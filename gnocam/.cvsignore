@@ -15,5 +15,4 @@ gnocam.spec
 Makefile
 Makefile.in
 intl
-intl/*
 

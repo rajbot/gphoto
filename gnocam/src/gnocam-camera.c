@@ -326,6 +326,8 @@ on_widget_changed (GnoCamFile* file, gpointer user_data)
 	g_return_if_fail (user_data);
 	camera = GNOCAM_CAMERA (user_data);
 
+	g_message ("on_widget_changed");
+
 	current_page = gtk_notebook_get_current_page (GTK_NOTEBOOK (camera->priv->notebook));
 
 	/* Remove old page */
@@ -351,11 +353,17 @@ static void
 on_preview_clicked (BonoboUIComponent* component, const gchar* path, Bonobo_UIComponent_EventType type, const gchar* state, gpointer user_data)
 {
 	GnoCamCamera*	camera;
+	gboolean	current;
 
 	g_return_if_fail (user_data);
 	camera = GNOCAM_CAMERA (user_data);
 
-	g_message ("on_preview_clicked");
+	/* Did the state really change? */
+	current = gconf_client_get_bool (camera->priv->client, "/apps/" PACKAGE "/preview", NULL);
+	if (current && !strcmp ("1", state)) return;
+	if (!current && !strcmp ("0", state)) return;
+
+	/* Tell GConf about the change */
 	if (!strcmp ("0", state)) gconf_client_set_bool (camera->priv->client, "/apps/" PACKAGE "/preview", FALSE, NULL);
 	else gconf_client_set_bool (camera->priv->client, "/apps/" PACKAGE "/preview", TRUE, NULL);
 }
@@ -431,6 +439,8 @@ on_file_selected (GnoCamStorageView* storage_view, const gchar* path, void* data
 	GdkPixbuf*		pixbuf;
 
 	camera = GNOCAM_CAMERA (data);
+
+	g_message ("on_file_selected (path='%s')", path);
 
 	if (camera->priv->storage_view_mode == GNOCAM_CAMERA_STORAGE_VIEW_MODE_TRANSIENT)
 		popdown_transient_folder_bar (camera);
@@ -756,7 +766,7 @@ gnocam_camera_new (const gchar* url, Bonobo_UIContainer container, GtkWindow* pa
 	gtk_signal_connect (GTK_OBJECT (new->priv->storage_view), "file_selected", GTK_SIGNAL_FUNC (on_file_selected), new);
 
         /* Create the menu */
-	new->priv->component = bonobo_ui_component_new (PACKAGE "Camera");
+	new->priv->component = bonobo_ui_component_new (url);
 //	gtk_idle_add (create_menu, new);
 	create_menu (new);
 

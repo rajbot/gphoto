@@ -196,6 +196,10 @@ on_shortcut_bar_item_selected (EShortcutBar* shortcut_bar, GdkEvent* event, gint
         }
 	g_free (url);
 
+	/* Are we already displaying this camera? */
+	if (m->priv->camera == camera) return;
+
+	/* Hide the old menu, display the new one */
 	if (m->priv->camera) gnocam_camera_hide_menu (m->priv->camera);
 	m->priv->camera = camera;
         gnocam_camera_show_menu (camera);

@@ -354,7 +354,7 @@ gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bono
         }       
 
 	/* Create the menu */
-	new->priv->component = bonobo_ui_component_new (PACKAGE "File");
+	new->priv->component = bonobo_ui_component_new (path);
 	gtk_idle_add (create_menu, new);
 
 	create_widget (new);

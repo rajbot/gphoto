@@ -291,9 +291,11 @@ gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bo
 	GnoCamFolder*			new;
 	Bonobo_Storage_DirectoryList*   list;
 	gchar*				row [] = {NULL, NULL};
+	gchar*				tmp;
 	const gchar*			directory;
 	gint				i;
 	CORBA_Environment		ev;
+	static gint			id = 0;
 
 	if (!strcmp (path, "/")) directory = path;
 	else directory = g_basename (path);
@@ -331,8 +333,11 @@ gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bo
         }
 
 	/* Create menu */
-	new->priv->component = bonobo_ui_component_new (PACKAGE "Folder");
+	tmp = g_strdup_printf ("%i", id++);
+	new->priv->component = bonobo_ui_component_new (tmp);
+	g_free (tmp);
 	gtk_idle_add (create_menu, new);
+//	create_menu (new);
 
 	return (new);
 }

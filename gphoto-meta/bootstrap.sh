@@ -3,6 +3,7 @@
 source "$(dirname $0)/utils/common.sh" || exit 7
 source "${metadir}/utils/autodetect.sh" || exit 7
 
+
 ########################################################################
 # evaluate command line parameters
 
@@ -13,13 +14,15 @@ else
     parm_update="false"
 fi
 
+
 ########################################################################
 # cvslogin - initialize stuff (CVS logins, etc)
 
 cvslogin() {
-    while read module release CVSROOT restofline
+    local module releasetag CVSROOT restofline
+    while read module releasetag CVSROOT restofline
     do 
-	CVSROOT="$(echo "${CVSROOT}" | sed 's|:/|:2401/|')"
+	local CVSROOT="$(echo "${CVSROOT}" | sed 's|:/|:2401/|')"
 	if grep -q "${CVSROOT}" $HOME/.cvspass
 	then
 	    echo "Good: already logged in for ${CVSROOT}."
@@ -27,9 +30,10 @@ cvslogin() {
 	fi
 	echo "##### Logging in for ${CVSROOT}."
 	echo "# Just press enter when asked for the CVS password:"
-	cvs -d "${CVSROOT}" login
+	cmd cvs -d "${CVSROOT}" login
     done < "${cvsmodulelist}"
 }
+
 
 ########################################################################
 # getsources - get software sources from CVS into ${cvsorig}/MODULE
@@ -38,8 +42,10 @@ getsources() {
     echo "##### Getting software from CVS"
     cmd mkdir -p "${cvsorig}"
     cmd cd "${cvsorig}"
+    local module releasetag CVSROOT restofline
     while read module releasetag CVSROOT restofline
     do 
+	local releaseparm
 	if [ 'HEAD' = $releasetag ]
 	then
 	    releaseparm=""
@@ -60,7 +66,7 @@ getsources() {
 		echo "#     Updating ${module}"
 		cmd cd "${cvsorig}/${module}"
 		# FIXME: Use other directory (do not modify timestamps if not required)
-		stdout="${tmpdir}/.tmp.${module}.stdout"
+		local stdout="${tmpdir}/.tmp.${module}.stdout"
 		cmd rm -f "$stdout"
 		cmd cvs -z3 update -d -P > "$stdout"
 		if [ -s "$stdout" ]
@@ -88,14 +94,16 @@ getsources() {
 # builddist - build distribution tarball for all MODULEs
 
 builddist() {
-    export PKG_CONFIG_PATH="${distroot}/lib/pkgconfig:${PKG_CONFIG_PATH}"
-    export LD_LIBRARY_PATH="${distroot}/lib:${LD_LIBRARY_PATH}"
-    export PATH="${distroot}/bin:${PATH}"
+    local PKG_CONFIG_PATH="${distroot}/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    local LD_LIBRARY_PATH="${distroot}/lib:${LD_LIBRARY_PATH}"
+    local PATH="${distroot}/bin:${PATH}"
+    export PKG_CONFIG_PATH LD_LIBRARY_PATH PATH
     cmd mkdir -p "${cvssrc}"
     cmd mkdir -p "${distdir}"
     while read module releasetag CVSROOT distopts configopts
     do
-	redist="true"
+	local redist="true"
+	local file
 	for file in "${distdir}/${module}-"[0-9]*.tar.{bz2,gz}
 	do 
 	    if [ -f "$file" ] && [ ! "${file}" -ot "${cvsorig}/.stamp.${module}" ]
@@ -119,7 +127,7 @@ builddist() {
 	    # FIXME: relies on GNU cp
 	    cmd cp -a "${cvsorig}/${module}" "${cvssrc}/"
 	    cmd cd "${cvssrc}/${module}"
-	    docroot="${distroot}/share/doc/gphoto2-manual-"[0-9]*
+	    local docroot="${distroot}/share/doc/gphoto2-manual-"[0-9]*
 	    if [ -d "$docroot" ]
 	    then
 		echo "#### Installing documentation for ${module}..."
@@ -151,11 +159,12 @@ builddist() {
 	    else
 		if ! make install
 		then
-		    for f in "${distdir}/${module}-"[0-9]*.tar.{bz2,gz}
+		    local file
+		    for file in "${distdir}/${module}-"[0-9]*.tar.{bz2,gz}
 		    do
-			if [ -f "$f" ] && ! echo "$f" | egrep -q -- '-broken.tar.(bz2|gz)$'
+			if [ -f "$file" ] && ! echo "$file" | egrep -q -- '-broken.tar.(bz2|gz)$'
 			then
-			    case "$f" in
+			    case "$file" in
 				*.tar.bz2)
 				    ext=".tar.bz2"
 				    ;;
@@ -163,41 +172,43 @@ builddist() {
 				    ext=".tar.gz"
 				    ;;
 				*)
-				    echo "Unknown extension: $f"
+				    echo "Unknown extension: $file"
 				    exit 1
 				    ;;
 			    esac
-			    newname="$(basename "$f" "$ext")-broken"
-			    cmd mv "$f" "${distdir}/${newname}${ext}"
+			    newname="$(basename "$file" "$ext")-broken"
+			    cmd mv "$file" "${distdir}/${newname}${ext}"
 			fi
 		    done
 		fi
 	    fi
+	    local file
 	    for file in "${distdir}/${module}-"[0-9]*.tar.{gz,bz2}
 	    do
 		[ -f "$file" ] && cmd touch "$file"
 	    done
 	fi
     done < "${cvsmodulelist}"
-    (TZ=UTC date;gphoto2 --version; gphoto2 --list-cameras) > "${distdir}/SUPPORTED-CAMERAS"
+    ( TZ=UTC date; echo; gphoto2 --version; echo; gphoto2 --list-cameras ) \
+	> "${distdir}/SUPPORTED-CAMERAS"
 }
+
 
 ########################################################################
 # makefiles - create Makefile.am files
 
 makefiles() {
     cmd cd "${distdir}"
-    files=""
+    local files=""
     while read module restofline
     do
+	local tarball
 	# add bz2 to dist if available, otherwise gz
 	for tarball in "${distdir}/${module}-"[0-9]*.tar.{bz2,gz}
 	do
 	    if [ -s "${tarball}" ]
 	    then
 		files="${files} $(basename ${tarball})"
-		dir="$(basename ${tarball} .tar.gz)"
-		dir="$(basename ${dir} .tar.bz2)"
 		tarball=""
 		break
 	    fi

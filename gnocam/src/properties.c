@@ -94,6 +94,7 @@ values_set (GladeXML* xml_properties, CameraWidget *camera_widget)
 {
 	GtkObject*	object;
 	GtkWidget*	preference_widget;
+	GtkWidget*	choice_widget;
 	guint 		k;
 	gint 		i;
 	gchar*		value_new;
@@ -126,9 +127,10 @@ values_set (GladeXML* xml_properties, CameraWidget *camera_widget)
 		g_free (value_new);
                 break;
         case GP_WIDGET_RADIO:
+		if ((preference_widget = gtk_object_get_data (object, gp_widget_label (camera_widget))) == NULL) break;
                 for (k = 0; k < gp_widget_choice_count (camera_widget); k++) {
-                        if ((preference_widget = gtk_object_get_data (object, gp_widget_choice (camera_widget, k))) == NULL) break;
-                        if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (preference_widget))) {
+                        if ((choice_widget = gtk_object_get_data (GTK_OBJECT (preference_widget), gp_widget_choice (camera_widget, k))) == NULL) break;
+                        if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (choice_widget))) {
 				value_new = gp_widget_choice (camera_widget, k);
 				if (strcmp (value_new, gp_widget_value_get (camera_widget)) != 0) {
 	                                gp_widget_value_set (camera_widget, value_new);
@@ -247,6 +249,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
                 hbox = gtk_hbox_new (FALSE, 10);
 		gtk_widget_show (hbox);
        	        gtk_container_add (GTK_CONTAINER (frame), hbox);
+		gtk_object_set_data (GTK_OBJECT (propertybox), gp_widget_label (camera_widget), hbox);
 		list = NULL;
 		for (k = 0; k < gp_widget_choice_count (camera_widget); k++) {
 			button = gtk_radio_button_new_with_label (list, gp_widget_choice (camera_widget, k));
@@ -261,8 +264,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 	
 			/* Store some data. */
 			gtk_object_set_data (GTK_OBJECT (button), "propertybox", propertybox);
-			gtk_object_set_data (GTK_OBJECT (propertybox), gp_widget_choice (camera_widget, k), button);
-			gtk_object_set_data (GTK_OBJECT (propertybox), gp_widget_label (camera_widget), button);
+			gtk_object_set_data (GTK_OBJECT (hbox), gp_widget_choice (camera_widget, k), button);
 		}
 		break;
 	case GP_WIDGET_MENU:

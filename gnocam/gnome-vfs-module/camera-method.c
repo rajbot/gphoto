@@ -217,72 +217,14 @@ do_close_directory (GnomeVFSMethod *method, GnomeVFSMethodHandle *handle,
 	return camera_dir_close ((CameraDir *) handle);
 }
 
-#if 0
-
-static GnomeVFSResult do_read_directory (
-	GnomeVFSMethod*                 method,
-	GnomeVFSMethodHandle*           handle,
-	GnomeVFSFileInfo*		info,
-	GnomeVFSContext*                context)
+static GnomeVFSResult
+do_read_directory (GnomeVFSMethod *method, GnomeVFSMethodHandle *handle,
+		   GnomeVFSFileInfo *info, GnomeVFSContext *context)
 {
-	DirectoryHandle *dh = (DirectoryHandle *) handle;
-	CameraFileInfo camera_info;
-	GnomeVFSResult result;
-	const char *name = NULL;
-	int dirs_count, files_count;
-
-printf ("ENTER: do_read_directory\n");
-
-	G_LOCK (cameras);
-
-	dirs_count = gp_list_count (dh->dirs);
-	if (dirs_count < 0) {
-		G_UNLOCK (cameras);
-		return (GNOME_VFS_RESULT (dirs_count));
-	}
-
-	files_count = gp_list_count (dh->files);
-	if (files_count < 0) {
-		G_UNLOCK (cameras);
-		return (GNOME_VFS_RESULT (files_count));
-	}
-
-	if (dh->pos >= dirs_count + files_count) {
-		G_UNLOCK (cameras);
-		return (GNOME_VFS_ERROR_EOF);
-	}
-
-	GNOME_VFS_FILE_INFO_SET_LOCAL (info, FALSE);
-
-	/* Tell gnome-vfs which fields will be valid */
-	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_NONE |
-			     GNOME_VFS_FILE_INFO_FIELDS_TYPE;
-
-	/* Fill the fields */
-	if (dh->pos < dirs_count) {
-		gp_list_get_name (dh->dirs, dh->pos, &name);
-		info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
-		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
-		info->mime_type = g_strdup ("x-directory/normal");
-	} else {
-		gp_list_get_name (dh->files, dh->pos - dirs_count, &name);
-		info->type = GNOME_VFS_FILE_TYPE_REGULAR;
-printf ("Trying to get file info for '%s'...\n", name);
-		result = GNOME_VFS_RESULT (gp_camera_file_get_info (
-			dh->camera, dh->dirname, name, &camera_info, NULL));
-printf ("... done.\n");
-		if (result == GNOME_VFS_OK)
-			get_info_from_camera_info (&camera_info, FALSE, info);
-	}
-	info->name = g_strdup (name);
-
-	dh->pos++;
-
-	G_UNLOCK (cameras);
-
-	return (GNOME_VFS_OK);
+	return camera_dir_read ((CameraDir *) handle, info);
 }
 
+#if 0
 static void
 get_info_from_camera_info (CameraFileInfo *cfi, gboolean preview,
 			   GnomeVFSFileInfo *info)
@@ -559,7 +501,7 @@ static GnomeVFSMethod method = {
         NULL,                           /* do_truncate_handle           */
         do_open_directory,
 	do_close_directory,
-        NULL, //do_read_directory,
+        do_read_directory,
         NULL, //do_get_file_info,
         NULL, //do_get_file_info_from_handle,
         do_is_local,

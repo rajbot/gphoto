@@ -50,7 +50,7 @@ impl_get_if (PortableServer_Servant servant, GNOME_C_ID id,
 	case 1: im = KNC_IMAGE_THUMB; break;
 	case 2: im = KNC_IMAGE_JPEG; break;
 	}
-	i = knc_c_if_new (f->priv->c, 0, im, ev);
+	i = knc_c_if_new (f->priv->c, f->priv->id, im, ev);
 	if (BONOBO_EX (ev)) return CORBA_OBJECT_NIL;
 	return CORBA_Object_duplicate (BONOBO_OBJREF (i), ev);
 }
@@ -83,6 +83,7 @@ knc_c_file_new (KncCntrl *c, unsigned long n, CORBA_Environment *ev)
 	f->priv->c = c;
 	knc_cntrl_ref (c);
 	f->priv->id = n;
+
 	return f;
 }
 

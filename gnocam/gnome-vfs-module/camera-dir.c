@@ -137,8 +137,9 @@ camera_dir_open (GnomeVFSURI *uri, CameraDir **d)
 
 		/* Get the file and the corresponding interfaces */
 		f = GNOME_C_Dir_get_file (dir, fl->_buffer[i], &ev);
-		if (BONOBO_EX (&ev))
-		    continue;
+		if (BONOBO_EX (&ev)) {
+			continue;
+		}
 		il = GNOME_C_File_get_ifs (f, &ev);
 		if (BONOBO_EX (&ev)) {
 			bonobo_object_release_unref (f, NULL);
@@ -152,7 +153,8 @@ camera_dir_open (GnomeVFSURI *uri, CameraDir **d)
 		    if (!i) {
 			name = GNOME_C_If__get_name (interface, &ev);
 			if (!BONOBO_EX (&ev)) {
-			    g_slist_append ((*d)->files, g_strdup (name));
+			    (*d)->files = g_slist_append ((*d)->files,
+							  g_strdup (name));
 			    CORBA_free (name);
 			}
 		    } else {
@@ -162,7 +164,8 @@ camera_dir_open (GnomeVFSURI *uri, CameraDir **d)
 				if (!strcmp (g_slist_nth_data ((*d)->ifs, k),
 					     type)) break;
 			    if (k == g_slist_length ((*d)->ifs))
-				g_slist_append ((*d)->ifs, g_strdup (type));
+				(*d)->ifs = g_slist_append ((*d)->ifs,
+							    g_strdup (type));
 			    CORBA_free (type);
 			}
 		    }
@@ -203,12 +206,12 @@ camera_dir_read (CameraDir *d, GnomeVFSFileInfo *i)
 		}
 		CORBA_exception_free (&ev);
 
-	} else if (d->n < g_slist_length (d->ifs) - d->dl->_length) {
+	} else if (d->n < g_slist_length (d->ifs) + d->dl->_length) {
 		i->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
 		i->name = g_strdup (g_slist_nth_data (d->ifs,
 						d->n - d->dl->_length));
-	} else if (d->n < g_slist_length (d->files) -
-			g_slist_length (d->ifs) - d->dl->_length) {
+	} else if (d->n < g_slist_length (d->files) +
+			g_slist_length (d->ifs) + d->dl->_length) {
 	    i->type = GNOME_VFS_FILE_TYPE_REGULAR;
 	    i->name = g_strdup (g_slist_nth_data (d->files,
 		d->n - g_slist_length (d->ifs) - d->dl->_length));

@@ -32,6 +32,7 @@ impl_get_name (PortableServer_Servant servant, CORBA_Environment *ev)
 	CORBA_string n = CORBA_string_dup (name);
 
 	g_free (name);
+
 	return n;
 }
 

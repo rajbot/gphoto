@@ -39,6 +39,16 @@ knc_c_dir_finalize (GObject *o)
 }
 
 static GNOME_C_IDList *
+impl_get_dirs (PortableServer_Servant servant, CORBA_Environment *ev)
+{
+	GNOME_C_IDList *l = GNOME_C_IDList__alloc ();
+
+	l->_length = 0;
+	CORBA_sequence_set_release (l, CORBA_TRUE);
+	return l;
+}
+
+static GNOME_C_IDList *
 impl_get_files (PortableServer_Servant servant, CORBA_Environment *ev)
 {
 	KncCDir *d = KNC_C_DIR (bonobo_object (servant));
@@ -84,6 +94,7 @@ knc_c_dir_class_init (KncCDirClass *klass)
 	parent_class = g_type_class_peek_parent (klass);
 
 	epv->get_files = impl_get_files;
+	epv->get_dirs  = impl_get_dirs;
 	epv->get_file  = impl_get_file;
 
 	g_class->finalize = knc_c_dir_finalize;
@@ -101,6 +112,7 @@ knc_c_dir_new (KncCntrl *c)
 	KncCDir *d = g_object_new (KNC_C_TYPE_DIR, NULL);
 	d->priv->c = c;
 	knc_cntrl_ref (c);
+
 	return d;
 }
 

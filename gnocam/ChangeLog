@@ -1,3 +1,13 @@
+2001-05-29	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
+	While desparately trying to get the gnome-vfs-module to work again...
+
+	* bonobo-moniker/bonobo-moniker-camera.c: More elaborate debugging 
+	messages.
+	* gnome-vfs-module/camera-method.c: Remove mutex stuff - shouldn't be
+	necessary any more?
+	* libgnocam/gphoto-extensions.c: 'Mutex' the static variables.
+
 2001-05-28	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
 	* gnome-vfs-module/*: Moved it over to use the bonobo-moniker-camera.

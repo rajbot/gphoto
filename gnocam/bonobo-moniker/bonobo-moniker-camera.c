@@ -13,13 +13,15 @@ camera_resolve (BonoboMoniker 		    *moniker,
 	const gchar *name;
 
 	name = bonobo_moniker_get_name (moniker);
+	g_message ("Trying to resolve %s...", name);
     
 	/* Stream? */
 	if (!strcmp (requested_interface, "IDL:Bonobo/Stream:1.0")) {
 		BonoboStream* stream;
 		
 		CORBA_exception_init (&tmp_ev);
-		
+	
+		g_message ("... as stream.");
 		stream = bonobo_stream_open_full ("camera", name, 
 						  Bonobo_Storage_READ |
 						  Bonobo_Storage_WRITE, 
@@ -42,6 +44,8 @@ camera_resolve (BonoboMoniker 		    *moniker,
 
 		CORBA_exception_free (&tmp_ev);
 
+		g_message ("Returning stream...");
+
 		return CORBA_Object_duplicate (BONOBO_OBJREF (stream), ev);
 	}
 
@@ -49,7 +53,7 @@ camera_resolve (BonoboMoniker 		    *moniker,
 	if (!strcmp (requested_interface, "IDL:Bonobo/Storage:1.0")) {
 		BonoboStorage* storage;
 
-		g_message ("Opening storage...");
+		g_message ("... as storage.");
 		storage = bonobo_storage_open_full ("camera", name, 
 						    Bonobo_Storage_READ | 
 						    Bonobo_Storage_WRITE, 
@@ -59,6 +63,8 @@ camera_resolve (BonoboMoniker 		    *moniker,
 				   bonobo_exception_get_text (ev));
 			return CORBA_OBJECT_NIL;
 		}
+
+		g_message ("Returning storage...");
 
 		return CORBA_Object_duplicate (BONOBO_OBJREF (storage), ev);
 	}

@@ -60,12 +60,14 @@ gint
 gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 {
 	static GConfClient *client = NULL;
-        gint 		    i, result;
-	gchar		   *name;
-	gchar		   *model = NULL;
-	gchar		   *port = NULL;
-	gchar		   *tmp;
-	static GSList	   *list = NULL;
+	static GStaticMutex client_mutex = G_STATIC_MUTEX_INIT;
+        gint 	    i, result;
+	gchar	   *name;
+	gchar	   *model = NULL;
+	gchar	   *port = NULL;
+	gchar	   *tmp;
+	GSList	   *list;
+	static GStaticMutex hash_table_mutex = G_STATIC_MUTEX_INIT;
 	static GHashTable  *hash_table = NULL;
 
 	CAM_EXT_DEBUG (("ENTER"));
@@ -109,9 +111,11 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 
 	/* Get the list of configured cameras */
 	CAM_EXT_DEBUG (("  Getting list of configured cameras..."));
+	g_static_mutex_lock (&client_mutex);
 	list = gconf_client_get_list (client, 
 				      "/apps/" PACKAGE "/cameras",
 				      GCONF_VALUE_STRING, NULL);
+	g_static_mutex_unlock (&client_mutex);
 	
         /* What model is associated to the name? */
 	for (i = 0; i < g_slist_length (list); i += 3) {
@@ -141,7 +145,9 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 	/* Do we already have this camera? */
 	CAM_EXT_DEBUG (("Looking for model '%s' on port '%s'...", model, port));
 	tmp = g_strconcat (model, port, NULL);
+	g_static_mutex_lock (&hash_table_mutex);
 	*camera = g_hash_table_lookup (hash_table, tmp);
+	g_static_mutex_unlock (&hash_table_mutex);
 	g_free (tmp);
 	if (*camera) {
 
@@ -179,9 +185,11 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 		/* will never be freed. We wouldn't have to do this if	*/
 		/* gphoto2 used GObjects...				*/
 		gp_camera_ref (*camera);
+		g_static_mutex_lock (&hash_table_mutex);
 		g_hash_table_insert (hash_table, 
 				     g_strconcat (model, port, NULL), 
 				     *camera);
+		g_static_mutex_unlock (&hash_table_mutex);
 	}
 
 	g_free (model);

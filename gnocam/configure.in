@@ -188,8 +188,8 @@ AC_SUBST(CFLAGS)
 dnl **********
 dnl libgphoto2
 dnl **********
-AC_MSG_CHECKING(for libgphoto2 >= 2.0)
-if gnome-config --libs libgphoto2 > /dev/null 2>&1; then
+AC_MSG_CHECKING(for libgphoto2)
+if gphoto2-config --libs > /dev/null 2>&1; then
     AC_MSG_RESULT(found)
 else
     AC_MSG_ERROR([

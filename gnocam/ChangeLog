@@ -1,3 +1,7 @@
+2001-05-27	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
+	* gnome-vfs-module/camera-method.c: Bonoboized more functions.
+
 2001-05-27	Fabrice Bellet  <fabrice@gnu.org>
 
 	* gnome-vfs-module/camera-method.c: Fixed the locking problem.
@@ -10,7 +14,9 @@
 	Remove comments before "#define USE_BONOBO" if you'd like to check
 	it out.
 	* configure.in: Don't use AM_PATH_GCONF - there seem to be systems 
-	with GConf out there that don't have this macro.
+	with GConf out there that don't have this macro. Then, use
+	gphoto-config instead of gnome-config - there are people out there
+	that don't have gphoto2 and GNOME in the same path.
 
 2001-05-07	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 

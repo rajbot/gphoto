@@ -5,3 +5,5 @@ Makefile.am
 *.lo
 *.o
 gnocam
+.libs
+.deps

@@ -3,11 +3,11 @@
 SUBDIRS =\
  art\
  macros\
- libgnocam\
- bonobo-moniker\
+ idl\
  capplet\
+ bonobo-moniker\
  gnome-vfs-module\
- src\
+ gnocam\
  tests\
  intl\
  po

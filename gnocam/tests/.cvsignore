@@ -1,6 +1,8 @@
+GnoCam*
 Makefile
 Makefile.in
 test-vfs-module
+test-gnocam
 *.o
 .libs
 .deps

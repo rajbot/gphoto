@@ -1,5 +1,4 @@
 #include <config.h>
-#include <gphoto2.h>
 #include <bonobo/bonobo-moniker-extender.h>
 #include <bonobo/bonobo-generic-factory.h>
 #include <bonobo/bonobo-moniker-simple.h>
@@ -8,10 +7,8 @@
 #include <bonobo/bonobo-context.h>
 #include <stdlib.h>
 
+#include "GnoCam.h"
 #include "bonobo-moniker-camera.h"
-
-#include "bonobo-storage-camera.h"
-#include "bonobo-stream-camera.h"
 
 static Bonobo_Unknown
 camera_resolve (BonoboMoniker 		    *moniker, 
@@ -20,23 +17,66 @@ camera_resolve (BonoboMoniker 		    *moniker,
 		CORBA_Environment 	    *ev)
 {
 	Bonobo_Storage_OpenMode mode, comp_mode = 0;
+	Bonobo_Storage storage;
+	Bonobo_Stream stream;
+	CORBA_Object gnocam;
 	CORBA_Environment tmp_ev;
 	const gchar *name;
+	gchar *camera_name;
+	gint i;
+	GNOME_Camera camera;
+
+	/* Start gnocam */
+	gnocam = oaf_activate_from_id ("OAFIID:GNOME_GnoCam", 0, NULL, ev);
+	if (BONOBO_EX (ev))
+		return (NULL);
 
 	name = bonobo_moniker_get_name (moniker);
 	if ((strlen (name) > 11) && !strncmp (name, "//previews@", 11))
 		comp_mode = Bonobo_Storage_COMPRESSED;
-    
+
+	/* Make sure we are given a camera name. */
+	for (i = 0; i < strlen (name); i++)
+		if (name [i] == '@') {
+			name += i + 1;
+			break;
+		}
+	if ((name [0] == '/') && (name [1] == '/'))
+		name += 2;
+	for (i = 0; name [i] != 0; i++) 
+		if (name [i] == '/') 
+			break;
+	camera_name = g_strndup (name, i);
+	name += i;
+
+	/* Get a camera */
+	camera = GNOME_GnoCam_getCamera (gnocam, camera_name, ev);
+	g_free (camera_name);
+	bonobo_object_release_unref (gnocam, NULL);
+	if (BONOBO_EX (ev))
+		return (CORBA_OBJECT_NIL);
+
+	/* Get the storage */
+	storage = Bonobo_Unknown_queryInterface (camera,
+						 "IDL:Bonobo/Storage:1.0", ev);
+	bonobo_object_release_unref (camera, NULL);
+	if (BONOBO_EX (ev))
+		return (CORBA_OBJECT_NIL);
+
+	/* Storage? */
+	if (!strcmp (requested_interface, "IDL:Bonobo/Storage:1.0"))
+		return (storage);
+
 	/* Stream? */
 	if (!strcmp (requested_interface, "IDL:Bonobo/Stream:1.0")) {
-		BonoboStream* stream;
-		
 		CORBA_exception_init (&tmp_ev);
 	
 		if (getenv ("DEBUG_GNOCAM"))
-			g_message ("Trying to get stream (rw)...");
+			g_message ("Trying to get stream (rw) for '%s'...",
+				   name);
 		mode = Bonobo_Storage_READ | Bonobo_Storage_WRITE | comp_mode;
-		stream = bonobo_stream_camera_open (name, mode, 0644, &tmp_ev);
+		stream = Bonobo_Storage_openStream (storage, name,
+						    mode, &tmp_ev);
 		if (BONOBO_EX (&tmp_ev)) {
 			g_warning ("Could not get stream: %s",
 				   bonobo_exception_get_text (&tmp_ev));
@@ -46,8 +86,8 @@ camera_resolve (BonoboMoniker 		    *moniker,
 			if (getenv ("DEBUG_GNOCAM"))
 				g_message ("Trying to get stream (r)...");
 			mode = Bonobo_Storage_READ | comp_mode;
-			stream = bonobo_stream_camera_open (name, mode,
-							    0644, ev);
+			stream = Bonobo_Storage_openStream (storage, name,
+							    mode, ev);
 			if (BONOBO_EX (ev)) {
 				g_warning ("Could not get stream: %s", 
 					   bonobo_exception_get_text (ev));
@@ -57,29 +97,11 @@ camera_resolve (BonoboMoniker 		    *moniker,
 
 		CORBA_exception_free (&tmp_ev);
 
-		return CORBA_Object_duplicate (BONOBO_OBJREF (stream), ev);
+		bonobo_object_release_unref (storage, NULL);
+		return (stream);
 	}
 
-	/* Storage? */
-	if (!strcmp (requested_interface, "IDL:Bonobo/Storage:1.0")) {
-		BonoboStorage* storage;
-		gchar *tmp;
-
-		if (getenv ("DEBUG_GNOCAM"))
-			g_message ("Trying to get storage for '%s'...", name);
-
-		mode = Bonobo_Storage_READ | Bonobo_Storage_WRITE;
-		tmp = g_strconcat ("camera:", name, NULL);
-		storage = bonobo_storage_camera_open (tmp, mode, 0644, ev);
-		g_free (tmp);
-		if (BONOBO_EX (ev)) {
-			g_warning ("Could not get storage: %s", 
-				   bonobo_exception_get_text (ev));
-			return CORBA_OBJECT_NIL;
-		}
-
-		return CORBA_Object_duplicate (BONOBO_OBJREF (storage), ev);
-	}
+	bonobo_object_release_unref (storage, NULL);
 
 	return (bonobo_moniker_use_extender (
 		    		"OAFIID:Bonobo_MonikerExtender_stream", 
@@ -89,9 +111,6 @@ camera_resolve (BonoboMoniker 		    *moniker,
 static BonoboObject *
 bonobo_moniker_camera_factory (BonoboGenericFactory *this, gpointer data)
 {
-	/* Initialize gphoto */
-	gp_init (GP_DEBUG_NONE);
-
 	return BONOBO_OBJECT (bonobo_moniker_simple_new ("camera:", 
 		    					 camera_resolve));
 }

@@ -155,22 +155,10 @@ fi
 dnl ******************************
 dnl GConf
 dnl ******************************
-AC_MSG_CHECKING(for gconf)
-if gconf-config --version > /dev/null 2>&1; then 
-	AC_MSG_RESULT(found)
-	GCONF_CFLAGS="`gconf-config --cflags`"
-	GCONF_LIBS="`gconf-config --libs`"
-	AC_SUBST(GCONF_CFLAGS)
-	AC_SUBST(GCONF_LIBS)
-else
-	AC_MSG_ERROR([
-*** You need GConf for this version of ${PACKAGE}.
-*** Get the latest version from http://www.gnome.org.
-*** Mirrors can be found at http://www.gnome.org/mirrors.])
-fi
+AM_PATH_GCONF(0.12,,,gconf-gtk)
 
-EXTRA_GNOME_CFLAGS="`gnome-config --cflags bonobo bonobox bonobox_print gconf print gal`"
-EXTRA_GNOME_LIBS="`gnome-config --libs bonobo bonobox bonobox_print gconf print gal`"
+EXTRA_GNOME_CFLAGS="`gnome-config --cflags bonobo bonobox bonobox_print print gal gnome gnomeui oaf`"
+EXTRA_GNOME_LIBS="`gnome-config --libs bonobo bonobox bonobox_print print gal gnome gnomeui oaf`"
 AC_SUBST(EXTRA_GNOME_CFLAGS)
 AC_SUBST(EXTRA_GNOME_LIBS)
 
@@ -206,11 +194,11 @@ art/Makefile
 intl/Makefile
 macros/Makefile
 po/Makefile.in
-src/Makefile
-bonobo-moniker/Makefile
+idl/Makefile
+gnocam/Makefile
 capplet/Makefile
+bonobo-moniker/Makefile
 gnome-vfs-module/Makefile
-libgnocam/Makefile
 tests/Makefile
 ])
 

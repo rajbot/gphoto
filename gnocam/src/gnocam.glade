@@ -77,20 +77,20 @@
 		<handler>on_save_previews_activate</handler>
 		<last_modification_time>Thu, 07 Sep 2000 21:04:40 GMT</last_modification_time>
 	      </signal>
-	      <label>Save _Previews</label>
+	      <label>Save _Preview(s)</label>
 	      <right_justify>False</right_justify>
 	      <stock_icon>GNOME_STOCK_MENU_SAVE</stock_icon>
 	    </widget>
 
 	    <widget>
 	      <class>GtkPixmapMenuItem</class>
-	      <name>save_preview_as</name>
+	      <name>save_previews_as</name>
 	      <signal>
 		<name>activate</name>
-		<handler>on_save_preview_as_activate</handler>
-		<last_modification_time>Fri, 22 Sep 2000 18:31:15 GMT</last_modification_time>
+		<handler>on_save_previews_as_activate</handler>
+		<last_modification_time>Sun, 01 Oct 2000 11:57:40 GMT</last_modification_time>
 	      </signal>
-	      <label>Save Preview As...</label>
+	      <label>Save Preview(s) As...</label>
 	      <right_justify>False</right_justify>
 	      <stock_icon>GNOME_STOCK_MENU_SAVE_AS</stock_icon>
 	    </widget>
@@ -103,20 +103,20 @@
 		<handler>on_save_files_activate</handler>
 		<last_modification_time>Thu, 07 Sep 2000 21:00:27 GMT</last_modification_time>
 	      </signal>
-	      <label>Save _Files</label>
+	      <label>Save _File(s)</label>
 	      <right_justify>False</right_justify>
 	      <stock_icon>GNOME_STOCK_MENU_SAVE</stock_icon>
 	    </widget>
 
 	    <widget>
 	      <class>GtkPixmapMenuItem</class>
-	      <name>save_file_as</name>
+	      <name>save_files_as</name>
 	      <signal>
 		<name>activate</name>
-		<handler>on_save_file_as_activate</handler>
-		<last_modification_time>Fri, 22 Sep 2000 18:12:37 GMT</last_modification_time>
+		<handler>on_save_files_as_activate</handler>
+		<last_modification_time>Sun, 01 Oct 2000 11:57:52 GMT</last_modification_time>
 	      </signal>
-	      <label>Save File As...</label>
+	      <label>Save File(s) As...</label>
 	      <right_justify>False</right_justify>
 	      <stock_icon>GNOME_STOCK_MENU_SAVE_AS</stock_icon>
 	    </widget>
@@ -235,21 +235,21 @@
 	    <handler>on_button_save_previews_clicked</handler>
 	    <last_modification_time>Thu, 07 Sep 2000 21:03:56 GMT</last_modification_time>
 	  </signal>
-	  <label>Save Previews</label>
+	  <label>Save Preview(s)</label>
 	  <stock_pixmap>GNOME_STOCK_PIXMAP_SAVE</stock_pixmap>
 	</widget>
 
 	<widget>
 	  <class>GtkButton</class>
 	  <child_name>Toolbar:button</child_name>
-	  <name>button_save_preview_as</name>
+	  <name>button_save_previews_as</name>
 	  <tooltip>Save selected previews</tooltip>
 	  <signal>
 	    <name>clicked</name>
-	    <handler>on_button_save_preview_as_clicked</handler>
-	    <last_modification_time>Fri, 22 Sep 2000 18:37:41 GMT</last_modification_time>
+	    <handler>on_button_save_previews_as_clicked</handler>
+	    <last_modification_time>Sun, 01 Oct 2000 11:59:17 GMT</last_modification_time>
 	  </signal>
-	  <label>Save Preview As...</label>
+	  <label>Save Preview(s) As...</label>
 	  <stock_pixmap>GNOME_STOCK_PIXMAP_SAVE_AS</stock_pixmap>
 	</widget>
 
@@ -263,21 +263,21 @@
 	    <handler>on_button_save_files_clicked</handler>
 	    <last_modification_time>Thu, 07 Sep 2000 21:04:03 GMT</last_modification_time>
 	  </signal>
-	  <label>Save Files</label>
+	  <label>Save File(s)</label>
 	  <stock_pixmap>GNOME_STOCK_PIXMAP_SAVE</stock_pixmap>
 	</widget>
 
 	<widget>
 	  <class>GtkButton</class>
 	  <child_name>Toolbar:button</child_name>
-	  <name>button_save_file_as</name>
+	  <name>button_save_files_as</name>
 	  <tooltip>Save selected previews</tooltip>
 	  <signal>
 	    <name>clicked</name>
-	    <handler>on_button_save_file_as_clicked</handler>
-	    <last_modification_time>Fri, 22 Sep 2000 18:37:51 GMT</last_modification_time>
+	    <handler>on_button_save_files_as_clicked</handler>
+	    <last_modification_time>Sun, 01 Oct 2000 11:59:32 GMT</last_modification_time>
 	  </signal>
-	  <label>Save File As...</label>
+	  <label>Save File(s) As...</label>
 	  <stock_pixmap>GNOME_STOCK_PIXMAP_SAVE_AS</stock_pixmap>
 	</widget>
 
@@ -529,13 +529,13 @@
 
   <widget>
     <class>GtkMenuItem</class>
-    <name>clist_files_popup_save_preview_as</name>
+    <name>clist_files_popup_save_previews_as</name>
     <signal>
       <name>activate</name>
-      <handler>on_save_preview_as_activate</handler>
-      <last_modification_time>Fri, 22 Sep 2000 17:57:33 GMT</last_modification_time>
+      <handler>on_save_previews_as_activate</handler>
+      <last_modification_time>Sun, 01 Oct 2000 11:55:25 GMT</last_modification_time>
     </signal>
-    <label>Save Preview As...</label>
+    <label>Save Preview(s) As...</label>
     <right_justify>False</right_justify>
   </widget>
 
@@ -559,13 +559,13 @@
 
   <widget>
     <class>GtkMenuItem</class>
-    <name>clist_files_popup_save_file_as</name>
+    <name>clist_files_popup_save_files_as</name>
     <signal>
       <name>activate</name>
-      <handler>on_save_file_as_activate</handler>
-      <last_modification_time>Fri, 22 Sep 2000 17:59:19 GMT</last_modification_time>
+      <handler>on_save_files_as_activate</handler>
+      <last_modification_time>Sun, 01 Oct 2000 11:55:21 GMT</last_modification_time>
     </signal>
-    <label>Save File As...</label>
+    <label>Save File(s) As...</label>
     <right_justify>False</right_justify>
   </widget>
 

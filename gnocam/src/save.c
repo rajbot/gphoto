@@ -200,12 +200,14 @@ save_all_selected (GladeXML* xml, gboolean file, gboolean ask_for_filename, gboo
         Camera*         camera;
         gchar*          path;
         gchar*          filename;
+	GnomeApp*	app;
 
         g_assert (xml != NULL);
 	g_assert (!(ask_for_filename && temporary));
         g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
+	g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
 
-        selection = g_list_first (clist->selection);
+        if (!(selection = g_list_first (clist->selection))) gnome_app_message (app, _("Please select at least one file first."));
         for (i = 0; i < g_list_length (selection); i++) {
 
 		/* Get some information. */
@@ -219,6 +221,54 @@ save_all_selected (GladeXML* xml, gboolean file, gboolean ask_for_filename, gboo
 		/* Save. */
 		if (ask_for_filename) save_as (xml, camera, path, filename, file);
 		else save (xml, camera, path, filename, file, temporary);
+        }
+}
+
+void
+delete_all_selected (GladeXML* xml)
+{
+        GnomeApp*       app;
+        GList*          selection;
+        GtkCList*       clist;
+        Camera*         camera;
+        gint            row;
+        gint            reply;
+        gchar*          path;
+        gchar*          filename;
+        gchar*          message;
+
+        g_assert (xml != NULL);
+        g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
+        g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
+
+	if (!(selection = g_list_first (clist->selection))) gnome_app_message (app, _("Please select at least one file first."));
+        else {
+                if (g_list_length (selection) > 1)
+                        message = g_strdup_printf (_("Do you really want to delete the %i selected files?"), g_list_length (selection));
+                else
+                        message = g_strdup_printf (_("Do you really want to delete the selected file?"));
+                gnome_dialog_run_and_close (GNOME_DIALOG (gnome_app_question_modal (app, message, on_reply, xml)));
+                reply = GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (app), "reply"));
+                if (reply == GNOME_YES) {
+                        while (selection != NULL) {
+
+                                /* Retrieve some data we need. */
+                                row = GPOINTER_TO_INT (selection->data);
+                                g_assert ((camera = gtk_clist_get_row_data (clist, row)) != NULL);
+                                gtk_clist_get_text (clist, row, 1, &path);
+                                gtk_clist_get_text (clist, row, 2, &filename);
+
+                                /* Delete the file and update the file list. */
+                                if (gp_camera_file_delete (camera, path, filename) == GP_OK) {
+                                        gtk_clist_remove (clist, row);
+                                } else {
+                                        gnome_app_error (app, _("Could not delete file!"));
+                                        gtk_clist_unselect_row (clist, row, 0);
+                                }
+
+                                selection = g_list_first (clist->selection);
+                        }
+                }
         }
 }
 

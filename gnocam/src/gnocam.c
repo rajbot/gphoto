@@ -66,15 +66,17 @@ static void
 on_camera_setup_changed (GConfClient* client, guint notify_id, GConfEntry* entry, gpointer user_data)
 {
 	GladeXML*	xml;
+	GtkTree*	tree;
 
 	g_assert ((xml = user_data) != NULL);
+	g_assert ((tree = GTK_TREE (glade_xml_get_widget (xml, "tree_cameras"))) != NULL);
 
 	if (entry->value == NULL) {
 		
 		/* No cameras configured. */
-		cameras_update (xml, NULL);
+		camera_tree_update (tree, NULL);
 	} else {
-		cameras_update (xml, entry->value);
+		camera_tree_update (tree, entry->value);
 	}
 }
 
@@ -108,34 +110,21 @@ int main (int argc, char *argv[])
         client = gconf_client_get_default ();
 	gconf_client_add_dir (client, "/apps/" PACKAGE "", GCONF_CLIENT_PRELOAD_NONE, NULL);
 
-	/* Init gphoto2 backend. */
-	value = gconf_client_get (client, "/apps/" PACKAGE "/debug_level", NULL);
-	if (value) {
-
-		/* We already have a value for debug_level in the database. */
+	/* Init gphoto2 backend with debug level as stored in database.	*/ 
+	/* If there is no debug level stored, init with GP_DEBUG_NONE. 	*/
+	if ((value = gconf_client_get (client, "/apps/" PACKAGE "/debug_level", NULL))) {
 		g_assert (value->type == GCONF_VALUE_INT);
 		gp_init (gconf_value_get_int (value));
 		gconf_value_free (value);
-	} else {
-
-		/* We don't have a value for debug_level in the database. */
-		gp_init (GP_DEBUG_NONE);
-	}
+	} else gp_init (GP_DEBUG_NONE);
 	gp_frontend_register (gp_frontend_status, gp_frontend_progress, gp_frontend_message, gp_frontend_confirm, gp_frontend_prompt);
 
 	/* Load the interface. */
-	xml = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "app");
-	if (xml == NULL) g_error (_("Could not find " GNOCAM_GLADEDIR "gnocam.glade. Check if " PACKAGE " was installed correctly."));
+	if (!(xml = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "app")))
+		g_error (_("Could not find " GNOCAM_GLADEDIR "gnocam.glade. Check if " PACKAGE " was installed correctly."));
 
-	/* Populate the camera tree. */
-	value = gconf_client_get (client, "/apps/" PACKAGE "/cameras", NULL);
-	if (value) {
-		cameras_update (xml, value);
-		gconf_value_free (value);
-	} 
-
-	value = gconf_client_get (client, "/apps/" PACKAGE "/prefix", NULL);
-	if (!value) {
+	/* Do we already have a prefix in the database? */
+	if (!(value = gconf_client_get (client, "/apps/" PACKAGE "/prefix", NULL))) {
 		
 		/* Set prefix to HOME by default. */
 		value = gconf_value_new (GCONF_VALUE_STRING);
@@ -167,9 +156,9 @@ int main (int argc, char *argv[])
 	/* Store some data. */
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "app")), "client", client);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "save_previews")), "xml", xml);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "save_preview_as")), "xml", xml);
+	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "save_previews_as")), "xml", xml);
         gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "save_files")), "xml", xml);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "save_file_as")), "xml", xml);
+	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "save_files_as")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "delete")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "exit")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "preferences")), "xml", xml);
@@ -177,10 +166,17 @@ int main (int argc, char *argv[])
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "tree_cameras")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "clist_files")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "button_save_files")), "xml", xml);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "button_save_file_as")), "xml", xml);
+	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "button_save_files_as")), "xml", xml);
         gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "button_save_previews")), "xml", xml);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "button_save_preview_as")), "xml", xml);
+	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "button_save_previews_as")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "button_delete")), "xml", xml);
+
+        /* Populate the camera tree. */
+        value = gconf_client_get (client, "/apps/" PACKAGE "/cameras", NULL);
+        if (value) {
+                camera_tree_update (GTK_TREE (glade_xml_get_widget (xml, "tree_cameras")), value);
+                gconf_value_free (value);
+        }
 
 	/* Notification in case the camera setup changes. */
 	notify_id_cameras = gconf_client_notify_add (client, "/apps/" PACKAGE "/cameras", on_camera_setup_changed, xml, NULL, NULL);

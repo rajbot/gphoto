@@ -1,6 +1,6 @@
 
 /* Prototypes */
 
-void cameras_update (GladeXML* xml, GConfValue* value);
+void camera_tree_update (GtkTree* tree, GConfValue* value);
 
-void cameras_clean_subtree (GtkTree* tree);
+void camera_tree_clean (GtkTree* tree);

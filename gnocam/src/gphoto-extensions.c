@@ -144,10 +144,9 @@ gp_widget_clone (CameraWidget* widget)
  * Returns TRUE if update has been successful, FALSE otherwise.
  **/
 gboolean
-gp_camera_update_by_description (GladeXML* xml, Camera** camera, gchar* description)
+gp_camera_update_by_description (Camera** camera, gchar* description)
 {
 	Camera*		camera_old;
-	GnomeApp*	app;
 	guint 		id;
 	gchar*		name;
 	gchar*		model;
@@ -160,8 +159,6 @@ gp_camera_update_by_description (GladeXML* xml, Camera** camera, gchar* descript
 	CameraPortInfo		port_info;
 	frontend_data_t*	frontend_data;
 
-	g_assert (xml != NULL);
-	g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
 	g_assert (camera != NULL);
 	g_assert (*camera != NULL);
 	g_assert (description != NULL);
@@ -176,7 +173,7 @@ gp_camera_update_by_description (GladeXML* xml, Camera** camera, gchar* descript
 	if (strcmp ((*camera)->model, model) != 0) {
 		camera_old = *camera;
 		if (gp_camera_new_by_name (&(*camera), model) == GP_ERROR) {
-			gnome_app_error (app, _("Could not set camera model!"));
+			dialog_information (_("Could not set camera model to '%s'!"), model);
 
 			/* Clean up. */
 			g_free (frontend_data->name);
@@ -205,7 +202,7 @@ gp_camera_update_by_description (GladeXML* xml, Camera** camera, gchar* descript
 	port_changed = FALSE;
         if (strcmp ((*camera)->port->name, port) != 0) {
 	        if ((number_of_ports = gp_port_count ()) == GP_ERROR) {
-	                gnome_app_error (app, _("Could not get number of ports!"));
+			dialog_information (_("Could not get number of ports!"));
 
 			/* Clean up. */
 			g_free (frontend_data->name);
@@ -216,7 +213,7 @@ gp_camera_update_by_description (GladeXML* xml, Camera** camera, gchar* descript
 	        }
 	        for (i = 0; i < number_of_ports; i++) {
 	                if (gp_port_info (i, &port_info) == GP_ERROR) {
-	                        gnome_app_error (app, _("Could not get port information!"));
+	                        dialog_information (_("Could not get port information for port number %i!"), i);
 
 				/* Clean up. */
 				g_free (frontend_data->name);
@@ -228,7 +225,7 @@ gp_camera_update_by_description (GladeXML* xml, Camera** camera, gchar* descript
 	                if (strcmp (port_info.name, port) == 0) break;
 	        }
 	        if (i == number_of_ports) {
-	                gnome_app_error (app, _("Could not find port!"));
+			dialog_information (_("Could not find port '%s'!"), port);
 
 			/* Clean up. */
 			g_free (frontend_data->name);
@@ -254,9 +251,8 @@ gp_camera_update_by_description (GladeXML* xml, Camera** camera, gchar* descript
 
 	/* If port or speed changed, we initialize the camera with the new settings. */	
 	if (port_changed || speed_changed) {
-//FIXME: Shouldn't we free the old port_info?
 	        if (gp_camera_init (*camera, &port_info) == GP_ERROR) {
-	                gnome_app_error (app, _("Could not initialize camera!"));
+	                dialog_information (_("Could not initialize camera on port '%s' with speed %i!"), (*camera)->port->name, (*camera)->port->speed);
 			
 			/* Clean up. */
 			g_free (frontend_data->name);

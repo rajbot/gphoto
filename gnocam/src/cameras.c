@@ -8,12 +8,14 @@
 #include "cameras.h"
 #include "information.h"
 
-/*************/
-/* Functions */
-/*************/
-
+/**
+ * camera_tree_clean:
+ *
+ * This function removes all items from a tree and makes sure that 
+ * the tree is still connected with its parent.
+ **/
 void
-cameras_clean_subtree (GtkTree* tree)
+camera_tree_clean (GtkTree* tree)
 {
 	GtkTreeItem*	item;
 	gint		i;
@@ -26,7 +28,7 @@ cameras_clean_subtree (GtkTree* tree)
 	for (i = g_list_length (tree->children) - 1; i >= 0; i--) {
 		item = GTK_TREE_ITEM (g_list_nth_data (tree->children, i));
 		if (item->subtree) {
-			cameras_clean_subtree (GTK_TREE (item->subtree));
+			camera_tree_clean (GTK_TREE (item->subtree));
 			gtk_object_unref (GTK_OBJECT (item->subtree));
 		}
 		g_free (gtk_object_get_data (GTK_OBJECT (item), "path"));
@@ -37,10 +39,15 @@ cameras_clean_subtree (GtkTree* tree)
 	if (GTK_WIDGET (tree)->parent == NULL) gtk_tree_item_set_subtree (GTK_TREE_ITEM (owner), GTK_WIDGET (tree));
 }
 
+/**
+ * camera_tree_update:
+ *
+ * This function adjusts the camera tree to reflect the current settings
+ * as indicated in value.
+ **/
 void
-cameras_update (GladeXML* xml, GConfValue* value)
+camera_tree_update (GtkTree* tree, GConfValue* value)
 {
-        GtkTree*        tree;
 	GtkWidget*	sub_tree;
         GSList*         list_cameras = NULL;
         GtkObject*      object;
@@ -53,14 +60,13 @@ cameras_update (GladeXML* xml, GConfValue* value)
         guint           id;
         Camera*         camera;
 	CameraList	folder_list;
-	GnomeApp*	app;
         GtkTargetEntry target_table[] = {
                 {"text/uri-list", 0, 0}
         };
+	GladeXML*	xml;
 
-        g_assert (xml != NULL);
-        g_assert ((tree = GTK_TREE (glade_xml_get_widget (xml, "tree_cameras"))) != NULL);
-	g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
+	g_assert (tree != NULL);
+	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (tree), "xml")) != NULL);
 
         if (value) {
                 g_assert (value->type == GCONF_VALUE_LIST);
@@ -92,7 +98,7 @@ cameras_update (GladeXML* xml, GConfValue* value)
                         if (id == ((frontend_data_t*) camera->frontend_data)->id) {
 
                                 /* We found the camera. Do we have to update? */
-                                if (gp_camera_update_by_description (xml, &camera, description)) {
+                                if (gp_camera_update_by_description (&camera, description)) {
                                         /* Update the label. */
                                         gtk_label_set_text (GTK_LABEL (GTK_BIN (object)->child), ((frontend_data_t*) camera->frontend_data)->name);
 
@@ -154,7 +160,7 @@ cameras_update (GladeXML* xml, GConfValue* value)
 
 			/* Remove subtree. */
 			if (GTK_TREE_ITEM (item)->subtree) {
-				cameras_clean_subtree (GTK_TREE (GTK_TREE_ITEM (item)->subtree));
+				camera_tree_clean (GTK_TREE (GTK_TREE_ITEM (item)->subtree));
 				gtk_object_unref (GTK_OBJECT (GTK_TREE_ITEM (item)->subtree));
 			}
 

@@ -302,5 +302,5 @@ int main(int argc, char *argv[])
 "camera model and serial port\n");
 	}
 	gtk_main();
-	return(0);
+	return 0;
 }

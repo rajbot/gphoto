@@ -1,5 +1,8 @@
+#include <config.h>
 #include <gnome.h>
 #include <glade/glade.h>
+
+#ifdef GNOCAM_USES_GTKHTML
 
 /**************/
 /* Prototypes */
@@ -8,9 +11,9 @@
 void on_app_gallery_close_activate      (GtkMenuItem* menuitem, gpointer user_data);
 void on_app_gallery_exit_activate       (GtkMenuItem* menuitem, gpointer user_data);
 
-/**************/
-/* Callbacks. */
-/**************/
+/*************/
+/* Callbacks */
+/*************/
 
 void
 on_app_gallery_close_activate (GtkMenuItem* menuitem, gpointer user_data)
@@ -29,4 +32,5 @@ on_app_gallery_exit_activate (GtkMenuItem* menuitem, gpointer user_data)
         gtk_main_quit ();
 }
 
+#endif
 

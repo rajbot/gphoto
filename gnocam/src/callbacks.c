@@ -1,7 +1,9 @@
 #include <config.h>
 #include <gnome.h>
-#include <pspell/pspell.h>
-#include <gtkhtml/gtkhtml.h>
+#ifdef GNOCAM_USES_GTKHTML
+#  include <pspell/pspell.h>
+#  include <gtkhtml/gtkhtml.h>
+#endif
 #include <libgnomevfs/gnome-vfs.h>
 #include <glade/glade.h>
 #include <gdk-pixbuf/gdk-pixbuf-loader.h>
@@ -137,6 +139,7 @@ on_button_delete_clicked (GtkButton *button, gpointer user_data)
 void
 on_new_gallery_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
+#ifdef GNOCAM_USES_GTKHTML
 	GladeXML*	xml_gallery;
 	GtkWidget*	widget;
 	GdkColor	bgColor = {0, 0xdfff, 0xdfff, 0xffff};
@@ -154,6 +157,9 @@ on_new_gallery_activate (GtkMenuItem *menuitem, gpointer user_data)
 
 	/* Connect the signals. */
 	glade_xml_signal_autoconnect (xml_gallery);
+#else
+	dialog_information (_("You need to compile " PACKAGE " with gtkhtml enabled in order to use this feature."));
+#endif
 }
 
 void

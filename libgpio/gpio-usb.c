@@ -70,7 +70,7 @@ int gpio_usb_close(gpio_device * dev)
 {
 	if (usb_close(dev->device_handle) < 0)
 		fprintf(stderr, "gpio_usb_close: %s\n",
-			usb_strerror());
+			strerror());
 
 	dev->device_handle = NULL;
 

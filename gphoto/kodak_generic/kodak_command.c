@@ -38,9 +38,31 @@
 ==============================================================================*/
 typedef unsigned char DESCRIPTOR_TYPE[COMMAND_PACKET_SIZE];
 
+typedef struct
+{
+   int command;
+   unsigned char *description;
+} COMMAND_DESCRIPTION_TYPE;
+
 /*==============================================================================
 * Local Variables
 ==============================================================================*/
+static const COMMAND_DESCRIPTION_TYPE command_descs[] =
+{
+   { CMD_SET_HPBS, "Set HPBS" },
+   { CMD_BAUD_RATE, "Set Baud Rate" },
+   { CMD_SEND_LAST_PIC, "Send Last Taken Image Name" },
+   { CMD_TAKE_PICTURE, "Take Picture" },
+   { CMD_STATUS, "Status" },
+   { CMD_READ_PIC_INFO, "Read Picture Information" },
+   { CMD_READ_THUMBNAIL, "Read Thumbnail" },
+   { CMD_OPEN_CARD, "Open Card" },
+   { CMD_CLOSE_CARD, "Close Card" },
+   { CMD_READ_DIRECTORY, "Read Directory" },
+   { CMD_READ_FILE, "Read File" },
+   { CMD_DELETE_FILE, "Delete File" },
+};
+
 static DESCRIPTOR_TYPE descriptors[NUM_DESCRIPTORS];
 
 /*==============================================================================
@@ -174,13 +196,31 @@ kodak_command_vcreate
          break;
    }
 
+#ifdef COMMAND_DEBUG
    {
       int i;
+
       printf ("Command: ");
+
+      /* Print a description of the command */
+      for (i = 0; i < sizeof(command_descs); i++)
+      {
+         if (command_descs[i].command == cmdbuf[0])
+         {
+            printf ("(%s) ", command_descs[i].description);
+            break;
+         }
+      }
+      
+      /* Print the command packet itself */
       for (i = 0; i < COMMAND_PACKET_SIZE; i++)
+      {
          printf ("%02X ", cmdbuf[i]);
+      }
+
       printf ("\n");
    }
+#endif
 
    /* Return the descriptor for this command */
    return descriptor;

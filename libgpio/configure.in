@@ -1,0 +1,82 @@
+dnl Process this file with autoconf to produce a configure script.
+
+AC_INIT(gpio.c)
+AM_CONFIG_HEADER(config.h)
+
+LIBGPIO_MAJOR_VERSION=0
+LIBGPIO_MINOR_VERSION=0
+LIBGPIO_MICRO_VERSION=2
+LIBGPIO_VERSION=$LIBGPIO_MAJOR_VERSION.$LIBGPIO_MINOR_VERSION.$LIBGPIO_MICRO_VERSION
+LIBGPIO_VERSION_INFO=`expr $LIBGPIO_MAJOR_VERSION + $LIBGPIO_MINOR_VERSION`:$LIBGPIO_MICRO_VERSION:$LIBGPIO_MINOR_VERSION
+
+AC_SUBST(LIBGPIO_MAJOR_VERSION)
+AC_SUBST(LIBGPIO_MINOR_VERSION)
+AC_SUBST(LIBGPIO_MICRO_VERSION)
+AC_SUBST(LIBGPIO_VERSION)
+AC_SUBST(LIBGPIO_VERSION_INFO)
+
+VERSION=$LIBGPIO_VERSION
+
+AM_INIT_AUTOMAKE(libgpio, $VERSION)
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_CPP
+AM_PROG_LIBTOOL
+
+AM_MAINTAINER_MODE
+
+dnl Checks for header files.
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+
+AC_CHECK_HEADERS(stdlib.h unistd.h stdio.h fcntl.h errno.h sys/time.h)
+AC_CHECK_HEADERS(sys/param.h termios.h sgetty.h ttold.h ioctl-types.h \
+	fcntl.h sgtty.h sys/ioctl.h sys/time.h termio.h unistd.h \
+	endian.h byteswap.h asm/io.h)
+
+dnl Checks for library functions.
+AC_FUNC_STRFTIME
+AC_CHECK_FUNCS(strdup strndup strerror snprintf)
+AC_CHECK_FUNCS(strftime localtime)
+
+dnl Check if TIOCM_RTS is included in one of several possible files
+AC_TRY_COMPILE([#include <termios.h>], [int foo = TIOCM_RTS;],
+			AC_DEFINE(HAVE_RTS_IOCTL))
+AC_TRY_COMPILE([#include <termio.h>], [int foo = TIOCM_RTS;],
+			AC_DEFINE(HAVE_RTS_IOCTL))
+AC_TRY_COMPILE([#include <ioctl-types.h>], [int foo = TIOCM_RTS;],
+			AC_DEFINE(HAVE_RTS_IOCTL))
+AC_TRY_COMPILE([#include <sys/ioctl.h>], [int foo = TIOCM_RTS;],
+			AC_DEFINE(HAVE_RTS_IOCTL))
+
+GPIO_LIBDIR='-L${libdir}'
+GPIO_INCLUDEDIR='-I${includedir}/gpio'
+GPIO_LIBS="-lgpio"
+
+dnl
+dnl Extra flags
+dnl
+GPIO_CFLAGS=""
+
+AC_PATH_PROG(LIBUSB_CONFIG,libusb-config)
+if test -n "${LIBUSB_CONFIG}"; then
+  CFLAGS="$CFLAGS `$LIBUSB_CONFIG --cflags`"
+  GPIO_CFLAGS="$GPIO_CFLAGS `$LIBUSB_CONFIG --cflags`"
+  LIBS="$LIBS `$LIBUSB_CONFIG --libs`"
+  GPIO_USB=1
+else
+  GPIO_USB=0
+fi
+
+AM_CONDITIONAL(GPIO_USB, test $GPIO_USB = "1")
+AC_SUBST(GPIO_USB)
+
+AC_SUBST(CFLAGS)
+AC_SUBST(GPIO_CFLAGS)
+
+AC_SUBST(GPIO_LIBDIR)
+AC_SUBST(GPIO_LIBS)
+AC_SUBST(GPIO_INCLUDEDIR)
+
+AC_OUTPUT(libgpio.spec Makefile gpio-config gpio.h)

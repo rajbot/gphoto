@@ -8,6 +8,7 @@
 #include <gal/util/e-util.h>
 
 #include "utils.h"
+#include "gnocam-configuration.h"
 
 #define PARENT_TYPE BONOBO_TYPE_WINDOW
 static BonoboWindowClass* parent_class = NULL;
@@ -33,7 +34,7 @@ struct _GnoCamCapturePrivate {
 "      <menuitem name=\"Close\" verb=\"\" _label=\"_Close\" pixtype=\"stock\" pixname=\"Close\"/>"			\
 "    </submenu>"													\
 "    <submenu name=\"Camera\" _label=\"Camera\">"                         						\
-"      <menuitem name=\"Manual\" _label=\"Manual\" verb=\"\"/>"           						\
+"      <menuitem name=\"Manual\" _label=\"Manual\" verb=\"\" pixtype=\"stock\" pixname=\"Book Open\"/>"			\
 "      <placeholder name=\"CaptureOperations\" delimit=\"top\"/>"							\
 "      <placeholder name=\"Configuration\" delimit=\"top\"/>"								\
 "    </submenu>"                                                          						\
@@ -50,6 +51,11 @@ struct _GnoCamCapturePrivate {
 "    <toolitem name=\"Refresh\" verb=\"\" _label=\"Refresh\" _tip=\"Refresh\" pixtype=\"stock\" pixname=\"Refresh\"/>"	\
 "  </dockitem>"														\
 "</Root>"
+
+#define GNOCAM_CAPTURE_UI_CONFIGURATION											\
+"<placeholder name=\"Configuration\">"											\
+"  <menuitem name=\"Configuration\" _label=\"Configuration\" verb=\"\" pixtype=\"stock\" pixname=\"Properties\"/>"	\
+"</placeholder>"
 
 #define GNOCAM_CAPTURE_UI_IMAGE                                                 \
 "<placeholder name=\"CaptureOperations\">"                                      \
@@ -75,6 +81,7 @@ static void	on_capture_image_clicked	(BonoboUIComponent* component, gpointer use
 static void	on_capture_video_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 static void	on_capture_preview_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 static void	on_capture_refresh_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
+static void	on_configuration_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 static void	on_close_clicked		(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 
 /********************/
@@ -100,10 +107,8 @@ create_menu (gpointer user_data)
 
         /* Camera Configuration? */
         if (capture->priv->camera->abilities->config) {
-                gint            result;
-
-                result = gp_camera_config_get (capture->priv->camera, &(capture->priv->configuration));
-                if (result == GP_OK) menu_setup (capture->priv->component, capture->priv->camera, capture->priv->configuration, "/menu/Camera", NULL, NULL);
+		bonobo_ui_component_set_translate (capture->priv->component, "/menu/Camera/Configuration", GNOCAM_CAPTURE_UI_CONFIGURATION, NULL);
+		bonobo_ui_component_add_verb (capture->priv->component, "Configuration", on_configuration_clicked, capture);
         }
 
         /* Capture? */
@@ -233,6 +238,18 @@ on_window_size_request (GtkWidget* widget, GtkRequisition* requisition, gpointer
 }
 
 static void
+on_configuration_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
+{
+	GnoCamCapture*	capture;
+	GtkWidget*	widget;
+
+	capture = GNOCAM_CAPTURE (user_data);
+	
+	widget = gnocam_configuration_new (capture->priv->camera, NULL, NULL, GTK_WIDGET (capture));
+	gtk_widget_show (widget);
+}
+
+static void
 on_manual_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
 {
         GnoCamCapture*  capture;
@@ -243,7 +260,7 @@ on_manual_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 
         result = gp_camera_manual (capture->priv->camera, &manual);
         if (result != GP_OK) {
-		g_warning (_("Could not get camera manual!\n(%s)"), gp_camera_result_as_string (capture->priv->camera, result));
+		g_warning (_("Could not get camera manual: %s!"), gp_camera_result_as_string (capture->priv->camera, result));
 		return;
         }
 

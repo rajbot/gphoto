@@ -30,7 +30,7 @@ struct _GnoCamConfigurationClass
 };
 
 GtkType    gnocam_configuration_get_type 	(void);
-GtkWidget *gnocam_configuration_new      	(Camera* camera, const gchar* dirname, const gchar* filename, GtkWidget* parent);
+GtkWidget *gnocam_configuration_new      	(Camera* camera, const gchar* dirname, const gchar* filename, GtkWidget* window);
 
 END_GNOME_DECLS
 

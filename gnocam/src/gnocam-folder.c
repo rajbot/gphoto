@@ -56,19 +56,19 @@ struct _GnoCamFolderPrivate
 "  </dockitem>"													\
 "</Root>"
 
-#define GNOCAM_FOLDER_UI_CONFIGURATION						\
-"<placeholder name=\"Configuration\">"						\
-"  <menuitem name=\"Configuration\" _label=\"Configuration\" verb=\"\"/>"	\
+#define GNOCAM_FOLDER_UI_CONFIGURATION											\
+"<placeholder name=\"Configuration\">"											\
+"  <menuitem name=\"Configuration\" _label=\"Configuration\" verb=\"\" pixtype=\"stock\" pixname=\"Properties\"/>"	\
 "</placeholder>"
 
-#define GNOCAM_FOLDER_UI_UPLOAD_MENUITEM			\
-"<placeholder name=\"Upload\">"					\
-"  <menuitem name=\"Upload\" _label=\"Upload\" verb=\"\"/>"	\
+#define GNOCAM_FOLDER_UI_UPLOAD_MENUITEM										\
+"<placeholder name=\"Upload\">"												\
+"  <menuitem name=\"Upload\" _label=\"Upload\" verb=\"\" pixtype=\"stock\" pixname=\"Open\"/>"				\
 "</placeholder>"
 
-#define GNOCAM_FOLDER_UI_UPLOAD_TOOLITEM                        \
-"<placeholder name=\"Upload\">"                                 \
-"  <toolitem name=\"Upload\" _label=\"Upload\" verb=\"\"/>"     \
+#define GNOCAM_FOLDER_UI_UPLOAD_TOOLITEM                        							\
+"<placeholder name=\"Upload\">"                                 							\
+"  <toolitem name=\"Upload\" _label=\"Upload\" verb=\"\" pixtype=\"stock\" pixname=\"Open\"/>"				\
 "</placeholder>"
 
 /**************/
@@ -123,13 +123,35 @@ create_menu (gpointer user_data)
 /*************/
 
 static void
-on_upload_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
+on_cancel_button_clicked (GtkButton* button, gpointer user_data)
+{
+	gtk_widget_destroy (gtk_widget_get_ancestor (GTK_WIDGET (button), GTK_TYPE_FILE_SELECTION));
+}
+
+static void
+on_upload_ok_button_clicked (GtkButton* button, gpointer user_data)
 {
 	GnoCamFolder*	folder;
 
 	folder = GNOCAM_FOLDER (user_data);
+
+	g_message (_("Not implemented!"));
+
+	gtk_widget_destroy (gtk_widget_get_ancestor (GTK_WIDGET (button), GTK_TYPE_FILE_SELECTION));
+}
+
+static void
+on_upload_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
+{
+	GnoCamFolder*		folder;
+	GtkFileSelection*	filesel;
+
+	folder = GNOCAM_FOLDER (user_data);
 	
-	g_warning ("Implement upload!");
+	filesel = GTK_FILE_SELECTION (gtk_file_selection_new (_("Upload")));
+	gtk_widget_show (GTK_WIDGET (filesel));
+	gtk_signal_connect (GTK_OBJECT (filesel->ok_button), "clicked", GTK_SIGNAL_FUNC (on_upload_ok_button_clicked), folder);
+	gtk_signal_connect (GTK_OBJECT (filesel->cancel_button), "clicked", GTK_SIGNAL_FUNC (on_cancel_button_clicked), folder);
 }
 
 static void
@@ -207,15 +229,9 @@ on_config_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 }
 
 static void
-on_cancel_button_clicked (GtkButton* cancel_button, gpointer user_data)
+on_save_as_ok_button_clicked (GtkButton* ok_button, gpointer user_data)
 {
-	gtk_widget_destroy (gtk_widget_get_ancestor (GTK_WIDGET (cancel_button), GTK_TYPE_WINDOW));
-}
-
-static void
-on_ok_button_clicked (GtkButton* ok_button, gpointer user_data)
-{
-	g_warning ("Implement");
+	g_message (_("Not implemented!"));
 }
 
 static void
@@ -239,7 +255,7 @@ on_save_as_clicked (BonoboUIComponent* component, gpointer user_data, const gcha
 
 		gtk_widget_show (widget = gtk_file_selection_new (_("Save As")));
 		gtk_file_selection_set_filename (GTK_FILE_SELECTION (widget), name);
-		gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION (widget)->ok_button), "clicked", GTK_SIGNAL_FUNC (on_ok_button_clicked), NULL);
+		gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION (widget)->ok_button), "clicked", GTK_SIGNAL_FUNC (on_save_as_ok_button_clicked), NULL);
 		gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION (widget)->cancel_button), "clicked", GTK_SIGNAL_FUNC (on_cancel_button_clicked), NULL);
 	}
 }

@@ -22,12 +22,12 @@ static void
 log_handler (const gchar* log_domain, GLogLevelFlags log_level, const gchar* message, gpointer user_data)
 {
 	GtkWindow*	window;
-
+	
 	window = GTK_WINDOW (user_data);
 
-	if (log_level & G_LOG_LEVEL_ERROR & G_LOG_LEVEL_CRITICAL) gnome_error_dialog_parented (message, window);
-	else if (log_level & G_LOG_LEVEL_WARNING) gnome_warning_dialog_parented (message, window);
-	else if (log_level & G_LOG_LEVEL_INFO & G_LOG_LEVEL_MESSAGE) gnome_ok_dialog_parented (message, window);
+	if ((log_level == G_LOG_LEVEL_ERROR) || (log_level == G_LOG_LEVEL_CRITICAL)) gnome_error_dialog_parented (message, window);
+	else if (log_level == G_LOG_LEVEL_WARNING) gnome_warning_dialog_parented (message, window);
+	else if ((log_level == G_LOG_LEVEL_INFO) || (log_level == G_LOG_LEVEL_MESSAGE)) gnome_ok_dialog_parented (message, window);
 }
 
 /*************/
@@ -122,9 +122,9 @@ int main (int argc, char *argv[])
 	gtk_widget_show (widget);
 
         /* Redirect messages */
-//	g_log_set_handler (G_LOG_DOMAIN, 
-//	        G_LOG_LEVEL_ERROR | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_MESSAGE | G_LOG_LEVEL_INFO,
-//	        log_handler, widget);
+	g_log_set_handler (G_LOG_DOMAIN, 
+		G_LOG_LEVEL_ERROR | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_MESSAGE | G_LOG_LEVEL_INFO,
+		log_handler, widget);
 
 	/* Start the event loop. */
 	bonobo_main ();

@@ -49,15 +49,15 @@ static unsigned int signals[LAST_SIGNAL] = { 0 };
 "  <placeholder name=\"Configuration\"/>"			\
 "</placeholder>"
 
-#define GNOCAM_FILE_UI_DELETE 										\
-"<placeholder name=\"Delete\">"										\
-"  <menuitem name=\"delete\" _label=\"Delete\" verb=\"\" pixtype=\"stock\" pixname=\"Delete\"/>"	\
+#define GNOCAM_FILE_UI_DELETE 												\
+"<placeholder name=\"Delete\">"												\
+"  <menuitem name=\"delete\" _label=\"Delete\" verb=\"\" pixtype=\"stock\" pixname=\"Delete\"/>"			\
 "</placeholder>"
 
-#define GNOCAM_FILE_UI_CONFIGURATION						\
-"<placeholder name=\"Configuration\">"						\
-"  <menuitem name=\"Configuration\" _label=\"Configuration\" verb=\"\"/>"	\
-"</placeholder>"								\
+#define GNOCAM_FILE_UI_CONFIGURATION											\
+"<placeholder name=\"Configuration\">"											\
+"  <menuitem name=\"Configuration\" _label=\"Configuration\" verb=\"\" pixtype=\"stock\" pixname=\"Properties\"/>"	\
+"</placeholder>"													\
 
 /**************/
 /* Prototypes */

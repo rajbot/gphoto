@@ -83,18 +83,18 @@ struct _GnoCamCameraPrivate
 /* UI-Variables */
 /****************/
 
-#define GNOCAM_CAMERA_UI 						\
-"<placeholder name=\"Camera\">"						\
-"  <submenu name=\"Camera\" _label=\"Camera\">"				\
-"    <menuitem name=\"Manual\" _label=\"Manual\" verb=\"\"/>"		\
-"    <placeholder name=\"CaptureOperations\" delimit=\"top\"/>"		\
-"    <placeholder name=\"Configuration\" delimit=\"top\"/>"		\
-"  </submenu>"								\
+#define GNOCAM_CAMERA_UI 											\
+"<placeholder name=\"Camera\">"											\
+"  <submenu name=\"Camera\" _label=\"Camera\">"									\
+"    <menuitem name=\"Manual\" _label=\"Manual\" verb=\"\" pixtype=\"stock\" pixname=\"Book Open\"/>"		\
+"    <placeholder name=\"CaptureOperations\" delimit=\"top\"/>"							\
+"    <placeholder name=\"Configuration\" delimit=\"top\"/>"							\
+"  </submenu>"													\
 "</placeholder>"
 
-#define GNOCAM_CAMERA_UI_CONFIGURATION						\
-"<placeholder name=\"Configuration\">"						\
-"  <menuitem name=\"Configuration\" verb=\"\" _label=\"Configuration\"/>"	\
+#define GNOCAM_CAMERA_UI_CONFIGURATION											\
+"<placeholder name=\"Configuration\">"											\
+"  <menuitem name=\"Configuration\" verb=\"\" _label=\"Configuration\" pixtype=\"stock\" pixname=\"Properties\"/>"	\
 "</placeholder>"
 
 #define CAPTURE_IMAGE								\

@@ -55,6 +55,10 @@ struct _KncCntrl {
 
 	KncCntrlProt prot;
 
+	KncCntrlFuncLock func_lock;
+	KncCntrlFuncUnlock func_unlock;
+	void *func_lock_data;
+
 	unsigned int ref_count;
 
 	unsigned int cancel : 1;
@@ -75,8 +79,8 @@ knc_cntrl_log (KncCntrl *c, const char *format, ...)
 static KncCntrlRes
 knc_cntrl_data (KncCntrl *c, const char *buf, unsigned int size)
 {
-	if (!c) return KNC_CNTRL_RES_ERR_ILLEGAL_PARAMETER;
-	if (!size || !c->func_data) return KNC_CNTRL_RES_OK;
+	if (!c) return KNC_CNTRL_ERR_ILLEGAL_PARAMETER;
+	if (!size || !c->func_data) return KNC_CNTRL_OK;
 
 	return c->func_data (buf, size, c->func_data_data);
 }
@@ -114,7 +118,7 @@ knc_cntrl_get_func_free (KncCntrl *c, KncCntrlFuncFree *f, void **f_data)
 static KncCntrlRes
 knc_cntrl_write (KncCntrl *c, const char *buf, unsigned int size)
 {
-	if (!c) return KNC_CNTRL_RES_ERR_ILLEGAL_PARAMETER;
+	if (!c) return KNC_CNTRL_ERR_ILLEGAL_PARAMETER;
 
 	return c->func_write (buf, size, c->func_io_data);
 }
@@ -125,11 +129,11 @@ knc_cntrl_read (KncCntrl *c, char *buf, unsigned int size,
 {
 	unsigned int r;
 
-	if (!c) return KNC_CNTRL_RES_ERR_ILLEGAL_PARAMETER;
+	if (!c) return KNC_CNTRL_ERR_ILLEGAL_PARAMETER;
 
 	CR (c->func_read (buf, size, timeout ? timeout : DEFAULT_TIMEOUT,
 			  read ? read : &r, c->func_io_data));
-	return KNC_CNTRL_RES_OK;
+	return KNC_CNTRL_OK;
 }
 
 static KncCntrlRes
@@ -138,16 +142,16 @@ knc_cntrl_initiate_transfer (KncCntrl *c)
 	unsigned char b = ENQ;
 	unsigned char buf[1024];
 	unsigned int read;
-	KncCntrlRes r = KNC_CNTRL_RES_OK;
+	KncCntrlRes r = KNC_CNTRL_OK;
 
-	if (!c) return KNC_CNTRL_RES_ERR_ILLEGAL_PARAMETER;
+	if (!c) return KNC_CNTRL_ERR_ILLEGAL_PARAMETER;
 
 	while (1) {
 		r = knc_cntrl_write (c, &b, 1);         if (r) break;;
 		r = knc_cntrl_read (c, &b, 1, 0, NULL); if (r) break;;
 		switch (b) {
 		case 0x06:
-			return KNC_CNTRL_RES_OK;
+			return KNC_CNTRL_OK;
 		case 0x15:
 			continue;
 		case 0x05:
@@ -173,14 +177,14 @@ knc_cntrl_read_packet (KncCntrl *c, unsigned char *rb, unsigned int *rbs,
 {
 	unsigned char buf[1024 * 4], b, checksum = 0;
 	unsigned int read, i;
-	KncCntrlRes r = KNC_CNTRL_RES_OK;
+	KncCntrlRes r = KNC_CNTRL_OK;
 
 	while (1) {
 		r = knc_cntrl_read (c, &b, 1, 5000, NULL); if (r) break;
 		if (b != ENQ) {
 			knc_cntrl_log (c, "Received unexpected byte "
 				       "(0x%02x)!", b);
-			r = KNC_CNTRL_RES_ERR;
+			r = KNC_CNTRL_ERR;
 			break;
 		}
 		b = ACK; r = knc_cntrl_write (c, &b, 1); if (r) break;
@@ -207,7 +211,7 @@ knc_cntrl_read_packet (KncCntrl *c, unsigned char *rb, unsigned int *rbs,
 		if (read != *rbs + 2) {
 			knc_cntrl_log (c, "Expected %u byte(s) but got %i!",
 				       *rbs + 2, read);
-			r = KNC_CNTRL_RES_ERR;
+			r = KNC_CNTRL_ERR;
 			break;
 		}
 
@@ -221,7 +225,7 @@ knc_cntrl_read_packet (KncCntrl *c, unsigned char *rb, unsigned int *rbs,
 
 		b = ACK; r = knc_cntrl_write (c, &b, 1); if (r) break;
 		r = knc_cntrl_read (c, &b, 1, 0, &read); if (r) break;
-		if (!read || (b != EOT)) r = KNC_CNTRL_RES_ERR;
+		if (!read || (b != EOT)) r = KNC_CNTRL_ERR;
 		break;
 
 TryAgain:
@@ -235,12 +239,12 @@ static KncCntrlRes
 knc_cntrl_write_packet (KncCntrl *c, const char *buf, unsigned int size)
 {
 	char b = 0x05;
-	KncCntrlRes r = KNC_CNTRL_RES_OK;
+	KncCntrlRes r = KNC_CNTRL_OK;
 	char sb[1024];
 	unsigned int sbs, cs = 1, read, i = 0;
 	char checksum;
 
-	if (!c) return KNC_CNTRL_RES_ERR_ILLEGAL_PARAMETER;
+	if (!c) return KNC_CNTRL_ERR_ILLEGAL_PARAMETER;
 
 	/* Construct the packet. */
 	memset (sb, 0, sizeof (sb));
@@ -270,14 +274,14 @@ knc_cntrl_write_packet (KncCntrl *c, const char *buf, unsigned int size)
 		case NAK:
 			knc_cntrl_log (c, "Camera rejected packet!");
 			if (++i == 3) {
-				r = KNC_CNTRL_RES_ERR;
+				r = KNC_CNTRL_ERR;
 				break;
 			}
 			continue;
 		default:
 			knc_cntrl_log (c, "Camera sent unexpeced byte "
 				       "(0x%02x)!", b);
-			r = KNC_CNTRL_RES_ERR;
+			r = KNC_CNTRL_ERR;
 			break;
 		}
 		break;
@@ -336,28 +340,70 @@ knc_cntrl_set_func_data (KncCntrl *c, KncCntrlFuncData f, void *d)
 	c->func_data_data = d;
 }
 
+static KncCntrlRes
+knc_cntrl_lock (KncCntrl *c)
+{
+	if (!c || !c->func_lock) return KNC_CNTRL_OK;
+	return c->func_lock (c->func_lock_data);
+}
+
+static void
+knc_cntrl_unlock (KncCntrl *c)
+{
+	if (!c || !c->func_unlock) return;
+	c->func_unlock (c->func_lock_data);
+}
+
+void
+knc_cntrl_set_func_lock (KncCntrl *c, KncCntrlFuncLock f_lock,
+			 KncCntrlFuncUnlock f_unlock, void *f_data)
+{
+	if (!c) return;
+	c->func_lock = f_lock;
+	c->func_unlock = f_unlock;
+	c->func_lock_data = f_data;
+}
+
+void
+knc_cntrl_get_func_lock (KncCntrl *c, KncCntrlFuncLock *f_lock,
+			 KncCntrlFuncUnlock *f_unlock, void **f_data)
+{
+	if (!c) return;
+	if (f_lock) *f_lock = c->func_lock;
+	if (f_unlock) *f_unlock = c->func_unlock;
+	if (f_data) *f_data = c->func_lock_data;
+}
+
 KncCntrlRes
 knc_cntrl_transmit (KncCntrl *c, const unsigned char *sb, unsigned int sbs,
 		    unsigned char *rb, unsigned int *rbs)
 {
-	KncCntrlRes r = KNC_CNTRL_RES_OK;
+	KncCntrlRes r;
 	char buf[1024 * 4];
 	unsigned int size, last = 0;
 
-	if (!c) return KNC_CNTRL_RES_ERR_ILLEGAL_PARAMETER;
+	if (!c) return KNC_CNTRL_ERR_ILLEGAL_PARAMETER;
 
-	CR (knc_cntrl_write_packet (c, sb, sbs));
+	CR (knc_cntrl_lock (c));
+	if ((r = knc_cntrl_write_packet (c, sb, sbs))) {
+		knc_cntrl_unlock (c);
+		return r;
+	}
 	if (knc_cmd_data ((sb[1] << 8) | sb[0]))
 		while (!r && !last) {
 			r = knc_cntrl_read_packet (c, buf, &size, &last);
 			if (!r) r = knc_cntrl_data (c, buf, size);
 			if (r) knc_cancel (c, NULL, NULL);
 		}
-	CR (r);
+	if (r) {knc_cntrl_unlock (c); return r;}
 
-	CR (knc_cntrl_read_packet (c, rb, rbs, NULL));
+	if ((r = knc_cntrl_read_packet (c, rb, rbs, NULL))) {
+		knc_cntrl_unlock (c);
+		return r;
+	}
+	knc_cntrl_unlock (c);
 
-	return r;
+	return KNC_CNTRL_OK;
 }
 
 void

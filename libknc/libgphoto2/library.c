@@ -17,15 +17,15 @@ static int
 knc_cntrl2gp (KncCntrlRes r)
 {
 	switch (r) {
-	case KNC_CNTRL_RES_OK:
+	case KNC_CNTRL_OK:
 		return GP_OK;
-	case KNC_CNTRL_RES_ERR_CANCEL:
+	case KNC_CNTRL_ERR_CANCEL:
 		return GP_ERROR_CANCEL;
-	case KNC_CNTRL_RES_ERR_NO_MEMORY:
+	case KNC_CNTRL_ERR_NO_MEMORY:
 		return GP_ERROR_NO_MEMORY;
-	case KNC_CNTRL_RES_ERR_ILLEGAL_PARAMETER:
+	case KNC_CNTRL_ERR_ILLEGAL_PARAMETER:
 		return GP_ERROR_BAD_PARAMETERS;
-	case KNC_CNTRL_RES_ERR:
+	case KNC_CNTRL_ERR:
 	default: return GP_ERROR;
 	}
 }
@@ -104,7 +104,7 @@ data_func (const unsigned char *buf, unsigned int size, void *data)
 
         gp_file_append (file, buf, size);
 
-        return KNC_CNTRL_RES_OK;
+        return KNC_CNTRL_OK;
 }
 
 static int
@@ -197,7 +197,7 @@ get_file_func (CameraFilesystem *fs, const char *folder, const char *filename,
         CameraFileInfo info;
         int r;
 	KncCamRes cr;
-	KncCntrlRes cntrl_res = KNC_CNTRL_RES_OK;
+	KncCntrlRes cntrl_res = KNC_CNTRL_OK;
 
         if (strlen (filename) != 11) return (GP_ERROR_FILE_NOT_FOUND);
         if (strcmp (folder, "/")) return (GP_ERROR_DIRECTORY_NOT_FOUND);

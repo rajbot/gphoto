@@ -108,16 +108,16 @@ read_func (unsigned char *buf, unsigned int size, unsigned int timeout,
 		r = gp_port_read ((GPPort *) d, &buf[*read], 1);
 		if (r < 0) break;
 	}
-	if ((*read == 0) && (r < 0)) return KNC_CNTRL_RES_ERR;
-	return KNC_CNTRL_RES_OK;
+	if ((*read == 0) && (r < 0)) return KNC_CNTRL_ERR;
+	return KNC_CNTRL_OK;
 }
 
 static KncCntrlRes
 write_func (const unsigned char *buf, unsigned int size, void *d)
 {
 	if (gp_port_write ((GPPort *) d, buf, size) < 0)
-		return KNC_CNTRL_RES_ERR;
-	return KNC_CNTRL_RES_OK;
+		return KNC_CNTRL_ERR;
+	return KNC_CNTRL_OK;
 }
 
 static void

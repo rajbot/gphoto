@@ -28,13 +28,13 @@
 #define DEFAULT_TIMEOUT 500
 
 #define CR(result) {KncCntrlRes r = (result); if (r) return r;}
-#define CS(s1,s2) {if ((s1) != (s2)) return KNC_CNTRL_RES_ERR;}
+#define CS(s1,s2) {if ((s1) != (s2)) return KNC_CNTRL_ERR;}
 #define CCR(r,b,s) {							\
-	if ((s) < 4) return KNC_CNTRL_RES_ERR;				\
-	if (!(r) && (((b)[3] << 8) | (b)[2])) return KNC_CNTRL_RES_ERR;	\
+	if ((s) < 4) return KNC_CNTRL_ERR;				\
+	if (!(r) && (((b)[3] << 8) | (b)[2])) return KNC_CNTRL_ERR;	\
 	if (r) {							\
 		*(r) = ((b)[3] << 8) | (b)[2];				\
-		if (*(r)) return KNC_CNTRL_RES_OK;			\
+		if (*(r)) return KNC_CNTRL_OK;			\
 	}								\
 }
 
@@ -59,7 +59,7 @@ knc_erase_image (KncCntrl *c, KncCamRes *r, unsigned long n, KncSource s)
 	}
 	CCR (r,rb,rbs);
 	CS (rbs, 4);
-        return KNC_CNTRL_RES_OK;
+        return KNC_CNTRL_OK;
 }
 
 KncCntrlRes
@@ -72,7 +72,7 @@ knc_format (KncCntrl *c, KncCamRes *r, KncSource s)
 	CR (knc_cntrl_transmit (c, sb, sizeof (sb), rb, &rbs));
 	CCR (r,rb,rbs);
 	CS (rbs, 4);
-	return KNC_CNTRL_RES_OK;
+	return KNC_CNTRL_OK;
 }
 
 
@@ -87,7 +87,7 @@ knc_erase_all (KncCntrl *c, KncCamRes *r, KncSource s, unsigned int *n)
 	CCR (r,rb,rbs);
 	CS (rbs, 6);
 	if (n) *n = (rb[5] << 8) | rb[4];
-	return KNC_CNTRL_RES_OK;
+	return KNC_CNTRL_OK;
 }
 
 KncCntrlRes
@@ -116,7 +116,7 @@ knc_set_prot (KncCntrl *c, KncCamRes *r, unsigned long n, KncSource s,
 	}
 	CCR (r,rb,rbs);
 	CS (rbs, 4);
-	return KNC_CNTRL_RES_OK;
+	return KNC_CNTRL_OK;
 }
 
 KncCntrlRes
@@ -141,7 +141,7 @@ knc_get_image (KncCntrl *c, KncCamRes *r, unsigned long n, KncSource s,
         }
 	CCR (r,rb,rbs);
 	CS (rbs, 4);
-        return KNC_CNTRL_RES_OK;
+        return KNC_CNTRL_OK;
 }
 
 KncCntrlRes
@@ -178,7 +178,7 @@ knc_get_image_info (KncCntrl *c, KncCamRes *r, unsigned long n, KncImageInfo *i)
 			i->prot = (rb[11] << 8) | rb[10];
 		}
         }
-        return KNC_CNTRL_RES_OK;
+        return KNC_CNTRL_OK;
 }
 
 KncCntrlRes
@@ -191,7 +191,7 @@ knc_get_preview (KncCntrl *c, KncCamRes *r, KncPreview p)
 	CR (knc_cntrl_transmit (c, sb, sizeof (sb), rb, &rbs));
 	CCR (r,rb,rbs);
 	CS (rbs, 4);
-        return KNC_CNTRL_RES_OK;
+        return KNC_CNTRL_OK;
 }
 
 KncCntrlRes
@@ -206,7 +206,7 @@ knc_get_io_pref (KncCntrl *c, KncCamRes *r, KncBitRate *br, KncBitFlag *bf)
 	CS (rbs, 8);
 	if (br) *br = (rb[5] << 8) | rb[4];
 	if (bf) *br = (rb[7] << 8) | rb[6];
-        return KNC_CNTRL_RES_OK;
+        return KNC_CNTRL_OK;
 }
 
 KncCntrlRes
@@ -231,7 +231,7 @@ knc_get_info (KncCntrl *c, KncCamRes *r, KncInfo *i)
 		strncpy (i->name,          &rb[28], 22);
 		strncpy (i->manufacturer,  &rb[50], 30);
 	}
-	return KNC_CNTRL_RES_OK;
+	return KNC_CNTRL_OK;
 }
 
 KncCntrlRes
@@ -268,7 +268,7 @@ knc_get_status (KncCntrl *c, KncCamRes *r, KncStatus *s)
 		s->total_pictures   = (rb[31] << 8) | rb[30];
 		s->total_strobes    = (rb[33] << 8) | rb[32];
 	}
-	return KNC_CNTRL_RES_OK;
+	return KNC_CNTRL_OK;
 }
 
 KncCntrlRes
@@ -289,7 +289,7 @@ knc_get_date_and_time (KncCntrl *c, KncCamRes *r, KncDate *d)
 		d->minute = rb[8];
 		d->second = rb[9];
 	}
-	return KNC_CNTRL_RES_OK;
+	return KNC_CNTRL_OK;
 };
 
 KncCntrlRes
@@ -308,7 +308,7 @@ knc_get_prefs (KncCntrl *c, KncCamRes *r, KncPrefs *p)
 		p->beep                   = rb[6];
 		p->slide_show_interval    = rb[7];
 	}
-	return KNC_CNTRL_RES_OK;
+	return KNC_CNTRL_OK;
 }
 
 KncCntrlRes
@@ -325,7 +325,7 @@ knc_set_io_pref (KncCntrl *c, KncCamRes *r, KncBitRate *br, KncBitFlag *bf)
 	CS (rbs, 8);
 	if (br) *br = (rb[5] << 8) | rb[4];
 	if (bf) *br = (rb[7] << 8) | rb[6];
-        return KNC_CNTRL_RES_OK;
+        return KNC_CNTRL_OK;
 }
 
 KncCntrlRes
@@ -339,7 +339,7 @@ knc_set_date_and_time (KncCntrl *c, KncCamRes *r, KncDate d)
 	CR (knc_cntrl_transmit (c, sb, sizeof (sb), rb, &rbs));
 	CCR (r,rb,rbs);
 	CS (rbs, 4);
-	return KNC_CNTRL_RES_OK;
+	return KNC_CNTRL_OK;
 }
 
 KncCntrlRes
@@ -352,7 +352,7 @@ knc_set_pref (KncCntrl *c, KncCamRes *r, KncPref p, unsigned int v)
 	CR (knc_cntrl_transmit (c, sb, sizeof (sb), rb, &rbs));
 	CCR (r,rb,rbs);
 	CS (rbs, 4);
-	return KNC_CNTRL_RES_OK;
+	return KNC_CNTRL_OK;
 }
 
 KncCntrlRes
@@ -365,7 +365,7 @@ knc_reset_prefs (KncCntrl *c, KncCamRes *r)
 	CR (knc_cntrl_transmit (c, sb, sizeof (sb), rb, &rbs)); 
 	CCR (r,rb,rbs);
 	CS (rbs, 4); 
-	return KNC_CNTRL_RES_OK;
+	return KNC_CNTRL_OK;
 }
 
 KncCntrlRes
@@ -392,7 +392,7 @@ knc_take_picture (KncCntrl *c, KncCamRes *r, KncSource s, KncImageInfo *i)
 			i->prot = (rb[9] << 8) | rb[8];
 		}
 	}
-        return KNC_CNTRL_RES_OK;
+        return KNC_CNTRL_OK;
 }
 
 KncCntrlRes
@@ -405,7 +405,7 @@ knc_loc_tv_output_format_set (KncCntrl *c, KncCamRes *r, KncTVOutputFormat f)
 	CR (knc_cntrl_transmit (c, sb, sizeof (sb), rb, &rbs));
 	CCR (r,rb,rbs);
 	CS (rbs, 4);
-	return KNC_CNTRL_RES_OK;
+	return KNC_CNTRL_OK;
 }
 
 KncCntrlRes
@@ -418,7 +418,7 @@ knc_loc_date_format_set (KncCntrl *c, KncCamRes *r, KncDateFormat f)
 	CR (knc_cntrl_transmit (c, sb, sizeof (sb), rb, &rbs));
 	CCR (r,rb,rbs);
 	CS (rbs, 4);
-	return KNC_CNTRL_RES_OK;
+	return KNC_CNTRL_OK;
 }
 
 #define PACKET_SIZE 1024
@@ -432,7 +432,7 @@ knc_loc_data_put (KncCntrl *c, KncCamRes *r, const unsigned char *d,
         unsigned long i = 0, j;
         unsigned char sb[16 + PACKET_SIZE];
 
-	if (ds < 512) return KNC_CNTRL_RES_ERR_ILLEGAL_PARAMETER;
+	if (ds < 512) return KNC_CNTRL_ERR_ILLEGAL_PARAMETER;
 
         sb[0] = 0x00;
         sb[1] = 0x92;
@@ -481,7 +481,7 @@ knc_loc_data_put (KncCntrl *c, KncCamRes *r, const unsigned char *d,
 			 * The camera does no longer want to receive
 			 * localization data. We are done.
 			 */
-			return KNC_CNTRL_RES_OK;
+			return KNC_CNTRL_OK;
 
 		} else CCR (r,rb,rbs);
 
@@ -490,7 +490,7 @@ knc_loc_data_put (KncCntrl *c, KncCamRes *r, const unsigned char *d,
 		 * packets but make sure we don't loop
 		 * forever.
 		 */
-		if (i > 131072) return KNC_CNTRL_RES_ERR;
+		if (i > 131072) return KNC_CNTRL_ERR;
 
                 i += PACKET_SIZE;
         }
@@ -507,5 +507,5 @@ knc_cancel (KncCntrl *c, KncCamRes *r, KncCmd *cmd)
 	CCR (r,rb,rbs);
 	CS (rbs, 6);
 	if (cmd) *cmd = (rb[5] << 8) | rb[4];
-	return KNC_CNTRL_RES_OK;
+	return KNC_CNTRL_OK;
 }

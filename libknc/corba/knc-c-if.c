@@ -55,7 +55,7 @@ func_data (const unsigned char *buf, unsigned int size, void *d)
 
 	CORBA_exception_init (&ev);
 	GNOME_C_ReadCallback_read (cb, b, &ev);
-	r = BONOBO_EX (&ev) ? KNC_CNTRL_RES_ERR_CANCEL : KNC_CNTRL_RES_OK;
+	r = BONOBO_EX (&ev) ? KNC_CNTRL_ERR_CANCEL : KNC_CNTRL_OK;
 	CORBA_exception_free (&ev);
 
 	return r;

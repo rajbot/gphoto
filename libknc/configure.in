@@ -99,6 +99,23 @@ AC_SUBST(GP_CFLAGS)
 AC_SUBST(GP_LIBS)
 
 dnl ---------------------------------------------------------------------------
+dnl libraries we need for tests/libgknc
+dnl ---------------------------------------------------------------------------
+have_testgknc=false
+PKG_CHECK_MODULES(TEST_GKNC, gtk+-2.0 gthread-2.0, [
+	have_testgknc=true])
+if $have_testgknc; then
+	have_testgknc=$have_gp
+fi
+if $have_testgknc; then
+	TEST_GKNC_CFLAGS="${TEST_GKNC_CFLAGS} ${GP_CFLAGS}"
+	TEST_GKNC_LIBS="${TEST_GKNC_LIBS} ${GP_LIBS}"
+fi
+AM_CONDITIONAL(HAVE_TEST_GKNC, $have_testgknc)
+AC_SUBST(TEST_GKNC_CFLAGS)
+AC_SUBST(TEST_GKNC_LIBS)
+
+dnl ---------------------------------------------------------------------------
 dnl libraries we need for the CORBA server
 dnl ---------------------------------------------------------------------------
 have_corba=false

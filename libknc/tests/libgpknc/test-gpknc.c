@@ -15,7 +15,7 @@
 static KncCntrlRes
 test_data (const unsigned char *buf, unsigned int size, void *data)
 {
-	return KNC_CNTRL_RES_OK;
+	return KNC_CNTRL_OK;
 }
 
 static void

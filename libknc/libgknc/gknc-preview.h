@@ -9,7 +9,7 @@ G_BEGIN_DECLS
 #define GKNC_TYPE_PREVIEW (gknc_preview_get_type ())
 #define GKNC_PREVIEW(o) (G_TYPE_CHECK_INSTANCE_CAST((o),GKNC_TYPE_PREVIEW,GkncPreview))
 #define GKNC_PREVIEW_CLASS(k) (G_TYPE_CHECK_CLASS_CAST((k),GKNC_TYPE_PREVIEW,GkncPreviewClass))
-#define KNC_C_IS_PREVIEW_WIDGET(o) (G_TYPE_CHECK_INSTANCE_TYPE((o),GKNC_TYPE_PREVIEW))
+#define GKNC_IS_PREVIEW(o) (G_TYPE_CHECK_INSTANCE_TYPE((o),GKNC_TYPE_PREVIEW))
 
 typedef struct _GkncPreview      GkncPreview;
 typedef struct _GkncPreviewClass GkncPreviewClass;

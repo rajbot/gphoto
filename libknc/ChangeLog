@@ -1,3 +1,7 @@
+2003-01-20  Lutz Mueller <lutz@users.sourceforge.net>
+
+	* libgknc/*: Make threaded.
+
 2003-01-11  Lutz Müller <lutz@users.sourceforge.net>
 
 	* corba: CORBA-server.

@@ -8,8 +8,9 @@
 #include <gdk-pixbuf/gdk-pixbuf-loader.h>
 
 struct _GkncPreviewPriv {
+	GMutex *c_mutex;
 	KncCntrl *c;
-	guint id;
+	GThread *t;
 };
 
 #define PARENT_TYPE GTK_TYPE_IMAGE
@@ -21,6 +22,7 @@ gknc_preview_finalize (GObject *o)
 	GkncPreview *p = GKNC_PREVIEW (o);
 
 	gknc_preview_stop (p);
+	g_mutex_free (p->priv->c_mutex);
 	g_free (p->priv);
 
 	G_OBJECT_CLASS (parent_class)->finalize (o);
@@ -36,9 +38,9 @@ func_data (const unsigned char *data, unsigned int size, void *d)
 	if (e) {
 		g_warning ("Could not interpret data: %s", e->message);
 		g_error_free (e);
-		return KNC_CNTRL_RES_ERR_CANCEL;
+		return KNC_CNTRL_ERR_CANCEL;
 	}
-	return KNC_CNTRL_RES_OK;
+	return KNC_CNTRL_OK;
 }
 
 void
@@ -49,7 +51,9 @@ gknc_preview_refresh (GkncPreview *p, KncCntrl *cntrl)
         GdkPixbufLoader *l = gdk_pixbuf_loader_new ();
 	GdkPixbuf *pixbuf;
         GError *e = NULL;
- 
+
+	g_return_if_fail (GKNC_IS_PREVIEW (p));
+
         knc_cntrl_set_func_data (cntrl, func_data, l);
         cntrl_res = knc_get_preview (cntrl, &cam_res, KNC_PREVIEW_YES);
         knc_cntrl_set_func_data (cntrl, NULL, NULL);
@@ -73,13 +77,20 @@ gknc_preview_refresh (GkncPreview *p, KncCntrl *cntrl)
         g_object_unref (G_OBJECT (l));
 }
 
-static gboolean
-func_idle_preview (gpointer data)
+static gpointer
+thread_func (gpointer data)
 {
         GkncPreview *p = GKNC_PREVIEW (data);
 
-        gknc_preview_refresh (p, p->priv->c);
-        return TRUE;
+	while (1) {
+		g_mutex_lock (p->priv->c_mutex);
+		if (!p->priv->c) {
+			g_mutex_unlock (p->priv->c_mutex);
+			return NULL;
+		}
+		gknc_preview_refresh (p, p->priv->c);
+		g_mutex_unlock (p->priv->c_mutex);
+	}
 }
 
 void
@@ -88,18 +99,20 @@ gknc_preview_start (GkncPreview *p, KncCntrl *c)
 	gknc_preview_stop (p);
 	p->priv->c = c;
 	knc_cntrl_ref (c);
-	p->priv->id = g_idle_add_full (G_PRIORITY_LOW,
-				       func_idle_preview, p, NULL);
+	p->priv->t = g_thread_create (thread_func, p, TRUE, NULL);
 }
 
 void
 gknc_preview_stop (GkncPreview *p)
 {
-	if (p->priv->id) {
-		g_source_remove (p->priv->id);
-		p->priv->id = 0;
-	}
+	g_mutex_lock (p->priv->c_mutex);
 	if (p->priv->c) {knc_cntrl_unref (p->priv->c); p->priv->c = NULL;}
+	g_mutex_unlock (p->priv->c_mutex);
+
+	if (p->priv->t) {
+		g_thread_join (p->priv->t);
+		p->priv->t = NULL;
+	}
 }
 
 static void
@@ -118,6 +131,7 @@ gknc_preview_init (GTypeInstance *instance, gpointer g_class)
 	GkncPreview *p = GKNC_PREVIEW (instance);
 
 	p->priv = g_new0 (GkncPreviewPriv, 1);
+	p->priv->c_mutex = g_mutex_new ();
 }
 
 GType

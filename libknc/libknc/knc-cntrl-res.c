@@ -6,11 +6,11 @@ static struct {
 	KncCntrlRes r;
 	const char *name;
 } KncCntrlResNames[] = {
-	{KNC_CNTRL_RES_OK, N_("No error")},
-	{KNC_CNTRL_RES_ERR, N_("Unspecified error")},
-	{KNC_CNTRL_RES_ERR_CANCEL, N_("Command cancelled")},
-	{KNC_CNTRL_RES_ERR_NO_MEMORY, N_("Not enough memory")},
-	{KNC_CNTRL_RES_ERR_ILLEGAL_PARAMETER, N_("Illegal parameter")},
+	{KNC_CNTRL_OK, N_("No error")},
+	{KNC_CNTRL_ERR, N_("Unspecified error")},
+	{KNC_CNTRL_ERR_CANCEL, N_("Command cancelled")},
+	{KNC_CNTRL_ERR_NO_MEMORY, N_("Not enough memory")},
+	{KNC_CNTRL_ERR_ILLEGAL_PARAMETER, N_("Illegal parameter")},
 	{0, NULL}
 };
 

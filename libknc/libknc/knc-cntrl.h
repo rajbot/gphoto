@@ -35,6 +35,14 @@ KncCntrlRes knc_cntrl_transmit   (KncCntrl *,
 				  const unsigned char *, unsigned int,
 				        unsigned char *, unsigned int *);
 
+/* Locking */
+typedef KncCntrlRes  (* KncCntrlFuncLock)   (void *);
+typedef void         (* KncCntrlFuncUnlock) (void *);
+void knc_cntrl_set_func_lock (KncCntrl *, KncCntrlFuncLock,
+			      KncCntrlFuncUnlock, void *);
+void knc_cntrl_get_func_lock (KncCntrl *, KncCntrlFuncLock *,
+			      KncCntrlFuncUnlock *, void **);
+
 /* Querying the protocol used */
 KncCntrlProt knc_cntrl_prot       (KncCntrl *c);
 

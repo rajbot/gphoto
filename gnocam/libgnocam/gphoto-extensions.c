@@ -1,12 +1,29 @@
 #include <config.h>
 #include <gphoto2.h>
 #include <gnome.h>
-#include <bonobo/bonobo.h>
+#include <bonobo.h>
 #include <bonobo/bonobo-storage-plugin.h>
 #include <libgnomevfs/gnome-vfs.h>
 #include <gconf/gconf-client.h>
 
 #include "gphoto-extensions.h"
+
+#define GNOCAM_EXT_DEBUG 1
+
+#if GNOCAM_EXT_DEBUG
+#define CAM_EXT_DEBUG_PRINT(x)				\
+G_STMT_START {                                          \
+        printf ("%s:%d ", __FILE__,__LINE__);		\
+        printf ("%s() ", __FUNCTION__);			\
+        printf x;					\
+        fputc ('\n', stdout);				\
+        fflush (stdout);				\
+}G_STMT_END
+#define CAM_EXT_DEBUG(x) CAM_EXT_DEBUG_PRINT(x)
+#else
+#define CAM_EXT_DEBUG(x)
+#endif
+
 
 GnomeVFSResult
 gp_result_as_gnome_vfs_result (gint result)
@@ -49,8 +66,12 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 
 	g_return_val_if_fail (camera, 							GP_ERROR_BAD_PARAMETERS);
 	g_return_val_if_fail (!((name_or_url [0] == '/') && (name_or_url [1] != '/')), 	GP_ERROR_BAD_PARAMETERS);
+	CAM_EXT_DEBUG (("entering"));
 
-	if ((result = gp_camera_new (camera)) != GP_OK) return (result);
+	if ((result = gp_camera_new (camera)) != GP_OK) {
+		CAM_EXT_DEBUG (("gp_camera_new() failed"));
+		return (result);
+	}
 
 	/* Make sure GConf is initialized. */
 	if (!gconf_is_initialized ()) {
@@ -98,6 +119,7 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 	if ((result = gp_camera_init (*camera)) != GP_OK) {
 		gp_camera_unref (*camera);
 		*camera = NULL;
+		CAM_EXT_DEBUG (("gp_camera_init() failed"));
 	}
 
 	return (result);

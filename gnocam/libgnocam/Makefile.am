@@ -20,16 +20,21 @@ CORBA_SOURCES =\
  GnoCam-stubs.c\
  GnoCam-skels.c
 
-noinst_LTLIBRARIES = libgnocam.la
+noinst_LTLIBRARIES = libgnocam.la libgnocam-bonobo.la
 
 libgnocam_la_SOURCES =\
  $(CORBA_SOURCES)\
- bonobo-extenstions.h bonobo-extensions.c\
  gphoto-extensions.h gphoto-extensions.c
+
+libgnocam_bonobo_la_SOURCES =\
+ bonobo-extensions.h bonobo-extensions.c
+
+libgnocam_bonobo_la_LIBADD =\
+ $(BONOBO_LIBS)\
+ $(GPHOTO_LIBS)
 
 libgnocam_la_LIBADD =\
  $(GPHOTO_LIBS)\
- $(BONOBO_LIBS)\
  $(GCONF_LIBS)\
  $(VFS_LIBS)
 

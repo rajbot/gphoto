@@ -57,6 +57,7 @@ struct _GnoCamFolderPrivate
 "        <menuitem name=\"Save\" _label=\"Save\" verb=\"\" pixtype=\"stock\" pixname=\"Save\"/>"		\
 "        <menuitem name=\"SaveAs\" _label=\"Save As\" verb=\"\" pixtype=\"stock\" pixname=\"Save As\"/>"	\
 "        <placeholder name=\"Upload\"/>"									\
+"        <placeholder name=\"Delete\"/>"									\
 "      </placeholder>"												\
 "    </submenu>"												\
 "  </menu>"													\
@@ -72,6 +73,11 @@ struct _GnoCamFolderPrivate
 "  <submenu name=\"Folder\" _label=\"Folder\">"			\
 "    <placeholder name=\"Configuration\" delimit=\"top\"/>"	\
 "  </submenu>"							\
+"</placeholder>"
+
+#define GNOCAM_FOLDER_UI_DELETE					\
+"<placeholder name=\"Delete\">"					\
+"  <menuitem name=\"Delete\" _label=\"Delete\" verb=\"\"/>"	\
 "</placeholder>"
 
 #define GNOCAM_FOLDER_UI_CONFIGURATION											\
@@ -96,6 +102,7 @@ struct _GnoCamFolderPrivate
 static void 	on_save_clicked 	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 static void	on_save_as_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 static void	on_upload_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
+static void	on_delete_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 static void	on_config_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 
 static void	on_save_as_ok_button_clicked	(GtkButton* button, gpointer user_data);
@@ -153,7 +160,7 @@ create_menu (gpointer user_data)
         bonobo_ui_component_add_verb (folder->priv->component, "SaveAs", on_save_as_clicked, folder);
 
 	/* Do we need a folder-menu? */
-	if (folder->priv->camera->abilities->folder_operations & (GP_FOLDER_OPERATION_CONFIG | GP_FOLDER_OPERATION_PUT_FILE))
+	if (folder->priv->camera->abilities->folder_operations & (GP_FOLDER_OPERATION_CONFIG | GP_FOLDER_OPERATION_PUT_FILE | GP_FILE_OPERATION_DELETE))
 		bonobo_ui_component_set_translate (folder->priv->component, "/menu", GNOCAM_FOLDER_UI_FOLDER, NULL);
 
         /* Upload? */
@@ -162,6 +169,12 @@ create_menu (gpointer user_data)
                 bonobo_ui_component_set_translate (folder->priv->component, "/Toolbar/Upload", GNOCAM_FOLDER_UI_UPLOAD_TOOLITEM, NULL);
                 bonobo_ui_component_add_verb (folder->priv->component, "Upload", on_upload_clicked, folder);
         }
+
+	/* Delete? */
+	if (folder->priv->camera->abilities->file_operations & GP_FILE_OPERATION_DELETE) {
+		bonobo_ui_component_set_translate (folder->priv->component, "/menu/File/FileOperations", GNOCAM_FOLDER_UI_DELETE, NULL);
+		bonobo_ui_component_add_verb (folder->priv->component, "Upload", on_delete_clicked, folder);
+	}
 
         /* Folder configuration? */
 	if (folder->priv->camera->abilities->folder_operations & GP_FOLDER_OPERATION_CONFIG) {
@@ -317,6 +330,18 @@ table_selected_row_foreach_save (int model_row, gpointer closure)
         g_free (full_path);
 }
 
+static void
+table_selected_row_foreach_delete (int model_row, gpointer user_data)
+{
+	GnoCamFolder*	folder;
+	gchar*		name;
+
+	folder = GNOCAM_FOLDER (user_data);
+
+	name = (gchar*) e_table_model_value_at (E_TABLE (folder)->model, 0, model_row);
+	g_warning ("Implement!");
+}
+
 /*************/
 /* Callbacks */
 /*************/
@@ -365,6 +390,14 @@ on_save_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* 
 	g_return_if_fail (GNOCAM_IS_FOLDER (user_data));
 	
 	e_table_selected_row_foreach (E_TABLE (user_data), table_selected_row_foreach_save, user_data);
+}
+
+static void
+on_delete_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
+{
+	g_return_if_fail (GNOCAM_IS_FOLDER (user_data));
+
+	e_table_selected_row_foreach (E_TABLE (user_data), table_selected_row_foreach_delete, user_data);
 }
 
 static void

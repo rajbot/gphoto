@@ -1,21 +1,4 @@
 
-HELP:
------
-- Do something like this:
-   gchar* helpfile;
-   
-   helpfile = gnome_help_file_find_file("gnocam", "index.html");
-
-   if (helpfile != NULL) {
-       gchar* url;
-       url = g_strconcat("file:", helpfile, NULL);
-       gnome_help_goto(NULL, url);
-       g_free(url);
-       g_free(helpfile);
-   } else {
-       gnome_error_dialog(_("Couldn't find the GnoCam manual!"));
-   }
-
 Icon, Logo:
 -----------
 - remain to be created.
@@ -24,10 +7,19 @@ Drag & Drop:
 ------------
 - correctly implement drag (files/previews). Timeout issue?
 
+Gallery:
+--------
+- Implement that correctly so that it gets useful.
+
 Main Window:
 ------------
-- Use bonobo-eog for displaying the preview.
+- At least on my system, the manual doesn't work.
+
+EOG:
+----
+- Get the EOG people to implement printing, zooming, saving.
 
 Threads:
 --------
-- Put the time-consuming save stuff in threads. How do I do that?
+- Put the time consuming stuff into threads?
+

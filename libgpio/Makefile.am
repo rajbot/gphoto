@@ -23,8 +23,7 @@ EXTRA_DIST = 		\
 	README \
 	libgpio.spec \
 	gpio-config.in \
-	gpioConf.sh.in \
-	TODO
+	gpioConf.sh.in 
 
 gpioConf.sh: gpioConf.sh.in Makefile
 ## Use sed and then mv to avoid problems if the user interrupts.

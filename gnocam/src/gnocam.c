@@ -12,10 +12,11 @@
 #include "information.h"
 
 /********************/
-/* Static Variables */
+/* Global Variables */
 /********************/
 
-static GladeXML *xml;
+GConfClient*	client = NULL;
+GladeXML*	xml;
 
 /*************/
 /* Functions */
@@ -83,7 +84,6 @@ int main (int argc, char *argv[])
 {
 //	static GtkTargetEntry target_table[] = {{"text/uri-list", 0, 0}};
 	GError*		gerror = NULL;
-	GConfClient*	client = NULL;
 	GConfValue*	value = NULL;
 	guint 		notify_id_cameras;
 	gchar*		prefix = NULL;

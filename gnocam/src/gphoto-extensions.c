@@ -4,15 +4,26 @@
 #include <gnome.h>
 #include <gphoto2.h>
 #include <glade/glade.h>
+#include <gconf/gconf-client.h>
 #include "gnocam.h"
 #include "gphoto-extensions.h"
 #include "information.h"
 
+/**********************/
+/* External Variables */
+/**********************/
+
+extern GladeXML*	xml;
+
+/**************/
 /* Prototypes */
+/**************/
 
 gboolean description_extract (gchar* description, guint* id, gchar** name, gchar** model, gchar** port, guint* speed);
 
+/*************/
 /* Functions */
+/*************/
 
 gboolean
 description_extract (gchar* description, guint* id, gchar** name, gchar** model, gchar** port, guint* speed)
@@ -267,7 +278,7 @@ gp_camera_update_by_description (Camera** camera, gchar* description)
 }
 
 Camera*
-gp_camera_new_by_description (GladeXML *xml, gchar* description)
+gp_camera_new_by_description (gchar* description)
 {
 	GnomeApp*	app;
 	gint 		number_of_ports, i;
@@ -280,7 +291,6 @@ gp_camera_new_by_description (GladeXML *xml, gchar* description)
 	Camera*		camera;
 	frontend_data_t*	frontend_data;
 
-	g_assert (xml != NULL);
 	g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
 	g_assert (description != NULL);
 
@@ -340,7 +350,7 @@ gp_camera_new_by_description (GladeXML *xml, gchar* description)
 	frontend_data = g_new (frontend_data_t, 1);
 	frontend_data->id = id;
 	frontend_data->name = name;
-	frontend_data->ref_count = 1;
+	frontend_data->ref_count = 0;
 	frontend_data->xml = xml;
 	frontend_data->xml_properties = NULL;
 	frontend_data->xml_preview = NULL;
@@ -352,3 +362,29 @@ gp_camera_new_by_description (GladeXML *xml, gchar* description)
 
 	return (camera);
 }
+
+void
+gp_camera_ref (Camera* camera)
+{
+	frontend_data_t*	frontend_data;
+
+	g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
+
+	frontend_data->ref_count++;
+}
+
+void
+gp_camera_unref (Camera* camera)
+{
+	frontend_data_t*        frontend_data;
+
+        g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
+        g_assert (frontend_data->ref_count > 0);
+
+        frontend_data->ref_count--;
+	if (frontend_data->ref_count == 0) {
+		g_free (frontend_data->name);
+		gp_camera_free (camera);
+	}
+}
+

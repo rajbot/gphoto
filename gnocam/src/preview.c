@@ -35,7 +35,10 @@ preview_refresh (Camera* camera)
 
         /* Capture. */
         if (gp_camera_capture (camera, file, &info) == GP_OK) {
+		if ((old_file = gtk_object_get_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview")), "file"))) gp_file_free (old_file);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview")), "file", file);
 
+		/* Load the image. */
                 g_assert ((loader = gdk_pixbuf_loader_new ()) != NULL);
                 if (gdk_pixbuf_loader_write (loader, file->data, file->size)) {
                         gdk_pixbuf_loader_close (loader);
@@ -44,12 +47,7 @@ preview_refresh (Camera* camera)
                         gdk_pixbuf_unref (pixbuf);
                         g_assert ((widget = glade_xml_get_widget (xml_preview, "app_preview_pixmap")) != NULL);
                         gtk_pixmap_set (GTK_PIXMAP (widget), pixmap, bitmap);
-                        if ((old_file = gtk_object_get_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview")), "file"))) gp_file_free (old_file);
-                        gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview")), "file", file);
-                } else {
-                        dialog_information (_("Could not load image!"));
-                        gp_file_free (file);
-                }
+                } else dialog_information (_("Could not load image!"));
         } else {
                 dialog_information (_("Could not get preview from camera '%s'!"), frontend_data->name);
                 gp_file_free (file);
@@ -88,7 +86,7 @@ preview_save_as (Camera* camera)
 	g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
 
 	if ((file = gtk_object_get_data (GTK_OBJECT (glade_xml_get_widget (frontend_data->xml_preview, "app_preview")), "file"))) {
-		dialog_information (_("Not yet implemented!"));
+		camera_file_save_as (file);
 	}
 }
 

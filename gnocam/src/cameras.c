@@ -1,12 +1,21 @@
+//This file should be called camera-tree.c or so.
+//I'll change the name some day. 
+
 #include <gnome.h>
 #include <glade/glade.h>
-#include <gconf/gconf-client.h>
 #include <gphoto2.h>
+#include <gconf/gconf-client.h>
 #include "gphoto-extensions.h"
 #include "callbacks.h"
 #include "gnocam.h"
 #include "cameras.h"
 #include "information.h"
+
+/**********************/
+/* External Variables */
+/**********************/
+
+extern GladeXML*	xml;
 
 /**
  * camera_tree_folder clean:
@@ -31,7 +40,6 @@ camera_tree_folder_clean (GtkTreeItem* folder)
 void
 camera_tree_item_remove (GtkTreeItem* item)
 {
-	GladeXML*		xml;
 	gchar*			path;
 	gchar*			filename;
 	GtkNotebook*		notebook;
@@ -41,8 +49,8 @@ camera_tree_item_remove (GtkTreeItem* item)
 	Camera*			camera;
 	gboolean		root;
 	frontend_data_t*	frontend_data = NULL;
+	CameraFile*		file;
 
-	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (item), "xml")) != NULL);
 	g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
 	g_assert ((notebook = GTK_NOTEBOOK (glade_xml_get_widget (xml, "notebook_files"))) != NULL);
 	g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
@@ -63,11 +71,8 @@ camera_tree_item_remove (GtkTreeItem* item)
         /* Do we have to remove a notebook page? */
         if ((page = gtk_object_get_data (GTK_OBJECT (item), "page"))) gtk_notebook_remove_page (notebook, gtk_notebook_page_num (notebook, page));
 
-	/* If it's the root folder, free the camera. */
-	if (root) {
-		frontend_data->ref_count--;
-		if (frontend_data->ref_count == 0) gp_camera_free (camera);
-	}
+	/* If it's the root folder, unref the camera. */
+	if (root) gp_camera_unref (camera);
 
 	/* If this is the last item, we have to make sure we don't loose the 	*/
 	/* tree. Therefore, keep a reference to the tree owner. 		*/
@@ -76,7 +81,9 @@ camera_tree_item_remove (GtkTreeItem* item)
 	/* Clean up. */
 	g_free (path);
 	if (filename) g_free (filename);
-	gtk_container_remove (GTK_CONTAINER (tree), GTK_WIDGET (item));
+	if ((file = gtk_object_get_data (GTK_OBJECT (item), "file"))) gp_file_free (file);
+	if ((file = gtk_object_get_data (GTK_OBJECT (item), "preview"))) gp_file_free (file);
+        gtk_container_remove (GTK_CONTAINER (tree), GTK_WIDGET (item));
 
 	/* Make sure the tree does not get lost. */
 	if (GTK_WIDGET (tree)->parent == NULL) {
@@ -90,7 +97,6 @@ camera_tree_item_remove (GtkTreeItem* item)
 void
 camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* path)
 {
-	GladeXML*	xml;
 	GtkTreeItem*	item;
 	GtkWidget*	subtree;
 	gboolean 	root;
@@ -103,7 +109,6 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* path)
 	g_assert (camera != NULL);
 	g_assert (tree != NULL);
 	g_assert (path != NULL);
-	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (tree), "xml")) != NULL);
 
 	/* Root folder needs special care. */
 	root = (strcmp ("/", path) == 0);
@@ -130,7 +135,6 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* path)
         /* Store some data. */
         gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
         gtk_object_set_data (GTK_OBJECT (item), "path", g_strdup (path));
-        gtk_object_set_data (GTK_OBJECT (item), "xml", xml);
         gtk_object_set_data (GTK_OBJECT (item), "checked", GINT_TO_POINTER (1));
 
         /* Do we have folders? */
@@ -152,7 +156,6 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* path)
         gtk_widget_ref (subtree);
         gtk_widget_show (subtree);
         gtk_tree_item_set_subtree (item, subtree);
-        gtk_object_set_data (GTK_OBJECT (subtree), "xml", xml);
 }
 
 /**
@@ -173,10 +176,8 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
         gint            j;
         guint           id;
         Camera*         camera;
-	GladeXML*	xml;
 
 	g_assert (tree != NULL);
-	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (tree), "xml")) != NULL);
 
         if (value) {
                 g_assert (value->type == GCONF_VALUE_LIST);
@@ -222,9 +223,10 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
                 if (j == g_list_length (tree_list)) {
 
                         /* We don't have the camera in the tree (yet). */
-                        if ((camera = gp_camera_new_by_description (xml, description))) {
+                        if ((camera = gp_camera_new_by_description (description))) {
 
 				/* Add the camera to the tree. */
+				gp_camera_ref (camera);
 				camera_tree_folder_add (tree, camera, "/");
 			}
                 }

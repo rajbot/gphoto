@@ -1,7 +1,6 @@
 
-
 /* Prototypes */
 
-void preferences (GConfClient* client);
+void preferences (void);
 
 

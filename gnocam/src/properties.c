@@ -79,6 +79,7 @@ gint on_properties_close (GnomeDialog *dialog, gpointer user_data)
 
 	/* Clean up. */
 	gp_widget_free (gtk_object_get_data (GTK_OBJECT (dialog), "camera_widget"));
+	gp_camera_unref (camera);
 	frontend_data->xml_properties = NULL;
 
         return (FALSE);

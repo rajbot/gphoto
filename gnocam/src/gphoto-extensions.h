@@ -1,7 +1,10 @@
 
-Camera* gp_camera_new_by_description (GladeXML* xml, gchar* description);
+Camera* gp_camera_new_by_description (gchar* description);
 
 gboolean gp_camera_update_by_description (Camera** camera, gchar* description);
 
 CameraWidget* gp_widget_clone (CameraWidget* widget);
+
+void gp_camera_ref (Camera* camera);
+void gp_camera_unref (Camera* camera);
 

@@ -33,10 +33,8 @@ int main (int argc, char *argv[])
 	gint			i;
 	GtkTree*		tree;
 
-#ifdef GNOCAM_USES_THREADS
 	/* Init threads. */
-	g_thread_init (NULL);
-#endif
+	if (!(g_thread_supported ())) g_thread_init (NULL);
 
 	/* Init GNOME, glade, gnome-vfs, gconf. */
 	gnome_init (PACKAGE, VERSION, argc, argv);
@@ -107,13 +105,9 @@ int main (int argc, char *argv[])
 	notify_id_interpolation = gconf_client_notify_add (client, "/apps/" PACKAGE "/interpolation", on_preview_setup_changed, NULL, NULL, NULL);
 
 	/* Start the event loop. */
-#ifdef GNOCAM_USES_THREADS
 	gdk_threads_enter ();
-#endif
 	gtk_main ();
-#ifdef GNOCAM_USES_THREADS
 	gdk_threads_leave ();
-#endif
 
 	/* Clean up. */
 	g_assert ((tree = GTK_TREE (glade_xml_get_widget (xml, "tree_cameras"))) != NULL);

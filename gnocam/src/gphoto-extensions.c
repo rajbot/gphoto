@@ -74,9 +74,24 @@ gp_camera_new_by_description (gint id, gchar* name, gchar* model, gchar* port, g
 	frontend_data->xml = xml;
 	frontend_data->xml_properties = NULL;
 	frontend_data->xml_preview = NULL;
+	frontend_data->lock = g_mutex_new ();
 	camera->frontend_data = frontend_data;
 
 	return (camera);
+}
+
+
+
+void
+gp_camera_lock (Camera* camera)
+{
+	g_mutex_lock (((frontend_data_t*) camera->frontend_data)->lock);
+}
+
+void
+gp_camera_unlock (Camera* camera)
+{
+	g_mutex_unlock (((frontend_data_t*) camera->frontend_data)->lock);
 }
 
 

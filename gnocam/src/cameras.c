@@ -130,7 +130,11 @@ camera_tree_item_remove (GtkTreeItem* item)
         if ((page = gtk_object_get_data (GTK_OBJECT (item), "page"))) gtk_notebook_remove_page (notebook, gtk_notebook_page_num (notebook, page));
 
 	/* If it's the root folder, unref the camera. */
-	if (root) gp_camera_unref (camera);
+	if (root) {
+		gp_camera_lock (camera);
+		gp_camera_unref (camera);
+		gp_camera_unlock (camera);
+	}
 
 	/* If this is the last item, we have to make sure we don't loose the 	*/
 	/* tree. Therefore, keep a reference to the tree owner. 		*/

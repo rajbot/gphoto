@@ -57,6 +57,8 @@ module GNOME {
 
 			Camera getCamera ()
 				raises (NotFound);
+			Camera getCameraByModel (in string model)
+				raises (NotFound);
 			Camera getCameraByModelAndPort (in string model,
 						        in string port)
 				raises (NotFound);

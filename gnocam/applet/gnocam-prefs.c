@@ -264,10 +264,8 @@ gnocam_prefs_new (gboolean camera_automatic, gboolean connect_automatic,
 		gtk_combo_set_popdown_strings (
 				GTK_COMBO (p->priv->combo_model), l);
 	CORBA_free (model_list);
-	if (model)
-		gtk_entry_set_text (
-			GTK_ENTRY (GTK_COMBO (p->priv->combo_model)->entry),
-			model);
+	gtk_entry_set_text (GTK_ENTRY (GTK_COMBO (p->priv->combo_model)->entry),
+		model ? model : "");
 
 	/* Set up the port combo. */
 	for (l = NULL, i = 0; i < port_list->_length; i++)
@@ -276,10 +274,8 @@ gnocam_prefs_new (gboolean camera_automatic, gboolean connect_automatic,
 		gtk_combo_set_popdown_strings (
 				GTK_COMBO (p->priv->combo_port), l);
 	CORBA_free (port_list);
-	if (port)
-		gtk_entry_set_text (
-			GTK_ENTRY (GTK_COMBO (p->priv->combo_port)->entry),
-			port);
+	gtk_entry_set_text (GTK_ENTRY (GTK_COMBO (p->priv->combo_port)->entry),
+		port ? port : "");
 
 	bonobo_object_release_unref (o, NULL);
 

@@ -96,9 +96,16 @@ AC_SUBST(GNOCAM_CFLAGS)
 AC_SUBST(GNOCAM_LIBS)
 
 dnl ---------------------------------------------------------------------------
+dnl test-gnocam
+dnl ---------------------------------------------------------------------------
+PKG_CHECK_MODULES(TEST_GNOCAM, bonobo-activation-2.0 ORBit-2.0 libbonobo-2.0)
+AC_SUBST(TEST_GNOCAM_CFLAGS)
+AC_SUBST(TEST_GNOCAM_LIBS)
+
+dnl ---------------------------------------------------------------------------
 dnl Makefiles
 dnl ---------------------------------------------------------------------------
-AC_OUTPUT([
+AC_OUTPUT([ intl/Makefile 
 Makefile
 art/Makefile
 idl/Makefile

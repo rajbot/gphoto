@@ -1,3 +1,7 @@
+2002-11-19  Lutz Müller <lutz@users.sourceforge.net>
+
+	* tests/gnocam-test.c: Get that working again.
+
 2002-11-18  Lutz Müller <lutz@users.sourceforge.net>
 
 	* gnocam/*

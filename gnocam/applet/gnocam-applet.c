@@ -124,11 +124,13 @@ gnocam_applet_connect (GnoCamApplet *a)
 
 	if (a->priv->prefs.camera_automatic)
 		a->priv->camera = GNOME_GnoCam_Factory_getCamera (o, &ev);
+	else if (!a->priv->prefs.port || !strcmp (a->priv->prefs.port, ""))
+		a->priv->camera = GNOME_GnoCam_Factory_getCameraByModel (o, 
+			a->priv->prefs.model ? a->priv->prefs.model : "", &ev);
 	else
 		a->priv->camera = GNOME_GnoCam_Factory_getCameraByModelAndPort (
 			o, a->priv->prefs.model ? a->priv->prefs.model : "",
-			   a->priv->prefs.port  ? a->priv->prefs.port  : "",
-			   &ev);
+			   a->priv->prefs.port, &ev);
 	bonobo_object_release_unref (o, NULL);
 	if (BONOBO_EX (&ev)) {
 		gnocam_applet_report_error (a, &ev);
@@ -176,6 +178,14 @@ gnocam_applet_load_preferences (GnoCamApplet *a)
 	}
 	g_free (key);
 	g_object_unref (client);
+
+	g_message ("Loaded preferences: ");
+	g_message ("  Automatic connection: %i",
+		   a->priv->prefs.connect_automatic);
+	g_message ("  Automatic detection of camera model and port: %o",
+		   a->priv->prefs.camera_automatic);
+	g_message ("  Model: '%s'", a->priv->prefs.model);
+	g_message ("  Port: '%s'", a->priv->prefs.port);
 
 	if (a->priv->prefs.connect_automatic && 
 	    (a->priv->camera == CORBA_OBJECT_NIL))
@@ -289,7 +299,11 @@ gnocam_applet_capture_cb (BonoboUIComponent *uic, GnoCamApplet *a,
 	CORBA_Environment ev;
 	CORBA_char *path;
 	Bonobo_Storage st;
-	Bonobo_Stream s;
+	Bonobo_Stream s, dest;
+	Bonobo_Unknown o;
+	gchar *r;
+	Bonobo_StorageInfo *info;
+	Bonobo_Stream_iobuf *iobuf = NULL;
 
 	CORBA_exception_init (&ev);
 
@@ -318,8 +332,55 @@ gnocam_applet_capture_cb (BonoboUIComponent *uic, GnoCamApplet *a,
 		return;
 	}
 
-	g_message ("FIXME: Show the image!");
+	info = Bonobo_Stream_getInfo (s, Bonobo_FIELD_CONTENT_TYPE |
+					 Bonobo_FIELD_SIZE, &ev);
+	if (BONOBO_EX (&ev)) {
+		gnocam_applet_report_error (a, &ev);
+		bonobo_object_release_unref (s, NULL);
+		CORBA_exception_free (&ev);
+	}
 
+	r = g_strdup_printf ("repo_ids.has('IDL:Bonobo/Stream:1.0') AND "
+			     "bonobo:supported_mime_types.has('%s')",
+			     info->content_type);
+	o = bonobo_activation_activate (r, NULL, 0, NULL, &ev);
+	g_free (r);
+	if (BONOBO_EX (&ev)) {
+		CORBA_free (info);
+		bonobo_object_release_unref (s, NULL);
+		gnocam_applet_report_error (a, &ev);
+		CORBA_exception_free (&ev);
+		return;
+	}
+
+	dest = Bonobo_Unknown_queryInterface (o, "IDL:Bonobo/Stream:1.0", &ev);
+	if (BONOBO_EX (&ev)) {
+		CORBA_free (info);
+		bonobo_object_release_unref (s, NULL);
+		gnocam_applet_report_error (a, &ev);
+		CORBA_exception_free (&ev);
+		return;
+	}
+	Bonobo_Stream_read (s, info->size, &iobuf, &ev);
+	CORBA_free (info);
+	if (BONOBO_EX (&ev)) {
+		bonobo_object_release_unref (s, NULL);
+		bonobo_object_release_unref (dest, NULL);
+		gnocam_applet_report_error (a, &ev);
+		CORBA_exception_free (&ev);
+		return;
+	}
+	Bonobo_Stream_write (s, iobuf, &ev);
+	if (BONOBO_EX (&ev)) {
+		bonobo_object_release_unref (s, NULL);
+		bonobo_object_release_unref (dest, NULL);
+		gnocam_applet_report_error (a, &ev);
+		CORBA_exception_free (&ev);
+		return;
+	}
+	CORBA_free (iobuf);
+
+	bonobo_object_release_unref (dest, NULL);
 	bonobo_object_release_unref (s, NULL);
 
 	CORBA_exception_free (&ev);

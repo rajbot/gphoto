@@ -103,7 +103,7 @@ on_button_delete_files_clicked (GtkButton *button, gpointer user_data)
 					camera = gtk_clist_get_row_data (clist, row);
 					g_assert (camera != NULL);
 					gtk_clist_get_text (clist, row, 1, &path);
-					g_assert (file_name != NULL);
+					g_assert (path != NULL);
 					gtk_clist_get_text (clist, row, 2, &file_name);
 					g_assert (file_name != NULL);
 
@@ -118,7 +118,8 @@ on_button_delete_files_clicked (GtkButton *button, gpointer user_data)
 						/* Unselect the file we could not delete. */
 						gtk_clist_unselect_row (clist, row, 0);
 						gnome_app_error (app, _("Could not delete file!"));
-					} 
+					}
+					selection = g_list_first (clist->selection); 
 				}
 			}
 		}
@@ -229,6 +230,10 @@ on_clist_files_drag_data_get (
 	gtk_selection_data_set (selection_data, selection_data->target, 8, filenames, i + 1);
 }
 
+/**********************/
+/* Camera tree stuff. */
+/**********************/
+
 void
 on_tree_cameras_selection_changed (GtkWidget *tree)
 {
@@ -318,6 +323,105 @@ on_tree_cameras_selection_changed (GtkWidget *tree)
 	}
 }
 
+gboolean
+on_tree_cameras_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+{
+	GladeXML *xml_popup, *xml;
+	Camera *camera;
 
+	g_assert (event != NULL);
+	xml = gtk_object_get_data (GTK_OBJECT (widget), "xml");
+	g_assert (xml != NULL);
+	camera = gtk_object_get_data (GTK_OBJECT (widget), "camera");
+	g_assert (camera != NULL);
 
+	/* Did the user right-click? */
+	if (event->button == 3) {
+		
+		/* Create the dialog. */
+		xml_popup = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "menu_tree_cameras_popup");
+		g_assert (xml != NULL);
+
+		/* Store some data. */
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "tree_cameras_popup_capture_video")), "xml", xml);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "tree_cameras_popup_capture_video")), "camera", camera);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "tree_cameras_popup_capture_image")), "xml", xml);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "tree_cameras_popup_capture_image")), "camera", camera);
+
+		/* Connect the signals. */
+		glade_xml_signal_autoconnect (xml_popup);
+
+		/* Pop up the dialog. */
+		gtk_menu_popup (GTK_MENU (glade_xml_get_widget (xml_popup, "menu_tree_cameras_popup")), NULL, NULL, NULL, NULL, event->button, event->time);
+
+		return (TRUE);
+
+	} else return (FALSE);
+}
+
+void
+on_tree_cameras_popup_capture_image_activate (GtkMenuItem *menu_item, gpointer user_data)
+{
+	GladeXML *xml;
+	Camera *camera;
+	CameraCaptureInfo info;
+	CameraFile *file;
+
+	xml = gtk_object_get_data (GTK_OBJECT (menu_item), "xml");
+	g_assert (xml != NULL);
+	camera = gtk_object_get_data (GTK_OBJECT (menu_item), "camera");
+	g_assert (camera != NULL);
+
+	/* Prepare the image. */
+	info.type = GP_CAPTURE_IMAGE;
+	info.duration = 0;
+	file = gp_file_new ();
+
+	/* Capture. */
+	gp_camera_capture (camera, file, &info);
+
+	/* Clean up. */
+	gp_file_free (file);
+}
+
+void
+on_duration_reply (gchar *string, gpointer user_data)
+{
+	Camera *camera;
+	CameraCaptureInfo info;
+	CameraFile *file;
+
+	camera = (Camera *) user_data;
+	g_assert (camera != NULL);
+
+	if (strcmp (string, "") != 0) {
+		
+		/* Prepare the video. */
+		info.type = GP_CAPTURE_VIDEO;
+		info.duration = atoi (string);
+		file = gp_file_new ();
+		
+		/* Capture. */
+		gp_camera_capture (camera, file, &info);
+		
+		/* Clean up. */
+		gp_file_free (file);
+	}
+	g_free (string);
+}
+
+void
+on_tree_cameras_popup_capture_video_activate (GtkMenuItem *menu_item, gpointer user_data)
+{
+	GladeXML *xml;
+        Camera *camera;
+
+        xml = gtk_object_get_data (GTK_OBJECT (menu_item), "xml");
+        g_assert (xml != NULL);
+        camera = gtk_object_get_data (GTK_OBJECT (menu_item), "camera");
+        g_assert (camera != NULL);
+
+	/* Ask for duration. */
+	gnome_app_request_string (GNOME_APP (glade_xml_get_widget (xml, "app")), _("How long should the video be?"), on_duration_reply, camera);
+}
 

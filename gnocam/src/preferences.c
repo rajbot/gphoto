@@ -3,6 +3,7 @@
 #include <glade/glade.h>
 #include <gphoto2.h>
 #include "preferences.h"
+#include "callbacks.h"
 
 /******************************************************************************/
 /* Prototypes                                                                 */
@@ -442,10 +443,12 @@ camera_add_to_tree (GladeXML *xml, Camera *camera, gchar *name, gint position)
 	
 	/* Connect the signals. */
 	gtk_signal_connect (GTK_OBJECT (item), "drag_data_received", GTK_SIGNAL_FUNC (on_drag_data_received), NULL);
+	gtk_signal_connect (GTK_OBJECT (item), "button_press_event", GTK_SIGNAL_FUNC (on_tree_cameras_button_press_event), NULL);
 	
 	/* Store some data. */
 	gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
 	gtk_object_set_data (GTK_OBJECT (item), "path", path);
+	gtk_object_set_data (GTK_OBJECT (item), "xml", xml);
 	
 	/* Do we have folders? */
 	if (gp_camera_folder_list (camera, &folder_list, path) == GP_OK) {

@@ -188,79 +188,44 @@ void
 on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 {
 	GnomeVFSURI*		uri;
-        gchar*                  filename;
-	gchar*			tmp;
-        gchar*                  dirname;
-	gchar*			message = NULL;
-	gint			result;
-        CameraFile*             file = NULL;
-        Camera*                 camera;
+	gchar*			tmp = NULL;
 	CORBA_Environment	ev;
 	CORBA_Object		interface;
-	BonoboStream*		stream;
+	Bonobo_Stream		stream;
+	BonoboStorage*		storage;
+#if 0
 	Bonobo_Control		control;
 	GtkWidget*		widget;
 	GtkPaned*		paned;
 
-        g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
-        g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (item), "uri"));
 	g_return_if_fail (paned = GTK_PANED (glade_xml_get_widget (xml_main, "main_hpaned")));
-
-	/* Extract the directory name. */
-	tmp = gnome_vfs_uri_extract_dirname (uri);
-	dirname = gnome_vfs_unescape_string_for_display (tmp);
-	g_free (tmp);
+#endif
+        g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (item), "uri"));
 
 	/* Folder or file? */
-	if ((filename = (gchar*) gnome_vfs_uri_get_basename (uri))) {
+	if (gnome_vfs_uri_get_basename (uri)) {
 		switch (view_mode) {
 		case GNOCAM_VIEW_MODE_NONE:
+			uri = NULL;
 			break;
 		case GNOCAM_VIEW_MODE_PREVIEW:
-
-		        /* Do we already have the preview? */
-		        if (!(file = gtk_object_get_data (GTK_OBJECT (item), "preview"))) {
-		                file = gp_file_new ();
-		                if ((result = gp_camera_file_get_preview (camera, file, dirname, filename)) != GP_OK) {
-					tmp = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE);
-		                        message = g_strdup_printf (_("Could not get preview of '%s'!\n(%s)"), tmp, gp_camera_result_as_string (camera, result));
-					g_free (tmp);
-					gnome_error_dialog_parented (message, main_window);
-					g_free (message);
-		                        gp_file_unref (file);
-		                        file = NULL;
-		                } else gtk_object_set_data (GTK_OBJECT (item), "preview", file);
-		                gp_frontend_progress (camera, NULL, 0.0);
-		        }
+			uri = gnome_vfs_uri_dup (uri);
+			gnome_vfs_uri_set_user_name (uri, "previews");
 			break;
 		case GNOCAM_VIEW_MODE_FILE:
-
-			/* Do we already have the file? */
-			if (!(file = gtk_object_get_data (GTK_OBJECT (item), "file"))) {
-				file = gp_file_new ();
-				if ((result = gp_camera_file_get (camera, file, dirname, filename)) != GP_OK) {
-					tmp = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE);
-					message = g_strdup_printf (_("Could not get '%s'!\n(%s)"), tmp, gp_camera_result_as_string (camera, result));
-					g_free (tmp);
-					gnome_error_dialog_parented (message, main_window);
-					g_free (message);
-					gp_file_unref (file);
-					file = NULL;
-				} else gtk_object_set_data (GTK_OBJECT (item), "file", file);
-				gp_frontend_progress (camera, NULL, 0.0);
-			}
+			uri = gnome_vfs_uri_dup (uri);
 			break;
 		}
-		if (file && viewer_client) {
+		if (uri && viewer_client) {
 			CORBA_exception_init (&ev);
 
 #if 0
 			/* Get the control. */
 			control = bonobo_get_object (gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE), "IDL:Bonobo/Control:1.0", &ev);
 			if (ev._major != CORBA_NO_EXCEPTION || !control) {
-				message = g_strdup_printf (_("Can not display the file! (%s)"), bonobo_exception_get_text (&ev));
-				gnome_error_dialog_parented (message, main_window);
-				g_free (message);
+				tmp = g_strdup_printf (_("Can not display the file! (%s)"), bonobo_exception_get_text (&ev));
+				gnome_error_dialog_parented (tmp, main_window);
+				g_free (tmp);
 			} else {
 
 				/* Get the widget. */
@@ -275,30 +240,62 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 				}
 			}
 #else
+			/* Get the interface. */
 			interface = bonobo_object_client_query_interface (viewer_client, "IDL:Bonobo/PersistStream:1.0", &ev);
 			if (ev._major != CORBA_NO_EXCEPTION) {
-				message = g_strdup_printf (_("Could not connect to the image viewer! (%s)"), bonobo_exception_get_text (&ev));
-				gnome_error_dialog_parented (message, main_window);
-				g_free (message);
-			} else {
-				g_assert ((stream = bonobo_stream_mem_create (file->data, file->size, FALSE, TRUE)));
-				Bonobo_PersistStream_load (interface, (Bonobo_Stream) bonobo_object_corba_objref (BONOBO_OBJECT (stream)), file->type, &ev);
-				if (ev._major != CORBA_NO_EXCEPTION) {
-					message = g_strdup_printf (_("Could not display the file! (%s)"), bonobo_exception_get_text (&ev));
-					gnome_error_dialog_parented (message, main_window);
-					g_free (message);
-				}
-				bonobo_object_unref (BONOBO_OBJECT (stream));
+				tmp = g_strdup_printf (_("Could not connect to the image viewer! (%s)"), bonobo_exception_get_text (&ev));
+				gnome_error_dialog_parented (tmp, main_window);
+				g_free (tmp);
+				CORBA_exception_free (&ev);
+				gnome_vfs_uri_unref (uri);
+				return;
+			}
+
+			/* Get the file. */
+			storage = bonobo_storage_open_full ("vfs", gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE), Bonobo_Storage_READ, 0664, &ev);
+			if (ev._major != CORBA_NO_EXCEPTION) {
+				tmp = g_strdup_printf (_("Could not get storage!\n(%s)"), bonobo_exception_get_text (&ev));
+				gnome_error_dialog_parented (tmp, main_window);
+				g_free (tmp);
 				Bonobo_Unknown_unref (interface, &ev);
 				CORBA_Object_release (interface, &ev);
+				CORBA_exception_free (&ev);
+				gnome_vfs_uri_unref (uri);
+				return;
 			}
+			g_assert (storage);
+			tmp = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE);
+			stream = Bonobo_Storage_openStream (BONOBO_OBJECT (storage)->corba_objref, tmp, Bonobo_Storage_READ, &ev);
+			g_free (tmp);
+			if (ev._major != CORBA_NO_EXCEPTION) {
+				tmp = g_strdup_printf (_("Could not get stream!\n(%s)"), bonobo_exception_get_text (&ev));
+				gnome_error_dialog_parented (tmp, main_window);
+				g_free (tmp);
+				Bonobo_Unknown_unref (stream, &ev);
+				CORBA_Object_release (stream, &ev);
+				Bonobo_Unknown_unref (interface, &ev);
+				CORBA_Object_release (interface, &ev);
+				CORBA_exception_free (&ev);
+				gnome_vfs_uri_unref (uri);
+				return;
+			}
+
+			/* Display the file. */
+			Bonobo_PersistStream_load (interface, stream, "image/jpeg", &ev);
+			if (ev._major != CORBA_NO_EXCEPTION) {
+				tmp = g_strdup_printf (_("Could not display the file!\n(%s)"), bonobo_exception_get_text (&ev));
+				gnome_error_dialog_parented (tmp, main_window);
+				g_free (tmp);
+			}
+			Bonobo_Unknown_unref (stream, &ev);
+			CORBA_Object_release (stream, &ev);
+			Bonobo_Unknown_unref (interface, &ev);
+			CORBA_Object_release (interface, &ev);
 #endif
 			CORBA_exception_free (&ev);
+			gnome_vfs_uri_unref (uri);
 		}
 	}
-
-	/* Clean up. */
-	g_free (dirname);
 }
 
 void
@@ -310,18 +307,13 @@ on_tree_item_deselect (GtkTreeItem* item, gpointer user_data)
 void
 on_camera_tree_file_drag_data_get (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data)
 {
-	gchar*		filename;
-	CameraFile*	file;
 	GnomeVFSURI*	uri;
+	gchar*		tmp;
 
-	if (!(file = gtk_object_get_data (GTK_OBJECT (widget), "file"))) g_return_if_fail (file = gtk_object_get_data (GTK_OBJECT (widget), "preview"));
+	g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (widget), "uri"));
 
-	/* Save the file temporarily. */
-	filename = g_strdup_printf ("file:%s/%s", g_get_tmp_dir (), file->name);
-	uri = gnome_vfs_uri_new (filename);
-	camera_file_save (file, uri);
-	gnome_vfs_uri_unref (uri);
-	gtk_selection_data_set (selection_data, selection_data->target, 8, filename, strlen (filename));
+	tmp = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE);
+	gtk_selection_data_set (selection_data, selection_data->target, 8, tmp, strlen (tmp));
 }
 
 void
@@ -447,7 +439,6 @@ camera_tree_item_remove (GtkTreeItem* item)
 	GtkWidget*		owner;
 	GtkTree*		tree;
 	Camera*			camera;
-	CameraFile*		file;
 
 	g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (item), "uri"));
 	g_return_if_fail (item);
@@ -469,8 +460,6 @@ camera_tree_item_remove (GtkTreeItem* item)
 
 	/* Clean up. */
 	gnome_vfs_uri_unref (uri);
-	if ((file = gtk_object_get_data (GTK_OBJECT (item), "file"))) gp_file_unref (file);
-	if ((file = gtk_object_get_data (GTK_OBJECT (item), "preview"))) gp_file_unref (file);
         gtk_container_remove (GTK_CONTAINER (tree), GTK_WIDGET (item));
 
 	/* Make sure the tree does not get lost. */

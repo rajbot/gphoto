@@ -185,12 +185,12 @@ bonobo_storage_vfs_open (const char *path, gint flags, gint mode,
 			return NULL;
 		}
 
-//		if ((info->valid_fields & GNOME_VFS_FILE_INFO_FIELDS_TYPE) &&
-//		    (info->type != GNOME_VFS_FILE_TYPE_DIRECTORY)) {
-//			CORBA_exception_set (ev, CORBA_USER_EXCEPTION,
-//					     ex_Bonobo_Stream_IOError, NULL);
-//			return NULL;
-//		}
+		if ((info->valid_fields & GNOME_VFS_FILE_INFO_FIELDS_TYPE) &&
+		    (info->type == GNOME_VFS_FILE_TYPE_DIRECTORY)) {
+			CORBA_exception_set (ev, CORBA_USER_EXCEPTION,
+					     ex_Bonobo_Stream_IOError, NULL);
+			return NULL;
+		}
 
 	} else if (flags & (Bonobo_Storage_WRITE)) {
 		if (result == GNOME_VFS_ERROR_NOT_FOUND)

@@ -41,11 +41,6 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 {
 	CameraFile*		file;
 	GtkFileSelection*	fileselection;
-	GtkWidget*		window;
-	GtkWidget*		widget;
-	CORBA_Object 		interface;
-	CORBA_Environment	ev;
-	BonoboObjectClient*	client;
 
 	g_assert ((fileselection = GTK_FILE_SELECTION (glade_xml_get_widget (gtk_object_get_data (GTK_OBJECT (button), "xml_fileselection"), "fileselection"))));
 
@@ -305,7 +300,7 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 	gchar*		filename;
 	gchar*		filename_user;
 	gchar*		message;
-	CameraFile*	file;
+	CameraFile*	file = NULL;
 	Camera*		camera;
 	GConfValue*	value;
 	gint		result;
@@ -326,40 +321,32 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 	uri = gnome_vfs_uri_new (filename_user);
 	g_free (filename_user);
 
-	/* Check if we already have the file. */
-	if (preview) file = gtk_object_get_data (GTK_OBJECT (item), "preview");
-	else file = gtk_object_get_data (GTK_OBJECT (item), "file");
-	if (!file) {
-
-		/* Get the file/preview from gphoto backend. */
-		file = gp_file_new ();
-		if (preview) result = gp_camera_file_get_preview (camera, file, path, filename);
-		else result = gp_camera_file_get (camera, file, path, filename);
-		if (result != GP_OK) {
-			if (preview) message = g_strdup_printf (
-				_("Could not get preview of file '%s/%s' from camera!\n(%s)"), 
-				path, 
-				filename, 
-				gp_camera_result_as_string (camera, result));
-			else message = g_strdup_printf (
-				_("Could not get file '%s/%s' from camera!\n(%s)"), 
-				path, 
-				filename, 
-				gp_camera_result_as_string (camera, result));
-			gnome_error_dialog_parented (message, main_window);
-			g_free (message);
-			gp_file_free (file);
-			file = NULL;
-		} else {
-			if (preview) gtk_object_set_data (GTK_OBJECT (item), "preview", file);
-			else gtk_object_set_data (GTK_OBJECT (item), "file", file);
-		}
-	}
+	/* Get the file/preview from gphoto backend. */
+	file = gp_file_new ();
+	if (preview) result = gp_camera_file_get_preview (camera, file, path, filename);
+	else result = gp_camera_file_get (camera, file, path, filename);
+	if (result != GP_OK) {
+		if (preview) message = g_strdup_printf (
+			_("Could not get preview of file '%s/%s' from camera!\n(%s)"), 
+			path, 
+			filename, 
+			gp_camera_result_as_string (camera, result));
+		else message = g_strdup_printf (
+			_("Could not get file '%s/%s' from camera!\n(%s)"), 
+			path, 
+			filename, 
+			gp_camera_result_as_string (camera, result));
+		gnome_error_dialog_parented (message, main_window);
+		g_free (message);
+		gp_file_free (file);
+		file = NULL;
+	} 
 
 	/* Save the file. */
 	if (file) {
 		if (save_as) camera_file_save_as (file);
 		else camera_file_save (file, uri);
+		gp_file_unref (file);
 	}
 
 	/* Clean up. */

@@ -178,9 +178,16 @@ etree_icon_at (ETreeModel* etree, ETreePath* tree_path, void* model_data)
 }
 
 static void*
-etree_value_at (ETreeModel* etree, ETreePath* tree_path, int col, void* model_data)
+etree_value_at (ETreeModel* etree, ETreePath* node, int col, void* model_data)
 {
-	return ("Name should be returned here...");
+	NodeData*	data;
+
+	data = e_tree_model_node_get_data (etree, node);
+
+	if (data->directory)
+		return (data->path);
+	else 
+		return (g_basename (data->path));
 }
 
 static void
@@ -195,15 +202,15 @@ etree_is_editable (ETreeModel* etree, ETreePath* path, int col, void* model_data
 }
 
 static int
-treepath_compare (ETreeModel* model, ETreePath* node1, ETreePath* node2)
+treepath_compare (ETreeModel* etree, ETreePath* node1, ETreePath* node2)
 {
-        gchar* path1;
-	gchar* path2;
+        NodeData*	data1;
+	NodeData*	data2;
 
-        path1 = e_tree_model_node_get_data (model, node1);
-        path2 = e_tree_model_node_get_data (model, node2);
+        data1 = e_tree_model_node_get_data (etree, node1);
+        data2 = e_tree_model_node_get_data (etree, node2);
 
-        return strcasecmp (path1, path2);
+	return (strcasecmp (data1->path, data2->path));
 }
 
 /*******************/
@@ -291,13 +298,21 @@ insert_folders_and_files (GnoCamStorageView* storage_view, ETreePath* parent, co
 		node = e_tree_model_node_insert_id (storage_view->priv->etree, parent, -1, tmp, tmp);
 		g_free (tmp);
 
+		/* Store some data in this node */
 		data = g_new (NodeData, 1);
-		data->path = g_strconcat (path, list->_buffer [i].name, NULL);
+		if (!strcmp (path, "/")) 
+			data->path = g_strconcat (path, list->_buffer [i].name, NULL);
+		else
+			data->path = g_strconcat (path, G_DIR_SEPARATOR, list->_buffer [i].name, NULL);
 		data->directory = (list->_buffer [i].type == Bonobo_STORAGE_TYPE_DIRECTORY);
 		e_tree_model_node_set_data (storage_view->priv->etree, node, (gpointer) data);
 		
 		e_tree_model_node_set_expanded (storage_view->priv->etree, parent, TRUE);
 		e_tree_model_node_set_compare_function (storage_view->priv->etree, node, treepath_compare);
+
+		/* If this is a directory, fill it */
+		if (data->directory) 
+			insert_folders_and_files (storage_view, node, data->path);
 	}
 	
 }
@@ -393,6 +408,7 @@ gnocam_storage_view_new (Bonobo_Storage storage)
 	GnoCamStorageView*	new;
 	ETableExtras*		extras;
 	ECell*			cell;
+	NodeData*		data;
 
 	new = gtk_type_new (gnocam_storage_view_get_type ());
 	new->priv->storage = storage;
@@ -409,8 +425,13 @@ gnocam_storage_view_new (Bonobo_Storage storage)
                                                etree_set_value_at,
                                                etree_is_editable,
                                                new);
-        e_tree_model_root_node_set_visible (new->priv->etree, FALSE);
-	new->priv->root_node = e_tree_model_node_insert (new->priv->etree, NULL, -1, "/Root Node");
+
+	/* Insert the root node */
+	data = g_new (NodeData, 1);
+	data->path = g_strdup ("/");
+	data->directory = TRUE;
+	new->priv->root_node = e_tree_model_node_insert (new->priv->etree, NULL, -1, "/");
+	e_tree_model_node_set_data (new->priv->etree, new->priv->root_node, data);
 	
 	/* Create extras */
 	extras = e_table_extras_new ();

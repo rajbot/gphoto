@@ -110,12 +110,13 @@ on_file_selected (GnoCamStorageView* storage_view, const gchar* path, void* data
 		CORBA_exception_free (&ev);
 		g_return_if_fail (control_file);
 
-		widget = bonobo_control_get_widget (BONOBO_CONTROL (control_file));
+		gtk_widget_show (widget = bonobo_control_get_widget (BONOBO_CONTROL (control_file)));
 		gtk_notebook_append_page (GTK_NOTEBOOK (control->priv->notebook), widget, NULL);
 		g_hash_table_insert (control->priv->hash_table, g_strdup (path), widget);
 	}
 
 	set_current_notebook_page (control, widget);
+	e_shell_folder_title_bar_set_title (E_SHELL_FOLDER_TITLE_BAR (control->priv->title_bar), path);
 }
 
 static void
@@ -136,12 +137,13 @@ on_directory_selected (GnoCamStorageView* storage_view, const gchar* path, void*
 		control_folder = gnocam_control_folder_new (control->priv->camera, control->priv->storage, path);
 		g_return_if_fail (control_folder);
 
-		widget = bonobo_control_get_widget (BONOBO_CONTROL (control_folder));
+		gtk_widget_show (widget = bonobo_control_get_widget (BONOBO_CONTROL (control_folder)));
 		gtk_notebook_append_page (GTK_NOTEBOOK (control->priv->notebook), widget, NULL);
 		g_hash_table_insert (control->priv->hash_table, g_strdup (path), widget);
 	}
 	
 	set_current_notebook_page (control, widget);
+	e_shell_folder_title_bar_set_title (E_SHELL_FOLDER_TITLE_BAR (control->priv->title_bar), path);
 }
 
 static void
@@ -265,14 +267,18 @@ set_current_notebook_page (GnoCamControl* control, GtkWidget* widget)
 	g_return_if_fail (notebook_page != -1);
 
 	/* Make the old menus disappear */
-	current = gtk_notebook_get_nth_page (GTK_NOTEBOOK (control->priv->notebook), current_page);
-	control_frame = bonobo_widget_get_control_frame (BONOBO_WIDGET (current));
-	bonobo_control_frame_set_autoactivate (control_frame, FALSE);
-	bonobo_control_frame_control_deactivate (control_frame);
+	if (current_page != 0) {
+		g_warning ("Make old menus disappear");
+		current = gtk_notebook_get_nth_page (GTK_NOTEBOOK (control->priv->notebook), current_page);
+		control_frame = bonobo_widget_get_control_frame (BONOBO_WIDGET (current));
+		bonobo_control_frame_set_autoactivate (control_frame, FALSE);
+		bonobo_control_frame_control_deactivate (control_frame);
+	}
 
 	gtk_notebook_set_page (GTK_NOTEBOOK (control->priv->notebook), notebook_page);
 
 	/* Show the new menus */
+	g_warning ("Show new menus");
 	current = gtk_notebook_get_nth_page (GTK_NOTEBOOK (control->priv->notebook), notebook_page);
 	control_frame = bonobo_widget_get_control_frame (BONOBO_WIDGET (current));
 	bonobo_control_frame_set_autoactivate (control_frame, FALSE);
@@ -427,7 +433,7 @@ gnocam_control_new (BonoboMoniker* moniker, CORBA_Environment* ev)
 	/* Create the notebook */
 	gtk_widget_show (new->priv->notebook = gtk_notebook_new ());
 	gtk_notebook_set_show_border (GTK_NOTEBOOK (new->priv->notebook), FALSE);
-        gtk_notebook_set_show_tabs (GTK_NOTEBOOK (new->priv->notebook), FALSE);
+	gtk_notebook_set_show_tabs (GTK_NOTEBOOK (new->priv->notebook), FALSE);
 	e_paned_pack2 (E_PANED (new->priv->hpaned), new->priv->notebook, TRUE, FALSE);
 
 	/* Create label for empty page */

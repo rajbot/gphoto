@@ -351,8 +351,8 @@ void appendpic (int picNum, int thumbnail, int fromCamera, char *fileName) {
 			system(process);
 			node->imlibimage = gdk_imlib_load_image(imagename);
 			remove(imagename);
-		}}
-	   else
+		}
+	 } else
 		node->imlibimage = gdk_imlib_load_image(fileName);
 	w = node->imlibimage->rgb_width;
         h = node->imlibimage->rgb_height;
@@ -848,14 +848,15 @@ void insert_thumbnail(struct ImageInfo *node) {
 	return;
   }
 
-  sprintf(info, "Picture #%i\n", i); 
   tag=g_string_new("");
+  g_string_sprintf(tag, "Picture #%i\n", i); 
   for (x=0; x<im->image_info_size; x+=2) {
-	g_string_sprintf(tag, "%s:%s\n",im->image_info[x],im->image_info[x+1]);
+	g_string_sprintfa(tag,
+		"%s:%s\n",im->image_info[x],im->image_info[x+1]);
   }
-
+  
   tooltip = gtk_tooltips_new();
-  gtk_tooltips_set_tip(tooltip,node->button,info, NULL);
+  gtk_tooltips_set_tip(tooltip,node->button,tag->str, NULL);
 
   node->imlibimage = gdk_imlib_load_image_mem(im->image, im->image_size);
 

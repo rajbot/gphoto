@@ -3,9 +3,7 @@
 #define _GNOCAM_STORAGE_VIEW_H_
 
 #include "gnocam-camera.h"
-
-#include <bonobo.h>
-#include <gal/e-table/e-table.h>
+#include <gal/e-table/e-tree-scrolled.h>
 
 BEGIN_GNOME_DECLS
 
@@ -20,21 +18,16 @@ typedef struct _GnoCamStorageViewPrivate	GnoCamStorageViewPrivate;
 typedef struct _GnoCamStorageViewClass		GnoCamStorageViewClass;
 
 struct _GnoCamStorageView {
-	ETable				parent;
+	ETreeScrolled			parent;
 	
 	GnoCamStorageViewPrivate*	priv;
 };
 
 struct _GnoCamStorageViewClass {
-	ETableClass			parent;
+	ETreeScrolledClass		parent;
 
 	void (* directory_selected)	(GnoCamStorageView* storage_view, const gchar* path);
 	void (* file_selected)		(GnoCamStorageView* storage_view, const gchar* path);
-
-	void (* dnd_action) 		(GnoCamStorageView* storage_view, GdkDragContext* context, 
-					const gchar* source_data, 
-					const gchar* source_data_type, 
-					const gchar* target_path);
 };
 
 GtkType		gnocam_storage_view_get_type 		(void);

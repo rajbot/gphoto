@@ -77,11 +77,11 @@ fi
 dnl ***
 dnl gal
 dnl ***
-AC_MSG_CHECKING(for GAL >= 0.5.99.6)
+AC_MSG_CHECKING(for GAL >= 0.5.99.10)
 if gnome-config --libs gal > /dev/null 2>&1; then
     vers=`gnome-config --modversion gal | sed -e "s/gal-//" -e 's/cvs$//' -e 's/pre$//' | \
         awk 'BEGIN { FS = "."; } { print $1 * 1000000 + $2 * 10000 + $3 * 100 + $4;}'`
-    if test "$vers" -ge 59906; then
+    if test "$vers" -ge 59910; then
         AC_MSG_RESULT(found)
 	GAL_LIBS="`gnome-config --libs gal`"
 	GAL_CFLAGS="`gnome-config --cflags gal`"
@@ -89,7 +89,7 @@ if gnome-config --libs gal > /dev/null 2>&1; then
 	AC_SUBST(GAL_CFLAGS)
     else
         AC_MSG_ERROR([
-*** You need at least GAL 0.5.99.6 for this version of $(PACKAGE).
+*** You need at least GAL 0.5.99.10 for this version of $(PACKAGE).
 *** Get the latest version from http://www.gnome.org. Mirrors can 
 *** be found at http://www.gnome.org/mirrors.])
     fi
@@ -115,32 +115,6 @@ else
 *** You need gnome-vfs for this version of ${PACKAGE}. Get the latest 
 *** version from http://www.gnome.org. Mirrors can be found at 
 *** http://www.gnome.org/mirrors.])
-fi
-
-dnl *********
-dnl gnome-xml
-dnl *********
-AC_MSG_CHECKING(for gnome-xml >= 1.8.7)
-if xml-config --version > /dev/null 2>&1; then
-    vers=`xml-config --version | awk 'BEGIN { FS = "."; } { printf "%d", ($1 * 1000 + $2) * 1000 + $3;}'`
-    if test "$vers" -ge 2000000; then
-        AC_MSG_RESULT(found libxml2)
-        AC_DEFINE(GNOCAM_USES_LIBXML2)
-    else
-        if test "$vers" -ge 1008010; then
-            AC_MSG_RESULT(found)
-        else
-            AC_MSG_ERROR([
-*** You need at least libxml-1.8.10 for this version of ${PACKAGE}.
-*** Get the latest version from http://www.gnome.org.
-*** Mirrors can be found at http://www.gnome.org/mirrors.])
-        fi
-    fi
-else
-    AC_MSG_ERROR([
-*** You need libxml (gnome-xml) for this version of ${PACKAGE}.
-*** Get the latest version from http://www.gnome.org.
-*** Mirrors can be found at http://www.gnome.org/mirrors.])
 fi
 
 dnl ******************************
@@ -223,14 +197,6 @@ fi
 CFLAGS="$realsave_CFLAGS"
 EXTRA_WARNING_CFLAGS="$warning_flags"
 AC_SUBST(EXTRA_WARNING_CFLAGS)
-
-dnl ******************************
-dnl Check for OAF
-dnl ******************************
-AM_PATH_OAF(0.6.2)
-
-AC_SUBST(OAF_LIBS)
-AC_SUBST(OAF_CFLAGS)
 
 dnl **********
 dnl libgphoto2

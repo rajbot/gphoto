@@ -709,7 +709,6 @@ gnocam_camera_new (const gchar* url, BonoboUIContainer* container, GConfClient* 
 	Camera*			camera;
 	BonoboStorage*		storage;
 	Bonobo_Storage_OpenMode	mode;
-	GtkWidget*		scroll_frame;
 	GtkWidget*		label;
 
 	g_return_val_if_fail (url, NULL);
@@ -779,16 +778,10 @@ gnocam_camera_new (const gchar* url, BonoboUIContainer* container, GConfClient* 
 	gtk_box_pack_start (GTK_BOX (new->priv->storage_view_vbox), new->priv->storage_view_title_bar, FALSE, FALSE, 0);
 	gtk_signal_connect (GTK_OBJECT (new->priv->storage_view_title_bar), "button_clicked", GTK_SIGNAL_FUNC (on_storage_view_title_bar_button_clicked), new);
 
-	/* Create the scroll frame */
-	gtk_widget_show (scroll_frame = e_scroll_frame_new (NULL, NULL));
-	e_scroll_frame_set_policy (E_SCROLL_FRAME (scroll_frame), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-	e_scroll_frame_set_shadow_type (E_SCROLL_FRAME (scroll_frame), GTK_SHADOW_IN);
-	gtk_box_pack_start (GTK_BOX (new->priv->storage_view_vbox), scroll_frame, TRUE, TRUE, 0);
-
 	/* Create the storage view */
 	new->priv->storage_view = gnocam_storage_view_new (new);
 	gtk_widget_show (new->priv->storage_view);
-	gtk_container_add (GTK_CONTAINER (scroll_frame), new->priv->storage_view);
+	gtk_box_pack_start (GTK_BOX (new->priv->storage_view_vbox), new->priv->storage_view, TRUE, TRUE, 0);
 	gtk_signal_connect (GTK_OBJECT (new->priv->storage_view), "directory_selected", GTK_SIGNAL_FUNC (on_directory_selected), new);
 	gtk_signal_connect (GTK_OBJECT (new->priv->storage_view), "file_selected", GTK_SIGNAL_FUNC (on_file_selected), new);
 

@@ -1,0 +1,73 @@
+INTRODUCTION
+------------
+I bought a Ricoh RDC-2E Digital camera which came with software that only
+ran under Microsoft Windows.  Naturally there was no Linux support.
+
+Welcome to version 0.6 of "rdc2e"; a program that runs on Linux which
+downloads pictures from the camera.
+
+INSTALLATION
+------------
+Read the INSTALL file for the (brief) installation instructions.
+
+PREREQUESITS
+------------
+You will also need to have the JPEG library installed along with "netpbm"
+utilities for the "j6itojpg" package to work.
+
+The JPEG library is found on any good Linux/sunsite/metalabs mirror in the
+.../libs/graphics/ directory. On a RedHat distribution, use the 'libjpeg'
+RPM.
+
+The "netpbm" is also available on a Linux/sunsite/metalabs mirror in the
+.../apps/graphics/convert/ directory. On a RedHat distribution, use the
+'libgr-progs' RPM.
+
+It is also HIGHLY recomended that you install 'irqtune' to improve the
+performance of your serial port.  http://www.best.com/~cae/irqtune
+This sets the IRQ priority of the serial higher than that of the 
+disk drives. If you don't, then expect to get CRC errors a lot of the
+time.
+
+HOW TO USE
+----------
+This is a command line tool that is pretty basic in its use.
+
+The easiest way to use it would be to use no options, and ALL images
+in the cameras memory (not the PCMCIA card) will be downloaded to the
+local directory using the internal names for each image.  These are
+r0100001.j6i, r0100002.j6i, etc.
+
+look at the man page ("man rdc2e") for an explanation of the command line
+arguements.
+
+Then use the "j6iextract" command installed in /usr/local/bin to convert them to
+GIF, JPEG or TIFF files. Again, read the man page ("man j6iextract") for full
+details on its use. It's most basic use is "j6iextract *.j6i" which will create
+a JPEG (.jpg) file for each J6I file in the current directory.
+
+THANKS TO
+---------
+Jun-ichiro "itojun" Hagino - itojun@iijlab.net
+                             http://www.itojun.org/itojun.html
+	
+	It is here that I found out how to convert the J6I files to JPEG.
+	Take a look at:
+	       ftp://ftp.itojun.org/pub/digi-cam/DC-2/dctools.0.04a.shar
+	for a good collection of utilities to convert the J6Is to JPEGs.
+
+Clifford Wright - cliff@snipe444.org
+	
+	Thanks to Cliffs work on the RDC-300 support in gPhoto I was able
+	to determine that the CRC used in the RDC-2E was that used in zmodem.
+
+Leon Brooks - leon@brooks.smileys.net
+
+	Leon found the value of a frame NAK.  This makes retries possible
+	when a frame comes in with an invalid CRC (or length).
+
+CONTACT INFORMATION
+-------------------
+Brian Miller
+bmiller@netspace.net.au
+http://www.netspace.net.au/~bmiller

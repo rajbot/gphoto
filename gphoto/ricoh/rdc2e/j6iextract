@@ -1,0 +1,105 @@
+#!/bin/sh
+#
+# Shell script to convert Ricoh J6I images to JPEG.
+#
+# Usage:
+#        j6iextract [-g|j|t] [-q quality] [-s scale]  *.j6i
+#        
+#        -g extrace as a GIF, not as a JPEG.
+#
+#        -j extrace as a JPEG. (The default)
+#
+#        -q quality
+#              The quality of the final JPEG image as a percentage. The default
+#              is 90.
+#
+#        -s scale
+#              scale resizes the image during the conversion. A value or
+#              0.5 will halve the picture size, and 2 will double the size,
+#              etc.  The default is 0.75.
+# 
+#        -t extract as TIFF, not as a JPEG.
+#
+# copyright(c) 1999 by Brian Miller
+#
+# For details covering this copyright see the file COPYING that came with it.
+#
+# Bits of this were copied from the "dctools" package found at:
+#     ftp://ftp.itojun.org/pub/digi-cam/DC-2/dctools.0.04a.shar
+# and were created by:
+#     Jun-ichiro itojun Itoh <itojun@mt.cs.keio.ac.jp>
+#
+# Download the "dctools" by itojun if you want a more powerful tool that
+# also extracts date & time information from the J6I images.
+#
+
+
+# Change these settings to what you want personally like as defaults.
+SCALE=0.75
+QUALITY=90
+PTYPE=JPEG
+
+while [ 1 ]
+do
+	case $1 in
+		-s)	SCALE=$2
+			shift 2
+			;;
+		-q)	QUALITY=$2
+			shift 2
+			;;
+		-g)	PTYPE=GIF
+			shift
+			;;
+		-j)	PTYPE=JPEG
+			shift
+			;;
+		-t)	PTYPE=TIFF
+			shift
+			;;
+		*)	break
+			;;
+	esac
+done
+
+if [ "$PTYPE" = "JPEG" ]
+then
+	echo "Converting $# J6I files to JPEG with a scale of $SCALE and $QUALITY% quality"
+else
+	echo "Converting $# J6I files to $PTYPE with a scale of $SCALE"
+fi
+
+XSIZE=`echo "768 * $SCALE" | bc | sed 's/\..*$//'`
+YSIZE=`echo "576 * $SCALE" | bc | sed 's/\..*$//'`
+
+CUTXMIN=`echo "4 * $SCALE +0.9" | bc | sed 's/\..*$//'`
+CUTXMAX=`echo "760 * $SCALE +0.9" | bc | sed 's/\..*$//'`
+
+for j6i in $*
+do
+	case $PTYPE in
+	TIFF)	tiff=`basename $j6i .j6i | sed 's/$/.tiff/'`
+		echo "Converting $j6i to $tiff"
+		dd if=$j6i skip=1 ibs=172 2>/dev/null | djpeg | \
+		pnmscale -xsize $XSIZE -ysize $YSIZE | \
+		pnmcut $CUTXMIN 0 $CUTXMAX $YSIZE | \
+		pnmtotiff > $tiff 2> /dev/null
+		;;
+	JPEG)	jpg=`basename $j6i .j6i | sed 's/$/.jpg/'`
+		echo "Converting $j6i to $jpg"
+		dd if=$j6i skip=1 ibs=172 2>/dev/null | djpeg | \
+		pnmscale -xsize $XSIZE -ysize $YSIZE | \
+		pnmcut $CUTXMIN 0 $CUTXMAX $YSIZE | \
+		cjpeg -quality $QUALITY > $jpg
+		;;
+	GIF)	gif=`basename $j6i .j6i | sed 's/$/.gif/'`
+		echo "Converting $j6i to $gif"
+		dd if=$j6i skip=1 ibs=172 2>/dev/null | djpeg | \
+		pnmscale -xsize $XSIZE -ysize $YSIZE | \
+		pnmcut $CUTXMIN 0 $CUTXMAX $YSIZE | \
+		ppmquant 256 2> /dev/null | \
+		ppmtogif > $gif 2> /dev/null
+		;;
+	esac
+
+done

@@ -1,0 +1,8 @@
+0.6 release
+---
+
+1. No code to support a PCMCIA memory code. I don't have one, so I can't
+test.
+
+2. Will ONLY work on hardware platforms that have the order in "short int"
+the same way as in Intel hardware. i.e. Motorola 680x0, Sparc, etc.

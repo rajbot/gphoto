@@ -1,0 +1,14 @@
+Begin3
+Title:		rdc2e
+Version:	0.6
+Entered-date:	10August99
+Description:	A program to download pictures from the Ricoh RDC-2E digital
+                camera,using the serial link.
+Keywords:	Digital cameras, Ricoh, RDC-2E, serial, download
+Author:		bmiller@netspace.net.au (Brian Miller)
+Maintained-by:	bmiller@netspace.net.au (Brian Miller)
+Primary-site:	http://www.netspace.net.au/~bmiller/linux/rdc2e
+		15.5kB rdc2e-0.6.tar.gz
+Platforms:	UNIX (tested on Linux)
+Copying-policy:	GPL
+End

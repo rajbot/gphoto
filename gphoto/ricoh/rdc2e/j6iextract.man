@@ -1,0 +1,55 @@
+.TH j6iextract 1 "13 July 1999" GPL "Extract images from Ricoh J6I files"
+.SH NAME
+j6iextract - Extract JPEG, GIF or TIFF files from a Ricoh J6I files.
+.SH SYNOPSIS
+j6iextract [-g|j|t]  [-q quality] [-s scale] file1.j6i file2.j6i ...
+.SH COPYRIGHT
+j6iextract is Copyright (C) 1999 Brian Miller under the General Public License
+(GPL).
+.SH DESCRIPTION
+.B j6iextract
+is a utility that converts
+.B Ricoh J6I
+images from a Ricoh digital camera into a more useable
+.B GIF, JPEG 
+or
+.B
+TIFF
+format.
+.PP
+Please note that existing files
+.B will be over written.
+.SH OPTIONS
+.IP "-g"
+Extract files into GIF format.
+.IP "-j"
+Extract files into JPEG format, the default.
+.IP "-q quality"
+Specify the quality (in percentage) of the final JPEG image. A value of 75
+gives a pretty good result.  The default is 90.
+.IP "-s scale"
+.B scale
+is used to make smaller or larger JPEG images from original J6I image. A value
+of 1 will keep to original size. The default is 0.75; three quarter size.
+.IP "-t"
+Extract files into TIFF format.
+.SH OPERANDS
+.IP "file1.j6i file2.j6i ..."
+a space separated list of J6I files to convert.
+Shell wildcards may be used.
+.SH EXAMPLES
+For example, the command:
+.PP
+.RS
+$ j6iextract -s 0.5 -q 80 *.j6i
+.RE
+.PP
+will create a JPEG (.jpg) file for each J6I file in the current directory at
+half size, and 80% image quality.
+.SH BUGS
+It will overwrite an already existing image with the same name
+without a warning.
+.SH SEE ALSO
+rdc2e(1)
+.SH AUTHOR
+Brian Miller <bmiller@netspace.net.au>

@@ -1,0 +1,61 @@
+0.1  First Alpha release 21 March 1999
+
+0.2  11 May 1999
+
+	Added in a 250ms delay between grabbing each picture. This seems to
+	have stopped the intermittant error in reading some pictures at their
+	start.
+
+	Wrote my own stripped down "j6i2jpg" shell script that converts
+	the *.j6i files to *.jpg files.  It's a little crude, but it works.
+
+	Added a man page for "j6i2jpg".
+
+0.2a 13 May 1999
+
+	Added in two parameters (-q & -s) onto the j6i2jpg shell script and
+	updated the associated man page.
+
+	Dropped the retry timeout on sending a frame from 1 second to 1/2 sec.
+
+	When a non 0x05 ACK is received, no error message is sent out unless
+	in debug mode.
+
+0.3 13 July 1999
+
+	Added in -d, -i, -p & -s options to rdc2e program.
+
+	Changed the old j6i2jpg to "j6iextract" script.
+
+0.4 17 July 1999
+
+	Added in support for specifing pictures to download on the
+	command line after all options.
+
+	Added in a '-v' option for version number. (WOW!)
+
+0.5 10 August 1999
+
+
+	Added in an option to rdc2e (-f) to start a command off when the
+	downloads have been finished.
+
+0.6 20 August 1999
+
+	Added in the '-t' option to extract the date from a J6I file.
+
+0.7 23 December 1999
+
+	Thanks to Leon Brooks <leon@brooks.smileys.net> who guessed the
+	right NAK (same as in RDC-300) by looking at the source in gPhoto
+	we now have the ability to NAK invalid frames.  These could be either
+	frames with invalid CRCs, or incorrect length.
+
+	I also updated the WWW page to add in that if you get too many CRC
+	errors, then install irqtune to clean this problem up.
+
+	There is also a start to using rdc2e as a http server called from
+	inetd.  It's really early, but uses TCP and is called with the
+	"-q -w" options (in this order!) in inetd.conf.
+
+

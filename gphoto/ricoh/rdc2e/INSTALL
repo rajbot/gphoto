@@ -1,0 +1,13 @@
+Here is the list of things to do:
+
+1. Untar the bundle with: 'tar -zxvf rdc2e-0.7.tar.gz'
+
+2. 'cd rdc2e-0.7'
+
+3. Type './BUILD' - This will prompt you for your default serial
+   port, and then compile the program.
+
+4. As root type 'make install' - this will install the programs in
+   /usr/local/bin, and the man pages in /usr/local/man/man1.
+
+To uninstall everything, as root do a 'make uninstall'.

@@ -1,0 +1,88 @@
+.TH rdc2e 1 "23 December 1999" GPL "Richo RDC-2E digital camera utility"
+.SH NAME
+rdc2e - download binary images from a Richo RDC-2E digital camera
+.SH SYNOPSIS
+rdc2e [-d] [-f finished_command] [-i interface] [-p prefix] [-s speed] [-t image.j6i] [image-list]
+.SH COPYRIGHT
+rdc2e is Copyright (C) 1999 Brian Miller under the General Public License
+(GPL).
+.SH DESCRIPTION
+.B rdc2e
+is a utility that downloads images from a
+.B Ricoh RDC-2E
+digital camera.
+.PP
+As images are being downloaded, a row of hash (#) characters will shown
+the progress.  If there is a CRC error in a frame received then a
+.B 'c'
+will be printed along with an audible beep.  A frame length error will
+produce a
+.B 'l'
+will be displayed along with a beep.
+.SH OPTIONS
+.TP
+.B \-\^d
+Turn on debugging. Additional -d options increases debugging output.
+Currently there are 3 levels.
+.TP
+.B \-\^f  "finished_command"
+Specify a command that will be executed when the last image has been downloaded
+from the camera. If the command contains spaces, then it must be enclosed in
+quotes. This is useful to automatically start the 
+.BR j6iextract
+command, or play a sound to signal that all downloading has been completed.
+.TP
+.B \-\^i  "interface"
+Specify which serial port the camera is on. The default is
+.BR /dev/ttyS1.
+.TP
+.B \-\^p  "prefix"
+Specify a prefix for each image downloaded. The full file name will
+be the prefix followed by a three digit number of the image, and
+a .j6i extension.
+If no prefix is specified, then the internal name of the image
+in the camera will be used. This is 
+.B r0100001.j6i, r0100002.j6i, ... r0100nnn.j6i
+.TP
+.B \-\^s  "speed"
+Specify the serial line download speed in bits per second. It has
+to be one of 2400, 4800, 9600, 19200, 38400, 57600 or 115200.
+The default is 115200.
+.TP
+.B \-\^t  "image.j6i"
+Print the date and time the J6I image was taken by reading it from
+the
+.BR image.j6i
+J6I image file.
+.SH ARGUMENTS
+The only arguments are an optional
+.B image-list
+that specifies which images should be downloaded. These are space
+separated single image numbers, or ranges of numbers denoted as
+<n1>-<n2>.
+.PP
+If no
+.B image-list
+is given, then all images in the camera memory will be downloaded.
+.SH EXAMPLES
+For example, the command:
+.PP
+.RS
+$ rdc2e -p holiday 2 5-7 11
+.RE
+.PP
+will download image numbers 2, 5, 6, 7 & 11 from the camera memory
+and call them holiday002.j6i, holiday005.j6i, holiday006.j6i,
+holiday007.j6i, holiday011.j6i.
+.SH BUGS
+I hope not! But if you find one please e-mail me at
+bmiller@netspace.net.au wit a full description of the problem
+and the version it was found in.
+.PP
+If you ask to download the same image number twice, the downloads
+will stop when the second attempt is tried saying the file already
+exists.
+.SH SEE ALSO
+j6iextract(1)
+.SH AUTHOR
+Brian Miller <bmiller@netspace.net.au>

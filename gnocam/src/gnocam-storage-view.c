@@ -58,6 +58,7 @@ struct _GnoCamStorageViewPrivate {
 	GConfClient*	client;
 
 	ETree*		tree;
+	ETreeModel*	model;
 
 	GHashTable*	hash_table;
 };
@@ -82,14 +83,14 @@ static unsigned int signals[LAST_SIGNAL] = { 0 };
 /*******************/
 
 static void
-populate_node (GnoCamStorageView* storage_view, ETreePath node)
+populate_node (GnoCamStorageView *storage_view, ETreePath node)
 {
-	CORBA_Environment		ev;
-	Bonobo_Storage_DirectoryList*	list;
-	NodeValue*			value;
-	gint				i;
+	CORBA_Environment		 ev;
+	Bonobo_Storage_DirectoryList	*list;
+	NodeValue			*value;
+	gint				 i;
 
-	value = (NodeValue*) e_tree_memory_node_get_data (E_TREE_MEMORY (storage_view->priv->tree->model), node);
+	value = (NodeValue*) e_tree_memory_node_get_data (E_TREE_MEMORY (storage_view->priv->model), node);
 	if (!value->directory) return;
 	if (!value->storage) return;
 
@@ -119,7 +120,7 @@ populate_node (GnoCamStorageView* storage_view, ETreePath node)
                         new_value->path = g_strdup_printf ("%s/%s", value->path, list->_buffer [i].name);
                 new_value->directory = (list->_buffer [i].type == Bonobo_STORAGE_TYPE_DIRECTORY);
 		new_value->populated = !new_value->directory;
-		new_node = e_tree_memory_node_insert (E_TREE_MEMORY (storage_view->priv->tree->model), node, -1, new_value);
+		new_node = e_tree_memory_node_insert (E_TREE_MEMORY (storage_view->priv->model), node, -1, new_value);
                 g_hash_table_insert (storage_view->priv->hash_table, new_value->path, new_node);
 
 		/* If directory, open the storage */
@@ -148,13 +149,13 @@ populate_node (GnoCamStorageView* storage_view, ETreePath node)
 /****************/
 
 static gint
-etree_col_count (ETreeModel* model, gpointer user_data)
+column_count (ETreeModel* model, gpointer data)
 {
 	return (1);
 }
 
 static void
-etree_free_value (ETreeModel* model, gint col, gpointer val, gpointer user_data)
+free_value (ETreeModel* model, gint col, gpointer val, gpointer data)
 {
 	NodeValue*	value;
 
@@ -167,7 +168,7 @@ etree_free_value (ETreeModel* model, gint col, gpointer val, gpointer user_data)
 }
 
 static GdkPixbuf*
-etree_icon_at (ETreeModel* model, ETreePath node, gpointer user_data)
+icon_at (ETreeModel* model, ETreePath node, gpointer data)
 {
 	NodeValue*	value;
 
@@ -182,12 +183,12 @@ etree_icon_at (ETreeModel* model, ETreePath node, gpointer user_data)
 }
 
 static void*
-etree_value_at (ETreeModel* model, ETreePath node, int col, gpointer user_data)
+value_at (ETreeModel* model, ETreePath node, gint col, gpointer data)
 {
 	GnoCamStorageView*	storage_view;
 	NodeValue*		value;
 
-	storage_view = GNOCAM_STORAGE_VIEW (user_data);
+	storage_view = GNOCAM_STORAGE_VIEW (data);
 
 	value = (NodeValue*) e_tree_memory_node_get_data (E_TREE_MEMORY (model), node);
 
@@ -201,14 +202,42 @@ etree_value_at (ETreeModel* model, ETreePath node, int col, gpointer user_data)
 	return (g_basename (value->path));
 }
 
+static void
+set_value_at (ETreeModel *model, ETreePath node, gint col, const void *value, gpointer data)
+{
+	/* Nothing in here yet */
+}
+
 static gboolean
-etree_is_editable (ETreeModel* model, ETreePath path, int col, gpointer user_data)
+is_editable (ETreeModel *model, ETreePath path, int col, gpointer data)
 {
         return (FALSE);
 }
 
+static gboolean
+value_is_empty (ETreeModel *model, gint col, const void *value, gpointer data)
+{
+	return (!value);
+}
+
+static void*
+duplicate_value (ETreeModel *model, gint col, const void *value, gpointer data)
+{
+	/* Nothing in here yet */
+
+	return (NULL);
+}
+
+static void*
+initialize_value (ETreeModel *model, gint col, gpointer data)
+{
+	/* Nothing in here yet */
+
+	return (NULL);
+}
+
 static gchar*
-etree_value_to_string (ETreeModel* mode, gint col, const void* value, gpointer user_data)
+value_to_string (ETreeModel* mode, gint col, const void* value, gpointer data)
 {
 	return (g_strdup (((NodeValue*)value)->path));
 }
@@ -231,9 +260,9 @@ on_folder_updated (GnoCamCamera* camera, const gchar* path, GnoCamStorageView* s
 
 	e_tree_node_set_expanded (E_TREE (storage_view), node, FALSE);
 	while (TRUE) {
-		child = e_tree_model_node_get_first_child (storage_view->priv->tree->model, node);
+		child = e_tree_model_node_get_first_child (storage_view->priv->model, node);
 		if (!child) break;
-		e_tree_memory_node_remove (E_TREE_MEMORY (storage_view->priv->tree->model), child);
+		e_tree_memory_node_remove (E_TREE_MEMORY (storage_view->priv->model), child);
 	}
 
 	populate_node (storage_view, node);
@@ -248,7 +277,7 @@ on_cursor_change (ETree* etree, int row, ETreePath path, GnoCamStorageView* stor
 	NodeValue*	value;
 
 	node = e_tree_node_at_row (storage_view->priv->tree, row);
-	value = (NodeValue*) e_tree_memory_node_get_data (E_TREE_MEMORY (storage_view->priv->tree->model), node);
+	value = (NodeValue*) e_tree_memory_node_get_data (E_TREE_MEMORY (storage_view->priv->model), node);
 
 	if (value->directory) gtk_signal_emit (GTK_OBJECT (storage_view), signals [DIRECTORY_SELECTED], value->path);
 	else gtk_signal_emit (GTK_OBJECT (storage_view), signals [FILE_SELECTED], value->path);
@@ -317,7 +346,6 @@ gnocam_storage_view_new (GnoCamCamera* camera)
 {
 	GnoCamStorageView*		new;
 	ETableExtras*			extras;
-	ETreeModel*			model;
 	ETreePath*			root;
 	ECell*				cell;
 	NodeValue*			value;
@@ -328,8 +356,8 @@ gnocam_storage_view_new (GnoCamCamera* camera)
 	new->priv->hash_table = g_hash_table_new (g_str_hash, g_str_equal);
 
 	/* Create the model */
-	model = e_tree_memory_callbacks_new (etree_icon_at, etree_col_count, NULL, NULL, etree_value_at, NULL, etree_is_editable, NULL, etree_free_value, NULL, NULL, 
-					     etree_value_to_string, new);
+	new->priv->model = e_tree_memory_callbacks_new (icon_at, column_count, NULL, NULL, value_at, set_value_at, is_editable, duplicate_value, free_value, 
+							initialize_value, value_is_empty, value_to_string, new);
 
 	/* Create extras */
 	extras = e_table_extras_new ();
@@ -337,10 +365,10 @@ gnocam_storage_view_new (GnoCamCamera* camera)
 	e_table_extras_add_cell (extras, "render_tree", e_cell_tree_new (NULL, NULL, TRUE, cell));
 
 	/* Construct the scrolled tree */
-	e_tree_scrolled_construct (E_TREE_SCROLLED (new), model, extras, ETABLE_SPEC, NULL);
+	e_tree_scrolled_construct (E_TREE_SCROLLED (new), new->priv->model, extras, ETABLE_SPEC, NULL);
+	gtk_object_unref (GTK_OBJECT (extras));
 
 	new->priv->tree = e_tree_scrolled_get_tree (E_TREE_SCROLLED (new));
-	gtk_object_unref (GTK_OBJECT (extras));
 
 	/* Set up the root node */
 	value = g_new (NodeValue, 1);
@@ -350,14 +378,14 @@ gnocam_storage_view_new (GnoCamCamera* camera)
         value->storage = gnocam_camera_get_storage (camera);
 
         /* Insert the root node */
-	root = e_tree_memory_node_insert (E_TREE_MEMORY (new->priv->tree->model), NULL, -1, value);
+	root = e_tree_memory_node_insert (E_TREE_MEMORY (new->priv->model), NULL, -1, value);
+	e_tree_node_set_expanded (new->priv->tree, root, FALSE);
 	g_hash_table_insert (new->priv->hash_table, value->path, root);
 
 	gtk_signal_connect (GTK_OBJECT (camera), "folder_updated", GTK_SIGNAL_FUNC (on_folder_updated), new);
 
 	/* Configure the tree */
 	e_tree_root_node_set_visible (new->priv->tree, TRUE);
-	e_tree_node_set_expanded (new->priv->tree, root, FALSE);
 	gtk_signal_connect (GTK_OBJECT (new->priv->tree), "cursor_change", GTK_SIGNAL_FUNC (on_cursor_change), new);
 
 	return (GTK_WIDGET (new));

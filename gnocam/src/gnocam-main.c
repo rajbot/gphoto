@@ -39,7 +39,7 @@ struct _GnoCamMainPrivate {
 "  <menu>"															\
 "    <submenu name=\"File\" _label=\"_File\">"											\
 "      <placeholder name=\"FileOperations\"/>"											\
-"      <placeholder name=\"Print\"/>"												\
+"      <placeholder name=\"Print\" delimit=\"top\"/>"										\
 "      <placeholder name=\"System\" delimit=\"top\">"                                                                           \
 "        <menuitem name=\"Close\" verb=\"\" _label=\"_Close\" pixtype=\"stock\" pixname=\"Close\" accel=\"*Control*w\"/>"       \
 "      </placeholder>"                                                                                                          \

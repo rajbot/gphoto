@@ -143,9 +143,14 @@ update_folder (GnoCamFolder* folder)
         CORBA_exception_init (&ev);
         folder->priv->list = Bonobo_Storage_listContents (folder->priv->storage, "", Bonobo_FIELD_TYPE | Bonobo_FIELD_CONTENT_TYPE | Bonobo_FIELD_SIZE, &ev);
         if (BONOBO_EX (&ev)) {
-                g_warning (_("Could not get list of contents for '%s': %s!"), folder->priv->path, bonobo_exception_get_text (&ev));
-                CORBA_exception_free (&ev);
-                return;
+		CORBA_exception_free (&ev);
+		CORBA_exception_init (&ev);
+		folder->priv->list = Bonobo_Storage_listContents (folder->priv->storage, "", Bonobo_FIELD_TYPE, &ev);
+		if (BONOBO_EX (&ev)) {
+	                g_warning (_("Could not get list of contents for '%s': %s!"), folder->priv->path, bonobo_exception_get_text (&ev));
+        	        CORBA_exception_free (&ev);
+                	return;
+		}
         }
         CORBA_exception_free (&ev);
 
@@ -769,7 +774,6 @@ gnocam_folder_new (GnoCamCamera* camera, const gchar* path)
 	GnoCamFolder*			new;
 	Bonobo_Storage			storage_new;
 	Bonobo_Storage			storage;
-	Bonobo_Storage_DirectoryList*   list;
 	Bonobo_Storage_OpenMode		mode;
 	const gchar*			directory;
 	CORBA_Environment		ev;
@@ -799,16 +803,6 @@ gnocam_folder_new (GnoCamCamera* camera, const gchar* path)
 		CORBA_exception_free (&ev);
 		return (NULL);
 	}
-
-	/* Get the list of contents */
-        list = Bonobo_Storage_listContents (storage_new, "", Bonobo_FIELD_TYPE | Bonobo_FIELD_CONTENT_TYPE | Bonobo_FIELD_SIZE, &ev);
-        if (BONOBO_EX (&ev)) {
-		g_warning (_("Could not get list of contents for '%s': %s!"), path, bonobo_exception_get_text (&ev));
-		bonobo_object_release_unref (storage_new, NULL);
-		CORBA_exception_free (&ev);
-		return (NULL);
-	}
-	CORBA_exception_free (&ev);
 
 	new = gtk_type_new (GNOCAM_TYPE_FOLDER);
 	new->priv->camera = cam;

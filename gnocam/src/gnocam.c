@@ -6,6 +6,7 @@
 #include <gnome.h>
 #include <glade/glade.h>
 #include <gconf/gconf-client.h>
+#include <gal/widgets/e-gui-utils.h>
 #include <bonobo.h>
 
 #include "gnocam-main.h"
@@ -31,9 +32,12 @@ log_handler (const gchar* log_domain, GLogLevelFlags log_level, const gchar* mes
 	
 	window = GTK_WINDOW (user_data);
 
-	if (log_level == G_LOG_LEVEL_CRITICAL) gnome_error_dialog_parented (message, window);
-	else if (log_level == G_LOG_LEVEL_WARNING) gnome_warning_dialog_parented (message, window);
-	else if ((log_level == G_LOG_LEVEL_INFO) || (log_level == G_LOG_LEVEL_MESSAGE)) gnome_ok_dialog_parented (message, window);
+	if (log_level == G_LOG_LEVEL_CRITICAL) 
+		e_notice (window, GNOME_MESSAGE_BOX_ERROR, message);
+	else if (log_level == G_LOG_LEVEL_WARNING) 
+		e_notice (window, GNOME_MESSAGE_BOX_WARNING, message);
+	else if ((log_level == G_LOG_LEVEL_INFO) || (log_level == G_LOG_LEVEL_MESSAGE)) 
+		e_notice (window, GNOME_MESSAGE_BOX_INFO, message);
 }
 
 int main (int argc, char *argv[]) 

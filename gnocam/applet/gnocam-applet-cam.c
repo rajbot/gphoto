@@ -5,7 +5,6 @@
 #include <libgnocam/GNOME_C.h>
 #include <libgnocam/gnocam-chooser.h>
 #include <libgnocam/gnocam-util.h>
-#include <libgnocam/gnocam-prefs.h>
 
 #include <gtk/gtkimage.h>
 #include <gtk/gtktogglebutton.h>
@@ -16,11 +15,16 @@
 #include <gtk/gtkstock.h>
 #include <gtk/gtkbutton.h>
 #include <gtk/gtkbox.h>
+#include <gtk/gtkvbox.h>
+#include <gtk/gtkhseparator.h>
+#include <gtk/gtkhbbox.h>
 
 #include <bonobo/bonobo-object.h>
 #include <bonobo/bonobo-exception.h>
 #include <bonobo/bonobo-moniker-util.h>
 #include <bonobo-activation/bonobo-activation-activate.h>
+#include <bonobo/bonobo-window.h>
+#include <bonobo/bonobo-widget.h>
 
 #include <string.h>
 
@@ -228,56 +232,65 @@ action_select_camera (gpointer callback_data, guint callback_action,
 	GnocamAppletCam *c = GNOCAM_APPLET_CAM (callback_data);
 	GnocamChooser *chooser = gnocam_chooser_new ();
 
-	gnocam_chooser_set_manufacturer (chooser, c->priv->manuf);
-	gnocam_chooser_set_model (chooser, c->priv->model);
-	gnocam_chooser_set_port (chooser, c->priv->port);
+	if (c->priv->manuf)
+		gnocam_chooser_set_manufacturer (chooser, c->priv->manuf);
+	else c->priv->manuf = gnocam_chooser_get_manufacturer (chooser);
+	if (c->priv->model) gnocam_chooser_set_model (chooser, c->priv->model);
+	else c->priv->model = gnocam_chooser_get_model (chooser);
+	if (c->priv->port) gnocam_chooser_set_port (chooser, c->priv->port);
+	else c->priv->port = gnocam_chooser_get_port (chooser);
 	gnocam_chooser_set_connect_auto (chooser, c->priv->connect_auto);
 	g_signal_connect (chooser, "changed", G_CALLBACK (on_changed), c);
 	gtk_widget_show (GTK_WIDGET (chooser));
 }
 
 static void
-on_close_clicked (GtkButton *button, GtkDialog *d)
+on_close_clicked (GtkButton *button, GtkWidget *win)
 {
-	gtk_widget_destroy (GTK_WIDGET (d));
+	gtk_widget_destroy (GTK_WIDGET (win));
 }
 
 static void
 action_settings (gpointer callback_data, guint callback_action, GtkWidget *w)
 {
-	GnocamPrefs *p;
-	GNOME_C_Bag bag;
 	CORBA_Environment ev;
 	GnocamAppletCam *c = GNOCAM_APPLET_CAM (callback_data);
-	GtkWidget *d, *b;
+	GtkWidget *b, *win, *vbox, *widget;
+	Bonobo_Control control;
 
 	CORBA_exception_init (&ev);
-	bag = GNOME_C_Camera_get_bag (c->priv->camera, &ev);
+	control = GNOME_C_Camera__get_prefs (c->priv->camera, &ev);
 	if (BONOBO_EX (&ev)) {
-		g_warning ("Could not get property bag: %s",
-			   bonobo_exception_get_text (&ev));
-		CORBA_exception_free (&ev);
-		return;
-	}
-	p = gnocam_prefs_new (bag, &ev);
-	bonobo_object_release_unref (bag, NULL);
-	if (BONOBO_EX (&ev)) {
-		g_warning ("Could not create widget for property bag: %s",
+		g_warning ("Could not get preferences: %s",
 			   bonobo_exception_get_text (&ev));
 		CORBA_exception_free (&ev);
 		return;
 	}
 	CORBA_exception_free (&ev);
-	gtk_widget_show (GTK_WIDGET (p));
-	d = gtk_dialog_new ();
-	gtk_container_add (GTK_CONTAINER (GTK_DIALOG (d)->vbox),
-			   GTK_WIDGET (p));
+	win = bonobo_window_new ("Preferences", _("Preferences"));
+	gtk_widget_show (vbox = gtk_vbox_new (FALSE, 5));
+	bonobo_window_set_contents (BONOBO_WINDOW (win), vbox);
+	
+	gtk_widget_show (widget = bonobo_widget_new_control_from_objref (
+		control, BONOBO_OBJREF (bonobo_window_get_ui_container (
+						BONOBO_WINDOW (win)))));
+	gtk_box_pack_start (GTK_BOX (vbox), widget, TRUE, TRUE, 0);
+
+	/* Add the button */
+	gtk_widget_show (widget = gtk_hbutton_box_new ());
+	gtk_button_box_set_layout (GTK_BUTTON_BOX (widget), GTK_BUTTONBOX_END);
+	gtk_box_pack_end (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
 	b = gtk_button_new_from_stock (GTK_STOCK_CLOSE);
 	gtk_widget_show (b);
-	gtk_box_pack_end (GTK_BOX (GTK_DIALOG (d)->action_area), b,
-			  FALSE, FALSE, 0);
-	g_signal_connect (b, "clicked", G_CALLBACK (on_close_clicked), d);
-	gtk_widget_show (d);
+	gtk_box_pack_end (GTK_BOX (widget), b, FALSE, FALSE, 0);
+	g_signal_connect (b, "clicked", G_CALLBACK (on_close_clicked), win);
+	gtk_widget_grab_focus (b);
+
+	gtk_widget_show (widget = gtk_hseparator_new ());
+	gtk_box_pack_end (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
+
+	/* Show the dialog */
+	gtk_widget_show (win);
 }
 
 static GtkItemFactoryEntry popup[] =

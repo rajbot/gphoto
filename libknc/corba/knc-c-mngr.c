@@ -121,7 +121,7 @@ knc_c_mngr_class_init (KncCMngrClass *klass)
 
 	parent_class = g_type_class_peek_parent (klass);
 
-	epv->get_devices = impl_get_devices;
+	epv->_get_devices = impl_get_devices;
 	epv->connect = impl_connect;
 
 	g_class->finalize = knc_c_mngr_finalize;

@@ -16,12 +16,5 @@ factory_callback (PanelApplet *applet, const gchar *iid,
 	return TRUE;
 }
 
-int
-main (int argc, char *argv[])
-{
-	gnome_program_init ("gnocam-applet", VERSION, LIBGNOMEUI_MODULE,
-			    argc, argv, NULL);
-
-	return panel_applet_factory_main ("OAFIID:GNOME_GnocamApplet_Factory",
-				PANEL_TYPE_APPLET, factory_callback, NULL);
-}
+PANEL_APPLET_BONOBO_FACTORY("OAFIID:GNOME_GnocamApplet_Factory",
+	PANEL_TYPE_APPLET, "gnocam-applet", "0", factory_callback, NULL);

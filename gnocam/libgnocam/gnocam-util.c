@@ -36,7 +36,7 @@ gnocam_util_get_camera (const gchar *manuf, const gchar *model,
 		CORBA_exception_set (ev, CORBA_NO_EXCEPTION, NULL, NULL);
 		continue;
 	    }
-            ml = GNOME_C_Mngr_get_devices (m, ev);
+            ml = GNOME_C_Mngr__get_devices (m, ev);
             if (BONOBO_EX (ev)) {
                     bonobo_object_release_unref (m, NULL);
 		    CORBA_exception_set (ev, CORBA_NO_EXCEPTION, NULL, NULL);

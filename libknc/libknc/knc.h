@@ -146,7 +146,7 @@ typedef enum {
 } KncPref;
 
 typedef struct {
-	unsigned int shutoff_time;
+	unsigned int auto_off_time;
 	unsigned int self_timer_time;
 	unsigned int beep;
 	unsigned int slide_show_interval;
@@ -157,6 +157,27 @@ KncCntrlRes knc_set_pref    (KncCntrl *, KncCamRes *, KncPref, unsigned int);
 KncCntrlRes knc_reset_prefs (KncCntrl *, KncCamRes *);
 
 /* Status information */
+
+typedef enum {
+	KNC_FLASH_OFF		= 0x00,
+	KNC_FLASH_ON  		= 0x01,
+	KNC_FLASH_AUTO		= 0x02,
+	KNC_FLASH_ON_RED_EYE	= 0x05,
+	KNC_FLASH_AUTO_RED_EYE	= 0x06
+} KncFlash;
+
+typedef enum {
+	KNC_FOCUS_SELF_TIMER_FIXED		= 0x00,
+	KNC_FOCUS_SELF_TIMER_FIXED_SELF_TIMER	= 0x01,
+	KNC_FOCUS_SELF_TIMER_AUTO		= 0x02,
+	KNC_FOCUS_SELF_TIMER_AUTO_SELF_TIMER	= 0x03
+} KncFocusSelfTimer;
+
+typedef enum {
+	KNC_RESOLUTION_HIGH	= 0x01,
+	KNC_RESOLUTION_MEDIUM	= 0x02,
+	KNC_RESOLUTION_LOW	= 0x03
+} KncResolution;
 
 typedef struct {
 	KncPowerLevel  power_level;
@@ -169,7 +190,10 @@ typedef struct {
 	KncDate date;
 	KncBitRate bit_rate;
 	KncBitFlag bit_flags;
-	unsigned char flash, resolution, focus, exposure;
+	KncFlash flash;
+	KncFocusSelfTimer focus_self_timer;
+	KncResolution resolution;
+	unsigned char exposure;
 	unsigned char total_pictures, total_strobes;
 } KncStatus;
 
@@ -203,9 +227,9 @@ KncCntrlRes knc_loc_tv_output_format_set (KncCntrl *, KncCamRes *,
 					  KncTVOutputFormat);
 
 typedef enum {
-	KNC_DATE_FORMAT_MONTH_DAY_YEAR = 0x0000,
-	KNC_DATE_FORMAT_DAY_MONTH_YEAR = 0x0001,
-	KNC_DATE_FORMAT_YEAR_MONTH_DAY = 0x0002
+	KNC_DATE_FORMAT_MDY = 0x0000,
+	KNC_DATE_FORMAT_DMY = 0x0001,
+	KNC_DATE_FORMAT_YMD = 0x0002
 } KncDateFormat;
 KncCntrlRes knc_loc_date_format_set (KncCntrl *, KncCamRes *, KncDateFormat);
 

@@ -27,7 +27,7 @@ main (int argc, char **argv)
 	CORBA_exception_init (&ev);
 
 	/* Count supported manufacturers */
-	ml = GNOME_C_Mngr_get_devices (m, &ev);
+	ml = GNOME_C_Mngr__get_devices (m, &ev);
 	if (BONOBO_EX (&ev)) {
 		bonobo_object_release_unref (m, NULL);
 		g_warning ("Could not get list of manufacturers: %s",
@@ -73,7 +73,7 @@ main (int argc, char **argv)
 	g_message ("Now connected to model '%s'.", s);
 	CORBA_free (s);
 
-	d = GNOME_C_Camera_get_dir (c, &ev);
+	d = GNOME_C_Camera__get_dir (c, &ev);
 	bonobo_object_release_unref (c, NULL);
 	if (BONOBO_EX (&ev)) {
 		g_warning ("Could not get root directory: %s",

@@ -3,6 +3,8 @@ SUBDIRS = icons
 INCLUDES =						\
 	-I$(top_srcdir)					\
 	-DICONSDIR="\"$(datadir)/pixmaps/knc/\""	\
+	-DKNC_GLADE_DIR=\"$(KNC_GLADE_DIR)\"		\
+	-DKNC_SRC_DIR=\"$(top_srcdir)\"			\
 	$(CORBA_CFLAGS)
 
 CORBA_GENERATED = GNOME_C-common.c GNOME_C-stubs.c GNOME_C-skels.c GNOME_C.h
@@ -18,12 +20,11 @@ endif
 
 knc_SOURCES = $(CORBA_GENERATED)	\
 	knc.c				\
-	knc-c-bag.h	knc-c-bag.c	\
 	knc-c-camera.h	knc-c-camera.c	\
 	knc-c-dir.h	knc-c-dir.c	\
 	knc-c-file.h	knc-c-file.c	\
 	knc-c-if.h	knc-c-if.c	\
-	knc-c-prop.h	knc-c-prop.c	\
+	knc-c-prefs.h	knc-c-prefs.c	\
 	knc-c-mngr.h	knc-c-mngr.c
 knc_LDADD = ../libknc/libknc.la $(CORBA_LIBS)
 
@@ -35,6 +36,9 @@ serverdir = $(libdir)/bonobo/servers
 server_in_files = GNOME_C_Knc.server.in
 server_DATA = $(server_in_files:.server.in=.server)
 @INTLTOOL_SERVER_RULE@
+
+Gladedir = $(KNC_GLADE_DIR)
+Glade_DATA = knc.glade
 endif
 
 CLEANFILES = $(CORBA_GENERATED)

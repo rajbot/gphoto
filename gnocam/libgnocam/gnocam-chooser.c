@@ -151,7 +151,7 @@ gnocam_chooser_setup (GnocamChooser *c)
 				       &ev);
 		if (BONOBO_EX (&ev))
 			continue;
-		ml = GNOME_C_Mngr_get_devices (m, &ev);
+		ml = GNOME_C_Mngr__get_devices (m, &ev);
 		bonobo_object_release_unref (m, NULL);
 		if (BONOBO_EX (&ev))
 			continue;
@@ -424,11 +424,12 @@ gnocam_chooser_new (void)
 	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (c)->vbox), ui, TRUE, TRUE, 0);
 
 	/* Add the buttons */
-	b = gtk_button_new_from_stock (GTK_STOCK_CLOSE);
-	gtk_widget_show (b);
+	gtk_widget_show (b = gtk_button_new_from_stock (GTK_STOCK_CLOSE));
+	GTK_WIDGET_SET_FLAGS (b, GTK_CAN_DEFAULT);
 	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (c)->action_area), b,
 			    TRUE, TRUE, 0);
 	g_signal_connect (b, "clicked", G_CALLBACK (on_close_clicked), c);
+	gtk_widget_grab_focus (b);
 
 	/* Manufacturer */
 	w = glade_xml_get_widget (xml, "treeview_manufacturer");

@@ -11,66 +11,6 @@ module C {
 
 	typedef unsigned long ID;
 	typedef sequence<unsigned long> IDList;
-	typedef sequence<octet> Icon;
-
-	/* Property types */
-	typedef boolean PropBoolean;
-	typedef string PropString;
-	struct PropChoice {
-		long val;
-		sequence<string> vals;
-	};
-	struct PropDateTime {
-		long base;
-		long val;
-	};
-	struct PropRange {
-		double min;
-		double max;
-		double incr;
-		double val;
-	};
-
-	enum ValType {
-		VAL_TYPE_BOOLEAN,
-		VAL_TYPE_STRING,
-		VAL_TYPE_DATE_TIME,
-		VAL_TYPE_RANGE,
-		VAL_TYPE_CHOICE
-	};
-
-	union Val switch (ValType) {
-	case VAL_TYPE_BOOLEAN: PropBoolean p_boolean;
-	case VAL_TYPE_RANGE: PropRange p_range;
-	case VAL_TYPE_STRING: PropString p_string;
-	case VAL_TYPE_DATE_TIME: PropDateTime p_date_time;
-	case VAL_TYPE_CHOICE: PropChoice p_choice;
-	};
-
-	/* A property */
-	interface Prop : Bonobo::Unknown {
-		readonly attribute string  name;
-		readonly attribute string  description;
-		readonly attribute Val val;
-
-		void set_boolean (in boolean val) raises (Error);
-		void set_string (in string val) raises (Error);
-		void set_long (in long val) raises (Error);
-		void set_double (in double val) raises (Error);
-	};
-	typedef sequence<Prop> PropList;
-
-	/* A bag containing properties */
-	interface Bag : Bonobo::Unknown {
-
-		typedef sequence<Bag> BagList;
-
-		readonly attribute string name;
-		readonly attribute string description;
-		readonly attribute Icon icon;
-		readonly attribute BagList bags;
-		readonly attribute PropList props;
-	};
 
 	interface ReadCallback : Bonobo::Unknown {
 
@@ -116,12 +56,10 @@ module C {
 
 		readonly attribute string manufacturer;
 		readonly attribute string model;
-
-		/* Get the root directory */
-		Dir get_dir () raises (Error);
-
-		/* Properties */
-		Bag get_bag () raises (Error);
+		readonly attribute Dir dir;
+		readonly attribute Bonobo::Control prefs;
+		readonly attribute Bonobo::Control capture;
+		readonly attribute Bonobo::Control preview;
 	};
 
 	interface Mngr : Bonobo::Unknown {
@@ -138,10 +76,11 @@ module C {
 			ModelList models;
 		};
 		typedef sequence<Manufacturer> ManufacturerList;
-		ManufacturerList get_devices ();
+
+		readonly attribute ManufacturerList devices;
+		readonly attribute IDList cameras;
 
 		/* Querying cameras we are already connected to. */
-		IDList get_cameras ();
 		Camera get_camera (in ID id_device) raises (BadID);
 
 		/* Connecting to cameras */

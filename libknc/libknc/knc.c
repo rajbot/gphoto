@@ -262,8 +262,8 @@ knc_get_status (KncCntrl *c, KncCamRes *r, KncStatus *s)
 		s->bit_rate         = (rb[23] << 8) | rb[22];
 		s->bit_flags        = (rb[25] << 8) | rb[24];
 		s->flash            = rb[26];
-		s->resolution       = rb[27];
-		s->focus            = rb[28];
+		s->resolution       = rb[27] ? rb[27] : KNC_RESOLUTION_MEDIUM;
+		s->focus_self_timer = rb[28];
 		s->exposure         = rb[29];
 		s->total_pictures   = (rb[31] << 8) | rb[30];
 		s->total_strobes    = (rb[33] << 8) | rb[32];
@@ -301,9 +301,9 @@ knc_get_prefs (KncCntrl *c, KncCamRes *r, KncPrefs *p)
 
 	CR (knc_cntrl_transmit (c, sb, sizeof (sb), rb, &rbs));
 	CCR (r,rb,rbs);
-	CS (rbs, 10);
+	CS (rbs, 8);
 	if (p) {
-		p->shutoff_time           = rb[4];
+		p->auto_off_time          = rb[4];
 		p->self_timer_time        = rb[5];
 		p->beep                   = rb[6];
 		p->slide_show_interval    = rb[7];

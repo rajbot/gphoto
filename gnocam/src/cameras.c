@@ -267,7 +267,7 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 			CORBA_exception_init (&ev);
 			interface = bonobo_object_client_query_interface (viewer_client, "IDL:Bonobo/PersistStream:1.0", &ev);
 			if (ev._major != CORBA_NO_EXCEPTION) {
-				message = g_strdup_printf (_("Could not connect to the eog image viewer! (%s)"), bonobo_exception_get_text (&ev));
+				message = g_strdup_printf (_("Could not connect to the image viewer! (%s)"), bonobo_exception_get_text (&ev));
 				gnome_error_dialog_parented (message, main_window);
 				g_free (message);
 			} else {
@@ -584,7 +584,7 @@ camera_tree_file_add (GtkTree* tree, Camera* camera, gchar* path, gchar* filenam
 }
 
 void
-camera_tree_update (GtkTree* tree, GConfValue* value)
+main_tree_update (GConfValue* value)
 {
 	xmlDocPtr	doc;
 	xmlNodePtr	node;
@@ -602,7 +602,7 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
         Camera*         camera;
 	gboolean	changed;
 
-	g_assert (tree != NULL);
+	g_return_if_fail (main_tree);
 
         if (value) {
                 g_assert (value->type == GCONF_VALUE_LIST);
@@ -611,7 +611,8 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
         }
 
         /* Mark each camera in the tree as unchecked. */
-        for (i = 0; i < g_list_length (tree->children); i++) gtk_object_set_data (GTK_OBJECT (g_list_nth_data (tree->children, i)), "checked", GINT_TO_POINTER (0));
+        for (i = 0; i < g_list_length (main_tree->children); i++) 
+		gtk_object_set_data (GTK_OBJECT (g_list_nth_data (main_tree->children, i)), "checked", GINT_TO_POINTER (0));
 
 	/* Investigate if the new cameras are in the tree. */
         for (i = 0; i < g_slist_length (list_cameras); i++) {
@@ -632,8 +633,8 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
 		g_assert ((speed = xmlGetProp (node, "Speed")) != NULL);
 
                 /* Do we have this camera in the tree? */
-                for (j = 0; j < g_list_length (tree->children); j++) {
-			item = GTK_TREE_ITEM (g_list_nth_data (tree->children, j));
+                for (j = 0; j < g_list_length (main_tree->children); j++) {
+			item = GTK_TREE_ITEM (g_list_nth_data (main_tree->children, j));
                         g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
                         if (atoi (id) == ((frontend_data_t*) camera->frontend_data)->id) {
 
@@ -647,20 +648,20 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
 
 					/* We simply remove the camera and add a new one to the tree. */
 					camera_tree_item_remove (GTK_TREE_ITEM (item));
-					j = g_list_length (tree->children) - 1;
+					j = g_list_length (main_tree->children) - 1;
 				}
                         }
                 }
-                if (j == g_list_length (tree->children)) {
+                if (j == g_list_length (main_tree->children)) {
 
                         /* We don't have the camera in the tree (yet). */
-                        if ((camera = gp_camera_new_by_description (atoi (id), name, model, port, atoi (speed)))) camera_tree_folder_add (tree, camera, "/");
+                        if ((camera = gp_camera_new_by_description (atoi (id), name, model, port, atoi (speed)))) camera_tree_folder_add (main_tree, camera, "/");
                 }
         }
 
         /* Delete all unchecked cameras. */
-        for (j = g_list_length (tree->children) - 1; j >= 0; j--) {
-                item = GTK_TREE_ITEM (g_list_nth_data (tree->children, j));
+        for (j = g_list_length (main_tree->children) - 1; j >= 0; j--) {
+                item = GTK_TREE_ITEM (g_list_nth_data (main_tree->children, j));
                 if (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (item), "checked")) == 0) camera_tree_item_remove (item);
         }
 }

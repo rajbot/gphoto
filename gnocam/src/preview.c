@@ -13,12 +13,6 @@
 #include "cameras.h"
 #include "utils.h"
 
-/***************/
-/* Definitions */
-/***************/
-
-#define EOG_IMAGE_VIEWER_ID "OAFIID:eog_image_viewer:a30dc90b-a68f-4ef8-a257-d2f8ab7e6c9f"
-
 /**********************/
 /* External Variables */
 /**********************/
@@ -132,7 +126,7 @@ preview_refresh (GtkWidget* preview)
 			CORBA_exception_init (&ev);
 			interface = bonobo_object_client_query_interface (client, "IDL:Bonobo/PersistStream:1.0", &ev);
 			if (ev._major != CORBA_NO_EXCEPTION) {
-				message = g_strdup_printf (_("Could not connect to the eog image viewer! (%s)"), bonobo_exception_get_text (&ev));
+				message = g_strdup_printf (_("Could not connect to the image viewer! (%s)"), bonobo_exception_get_text (&ev));
 				gnome_error_dialog_parented (message, main_window);
 				g_free (message);
 			} else {
@@ -214,6 +208,7 @@ preview_new (Camera* camera)
 		BONOBO_UI_UNSAFE_VERB ("Manual", on_manual_activate),
 		BONOBO_UI_UNSAFE_VERB ("About", on_about_activate),
 		BONOBO_UI_VERB_END};
+	GConfValue*		value;
 
         g_assert (camera);
 
@@ -225,10 +220,12 @@ preview_new (Camera* camera)
 	bonobo_ui_component_set_container (component, bonobo_object_corba_objref (BONOBO_OBJECT (container)));
 	bonobo_ui_component_add_verb_list_with_data (component, verb, window);
 	bonobo_ui_util_set_ui (component, "", "gnocam-preview.xml", "Preview");
-	if ((widget = bonobo_widget_new_control (EOG_IMAGE_VIEWER_ID, bonobo_object_corba_objref (BONOBO_OBJECT (container))))) {
-		bonobo_window_set_contents (BONOBO_WINDOW (window), widget);
-		gtk_object_set_data (GTK_OBJECT (window), "client", bonobo_widget_get_server (BONOBO_WIDGET (widget)));
-	} else gnome_error_dialog_parented (_("Could not start the eog image viewer!"), main_window);
+	if ((value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/viewer_id", NULL))) {
+		if ((widget = bonobo_widget_new_control ((gchar*) gconf_value_get_string (value), bonobo_object_corba_objref (BONOBO_OBJECT (container))))) {
+			bonobo_window_set_contents (BONOBO_WINDOW (window), widget);
+			gtk_object_set_data (GTK_OBJECT (window), "client", bonobo_widget_get_server (BONOBO_WIDGET (widget)));
+		} else gnome_error_dialog_parented (_("Could not start the image viewer!"), main_window);
+	} gnome_warning_dialog_parented (_("No image viewer has been specified. Please select one in the preferences dialog."), main_window);
 	gtk_widget_show_all (window);
 
         /* Store some data. */

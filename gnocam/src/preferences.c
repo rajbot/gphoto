@@ -4,6 +4,7 @@
 #include <gphoto2.h>
 #include <gconf/gconf-client.h>
 #include <parser.h>
+#include <bonobo.h>
 #include "preferences.h"
 #include "gnocam.h"
 
@@ -25,6 +26,8 @@ extern GConfClient*     gconf_client;
 /* Prototypes */
 /**************/
 
+void on_button_image_viewer_clicked 			(GtkButton* button, gpointer user_data);
+
 void on_button_camera_add_clicked 			(GtkButton* button, gpointer user_data);
 void on_button_camera_update_clicked 			(GtkButton* button, gpointer user_data);
 void on_button_camera_delete_clicked 			(GtkButton* button, gpointer user_data);
@@ -37,6 +40,7 @@ void on_dialog_preferences_button_cancel_clicked 	(GtkButton* button, gpointer u
 void on_clist_cameras_row_selection_changed (GtkWidget *clist, gint row, gint column, GdkEventButton *event, gpointer user_data);
 
 void on_entry_prefix_changed 		(GtkEditable* editable, gpointer user_data);
+void on_entry_image_viewer_changed 	(GtkEditable* editable, gpointer user_data);
 
 gboolean on_combo_entry_model_focus_out_event 	(GtkWidget *widget, GdkEventFocus *event, gpointer user_data);
 
@@ -44,6 +48,7 @@ void on_radiobutton_debug_level_toggled (GtkToggleButton* toggle_button);
 
 void dialog_preferences_debug_level_update 	(gint debug_level);
 void dialog_preferences_prefix_update 		(gchar *prefix);
+void dialog_preferences_viewer_id_update 	(gchar* viewer_id);
 void dialog_preferences_cameras_update 		(GSList* camera_list);
 void dialog_preferences_populate 		(void);
 void dialog_preferences_cameras_changed 	(void);
@@ -54,6 +59,46 @@ void dialog_preferences_update_sensitivity 	(void);
 /*************/
 /* Callbacks */
 /*************/
+
+void
+on_button_image_viewer_clicked (GtkButton* button, gpointer user_data)
+{
+	gchar*		object_id = NULL;
+	gchar*		required_interfaces [2] = { "IDL:Bonobo/Control:1.0", NULL };
+	GtkEntry*	entry;
+
+	g_return_if_fail (entry = GTK_ENTRY (glade_xml_get_widget (xml_preferences, "entry_image_viewer_id")));
+	
+	object_id = bonobo_selector_select_id (_("Select an image viewer"), (const gchar **) required_interfaces);
+	if (object_id) {
+		gtk_entry_set_text (entry, object_id);
+		gconf_change_set_set_string (change_set, "/apps/" PACKAGE "/viewer_id", object_id);
+		g_free (object_id);
+		dialog_preferences_update_sensitivity ();
+	}
+}
+
+void
+on_entry_image_viewer_changed (GtkEditable* editable, gpointer user_data)
+{
+	GtkEntry*	entry;
+	gchar*		object_id;
+	
+	g_assert (editable);
+	g_assert (entry = GTK_ENTRY (glade_xml_get_widget (xml_preferences, "entry_prefix")));
+	g_assert (change_set);
+			
+	/* Did the user really change something? */
+	if (gtk_object_get_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences")), "done")) {
+			
+		/* Tell gconf about the change. */
+		object_id = gtk_entry_get_text (entry);
+		if (*object_id != '0') gconf_change_set_set_string (change_set, "/apps/" PACKAGE "/viewer_id", object_id);
+		else gconf_change_set_unset (change_set, "/apps/" PACKAGE "/viewer_id");
+
+		dialog_preferences_update_sensitivity ();
+	}
+}
 
 void
 on_button_camera_add_clicked (GtkButton* button, gpointer user_data)
@@ -247,9 +292,9 @@ on_entry_prefix_changed (GtkEditable* editable, gpointer user_data)
 	gchar*		prefix;
 	GtkEntry*	entry;
 
-	g_assert (editable != NULL);
+	g_assert (editable);
 	g_assert ((entry = GTK_ENTRY (glade_xml_get_widget (xml_preferences, "entry_prefix"))) != NULL);
-	g_assert (change_set != NULL);
+	g_assert (change_set);
 
 	/* Did the user really change something? */
 	if (gtk_object_get_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences")), "done")) {
@@ -366,14 +411,25 @@ on_combo_entry_model_focus_out_event (GtkWidget *widget, GdkEventFocus *event, g
 /******************************************************************************/
 
 void
-dialog_preferences_prefix_update (gchar *prefix)
+dialog_preferences_prefix_update (gchar* prefix)
 {
 	GtkEntry*	entry_prefix;
 
-	g_assert (xml_preferences != NULL);
-	g_assert ((entry_prefix = GTK_ENTRY (glade_xml_get_widget (xml_preferences, "entry_prefix"))) != NULL);
+	g_return_if_fail (xml_preferences);
+	g_return_if_fail (entry_prefix = GTK_ENTRY (glade_xml_get_widget (xml_preferences, "entry_prefix")));
 
 	gtk_entry_set_text (entry_prefix, prefix);
+}
+
+void
+dialog_preferences_viewer_id_update (gchar* viewer_id)
+{
+	GtkEntry*	entry_image_viewer_id;
+
+	g_return_if_fail (xml_preferences);
+	g_return_if_fail (entry_image_viewer_id = GTK_ENTRY (glade_xml_get_widget (xml_preferences, "entry_image_viewer_id")));
+
+	gtk_entry_set_text (entry_image_viewer_id, viewer_id);
 }
 
 void
@@ -492,6 +548,13 @@ dialog_preferences_populate ()
                 gconf_value_free (value);
         }
 
+	/* Get gconf's value for viewer_id. */
+	if ((value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/viewer_id", NULL))) {
+		g_assert (value->type == GCONF_VALUE_STRING);
+		dialog_preferences_viewer_id_update ((gchar*) gconf_value_get_string (value));
+		gconf_value_free (value);
+	}
+
         /* Get gconf's value for debug level. */
         if ((value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/debug_level", NULL))) {
                 g_assert (value->type == GCONF_VALUE_INT);
@@ -526,6 +589,7 @@ dialog_preferences_apply ()
 			NULL, 
 			"/apps/" PACKAGE "/cameras",
 			"/apps/" PACKAGE "/prefix",
+			"/apps/" PACKAGE "/viewer_id", 
 			"/apps/" PACKAGE "/debug_level",
 			NULL);
 	}
@@ -542,11 +606,12 @@ dialog_preferences_revert ()
         GtkObject*      object;
 	GSList*		list_cameras = NULL;
 	gchar*		prefix;
+	gchar*		viewer_id;
 
-        g_assert (xml_preferences != NULL);
-        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences"))) != NULL);
-        g_assert (change_set != NULL);
-	g_assert (revert_change_set != NULL);
+        g_return_if_fail (xml_preferences);
+        g_return_if_fail (object = GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences")));
+        g_return_if_fail (change_set);
+	g_return_if_fail (revert_change_set);
 
         /* When reverting, we want to discard any pending changes. */
         gconf_change_set_clear (change_set);
@@ -557,19 +622,24 @@ dialog_preferences_revert ()
 			g_assert (value->type == GCONF_VALUE_STRING);
 			prefix = (gchar*) gconf_value_get_string (value);
 			dialog_preferences_prefix_update (prefix);
-		} else {
-			dialog_preferences_prefix_update ("");
-		}
+		} else dialog_preferences_prefix_update ("");
 	} 
+
+	/* Revert viewer_id (if necessary). */
+	if (gconf_change_set_check_value (revert_change_set, "/apps/" PACKAGE "/viewer_id", &value)) {
+		if (value) {
+			g_assert (value->type == GCONF_VALUE_STRING);
+			viewer_id = (gchar*) gconf_value_get_string (value);
+			dialog_preferences_viewer_id_update (viewer_id);
+		} else dialog_preferences_viewer_id_update ("");
+	}
 
 	/* Revert debug level (if necessary). */
 	if (gconf_change_set_check_value (revert_change_set, "/apps/" PACKAGE "/debug_level", &value)) {
 		if (value) {
 			g_assert (value->type == GCONF_VALUE_INT);
 			dialog_preferences_debug_level_update (gconf_value_get_int (value));
-		} else {
-			dialog_preferences_debug_level_update (GP_DEBUG_NONE);
-		}
+		} else dialog_preferences_debug_level_update (GP_DEBUG_NONE);
 	}
 
 	/* Revert camera list (if necessary). */
@@ -578,9 +648,7 @@ dialog_preferences_revert ()
 			g_assert (value->type == GCONF_VALUE_LIST);
 			list_cameras = gconf_value_get_list (value);
 			g_assert (gconf_value_get_list_type (value) == GCONF_VALUE_STRING);
-		} else {
-			list_cameras = NULL;
-		}
+		} else list_cameras = NULL;
 		dialog_preferences_cameras_update (list_cameras);
 	}
 

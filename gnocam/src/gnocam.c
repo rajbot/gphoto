@@ -15,19 +15,13 @@
 #include "preview.h"
 #include "file-operations.h"
 
-/***************/
-/* Definitions */
-/***************/
-
-#define EOG_IMAGE_VIEWER_ID 		"OAFIID:eog_image_viewer:a30dc90b-a68f-4ef8-a257-d2f8ab7e6c9f"
-#define NAUTILUS_IMAGE_VIEWER_ID	"OAFIID:nautilus-image-viewer:30686633-23d5-422b-83c6-4f1b06f8abcd"
-
 /********************/
 /* Global Variables */
 /********************/
 
 GConfClient*		gconf_client 	= NULL;
 BonoboObjectClient*	viewer_client 	= NULL;
+BonoboUIContainer*      container	= NULL;
 GtkTree*		main_tree 	= NULL;
 GnoCamViewMode		view_mode 	= GNOCAM_VIEW_MODE_PREVIEW;
 GList*			preview_list 	= NULL;
@@ -136,14 +130,13 @@ int main (int argc, char *argv[])
 {
 	GError*			gerror = NULL;
 	GConfValue*		value = NULL;
-	guint 			notify_id_cameras;
+	guint 			notify_id_cameras, notify_id_viewer;
 	gchar*			prefix = NULL;
 	GtkWidget*		widget;
 	GtkWidget*      	viewer;
 	GtkWidget*		menu;
 	GtkWidget*		menu_item;
 	gint			i;
-	BonoboUIContainer*	container;
 	BonoboUIComponent*	component;
 	BonoboUIVerb		verb [] = {
 		BONOBO_UI_UNSAFE_VERB ("NewGallery", on_new_gallery_activate),
@@ -213,11 +206,14 @@ int main (int argc, char *argv[])
 	bonobo_ui_component_object_set (component, "/Toolbar/ViewMode", bonobo_object_corba_objref (BONOBO_OBJECT (bonobo_control_new (widget))), NULL);
 
 	/* Create the viewer. */
-	if ((viewer = bonobo_widget_new_control (EOG_IMAGE_VIEWER_ID, bonobo_object_corba_objref (BONOBO_OBJECT (container))))) {
-		gtk_widget_show (viewer);
-		gtk_paned_pack2 (GTK_PANED (glade_xml_get_widget (xml_main, "main_hpaned")), viewer, TRUE, TRUE);
-		viewer_client = bonobo_widget_get_server (BONOBO_WIDGET (viewer));
-	} else gnome_error_dialog_parented (_("Could not start the eog image viewer!"), main_window);
+	if ((value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/viewer_id", NULL))) {
+		if ((viewer = bonobo_widget_new_control ((gchar*) gconf_value_get_string (value), bonobo_object_corba_objref (BONOBO_OBJECT (container))))) {
+			gtk_widget_show (viewer);
+			gtk_paned_pack2 (GTK_PANED (glade_xml_get_widget (xml_main, "main_hpaned")), viewer, TRUE, TRUE);
+			viewer_client = bonobo_widget_get_server (BONOBO_WIDGET (viewer));
+		} else gnome_error_dialog_parented (_("Could not start the image viewer!"), main_window);
+		gconf_value_free (value);
+	}
 
 	/* Set the global variables. */
 	main_tree = GTK_TREE (glade_xml_get_widget (xml_main, "main_tree"));
@@ -242,12 +238,13 @@ int main (int argc, char *argv[])
 
         /* Populate the camera tree. */
 	if ((value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/cameras", NULL))) {
-		camera_tree_update (main_tree, value);
+		main_tree_update (value);
 		gconf_value_free (value);
 	}
 
 	/* Notifications. */
 	notify_id_cameras = gconf_client_notify_add (gconf_client, "/apps/" PACKAGE "/cameras", on_camera_setup_changed, NULL, NULL, NULL);
+	notify_id_viewer = gconf_client_notify_add (gconf_client, "/apps/" PACKAGE "/viewer_id", on_viewer_changed, NULL, NULL, NULL);
 
 	/* Start the event loop. */
 	bonobo_main ();
@@ -266,6 +263,7 @@ int main (int argc, char *argv[])
 
 	/* Clean up (gconf). */
 	gconf_client_notify_remove (gconf_client, notify_id_cameras);
+	gconf_client_notify_remove (gconf_client, notify_id_viewer);
 	gerror = NULL;
 	gconf_client_suggest_sync (gconf_client, &gerror);
 	if (gerror) g_warning ("GConf Error: %s", gerror->message);

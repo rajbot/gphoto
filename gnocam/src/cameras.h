@@ -10,7 +10,7 @@ void camera_tree_file_add       	(GtkTree* tree, Camera* camera, gchar* path, gc
 
 void camera_tree_item_remove 		(GtkTreeItem* item);
 
-void camera_tree_update (GtkTree* tree, GConfValue* value);
+void main_tree_update (GConfValue* value);
 
 
 

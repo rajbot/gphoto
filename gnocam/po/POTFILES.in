@@ -10,7 +10,6 @@ src/preferences.c
 src/preview.c
 src/properties.c
 src/utils.c
-src/libglade-i18n.c
 src/ui/gnocam-main.xml
 src/ui/gnocam-preview.xml
 

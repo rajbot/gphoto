@@ -22,7 +22,7 @@ dnl Completed by AM_INIT_AUTOMAKE
 dnl AC_PROG_INSTALL
 dnl AC_PROG_MAKE_SET
 
-ALL_LINGUAS="da no ru sv"
+ALL_LINGUAS="da de no ru sv"
 AM_GNOME_GETTEXT
 
 AC_SUBST(CFLAGS)

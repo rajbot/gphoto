@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1999 by Henning Zabel <henning@uni-paderborn.de>
+ * Copyright (C) 1999/2000 by Henning Zabel <henning@uni-paderborn.de>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -18,8 +18,7 @@
  
 /*
  * gphoto driver for the Mustek MDC800 Digital Camera. The driver 
- * supports rs232 and USB. It automatically detects which Kernelnode
- * is used.
+ * supports rs232 and USB. 
  */
 #include "mdc800.h"
 #include "../src/util.h"
@@ -35,9 +34,9 @@
 static int  mdc800_camera_open=0;
 static char mdc800_summary_output [500]; 
 
-
 /*
  * Init this library.
+ * usb: 0: rs232   1:usb
  */
 int mdc800_initialize ()
 {
@@ -49,7 +48,7 @@ int mdc800_initialize ()
 	printAPINote ("-Init---------------------------------------------------------------------------\n");		
 	printAPINote ("Serial Port is \"%s\" \n",serial_port);
 
-	if (!mdc800_openCamera (serial_port,0))
+	if (!mdc800_openCamera (serial_port))
 	{
 		printAPIError ("(mdc800_initialize) open camera fails.\n");
 		return 0;
@@ -149,9 +148,7 @@ char* mdc800_description()
 {
 	return "Mustek MDC-800 gPhoto Library\n"
 		    "Henning Zabel <henning@uni-paderborn.de>\n\n"
-			 "Supports Serial and USB Protokoll. For\n"
-			 "USB you need a special Driver load in\n"
-			 "to the Kernel.\n";
+			 "Supports Serial and USB Protokoll. \n";
 }
 
 
@@ -190,6 +187,8 @@ int mdc800_delete_image (int pn)
 	{
 		return 0;
 	}
+
+	printAPINote ("Delete Image %i \n", pn);
 
 	if (!mdc800_setTarget (1))	// Image
 	{
@@ -354,14 +353,14 @@ struct Image* mdc800_get_preview ()
 	int num=mdc800_take_picture ();
 	if (num == 0)
 	{
-		printAPIError ("mdc800_get_preview: taking picture fails.\n");
+		printAPIError ("(mdc800_get_preview) taking picture fails.\n");
 		mdc800_close ();
 		return null;
 	}
 	pic=mdc800_get_picture (num,1);  // Thumbnail
 	if (pic == null)
 	{
-		printAPIError ("mdc800_get_preview: there's no picture ??\n");
+		printAPIError ("(mdc800_get_preview) there's no picture ??\n");
 		mdc800_close ();
 		return 0;
 	}
@@ -369,7 +368,7 @@ struct Image* mdc800_get_preview ()
 	if (!mdc800_delete_image (num))
 	{
 		mdc800_close ();
-		printAPIError ("mdc800_get_preview: can't delete taken picture (%i)\n",num);
+		printAPIError ("(mdc800_get_preview) can't delete taken picture (%i)\n",num);
 		return 0;
 	}
 	
@@ -377,11 +376,39 @@ struct Image* mdc800_get_preview ()
 }
 
 
-
-
-struct _Camera mustek_mdc800 = 
+/*
+ * Spezial USB and rs232 Initialisation
+ * Camera structs :
+ */
+int mdc800_initialize_rs232 ()
 {
-	mdc800_initialize,
+	mdc800_io_using_usb=0;
+	return mdc800_initialize ();
+}
+
+struct _Camera mustek_mdc800_rs232 = 
+{
+	mdc800_initialize_rs232 ,
+	mdc800_get_picture,
+	mdc800_get_preview,
+	mdc800_delete_image,
+	mdc800_take_picture,
+	mdc800_number_of_pictures,
+	mdc800_configure,
+	mdc800_summary,
+	mdc800_description
+};
+
+
+int mdc800_initialize_usb ()
+{
+	mdc800_io_using_usb=1;
+	return mdc800_initialize ();
+}
+
+struct _Camera mustek_mdc800_usb = 
+{
+	mdc800_initialize_usb ,
 	mdc800_get_picture,
 	mdc800_get_preview,
 	mdc800_delete_image,

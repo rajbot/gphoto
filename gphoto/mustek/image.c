@@ -161,6 +161,7 @@ unsigned char SOF_SOS3[33]=
 	0x11, 0x00, 0x3F, 0x00
 };
 
+
 /*
  * corrects downloaded data 
  *

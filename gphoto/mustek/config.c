@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1999 by 
+ * Copyright (C) 1999/2000 by 
  *     Henning Zabel <henning@uni-paderborn.de>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -19,8 +19,7 @@
  
 /*
  * gphoto driver for the Mustek MDC800 Digital Camera. The driver 
- * supports rs232 and USB. It automatically detects which Kernelnode
- * is used.
+ * supports rs232 and USB.
  */
 
 
@@ -48,7 +47,6 @@
 #include "core.h"
 #include "print.h"
 #include "io.h"
-#include "device.h"
 
 /****************************************************************************
 	Dialog Data
@@ -244,7 +242,7 @@ void mdc800_createDialog (void )
 
 
 	/* Baud Rate Selection (only for rs232)*/
-	if (mdc800_device_USB_detected ())
+	if (mdc800_io_using_usb)
 	{
 		label=gtk_label_new ("USB detected.");
 		gtk_widget_show(label);
@@ -356,7 +354,7 @@ int mdc800_setupDialog (void)
 	update_progress (0.95);
 	
 	/* Baudrate */
-	if (!mdc800_device_USB_detected ())
+	if (!mdc800_io_using_usb)
 		mdc800_ComboBox_SetEntry (mdc800_dialog.baud, mdc800_baud_rate_string, mdc800_getSpeed ());
 		
 	update_progress (1);
@@ -449,7 +447,7 @@ int mdc800_setupConfig (void)
 			
 		
 	/* Change BaudRate */
-	if (!mdc800_device_USB_detected ())
+	if (!mdc800_io_using_usb)
 	{
 		value = mdc800_ComboBox_GetEntry (mdc800_dialog.baud, mdc800_baud_rate_string,3);
 		if (value < 0)

@@ -14,7 +14,7 @@
 
 //--------------------------------------------------------------------------/
 
-int mdc800_openCamera (char*, int);
+int mdc800_openCamera (char*);
 int mdc800_closeCamera ();
 
 int mdc800_changespeed (int);

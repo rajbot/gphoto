@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1999 by Henning Zabel <henning@uni-paderborn.de>
+ * Copyright (C) 1999/2000 by Henning Zabel <henning@uni-paderborn.de>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -32,10 +32,7 @@
 #undef _IO_C
 #include "../src/gphoto.h"
 
-#include <fcntl.h>
-#include <termios.h>
 #include <sys/time.h>
-#include "device.h"
 #include "print.h"
 #include "rs232.h"
 #include "usb.h"
@@ -45,26 +42,60 @@
            
 /*
  * Opens Connection to Camera, 
- * flag: 0: use RS232 , 1:USB (unused)
- * and sends initial Packet.
  */
-int mdc800_io_openDevice (char* device,int flag)
+int mdc800_io_openDevice (char* device)
 {
-	if (mdc800_device_handle != -1)
+	if (mdc800_io_device_handle != 0)
 	{
 		printCError ("(mdc800_io_openDevice) Camera was already open.\n");
 		return 1;
 		//closeCamera ();
 	}
-	mdc800_device_handle=mdc800_device_open (device,flag);
 	
-	if (mdc800_device_handle == -1)
+	if (mdc800_io_using_usb)
 	{
-		printCError ("(mdc800_io_openDevice) can't open camera.\n");
-		return 0;
+		mdc800_io_device_handle=gpio_new (GPIO_DEVICE_USB);
+		
+/*
+		mdc800_io_device_settings.usb.bus=1;
+		mdc800_io_device_settings.usb.device=10;
+*/
+	}
+	else
+	{
+		mdc800_io_device_handle=gpio_new (GPIO_DEVICE_SERIAL);
+		
+		mdc800_io_device_settings.serial.speed=57600;
+		mdc800_io_device_settings.serial.parity=0;
+		mdc800_io_device_settings.serial.bits=8;
+		mdc800_io_device_settings.serial.stopbits=1;
+		strcpy (mdc800_io_device_settings.serial.port, device);
 	}
 	
+	gpio_set_settings (mdc800_io_device_handle, mdc800_io_device_settings);
+	
+/*
+	if (gpio_reset (mdc800_io_device_handle) != GPIO_OK)
+	{
+		printCError ("(mdc800_io_openDevice) error reset libgpio ?!\n");
+		gpio_free (mdc800_io_device_handle);
+		mdc800_io_device_handle=0;
+		return 0;
+	}
+*/	
+	
+	if (gpio_open (mdc800_io_device_handle) != GPIO_OK)
+	{
+		printCError ("(mdc800_io_openDevice) can't open camera.\n");
+		gpio_free (mdc800_io_device_handle);
+		mdc800_io_device_handle=0;
+		return 0;
+	}
+
+
+
 	return 1;
+	
 }
 
 
@@ -73,25 +104,82 @@ int mdc800_io_openDevice (char* device,int flag)
  */
 int mdc800_io_closeDevice ()
 {
-	if (mdc800_device_handle == -1)
+	if (mdc800_io_device_handle == 0)
 	{
 		printCError ("(mdc800_io_closeCamera) Camera is already closed !\n");
 		return (1);
 	}
-	mdc800_device_close (mdc800_device_handle);
-	mdc800_device_handle=-1;
+	gpio_close (mdc800_io_device_handle);
+	gpio_free (mdc800_io_device_handle);
+	mdc800_io_device_handle=0;
+
 	return (1);
 }
 
 
 /*
  * Sets the baud rate 
+ * 0: 19200, 1:57600, 2: 115200
  */
-int mdc800_io_changespeed (int baud)
+int mdc800_io_changespeed (int value)
 {
-	return mdc800_device_changespeed (mdc800_device_handle, baud);
+	int rates [3]={19200, 57600, 115200};
+	int retval=0;
+	if (mdc800_io_using_usb)
+	{
+		return 1;
+	}
+	
+	mdc800_io_device_settings.serial.speed=rates[value];
+	retval=gpio_set_settings (mdc800_io_device_handle, mdc800_io_device_settings);
+	
+	return (retval == GPIO_OK);
 }
 
+
+/*
+ * Send a Command to the Camera. It is unimportent wether this
+ * is a USB or a RS232 Command. The Function implements an automatic
+ * retry of a failed command.
+ *
+ * The Function will only be used in this Layer, execpt on probing
+ * the Baudrate of Rs232.
+ * if quiet is true, the function won't print notes
+ */
+int mdc800_io_sendCommand_with_retry (char* command, char* buffer, int length, int maxtries,int quiet)
+{
+	int try=0;
+	int retval=0;
+	
+	while (try < maxtries)
+	{
+		if (try)
+		{
+			struct timeval timeout;
+			timeout.tv_usec = MDC800_DEFAULT_COMMAND_RETRY_DELAY*1000;   
+			timeout.tv_sec  = 0;  
+			select (1 , NULL, NULL, NULL, &timeout);
+			printCError ("retry Command %i (%i)\n",(unsigned char) command[1], try);
+		}
+
+		if (mdc800_io_using_usb)
+			retval=mdc800_usb_sendCommand (command, buffer, length );
+		else
+			retval=mdc800_rs232_sendCommand ( command, buffer, length);
+			
+		if (retval)
+			return 1;
+			
+		try++;
+	}
+	
+	if (!quiet)
+	{
+		printCoreNote ("\nCamera is not responding (Maybe off?)\n");
+		printCoreNote ("giving it up after %i times.\n\n", try);
+	}
+	return 0;
+}
 
 
 /*
@@ -110,10 +198,7 @@ int mdc800_io_sendCommand (char commandid,char par1,char par2,char par3, char* b
 	command[5]=COMMAND_END;
 	command[6]=0;
 	command[7]=0;
-	if (mdc800_device_USB_detected ())
-		return mdc800_usb_sendCommand (command, buffer, length );
-	else
-		return mdc800_rs232_sendCommand ( command, buffer, length);
+	return mdc800_io_sendCommand_with_retry (command,buffer,length, MDC800_DEFAULT_COMMAND_RETRY,0);
 }
 
 
@@ -124,7 +209,7 @@ int mdc800_io_sendUSBCommand (char commandid , char b1, char b2, char b3, char b
 {
 	char command [8];
 	
-	if (!mdc800_device_USB_detected ())
+	if (!mdc800_io_using_usb)
 	{
 		printAPIError ("USB is not detected\n");
 		return 0;
@@ -139,5 +224,29 @@ int mdc800_io_sendUSBCommand (char commandid , char b1, char b2, char b3, char b
 	command[5]=b4;
 	command[6]=b5;
 	command[7]=b6;
-	return mdc800_usb_sendCommand ( command, buffer, length);	
+	return mdc800_io_sendCommand_with_retry ( command, buffer, length,1,0);	
+}
+
+
+
+/*
+ * Helper function for rs232 and usb
+ * It returns a timeout for the specified command
+ */
+int mdc800_io_getCommandTimeout (char command)
+{
+	switch ((unsigned char) command)
+	{
+		case COMMAND_SET_STORAGE_SOURCE:
+		case COMMAND_SET_TARGET:
+		case COMMAND_SET_CAMERA_MODE:
+		case COMMAND_DELETE_IMAGE:
+			return MDC800_LONG_TIMEOUT;
+			
+		case COMMAND_TAKE_PICTURE:
+		case COMMAND_PLAYBACK_IMAGE:
+		case COMMAND_SET_PLAYBACK_MODE:
+			return MDC800_TAKE_PICTURE_TIMEOUT;
+	}
+	return MDC800_DEFAULT_TIMEOUT;
 }

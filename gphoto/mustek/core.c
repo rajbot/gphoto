@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1999 by Henning Zabel <henning@uni-paderborn.de>
+ * Copyright (C) 1999/2000 by Henning Zabel <henning@uni-paderborn.de>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -18,8 +18,7 @@
  
 /*
  * gphoto driver for the Mustek MDC800 Digital Camera. The driver 
- * supports rs232 and USB. It automatically detects which Kernelnode
- * is used.
+ * supports rs232 and USB.
  */
 
 #include "core.h"
@@ -28,7 +27,6 @@
 #include <sys/time.h>
 #include <stdlib.h>
 #include "print.h"
-#include "device.h"
 
 //------------- Global System Data ----------------------------------------/
 
@@ -45,20 +43,71 @@ static int mdc800_baud_rate=1;		// Current Baudrate
 
 //----------------------  Funktion for Communication --------------------------/
 
+
+/*
+ * Send the Initial Command. If the device is rs232 the
+ * Function will probe for the Baudrate
+ */
+int mdc800_sendInitialCommand (char* answer)
+{
+	char* baud_string [3]={"19200","57600","115200"};
+	
+	int try_next=3;
+
+	mdc800_baud_rate=1;
+
+	while (try_next)
+	{
+		char command [8]={COMMAND_BEGIN,COMMAND_INIT_CONNECT,0,0,0,COMMAND_END,0,0};
+		
+		if (mdc800_io_using_usb)
+			try_next=0;
+			
+		if (mdc800_io_changespeed (mdc800_baud_rate))
+		{
+			if (mdc800_io_sendCommand_with_retry (command,answer,8,1,1))
+			{
+				if (!mdc800_io_using_usb)
+				{
+					printCoreNote ("RS232 Baudrate probed at %s \n",baud_string [mdc800_baud_rate]);
+				}
+				try_next=0;
+				return 1;
+			}
+		}
+		
+		if (try_next)
+		{
+			try_next--;
+			
+			printCoreError ("Probing RS232 Baudrate with %s fails.\n", baud_string [mdc800_baud_rate]);
+			mdc800_baud_rate=(mdc800_baud_rate+2)%3;
+			if (!try_next)
+			{
+				printCoreError ("Probing fails completly.\n");
+				return 0;
+			}
+		}
+	}
+	return 0;
+}
+
+
+
 /*
  * Opens the Camera:
  * (1) open serial device 		(2) -
  * (3) send Initial command	
  */
-int mdc800_openCamera (char* device, int flag)
+int mdc800_openCamera (char* device)
 {
 	char answer [8];
 	int  i;
 	
-	if (!mdc800_io_openDevice (device,flag))
+	if (!mdc800_io_openDevice (device))
 		return 0;
 
-	if (mdc800_device_USB_detected ())
+	if (mdc800_io_using_usb)
 	{
 		printCoreNote ("Device Registered as USB.\n");
 	}
@@ -70,11 +119,10 @@ int mdc800_openCamera (char* device, int flag)
 
 
 	/* Send initial command */
-	if (!mdc800_io_sendCommand (COMMAND_INIT_CONNECT,0,0,0,answer,8))
+	if (!mdc800_sendInitialCommand (answer))
 	{
 		printCoreError ("(mdc800_openCamera) can't send initial command.\n");
 		mdc800_io_closeDevice ();
-		mdc800_baud_rate=1;
 		return 0;
 	}
 
@@ -118,7 +166,6 @@ int mdc800_closeCamera ()
  */
 int mdc800_changespeed (int new)
 {
-	int value;
 	char* baud_string [3]={"19200","57600","115200"};
 	
 	printFnkCall ("(mdc800_changespeed) called.\n");
@@ -127,7 +174,7 @@ int mdc800_changespeed (int new)
 		return 1;
 	
 	/* We are using USB, so we don't need to change BaudRates */
-	if (mdc800_device_USB_detected ())
+	if (mdc800_io_using_usb)
 		return 1;
 
 	/* Setting comunication speed */
@@ -137,20 +184,7 @@ int mdc800_changespeed (int new)
 		return 0;
 	}
 
-	switch (new)
-	{
-		case 0 :
-		 	value=B19200;
-			break;
-		case 1 :
-		 	value=B57600;
-			break;
-		case 2 :
-		 	value=B115200;
-			break;
-	}
-	
-	if (!mdc800_io_changespeed (value))
+	if (!mdc800_io_changespeed (new))
 	{
 		printCoreError ("(mdc800_changespeed) Changing Baudrate fails.\n");
 		return 0;
@@ -165,7 +199,6 @@ int mdc800_changespeed (int new)
 
 	mdc800_baud_rate=new;
 	printCoreNote ("Set Baudrate to %s\n", baud_string [new]);
-
 
 	return 1;
 }
@@ -486,6 +519,7 @@ int mdc800_getStorageSource ()
  */
 int mdc800_setMode (int m)
 {
+	int last=mdc800_getMode ();
 /*
 	if (mdc800_getMode () == m)
 		return 1;
@@ -498,7 +532,8 @@ int mdc800_setMode (int m)
 				printCoreError ("(mdc800_setMode) setting Camera Mode fails\n");
 				return 0;
 			}
-			printCoreNote ("Mode set to Camera Mode.\n");
+			if (last != m)
+				printCoreNote ("Mode set to Camera Mode.\n");
 			break;
 			
 		case 1:
@@ -507,7 +542,8 @@ int mdc800_setMode (int m)
 				printCoreError ("(mdc800_setMode) setting Playback Mode fails\n");
 				return 0;
 			}
-			printCoreNote ("Mode set to Payback Mode.\n");
+			if (last != m)
+				printCoreNote ("Mode set to Payback Mode.\n");
 			break;
 			
 	}
@@ -718,7 +754,7 @@ int mdc800_getWBandExposure (int* exp, int* wb)
 	char retval[2];
 	
 	/* What's that here is a real diffenrence between USB and RS232 */
-	int toggle=mdc800_device_USB_detected ();
+	int toggle=mdc800_io_using_usb;
 	
 	if (mdc800_io_sendCommand (COMMAND_GET_WB_AND_EXPOSURE,0,0,0,retval,2))
 	{

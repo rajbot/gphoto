@@ -19,7 +19,7 @@
 
 /* CError are Error Messages below */
 /* the Core of this driver */
-#define printCError			if (0) printf
+#define printCError			if (1) printf
 
 
 #endif

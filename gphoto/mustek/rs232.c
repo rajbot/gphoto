@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1999 by Henning Zabel <henning@uni-paderborn.de>
+ * Copyright (C) 1999/2000 by Henning Zabel <henning@uni-paderborn.de>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -18,22 +18,19 @@
  
 /*
  * gphoto driver for the Mustek MDC800 Digital Camera. The driver 
- * supports rs232 and USB. It automatically detects which Kernelnode
- * is used.
+ * supports rs232 and USB. 
  */
  
 #include "../src/gphoto.h"
 #include "print.h"
 #include "rs232.h"
 #include "mdc800_spec.h"
-#include "device.h"
 #include "io.h"
 
 #include <fcntl.h>
 #include <termios.h>
-#include <sys/types.h>
 #include <sys/time.h>
-#include <unistd.h>
+
 
 /*
  * sends a command and receives the answer to this
@@ -43,11 +40,11 @@
 int mdc800_rs232_sendCommand (char* command, char* buffer, int length)
 {
 	char answer;
+	int fault=0;
+	struct timeval timeout;
 	int i;
-	int numtries=0;
-	int maxtries=(command[1]==COMMAND_CHANGE_RS232_BAUD_RATE)?1:3;
 	
-	if (mdc800_device_handle == -1)
+	if (mdc800_io_device_handle == 0)
 	{
 		printCError ("(mdc800_rs232_sendCommand) Camera is not open !\n");
 		return 0;
@@ -55,91 +52,77 @@ int mdc800_rs232_sendCommand (char* command, char* buffer, int length)
 
 
 	printFnkCall ("(mdc800_rs232_sendCommand) id:%i (%i,%i,%i),answer:%i\n",command[1],command[2],command[3],command[4],length);	
-	while (numtries < maxtries)
+
+
+	timeout.tv_usec = MDC800_DEFAULT_COMMAND_DELAY*1000;   
+	timeout.tv_sec  = 0;  
+	select (1 , NULL, NULL, NULL, &timeout);
+
+	gpio_set_timeout (mdc800_io_device_handle, MDC800_DEFAULT_TIMEOUT );
+
+	// Send command
+	for (i=0; i<6; i++)
 	{
-		int fault=0;
-		struct timeval Timeout;
-		
-		if (numtries)
-			Timeout.tv_usec = MDC800_RESEND_COMMAND_DELAY;   
-		else
-			Timeout.tv_usec = MDC800_DEFAULT_COMMAND_DELAY;   
-		Timeout.tv_sec  = 0;  
-		select (1 , NULL, NULL, NULL, &Timeout);
-
-
-		numtries++;
-		if (numtries > 1)
-			printFnkCall ("retry command %i \n",(unsigned int) command [1]);
-			
-		// Send command
-		for (i=0; i<6; i++)
+		if (gpio_write (mdc800_io_device_handle, &command[i] ,1) != GPIO_OK)
 		{
-			if (mdc800_device_write (mdc800_device_handle, &command[i] ,1) != 1)
-			{
-				printCError ("(mdc800_rs232_sendCommand) sending Byte %i fails!\n",i);
-				fault=1;
-			}
-
-			if (mdc800_device_read (mdc800_device_handle,&answer,1,0) != 1)
-			{
-				printCError ("(mdc800_rs232_sendCommand) receiving resend of Byte %i fails.\n",i);
-				fault=1;
-			}
-
-			if (command [i] != answer)
-			{
-				printCError ("(mdc800_rs232_sendCommand) Byte %i differs : send %i, received %i \n",i,command[i],answer);
-				fault=1;
-			}
-		}
-		if (fault)
-			continue;
-		
-		// Receive answer
-		if (length)
-		{
-			// Some Commands needs a download.
-			switch (command[1])
-			{
-				case COMMAND_GET_IMAGE:
-				case COMMAND_GET_THUMBNAIL:
-					if (!mdc800_rs232_download (buffer,length))
-					{
-						printCError ("(mdc800_rs232_sendCommand) download of %i Bytes fails.\n",length);
-						fault=1;
-					}
-					break;
-				default:
-					if (!mdc800_rs232_receive (buffer,length))
-					{
-						printCError ("(mdc800_rs232_sendCommand) receiving %i Bytes fails.\n",length);
-						fault=1;
-					}
-			}
+			printCError ("(mdc800_rs232_sendCommand) sending Byte %i fails!\n",i);
+			fault=1;
 		}
 
-		if (fault)
-			continue;
-	
-		// commit 
-		if (!(command[1] == COMMAND_CHANGE_RS232_BAUD_RATE))
-			if (!mdc800_rs232_waitForCommit (command[1]))
-			{
-				printCError ("(mdc800_rs232_sendCommand) receiving commit fails.\n");
-				fault=1;
-			}
-	
-		if (fault)
-			continue;
+		if (gpio_read (mdc800_io_device_handle,&answer,1) != GPIO_OK)
+		{
+			printCError ("(mdc800_rs232_sendCommand) receiving resend of Byte %i fails.\n",i);
+			fault=1;
+		}
 
-		// all right
-		return 1;
+		if (command [i] != answer)
+		{
+			printCError ("(mdc800_rs232_sendCommand) Byte %i differs : send %i, received %i \n",i,command[i],answer);
+			fault=1;
+		}
+	}
+	if (fault)
+		return 0;
+
+	// Receive answer
+	if (length)
+	{
+		// Some Commands needs a download.
+		switch (command[1])
+		{
+			case COMMAND_GET_IMAGE:
+			case COMMAND_GET_THUMBNAIL:
+				if (!mdc800_rs232_download (buffer,length))
+				{
+					printCError ("(mdc800_rs232_sendCommand) download of %i Bytes fails.\n",length);
+					fault=1;
+				}
+				break;
+			default:
+				if (!mdc800_rs232_receive (buffer,length))
+				{
+					printCError ("(mdc800_rs232_sendCommand) receiving %i Bytes fails.\n",length);
+					fault=1;
+				}
+		}
 	}
 
-	printCError ("(mdc800_rs232_sendCommand) to much tries, giving up.\n");
-	printAPINote ("\nCamera is not responding. Maybe off ?\n\n");
-	return 0;
+	if (fault)
+		return 0;
+
+	// commit 
+	if (!(command[1] == COMMAND_CHANGE_RS232_BAUD_RATE))
+		if (!mdc800_rs232_waitForCommit (command[1]))
+		{
+			printCError ("(mdc800_rs232_sendCommand) receiving commit fails.\n");
+			fault=1;
+		}
+
+	if (fault)
+		return 0;
+
+	// all right
+	return 1;
 }
 
 
@@ -151,34 +134,16 @@ int mdc800_rs232_sendCommand (char* command, char* buffer, int length)
 int mdc800_rs232_waitForCommit (char commandid)
 {
 	char ch[1];
-	int long_timeout;
-	switch (commandid)
-	{
-		case COMMAND_SET_STORAGE_SOURCE:
-		case COMMAND_SET_TARGET:
-		case COMMAND_SET_CAMERA_MODE:
-		case COMMAND_DELETE_IMAGE:
-			long_timeout=MDC800_LONG_TIMEOUT;
-			break;
-			
-		case COMMAND_TAKE_PICTURE:
-		case COMMAND_PLAYBACK_IMAGE:
-		case COMMAND_SET_PLAYBACK_MODE:
-			long_timeout=MDC800_TAKE_PICTURE_TIMEOUT;
-			break;
-			
-		default:
-			long_timeout=0;
-			break;
-	}
 	
-	if (mdc800_device_handle == -1)
+	if (mdc800_io_device_handle == 0)
 	{
 		printCError ("(mdc800_rs232_waitForCommit) Camera is not open !\n");
 		return 0;
 	}
 
-	if (mdc800_device_read (mdc800_device_handle,ch,1,long_timeout) != 1)
+	gpio_set_timeout (mdc800_io_device_handle, mdc800_io_getCommandTimeout (commandid) );
+	
+	if (gpio_read (mdc800_io_device_handle,ch,1) != GPIO_OK)
 	{
 		printCError ("(mdc800_rs232_waitForCommit) Error receiving commit !\n");
 		return 0;
@@ -198,16 +163,15 @@ int mdc800_rs232_waitForCommit (char commandid)
  */
 int mdc800_rs232_receive (char* buffer, int b)
 {
-	int readen;
-	if (mdc800_device_handle == -1)
+	if (mdc800_io_device_handle == 0)
 	{
 		printCError ("(mdc800_rs232_receive) Camera is not open !\n");
 		return 0;
 	}
 	
-
-	readen=mdc800_device_read (mdc800_device_handle, buffer,b,0);
-	if (readen != b)
+	gpio_set_timeout (mdc800_io_device_handle, MDC800_DEFAULT_TIMEOUT );
+	
+	if (gpio_read (mdc800_io_device_handle, buffer,b) != GPIO_OK)
 	{
 		printCError ("(mdc800_rs232_receive) can't read %i Bytes !\n",b);
 		return 0;
@@ -225,6 +189,9 @@ int mdc800_rs232_download (char* buffer, int size)
 	int checksum,readen=0,i;
 	char DSC_checksum;
 	int numtries=0;
+	
+	gpio_set_timeout (mdc800_io_device_handle, MDC800_DEFAULT_TIMEOUT );
+	
 	while (readen < size)
 	{
 		update_progress ((float) readen/size);
@@ -233,7 +200,7 @@ int mdc800_rs232_download (char* buffer, int size)
 		checksum=0;
 		for (i=0; i<512; i++)
 			checksum=(checksum+(unsigned char) buffer [readen+i])%256;
-		if (mdc800_device_write (mdc800_device_handle,(char*) &checksum,1) != 1)
+		if (gpio_write (mdc800_io_device_handle,(char*) &checksum,1) != GPIO_OK)
 			return readen;
 		
 		if (!mdc800_rs232_receive (&DSC_checksum,1))

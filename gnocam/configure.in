@@ -72,6 +72,21 @@ AC_MSG_CHECKING([whether to use gtkhtml])
 if test x"$use_gtkhtml" = xyes; then
     AC_MSG_RESULT([yes])
     if `test ! -z `gnome-config>&1 |grep gtkhtml>/dev/null``; then
+dnl     ******
+dnl     bonobo
+dnl     ******
+	AC_MSG_CHECKING(for bonobox)
+	if gnome-config --libs bonobox > /dev/null 2>&1; then
+	    AC_MSG_RESULT(found)
+	else
+	    AC_MSG_ERROR([
+*** You need bonobo for this version of ${PACKAGE}. Get the latest 
+*** version from http://www.gnome.org. Mirrors can be found at
+*** http://www.gnome.org/mirrors. 
+***
+*** Alternatively, you can configure ${PACKAGE} without gtkhtml
+*** enabled.])
+	fi
         GTKHTML_CFLAGS="`gnome-config --cflags gtkhtml bonobox` `libglade-config --cflags bonobo`"
         GTKHTML_LIBS="`gnome-config --libs gtkhtml bonobox` `libglade-config --libs bonobo`"
         CFLAGS="$CFLAGS $GTKHTML_CFLAGS"

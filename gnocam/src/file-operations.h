@@ -12,7 +12,5 @@ void camera_file_save (CameraFile* file, GnomeVFSURI* uri);
 void camera_file_save_as (CameraFile* file);
 void camera_file_upload (Camera* camera, gchar* path, CameraFile* file);
 
-void gallery_open 	(GtkWidget* window);
-void gallery_save_as 	(GtkWidget* window);
 
 

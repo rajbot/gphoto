@@ -21,7 +21,6 @@ typedef enum {
 /**************/
 
 void on_exit_activate            (GtkWidget* widget, gpointer user_data);
-void on_new_gallery_activate     (GtkWidget* widget, gpointer user_data);
 void on_preferences_activate     (GtkWidget* widget, gpointer user_data);
 void on_manual_activate         (GtkWidget* widget, gpointer user_data);
 void on_about_activate           (GtkWidget* widget, gpointer user_data);

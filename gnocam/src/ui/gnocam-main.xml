@@ -1,8 +1,6 @@
 <Root>
   <menu>
     <submenu name="File" _label="_File">
-      <menuitem name="NewGallery" verb="" _label="New Gallery" pixtype="stock" pixname="New"/>
-      <separator/>
       <menuitem name="SavePreviews" verb="" _label="Save Previews" pixtype="stock" pixname="Save"/>
       <menuitem name="SavePreviewsAs" verb="" _label="Save Previews As" pixtype="stock" pixname="Save As"/>
       <menuitem name="SaveFiles" verb="" _label="Save Files" pixtype="stock" pixname="Save"/>

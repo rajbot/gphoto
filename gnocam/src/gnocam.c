@@ -10,7 +10,6 @@
 #include "cameras.h"
 #include "frontend.h"
 #include "notification.h"
-#include "gallery.h"
 #include "preferences.h"
 #include "preview.h"
 #include "file-operations.h"
@@ -48,12 +47,6 @@ void
 on_view_mode_activate (GtkWidget* widget, gpointer user_data)
 {
 	view_mode = GPOINTER_TO_INT (user_data);
-}
-
-void
-on_new_gallery_activate (GtkWidget* widget, gpointer user_data)
-{
-        gallery_new ();
 }
 
 void
@@ -139,7 +132,6 @@ int main (int argc, char *argv[])
 	gint			i;
 	BonoboUIComponent*	component;
 	BonoboUIVerb		verb [] = {
-		BONOBO_UI_UNSAFE_VERB ("NewGallery", on_new_gallery_activate),
 		BONOBO_UI_UNSAFE_VERB ("Exit", on_exit_activate),
 		BONOBO_UI_UNSAFE_VERB ("Preferences", on_preferences_activate),
 		BONOBO_UI_UNSAFE_VERB ("About", on_about_activate),

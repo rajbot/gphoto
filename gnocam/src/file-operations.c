@@ -15,8 +15,6 @@
 
 #define OPERATION_FILE_UPLOAD		0
 #define OPERATION_FILE_SAVE		1
-#define OPERATION_GALLERY_OPEN		2
-#define OPERATION_GALLERY_SAVE_AS	3
 
 /**********************/
 /* External Variables */
@@ -32,7 +30,6 @@ extern GtkWindow*	main_window;
 void on_fileselection_ok_button_clicked 	(GtkButton* button, gpointer user_data);
 void on_fileselection_cancel_button_clicked 	(GtkButton* button, gpointer user_data);
 
-void gallery_common (GtkWidget* window, gint operation);
 void upload_common (Camera* camera, gchar* path, gchar* filename);
 
 /*************/
@@ -61,26 +58,6 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 		camera_file_save (file,  gnome_vfs_uri_new (gtk_file_selection_get_filename (fileselection)));
 		gp_file_unref (file);
 		break;
-	case OPERATION_GALLERY_OPEN:
-		g_assert ((window = gtk_object_get_data (GTK_OBJECT (button), "window")));
-		g_assert ((widget = gtk_object_get_data (GTK_OBJECT (window), "editor")));
-		g_assert ((client = bonobo_widget_get_server (BONOBO_WIDGET (widget))));
-		g_assert ((interface =  bonobo_object_client_query_interface (client, "IDL:Bonobo/PersistFile:1.0", NULL)));
-        	CORBA_exception_init (&ev);
-		Bonobo_PersistFile_load (interface, gtk_file_selection_get_filename (fileselection), &ev);
-		if (ev._major != CORBA_NO_EXCEPTION) gnome_error_dialog_parented (_("Could not save gallery."), main_window);
-	        CORBA_exception_free (&ev);
-		break;
-	case OPERATION_GALLERY_SAVE_AS:
-		g_assert ((window = gtk_object_get_data (GTK_OBJECT (button), "window")));
-		g_assert ((widget = gtk_object_get_data (GTK_OBJECT (window), "editor")));
-                g_assert ((client = bonobo_widget_get_server (BONOBO_WIDGET (widget))));
-                g_assert ((interface =  bonobo_object_client_query_interface (client, "IDL:Bonobo/PersistFile:1.0", NULL)));
-                CORBA_exception_init (&ev);
-                Bonobo_PersistFile_save (interface, gtk_file_selection_get_filename (fileselection), &ev);
-                if (ev._major != CORBA_NO_EXCEPTION) gnome_error_dialog_parented (_("Could not load gallery."), main_window);
-		CORBA_exception_free (&ev);
-                break;
 	default:
 		g_assert_not_reached ();
 	}
@@ -104,8 +81,6 @@ on_fileselection_cancel_button_clicked (GtkButton *button, gpointer user_data)
 	case OPERATION_FILE_SAVE:
 		g_assert ((file = gtk_object_get_data (GTK_OBJECT (button), "file")) != NULL);
 		gp_file_unref (file);
-		break;
-	case OPERATION_GALLERY_OPEN:
 		break;
 	default:
 		g_assert_not_reached ();
@@ -440,43 +415,6 @@ delete (GtkTreeItem* item)
 	}
 }
 
-void
-gallery_common (GtkWidget* window, gint operation)
-{
-        GladeXML*       xml_fileselection;
-        GtkObject*      object;
-
-        g_return_if_fail (window);
-
-        /* Pop up the file selection dialog. */
-        g_return_if_fail (xml_fileselection = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "fileselection"));
-
-        /* Store some data in the ok button. */
-        g_return_if_fail (object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_ok_button")));
-        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
-        gtk_object_set_data (object, "window", window);
-        gtk_object_set_data (object, "operation", GINT_TO_POINTER (operation));
-
-        /* Store some data in the cancel button. */
-        g_return_if_fail (object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_cancel_button")));
-        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
-        gtk_object_set_data (object, "operation", GINT_TO_POINTER (operation));
-
-        /* Connect the signals. */
-        glade_xml_signal_autoconnect (xml_fileselection);
-}
-
-void
-gallery_open (GtkWidget* window)
-{
-	gallery_common (window, OPERATION_GALLERY_OPEN);
-}
-
-void
-gallery_save_as (GtkWidget* window)
-{
-	gallery_common (window, OPERATION_GALLERY_SAVE_AS);
-}
 
 
 

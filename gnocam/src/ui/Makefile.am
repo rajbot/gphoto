@@ -1,11 +1,9 @@
 
 XML_FILES =\
- gnocam-gallery.xml\
  gnocam-main.xml\
  gnocam-preview.xml
 
 H_FILES =\
- gnocam-gallery.h\
  gnocam-main.h\
  gnocam-preview.h
 

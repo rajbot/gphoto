@@ -62,14 +62,9 @@ static void	on_config_clicked	(BonoboUIComponent* component, gpointer user_data,
 /* Helper functions */
 /********************/
 
-static gint
-create_menu (gpointer user_data)
+static void
+create_menu (GnoCamFile* file)
 {
-	GnoCamFile*	file;
-
-	g_return_val_if_fail (user_data, FALSE);
-	file = GNOCAM_FILE (user_data);
-
         bonobo_ui_component_set_translate (file->priv->component, "/menu/File", GNOCAM_FILE_UI, NULL);
 
         /* Delete? */
@@ -83,8 +78,6 @@ create_menu (gpointer user_data)
 		bonobo_ui_component_set_translate (file->priv->component, "/menu/File/FileOperations", GNOCAM_FILE_UI_CONFIGURATION, NULL);
 		bonobo_ui_component_add_verb (file->priv->component, "Configuration", on_config_clicked, file);
 	}
-
-	return (FALSE);
 }
 
 static void
@@ -139,6 +132,7 @@ create_widget (GnoCamFile* file)
         oaf_requirements = g_strdup_printf (
                 "bonobo:supported_mime_types.has ('%s') AND "
                 "repo_ids.has ('IDL:Bonobo/Control:1.0') AND "
+		"repo_ids.has ('IDL:Bonobo/PersistFile:1.0') AND " //This is to avoid Nautilus_Image_View...
                 "repo_ids.has ('IDL:Bonobo/PersistStream:1.0')", mime_type);
 
         /* Activate the object */
@@ -168,6 +162,8 @@ create_widget (GnoCamFile* file)
 	file->priv->widget = bonobo_widget_new_control_from_objref (file->priv->control, file->priv->container);
 	gtk_widget_show (file->priv->widget);
 	gtk_container_add (GTK_CONTAINER (file), file->priv->widget);
+
+	Bonobo_Control_activate (file->priv->control, TRUE, NULL);
 
 	return;
 
@@ -261,7 +257,7 @@ gnocam_file_show_menu (GnoCamFile* file)
 
 	bonobo_ui_component_set_container (file->priv->component, file->priv->container);
 	if (file->priv->control) Bonobo_Control_activate (file->priv->control, TRUE, NULL);
-	gtk_idle_add (create_menu, file);
+	create_menu (file);
 }
 
 /****************************/
@@ -373,7 +369,7 @@ gnocam_file_new (GnoCamCamera* camera, const gchar* path)
 	/* Create the menu */
 	new->priv->component = bonobo_ui_component_new (PACKAGE "File");
 	bonobo_ui_component_set_container (new->priv->component, new->priv->container);
-	gtk_idle_add (create_menu, new);
+	create_menu (new);
 
 	create_widget (new);
 

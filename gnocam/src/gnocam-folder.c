@@ -134,14 +134,9 @@ update_folder (GnoCamFolder* folder)
         e_table_model_changed (folder->priv->model);
 }
 
-static gint
-create_menu (gpointer user_data)
+static void
+create_menu (GnoCamFolder* folder)
 {
-	GnoCamFolder*	folder;
-
-	g_return_val_if_fail (user_data, FALSE);
-	folder = GNOCAM_FOLDER (user_data);
-
         bonobo_ui_component_freeze (folder->priv->component, NULL);
 	
         bonobo_ui_component_set_translate (folder->priv->component, "/", GNOCAM_FOLDER_UI, NULL);
@@ -172,8 +167,6 @@ create_menu (gpointer user_data)
 	}
 
         bonobo_ui_component_thaw (folder->priv->component, NULL);
-
-	return (FALSE);
 }
 
 static void
@@ -503,7 +496,7 @@ gnocam_folder_show_menu (GnoCamFolder* folder)
 		return;
 
 	bonobo_ui_component_set_container (folder->priv->component, folder->priv->container);
-	gtk_idle_add (create_menu, folder);
+	create_menu (folder);
 }
 
 void
@@ -753,7 +746,7 @@ gnocam_folder_new (GnoCamCamera* camera, const gchar* path)
 	/* Create menu */
 	new->priv->component = bonobo_ui_component_new (PACKAGE "Folder");
 	bonobo_ui_component_set_container (new->priv->component, new->priv->container);
-	gtk_idle_add (create_menu, new);
+	create_menu (new);
 
 	gtk_signal_connect (GTK_OBJECT (camera), "folder_updated", GTK_SIGNAL_FUNC (on_folder_updated), new);
 

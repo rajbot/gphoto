@@ -1,5 +1,7 @@
-//This file should be called utils.c or so.
-//I'll change the name some day. 
+/**
+ * This file should be called utils.c or so.
+ * I'll change the name some day. 
+ */
 
 #include <config.h>
 #include <gnome.h>

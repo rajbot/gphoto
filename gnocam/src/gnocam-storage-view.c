@@ -28,6 +28,8 @@
 #include <config.h>
 #endif
 
+#include <gphoto2.h>
+
 #include "gnocam-storage-view.h"
 
 #include <gnome.h>
@@ -36,7 +38,8 @@
 #include <gal/e-table/e-cell-tree.h>
 #include <gal/e-table/e-cell-text.h>
 
-#include "e-shell-constants.h"
+//#include "e-shell-constants.h"
+#include "utils.h"
 
 #define ETABLE_SPEC "\
 <ETableSpecification no-headers=\"true\" selection-mode=\"single\" cursor-mode=\"line\" draw-grid=\"true\" horizontal-scrolling=\"true\"> 		\
@@ -69,12 +72,6 @@ enum {
 };
 
 static unsigned int signals[LAST_SIGNAL] = { 0 };
-
-/**************/
-/* Prototypes */
-/**************/
-
-static GdkPixbuf* scale_pixbuf (GdkPixbuf* pixbuf);
 
 /*******************************/
 /* Custom marshalling function */
@@ -199,14 +196,10 @@ etree_icon_at (ETreeModel* etree, ETreePath* node, void* model_data)
 	//FIXME: Do we have to distribute our own pixmaps?
 
 	/* Directory? */
-	if (data->directory) {
-		if (!g_file_exists ("/usr/share/pixmaps/gnome-folder.png")) return (NULL);
-		return (scale_pixbuf (gdk_pixbuf_new_from_file ("/usr/share/pixmaps/gnome-folder.png")));
-	} 
+	if (data->directory) return (util_pixbuf_folder ());
 
 	/* File? */
-	if (!g_file_exists ("/usr/share/pixmaps/gnome-file-h.png")) return (NULL);
-	return (scale_pixbuf (gdk_pixbuf_new_from_file ("/usr/share/pixmaps/gnome-file-h.png")));
+	return (util_pixbuf_file ());
 }
 
 static void*
@@ -328,20 +321,6 @@ table_drag_data_received (ETable* etable, int row, int col, GdkDragContext* cont
 /* Helper functions */
 /********************/
 
-static GdkPixbuf*
-scale_pixbuf (GdkPixbuf* pixbuf)
-{
-	GdkPixbuf*	pixbuf_scaled;
-
-	pixbuf_scaled = gdk_pixbuf_new (
-		gdk_pixbuf_get_colorspace (pixbuf), gdk_pixbuf_get_has_alpha (pixbuf), gdk_pixbuf_get_bits_per_sample (pixbuf), 
-		E_SHELL_MINI_ICON_SIZE, E_SHELL_MINI_ICON_SIZE);
-	gdk_pixbuf_scale (pixbuf, pixbuf_scaled, 0, 0, E_SHELL_MINI_ICON_SIZE, E_SHELL_MINI_ICON_SIZE, 0.0, 0.0, 
-		(double) E_SHELL_MINI_ICON_SIZE / gdk_pixbuf_get_width (pixbuf), 
-		(double) E_SHELL_MINI_ICON_SIZE / gdk_pixbuf_get_height (pixbuf), GDK_INTERP_HYPER);
-	return (pixbuf_scaled);
-}
-
 static void
 insert_folders_and_files (GnoCamStorageView* storage_view, ETreePath* parent, const gchar* path)
 {
@@ -352,7 +331,10 @@ insert_folders_and_files (GnoCamStorageView* storage_view, ETreePath* parent, co
 	g_warning ("insert_folders_and_files (?, ?, %s)", path);
 
 	CORBA_exception_init (&ev);
-	list = Bonobo_Storage_listContents (storage_view->priv->storage, path, Bonobo_FIELD_TYPE, &ev);
+	if (!strcmp (path, "/")) 
+		list = Bonobo_Storage_listContents (storage_view->priv->storage, "", Bonobo_FIELD_TYPE, &ev);
+	else
+		list = Bonobo_Storage_listContents (storage_view->priv->storage, path, Bonobo_FIELD_TYPE, &ev);
 	if (BONOBO_EX (&ev)) {
 		CORBA_exception_free (&ev);
 		return;
@@ -381,8 +363,8 @@ insert_folders_and_files (GnoCamStorageView* storage_view, ETreePath* parent, co
 		e_tree_model_node_set_compare_function (storage_view->priv->etree, node, treepath_compare);
 
 		/* If this is a directory, fill it */
-		if (data->directory) 
-			insert_folders_and_files (storage_view, node, data->path);
+//		if (data->directory) 
+//			insert_folders_and_files (storage_view, node, data->path);
 	}
 	
 }
@@ -409,7 +391,7 @@ gnocam_storage_view_class_init (GnoCamStorageViewClass* klass)
 	GtkObjectClass*	object_class;
 	ETableClass*	etable_class;
 
-	parent_class = gtk_type_class (e_table_get_type ());
+	parent_class = gtk_type_class (PARENT_TYPE);
 
 	object_class = GTK_OBJECT_CLASS (klass);
 	object_class->destroy = gnocam_storage_view_destroy;
@@ -471,7 +453,7 @@ gnocam_storage_view_new (Bonobo_Storage storage)
 	ECell*			cell;
 	NodeData*		data;
 
-	new = gtk_type_new (gnocam_storage_view_get_type ());
+	new = gtk_type_new (GNOCAM_TYPE_STORAGE_VIEW);
 	new->priv->storage = storage;
 
 	/* Create the model */

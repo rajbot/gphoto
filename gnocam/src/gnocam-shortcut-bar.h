@@ -30,8 +30,6 @@ struct _GnoCamShortcutBarClass
 GtkType    gnocam_shortcut_bar_get_type (void);
 GtkWidget *gnocam_shortcut_bar_new      (void);
 
-void       gnocam_shortcut_bar_refresh	(GnoCamShortcutBar* bar);
-
 END_GNOME_DECLS
 
 #endif /* _GNOCAM_SHORTCUT_BAR_H_ */

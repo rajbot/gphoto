@@ -7,7 +7,9 @@
 
 #include <gal/util/e-util.h>
 #include <gal/e-paned/e-hpaned.h>
+#include <gconf/gconf-client.h>
 
+#include "e-clipped-label.h"
 #include "gnocam-preferences.h"
 #include "gnocam-shortcut-bar.h"
 #include "gnocam-camera.h"
@@ -17,6 +19,8 @@ static BonoboWindowClass* parent_class = NULL;
 
 struct _GnoCamMainPrivate {
 	Bonobo_UIContainer	container;
+
+	GConfClient*		client;
 
 	GtkWidget*		hpaned;
 };
@@ -30,6 +34,10 @@ struct _GnoCamMainPrivate {
 "    </submenu>"														\
 "    <placeholder name=\"Folder\"/>"												\
 "    <placeholder name=\"Camera\"/>"												\
+"    <submenu name=\"Edit\" _label=\"_Edit\">"											\
+"       <placeholder/>"														\
+"       <menuitem name=\"BonoboCustomize\" verb=\"\" _label=\"Customi_ze...\" pos=\"bottom\"/>"					\
+"    </submenu>"														\
 "    <placeholder name=\"Edit\"/>"												\
 "    <placeholder name=\"View\"/>"												\
 "    <submenu name=\"Settings\" _label=\"_Settings\">"										\
@@ -49,26 +57,60 @@ struct _GnoCamMainPrivate {
 /*************/
 
 static void
-on_shortcut_bar_item_selected (EShortcutBar* shortcut_bar, GdkEvent* event, gint group_num, gint item_num, gpointer user_data)
+on_window_size_request (GtkWidget* widget, GtkRequisition* requisition, gpointer user_data)
 {
 	GnoCamMain*	m;
-	GnoCamCamera*	camera;
-        gchar*          url;
-        gchar*          name;
-        GtkWidget*      widget;
+
+	m = GNOCAM_MAIN (user_data);
+
+	gconf_client_set_int (m->priv->client, "/apps/" PACKAGE "/width_main", widget->allocation.width, NULL);
+	gconf_client_set_int (m->priv->client, "/apps/" PACKAGE "/height_main", widget->allocation.height, NULL);
+}
+
+static void
+on_size_request (GtkWidget* widget, GtkRequisition* requisition, gpointer user_data)
+{
+        GnoCamMain*	m;
+
+        m = GNOCAM_MAIN (user_data);
+
+        gconf_client_set_int (m->priv->client, "/apps/" PACKAGE "/hpaned_position_main", e_paned_get_position (E_PANED (widget)), NULL);
+}
+
+static void
+on_shortcut_bar_item_selected (EShortcutBar* shortcut_bar, GdkEvent* event, gint group_num, gint item_num, gpointer user_data)
+{
+	GnoCamMain*		m;
+	GnoCamCamera*		camera;
+        gchar*          	url;
+        gchar*          	name;
+        GtkWidget*      	widget;
+	CORBA_Environment	ev;
 
 	g_return_if_fail (m = GNOCAM_MAIN (user_data));
 
-        /* If there is an old viewer, destroy it. */
-        if (E_PANED (m->priv->hpaned)->child2) gtk_container_remove (GTK_CONTAINER (m->priv->hpaned), E_PANED (m->priv->hpaned)->child2);
-
         /* Get information about the item. */
         e_shortcut_model_get_item_info (shortcut_bar->model, group_num, item_num, &url, &name);
+	g_free (name);
 
-	camera = gnocam_camera_new (url, m->priv->container);
+	CORBA_exception_init (&ev);
+	camera = gnocam_camera_new (url, m->priv->container, GTK_WINDOW (m), &ev);
+	if (BONOBO_EX (&ev)) {
+		gchar*	message;
+
+		message = g_strdup_printf (_("Could not display camera widget for camera '%s'!\n(%s)"), url, bonobo_exception_get_text (&ev));
+		gnome_error_dialog_parented (message, GTK_WINDOW (m));
+		g_free (message);
+		g_free (url);
+		CORBA_exception_free (&ev);
+		return;
+	}
+	g_free (url);
+	CORBA_exception_free (&ev);
 	g_return_if_fail (camera);
 
 	gtk_widget_show (widget = gnocam_camera_get_widget (camera));
+	gtk_container_remove (GTK_CONTAINER (m->priv->hpaned), E_PANED (m->priv->hpaned)->child2);
 	e_paned_pack2 (E_PANED (m->priv->hpaned), widget, TRUE, TRUE);
 }
 
@@ -103,6 +145,8 @@ gnocam_main_destroy (GtkObject* object)
 
 	m = GNOCAM_MAIN (object);
 
+	gtk_object_unref (GTK_OBJECT (m->priv->client));
+	bonobo_object_release_unref (m->priv->container, NULL);
 	g_free (m->priv);
 
 	(*GTK_OBJECT_CLASS (parent_class)->destroy) (object);
@@ -137,14 +181,22 @@ gnocam_main_new (void)
 		BONOBO_UI_VERB ("Preferences", on_preferences_activate),
 		BONOBO_UI_VERB ("About", on_about_activate),
 		BONOBO_UI_VERB_END};
-										
+	gint			position, w, h;
 
-	new = gtk_type_new (gnocam_main_get_type ());
+	new = gtk_type_new (GNOCAM_TYPE_MAIN);
 	new = GNOCAM_MAIN (bonobo_window_construct (BONOBO_WINDOW (new), "GnoCamMain", "GnoCam"));
+	gtk_signal_connect (GTK_OBJECT (new), "size_request", GTK_SIGNAL_FUNC (on_window_size_request), new);
+	gtk_signal_connect (GTK_OBJECT (new), "destroy", GTK_SIGNAL_FUNC (gtk_main_quit), new);
+	new->priv->client = gconf_client_get_default ();
 
 	/* Create the hpaned */
         gtk_widget_show (new->priv->hpaned = e_hpaned_new ());
+	gtk_signal_connect (GTK_OBJECT (new->priv->hpaned), "size_request", GTK_SIGNAL_FUNC (on_size_request), new);
         bonobo_window_set_contents (BONOBO_WINDOW (new), new->priv->hpaned);
+
+	/* Create label */
+	gtk_widget_show (widget = e_clipped_label_new (_("(No camera selected)")));
+	e_paned_add2 (E_PANED (new->priv->hpaned), widget);
 
         /* Create the shortcut bar. */
 	gtk_widget_show (widget = gnocam_shortcut_bar_new ());
@@ -154,15 +206,23 @@ gnocam_main_new (void)
 	/* Create the container */
 	container = bonobo_ui_container_new ();
 	bonobo_ui_container_set_win (container, BONOBO_WINDOW (new));
-	new->priv->container = bonobo_object_corba_objref (BONOBO_OBJECT (container));
+	new->priv->container = BONOBO_OBJREF (container);
 
 	/* Create the menu */
 	component = bonobo_ui_component_new ("main");
 	bonobo_ui_component_set_container (component, new->priv->container);
+	bonobo_ui_component_freeze (component, NULL);
+	bonobo_ui_engine_config_set_path (bonobo_window_get_ui_engine (BONOBO_WINDOW (new)), "/" PACKAGE "/UIConf/main");
 	bonobo_ui_component_set_translate (component, "/", GNOCAM_MAIN_UI, NULL);
 	bonobo_ui_component_add_verb_list_with_data (component, verb, new);
+	bonobo_ui_component_thaw (component, NULL);
 
-	gtk_window_set_default_size (GTK_WINDOW (new), 550, 550);
+	/* Set the default settings */
+	w = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/width_main", NULL);
+	h = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/height_main", NULL);
+	if (w + h > 0) gtk_window_set_default_size (GTK_WINDOW (new), w, h);
+	position = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/hpaned_position_main", NULL);
+	if (position) e_paned_set_position (E_PANED (new->priv->hpaned), position);
 
 	return (new);
 }

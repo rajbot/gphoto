@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
+
 #ifndef _BONOBO_STREAM_CAMERA_H_
 #define _BONOBO_STREAM_CAMERA_H_
 
@@ -7,37 +7,29 @@
 
 BEGIN_GNOME_DECLS
 
-typedef struct _BonoboStreamCamera BonoboStreamCamera;
-
 #define BONOBO_STREAM_CAMERA_TYPE        (bonobo_stream_camera_get_type ())
 #define BONOBO_STREAM_CAMERA(o)          (GTK_CHECK_CAST ((o), BONOBO_STREAM_CAMERA_TYPE, BonoboStreamCamera))
 #define BONOBO_STREAM_CAMERA_CLASS(k)    (GTK_CHECK_CLASS_CAST((k), BONOBO_STREAM_CAMERA_TYPE, BonoboStreamCameraClass))
 #define BONOBO_IS_STREAM_CAMERA(o)       (GTK_CHECK_TYPE ((o), BONOBO_STREAM_CAMERA_TYPE))
 #define BONOBO_IS_STREAM_CAMERA_CLASS(k) (GTK_CHECK_CLASS_TYPE ((k), BONOBO_STREAM_CAMERA_TYPE))
 
-typedef struct _BonoboStreamCameraPrivate BonoboStreamCameraPrivate;
+typedef struct _BonoboStreamCamera		BonoboStreamCamera;
+typedef struct _BonoboStreamCameraPrivate 	BonoboStreamCameraPrivate;
+typedef struct _BonoboStreamCameraClass		BonoboStreamCameraClass;
 
 struct _BonoboStreamCamera {
-	BonoboStream 	stream;
-
-	gchar* 		dirname;
-	gchar* 		filename;
-
-	Camera*		camera;
-	CameraFile*	file;
-	
-	gint		mode;
-	long 		position;
+	BonoboStream 			stream;
+	BonoboStreamCameraPrivate*	priv;
 };
 
-typedef struct {
-	BonoboStreamClass parent_class;
-} BonoboStreamCameraClass;
+struct _BonoboStreamCameraClass {
+	BonoboStreamClass 		parent_class;
+};
 
-GtkType       bonobo_stream_camera_get_type (void);
-BonoboStream *bonobo_stream_camera_open     (const char *path,
-					     gint flags, gint mode,
-					     CORBA_Environment *ev);
+GtkType       		bonobo_stream_camera_get_type	(void);
+BonoboStreamCamera*	bonobo_stream_camera_new	(Camera* camera, const gchar* dirname, const gchar* filename, gint mode, CORBA_Environment* ev);
+
+BonoboStream*		bonobo_stream_camera_open     	(const gchar* path, gint flags, gint mode, CORBA_Environment* ev);
 	
 END_GNOME_DECLS
 

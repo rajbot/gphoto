@@ -1,8 +1,7 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
+
 #ifndef _BONOBO_STORAGE_CAMERA_H_
 #define _BONOBO_STORAGE_CAMERA_H_
 
-#include <gphoto2.h>
 #include <bonobo/bonobo-storage.h>
 
 BEGIN_GNOME_DECLS
@@ -13,17 +12,18 @@ BEGIN_GNOME_DECLS
 #define BONOBO_IS_STORAGE_CAMERA(o)       (GTK_CHECK_TYPE ((o), BONOBO_STORAGE_CAMERA_TYPE))
 #define BONOBO_IS_STORAGE_CAMERA_CLASS(k) (GTK_CHECK_CLASS_TYPE ((k), BONOBO_STORAGE_CAMERA_TYPE))
 
-typedef struct {
-	BonoboStorage storage;
+typedef struct _BonoboStorageCamera		BonoboStorageCamera;
+typedef struct _BonoboStorageCameraPrivate	BonoboStorageCameraPrivate;
+typedef struct _BonoboStorageCameraClass	BonoboStorageCameraClass;
 
-	gchar* 	path;
-	Camera*	camera;
+struct _BonoboStorageCamera {
+	BonoboStorage 			parent;
+	BonoboStorageCameraPrivate*	priv;
+};
 
-} BonoboStorageCamera;
-
-typedef struct {
-	BonoboStorageClass parent_class;
-} BonoboStorageCameraClass;
+struct _BonoboStorageCameraClass {
+	BonoboStorageClass 		parent_class;
+};
 
 GtkType         bonobo_storage_camera_get_type     (void);
 

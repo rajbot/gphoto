@@ -22,13 +22,27 @@ struct _GnoCamFolderPrivate
 	gchar*			path;
 };
 
-#define GNOCAM_FOLDER_UI	 				\
-"<placeholder name=\"Folder\">"					\
-"  <submenu name=\"Folder\" _label=\"Folder\">"			\
-"    <placeholder name=\"Upload\"/>"				\
-"    <placeholder name=\"Configuration\"/>"			\
-"  </submenu>"							\
-"</placeholder>"
+#define GNOCAM_FOLDER_UI	 										\
+"<Root>"													\
+"  <menu>"													\
+"    <submenu name=\"File\">"											\
+"      <placeholder name=\"FileOperations\">"									\
+"        <menuitem name=\"Save\" _label=\"Save\" verb=\"\" pixtype=\"stock\" pixname=\"Save\"/>"		\
+"        <menuitem name=\"SaveAs\" _label=\"Save As\" verb=\"\" pixtype=\"stock\" pixname=\"Save As\"/>"	\
+"      </placeholder>"												\
+"    </submenu>"												\
+"    <placeholder name=\"Folder\">"										\
+"      <submenu name=\"Folder\" _label=\"Folder\">"								\
+"        <placeholder name=\"Upload\"/>"									\
+"        <placeholder name=\"Configuration\"/>"									\
+"      </submenu>"												\
+"    </placeholder>"												\
+"  </menu>"													\
+"  <dockitem name=\"Toolbar\">"											\
+"    <toolitem name=\"Save\" _label=\"Save\" verb=\"\" pixtype=\"stock\" pixname=\"Save\"/>"			\
+"    <toolitem name=\"SaveAs\" _label=\"Save As\" verb=\"\" pixtype=\"stock\" pixname=\"Save As\"/>"		\
+"  </dockitem>"													\
+"</Root>"
 
 #define GNOCAM_FOLDER_UI_UPLOAD 				\
 "<placeholder name=\"Upload\">"					\
@@ -48,6 +62,26 @@ on_upload_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 	folder = GNOCAM_FOLDER (user_data);
 	
 	g_warning ("Implement upload!");
+}
+
+static void
+on_save_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
+{
+	GnoCamFolder*	folder;
+
+	folder = GNOCAM_FOLDER (user_data);
+
+	g_warning ("Implement save!");
+}
+
+static void
+on_save_as_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
+{
+	GnoCamFolder*   folder;
+
+	folder = GNOCAM_FOLDER (user_data);
+
+	g_warning ("Implement save as!");
 }
 
 /*****************/
@@ -117,29 +151,34 @@ gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bo
 	GnoCamFolder*			new;
 	Bonobo_Storage_DirectoryList*   list;
 	gchar*				row [] = {NULL, NULL, NULL};
+	const gchar*			directory;
+	gchar*				titles [] = {"Type", "Name", NULL};
 	gint				i;
 	gint				result;
 	CORBA_Environment		ev;
 
+	if (!strcmp (path, "/")) directory = path;
+	else directory = g_basename (path);
+
 	CORBA_exception_init (&ev);
-        list = Bonobo_Storage_listContents (storage, "", Bonobo_FIELD_TYPE, &ev);
+        list = Bonobo_Storage_listContents (storage, directory, Bonobo_FIELD_TYPE, &ev);
         if (BONOBO_EX (&ev)) {
 		CORBA_exception_free (&ev);
 		return (NULL);
 	}
 	CORBA_exception_free (&ev);
 
-	new = gtk_type_new (gnocam_folder_get_type ());
+	new = gtk_type_new (GNOCAM_TYPE_FOLDER);
 	new->priv->camera = camera;
 	new->priv->path = g_strdup (path);
 	gp_camera_ref (camera);
-	new->priv->component = bonobo_ui_component_new ("GnoCamFolder");
 
-        gtk_widget_show (new->priv->widget = gtk_clist_new (2));
+        gtk_widget_show (new->priv->widget = gtk_clist_new_with_titles (2, titles));
+	gtk_clist_column_titles_show (GTK_CLIST (new->priv->widget));
         for (i = 0; i < list->_length; i++) {
 		switch (list->_buffer [i].type) {
                 case Bonobo_STORAGE_TYPE_DIRECTORY:
-                        row [0] = g_strdup ("Directory");
+                        row [0] = g_strdup ("Dir");
                         break;
                 case Bonobo_STORAGE_TYPE_REGULAR:
                         row [0] = g_strdup ("File");
@@ -153,8 +192,11 @@ gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bo
         }
 
 	/* Create menu */
-        bonobo_ui_component_set_container (new->priv->component, container);
-        bonobo_ui_component_set_translate (new->priv->component, "/menu", GNOCAM_FOLDER_UI, NULL);
+	new->priv->component = bonobo_ui_component_new (PACKAGE "Folder");
+	bonobo_ui_component_set_container (new->priv->component, container);
+	bonobo_ui_component_set_translate (new->priv->component, "/", GNOCAM_FOLDER_UI, NULL);
+	bonobo_ui_component_add_verb (new->priv->component, "Save", on_save_clicked, new);
+	bonobo_ui_component_add_verb (new->priv->component, "SaveAs", on_save_as_clicked, new);
 
         /* Upload? */
         if (new->priv->camera->abilities->file_put) {

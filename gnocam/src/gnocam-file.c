@@ -135,7 +135,7 @@ gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bono
 	OAF_ActivationID 	ret_id;
 
 	/* Open the stream */
-	stream = Bonobo_Storage_openStream (storage, path, Bonobo_Storage_READ | Bonobo_Storage_COMPRESSED, ev);
+	stream = Bonobo_Storage_openStream (storage, path, Bonobo_Storage_READ, ev);
 	if (BONOBO_EX (ev)) return (NULL);
 	g_return_val_if_fail (stream, NULL);
 
@@ -145,7 +145,7 @@ gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bono
 	g_return_val_if_fail (info, NULL);
 	mime_type = g_strdup (info->content_type);
 	CORBA_free (info);
-	
+
 	oaf_requirements = g_strdup_printf (
 		"bonobo:supported_mime_types.has ('%s') AND "
 		"repo_ids.has ('IDL:Bonobo/Control:1.0') AND "
@@ -180,7 +180,7 @@ gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bono
 	subcontrol = bonobo_moniker_util_qi_return (object, "IDL:Bonobo/Control:1.0", ev);
 	if (BONOBO_EX (ev)) return (NULL);
 
-	new = gtk_type_new (gnocam_file_get_type ());
+	new = gtk_type_new (GNOCAM_TYPE_FILE);
 	new->priv->filename = g_strdup (g_basename (path));
 	new->priv->camera = camera;
 	gp_camera_ref (camera);

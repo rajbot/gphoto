@@ -16,6 +16,7 @@ static GnomeDialogClass* parent_class = NULL;
 
 struct _GnoCamPreferencesPrivate {
 	GConfClient*	client;
+	guint		cnxn;
 
 	GtkWidget*	clist;
 };
@@ -29,6 +30,58 @@ void on_druid_cancel 				(GnomeDruid* druid);
 void on_druidpagestandard_model_prepare 	(GnomeDruidPage* page, GtkWidget* druid);
 void on_druidpagestandard_port_prepare 		(GnomeDruidPage* page, GtkWidget* druid);
 void on_druid_finish 				(GnomeDruidPage* page, GtkWidget* druid);
+
+/************************/
+/* GConf - notification */
+/************************/
+
+static void
+on_cameras_changed (GConfClient *client, guint cnxn_id, GConfEntry* entry, gpointer user_data)
+{
+	GnoCamPreferences*	preferences;
+	gint			i, row;
+	GSList*			list;
+	GtkCList*		clist;
+
+	g_return_if_fail (GNOCAM_IS_PREFERENCES (user_data));
+	preferences = GNOCAM_PREFERENCES (user_data);
+	clist = GTK_CLIST (preferences->priv->clist);
+	list = gconf_client_get_list (preferences->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, NULL);
+
+	/* Delete deleted cameras */
+	for (row = 0; row < clist->rows; ) {
+		gchar*	name = NULL;
+
+		gtk_clist_get_text (clist, row, 0, &name);
+		for (i = 0; i < g_slist_length (list); i++) {
+			if (!strcmp (g_slist_nth_data (list, i), name)) break;
+		}
+		if (i == g_slist_length (list)) gtk_clist_remove (clist, row);
+		else row++;
+	}
+
+	/* Append the new cameras */
+	for (i = 0; i < g_slist_length (list); i += 3) {
+		for (row = 0; row < clist->rows; row++) {
+			gchar* name = NULL;
+			
+			gtk_clist_get_text (clist, row, 0, &name);
+			if (!strcmp (g_slist_nth_data (list, i), name)) break;
+		}
+		if (row == clist->rows) {
+			gchar*  row [3];
+
+        	        row [0] = g_slist_nth_data (list, i);
+	                row [1] = g_slist_nth_data (list, i + 1);
+	                row [2] = g_slist_nth_data (list, i + 2);
+	                gtk_clist_append (GTK_CLIST (clist), row);
+		}
+	}
+
+	/* Free the list */
+	for (i = 0; i < g_slist_length (list); i++) g_free (g_slist_nth_data (list, i));
+	g_slist_free (list);
+}
 
 /*************/
 /* Callbacks */
@@ -123,6 +176,7 @@ on_druid_finish (GnomeDruidPage* page, GtkWidget* druid)
 	gchar*		name;
 	gchar*		port;
 	gint		i;
+	GSList*		list;
 
 	g_return_if_fail (xml = gtk_object_get_data (GTK_OBJECT (druid), "xml"));
 	g_return_if_fail (model = gtk_entry_get_text (GTK_ENTRY (glade_xml_get_widget (xml, "entry_model"))));
@@ -130,30 +184,23 @@ on_druid_finish (GnomeDruidPage* page, GtkWidget* druid)
 	g_return_if_fail (port = gtk_entry_get_text (GTK_ENTRY (glade_xml_get_widget (xml, "entry_port"))));
 	g_return_if_fail (client = gconf_client_get_default ());
 
-	for (i = 0; ; i++) {
-		gchar* path = g_strdup_printf ("/apps/" PACKAGE "/camera/%i", i);
-		if (!gconf_client_dir_exists (client, path, NULL)) {
-			gchar* tmp;
+	/* Get the list */
+	list = gconf_client_get_list (client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, NULL);
 
-			tmp = g_strconcat (path, "/port", NULL);
-			gconf_client_set_string (client, tmp, port, NULL);
-			g_free (tmp);
+	/* Append the new entries */
+	list = g_slist_append (list, g_strdup (name));
+	list = g_slist_append (list, g_strdup (model));
+	list = g_slist_append (list, g_strdup (port));
 
-			tmp = g_strconcat (path, "/model", NULL);
-			gconf_client_set_string (client, tmp, model, NULL);
-			g_free (tmp);
+	/* Tell gconf about the new list */
+	gconf_client_set_list (client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, list, NULL);
 
-			tmp = g_strconcat (path, "/name", NULL);
-			gconf_client_set_string (client, tmp, name, NULL);
-			g_free (tmp);
-
-			g_free (path);
-			break;
-		}
-		g_free (path);
-	}
+	/* Free the list */
+	for (i = 0; i < g_slist_length (list); i++) g_free (g_slist_nth_data (list, i));
+	g_slist_free (list);
 
 	gtk_widget_destroy (glade_xml_get_widget (xml, "window_druid"));
+	gtk_object_unref (GTK_OBJECT (client));
 }
 
 void
@@ -185,12 +232,28 @@ on_delete_clicked (GtkButton *button, gpointer user_data)
 
 	/* Remove the rows in the camera list. */
 	while ((selection = g_list_first (clist->selection))) {
-		gint	row = GPOINTER_TO_INT (selection->data);
-		gchar*	tmp;
-		
-		tmp = g_strdup_printf ("/apps/" PACKAGE "/camera/%i", GPOINTER_TO_INT (gtk_clist_get_row_data (clist, row)));
-		gconf_client_remove_dir (preferences->priv->client, tmp, NULL);
-		g_free (tmp);
+		gint	row;
+		GSList*	list;
+		gint	i;
+
+		row = GPOINTER_TO_INT (selection->data);
+		list = gconf_client_get_list (preferences->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, NULL);
+
+		for (i = 0; i < 3; i++) {
+			GSList*	link;
+
+			link = g_slist_nth (list, row);
+			list = g_slist_remove_link (list, link);
+			g_free (g_slist_nth_data (link, 1));
+			g_slist_free (link);
+		}
+
+		/* Tell GConf about the new list */
+		gconf_client_set_list (preferences->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, list, NULL);
+
+		/* Free the list */
+		for (i = 0; i < g_slist_length (list); i++) g_free (g_slist_nth_data (list, i));
+		g_slist_free (list);
 		
 		gtk_clist_remove (clist, row);
 	}
@@ -207,6 +270,7 @@ gnocam_preferences_destroy (GtkObject* object)
 
 	preferences = GNOCAM_PREFERENCES (object);
 
+	gconf_client_notify_remove (preferences->priv->client, preferences->priv->cnxn);
 	gtk_object_unref (GTK_OBJECT (preferences->priv->client));
 	g_free (preferences->priv);
 
@@ -249,6 +313,7 @@ gnocam_preferences_new (GtkWindow* parent)
 	gnome_dialog_constructv (GNOME_DIALOG (new), _(PACKAGE " - Preferences"), buttons);
 	gnome_dialog_set_close (GNOME_DIALOG (new), TRUE);
 	new->priv->client = gconf_client_get_default ();
+	gconf_client_add_dir (new->priv->client, "/apps" PACKAGE, GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
 	gnome_dialog_set_parent (GNOME_DIALOG (new), parent);
 
 	/* Create the notebook */
@@ -266,41 +331,8 @@ gnocam_preferences_new (GtkWindow* parent)
 	gtk_container_set_border_width (GTK_CONTAINER (hbox), 10);
 	gtk_container_add (GTK_CONTAINER (frame), hbox);
 	gtk_widget_show (new->priv->clist = gtk_clist_new_with_titles (3, titles));
-	{
-		gint	i;
-
-	        for (i = 0; ; i++) {
-	                gchar*          path;
-	
-	                /* Check each entry in gconf's database. */
-	                path = g_strdup_printf ("/apps/" PACKAGE "/camera/%i", i);
-	                if (gconf_client_dir_exists (new->priv->client, path, NULL)) {
-	                        gchar*  tmp;
-				gchar*	row [3];
-	
-	                        tmp = g_strconcat (path, "/name", NULL);
-	                        row [0] = gconf_client_get_string (new->priv->client, tmp, NULL);
-	                        g_free (tmp);
-
-				tmp = g_strconcat (path, "/model", NULL);
-				row [1] = gconf_client_get_string (new->priv->client, tmp, NULL);
-				g_free (tmp);
-
-				tmp = g_strconcat (path, "/port", NULL);
-				row [2] = gconf_client_get_string (new->priv->client, tmp, NULL);
-				g_free (tmp);
-
-				gtk_clist_append (GTK_CLIST (new->priv->clist), row);
-	
-	                        g_free (path);
-	
-	                } else {
-	                        g_free (path);
-	                        break;
-        	        }
-	        }
-
-	}
+	new->priv->cnxn = gconf_client_notify_add (new->priv->client, "/apps/" PACKAGE "/cameras", on_cameras_changed, new, NULL, NULL);
+	on_cameras_changed (new->priv->client, 0, NULL, new);
 	gtk_container_add (GTK_CONTAINER (hbox), new->priv->clist);
 	gtk_widget_show (vbuttonbox = gtk_vbutton_box_new ());
 	gtk_container_add (GTK_CONTAINER (hbox), vbuttonbox);

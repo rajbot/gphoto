@@ -2249,7 +2249,7 @@ Hyper
 	<widget>
 	  <class>GtkButton</class>
 	  <child_name>Toolbar:button</child_name>
-	  <name>button1</name>
+	  <name>app_gallery_button_clear</name>
 	  <tooltip>New File</tooltip>
 	  <label>Clear</label>
 	  <stock_pixmap>GNOME_STOCK_PIXMAP_CLEAR</stock_pixmap>
@@ -2262,7 +2262,7 @@ Hyper
 	<widget>
 	  <class>GtkButton</class>
 	  <child_name>Toolbar:button</child_name>
-	  <name>button3</name>
+	  <name>app_gallery_button_save_as</name>
 	  <tooltip>Save File</tooltip>
 	  <label>Save As</label>
 	  <stock_pixmap>GNOME_STOCK_PIXMAP_SAVE_AS</stock_pixmap>

@@ -195,6 +195,7 @@ on_new_gallery_activate (GtkMenuItem *menuitem, gpointer user_data)
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_gallery, "app_gallery_close")), "xml_gallery", xml_gallery);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_gallery, "app_gallery_open")), "xml_gallery", xml_gallery);
         gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_gallery, "app_gallery_save_as")), "xml_gallery", xml_gallery);
+	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_gallery, "app_gallery_button_save_as")), "xml_gallery", xml_gallery);
 
 	/* Connect the signals. */
 	glade_xml_signal_autoconnect (xml_gallery);

@@ -40,6 +40,21 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.19  1999/11/20 16:28:43  ole
+ * Merged back changes
+ *
+ * Revision 1.18.2.2  1999/11/04 04:41:58  ole
+ * Changed hard coded path (/usr/local/share/gphoto/gallery) to
+ * Makefile variable (GALLERYDIR).
+ *
+ * Revision 1.18.2.1  1999/10/19 11:05:09  ole
+ * Mike Labriola <mdlabriola@mindless.com> made a couple
+ * changes to the html gallery option
+ *
+ * - added a checkbutton to save as index.shtml for ssi
+ * - added a checkbutton to set table border width to 0
+ * - added a checkbutton to set image border width to 0
+ *
  * Revision 1.18  1999/08/11 15:03:05  ole
  * 999-08-11  Ole Aamot  <oleaa@ifi.uio.no>
  *
@@ -137,6 +152,7 @@
  *
  */
 
+#include "config.h"
 #include "main.h"
 #include "gphoto.h"
 #include "util.h"
@@ -169,6 +185,10 @@ char picture_filename[128];
 char picture_number[5];
 char picture_next[128];
 char picture_previous[128];
+char output_filename[7];
+char table_border_width[2];
+char image_border_width[2];
+
 
 void gallery_change_dir(GtkWidget *widget, GtkWidget *label) {
 
@@ -234,7 +254,7 @@ void gallery_main() {
 	GList *dlist;
 
 	GtkWidget *dialog, *list, *list_item, *scrwin, *obutton, *cbutton;
-	GtkWidget *netscape;
+	GtkWidget *netscape, *shtml, *table_border, *image_border;
 	GtkWidget *galentry;
 	GtkWidget *label, *dirlabel, *dirbutton, *hbox, *hseparator;
 
@@ -295,19 +315,19 @@ Then, re-run the HTML Gallery.");
         gtk_widget_show(list);
         gtk_list_set_selection_mode (GTK_LIST(list),GTK_SELECTION_SINGLE);
 
-	dir = opendir("/usr/local/share/gphoto/gallery");
+	dir = opendir(GALLERYDIR);
 	if (dir == NULL) {
-		error_dialog(
-"HTML gallery themes do not exist at
-/usr/local/share/gphoto/gallery
-Please install/move gallery themes there.");
+		sprintf(statmsg, 
+			"HTML gallery themes do not exist at %s.\n"
+			"Please install/move gallery themes there.",
+			GALLERYDIR);
+		error_dialog(statmsg);
 		return;
 	}
 
 	file = readdir(dir);
 	while (file != NULL) {
-		sprintf(filename, "/usr/local/share/gphoto/gallery/%s",
-			file->d_name);
+		sprintf(filename,"%s/%s",GALLERYDIR,file->d_name);
 		testdir = opendir(filename);
                 if ((strcmp(file->d_name, ".") != 0) &&
                     (strcmp(file->d_name, "..") != 0) &&
@@ -361,6 +381,23 @@ Please install/move gallery themes there.");
 		GTK_SIGNAL_FUNC(gallery_change_dir),dirlabel);
 	gtk_box_pack_end(GTK_BOX(hbox), dirbutton, FALSE, FALSE, 0);
 
+	/* i made this
+	 * it should make extra buttons for shtml, table borders, and 
+	 * image borders
+	 */	
+	shtml = gtk_check_button_new_with_label("Export file as *.shtml?");
+	gtk_widget_show(shtml);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), shtml, FALSE, FALSE, 0);
+	
+	table_border = gtk_check_button_new_with_label("Set table border width to zero for thumbnails?");
+	gtk_widget_show(table_border);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table_border, FALSE, FALSE, 0);
+        
+	image_border = gtk_check_button_new_with_label("Set image border width to zero? (so you don't see the link colors...)");
+        gtk_widget_show(image_border);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), image_border, FALSE, FALSE, 0); 
+
+	 
 	netscape = gtk_check_button_new_with_label(
 		"View in \"netscape\" when finished");
 	gtk_widget_show(netscape);
@@ -395,20 +432,44 @@ Please install/move gallery themes there.");
 		return;
 	}
 
+	/* shtml?, table borders?, image borders?
+	 */
+	if (GTK_TOGGLE_BUTTON(shtml)->active) {
+		strcpy(output_filename, "index.shtml");
+	}
+	   else {
+		strcpy(output_filename, "index.html");
+	}
+	
+	if (GTK_TOGGLE_BUTTON(table_border)->active) {
+		strcpy(table_border_width, "0");
+	}
+	   else {
+       	        strcpy(table_border_width, "1");
+        }
+	 
+	if (GTK_TOGGLE_BUTTON(image_border)->active) {
+		strcpy(image_border_width, "0");
+	}
+	   else {
+		strcpy(image_border_width, "1");
+        }
+
+	 
+	 
 	strcpy(cp, "");
 	sprintf(theme, "%s",(char*)gtk_object_get_data(GTK_OBJECT(dlist->data),
 		"theme"));
 	sprintf(gallery_name,"%s",
 		gtk_entry_get_text(GTK_ENTRY(galentry)));
-	strcpy(gallery_index, "index.html");
+	strcpy(gallery_index, output_filename);
 	loctime = time(&loctime);
         sprintf(date, "%s", ctime(&loctime));
 	date[24] = '\0';
  	sprintf(outputdir,"%s",
 		(char*)gtk_object_get_data(GTK_OBJECT(dirlabel),"dir"));
 
-	sprintf(filename, "/usr/local/share/gphoto/gallery/%s",
-		theme);
+	sprintf(filename, "%s/%s",GALLERYDIR,theme);
 	dir = opendir(filename);
 	file = readdir(dir);
 	while (file != NULL) {
@@ -420,7 +481,7 @@ Please install/move gallery themes there.");
 		    (strcmp(file->d_name, "..") != 0 )) {
 			sprintf(filename2, "%s%s", outputdir, file->d_name);
 			if (confirm_overwrite(filename2)) {
-				sprintf(cp, "cp %s/%s %s", filename, file->d_name,
+				sprintf(cp, "cp %s%s %s", filename, file->d_name,
 					outputdir);
 				system(cp);
 			}
@@ -428,7 +489,7 @@ Please install/move gallery themes there.");
 		file = readdir(dir);
 	}	
 	closedir(dir);
-	sprintf(filename, "%sindex.html", outputdir);	
+	sprintf(filename, "%s%s", outputdir, output_filename);	
 	if (!confirm_overwrite(filename)) {
 		if (GTK_IS_OBJECT(dialog))
 			gtk_widget_destroy(dialog);
@@ -437,16 +498,14 @@ Please install/move gallery themes there.");
 
 	sprintf(cp, "echo \" \" > %s", filename);
 	system(cp);
-	sprintf(filename2,
-		"/usr/local/share/gphoto/gallery/%s/index_top.html",
-		theme);	
+	sprintf(filename2,"%s/%s/index_top.html",GALLERYDIR,theme);	
 	gallery_parse_tags(filename, filename2);
-	sprintf(cp, "echo \"<table border=1><tr>\" >> %s", filename);
+	sprintf(cp, "echo \"<table border=\"%s\"><tr>\" >> %s", table_border_width, filename);
 	system(cp);
 	node = &Thumbnails;
 	while (node->next != NULL) {
 		node = node->next;
-		sprintf(filename, "%sindex.html", outputdir);	
+		sprintf(filename, "%s%s", outputdir, output_filename);	
 		if (GTK_TOGGLE_BUTTON(node->button)->active) {
 			if ((i%5==0) && (i!=0)) {
 				sprintf(cp, "echo \"</tr><tr>\" >> %s",
@@ -465,8 +524,8 @@ Please install/move gallery themes there.");
 				sprintf(thumbnail_number, "%03i", i+1);
 			} else {
 				sprintf(thumbnail, 
-	"<a href=\"picture-%03i.html\"><img alt=\"%03i\" src=\"thumbnail-%03i.%s\"><\\/a>",
-					i+1, i+1, i+1, im->image_type);
+	"<a href=\"picture-%03i.html\"><img alt=\"%03i\" src=\"thumbnail-%03i.%s\" border=\"%s\"><\\/a>",
+					i+1, i+1, i+1, im->image_type, image_border_width);
 				sprintf(thumbnail_filename, "thumbnail-%03i.%s",
 					i+1, im->image_type);
 				sprintf(thumbnail_number, "%03i", i+1);
@@ -520,8 +579,7 @@ Please install/move gallery themes there.");
 			system(cp);
 
 			sprintf(filename2,
-				"/usr/local/share/gphoto/gallery/%s/thumbnail.html",
-				theme);
+				"%s/%s/thumbnail.html",GALLERYDIR,theme);
 			gallery_parse_tags(filename, filename2);
 
 			sprintf(cp, "echo \"</td>\" >> %s", filename);
@@ -538,22 +596,19 @@ Please install/move gallery themes there.");
 			sprintf(cp, "echo \" \" > %s", filename);
 			system(cp);
 			sprintf(filename2,
-				"/usr/local/share/gphoto/gallery/%s/picture.html",
-				theme);
+				"%s/%s/picture.html",GALLERYDIR,theme);
 			gallery_parse_tags(filename, filename2);
 			i++;
 		}
 		j++;
 	}
-	sprintf(filename, "%sindex.html", outputdir);	
+	sprintf(filename, "%s%s", outputdir, output_filename);	
 	sprintf(cp, "echo \"</tr></table>\" >> %s", filename);
 	system(cp);
-	sprintf(filename2,
-		"/usr/local/share/gphoto/gallery/%s/index_bottom.html",
-		theme);			
+	sprintf(filename2,"%s/%s/index_bottom.html",GALLERYDIR,theme);
 	gallery_parse_tags(filename, filename2);
 	if (GTK_TOGGLE_BUTTON(netscape)->active) {
-		sprintf(statmsg, "Loaded file:%sindex.html in %s", filesel_cwd, BROWSER);
+		sprintf(statmsg, "Loaded file:%s%s in %s", filesel_cwd, output_filename, BROWSER);
 		browse_gallery();}
 	   else {
 		sprintf(statmsg, "Gallery saved in: %s", outputdir);

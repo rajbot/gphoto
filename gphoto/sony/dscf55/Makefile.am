@@ -12,7 +12,7 @@ srsony.o : rsony.c serio.o config.o serio.h
 
 ## rsony_SOURCES = rmain.c rsony.c config.c serio.c serio.h
 
-CFLAGS = @GTK_CFLAGS@
+CFLAGS = @CFLAGS@ @GTK_CFLAGS@
 
 libgphoto_sony_dscf55_la_SOURCES = $(rs)
 

@@ -159,7 +159,7 @@ int kodak_dc210_command_complete (int serialdev)
   /* Wait for the camera to be ready. */
   do
   {
-    success = kodak_dc210_read(serialdev,&status,1);
+    success = kodak_dc210_read(serialdev,(char *)&status,1);
   }
   while (success && (status == DC_BUSY));
 
@@ -764,7 +764,7 @@ char *kodak_dc210_summary()
       snprintf(buff,1024,"AC Status: %d\n",status.acStatusId);
       strcat(summary_string,buff);
 
-      strftime(buff,1024,"Time: %a, %d %b %y %T\n",localtime(&status.time));
+      strftime(buff,1024,"Time: %a, %d %b %y %T\n",localtime((time_t *)&status.time));
       strcat(summary_string,buff);
 
       fprintf(stderr,"step 4\n");
@@ -781,7 +781,7 @@ char *kodak_dc210_summary()
     kodak_dc210_close_camera ( serialdev );
   }
 
-  return (&summary_string);
+  return (summary_string);
 }
 
 char *kodak_dc210_description() 

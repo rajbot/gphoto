@@ -1,2 +1,11 @@
 Makefile.in
 Makefile
+.libs
+.deps
+os.lo
+log.lo
+qm.lo
+dcx.lo
+libgphoto_konica_qmxxx.la
+qmxxx
+

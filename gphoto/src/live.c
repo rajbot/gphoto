@@ -58,7 +58,7 @@ void live_main () {
 	int w, h;
 
 	GtkWidget *dialog;
-	GtkWidget *button, *hbox;
+	GtkWidget *button, *ubutton, *cbutton, *tbutton, *hbox;
 
 	GtkWidget *gpixmap;
 	GdkPixmap *pixmap;
@@ -74,17 +74,17 @@ void live_main () {
 	gtk_widget_show(hbox);
 	gtk_box_pack_end_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),hbox);
 
-	button = gtk_button_new_with_label("Update Picture");
-	gtk_widget_show(button);
-	gtk_box_pack_start_defaults(GTK_BOX(hbox),button);
-        gtk_signal_connect_object(GTK_OBJECT(button), "clicked",
+	ubutton = gtk_button_new_with_label("Update Picture");
+	gtk_widget_show(ubutton);
+	gtk_box_pack_start_defaults(GTK_BOX(hbox),ubutton);
+        gtk_signal_connect_object(GTK_OBJECT(ubutton), "clicked",
                            GTK_SIGNAL_FUNC(live_snapshot),
                            GTK_OBJECT(dialog));
 
-        button = gtk_button_new_with_label("Take Picture");
-        gtk_widget_show(button);
-        gtk_box_pack_start_defaults(GTK_BOX(hbox),button);
-        gtk_signal_connect_object(GTK_OBJECT(button), "clicked",
+        tbutton = gtk_button_new_with_label("Take Picture");
+        gtk_widget_show(tbutton);
+        gtk_box_pack_start_defaults(GTK_BOX(hbox),tbutton);
+        gtk_signal_connect_object(GTK_OBJECT(tbutton), "clicked",
                            GTK_SIGNAL_FUNC(takepicture_call),
                            GTK_OBJECT(dialog));
 
@@ -97,15 +97,16 @@ void live_main () {
         	GTK_SIGNAL_FUNC(live_video), dialog);
 
 
-	button = gtk_button_new_with_label("Close");
-	gtk_widget_show(button);
+	cbutton = gtk_button_new_with_label("Close");
+	gtk_widget_show(cbutton);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
-				  button);
-        gtk_signal_connect_object(GTK_OBJECT(button), "clicked",
+				  cbutton);
+
+        gtk_signal_connect_object(GTK_OBJECT(cbutton), "clicked",
                            GTK_SIGNAL_FUNC(gtk_widget_destroy),
                            GTK_OBJECT(dialog)); 
         if ((im = (*Camera->get_preview)()) == 0) {
-		error_dialog("Could not get preview");
+	        error_dialog("Could not get preview");
 		return;
 	}
 	imlibimage = gdk_imlib_load_image_mem(im->image, im->image_size);

@@ -1,0 +1,9 @@
+Makefile.in
+Makefile
+.deps
+.libs
+rsony.lo
+config.lo
+serio.lo
+libgphoto_sony_dscf55.la
+rsony

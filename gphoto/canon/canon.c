@@ -324,29 +324,26 @@ static int canon_configure(void)
 
 /****************************************************************************/
 
-
-static int _pick_nth(struct psa50_dir *tree,int n,char *path)
-{
-    int i;
-
-    path = strchr(path,0);
-    for (i = 0; i <= n; i++) {
-	if (!tree->name) return i;
-	while (1) {
-	    *path = '\\';
-	    strcpy(path+1,tree->name);
-	    if (!tree->is_file) {
-		i += _pick_nth(tree->user,n-i,path);
-		break;
-	    }
-	    if (is_image(tree->name)) break;
-	    tree++;
-	}
-	tree++;
-    }
-    return i;
-}
-
+static int _pick_nth(struct psa50_dir *tree, int n, char *path) {          
+                                                                           
+  int i=0;                                                                 
+                                                                           
+  if (tree == NULL)                                                        
+    return 0;                                                              
+                                                                           
+  path = strchr(path, 0);                                                  
+  *path = '\\';                                                            
+                                                                           
+  while (i<n && tree->name) {                                              
+    strcpy(path+1, tree->name);                                            
+    if (is_image(tree->name))                                              
+      i++;                                                                 
+    else if (!tree->is_file)                                               
+      i += _pick_nth(tree->user, n-i, path);                               
+    tree++;                                                                
+  }                                                                        
+  return i;                                                                
+}                                                                          
 
 static void pick_nth(int n,char *path)
 {

@@ -41,11 +41,11 @@ typedef struct
    NEXT_STATE_TYPE (*error_handler)(int, ERROR_TYPE);
 } STATE_MACHINE_LINE;
 
-typedef struct
+typedef struct _STATE_MACHINE_INSTANCE
 {
    unsigned char *device;
    int initial_baud;
-   void (*driver_init)(void *);
+   void (*driver_init)(struct _STATE_MACHINE_INSTANCE *);
 
    int fd;
    int baud;

@@ -1,7 +1,7 @@
 bin_PROGRAMS = qmxxx 
 drivers_LTLIBRARIES = libgphoto_konica_qmxxx.la
 
-CFLAGS   = @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@
+CFLAGS   = @CFLAGS@ @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@
 # EXTRA_DIST = ChangeLog TODO gettraces 
 
 libgphoto_konica_qmxxx_la_SOURCES =  os.c log.c qm.c dcx.c dcx.h log.h os.h

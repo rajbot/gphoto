@@ -1,13 +1,8 @@
 ## Process this file with automake to generate a GNU Makefile
 
-SUBDIRS = canon casio fuji kodak kodak_generic \
-	konica minolta mustek philips \
-	konica_qmxxx \
-	photopc ricoh \
-	sony \
-	nikon \
-	directory \
-	src gallery man
+SUBDIRS = canon casio directory fuji gallery kodak \
+kodak_generic konica konica_qmxxx man minolta mustek nikon \
+philips photopc ricoh sony src
 
 gphotodocdir = $(datadir)/gphoto/doc
 

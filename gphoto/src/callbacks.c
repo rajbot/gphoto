@@ -33,7 +33,9 @@
 #include "post_processing_on.xpm"
 #include "post_processing_off.xpm"
 
-static int okDownload;
+#define DEBUG(x) printf(x)
+
+static gint okAction;
 
 extern struct ImageMembers Thumbnails;
 extern struct ImageMembers Images;
@@ -46,7 +48,7 @@ extern GtkWidget *stop_button;
 extern char	  camera_model[];
 extern char	  serial_port[];
 
-extern int	  post_process;
+extern gint	  post_process;
 extern char	  post_process_script[];
 extern GtkWidget *post_process_pixmap;
 extern GtkWidget *index_vp;
@@ -69,18 +71,36 @@ char* find_tag(struct Image *im, char* name) {
 	return(NULL); /* Nothing Found */
 };
 
+void index_page () {
+    gtk_notebook_set_page (GTK_NOTEBOOK(notebook), 0);
+}
+
+void next_page () {
+    gtk_notebook_next_page (GTK_NOTEBOOK(notebook));
+}
+
+void prev_page () {
+    gtk_notebook_prev_page (GTK_NOTEBOOK(notebook));
+}
+
 void set_camera (char *model) {
 
 	int i=0;
 
 	while (strlen(cameras[i].name) > 0) {
 		if (strcmp(model, cameras[i].name) == 0) {
+
+		    if (!command_line_mode)
 			gtk_label_set(GTK_LABEL(library_name),
-					cameras[i].name);
-			Camera = cameras[i].library;
-			if ((*Camera->initialize)() != 0) {
-				return;
-			}
+				      cameras[i].name);
+		    else 
+			printf("set_camera: %s\n", cameras[i].name);
+		    
+		    Camera = cameras[i].library;
+
+		    if ((*Camera->initialize)() != 0) {
+			return;
+		    }
 		}
 		i++;
 	}
@@ -102,22 +122,49 @@ void takepicture_call() {
 	int picNum;
 
 	update_status("Taking picture...");
+	
 	picNum = (*Camera->take_picture)();
 
 	if (picNum == 0) {
-		error_dialog("Could not take a picture.");
-		return;
+	    error_dialog ("Could not take a picture.");
+	    return;
 	}
-
+	    
 	appendpic(picNum, 0, TRUE, NULL);
 	sprintf(status, "New picture is #%i", picNum);
-	error_dialog(status);
-	update_status("Done.");
+	gtk_notebook_set_page (GTK_NOTEBOOK(notebook), picNum);
+	update_status(status);
+}
+
+void format (GtkWidget *dialog, GtkObject *button) {
+
+        gint current, no_pics, i;
+        char error[32];
+
+	no_pics = (*Camera->number_of_pictures)();
+	i = no_pics;
+
+        gtk_widget_hide(dialog);
+        update_status("Deleting ALL pictures.");
+
+	/* empty camera memory... */
+
+        while (i) {
+	    (*Camera->delete_picture)(i);
+	    remove_thumbnail(i);
+	    i--;
+	    sprintf(error, "Deleting %i...\n", i);
+	    update_status(error);
+	    update_progress((float)i/(float)no_pics);
+	}
+	update_status ("Deleted all images.");
+	update_progress(0);
+        gtk_widget_destroy(dialog);
 }
 
 void del_pics (GtkWidget *dialog, GtkObject *button) {
 
-        int i=1;
+        gint i=1;
 	char error[32];
 
         struct ImageMembers *node = &Thumbnails;
@@ -147,38 +194,55 @@ void del_pics (GtkWidget *dialog, GtkObject *button) {
         update_status("Done.");
 }
 
-void del_dialog () {
+void del_dialog (int type) {
 
 	/*
 	   Shows the delete confirmation dialog
+	   type == 1: all
+	   type == 0; selected
 	*/
 
 	int nothing_selected = 1;
 	GtkWidget *dialog, *button, *label;
 
-	struct ImageMembers *node = &Thumbnails;
-	while (node->next != NULL) {
+	if (type==0) {
+	    struct ImageMembers *node = &Thumbnails;
+	    while (node->next != NULL) {
 		node = node->next;
 		if (GTK_TOGGLE_BUTTON(node->button)->active)
-			nothing_selected = 0;
-	}
-	if (nothing_selected) {
+		    nothing_selected = 0;
+	    }
+	    if (nothing_selected) {
 		update_status("Nothing selected to be deleted.");
 		return;
+	    }
 	}
 
 	dialog = gtk_dialog_new();
+	
+	if (type==0) {
+	    label = gtk_label_new("Are you sure you want to DELETE the selected images?");
+	} else if (type==1) {
+	    label = gtk_label_new("Are you sure you want to DELETE all the images from memory?");
+	}
 
-	label = gtk_label_new("Are you sure you want to DELETE the selected images?");
 	gtk_widget_show(label);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
 			   FALSE, FALSE, 0);
 
 	button = gtk_button_new_with_label("Yes");
 	gtk_widget_show(button);
-	gtk_signal_connect_object(GTK_OBJECT(button), "clicked", 
-				  GTK_SIGNAL_FUNC(del_pics), 
-				  GTK_OBJECT(dialog));
+	
+	if (type==0) {
+	    gtk_signal_connect_object(GTK_OBJECT(button), "clicked", 
+				      GTK_SIGNAL_FUNC(del_pics), 
+				      GTK_OBJECT(dialog));
+	} else if (type==1) {
+	    gtk_signal_connect_object(GTK_OBJECT(button), "clicked", 
+				      GTK_SIGNAL_FUNC(format), 
+				      GTK_OBJECT(dialog));
+	}
+
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
 			   button, FALSE, FALSE, 0);
 	button = gtk_button_new_with_label("No");
@@ -193,7 +257,7 @@ void del_dialog () {
 	gtk_widget_show(dialog);
 }
 
-void savepictodisk (int picNum, int thumbnail, char *prefix) {
+void savepictodisk (gint picNum, gint thumbnail, char *prefix) {
 
 	/* Saves picture (thumbnail == 0) or thumbnail (thumbnail == 1)
 	 * #picNum to disk as prefix.(returned image extension)
@@ -201,6 +265,19 @@ void savepictodisk (int picNum, int thumbnail, char *prefix) {
 
 	struct Image *im = NULL; 
 	char fname[1024], error[32], process[1024];
+
+	struct ImageMembers *node = &Images;
+
+	if (!thumbnail) {
+	    while(node!=NULL && node->info!=NULL &&
+		  atoi(node->info)!=picNum)  /*should be strtol. RAA*/
+		node = node->next;
+	    sprintf(fname, "%s.%s", prefix, "jpg");
+	    if (node != NULL) { /*A match was found*/
+		gdk_imlib_save_image(node->imlibimage, fname, NULL);
+		return;
+	    }
+	}
 
 	if ((im = (*Camera->get_picture)(picNum, thumbnail)) == 0) {
 		sprintf(error, "Could not save #%i", picNum);
@@ -234,7 +311,8 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 	 */
 
 	int i = 0, pic = 1;
-	char fname[1024], status[32];
+	char fname[1024];
+	char status[32];
 	char *filesel_dir, *filesel_prefix;
 
 	struct ImageMembers *node = &Thumbnails;
@@ -273,6 +351,7 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 		filesel_dir = gtk_file_selection_get_filename(
 				GTK_FILE_SELECTION(filesel));
 		filesel_prefix = gtk_entry_get_text(GTK_ENTRY(entry));
+		if (filesel_prefix==NULL) filesel_prefix="Image";
 		sprintf(saveselectedtodisk_dir, "%s%s", filesel_dir,
 			filesel_prefix);
 	        sprintf(filesel_cwd, "%s", filesel_dir);
@@ -302,7 +381,7 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 	update_status(fname);
 }
 
-void appendpic (int picNum, int thumbnail, int fromCamera, char *fileName) {
+void appendpic (gint picNum, gint thumbnail, gint fromCamera, char *fileName) {
 
 	int w, h;
 	char fname[15], error[32], process[1024],
@@ -426,7 +505,6 @@ void port_dialog() {
 	GList *list;
 
 	char serial_port_prefix[20], tempstring[20], status[128];
-
 	char *camera_selected;
 	int i=0;
 	int sd = -1;
@@ -567,8 +645,6 @@ void port_dialog() {
 	strcpy(camera_model, camera_selected);
 	set_camera(camera_model);
 
-	set_camera(camera_model);
-
 	if (GTK_WIDGET_STATE(port0) == GTK_STATE_ACTIVE) {
 		sprintf(tempstring, "%s0", serial_port_prefix);
 		strcpy(serial_port, tempstring);
@@ -608,7 +684,7 @@ void port_dialog() {
 	gtk_widget_destroy(dialog);
 }
 
-int  load_config() {
+gint load_config() {
 
 	char fname[1024];
 	FILE *conf;
@@ -648,7 +724,10 @@ void save_config() {
 		fclose(conf);
 		return;
 	}
-	error_dialog("Could not open $HOME/.gphoto/gphotorc for writing.");
+	if (!command_line_mode)
+	    error_dialog ("Could not open $HOME/.gphoto/gphotorc for writing.");
+	else
+	    fprintf(stderr, "Could not open $HOME/.gphoto/gphotorc for writing.\n");
 }
 
 void version_dialog() {
@@ -787,8 +866,8 @@ void insert_thumbnail(struct ImageMembers *node) {
   GtkWidget *vbox;
   GtkTooltips *tooltip;
   /*  char *thumbname;*/
-  int i=0, x;
-  int w, h;
+  gint i=0, x;
+  gint w, h;
   struct ImageMembers *other=&Thumbnails;
   struct Image *im;
   double aspectRatio;
@@ -842,11 +921,11 @@ void insert_thumbnail(struct ImageMembers *node) {
   aspectRatio = h/w; 
   if (aspectRatio > 0.75) {
      /* Thumbnail is tall. Adjust height to 60. Width will be < 80. */
-     w = (int)(60.0 * w / h);
+     w = (gint)(60.0 * w / h);
      h = 60;
   } else {
      /* Thumbnail is wide. Adjust width to 80. Height will be < 60. */
-     h = (int)(80.0 * h / w);
+     h = (gint)(80.0 * h / w);
      w = 80;
   }
   scaledImage = gdk_imlib_clone_scaled_image(node->imlibimage,w,h);
@@ -884,10 +963,10 @@ gint thumb_click( GtkWidget *widget,GdkEventButton *event,gpointer   callback_da
         calling with getthumbs==0  makes a set of blank buttons
 	                      !=0  downloads the thumbs for each
 */
-void makeindex (int getthumbs) {
+void makeindex (gint getthumbs) {
 
-	int i;
-	int num_pictures_taken;
+	gint i;
+	gint num_pictures_taken;
 	char status[256];
 
 	GtkStyle *style;
@@ -918,10 +997,10 @@ fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
 		return;
 	}
 
-	okDownload = 1;
+	okAction = 1;
 	activate_button(stop_button);
 	for (i=1; i<=num_pictures_taken; i++) {
-		if (!okDownload) {
+		if (!okAction) {
 			deactivate_button(stop_button);
 			update_progress(0);
 			update_status("Download cancelled.");
@@ -996,17 +1075,17 @@ void getindex_empty () {
   makeindex(0);
 }
 
-void halt_download() {
+void halt_action() {
 
-	okDownload = 0;
+	okAction = 0;
 }
 
 /* get selected pictures */
 void getpics (char *pictype) {
 
 	char status[256];
-	int i=0;
-	int x=0, y=0;	
+	gint i=0;
+	gint x=0, y=0;	
 
 	extern void activate_button(GtkWidget *cur_button);
         extern void deactivate_button(GtkWidget *cur_button);
@@ -1025,9 +1104,9 @@ void getpics (char *pictype) {
 
 	node = &Thumbnails;
 	update_progress(0);
-	okDownload = 1;
+	okAction = 1;
 	activate_button(stop_button);
-	while (node->next != NULL && okDownload) {
+	while (node->next != NULL && okAction) {
 		node = node->next; i++;
 		if (GTK_TOGGLE_BUTTON(node->button)->active) {
 			y++;
@@ -1049,7 +1128,7 @@ void getpics (char *pictype) {
 			update_progress((float)y/(float)x);
 		}
 	}
-	if (okDownload)
+	if (okAction)
 		update_status("Done downloading.");
 	   else
 		update_status("Download halted.");
@@ -1059,7 +1138,7 @@ void getpics (char *pictype) {
 
 void remove_image(int i) {
 
-	int x=0;
+	gint x=0;
 
 	struct ImageMembers *node = &Images;
 	struct ImageMembers *prev = node;
@@ -1550,8 +1629,8 @@ void summary_dialog() {
 
 void scale (int factor) { /* Decreases image size by factor n % */
 
-  int i=0, currentPic;
-  int w, h;
+  gint i=0, currentPic;
+  gint w, h;
   char w_size[10], h_size[10];
   GdkImlibImage *scaledImage;
   GdkPixmap *pixmap;

@@ -25,7 +25,7 @@
 
 #include <stdio.h>
 #include <time.h>
-#include <jpeglib.h>
+/* #include <jpeglib.h> */
 #include "../src/gphoto.h"
 #include "../src/util.h"
 
@@ -36,8 +36,12 @@
 extern char *Philips_models[];
 long cameraid; /* this should be global or returned */
 char	*philips_processThumb ( char *thumbdata, int *Size );
+extern int philips_debugflag;
+PhilipsCfgInfo *p_cfg_info = NULL;
 
-extern philips_configure ();
+
+/* extern philips_configure (); */
+extern GtkWidget *create_Camera_Configuration ();
 
 
 /* #include <gif_lib.h> */
@@ -120,7 +124,7 @@ int philips_take_picture () {
 struct Image *philips_get_picture (int picNum, int thumbnail) {
 
 	int 	Size;
-	char	*picData, *thumbData, header[14];
+	char	*picData, *thumbData, header[14], fileName[20];
 	struct	Image	*image;
 
 
@@ -149,7 +153,7 @@ struct Image *philips_get_picture (int picNum, int thumbnail) {
 		image->image_info = NULL;
 		image->image_info_size = 0;
 
-		if ( cameraid != 5000 ) { /* thumbnail format unknown, guess */
+		if ( cameraid != RDC_5000 ) { /* thumbnail format unknown, guess */
 			thumbData = philips_processThumb ( picData, &Size );
 			free ( picData );
 
@@ -163,12 +167,20 @@ struct Image *philips_get_picture (int picNum, int thumbnail) {
 		}
 	
 	else { /* Not a thumbnail */
-		philips_getpictsize ( picNum, &Size );
-        image->image = (char *)malloc ( Size );
-		image->image_size = Size;
-		image->image_info_size = 0;
-		strcpy ( image->image_type, "jpg" );
-	    philips_getpict ( picNum, (char *)image->image );
+		if ( philips_getpictsize ( picNum, &Size ) == 0 ) {
+	        image->image = (char *)malloc ( Size );
+			image->image_size = Size;
+			image->image_info_size = 0;
+			image->image_info = NULL;
+			strcpy ( image->image_type, "jpg" );
+		    philips_getpict ( picNum, (char *)image->image, fileName );
+			}
+		else {
+			image->image = NULL;
+			image->image_size = 0;
+			image->image_info_size = 0;
+			image->image_info = NULL;
+			}
 		}
 
 	philips_close_camera();
@@ -190,6 +202,7 @@ struct Image *philips_get_preview () {
 
 	long	picNum = 0;
 	int		Size;
+	char	tmStamp[25], fileName[20];
 	struct	Image	*image;
 
 	if ( philips_open_camera() == 0 ) {
@@ -202,24 +215,26 @@ struct Image *philips_get_preview () {
 		return ( NULL );
 		}
 
-	philips_set_mode ( 1 );
-
-	/* put camera in lowest resolution mode */
-	philips_setresolution ( 1 );
-	philips_setcompression ( 1 );
-
 	if ( philips_takepicture() == 0 ) {
 		philips_set_mode (0);
 		sleep (1);
 		philips_getpictnum ( &picNum );
+		philips_getpictsize ( picNum, &Size );
+		philips_getpictdate ( picNum, tmStamp );
+    	image->image = (void *)malloc ( Size );
+		image->image_size = Size;
+		image->image_info_size = 0;
+		image->image_info = NULL;
+		strcpy ( image->image_type, "jpg" );
+		philips_getpict ( picNum, (char *)image->image, fileName );
+		philips_deletepict ( picNum );
+printf ( "Captured picture %d, %s, %ld, %s\n", picNum, fileName, Size, tmStamp );
+		}
+	else {
+		free ( image ) ;
+		image = NULL;
 		}
 
-	philips_getpictsize(picNum, &Size);
-    image->image = (void *)malloc ( Size );
-	image->image_size = Size;
-	strcpy ( image->image_type, "jpg" );
-	philips_getpict ( picNum, (char *)image->image );
-	philips_deletepict(picNum);
 	philips_close_camera();
 	return ( image );
 }
@@ -294,6 +309,8 @@ char *philips_summary ()
 	sprintf ( tmp, "Camera Zoom Level : %d\n", pcfginfo->zoom );
 	strcat ( philips_summary_string, tmp );
 
+	free ( pcfginfo );
+
 	return ( philips_summary_string );
 }
 
@@ -343,6 +360,106 @@ char *philips_summary ()
 	
 	return ( postprocess );
 }
+
+/*
+ * philips_configure
+ * 
+ *  Call up a configuration dialog box that can be used to set the
+ *  camera's features and modes.
+ *
+ *  p_cfg_info is a global pointer to the camera's configuration
+ *  info. It is global so all the callbacks can use it. The 
+ *  correct way to handle this would probably be to allocate
+ *  this in the create_Camera_Configuration routine and pass it
+ *  to all the callbacks.
+ */
+
+int philips_configure () 
+{
+	GtkWidget	*Camera_Configuration;
+	int			error;
+
+/*
+philips_configure_test ( RDC_1 );
+philips_configure_test ( RDC_2 );
+philips_configure_test ( RDC_2E );
+philips_configure_test ( RDC_300 );
+philips_configure_test ( RDC_300Z );
+philips_configure_test ( RDC_4200 );
+philips_configure_test ( RDC_4300 );
+philips_configure_test ( RDC_5000 );
+philips_configure_test ( RDC_100G );
+philips_configure_test ( ESP2 );
+philips_configure_test ( ESP50 );
+philips_configure_test ( ESP60SXG );
+philips_configure_test ( ESP80SXG );
+
+return (1);
+*/
+
+	if ( p_cfg_info != NULL ) {
+		printf ( "Someone has read the configuration, Opps!\n" );
+		free ( p_cfg_info ) ;
+		}
+
+    /* initialize camera and grab configuration information */
+
+    if ( philips_open_camera() == 0 ) { 
+        error_dialog ( "Could not open camera." );
+        return ( 0 );
+        }
+	if ( (p_cfg_info = philips_getcfginfo ( &error )) == NULL ) {
+		printf ( "Error reading camera configuration\n" );
+		}
+
+	Camera_Configuration = create_Camera_Configuration ();
+
+	philips_set_config_options ( cameraid, Camera_Configuration, p_cfg_info );
+
+	gtk_widget_show (Camera_Configuration);
+
+	while (GTK_WIDGET_VISIBLE(Camera_Configuration))
+		gtk_main_iteration();
+	
+	gtk_widget_destroy ( Camera_Configuration );
+
+	return (1);
+}
+
+int philips_configure_test ( long id ) 
+{
+	GtkWidget	*Camera_Configuration;
+	int			error;
+
+	if ( p_cfg_info != NULL ) {
+		printf ( "Someone has read the configuration, Opps!\n" );
+		free ( p_cfg_info ) ;
+		}
+
+    /* initialize camera and grab configuration information */
+
+    if ( philips_open_camera() == 0 ) { 
+        error_dialog ( "Could not open camera." );
+        return ( 0 );
+        }
+	if ( (p_cfg_info = philips_getcfginfo ( &error )) == NULL ) {
+		printf ( "Error reading camera configuration\n" );
+		}
+
+	Camera_Configuration = create_Camera_Configuration ();
+
+	philips_set_config_options ( id, Camera_Configuration, p_cfg_info );
+
+	gtk_widget_show (Camera_Configuration);
+
+	while (GTK_WIDGET_VISIBLE(Camera_Configuration))
+		gtk_main_iteration();
+	
+	gtk_widget_destroy ( Camera_Configuration );
+
+	return (1);
+}
+
 
 
 char *philips_description ()

@@ -11,10 +11,15 @@ void update_status(char *newStatus) {
                 displays whatever is in string "newStatus" in the
                 status bar at the bottom of the main window
         */
+    
+        if (command_line_mode) {
+	    fprintf(stdout,"%s\n",newStatus);
+	    return;
+        }
 
         gtk_label_set(GTK_LABEL(status_bar), newStatus);
         while (gtk_events_pending())
-                gtk_main_iteration();
+	    gtk_main_iteration();
 }
 
 void update_progress(float percentage) {
@@ -25,9 +30,9 @@ void update_progress(float percentage) {
         */
 
 	if (command_line_mode) {
-		printf("#");
-		fflush(stdout);
-		return;
+	    fprintf(stdout, "#");
+	    fflush(stdout);
+	    return;
 	}
 
 	if (percentage >= 0)

@@ -18,6 +18,9 @@ int canon_serial_restore();
 int canon_serial_send(const unsigned char *buf, int len);
 int canon_serial_get_byte();
 
+void serial_flush_input(void);
+void serial_set_timeout(int to);
+
 #endif /* _SERIAL_H */
 
 /****************************************************************************

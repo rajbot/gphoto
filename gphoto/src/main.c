@@ -68,13 +68,7 @@ int main (int argc, char *argv[]) {
 	GdkPixmap *pixmap;
 	GdkBitmap *bitmap;
 	char title[256];
-
-	gtk_init(&argc, &argv);
-	#if 1 /* by fujisawa */
-	gdk_imlib_init();
-	#endif
-	gtk_widget_push_visual(gdk_imlib_get_visual());
-	gtk_widget_push_colormap(gdk_imlib_get_colormap());
+	char *envhome;
 
 	Thumbnails.next = NULL;
 	Images.next=NULL;
@@ -93,27 +87,38 @@ int main (int argc, char *argv[]) {
 	}
 #endif
 
-	/* Make sure there's a .gphoto directory in their home ---- */
-
 	filesel_cwd = (char *)malloc(sizeof(char)*1024);
 	getcwd(filesel_cwd, 1024);
 	strcat(filesel_cwd, "/");
+	
+	/* Make sure there's a .gphoto directory in their home ---- */
 
-	gphotoDir = getenv("HOME");
-	sprintf(gphotoDir, "%s/.gphoto", gphotoDir);
+	envhome = getenv("HOME");
+	gphotoDir = (char *)malloc(sizeof(char)*(strlen(envhome)+9));
+	memset(gphotoDir, 0, sizeof(char)*(strlen(envhome)+9));
+	sprintf(gphotoDir, "%s/.gphoto", envhome);
 	(void)mkdir(gphotoDir, 0744);
-
-	has_rc = load_config();
-
-	library_name = gtk_label_new("");
-	set_camera(camera_model);
-
+	
 	/* Command line mode anyone? ----------------------------- */
 	if (argc > 1) {
-		command_line_mode = 1;
-		command_line(argc, argv);
+	    command_line_mode = 1;
+	    has_rc = load_config();
+	    set_camera(camera_model);
+	    command_line(argc, argv);
 	} else
-		command_line_mode = 0;
+	    command_line_mode = 0;
+
+	gtk_init(&argc, &argv);
+#if 1 /* by fujisawa */
+	gdk_imlib_init();
+#endif
+	gtk_widget_push_visual(gdk_imlib_get_visual());
+	gtk_widget_push_colormap(gdk_imlib_get_colormap());
+	
+	library_name = gtk_label_new("");
+	
+	has_rc = load_config();
+	set_camera(camera_model);
 
 	/* set up the main window -------------------------------- */
 	mainWin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -215,8 +220,6 @@ int main (int argc, char *argv[]) {
 		GTK_SIGNAL_FUNC(port_dialog), NULL);
 	gtk_container_add(GTK_CONTAINER(button), library_name);
 	gtk_box_pack_end(GTK_BOX(sbox), button, FALSE, FALSE, 0);
-
-	
 
 	pixmap = gdk_pixmap_create_from_xpm_d(mainWin->window, &bitmap,
 					&style->bg[GTK_STATE_NORMAL],

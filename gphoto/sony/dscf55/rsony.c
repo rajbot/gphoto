@@ -35,15 +35,15 @@ char serialbuff[64];
 #endif
 
 
-static const char version_string[] = "0.1.0";
-
+static const char version_string[] = "0.2.0";
+static const unsigned char dsc_sequence[] = {14,0,32,34,66,68,100,102,134,136,168,170,202,204,236,238,255};
 
 
 /**************************************************************
 *
 */
 int decode_image(char *filename, int image_style );
-int Converse(Packet *out, unsigned char *str, int len, int chg_ctrl, int );
+int Converse(Packet *out, unsigned char *str, int len);
 
 
 
@@ -56,18 +56,22 @@ static unsigned int THUMB_JPG		= 0x248;
 
 static unsigned char ESCAPE_CHAR	= 0x7d;
 
+#define DSC_INVALID_CHECKSUM 0x40
+#define DSC_INVALID_SEQUENCE 0x41
 
 static int PORT_SPEED	= B9600;
-
 
 static int	NO_CTRL		= 0;
 static int	CHG_CTRL	= 1;
 static int	IN_PACKET	= 0;
 
-
-static unsigned char	dsc_controlchar;
+static unsigned char		dscf55_controlchar;
+static unsigned short int	dscf55_image_count;
+static unsigned short int	dscf55_sequence_id;
 
 Packet	CameraInvalid = {0, 2, {131,125}, 93};
+
+Packet	ResendPacket = {0, 4, {129,2,'1',0}, 'L'};
 //Packet	CheckSumInvalid = {0, 2, {137,193}, 93};
  
 
@@ -94,7 +98,6 @@ static unsigned char	StillImage[] = {0,2,2,0,14,'/','D','C','I','M','/','1','0',
 
 static unsigned char	X5Camera[]		= {0,2,1};
 static unsigned char	X13Camera[]		= {0,2,18};
-//static unsigned char	SendThumbnail[]		= {0,2,'0',0};
 
 
 
@@ -118,12 +121,12 @@ int sony_dscf55_initialize()
 
 		for(count=0; count<3; count++)
 		{
-			Converse(&dp, EmptyPacket, 1, CHG_CTRL,1);
-			if(Converse(&dp, IdentString, 12, NO_CTRL,1))
+			dscf55_sequence_id = 0;
+
+			if(Converse(&dp, IdentString,12))
 				break;
 	
 			usleep(2000);
-//			Converse(&dp, EmptyPacket, 1, CHG_CTRL,1);
 			printf("Init - Fail %u\n", count+1);
 		}
 
@@ -182,13 +185,14 @@ int sony_dscf55_number_of_pictures()
 {
 	Packet dp;
 
-	Converse(&dp, SetTransferRate, 4, CHG_CTRL, 1);
+	Converse(&dp, SetTransferRate, 4);
 
-	if(Converse(&dp, StillImage, 19, CHG_CTRL, 1))
+	if(Converse(&dp, StillImage, 19))
 	{
 
-		if(Converse(&dp, X5Camera, 3, CHG_CTRL, 1))
+		if(Converse(&dp, X5Camera, 3))
 		{
+			dscf55_image_count = (unsigned short int) dp.buffer[5];
 			return (int) dp.buffer[5];
 		}
 		else
@@ -306,8 +310,6 @@ int ReadCommsPacket(Packet *dst)
 
 	dst->length = 0;
 
-//	usleep(1000);
-
 	do
 	{
 		length = Read(buffer, &length );
@@ -320,7 +322,6 @@ int ReadCommsPacket(Packet *dst)
 				memcpy(dst->buffer, buffer+1, length);
 				dst->length += length-1;
 
-				dsc_controlchar = buffer[1];
 				
 				count = 0;
 
@@ -350,15 +351,14 @@ int ReadCommsPacket(Packet *dst)
 			}
 		}
 		else
-		{
 			fprintf(stderr, "Read failed in ReadCommsPacket\n");
-		}
 
 		count++;
 	}while(count<MAXTIME);
 
 	return 0;
 }
+
 
 
 /*******************************************************************
@@ -369,13 +369,73 @@ int ReadCommsPacket(Packet *dst)
 unsigned char CalcCheckSum(Packet *p)
 {
 	unsigned short int o = 0;
-	unsigned char sum = 0;
+	unsigned short int skip = 0;
+	unsigned long int sum = 0;
+
+	sum = 0;
+
+	while(o < p->length)
+	{
+
+		if(ESCAPE_CHAR == p->buffer[o])
+		{
+			if(!skip)
+			{
+				unsigned char extra = p->buffer[o+1];
+
+				switch(p->buffer[o+1])
+				{
+					case 1:
+					case 7:
+					case 0xe1:
+					case 0xe0:
+						extra &= 0xcf;
+						sum += extra;
+						
+						break;
+					case 0x5d:
+						sum += p->buffer[o]; // value, sizeof(char), 1, fp1);
+						break;
+					default:
+						sum += p->buffer[o] + extra;
+						break;
+				}
+
+				skip = 1;
+			}
+		}
+		else
+			if(!skip)
+				sum += p->buffer[o];
+			else
+				skip =0;
+
+
+		o++;
+
+	}
+
+	return 256-(sum&255);
+}
+
+#if defined(OLD_CHECKSUM)
+/*******************************************************************
+*
+*
+*
+*/
+unsigned char CalcCheckSum(Packet *p)
+{
+	unsigned short int o = 0;
+//	unsigned char sum = 0;
+	unsigned int sum = 0;
 
 	while(o != p->length)
 		sum += p->buffer[o++];
 
 	return 256-(sum&255);
 }
+#endif // OLD_CHECKSUM
 
 
 /*******************************************************************
@@ -385,20 +445,21 @@ unsigned char CalcCheckSum(Packet *p)
 */
 int AddCheckSum(Packet *p)
 {
-
-	do
+	for(;;)
 	{
 		unsigned char c = CalcCheckSum(p);
 
 		if(c == END_PACKET)
 		{
-			p->buffer[0] = 14;
+			dscf55_sequence_id = 0;
+
+			p->buffer[0] = dsc_sequence[dscf55_sequence_id];
 			continue;
 		}
 
 		p->checksum = c;
 		break;
-	}while(1);
+	}
 
 	return TRUE;
 }
@@ -431,12 +492,13 @@ int CheckPacket(Packet *p)
 {
 	unsigned char c = CalcCheckSum(p);
 
-	if(c==p->checksum)
-	{
-		return TRUE;
-	}
+	if(c!=p->checksum)
+		return DSC_INVALID_CHECKSUM;
 
-	return FALSE;
+	if(dsc_sequence[dscf55_sequence_id] != p->buffer[0])
+		return DSC_INVALID_SEQUENCE;
+
+	return TRUE;
 }
 
 
@@ -463,6 +525,8 @@ int ComparePacket(Packet *s, Packet *d)
 	return FALSE;
 }
 
+
+
 /*******************************************************************
 *
 *
@@ -480,39 +544,100 @@ void SendPacket(Packet *p)
 
 /*******************************************************************
 *
+*	A total hash to get the packet across Ok.
+*
+*/
+int GetPacket(Packet *out, unsigned char *str, int len)
+{
+	Packet	pb[5];
+	Packet resend;
+	int l=len;
+
+	memcpy(&resend, &ResendPacket, sizeof(Packet));
+
+	if(Converse(&pb[0], str, len))
+	{
+		int count;
+
+		for(count=1; count<5; count++)
+		{
+			int subcount;
+
+			Converse(&pb[count], &resend, 4);
+
+			for(subcount=0; subcount<count; subcount++)
+			{
+				if(pb[count].length != pb[subcount].length)
+					continue;
+
+				if(!memcmp(&pb[count].buffer+1,&pb[subcount].buffer+1, pb[count].length))
+				{
+					/* we have a match! */
+					return TRUE;
+				}
+			}
+		}
+	}
+
+	return FALSE;
+}
+
+
+
+
+
+/*******************************************************************
+*
 *
 *
 */
-int Converse(Packet *out, unsigned char *str, int len, int chg_ctrl, int check_packet)
+int Converse(Packet *out, unsigned char *str, int len)
 {
 	Packet ps;
 	int count;
 
 	MakePacket(&ps, str, len);
 
-	if(CHG_CTRL == chg_ctrl)
+	if(129 != ps.buffer[0])
 	{
-		if(dsc_controlchar !=14)
-			ps.buffer[0] = dsc_controlchar+2;
-		else
-			ps.buffer[0] = 0;
+
+		if(255==dsc_sequence[++dscf55_sequence_id])
+			dscf55_sequence_id = 0;
+
+		ps.buffer[0] = dsc_sequence[dscf55_sequence_id++];
+
+		if(255==dsc_sequence[dscf55_sequence_id])
+			dscf55_sequence_id = 0;
 
 		AddCheckSum(&ps);
 	}
 
-
-	for(count=0; count<3; count++)
+	for(count=0; count<4; count++)
 	{
+
+//		printf("Sending Packet\n");
 		SendPacket(&ps);
 
 		if(ReadCommsPacket(out))
-			if(check_packet)
+			switch(CheckPacket(out))
 			{
-				if(CheckPacket(out))
-					return 1;
+				case DSC_INVALID_CHECKSUM:
+					printf("Invalid Checksum\n");
+					ps.buffer[0] = 129;
+					AddCheckSum(&ps);
+					break;
+				case DSC_INVALID_SEQUENCE:
+					printf("Invalid Sequence\n");
+					ps.buffer[0] = 129;
+					AddCheckSum(&ps);
+					break;
+				case TRUE:
+					return TRUE;
+				default:
+					printf("Unknown Error\n");
+					break;
 			}
-			else
-				return TRUE;
+
 	}
 
 	return FALSE;
@@ -557,15 +682,13 @@ int decode_image(char *filename, int image_style)
 
 	while(fread(&value, sizeof(char), 1, fp))
 	{
-		if((IN_PACKET == 0) && (value == START_PACKET))
+		if((0==IN_PACKET) && (value==START_PACKET))
 		{
 			char buffer[8];
 
 			IN_PACKET = 1;
 
-			if(fread(buffer, sizeof(char), 7, fp) != 7)
-			{
-			}
+			fread(buffer, sizeof(char), 7, fp);
 
 			continue;
 		}
@@ -640,48 +763,50 @@ struct Image *sony_dscf55_get_picture(int imageid, int thumbnail)
 	char filename[64];
 	long size;
 	struct Image *image;
-	FILE *temp;
-	Packet dp;
 
-
-
-
-	if(PORT_SPEED == B115200)
-	{
-		SetTransferRate[3] = 4;
-		Converse(&dp, SetTransferRate, 4, CHG_CTRL, 1);
-		dscSetSpeed(B115200);
-		Converse(&dp, EmptyPacket, 1, CHG_CTRL, 1);
-	}
-
-
-	if(thumbnail)
-	{
-
-		if(!Converse(&dp, StillImage, 19, CHG_CTRL, 1))
-			printf("StillImage Failed\n");
-
-		if(!Converse(&dp, X5Camera, 3, CHG_CTRL, 1))
-			printf("X5Camera Failed\n");
-		
-		if(!Converse(&dp, X13Camera, 3, CHG_CTRL, 1))
-			printf("X13Camera Failed\n");
-
-		SelectImage[4] = imageid;
-		Converse(&dp, SelectImage, 7, CHG_CTRL, 0);
-
-		sprintf(filename, "/tmp/gphoto_image_%u.jpg", imageid-1);
-/*		printf("%s\n", filename); */
-/*		sprintf(filename, "/tmp/%s", dp.buffer+5); */
-		temp = fopen(filename, "wb");
-
-		Converse(&dp, SendThumbnail, 4, CHG_CTRL, 0);
-		WritePacket(temp, &dp);
-		memset(dp.buffer, 0, sizeof(dp.buffer));
-		Converse(&dp, SendThumbnail, 4, CHG_CTRL, 0);
-		WritePacket(temp, &dp);
-
-		fclose(temp);
+  	FILE *temp;
+  	Packet dp;
+  
+ 	printf("Requested image is %u\n", imageid);
+  
+  	if(PORT_SPEED == B115200)
+  	{
+  		SetTransferRate[3] = 4;
+  		Converse(&dp, SetTransferRate, 4);
+  		dscSetSpeed(B115200);
+  		Converse(&dp, EmptyPacket, 1);
+  	}
+  
+  
+  	if(thumbnail)
+  	{
+  
+  		if(!Converse(&dp, StillImage, 19))
+  			printf("StillImage Failed\n");
+  
+  		if(!Converse(&dp, X5Camera, 3))
+  			printf("X5Camera Failed\n");
+  		
+  		if(!Converse(&dp, X13Camera, 3))
+  			printf("X13Camera Failed\n");
+  
+  		SelectImage[4] = imageid;
+  		Converse(&dp, SelectImage, 7);
+  
+  		sprintf(filename, "/tmp/gphoto_image_%u.jpg", imageid-1);
+  		temp = fopen(filename, "wb");
+  
+  		for(;;)
+  		{
+  			Converse(&dp, SendThumbnail, 4);
+  
+  			WritePacket(temp, &dp);
+  
+  			if(3==dp.buffer[4])
+  				break;
+  		}
+  
+  		fclose(temp);
 
 		decode_image(filename, THUMB_JPG);
 	}
@@ -691,35 +816,29 @@ struct Image *sony_dscf55_get_picture(int imageid, int thumbnail)
 
 		sprintf(filename, "/tmp/gphoto_image_%u.jpg", imageid-1);
 
-		if(!Converse(&dp, StillImage, 19, CHG_CTRL, 1))
+
+		if(!Converse(&dp, StillImage, 19))
 			printf("StillImage Failed\n");
 
-		SendImage[4] = imageid;
-
-		Converse(&dp, SendImage, 7, CHG_CTRL, 0);
-
 		temp = fopen(filename, "wb");
+		printf("%s\n", filename);
 
-		do
+		SendImage[4] = imageid;
+		Converse(&dp, SendImage, 7);
+
+		for(;;)
 		{
 			WritePacket(temp, &dp);
-			memset(dp.buffer, 0, sizeof(dp.buffer));
-			Converse(&dp, SendNextImagePacket, 4, CHG_CTRL, 0);
 
-			if(last_packet == 1)
+			if(3==dp.buffer[4])
 				break;
 
-			if(dp.buffer[4] == 3)
-				last_packet = 1;
-
+			Converse(&dp, SendNextImagePacket, 4);
 		}
-		while(1);
 
 		fclose(temp);
 		decode_image(filename, IMAGE_JPG);
 	}
-
-
 
 	fp = fopen(filename, "r");
 
@@ -732,19 +851,26 @@ struct Image *sony_dscf55_get_picture(int imageid, int thumbnail)
 		rewind(fp);
 		image = (struct Image*)malloc(sizeof(struct Image));
 
-		image->image = (char*)malloc(sizeof(char)*size);
-		image->image_size = size;
-		image->image_info_size = 0;
-		fread(image->image, sizeof(char), size, fp);
+		if(image)
+		{
+			image->image = (char*)malloc(sizeof(char)*size);
+			image->image_size = size;
+			image->image_info_size = 0;
+			fread(image->image, sizeof(char), size, fp);
+		}
+		else
+			printf("Failed to allocate Image struct\n");
+
+		fclose(fp);
 		unlink(filename);
 	}
 	else
 		printf("Failed to open file\n");
 
 	SetTransferRate[3] = 0;
-	Converse(&dp, SetTransferRate, 4, CHG_CTRL, 1);
+	Converse(&dp, SetTransferRate, 4);
 	dscSetSpeed(B9600);
-	Converse(&dp, EmptyPacket, 1, CHG_CTRL, 1);
+	Converse(&dp, EmptyPacket, 1);
 
 	return(image);
 }
@@ -772,29 +898,25 @@ struct _Camera sony_dscf55 = {  sony_dscf55_initialize,
 */
 int sony_dscf55_store_picture(int imageid, char *path)
 {
-	FILE *fp;
 	FILE *temp;
-	int last_packet = 0;
 	int f;
 	char filename[64];
 	long size;
-	struct Image *image;
 	Packet dp;
-
 
 	if(PORT_SPEED == B115200)
 	{
 		SetTransferRate[3] = 4;
-		Converse(&dp, SetTransferRate, 4, CHG_CTRL, 1);
+		Converse(&dp, SetTransferRate, 4);
 		dscSetSpeed(B115200);
-		Converse(&dp, EmptyPacket, 1, CHG_CTRL, 1);
+		Converse(&dp, EmptyPacket, 1);
 	}
 
-
 	SelectImage[4] = imageid;
-	Converse(&dp, SelectImage, 7, CHG_CTRL, 1);
+	Converse(&dp, SelectImage, 7);
 
 	sprintf(filename, "%s/%s", path, dp.buffer+5);
+	printf("%s\n", filename);
 
 	f = strlen(filename);
 	filename[f] = filename[f-1];
@@ -813,39 +935,33 @@ int sony_dscf55_store_picture(int imageid, char *path)
 
 	temp = fopen(filename, "wb");
 
-	if(!Converse(&dp, StillImage, 19, CHG_CTRL, 1))
+	if(!Converse(&dp, StillImage, 19))
 		printf("StillImage Failed\n");
-
-	SendImage[4] = imageid;
-	Converse(&dp, SendImage, 7, CHG_CTRL, 0);
 
 	temp = fopen(filename, "wb");
 	printf("%s\n", filename);
 
-	do
+	SendImage[4] = imageid;
+	Converse(&dp, SendImage, 7);
+
+	for(;;)
 	{
 		WritePacket(temp, &dp);
-		memset(dp.buffer, 0, sizeof(dp.buffer));
-		Converse(&dp, SendNextImagePacket, 4, CHG_CTRL, 0);
 
-		if(last_packet == 1)
+		if(3==dp.buffer[4])
 			break;
 
-		if(dp.buffer[4] == 3)
-			last_packet = 1;
-
+		Converse(&dp, SendNextImagePacket, 4);
 	}
-	while(1);
 
 	fclose(temp);
 
 	SetTransferRate[3] = 0;
-	Converse(&dp, SetTransferRate, 4, CHG_CTRL, 1);
+	Converse(&dp, SetTransferRate, 4);
 	dscSetSpeed(B9600);
-	Converse(&dp, EmptyPacket, 1, CHG_CTRL, 1);
+	Converse(&dp, EmptyPacket, 1);
 
 	return decode_image(filename, IMAGE_JPG);
-//	return FALSE;
 }
 
 

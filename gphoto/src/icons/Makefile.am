@@ -4,5 +4,8 @@ EXTRA_DIST = batch_save.xpm brightness.xpm close_image.xpm \
 	get_selected_images.xpm help.xpm open_image.xpm \
 	post_processing_off.xpm post_processing_on.xpm print_image.xpm \
 	resize.xpm rotc.xpm rotcc.xpm save_current_image.xpm splash.xpm \
-	take_picture.xpm stop.xpm web_browse.xpm mail_image.xpm
+	take_picture.xpm stop.xpm web_browse.xpm mail_image.xpm \
+	left_arrow.xpm right_arrow.xpm
+
+	
 

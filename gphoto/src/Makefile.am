@@ -4,7 +4,7 @@ SUBDIRS = icons
 
 bin_PROGRAMS = gphoto
 
-CFLAGS = -I$(srcdir)/icons @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@
+CFLAGS = @CFLAGS@ -I$(srcdir)/icons @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@
 
 gphoto_LDADD = ../konica/libgphoto_konica_qm100.la \
 	../konica_qmxxx/libgphoto_konica_qmxxx.la \

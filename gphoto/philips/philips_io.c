@@ -35,7 +35,12 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifdef GPHOTO
 #include "config.h"
+void update_progress (float percentage);
+void update_status (char *message);
+#endif
+
 #if HAVE_TERMIOS_H
 # include <termios.h>
 #else
@@ -45,10 +50,14 @@
 #  include <sgtty.h>
 # endif
 #include <stdio.h>
+#include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <signal.h>
 #include <time.h>
+#include <malloc.h>
+#include <unistd.h>
+#include <string.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 
@@ -56,9 +65,11 @@
 #include "debug.h"  /* debugging macros */
 #include "philips_io.h"  /* functions */
 
+#define READ_TIMEOUT	2	/* timeout value in seconds */
+
 static char philips_buf[1024 * 4];/* buffer for data from the camera */
-static size_t philips_len;	/* relative pointer of last valid data
-				 * in receive buffer */
+static size_t philips_len;	/* relative pointer of last valid data */
+							/* in receive buffer */
 static int fd0;
 static int close_handler_set = 0;/* flag, close handler set for timer */
 static int camera_opened = 0;	/* flag, camera is in connected state */
@@ -81,6 +92,8 @@ char	*serial_port;
 int		baudrate;
 long	*cameraid;
 {
+	int		startbaud = 2400;
+
 	static struct sigaction close_philips = {
 		(void (*)())philips_close_handler,
 		0, 
@@ -109,23 +122,12 @@ long	*cameraid;
 	    return -1;
 		}
 
-	if (philips_setbaud (fd0, 2400)) {
-	    fprintf(stderr, "philips_open: can't set baudrate to 2400\n");
-	    return -1;
-		}
-
 	/* initialize receive buffer pointer */
 	philips_len = 0;
 
 	/* connect to the camera */
-	if ((*cameraid = philips_hello(baudrate)) == -1) {
+	if ((*cameraid = philips_hello(startbaud, baudrate)) == -1) {
 	    fprintf(stderr, "philips_open: communication with camera failed.\n");
-	    return -1;
-		}
-
-	/* set the desired baudrate */
-	if (philips_setspeed(baudrate) == 1) {
-	    fprintf(stderr, "philips_open: unable to set camera to %d baud.\n", baudrate);
 	    return -1;
 		}
 
@@ -133,7 +135,7 @@ long	*cameraid;
 	 * communications with the camera. The camera returns 00 00 01
 	 * We don't know what it means but do it anyway for completness
 	 * sake. */
-	if ( *cameraid != 5000 ) philips_init_query();
+	if ( *cameraid != RDC_5000 ) philips_init_query();
 
 	/* Get the current camera mode */
 	philips_mode = philips_get_mode ();
@@ -147,7 +149,7 @@ long	*cameraid;
  *  Disconnect from the camera. 
  */
 
-philips_close()
+int philips_close()
 {
     struct timeval zero_time = {0, 0};
     struct timeval noactivity_time = {10, 0};
@@ -167,7 +169,7 @@ philips_close()
  *  number of pictures.
  */
 
-philips_getnpicts(n)
+int philips_getnpicts(n)
 long	*n;
 {
 	struct	CAM_DATA	cam_data;
@@ -191,7 +193,7 @@ long	*n;
  *  number of pictures.
  */
 
-philips_getpictnum(n)
+int philips_getpictnum(n)
 long	*n;
 {
 	struct	CAM_DATA	cam_data;
@@ -215,7 +217,7 @@ long	*n;
  *  settings.
  */
 
-philips_takepicture()
+int philips_takepicture()
 {
 	struct	CAM_DATA	cam_data;
 	int		err = 0;
@@ -237,7 +239,7 @@ philips_takepicture()
  *
  */
 
-philips_getpictsize(n, size)
+int philips_getpictsize(n, size)
 int n;		/* picture number */
 int *size;	/* size of picture in bytes */
 {
@@ -266,7 +268,7 @@ int *size;	/* size of picture in bytes */
  *
  */
 
-philips_gettotalbytes(size)
+int philips_gettotalbytes(size)
 int *size;	/* size of picture in bytes */
 {
 	struct	CAM_DATA	cam_data;
@@ -293,7 +295,7 @@ int *size;	/* size of picture in bytes */
  *
  */
 
-philips_getavailbytes(size)
+int philips_getavailbytes ( size )
 int *size;	/* size of picture in bytes */
 {
 	struct	CAM_DATA	cam_data;
@@ -327,7 +329,7 @@ int *size;	/* size of picture in bytes */
  *
  */
 
-philips_getexposure(exposure)
+int philips_getexposure ( exposure )
 int *exposure;	/* exposure setting */
 {
 	struct	CAM_DATA	cam_data;
@@ -358,7 +360,7 @@ int *exposure;	/* exposure setting */
  *
  */
 
-philips_setexposure(exposure)
+int philips_setexposure ( exposure )
 int exposure;	/* exposure setting */
 {
 	struct	CAM_DATA	cam_data;
@@ -379,7 +381,7 @@ int exposure;	/* exposure setting */
  *
  */
 
-philips_getwhitelevel(level)
+int philips_getwhitelevel ( level )
 int *level;	/* white level */
 {
 	struct	CAM_DATA	cam_data;
@@ -409,7 +411,7 @@ int *level;	/* white level */
  *    05 = sepia
  */
 
-philips_setwhitelevel(whitelevel)
+int philips_setwhitelevel ( whitelevel )
 int whitelevel;	/* whitelevel setting */
 {
 	struct	CAM_DATA	cam_data;
@@ -430,7 +432,7 @@ int whitelevel;	/* whitelevel setting */
  *
  */
 
-philips_getzoom(zoom)
+int philips_getzoom ( zoom )
 int *zoom;	/* zoom level */
 {
 	struct	CAM_DATA	cam_data;
@@ -456,7 +458,7 @@ int *zoom;	/* zoom level */
  *    08 = maximum zoom
  */
 
-philips_setzoom(zoom)
+int philips_setzoom ( zoom )
 int zoom;	/* zoom setting */
 {
 	struct	CAM_DATA	cam_data;
@@ -477,7 +479,7 @@ int zoom;	/* zoom setting */
  *
  */
 
-philips_getflash(flash)
+int philips_getflash ( flash )
 int *flash;	/* flash level */
 {
 	struct	CAM_DATA	cam_data;
@@ -504,7 +506,7 @@ int *flash;	/* flash level */
  *    02 = on
  */
 
-philips_setflash(flash)
+int philips_setflash ( flash )
 int flash;	/* flash setting */
 {
 	struct	CAM_DATA	cam_data;
@@ -525,7 +527,7 @@ int flash;	/* flash setting */
  *
  */
 
-philips_getrecordmode(mode)
+int philips_getrecordmode ( mode )
 int *mode;	/* record mode */
 {
 	struct	CAM_DATA	cam_data;
@@ -556,7 +558,7 @@ int *mode;	/* record mode */
  *    06 = character+sound
  */
 
-philips_setrecordmode(mode)
+int philips_setrecordmode ( mode )
 int mode;	/* mode setting */
 {
 	struct	CAM_DATA	cam_data;
@@ -577,7 +579,7 @@ int mode;	/* mode setting */
  *
  */
 
-philips_getcompression(compression)
+int philips_getcompression ( compression )
 int *compression;	/* compression mode */
 {
 	struct	CAM_DATA	cam_data;
@@ -605,7 +607,7 @@ int *compression;	/* compression mode */
  *    03 = mimimal
  */
 
-philips_setcompression(mode)
+int philips_setcompression ( mode )
 int mode;	/* mode setting */
 {
 	struct	CAM_DATA	cam_data;
@@ -627,7 +629,7 @@ int mode;	/* mode setting */
  *
  */
 
-philips_getresolution(resolution)
+int philips_getresolution ( resolution )
 int *resolution;	/* resolution mode */
 {
 	struct	CAM_DATA	cam_data;
@@ -656,7 +658,7 @@ int *resolution;	/* resolution mode */
  *    04 = 1280x960
  */
 
-philips_setresolution(resolution)
+int philips_setresolution ( resolution )
 int resolution;	/* resolution setting */
 {
 	struct	CAM_DATA	cam_data;
@@ -677,7 +679,7 @@ int resolution;	/* resolution setting */
  *
  */
 
-philips_getcopyright(copyright)
+int philips_getcopyright ( copyright )
 char *copyright;	/* copyright string */
 {
 	struct	CAM_DATA	cam_data;
@@ -706,7 +708,7 @@ char *copyright;	/* copyright string */
  *  we'll need to pad or truncate.
  */
 
-philips_setcopyright(copyright)
+int philips_setcopyright ( copyright )
 char *copyright;	/* copyright setting */
 {
 	struct	CAM_DATA	cam_data;
@@ -727,7 +729,7 @@ char *copyright;	/* copyright setting */
  *
  */
 
-philips_getmacro(macro)
+int philips_getmacro ( macro )
 int *macro;	/* macro mode */
 {
 	struct	CAM_DATA	cam_data;
@@ -753,7 +755,7 @@ int *macro;	/* macro mode */
  *  1 = on
  */
 
-philips_setmacro(macro)
+int philips_setmacro ( macro )
 int macro;	/* macro mode */
 {
 	struct	CAM_DATA	cam_data;
@@ -773,7 +775,7 @@ int macro;	/* macro mode */
  *  Get the timestamp for a stored picture.
  */
 
-philips_getpictdate(n, date)
+int philips_getpictdate ( n, date )
 int		n;       	/* picture number */
 u_char	*date;		/* date picture was taken */
 {
@@ -791,7 +793,9 @@ u_char	*date;		/* date picture was taken */
 	err = philips_execcmd ( P_GETIMG, buf, 3, 0x00, &cam_data );
 
 	if ( ! err ) 
-		memmove(date, &(cam_data.data[3]), 6);
+		sprintf ( date, "%02d/%02d/%02d %02d:%02d:%02d", 
+			cam_data.data[5], cam_data.data[4], cam_data.data[3],
+			cam_data.data[6], cam_data.data[7], cam_data.data[8] );
 
 	return ( err );
 }
@@ -801,9 +805,10 @@ u_char	*date;		/* date picture was taken */
  *  Get a picture from the camera
  */
 
-philips_getpict(n, image)
-	int n;		/* picture number to download */
-	char *image;	/* memory pointer to store image */
+int philips_getpict ( n, image, name )
+int n;		/* picture number to download */
+char *image;	/* memory pointer to store image */
+char *name;		/* file name */
 {
 	struct	CAM_DATA	cam_data;
 	u_char	buf[5];
@@ -813,6 +818,7 @@ philips_getpict(n, image)
 
 	if ( philips_mode != 0 ) philips_set_mode ( 0 );
 
+	philips_progress_bar ( 0.0, "Getting Image..." );
 	buf[0] = n & 0xff;
 	buf[1] = (n >> 8) & 0xff;
 
@@ -821,9 +827,14 @@ philips_getpict(n, image)
 	err = philips_execcmd ( P_GETPICT, buf, 2, 0x00, &cam_data );
 	if ( err ) return (err);
 
-	totlen = (cam_data.data[16] << 16) | (cam_data.data[15] << 8) | cam_data.data[14];
+	/* Set file name */
+	memmove ( name, &cam_data.data[2], 12 );
+	name[12] = '\0';
+
+/*	totlen = (cam_data.data[16] << 16) | (cam_data.data[15] << 8) | cam_data.data[14]; */
+	totlen = (cam_data.data[17] << 24) | (cam_data.data[16] << 16) | (cam_data.data[15] << 8) | cam_data.data[14];
 	while (flen < totlen) {
-		err = philips_getpacket ( &cam_data );
+		err = philips_getpacket ( &cam_data, READ_TIMEOUT );
 		if ( err == 0 ) {
 			memmove ( &image[flen], cam_data.data, cam_data.length );
 			flen += cam_data.length;
@@ -839,7 +850,7 @@ philips_getpict(n, image)
 			fprintf ( stderr, "in philips_getpict. error reading packet.... giving up.\n" );
 			return ( err );
 			}
-
+		philips_progress_bar ( ((float)flen / (float)totlen), "" );
 		}
 	if (philips_verbose) {
 		fprintf(stderr, "got block %3d: %d/%d ...done%s\n",
@@ -865,7 +876,7 @@ struct	PICINFO  {
 	long	size;
 	};
 
-philips_putpict ( picData, size, picNum )
+int philips_putpict ( picData, size, picNum )
 char	*picData;   /* pointer to the data to send */
 long	size;       /* size of picture data */
 int		*picNum;    /* send back the picture number that was used */
@@ -939,7 +950,6 @@ char *philips_getthumb(n, size)
 {
 	struct	CAM_DATA	cam_data;
 	u_char	buf[5];
-	int		totlen;
 	int		flen = 0;
 	int		err = 0;
 	char	*image;
@@ -958,20 +968,20 @@ char *philips_getthumb(n, size)
 		}
 
 	*size = (cam_data.data[17] << 24) | (cam_data.data[16] << 16) | (cam_data.data[15] << 8) | cam_data.data[14];
-	dprintf((stderr, "Getting thumbnail %d (%d bytes)\n", n, *size ));
+	dprintf( (stderr, "Getting thumbnail %d (%d bytes)\n", n, *size ) );
 
 	if ( (image = (char *)malloc ( (long)*size )) == NULL ) {
 		fprintf ( stderr, "unable to allocate memory for image (%d bytes)\n", *size );
 		return (NULL);
 		}
 
-	while (flen < *size) {
-		err = philips_getpacket ( &cam_data );
+	while ( flen < *size ) {
+		err = philips_getpacket ( &cam_data, READ_TIMEOUT );
 		if ( err == 0 ) {
 			memmove ( &image[flen], cam_data.data, cam_data.length );
 			flen += cam_data.length;
 			if (philips_verbose && (cam_data.blockno % philips_echobackrate == 0)) {
-				fprintf(stderr, "got block %3d: %d/%d \r", cam_data.blockno, flen, totlen);
+				fprintf(stderr, "got block %3d: %d/%d \r", cam_data.blockno, flen, *size);
 				}
 			}
 		else if ( err == -1 ) {
@@ -985,7 +995,7 @@ char *philips_getthumb(n, size)
 		}
 	if (philips_verbose) {
 		fprintf(stderr, "got block %3d: %d/%d ...done%s\n",
-			cam_data.blockno, flen, totlen, err ? " with err" : "");
+			cam_data.blockno, flen, *size, err ? " with err" : "");
 	}
 
 	return ( image );
@@ -997,7 +1007,7 @@ char *philips_getthumb(n, size)
  *  Delete a single picture from the camera.
  */
 
-philips_deletepict(n)
+int philips_deletepict ( n )
 int		n;		/* picture number to delete */
 {
 	struct	CAM_DATA	cam_data;
@@ -1030,7 +1040,7 @@ int		n;		/* picture number to delete */
  *        00 00 01 -  ready to take a picture
  */
 
-philips_get_mode()
+int philips_get_mode ()
 {
 	struct	CAM_DATA cam_data;
 	int		err = 0;
@@ -1056,7 +1066,7 @@ philips_get_mode()
  *        00 00 01 -  ready to take a picture
  */
 
-philips_set_mode(n)
+int philips_set_mode ( n )
 int	n;
 {
 	struct	CAM_DATA cam_data;
@@ -1071,6 +1081,8 @@ int	n;
 
 	if ( !err )
 		philips_mode = n;
+	
+	return ( err );
 }
 
 
@@ -1082,7 +1094,7 @@ int	n;
  *  does at this time.
  */
 
-philips_init_query()
+int philips_init_query ()
 {
 	struct	CAM_DATA	cam_data;
 
@@ -1096,7 +1108,7 @@ philips_init_query()
  *  Get the time/date from the camera
  */
 
-philips_getcamdate(date)
+int philips_getcamdate ( date )
 time_t	*date;	/* camera real time date */
 {
 	struct	CAM_DATA	cam_data;
@@ -1134,7 +1146,7 @@ time_t	*date;	/* camera real time date */
 
 #define HEX(x) (x / 10 << 4) + (x % 10)
 
-philips_setcamdate(date)
+int philips_setcamdate ( date )
 time_t date;	/* camera real time date */
 {
 	struct	CAM_DATA	cam_data;
@@ -1173,7 +1185,7 @@ time_t date;	/* camera real time date */
  *  Get the memo entry associated with a picture.
  */
 
-philips_getmemo ( n, memo )
+int philips_getmemo ( n, memo )
 int     n;      /* picture number */
 char    *memo;  /* string to hold memo entry (256 bytes) */
 {
@@ -1195,10 +1207,10 @@ char    *memo;  /* string to hold memo entry (256 bytes) */
     else {
         memmove ( memo, &(cam_data.data[10]), (cam_data.length - 10) );
 
-        err = philips_getpacket ( &cam_data );
+        err = philips_getpacket ( &cam_data, READ_TIMEOUT );
         if ( ! err ) {
             memmove ( &memo[118], cam_data.data, cam_data.length );
-        	err = philips_getpacket ( &cam_data );
+        	err = philips_getpacket ( &cam_data, READ_TIMEOUT );
 			}
 		}
 	return ( err );
@@ -1211,13 +1223,13 @@ char    *memo;  /* string to hold memo entry (256 bytes) */
  *  Set the memo entry associated with a picture.
  */
 
-philips_setmemo ( n, memo )
+int philips_setmemo ( n, memo )
 int     n;      /* picture number */
 char    *memo;  /* string to hold memo entry (256 bytes) */
 {
     struct  CAM_DATA    cam_data;
     u_char  buf[132];
-    int     err = 0, i, memo_len;
+    int     err = 0, memo_len;
 
     if ( philips_mode != 0 ) philips_set_mode ( 0 );
 
@@ -1273,7 +1285,7 @@ char    *memo;  /* string to hold memo entry (256 bytes) */
  *  Get the name of a picture in memory.
  */
 
-philips_getpictname(n, name)
+int philips_getpictname ( n, name )
 int		n;		/* picture number to access */
 char	*name;	/* string to return the data */
 {
@@ -1300,7 +1312,7 @@ char	*name;	/* string to return the data */
  *  Get the memo entry of a picture in memory.
  */
 
-philips_getpictmemo(n, memo)
+int philips_getpictmemo ( n, memo )
 int		n;		/* picture number to access */
 char	*memo;	/* string to return the data */
 {
@@ -1324,38 +1336,47 @@ char	*memo;	/* string to return the data */
 
 /*  philips_hello
  *
- *  Try to initialize communications with the camera
+ *  Try to initialize communications with the camera. 
+ *
+ *   Repeat 2 times:
+ *    Try a hello at initial_baud (2400)
+ *    Success -> set baud to baudrate and return camera id value
+ *    Failure -> set baud to baudrate and try a disconnect
  */
 
-philips_hello(baudrate)
-long	baudrate;
+int philips_hello ( initial_baud, baudrate )
+int		initial_baud;
+int		baudrate;
 {
 	struct	CAM_DATA	cam_data;
-	u_char	buf[5];
 	u_char	tmpstr[50];
-	int		err = 0;
+	int		err = 0, retry = 2;
 
-	cam_data.ack_only = 0;
-	err = philips_execcmd ( P_HELLO, "\x00\x00\x00", 3, 0x00, &cam_data );
-
-	/*  We got a fatal error, should we retry at a faster baud? */
-	if ( err == 1 ) {  
-		dpprintf((stderr, "hello: No response, try %ld", baudrate));
-		if (philips_setbaud(fd0, baudrate)) {
-	   		fprintf(stderr, "can't set baudrate\n");
-	    	return 1;
-			}
+	while ( retry-- ) {
+		if (philips_setbaud(fd0, initial_baud))
+	    	return -1;
+		
+		cam_data.ack_only = 0;
 		err = philips_execcmd ( P_HELLO, "\x00\x00\x00", 3, 0x00, &cam_data );
+		if ( err ) { /* Camera left in connected state, disconnect? */
+			if (philips_setbaud(fd0, baudrate))
+	    		return -1;
+
+			cam_data.ack_only = 0;
+			err = philips_execcmd ( P_DISCONECT, NULL, 0, 0x00, &cam_data );
+			}
+		else
+			retry = 0; /* OK, no error so don't retry... */
 		}
 
-	/* Non fatal error (camera NACK's us), try something different */
-	if ( err == -1 ) {
-		dpprintf((stderr, "hello: 31 00 00 00 -> NACK "));
-		} 
-	else if ( err == 0 ) {
+	if ( err == 0 ) {
 		sprintf ( tmpstr, "%d%d%d%d%d%d", cam_data.data[0], cam_data.data[1], cam_data.data[2], cam_data.data[3], cam_data.data[4], cam_data.data[5] );
 		err = atoi ( tmpstr );
-	/*	dpprintf((stderr, "hello: 31 00 00 00 -> ")); */
+		/* Ok, now tell the camera to use the final baud */
+		if ( philips_setspeed ( baudrate ) == 1 ) {
+			fprintf ( stderr, "philips_hello: Cannot set baud to %d.\n", baudrate );
+			return ( -1 );
+			}
 		}
 
 	return ( err );
@@ -1366,7 +1387,7 @@ long	baudrate;
  *  Shutdown the link to the camera.
  */
 
-philips_bye()
+int philips_bye ()
 {
 	struct	CAM_DATA	cam_data;
 	int		err = 0;
@@ -1382,7 +1403,7 @@ philips_bye()
  *  Change the camera's baud rate and the computer's baud rate.
  */
 
-philips_setspeed(baud)
+int philips_setspeed ( baud )
 int		baud;
 {
 	struct	CAM_DATA	cam_data;
@@ -1477,7 +1498,7 @@ int		baud;
  *
  */
 
-philips_execcmd ( cmd, data, len, blkno, cam_data )
+int philips_execcmd ( cmd, data, len, blkno, cam_data )
 u_char	cmd;       /* command class */
 u_char	*data;     /* specific command & data */
 int		len;       /* length of command & data */
@@ -1490,12 +1511,13 @@ struct	CAM_DATA	*cam_data;   /* data returned by camera */
 	int		err = 0;
 	u_char	send_buff[260];
 	int		retry = 0;
+	long	timeout = READ_TIMEOUT;
 
 	while ( retry < PHILIPS_RESENDS ) {
 		philips_flush (); /* make sure camera is ready for command */
 		/* generate crc sent at the end of the packet */
-		crc = updcrc (cmd & 0xff, crc);
-		crc = updcrc (len & 0xff, crc);
+		crc = updcrc ((cmd & 0xff), crc);
+		crc = updcrc ((len & 0xff), crc);
 	
 		/* send the command type packet header */
 		tbuf[0] = 0x10;
@@ -1513,7 +1535,7 @@ struct	CAM_DATA	*cam_data;   /* data returned by camera */
 		/* send the command */
 		for (i = 0, x = 0; i < len; i++) {
 			send_buff[x] = data[i];
-			crc = updcrc (data[i] & 0xff, crc); /* calculate crc */
+			crc = updcrc ((data[i] & 0xff), crc); /* calculate crc */
 			/* 0x10 must be escaped */
 			if (data[i] == 0x10) {
 				x++;
@@ -1538,9 +1560,10 @@ struct	CAM_DATA	*cam_data;   /* data returned by camera */
 		tbuf[5] = blkno;    /* block number */
 		if ( philips_put (tbuf, 6, 0) ) return ( -4 );
 
-		if ( (err = philips_getpacket ( cam_data )) ) {
+		if ( (err = philips_getpacket ( cam_data, timeout )) ) {
 			/* Something went wrong, retry ? */
 			retry++;
+			timeout += READ_TIMEOUT;
 			}
 		else {
 			/* Everything's ok, don't want to retry */
@@ -1606,8 +1629,9 @@ void philips_flush ()
  *  be re-written.
  */
 
-philips_getpacket ( data )
+int philips_getpacket ( data, timeout )
 struct	CAM_DATA	*data;
+long				timeout;
 {
 	enum { PRESYNC, SYNC, SYNCUP, PACKET, CRC, SKIPCRC, DONE, NAK } state;
 	int		badcrc = 0, i, len;
@@ -1624,7 +1648,7 @@ struct	CAM_DATA	*data;
 	while (1) {
 		switch (state) {
 			case PRESYNC:   /* first character.... */
-				if (philips_get(tbuf, 1, 0))
+				if (philips_read ( tbuf, 1, 0, timeout ))
 					return (1);
 				else if (tbuf[0] == 0x10)
 					state = SYNC;
@@ -1634,7 +1658,7 @@ struct	CAM_DATA	*data;
 				break;
 
 			case SYNC:   /* second character.... */
-				if (philips_get(tbuf, 1, 1))
+				if (philips_read ( tbuf, 1, 1, timeout ))
 					return ( 1 );
 				state = SYNCUP;
 				break;
@@ -1677,9 +1701,9 @@ struct	CAM_DATA	*data;
 				break;
 
 			case PACKET:    /* Get data from camera... */
-				if (philips_get(&(data->class), 1, 2))
+				if (philips_read ( &(data->class), 1, 2, timeout ))
 					return (1);
-				if (philips_get(tbuf, 1, 3))
+				if (philips_read ( tbuf, 1, 3, timeout ))
 					return (1);
 
 				len = tbuf[0] & 0xff;
@@ -1687,11 +1711,11 @@ struct	CAM_DATA	*data;
 				state = PRESYNC;
 				i = 0;
 				while (i < len) {
-					if (philips_get(&(data->data[i]), 1, 4))
+					if (philips_read ( &(data->data[i]), 1, 4, timeout ))
 						return (1);
 					if ( data->data[i] == 0x10 ) {
 						/* is this a new packet or just an escaped 0x10 */
-						if (philips_get(&(data->data[i]), 1, 5))
+						if (philips_read ( &(data->data[i]), 1, 5, timeout ))
 							return (1);
 						if(data->data[i] != 0x10) {
 							dprintf ( (stderr, "philips_getpacket: Got a %x character after an escape.\n", data->data[i]) );
@@ -1706,7 +1730,7 @@ struct	CAM_DATA	*data;
 				break;
 
 			case CRC:
-				if (philips_get(tbuf, 2, 6))
+				if (philips_read ( tbuf, 2, 6, timeout ))
 					return (1);
 
 		    	{
@@ -1714,10 +1738,10 @@ struct	CAM_DATA	*data;
 					int i;
 
 					crc = 0;
-					crc = updcrc(data->class & 0xff, crc);
-					crc = updcrc(len & 0xff, crc);
+					crc = updcrc((data->class & 0xff), crc);
+					crc = updcrc((len & 0xff), crc);
 					for (i = 0; i < len; i++) {
-						crc = updcrc(data->data[i] & 0xff, crc);
+						crc = updcrc((data->data[i] & 0xff), crc);
 						}
 
 					if ((crc & 0xff) == tbuf[0] && ((crc >> 8) & 0xff) == tbuf[1])
@@ -1730,7 +1754,7 @@ struct	CAM_DATA	*data;
 
 		    	}
 
-				if (philips_get(tbuf, 2, 7))
+				if (philips_read ( tbuf, 2, 7, timeout ))
 					return (1);
 				if (tbuf[0] != len + 2) {
 					dprintf((stderr, "philips_getpacket: Bad crc length (%d %d)\n", tbuf[0], len + 2));
@@ -1751,7 +1775,7 @@ struct	CAM_DATA	*data;
 				break;
 
 			case SKIPCRC:
-				if (philips_get(tbuf, 3, 8))
+				if (philips_read ( tbuf, 3, 8, timeout ))
 					return (1);
 				data->blockno = tbuf[2];
 				state = DONE;
@@ -1783,100 +1807,131 @@ struct	CAM_DATA	*data;
 
 
 /* send bytes to the camera */
-philips_put(buf, len, wait)
-	u_char *buf;
-	int len, wait;
+int philips_put ( buf, len, wait )
+u_char *buf;
+int len, wait;
 {
 	int wlen;
-	int i;
 
-	wlen = write(fd0, buf, len);
-	if (wlen != len) {
-	    dprintf((stderr, "failed in philips_put\n"));
-	    return 1;
-	}
+	wlen = write ( fd0, buf, len );
+	if ( wlen != len ) {
+	    dprintf( (stderr, "wrote %d bytes while trying to write %d\n", wlen, len) );
+	    return ( 1 );
+		}
+
+	/* wait for data to reach the camera before returning */
+	/******************************
 	if ( wait ) {
-		/* wait for data to reach the camera before returning */
 #if HAVE_TERMIOS_H
-	    /*termios*/
 	    tcdrain(fd0);
 #else
-	    /*sgtty*/
 	    ioctl(fd0, TCDRAIN, 0);
 #endif
 		}
+	******************************/
 
 	/* print stream debug info if dumpflag is set */
 	if ( philips_dumpflag ) philips_dump_stream('<', buf, len);
 	return 0;
 }
 
-/* get data from the philips receive buffer */
-philips_get(buf, len, calledfrom)
-	u_char *buf;
-	int len, calledfrom;
+/*
+ * philips_read
+ *
+ *  Read data from the camera. It should buffer from the camera.
+ *  
+ */
+
+int philips_read ( buf, len, calledfrom, timeout )
+u_char	*buf;
+int		len, calledfrom;
+long	timeout;
 {
+	int		retry = 0;
+
+	/* Is the buffer not have enough data to satisfy request? */
+
 	if ( philips_len < len ) {
-		if ( philips_wait ( len ) ) {
-			dprintf((stderr, "philips_get: Timed out (at %d)\n", calledfrom));
-			if ( !philips_debugflag )
-				fprintf(stderr, "philips_get: Camera not ready.\n");
-			return 1;
+		while ( retry < PHILIPS_RESENDS ) {
+			if ( philips_wait ( len, timeout ) ) {
+				retry++;
+				}
+			else {
+				retry = PHILIPS_RESENDS + 1;
+				}
+			}
+		if ( retry == PHILIPS_RESENDS ) { /* timeout */
+			dprintf ( (stderr, "Read timeout at %d\n", calledfrom) );
+			return ( 1 );
 			}
 		}
 
-	if (philips_len < len)
-		abort();
+	memcpy ( buf, philips_buf, len );
 
-	memcpy(buf, philips_buf, len);
-	if (philips_len - len)
-		memmove(philips_buf, philips_buf + len, philips_len - len);
 	philips_len -= len;
+	if ( philips_len )
+		memmove ( philips_buf, philips_buf+len, philips_len );
 
-	return 0;
+	return ( 0 );
 }
 
-/* If the philips receive buffer does not have enough data to satisfy the
- * length requested, this routine will get data from the camera
+/* 
+ * If the philips receive buffer does not have enough data to satisfy 
+ * the length requested, this routine will try to get data from the 
+ * camera.
+ *
+ * Return uncsuccessful if we time out, select fails, or we have
+ * reached EOF.
  */
-philips_wait(rlen)
-	int rlen;
-{
-	fd_set rdfd;
-	int maxfd;
-	int len;
-	struct timeval t;
 
-	while (philips_len < rlen) {
-		/* obtain chars from the camera */
+int philips_wait ( int rlen, long timeout )
+{
+	fd_set	rdfd;
+	int		len;
+	struct	timeval t;
+
+	/* 
+	 * Try to fill the buffer (4096 bytes) with data. If we can't
+	 * then return what we have and an error code.
+	 */
+	while ( philips_len < rlen ) {
+
 		FD_ZERO(&rdfd);
 		FD_SET(fd0, &rdfd);
-		maxfd = fd0;
-		/* timeout: 4sec */
-		t.tv_sec = 4;
+
+		t.tv_sec = timeout;
 		t.tv_usec = 0;
-		switch (select(maxfd + 1, &rdfd, NULL, NULL, &t)) {
-		case -1:
-			if (errno == EINTR)
+
+		switch ( select ( fd0 + 1, &rdfd, NULL, NULL, &t ) ) {
+			case -1:
+				if ( errno == EINTR )
+					break;
+				perror("select");
+				return ( 1 );
+			case 0:
+				dprintf ( (stderr, "read timeout.\n") );
+				return ( 1 );
+			default:
 				break;
-			perror("select");
-			exit(1);
-		case 0:
-			dprintf((stderr, "read timeout.\n"));
-			return 1;
-		default:
-			break;
+			}
+
+		if ( FD_ISSET(fd0, &rdfd) ) {
+			/* Try to fill the buffer */
+			len = read ( fd0, philips_buf + philips_len,
+				sizeof(philips_buf) - philips_len );
+			philips_len += len;
+			}
+		else {
+			dprintf ( (stderr, "Opps, select says we have data but not on our file descriptor.\n") );
+			return ( 1 );
+			}
+
+		if ( len == 0 ) { /* EOF */
+			dprintf ( (stderr, "Opps, Reached End Of File on read.\n") );	
+			return ( 1 );
+			}
 		}
 
-		if (FD_ISSET(fd0, &rdfd)) {
-			len = read(fd0, philips_buf + philips_len,
-				sizeof(philips_buf) - philips_len);
-			philips_len += len;
-		} else {
-			dprintf((stderr, "something wrong in philips_get\n"));
-			return 1;
-		}
-	}
 	if ( philips_dumpflag ) philips_dump_stream('>', philips_buf, philips_len);
 
 	return 0;
@@ -1889,9 +1944,9 @@ philips_wait(rlen)
  *  Set the tty port's baud rate
  *
  */
-philips_setbaud(fd, baud)
-	int fd;
-	int baud;
+int philips_setbaud ( fd, baud )
+int fd;
+int baud;
 {
 #if HAVE_TERMIOS_H
 	/* termios */
@@ -2002,8 +2057,7 @@ philips_baudconv(int baud)
  *  when changing modes.
  */
 
-static void*
-philips_close_handler(n)
+static void *philips_close_handler ( n )
 int n;		/* signal number. should only be SIGALRM */
 {
     struct timeval zero_time = {0, 0};
@@ -2033,12 +2087,19 @@ char *philips_model ( int id )
 	sprintf ( errorstr, "Unknown model %d", id );
 
 	switch ( id ) {
-		case 4200: return ( "Ricoh RDC-4200" );
-		case 4300: return ( "Ricoh RDC-4300" );
-		case 4000: return ( "Philips ESP80SXG" );
-		case 5000: return ( "Ricoh RDC-5000" );
-		case 3100: return ( "Ricoh RDC-300Z" );
-		case 3000: return ( "Ricoh RDC-300" ); /* philips ESP2 ? */
+		case RDC_100G: return ( "Ricoh RDC-100G" );
+		case RDC_5000: return ( "Ricoh RDC-5000" );
+		case RDC_4300: return ( "Ricoh RDC-4300" );
+		case RDC_4200: return ( "Ricoh RDC-4200" );
+		case RDC_300Z: return ( "Ricoh RDC-300Z" );
+		case RDC_300: return ( "Ricoh RDC-300" );
+		case RDC_2E: return ( "Ricoh RDC-2E" );
+		case RDC_2: return ( "Ricoh RDC-2" );
+		case RDC_1: return ( "Ricoh RDC-1" );
+		case ESP80SXG: return ( "Philips ESP80SXG" );
+		case ESP60SXG: return ( "Philips ESP60SXG" );
+		case ESP50: return ( "Philips ESP50" );
+		case ESP2: return ( "Philips ESP2" );
 		default:   return ( errorstr );
 		}
 }
@@ -2061,63 +2122,79 @@ PhilipsCfgInfo *philips_getcfginfo ( int *rtn )
 {
 	PhilipsCfgInfo	*cfginfo;
 
+	philips_progress_bar ( 0.0, "Getting camera configuration..." );
 	if ( (cfginfo = (PhilipsCfgInfo *)malloc ( sizeof(PhilipsCfgInfo) )) == NULL ) {
 		return ( NULL );
 		}
+
+	cfginfo->date_dirty = 0;
 
 	if ( (*rtn = philips_gettotalbytes ( &(cfginfo->memory) )) != 0 ) {
 		free ( cfginfo );
 		return ( NULL );
 		}
+	philips_progress_bar ( 0.075, "" );
 	if ( (*rtn = philips_getavailbytes ( &(cfginfo->a_memory) )) != 0 ) {
 		free ( cfginfo );
 		return ( NULL );
 		}
+	philips_progress_bar ( 0.15, "" );
 	if ( (*rtn = philips_getexposure ( &(cfginfo->exposure) )) != 0 ) {
 		free ( cfginfo );
 		return ( NULL );
 		}
+	philips_progress_bar ( 0.225, "" );
 	if ( (*rtn = philips_getwhitelevel ( &(cfginfo->white) )) != 0 ) {
 		free ( cfginfo );
 		return ( NULL );
 		}
+	philips_progress_bar ( 0.300, "" );
 	if ( (*rtn = philips_getzoom ( &(cfginfo->zoom) )) != 0 ) {
 		free ( cfginfo );
 		return ( NULL );
 		}
+	philips_progress_bar ( 0.375, "" );
 	if ( (*rtn = philips_getflash ( &(cfginfo->flash) )) != 0 ) {
 		free ( cfginfo );
 		return ( NULL );
 		}
+	philips_progress_bar ( 0.450, "" );
 	if ( (*rtn = philips_getrecordmode ( &(cfginfo->mode) )) != 0 ) {
 		free ( cfginfo );
 		return ( NULL );
 		}
+	philips_progress_bar ( 0.525, "" );
 	if ( (*rtn = philips_getcompression ( &(cfginfo->compression) )) != 0 ) {
 		free ( cfginfo );
 		return ( NULL );
 		}
+	philips_progress_bar ( 0.600, "" );
 	if ( (*rtn = philips_getresolution ( &(cfginfo->resolution) )) != 0 ) {
 		free ( cfginfo );
 		return ( NULL );
 		}
+	philips_progress_bar ( 0.675, "" );
 	*rtn = philips_getmacro ( &(cfginfo->macro) );
 	if ( (*rtn != 0) && (*rtn != 4) ) {
 		free ( cfginfo );
 		return ( NULL );
 		}
+	philips_progress_bar ( 0.750, "" );
 	if ( (*rtn = philips_getnpicts ( &(cfginfo->picts) )) == -1 ) {
 		free ( cfginfo );
 		return ( NULL );
 		}
+	philips_progress_bar ( 0.825, "" );
 	if ( (*rtn = philips_getcopyright ( cfginfo->copyright )) != 0 ) {
 		free ( cfginfo );
 		return ( NULL );
 		}
+	philips_progress_bar ( 0.900, "" );
 	if ( (*rtn = philips_getcamdate ( &(cfginfo->date) )) != 0 ) {
 		free ( cfginfo );
 		return ( NULL );
 		}
+	philips_progress_bar ( 1.000, "" );
 	
 	return ( cfginfo );
 }
@@ -2133,57 +2210,133 @@ PhilipsCfgInfo *philips_getcfginfo ( int *rtn )
  *       0 = no failures
  *       x = failure code returned by camera for last command.
  *
+ *  Some settings don't work depending on the recording mode
+ *  that the camera is in. These will return a 06 error code.
+ *
+ *  Assume that error codes 0, 4, & 6 are probably ok and 
+ *  continue. The return error code will be the sum of all
+ *  errors encountered.
+ *
  *  Assumes that camera has already been initialized.... probably
  *  not a good idea, but....
  */
 
 int philips_setcfginfo ( PhilipsCfgInfo *cfginfo )
 {
-	int		rtn;
+	int		rtn, errors = 0;
 
-	if ( (rtn = philips_setexposure ( cfginfo->exposure )) != 0 ) {
-		free ( cfginfo );
-		return ( rtn );
+	philips_progress_bar ( 0.0, "Saving camera configuration..." );
+	rtn = philips_setrecordmode ( cfginfo->mode );
+	if ( (rtn != 0) && (rtn != 4) && (rtn != 6) )
+		fprintf ( stderr, "philips_setcfginfo: Error setting record mode %d\n", rtn );
+	errors += rtn;
+
+	philips_progress_bar ( 0.1, "" );
+	rtn = philips_setresolution ( cfginfo->resolution );
+	if ( (rtn != 0) && (rtn != 4) && (rtn != 6) )
+		fprintf ( stderr, "philips_setcfginfo: Error setting resolution %d\n", rtn );
+	errors += rtn;
+
+	philips_progress_bar ( 0.2, "" );
+	rtn = philips_setexposure ( cfginfo->exposure );
+	if ( (rtn != 0) && (rtn != 4) && (rtn != 6) )
+		fprintf ( stderr, "philips_setcfginfo: Error setting exposure %d\n", rtn );
+	errors += rtn;
+
+	philips_progress_bar ( 0.3, "" );
+	rtn = philips_setwhitelevel ( cfginfo->white );
+	if ( (rtn != 0) && (rtn != 4) && (rtn != 6) )
+		fprintf ( stderr, "philips_setcfginfo: Error setting white level %d\n", rtn );
+	errors += rtn;
+
+	philips_progress_bar ( 0.4, "" );
+	rtn = philips_setzoom ( cfginfo->zoom );
+	if ( (rtn != 0) && (rtn != 4) && (rtn != 6) )
+		fprintf ( stderr, "philips_setcfginfo: Error setting zoom %d\n", rtn );
+	errors += rtn;
+
+	philips_progress_bar ( 0.5, "" );
+	rtn = philips_setflash ( cfginfo->flash );
+	if ( (rtn != 0) && (rtn != 4) && (rtn != 6) )
+		fprintf ( stderr, "philips_setcfginfo: Error setting flash %d\n", rtn );
+	errors += rtn;
+
+	philips_progress_bar ( 0.6, "" );
+	rtn = philips_setcompression ( cfginfo->compression );
+	if ( (rtn != 0) && (rtn != 4) && (rtn != 6) )
+		fprintf ( stderr, "philips_setcfginfo: Error setting compression %d\n", rtn );
+	errors += rtn;
+
+	philips_progress_bar ( 0.7, "" );
+	rtn = philips_setcopyright ( cfginfo->copyright );
+	if ( (rtn != 0) && (rtn != 4) && (rtn != 6) )
+		fprintf ( stderr, "philips_setcfginfo: Error setting copyright %d\n", rtn );
+	errors += rtn;
+
+	philips_progress_bar ( 0.8, "" );
+	if ( cfginfo->date_dirty ) { /* only if requested */
+		rtn = philips_setcamdate ( cfginfo->date );
+		if ( (rtn != 0) && (rtn != 4) && (rtn != 6) )
+			fprintf ( stderr, "philips_setcfginfo: Error setting date %d\n", rtn );
+		errors += rtn;
 		}
-	if ( (rtn = philips_setwhitelevel ( cfginfo->white )) != 0 ) {
-		free ( cfginfo );
-		return ( rtn );
-		}
-	if ( (rtn = philips_setzoom ( cfginfo->zoom )) != 0 ) {
-		free ( cfginfo );
-		return ( rtn );
-		}
-	if ( (rtn = philips_setflash ( cfginfo->flash )) != 0 ) {
-		free ( cfginfo );
-		return ( rtn );
-		}
-	if ( (rtn = philips_setrecordmode ( cfginfo->mode )) != 0 ) {
-		free ( cfginfo );
-		return ( rtn );
-		}
-	if ( (rtn = philips_setcompression ( cfginfo->compression )) != 0 ) {
-		free ( cfginfo );
-		return ( rtn );
-		}
-	if ( (rtn = philips_setresolution ( cfginfo->resolution )) != 0 ) {
-		free ( cfginfo );
-		return ( rtn );
-		}
+
+	philips_progress_bar ( 0.9, "" );
 	rtn = philips_setmacro ( cfginfo->macro );
-	if ( (rtn != 0) && (rtn != 4) ) {
-		free ( cfginfo );
-		return ( rtn );
-		}
-	if ( (rtn = philips_setcopyright ( cfginfo->copyright )) != 0 ) {
-		free ( cfginfo );
-		return ( rtn );
-		}
-	if ( (rtn = philips_setcamdate ( cfginfo->date )) != 0 ) {
-		free ( cfginfo );
-		return ( rtn );
-		}
-	
+	if ( (rtn != 0) && (rtn != 4) && (rtn != 6) )
+		fprintf ( stderr, "philips_setcfginfo: Error setting macro %d\n", rtn );
+	errors += rtn;
+
+	philips_progress_bar ( 1.0, "" );
 	free ( cfginfo );
-	return ( 0 );
+	return ( errors );
 }
 
+
+/*
+ *  philips_progress_bar
+ *
+ *  Display an indication of the current commands progress. 
+ *  This was implemented for gPhoto but may be of use in other 
+ *  programs that use this library. 
+ *
+ *  This takes one argument that is the fraction complete.
+ */
+
+void philips_progress_bar ( float progress, char *message )
+{
+	if ( progress < 0.0 || progress > 1.0 ) {
+		printf ( "philips_progress_bar: value out of range %f\n", progress );
+		return;
+		}
+
+	if ( progress == 0.0 ) {
+#ifdef GPHOTO
+		update_status ( message );
+		update_progress ( progress );
+#else
+		printf ( "%s", message );
+		fflush ( stdout );
+#endif
+		}
+
+	if ( progress > 0.0 && progress < 0.99 ) {
+		/* Display progress.... */
+#ifdef GPHOTO
+		update_progress ( progress );
+#else
+		printf ( "*" );
+		fflush ( stdout );
+#endif
+		}
+	if ( progress > .99 ) {
+#ifdef GPHOTO
+		update_progress ( progress );
+		update_status ( "Done." );
+#else
+		printf ( "\n" );
+		fflush ( stdout );
+#endif
+		}
+	
+}

@@ -1,4 +1,4 @@
-/* gPhoto - free digital camera utility - http://www.gphoto.org/
+/* Gphoto - free digital camera utility - http://www.gphoto.org/
  *
  * Copyright (C) 1999  The gPhoto developers  <gphoto-devel@gphoto.org>
  *
@@ -24,7 +24,6 @@
 #include "gallery.h"
 #include "live.h"
 #include "developer_dialog.h"
-
 
 /* Build the Menu --------------------------------------------
    ----------------------------------------------------------- */
@@ -85,14 +84,14 @@ void menu_select (gpointer data, guint action, GtkWidget *widget) {
 		case 15: /* Select None */
 			select_none();
 			break;
-		case 16: /* Get Thumbnails */
+		case 16: /* Download Thumbnails */
 			getindex();
 			break;
-		case 17: /* Get blank */
+		case 17: /* Download blank */
 			getindex_empty();
 			break;
 		case 20: /* Delete selected */
-			del_dialog();
+			del_dialog(0);
 			break;
 		case 21: /* Take picture */
 			takepicture_call();
@@ -165,6 +164,18 @@ void menu_select (gpointer data, guint action, GtkWidget *widget) {
 		case 43: /* Color balance */
 			color_dialog();
 			break;
+	       case 44: /* Next page */
+	                next_page();
+	                break;
+      	        case 45: /* Previous page */
+		        prev_page();
+  		        break;
+	        case 46: /* Index page */
+		        index_page();
+		        break;
+	        case 47: /* Format */
+		        del_dialog(1);
+		        break;
 		default:
 	}
 }
@@ -177,8 +188,8 @@ GtkItemFactoryEntry menu_items[] = {
 
 	{"/_File",						NULL, 0,		0, "<Branch>"},
 	{"/File/_Open",				                NULL, 0,	        0, "<Branch>"},
-	{"/File/Open/File...",				"<control>f", menu_select,	1},
 	{"/File/Open/Directory...",			"<control>o", menu_select,	32},
+	{"/File/Open/File...",				"<control>f", menu_select,	1},
 	{"/File/sep2",						NULL, 0,		0, "<Separator>"},
 	{"/File/_Save",				                NULL, 0,	        0, "<Branch>"},
 	{"/File/Save/Opened Image(s)...", 		"<control>s", menu_select, 2},
@@ -193,6 +204,26 @@ GtkItemFactoryEntry menu_items[] = {
 	{"/File/sep2",						NULL, 0,		0, "<Separator>"},
 	{"/File/_Close",				"<control>W", menu_select,	4},
 	{"/File/_Quit",					"<control>q", menu_select,	5},
+	{"/_Camera",					 	NULL, 0, 		0, "<Branch>"},
+	{"/Camera/_Summary",				NULL, menu_select, 22},
+	{"/Camera/Download _Index",			NULL, 0,0, "<Branch>"},
+	{"/Camera/Download Index/_Thumbnails",		"<control>i", menu_select,	16},
+	{"/Camera/Download Index/_No Thumbnails",		"<control>e", menu_select,	17},
+	{"/Camera/Download _Selected",				NULL, 0,		0, "<Branch>"},
+	{"/Camera/Download Selected/_Images",			NULL, 0,		0, "<Branch>"},
+	{"/Camera/Download Selected/Images/_Open in window",		NULL, open_images,	18},
+	{"/Camera/Download Selected/Images/_Save to disk...","<control>g", save_images,	19},
+	{"/Camera/Download Selected/_Thumbnails",			NULL, 0,		0, "<Branch>"},
+	{"/Camera/Download Selected/Thumbnails/_Open in window",	NULL, open_thumbs,	0},
+	{"/Camera/Download Selected/Thumbnails/_Save to disk...",	NULL, save_thumbs,	0},
+	{"/Camera/Download Selected/_Both",				NULL, 0,		0, "<Branch>"},
+	{"/Camera/Download Selected/Both/_Open in window",		NULL, open_both,	0},
+	{"/Camera/Download Selected/Both/_Save to disk...",		NULL, save_both,	0},
+	{"/Camera/_Delete",						NULL, 0, 0, "<Branch>"},
+	{"/Camera/Delete/Selected Images",			NULL, menu_select,	20},
+	{"/Camera/Delete/All Images",			        NULL, menu_select,	47},
+	{"/Camera/_Live Preview!",				NULL, menu_select,	26},
+	{"/Camera/_Take Picture",				NULL, menu_select,	21},
 
 	{"/_Edit",						NULL, 0,		0, "<Branch>"},
 	{"/Edit/_Size",					        NULL, 0,		0, "<Branch>"},
@@ -202,8 +233,12 @@ GtkItemFactoryEntry menu_items[] = {
 	{"/Edit/sep2",						NULL, 0,		0, "<Separator>"},
 	{"/Edit/_Color Balance",				NULL, menu_select,	43},
 
+	{"/_Go",						NULL, 0,                0,"<Branch>"},
+	{"/Go/_Index page",				  "<alt>i", menu_select,	46},
+	{"/Go/_Next page",				  "<alt>n", menu_select,	44},
+	{"/Go/_Previous page",			          "<alt>p", menu_select,	45},
 	{"/_Select",						NULL, 0,                0,"<Branch>"},
-	{"/Select/_All",				  "<shift>a", menu_select,	13},
+       	{"/Select/_All images",				  "<shift>a", menu_select,	13},
 	{"/Select/_Inverse",			          "<shift>i", menu_select,	14},
 	{"/Select/_None",			 	  "<shift>n", menu_select,	15},
 
@@ -213,32 +248,9 @@ GtkItemFactoryEntry menu_items[] = {
 	{"/Orientation/sep2",					NULL, 0,		0, "<Separator>"},
 	{"/Orientation/Flip Horizontal", 			NULL, menu_select,	8},
 	{"/Orientation/Flip Vertical", 			        NULL, menu_select,	9},
-
-	{"/_Camera",					 	NULL, 0, 		0, "<Branch>"},
-	{"/Camera/Get _Index",			        	NULL, 0,		0, "<Branch>"},
-	{"/Camera/Get Index/_Thumbnails",		"<control>i", menu_select,	16},
-	{"/Camera/Get Index/_No Thumbnails",		"<control>e", menu_select,	17},
-	{"/Camera/Get _Selected",				NULL, 0,		0, "<Branch>"},
-	{"/Camera/Get Selected/_Images",			NULL, 0,		0, "<Branch>"},
-	{"/Camera/Get Selected/Images/_Open in window",		NULL, open_images,	18},
-	{"/Camera/Get Selected/Images/_Save to disk...","<control>g", save_images,	19},
-	{"/Camera/Get Selected/_Thumbnails",			NULL, 0,		0, "<Branch>"},
-	{"/Camera/Get Selected/Thumbnails/_Open in window",	NULL, open_thumbs,	0},
-	{"/Camera/Get Selected/Thumbnails/_Save to disk...",	NULL, save_thumbs,	0},
-	{"/Camera/Get Selected/_Both",				NULL, 0,		0, "<Branch>"},
-	{"/Camera/Get Selected/Both/_Open in window",		NULL, open_both,	0},
-	{"/Camera/Get Selected/Both/_Save to disk...",		NULL, save_both,	0},
-	{"/Camera/sep3",					NULL, 0, 		0, "<Separator>"},
-	{"/Camera/_Delete Selected Images",			NULL, menu_select,	20},
-	{"/Camera/_Take Picture",				NULL, menu_select,	21},
-	{"/Camera/_Camera Summary",				NULL, menu_select,	22},
-
-	{"/Confi_gure",						NULL, 0,		0, "<Branch>"},
+	{"/Configu_re",						NULL, 0,		0, "<Branch>"},
 	{"/Configure/_Select Port-Camera Model",		NULL, menu_select,	23},
 	{"/Configure/_Configure Camera...",			NULL, menu_select,	24},
-
-	{"/_Plugins",						NULL, 0,		0, "<Branch>"},
-	{"/Plugins/_Live Camera!",				NULL, menu_select,	26},
 	{"/_Help",						NULL, 0,		0, "<LastBranch>"},
 	{"/Help/_Authors",					NULL, menu_select,	27},
 	{"/Help/_License",					NULL, menu_select,	28},
@@ -258,7 +270,6 @@ GtkItemFactoryEntry menu_items[] = {
 	{"/Help/www.gphoto.org/To Do_",			        NULL, menu_select,	41},
 	{"/Help/www.gphoto.org/Feed_back",		        NULL, menu_select,	42},
 };
-
 
 void create_menu (GtkWidget *menu_bar) {
 

@@ -11,6 +11,9 @@ Matt Martin <matt.martin@ieee.org>
 Fuji DS-7 library
 Bug fixing and GUI features
 
+Mike Labriola <mdlabriola@mindless.com> 
+Extra HTML gallery export options 
+ 
 Werner Almesberger <almesber@lrc.di.epfl.ch>
 Canon A50 library
 
@@ -52,8 +55,11 @@ Sony DSC-F55E library
 Michael McCormack <mccormac@aals27.alcatel.com.au>
 Nikon CoolPix 600 library
 
+Henning Zabel <henning@uni-paderborn.de>
+New Mustek MDC 800 library
+
 Pedro Caria <pmiguel@maquina.com>
-Mustek MDC 800 library
+Original Mustek MDC 800 library
 
 Del Simmons <del@gphoto.org>
 Kodak DC20/25 library
@@ -64,6 +70,10 @@ Bug fixing
 
 Cliff Wright <cliff@snipe444.org>
 Ricoh RDC 300/300Z library
+Bug fixing
+
+Rasmus Andersen <rasmus@diku.dk>
+X independent CLI invocation
 Bug fixing
 
 Beat Christen <spiff@longstreet.ch>

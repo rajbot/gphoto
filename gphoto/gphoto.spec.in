@@ -41,7 +41,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc AUTHORS COPYING FAQ MANUAL NEWS README THANKS THEMES ChangeLog
 %{prefix}/man/man1/gphoto.1
 %{prefix}/bin/*
-%{prefix}/share/gphoto/drivers/*
+%{prefix}/lib/gphoto/*
 %{prefix}/share/gphoto/doc/*
 %{prefix}/share/gphoto/gallery/Default/*
 %{prefix}/share/gphoto/gallery/RedNGray/*

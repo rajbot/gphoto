@@ -51,7 +51,7 @@ WHATS IN THE PACKAGE:
         * Konica library improvements by Ed Legowski <edlegowski@pobox.com>
 	* Konica Q-M200 library by Toshiki Fujisawa <fujisawa@konica.co.jp>
         * Minolta Dimage V library by Gus Hartmann <hartmann@cs.wisc.edu> 
-	* Mustek MDC 800 library by Pedro Caria <pmiguel@maquina.com>
+	* New Mustek MDC 800 library by Henning Zabel <pmiguel@maquina.com>
 	* Nikon CP 600 library by M. McCormack <mccormac@aals27.alcatel.com.au>
 	* Philips ESP library written by Bob Paauwe <bpaauwe@bobsplace.com>
 	* PhotoPC library written by Eugene Crosser <crosser@average.org> 
@@ -84,7 +84,7 @@ FEATURES/CHANGES:
 		step in making gPhoto "more" than just a digicam utility.
 		there is a "Default" theme included... to install it, 
 		you MUST do a "make install" to copy all files to the
-		correct location (/usr/share/gphoto/gallery/) after
+		correct location ($PREFIX/share/gphoto/gallery/) after
 		you "make" the package
 	
 		Using it:
@@ -108,10 +108,10 @@ FEATURES/CHANGES:
 
 	* Configure scripts for building libraries and GTK+ application
 
-		To build/install everything, change to the gphoto source
-		tree and type:
+		To build/install everything in /usr/local/ -- change to
+		the gphoto source tree and type:
 	
-		./configure
+		./configure --prefix=/usr/local/
 		make
 		make install
 
@@ -156,8 +156,7 @@ INSTALLATION:
            the gphoto binary.
 
 	3) Type 'make install' to install the camera libraries into
-	   /usr/local/share/gphoto/drivers/ and the 'gphoto' executable 
-           into /usr/local/bin/
+	   $PREFIX/lib/gphoto/ and the 'gphoto' binary in $PREFIX/bin/
 
 UNINSTALL:
 	In the gphoto-0.x.y/ directory, type 'make uninstall'

@@ -328,9 +328,10 @@ char *kodak_dc2x_summary() {
   sleep(1);
   
   dc20_info = get_info(tfd);
-  
-  strcat(summary_string, "This camera is a Kodak DC");
-  strcat (summary_string, dc20_info->model);
+
+/*    strcat(summary_string, "This camera is a Kodak DC"); */
+/*    strcat (summary_string, dc20_info->model); */  
+  snprintf(summary_string, 500, "This camera is a Kodak DC%d",(int)dc20_info->model);
 
   /*
   There are %d pictures in the camera\n

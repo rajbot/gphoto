@@ -5,5 +5,6 @@
 #undef PACKAGE
 #undef VERSION
 #undef DOCDIR
+#undef GALLERYDIR
 
 #define HAVE_RTS_IOCTL 0

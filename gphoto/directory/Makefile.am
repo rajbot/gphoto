@@ -1,6 +1,6 @@
 drivers_LTLIBRARIES = libgphoto_dir.la
 
-CFLAGS = @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@ 
+CFLAGS = @CFLAGS@ @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@ 
 
 libgphoto_dir_la_SOURCES = directory.c directory.h
 

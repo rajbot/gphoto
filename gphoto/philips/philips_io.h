@@ -38,6 +38,29 @@
 #define P_BLOCK		0xA2
 #define P_GETTHUMB	0xA4
 
+/* 
+ * Camera model numbers.
+ *
+ * Each camera returns an identification number when it is
+ * initialized. 
+ *
+ */
+
+
+#define RDC_1		5		/* placeholder, not yet correct */
+#define RDC_2		3		/* placeholder, not yet correct */
+#define RDC_2E		4		/* placeholder, not yet correct */
+#define RDC_100G	7		/* placeholder, not yet correct */
+#define RDC_300		3000
+#define RDC_300Z	3100
+#define RDC_4200	4200
+#define RDC_4300	4300
+#define RDC_5000	5000
+#define ESP80SXG	4000
+#define ESP60SXG	1		/* placeholder, not yet correct */
+#define ESP2		2		/* placeholder, not yet correct */
+#define ESP50		6		/* placeholder, not yet correct */
+
 struct CAM_DATA {
 	u_char	class;
 	u_char	data[4096];
@@ -52,6 +75,7 @@ typedef struct	PHILIPS_CFG {
 	int		a_memory;	/* available camera memory */
 	int		memory;		/* total camera memory */
 	time_t	date;		/* camera date & time */
+	int		date_dirty;	/* has date changed? */
 	char	copyright[21];	/* picture copyright string */
 	int		resolution;	/* camera resolution setting */
 	int		compression;	/* camera compression setting */
@@ -114,7 +138,7 @@ int philips_setcopyright();
 int philips_setmacro();
 int philips_putpict();
 int philips_wait();
-int philips_get();
+int philips_read();
 int philips_put();
 int philips_getpacket();
 int philips_setspeed();
@@ -130,3 +154,4 @@ int philips_setbaud();
 char *philips_model();
 PhilipsCfgInfo *philips_getcfginfo();
 int philips_setcfginfo();
+void philips_progress_bar( float progress, char *message );

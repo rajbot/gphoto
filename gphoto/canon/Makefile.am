@@ -1,6 +1,6 @@
 drivers_LTLIBRARIES = libgphoto_canon.la
 
-CFLAGS = @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@ -Wall
+CFLAGS = @CFLAGS@ @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@ -Wall
 
 libgphoto_canon_la_SOURCES = canon.c canon.h psa50.c psa50.h serial.c serial.h \
 	crc.c crc.h util.c util.h

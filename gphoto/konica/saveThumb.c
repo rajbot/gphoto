@@ -8,11 +8,9 @@
 #include "../src/gphoto.h"
 #include "saveThumb.h"
 
-struct Image *qm100_saveThumb(int serialdev, char *filename, int pic)
+void qm100_saveThumb(int serialdev, char *filename, int pic)
 {
   int jpgfile;
-  long jpgfile_size;
-  struct Image *im;
 
   char success=1;
   char cmd_getthumb[QM100_GETTHUMB_LEN]=QM100_GETTHUMB;
@@ -45,18 +43,6 @@ struct Image *qm100_saveThumb(int serialdev, char *filename, int pic)
       close(jpgfile);     
     }
   qm100_endTransmit(serialdev);
-
-  jpgfile = fopen(filename, "r");
-  fseek(jpgfile, 0, SEEK_END);
-  jpgfile_size = ftell(jpgfile);
-  rewind(jpgfile);
-  im = (struct Image*)malloc(sizeof(struct Image));
-  im->image = (char *)malloc(sizeof(char)*jpgfile_size);
-  fread(im->image, (size_t)sizeof(char), (size_t)jpgfile_size, jpgfile);
-  strcpy(im->image_type, "jpg");
-  im->image_size = (int)jpgfile_size;
-  im->image_info_size = 0;
-  return (im);
 }
 
 

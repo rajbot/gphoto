@@ -66,32 +66,41 @@ struct Image *konica_qm100_get_picture (int picNum, int thumbnail)
   int serialdev;
   int pid;
   char tempName[1024], rm[1024];
-  GdkImlibImage *imlibimage;
+  FILE *jpgfile;
+  int jpgfile_size;
   struct Image *im;
   pid = getpid();
   
   serialdev = qm100_open(serial_port);
   qm100_setSpeed(serialdev, B115200);
   
-  sprintf(tempName, "%s/gphoto-%i-%i.jpg", gphotoDir, pid,
+  sprintf(tempName, "%s/gphoto-konica-%i.jpg", gphotoDir, pid,
 	konica_picCounter);
   konica_picCounter++;
   
   picNum = qm100_getRealPicNum(serialdev, picNum);
   
   if (thumbnail) {
-    im = qm100_saveThumb(serialdev, tempName, picNum);
+    qm100_saveThumb(serialdev, tempName, picNum);
   } else {
-    im = qm100_savePic(serialdev, tempName, picNum);
+    qm100_savePic(serialdev, tempName, picNum);
   }
   
   qm100_setSpeed(serialdev, B9600);
   qm100_close(serialdev);
 
-  imlibimage = gdk_imlib_load_image(tempName);
-
-  sprintf(rm, "rm %s", tempName);
-  system(rm);
+  jpgfile = fopen(tempName, "r");
+  fseek(jpgfile, 0, SEEK_END);
+  jpgfile_size = ftell(jpgfile);
+  rewind(jpgfile);
+  im = (struct Image*)malloc(sizeof(struct Image));
+  im->image = (char *)malloc(sizeof(char)*jpgfile_size);
+  fread(im->image, (size_t)sizeof(char), (size_t)jpgfile_size, jpgfile);
+  fclose(jpgfile);
+  strcpy(im->image_type, "jpg");
+  im->image_size = jpgfile_size;
+  im->image_info_size = 0;
+  remove(tempName);
   return (im);
 }
 

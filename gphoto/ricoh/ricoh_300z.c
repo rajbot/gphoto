@@ -134,7 +134,7 @@ struct Image *ricoh_300z_get_picture (int picNum, int thumbnail) {
 	unsigned char date[6];
 
 	FILE *jpgfile;
-	long jpgfile_size;
+	int jpgfile_size;
 	struct Image *im;
 	char filename[1024];
 
@@ -208,15 +208,17 @@ struct Image *ricoh_300z_get_picture (int picNum, int thumbnail) {
 	}
 	ricoh_300z_close_camera();
 
-          sprintf(filename, "%s/gphoto-%i.jpg", gphotoDir, picNum);
+          sprintf(filename, "%s/gphoto-ricoh-%i.jpg", gphotoDir, picNum);
           gdk_imlib_save_image (imlibimage, filename, NULL);
+	  gdk_imlib_kill_image (imlibimage);
           jpgfile = fopen(filename, "r");
           fseek(jpgfile, 0, SEEK_END);
           jpgfile_size = ftell(jpgfile);      
           rewind(jpgfile);
           im = (struct Image*)malloc(sizeof(struct Image));
           im->image = (char *)malloc(sizeof(char)*jpgfile_size);
-  fread(im->image, (size_t)sizeof(char), (size_t)jpgfile_size, jpgfile); 
+	  fread(im->image,(size_t)sizeof(char),(size_t)jpgfile_size,jpgfile); 
+	  fclose(jpgfile);
           strcpy(im->image_type, "jpg");
           im->image_size = (int)jpgfile_size;
           im->image_info_size = 0;

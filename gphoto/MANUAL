@@ -1,10 +1,15 @@
 $Id$
 
 $Log$
+Revision 1.3  1999/06/22 15:30:09  scottf
+updated the MANUAL (fixed the log that actually showed ten dashes,
+	messing up the way the manual was displayed :)
+hopefully fixed the kodak dc2x, ricoh, and konica libs.
+minor /src revisions.
+
 Revision 1.2  1999/06/18 18:17:25  scottf
 updated the manual_dialog to read from DOCDIC/MANUAL. it expects the
 beginning of the relevant manual text to begin with ten dashes
-"----------"
 
 Revision 1.1.1.1  1999/05/27 18:32:01  scottf
 gPhoto- digital camera utility

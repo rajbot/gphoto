@@ -129,6 +129,7 @@ void menu_select (gpointer data, guint action, GtkWidget *widget) {
 			break;
 		case 32: /* Open Directory */
 			set_camera("Browse Directory");
+			strcpy(camera_model, "Browse Directory");
 			makeindex(1);
 			break;
 		case 33: /* Online News */

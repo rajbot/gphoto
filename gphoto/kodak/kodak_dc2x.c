@@ -116,7 +116,7 @@ struct Image *kodak_dc2x_get_picture (int picNum, int thumbnail) {
   GdkImlibColorModifier mod;
 
   FILE *jpgfile;
-  long jpgfile_size;
+  int jpgfile_size;
   char filename[1024];
   struct Image *im;
 
@@ -140,15 +140,17 @@ struct Image *kodak_dc2x_get_picture (int picNum, int thumbnail) {
 	fprintf(stderr,"get_thumb returned ok! Creating ImLib image!\n");
 	this_image = gdk_imlib_create_image_from_data(color_thumb, NULL, 80, 60);
 	fprintf(stderr, "Made it back from imlib_create!\n");
-        sprintf(filename, "%s/gphoto-%i.jpg", gphotoDir, picNum);
+        sprintf(filename, "%s/gphoto-kodak-%i.jpg", gphotoDir, picNum);
         gdk_imlib_save_image (this_image, filename, NULL);
+	gdk_imlib_kill_image (this_image);
         jpgfile = fopen(filename, "r");
         fseek(jpgfile, 0, SEEK_END);
-        jpgfile_size = ftell(jpgfile);      
+        jpgfile_size = ftell(jpgfile); 
         rewind(jpgfile);
         im = (struct Image*)malloc(sizeof(struct Image));
         im->image = (char *)malloc(sizeof(char)*jpgfile_size);
-  fread(im->image, (size_t)sizeof(char), (size_t)jpgfile_size, jpgfile); 
+	fread(im->image, (size_t)sizeof(char), (size_t)jpgfile_size, jpgfile); 
+	fclose(jpgfile);
         strcpy(im->image_type, "jpg");
         im->image_size = (int)jpgfile_size;
         im->image_info_size = 0;
@@ -215,17 +217,19 @@ struct Image *kodak_dc2x_get_picture (int picNum, int thumbnail) {
 
 	  kodak_dc2x_close_camera(tfd);
 
-	  sprintf(filename, "%s/gphoto-%i.jpg", gphotoDir, picNum);
+	  sprintf(filename, "%s/gphoto-kodak-%i.jpg", gphotoDir, picNum);
 	  gdk_imlib_save_image (scaled_image, filename, NULL);
+	  gdk_imlib_kill_image (scaled_image);
 	  jpgfile = fopen(filename, "r");
 	  fseek(jpgfile, 0, SEEK_END);
 	  jpgfile_size = ftell(jpgfile);
 	  rewind(jpgfile);
 	  im = (struct Image*)malloc(sizeof(struct Image));
 	  im->image = (char *)malloc(sizeof(char)*jpgfile_size);
-  fread(im->image, (size_t)sizeof(char), (size_t)jpgfile_size, jpgfile); 
+	  fread(im->image,(size_t)sizeof(char),(size_t)jpgfile_size,jpgfile); 
+	  fclose(jpgfile);
 	  strcpy(im->image_type, "jpg");
-	  im->image_size = (int)jpgfile_size;
+	  im->image_size = jpgfile_size;
 	  im->image_info_size = 0;
 	  remove(filename);
 

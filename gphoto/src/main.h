@@ -24,6 +24,7 @@ char	  serial_port[20];	/* Serial port			*/
 char	  camera_model[100];	/* Currently selected cam model */
 
 GtkWidget *status_bar;		/* Main window status bar	*/
+GtkWidget *post_process_pixmap; /* Post process pixmap		*/
 GtkWidget *library_name;	/* Main window library bar	*/
 GtkWidget *notebook;            /* Main window Notebook		*/
 GtkWidget *index_table;         /* Index table			*/

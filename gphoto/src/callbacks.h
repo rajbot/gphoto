@@ -1,7 +1,3 @@
-extern struct ImageInfo Thumbnails;
-extern struct ImageInfo Images;
-extern struct _Camera *Camera;
-
 char filesel_cwd[1024];
 
 gint delete_event (GtkWidget *widget, GdkEvent *event, gpointer data);
@@ -52,3 +48,5 @@ void save_thumbs (gpointer data, guint action, GtkWidget *widget);
 void open_thumbs (gpointer data, guint action, GtkWidget *widget);
 void save_both (gpointer data, guint action, GtkWidget *widget);
 void open_both (gpointer data, guint action, GtkWidget *widget);
+
+void post_process_change (GtkWidget *widget, GtkWidget *window);

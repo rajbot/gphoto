@@ -28,6 +28,14 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#include "post_processing_on.xpm"
+#include "post_processing_off.xpm"
+
+extern struct ImageInfo Thumbnails;
+extern struct ImageInfo Images;
+extern struct _Camera *Camera;
+extern GtkWidget *post_process_pixmap;
+
 /* Search the image_info tags for "name", return its value (string) */
 char* find_tag(struct Image *im, char* name) {
 
@@ -205,7 +213,7 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 	 */
 
 	int i = 0, pic = 1;
-	char fname[1024];
+	char fname[1024], status[32];
 	char *filesel_dir, *filesel_prefix;
 
 	struct ImageInfo *node = &Thumbnails;
@@ -215,6 +223,9 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 	GSList *group;
 
 	if ((strcmp("tn", type) != 0) && (strcmp("in", type) != 0)) {
+
+		/* Get an output directory */
+
 		filesel = gtk_file_selection_new(
 				"Select a directory to store the images...");
 		gtk_file_selection_set_filename(GTK_FILE_SELECTION(filesel),
@@ -257,10 +268,14 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
                 node = node->next; i++;
                 if (GTK_TOGGLE_BUTTON(node->button)->active) {
 			if ((strcmp("i", type)==0)||(strcmp("in", type)==0)) {
+				sprintf(status, "Saving Image #%i...", i);
+				update_status(status);
 				sprintf(fname, "%s-%i",
 					saveselectedtodisk_dir, pic);
 				savepictodisk(i, 0, fname); }
 			   else {
+				sprintf(status, "Saving Thumbnail #%i...", i);
+				update_status(status);
 				sprintf(fname, "%s-thumbnail-%i",
 					saveselectedtodisk_dir, pic);
 				savepictodisk(i, 1, fname);
@@ -268,8 +283,7 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 			pic++;
 		}
 	}
-	sprintf(fname, "Done. Images saved as %s%s-*.*", filesel_dir,
-		filesel_prefix);
+	sprintf(fname, "Done. Images saved in %s", filesel_dir);
 	update_status(fname);
 }
 
@@ -1039,17 +1053,21 @@ void getpics (GtkWidget *widget, char *type) {
 		node = node->next; i++;
 		if (GTK_TOGGLE_BUTTON(node->button)->active) {
 			y++;
-			sprintf(status, "Getting image %i (this might take a minute)", i);
-			update_status(status);
+			
 /*
 			gtk_toggle_button_set_state(
 				GTK_TOGGLE_BUTTON(node->button),
 				FALSE);
 */
-			if (strcmp("i", type) == 0)
-				appendpic(i, 0, TRUE, NULL);
-			   else
+			if (strcmp("i", type) == 0) {
+				sprintf(status, "Getting Image #%i...", i);
+				update_status(status);
+				appendpic(i, 0, TRUE, NULL);}
+			   else {
 				appendpic(i, 1, TRUE, NULL);
+				sprintf(status, "Getting Thumbnail #%i...", i);
+				update_status(status);
+			}
 			update_progress((float)y/(float)x);
 		}
 	}
@@ -1555,3 +1573,17 @@ void open_both (gpointer data, guint action, GtkWidget *widget) {
 	getpics(widget, "i");
 }
 
+
+void post_process_change (GtkWidget *widget, GtkWidget *win) {
+
+	GdkPixmap *pixmap;
+	GdkBitmap *bitmap;
+	GtkStyle *style;
+
+	style = gtk_widget_get_style(win);
+	pixmap = gdk_pixmap_create_from_xpm_d(win->window, &bitmap,
+                 &style->bg[GTK_STATE_NORMAL],(gchar **)post_processing_on_xpm);
+        gtk_pixmap_set(GTK_PIXMAP(post_process_pixmap), pixmap, bitmap);
+
+	error_dialog("Post Processing Not Yet Implemented");
+}

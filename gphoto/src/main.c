@@ -20,6 +20,7 @@
 #include "developer_dialog.h"
 
 #include "splash.xpm"           /* Splash screen  */
+#include "post_processing_off.xpm"
 
 int main (int argc, char *argv[]) {
 
@@ -29,8 +30,9 @@ int main (int argc, char *argv[]) {
 	GtkWidget *table;
 	GtkWidget *menu_bar;
 	GtkWidget *index_page;
-	GtkWidget *label, *box, *sbox;
+	GtkWidget *label, *box, *sbox, *pbox;
 	GtkWidget *vseparator;
+	GtkWidget *post_process_button;
 	GtkStyle *style;
 
 	GtkWidget *gpixmap;
@@ -146,21 +148,47 @@ int main (int argc, char *argv[]) {
 	gtk_box_pack_start(GTK_BOX(sbox), status_bar, FALSE, FALSE, 0);
 	update_status("Select \"Camera->Get Index\" to preview images.");
 
+
 	progress = gtk_progress_bar_new();
 	gtk_widget_show(progress);
-/*	gtk_widget_set_usize(progress, 100, 16);*/
 	gtk_box_pack_end(GTK_BOX(sbox), progress, FALSE, FALSE, 0);
+
+	vseparator = gtk_vseparator_new();
+	gtk_widget_show(vseparator);
+	gtk_box_pack_end(GTK_BOX(sbox), vseparator, FALSE, FALSE, 0);
+
+	post_process_button = gtk_button_new();
+	gtk_widget_show(post_process_button);
+	gtk_button_set_relief(GTK_BUTTON(post_process_button),GTK_RELIEF_NONE);
+	gtk_signal_connect (GTK_OBJECT(post_process_button), "clicked",
+		GTK_SIGNAL_FUNC(post_process_change), mainWin);
+	gtk_box_pack_end(GTK_BOX(sbox), post_process_button, FALSE, FALSE, 0);	
+
+	pbox = gtk_hbox_new(FALSE, 3);
+	gtk_widget_show(pbox);
+	gtk_container_add(GTK_CONTAINER(post_process_button), pbox);
+
+	style = gtk_widget_get_style(mainWin);
+        pixmap = gdk_pixmap_create_from_xpm_d(mainWin->window, &bitmap,
+                 &style->bg[GTK_STATE_NORMAL],(gchar **)post_processing_off_xpm);
+        post_process_pixmap = gtk_pixmap_new(pixmap, bitmap);
+        gtk_widget_show(post_process_pixmap);
+	gtk_box_pack_start(GTK_BOX(pbox),post_process_pixmap,FALSE,FALSE,0);
+
+	label = gtk_label_new("Post Process");
+	gtk_widget_show(label);
+	gtk_box_pack_start(GTK_BOX(pbox),label,FALSE,FALSE,0);
+
+	vseparator = gtk_vseparator_new();
+	gtk_widget_show(vseparator);
+	gtk_box_pack_end(GTK_BOX(sbox), vseparator, FALSE, FALSE, 0);
 
 	gtk_widget_show(library_name);
 	gtk_widget_set_usize(library_name, 200, 16);
 	gtk_label_set_justify(GTK_LABEL(library_name), GTK_JUSTIFY_LEFT);
 	gtk_box_pack_end(GTK_BOX(sbox), library_name, FALSE, FALSE, 0);
 
-	vseparator = gtk_vseparator_new();
-	gtk_widget_show(vseparator);
-	gtk_box_pack_end(GTK_BOX(sbox), vseparator, FALSE, FALSE, 0);
 
-	style = gtk_widget_get_style(mainWin);
 	pixmap = gdk_pixmap_create_from_xpm_d(mainWin->window, &bitmap,
 					&style->bg[GTK_STATE_NORMAL],
 					(gchar **)splash_xpm);

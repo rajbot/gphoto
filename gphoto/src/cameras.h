@@ -38,6 +38,7 @@ struct Model cameras[] = {
 	{"Nikon CoolPix 600 (unverified)", &olympus},
 	{"Nikon CoolPix 900", &olympus},
 	{"Nikon CoolPix 900S", &olympus},
+	{"Nikon CoolPix 950", &olympus},
 	{"Olympus D-220L", &olympus},
 	{"Olympus D-300L (unverified)", &olympus},
 	{"Olympus D-320L", &olympus},

@@ -108,7 +108,7 @@ void qm100_sendPacket(int serialdev, unsigned char *cmd, int cmd_len)
    unsigned char esc_list[255];
    unsigned char packet[255];
    unsigned char packet_sum=0;
-   int packet_pos=0, cmd_pos=0, esc_lookup=0;
+   unsigned packet_pos=0, cmd_pos=0, esc_lookup=0;
    int data;
    
    /*------------------------------------------------------------------*
@@ -241,7 +241,7 @@ void qm100_getAck(int serialdev)
    c=qm100_readByte(serialdev);
    if (c != SIO_ACK)
       qm100_error(serialdev, "Acknowledgement Failed", 0);
-   qm100_writeByte(serialdev, SIO_EOT);
+   qm100_writeByte(serialdev, (char) SIO_EOT);
    
    while(c != SIO_ENQ)
       {
@@ -492,7 +492,7 @@ void  qm100_setTransmitSpeed(void)
    sp = qm100_getKeyword("SPEED", DEFAULT_SPEED);
    while (qm100_transmitSpeed == 0)
       {
-      int l;
+      unsigned l;
       
       if (!sp)
          sp = DEFAULT_SPEED;

@@ -7,7 +7,6 @@
  *---------------------------------------------------------------------*/
 void qm100_takePic(int serialdev)
 {
-  unsigned char cmd_setpic[]=QM100_SETPIC;
   unsigned char cmd_takepic[]=QM100_TAKEPIC;
   qm100_packet_block packet;
 /*---------------------------------------------------------------------*
@@ -24,6 +23,7 @@ void qm100_takePic(int serialdev)
 #ifdef SET_CAMERA_CONTROLS  
   /* Set Quality */
 
+  unsigned char cmd_setpic[]=QM100_SETPIC;
   cmd_setpic[4]=0x00;
   cmd_setpic[5]=0x80;
   cmd_setpic[6]=QUALITY_FINE;
@@ -49,7 +49,7 @@ void qm100_takePic(int serialdev)
   cmd_setpic[5]=0x90;
   cmd_setpic[6]=FOCUS_AUTO;
   qm100_transmit(serialdev, cmd_setpic, sizeof(cmd_setpic), &packet, "Set Focus");
-#endif /* SET_CAMERA_CONTROLS
+#endif /* SET_CAMERA_CONTROLS */
 
   /* Take Picture */
 

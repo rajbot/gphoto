@@ -58,8 +58,6 @@ int qm100_getStatus(int serialdev, QM100_CAMERA_INFO *cip)
    qm100_packet_block packet;
    char cmd_getstatus[]=QM100_GETSTATUS;
    char cmd_getid[]=QM100_GETID;
-   static char description[512];
-   char *sp = description;
    QM100_PKT_STATUS *pp = (QM100_PKT_STATUS *) packet.packet;
    QM100_PKT_ID *ip = (QM100_PKT_ID *) packet.packet;
 
@@ -90,10 +88,6 @@ int qm100_getStatus(int serialdev, QM100_CAMERA_INFO *cip)
       }
    return qm100_pictureCount;
 }
-
-
-
-
 
 
 

@@ -14,43 +14,39 @@
  *---------------------------------------------------------------------*/
 char *qm100_getKeyword(char *key, char *dflt)
 {
-   char         fname[128];
-   FILE        *fp;
    char        *sp=NULL;
    static char  buf[256];
+   QM100_CONFIGDATA *cp = & qm100_configData;
    
    sprintf(buf, "QM100_%s", key);
    sp = getenv(buf);
    if (!sp)
       {
-      sprintf(fname, "%s/.gphoto/konicarc", getenv("HOME"));
-      fp = fopen(fname, "r");
-      if (!fp)
-         {
-         sprintf(fname, "%s/konicarc", getenv("HOME"));
-         fp = fopen(fname, "r");
-      }
-      if (fp)
-      {
-      while ((sp = fgets(buf, sizeof(buf)-1, fp)) != NULL)
-         {
-         if (*sp == '#' || *sp == '*')
-            continue;
-         sp = strtok(buf, " \t\r\n");
-         if (!sp)       
-            continue;    /* skip blank lines */
-         if (strcasecmp(sp, key) != 0)
-            continue;
-         sp = strtok(NULL, " \t\r\n");
-         break;
-         }
-      fclose(fp);
-      }
+      if (strcasecmp(key, "Speed") == 0)
+         sp = cp->speed;
+      else if (strcasecmp(key, "Pacing") == 0)
+         sp = cp->pacing;
+      else if (strcasecmp(key, "Camera") == 0)
+         sp = cp->device;
+      else if (strcasecmp(key, "Trace") == 0)
+         sp = cp->tracefile;
+      else if (strcasecmp(key, "Trace_Bytes") == 0)
+         sp = cp->tracebytes;
+      else if (strcasecmp(key, "Quality") == 0)
+         sp = cp->quality;
+      else if (strcasecmp(key, "Focus") == 0)
+         sp = cp->focus;
+      else if (strcasecmp(key, "Flash") == 0)
+         sp = cp->flash;
+      else if (strcasecmp(key, "AutoOff") == 0)
+         sp = cp->autooff;
+      else if (strcasecmp(key, "Timer") == 0)
+         sp = cp->timer;
+      else if (strcasecmp(key, "RedEye") == 0)
+         sp = cp->redeye;
       else
-         printf("Unable to open %s\n", fname);
+         sp = dflt;
       }
-   if (!sp)
-      sp = dflt;
    return sp;
 }
 
@@ -84,7 +80,7 @@ void qm100_setTrace(void)
       qm100_trace = fopen(tname, "w");
       if (!qm100_trace)
          {
-         sprintf(tname, "%s/%s", fname);
+         sprintf(tname, "./%s", fname);
          qm100_trace = fopen(tname, "w");
          }
       }
@@ -106,9 +102,13 @@ int qm100_open(const char *devname)
   qm100_packet_block packet;
   char cmd[]=QM100_INIT;
 
-  serialdev = open(devname, O_RDWR|O_NOCTTY);
-  if (serialdev < 0) 
-     qm100_error(serialdev, "Unable to open serial device", errno);
+  serialdev = open(devname, O_RDWR | O_NOCTTY);
+  if (serialdev <= 0) 
+     {
+     char tmsg[100];
+     sprintf(tmsg, "Unable to open serial device %s", devname);
+     qm100_error(serialdev, tmsg, errno);
+     }
   
   if (tcgetattr(serialdev, &oldt) < 0) 
      qm100_error(serialdev, "Unable to get serial device attributes", errno);
@@ -132,9 +132,3 @@ int qm100_open(const char *devname)
   qm100_setSpeed(serialdev, qm100_transmitSpeed);
   return serialdev;
 }
-
-
-
-
-
-

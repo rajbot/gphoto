@@ -1,3 +1,11 @@
+1999-09-27    <EdLegowski@pobox.com>
+	* Change default speed to 57600.
+	* Add progress indicator during downloads.
+	* Miscellaneous code cleanup.
+	
+1999-08-17    <EdLegowski@pobox.com>
+	* Close cvs-bug incidents 1622, 1664 and 1667.
+
 1999-08-16    <EdLegowski@pobox.com>
 	* Add shell-script 'gettraces' to aid the gathering 
 	  of trace data for debugging the camera protocol.

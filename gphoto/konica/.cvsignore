@@ -6,9 +6,10 @@ Makefile
 *.la
 qm100
 *~
-trace*
+*.trace
 *.tgz
 *.tif
 *.jpg
+*.tar
 output
 core

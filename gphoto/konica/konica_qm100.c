@@ -10,16 +10,40 @@
 #include "qm100.h"
 #include "../src/gphoto.h"
 #include "konica_qm100.h"
-#if defined(FULL_CONFIG)
-#include "configDialog.h"
-#endif
+
 int konica_picCounter;
 void message_window(char *title, char *message, GtkJustification  jtype );
+void konica_show_camera_error(void);
+
+#if defined(FULL_CONFIG)
+#include "configDialog.h"
+#else
+int konica_qm100_formatCF()
+{
+  int serialdev;
+  if (setjmp(qm100_jmpbuf))
+     {
+     konica_show_camera_error();
+     return 0;
+     }
+  serialdev = qm100_open(serial_port);
+  qm100_formatCF(serialdev);
+  qm100_close(serialdev);
+  return (1);
+}
+#endif
+
+static void dlprogress(void)
+{
+   qm100_percent += qm100_percentIncr;
+   printf("\ndlprogress percent=%f Incr=%f\n", qm100_percent, qm100_percentIncr);
+   update_progress(qm100_percent);
+}
 
 int konica_qm100_initialize()
 {
-   char *fname;
-
+   qm100_readConfigData(&qm100_configData);
+   strcpy(serial_port, qm100_configData.device);
    qm100_setTrace();
    qm100_setTransmitSpeed();
    konica_picCounter = 0;
@@ -34,7 +58,6 @@ void konica_show_camera_error(void)
 
 int konica_qm100_number_of_pictures ()
 {
-  qm100_packet_block packet;
   int serialdev;
   
   if (setjmp(qm100_jmpbuf))
@@ -51,7 +74,6 @@ int konica_qm100_number_of_pictures ()
 int konica_qm100_take_picture()
 {
   int serialdev;
-  qm100_packet_block packet;
   
   if (setjmp(qm100_jmpbuf))
      {
@@ -69,7 +91,7 @@ struct Image *konica_qm100_get_picture (int picNum, int thumbnail)
 {
   int serialdev;
   int pid;
-  char tempName[1024], rm[1024];
+  char tempName[1024];
   FILE *jpgfile;
   int jpgfile_size;
   struct Image *im;
@@ -82,13 +104,15 @@ struct Image *konica_qm100_get_picture (int picNum, int thumbnail)
      }
   serialdev = qm100_open(serial_port);
   konica_picCounter++;
-  sprintf(tempName, "%s/gphoto-konica-%i.jpg", gphotoDir, pid,
+  sprintf(tempName, "%s/gphoto-konica-%i-%i.jpg", gphotoDir, pid,
           konica_picCounter);
   picNum = qm100_getRealPicNum(serialdev, picNum);
+  qm100_percent=0.;
+  qm100_percentIncr=.003;
   if (thumbnail) 
-     qm100_saveThumb(serialdev, tempName, picNum, NULL);
+     qm100_saveThumb(serialdev, tempName, picNum, dlprogress);
   else 
-     qm100_savePic(serialdev, tempName, picNum, NULL);
+     qm100_savePic(serialdev, tempName, picNum, dlprogress);
   qm100_close(serialdev);
 
   jpgfile = fopen(tempName, "r");
@@ -120,20 +144,6 @@ int konica_qm100_delete_picture (int picNum)
   serialdev = qm100_open(serial_port);
   picNum = qm100_getRealPicNum(serialdev, picNum);
   qm100_erasePic(serialdev, picNum);
-  qm100_close(serialdev);
-  return (1);
-}
-
-int konica_qm100_formatCF()
-{
-  int serialdev;
-  if (setjmp(qm100_jmpbuf))
-     {
-     konica_show_camera_error();
-     return 0;
-     }
-  serialdev = qm100_open(serial_port);
-  qm100_formatCF(serialdev);
   qm100_close(serialdev);
   return (1);
 }
@@ -191,10 +201,9 @@ char *konica_qm100_summary()
 {
   char summary[512];
   int serialdev;
-  qm100_packet_block packet;
   QM100_CAMERA_INFO  cinfo;
   
-  update_progress(0);
+  update_progress(0.);
   if (setjmp(qm100_jmpbuf))
      return qm100_errmsg;
   serialdev = qm100_open(serial_port);
@@ -209,7 +218,7 @@ char *konica_qm100_summary()
           cinfo.year+1900, cinfo.month, cinfo.day,
           cinfo.hour, cinfo.min, cinfo.sec);
   qm100_close(serialdev);
-  update_progress(1);
+  update_progress(1.);
   return (strdup(summary));
 }
 

@@ -1,6 +1,4 @@
 #include "qm100.h"
-#define  QM100MAIN
-#include "configDialog.c"
 
 /*---------------------------------------------------------------------*
  *                                                                     *
@@ -11,8 +9,14 @@
  *           camera downloads.                                         *
  *                                                                     *
  *---------------------------------------------------------------------*/
+void progress(void);
+void usage(void);
 static char cycle[] = "|/-\\";
 static char  cameraName[128];
+static int   qm100_killPic;
+static int   qm100_format;
+static int   qm100_getPic;
+static int   qm100_getThumb;
 
 void progress(void)
 {
@@ -52,7 +56,7 @@ void usage(void)
    printf("\t  QM100_CAMERA=dev  - set default device for camera\n");
    printf("\t  QM100_SPEED=nn    - set transmission speed\n");
    printf("\t  QM100_PACING=nn   - set I/O pacing delay, in millesconds\n");
-   printf("\t                      (Default %d)\n", DEFAULT_PACING);
+   printf("\t                      (Default %s)\n", DEFAULT_PACING);
    printf("\t  QM100_TRACE=fname - trace camera activity to fname\n");
    printf("\t  QM100_TRACE_BYTES - trace low-level camera I/O\n");
 }
@@ -73,6 +77,8 @@ int main(int argc, char *argv[])
     * command line.                                                    *
     *                                                                  *
     *------------------------------------------------------------------*/
+   qm100_main = 1;
+   qm100_readConfigData(&qm100_configData);
    strcpy(cameraName,qm100_getKeyword("CAMERA", DEFAULT_PORT));
    qm100_setTrace();
    while ((c=getopt(argc, argv, "e:fg:hstaIi:p:b:dDTvV?C")) != EOF)
@@ -219,8 +225,7 @@ int main(int argc, char *argv[])
             dump(stdout, "Camera ID", packet.packet, packet.packet_len);
             break;
             }
-         case 's':       // Status display already done
-            dump(stdout,"Camera Info", &cinfo, sizeof(cinfo));
+         case 's':       
             printf("Camera:             %s\n", cinfo.name);
             printf("Product Id:         %-4.4s\n", cinfo.product);
             printf("Serial #:           %-10.10s\n", cinfo.serial);

@@ -8,16 +8,16 @@
  * Standard ascii control codes                                        *
  *                                                                     *
  *---------------------------------------------------------------------*/
-#define SIO_NUL        0x00   /* null */
-#define SIO_STX        0x02   /* start transmission */
-#define SIO_ETX        0x03   /* end transaction */
-#define SIO_EOT        0x04   /* end transmission  */
-#define SIO_ENQ        0x05   /* reuest to send */
-#define SIO_ACK        0x06   /* acknowledge (positive) */
-#define SIO_NAK        0x15   /* acknowledge (negative) */
-#define SIO_ETB        0x17   /* end of block (more to follow) */
-#define SIO_CAN        0x18   /* cancel */
-#define SIO_ESC        0x1b   /* escape */
+#define SIO_NUL  0x00   /* null */
+#define SIO_STX  0x02   /* start transmission */
+#define SIO_ETX  0x03   /* end transaction */
+#define SIO_EOT  0x04   /* end transmission  */
+#define SIO_ENQ  0x05   /* reuest to send */
+#define SIO_ACK  0x06   /* acknowledge (positive) */
+#define SIO_NAK  0x15   /* acknowledge (negative) */
+#define SIO_ETB  0x17   /* end of block (more to follow) */
+#define SIO_CAN  0x18   /* cancel */
+#define SIO_ESC  0x1b   /* escape */
 
 /*---------------------------------------------------------------------*
  *                                                                     *
@@ -79,9 +79,18 @@
 #define WHITEBAL      packet.packet[32]
 #define PICNUM        packet.packet+0xf9
 
-#define DEFAULT_PORT	  "/dev/ttyS0"
-#define DEFAULT_SPEED  "9600"
-#define DEFAULT_PACING "10"
+#define DEFAULT_PORT	   "/dev/ttyS0"
+#define DEFAULT_SPEED   "57600"
+#define DEFAULT_PACING  "1"
+#define DEFAULT_TRACE   "Off"
+#define DEFAULT_TRACEB  "Off"
+#define DEFAULT_QUALITY "Fine"
+#define DEFAULT_FOCUS   "Auto"
+#define DEFAULT_FLASH   "Auto"
+#define DEFAULT_AUTOOFF "300"
+#define DEFAULT_TIMER   "15"
+#define DEFAULT_REDEYE  "Off" 
+
 #define PACKET_SIZE    4096       /* maximum response packet length */
 #define STATUS_SIZE    34         /* expected size of status response* */
 #define SPEED_SIZE     8          /* expected size of change speed response */
@@ -94,7 +103,7 @@
  *---------------------------------------------------------------------*/
 typedef struct
 {
-  short    packet_len;
+  unsigned packet_len;
   char     transmission_continues;
   unsigned char packet[PACKET_SIZE];
 } qm100_packet_block;
@@ -166,6 +175,7 @@ typedef struct
    unsigned char  hwmod;
    unsigned char  swver;
    unsigned char  swmod;
+   unsigned char  beep;
    char           product[4];
    char           serial[10];
    char           name[40];

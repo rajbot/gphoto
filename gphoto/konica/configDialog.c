@@ -1,22 +1,108 @@
 #include "qm100.h"
-#include <sys/stat.h>
-#include <gtk/gtk.h>
-#include <gdk/gdkkeysyms.h>
-#include "configDialog.h"
+static int  needSave=0;
+static GtkWidget *qm100ConfigDlg;
+static GtkObject *selfTimer;
+static GtkObject *autoOff;
+GtkWidget        *clockLabel;
+static GSList    *Speed_group = NULL;
+static GSList    *Port_group = NULL;
 
-#if defined(QM100MAIN)
-static needSave=0;
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * Forward declaration of local functions.                             *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+static void button_clicked(GtkButton *button, gpointer user_data);
+static void closeDialog(void);
+static void port_pressed(GtkButton *button, gpointer user_data);
+static void reloadValues(void);
+static void resetValues(void);
+static void setSize(GtkButton *button, gpointer user_data);
+static void set_notebook_tab(GtkWidget *notebook, gint page_num, GtkWidget *widget);
+static void spd_pressed(GtkButton *button, gpointer user_data);
+static void tracePressed(GtkButton *button, gpointer user_data);
+static void setClock(void);
+static void showCameraClock(void);
 
-void qm100_configureDialog()
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * Label/titles for the tab pages                                      *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+static char *nbtitle[] =
 {
-   GtkWidget *dialog;
-   
-   gtk_init(0, NULL);
-   dialog = qm100_createConfigDlg();
-   gtk_widget_show(dialog);
-   gtk_main();
-}
-#endif 
+   "Communication Settings\n",
+   "Camera Settings\n",
+   "Photo Settings\n",
+   "Format CF\n",
+   "Tracing Options\n"
+};
+
+static char *nbtab[] =
+{
+   "Communication",
+   "Camera",
+   "Photo",
+   "Format",
+   "Tracing"
+};
+
+#define NBPAGES   (sizeof(nbtitle)/sizeof(char *))
+#define CommPage   nbpage[0]
+#define CameraPage nbpage[1]
+#define PhotoPage  nbpage[2]
+#define FormatPage nbpage[3]
+#define TracePage  nbpage[4]
+
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * Names for the button controls                                       *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+static char *buttonNames[] = 
+{
+   "Save",
+   "Reload",
+   "Defaults",
+   "Close"
+};
+
+typedef enum 
+{ 
+   SAVEBUTTON, 
+   RELOADBUTTON, 
+   DEFAULTSBUTTON, 
+   CLOSEBUTTON,
+   CLOCKBUTTON
+} buttonvals;
+
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * Labels/values for the Port radio buttons                            *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+static char *PortLabel[] = 
+{
+   "Autodetect",
+   "/dev/ttyS0",
+   "/dev/ttyS1",
+   "/dev/ttyS2",
+   "/dev/ttyS3"
+};
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * Labels/values for the Speed radio buttons.                          *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+static char *SpeedLabel[] = 
+{
+   "Optimize",
+   "9600",
+   "19200",
+   "38400",
+   "57600",
+   "115200",
+};
 
 /*---------------------------------------------------------------------*
  *                                                                     *
@@ -31,251 +117,489 @@ static void set_notebook_tab(GtkWidget *notebook,
    GtkNotebookPage *page;
    GtkWidget *notebook_page;
    
-   page = (GtkNotebookPage*) g_list_nth (GTK_NOTEBOOK (notebook)->children, page_num)->data;
+   page = (GtkNotebookPage*) g_list_nth(GTK_NOTEBOOK(notebook)->children, page_num)->data;
    notebook_page = page->child;
-   gtk_widget_ref (notebook_page);
-   gtk_notebook_remove_page (GTK_NOTEBOOK (notebook), page_num);
-   gtk_notebook_insert_page (GTK_NOTEBOOK (notebook), notebook_page,
+   gtk_widget_ref(notebook_page);
+   gtk_notebook_remove_page(GTK_NOTEBOOK(notebook), page_num);
+   gtk_notebook_insert_page(GTK_NOTEBOOK(notebook), notebook_page,
                              widget, page_num);
-   gtk_widget_unref (notebook_page);
+   gtk_widget_unref(notebook_page);
 }
 
-GtkWidget *qm100_createConfigDlg ()
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * configureDialog - called from qm100 CLI utility.  Create a gtk      *
+ *                   environment, then invokes the configuration       *
+ *                   dialog.                                           *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+void qm100_configureDialog()
 {
-   GtkWidget *qm100ConfigDlg;
-   GtkWidget *dialog_vbox1;
-   GtkWidget *notebook1;
-   GtkWidget *vbox2;
-   GtkWidget *label4;
-   GSList *Size_group = NULL;
-   GtkWidget *normalSize;
-   GtkWidget *doubleSize;
-   GtkWidget *vbox1;
-   GSList *Speed_group = NULL;
-   GtkWidget *spd_9600;
-   GtkWidget *spd_19200;
-   GtkWidget *spd_38400;
-   GtkWidget *spd_57600;
-   GtkWidget *spd_115200;
-   GtkWidget *vbox3;
-   GtkWidget *debugToggle;
-   GtkWidget *Photos;
-   GtkWidget *PortSpeed;
-   GtkWidget *debug;
+   GtkWidget *dialog;
+   
+   gtk_init(0, NULL);
+   dialog = qm100_createConfigDlg();
+   gtk_widget_show(dialog);
+   gtk_main();
+}
+
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * createConfigDlg - crete configuration dialog                        *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+GtkWidget *qm100_createConfigDlg()
+{
+   GtkWidget *TraceBytesToggle;
+   GtkWidget *TraceToggle;
+   GtkWidget *BeepToggle;
    GtkWidget *dialog_action_area1;
+   GtkWidget *dialog_vbox1;
+   GtkWidget *frame;
    GtkWidget *hbuttonbox1;
-   GtkWidget *resetBtn;
-   GtkWidget *okBtn;
-   GtkWidget *cancelBtn;
-   
-   qm100ConfigDlg = gtk_dialog_new ();
-   gtk_widget_set_name (qm100ConfigDlg, "qm100ConfigDlg");
-   gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "qm100ConfigDlg", qm100ConfigDlg);
-   GTK_WIDGET_SET_FLAGS (qm100ConfigDlg, GTK_CAN_DEFAULT);
-   gtk_widget_grab_focus (qm100ConfigDlg);
-   gtk_widget_grab_default (qm100ConfigDlg);
-   gtk_widget_set_extension_events (qm100ConfigDlg, GDK_EXTENSION_EVENTS_ALL);
-   gtk_window_set_title (GTK_WINDOW (qm100ConfigDlg), "Configure Konica/HP Camera");
-   gtk_window_set_policy (GTK_WINDOW (qm100ConfigDlg), TRUE, TRUE, FALSE);
-   
-   dialog_vbox1 = GTK_DIALOG (qm100ConfigDlg)->vbox;
-   gtk_widget_set_name (dialog_vbox1, "dialog_vbox1");
-   gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "dialog_vbox1", dialog_vbox1);
-   gtk_widget_show (dialog_vbox1);
-   
-   notebook1 = gtk_notebook_new ();
-   gtk_widget_set_name (notebook1, "notebook1");
-   gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "notebook1", notebook1);
-   gtk_widget_show (notebook1);
-   gtk_box_pack_start (GTK_BOX (dialog_vbox1), notebook1, TRUE, TRUE, 0);
-   
-   vbox2 = gtk_vbox_new (FALSE, 0);
-   gtk_widget_set_name (vbox2, "vbox2");
-   gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "vbox2", vbox2);
-   gtk_widget_show (vbox2);
-   gtk_container_add (GTK_CONTAINER (notebook1), vbox2);
-   
-   label4 = gtk_label_new ("Size to use for low resolution photos:");
-   gtk_widget_set_name (label4, "label4");
-   gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "label4", label4);
-   gtk_widget_show (label4);
-   gtk_box_pack_start (GTK_BOX (vbox2), label4, FALSE, FALSE, 0);
-   gtk_label_set_justify (GTK_LABEL (label4), GTK_JUSTIFY_LEFT);
-   
-   normalSize = gtk_radio_button_new_with_label (Size_group, "320 x 240");
-   Size_group = gtk_radio_button_group (GTK_RADIO_BUTTON (normalSize));
-   gtk_widget_set_name (normalSize, "normalSize");
-   gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "normalSize", normalSize);
-   gtk_widget_show (normalSize);
-   gtk_box_pack_start (GTK_BOX (vbox2), normalSize, FALSE, FALSE, 0);
-   gtk_signal_connect (GTK_OBJECT (normalSize), "pressed",
-                       GTK_SIGNAL_FUNC (setSize),
-                       0);
-   
-   doubleSize = gtk_radio_button_new_with_label (Size_group, "640 x 480");
-   Size_group = gtk_radio_button_group (GTK_RADIO_BUTTON (doubleSize));
-   gtk_widget_set_name (doubleSize, "doubleSize");
-   gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "doubleSize", doubleSize);
-   gtk_widget_show (doubleSize);
-   gtk_box_pack_start (GTK_BOX (vbox2), doubleSize, FALSE, FALSE, 0);
-   gtk_signal_connect (GTK_OBJECT (doubleSize), "pressed",
-                       GTK_SIGNAL_FUNC (setSize),
-                       (gpointer) 1);
-   
-   vbox1 = gtk_vbox_new (FALSE, 0);
-   gtk_widget_set_name (vbox1, "vbox1");
-   gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "vbox1", vbox1);
-   gtk_widget_show (vbox1);
-   gtk_container_add (GTK_CONTAINER (notebook1), vbox1);
-   
-   spd_9600 = gtk_radio_button_new_with_label (Speed_group, "9600 (Default)");
-   Speed_group = gtk_radio_button_group (GTK_RADIO_BUTTON (spd_9600));
-   gtk_widget_set_name (spd_9600, "spd_9600");
-   gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "spd_9600", spd_9600);
-   gtk_widget_show (spd_9600);
-   gtk_box_pack_start (GTK_BOX (vbox1), spd_9600, FALSE, FALSE, 0);
-   gtk_signal_connect_after (GTK_OBJECT (spd_9600), "pressed",
-                             GTK_SIGNAL_FUNC (on_spd_pressed),
-                             (gpointer) B9600);
-   
-   spd_19200 = gtk_radio_button_new_with_label (Speed_group, "19200");
-   Speed_group = gtk_radio_button_group (GTK_RADIO_BUTTON (spd_19200));
-   gtk_widget_set_name (spd_19200, "spd_19200");
-   gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "spd_19200", spd_19200);
-   gtk_widget_show (spd_19200);
-   gtk_box_pack_start (GTK_BOX (vbox1), spd_19200, FALSE, FALSE, 0);
-   gtk_signal_connect_after (GTK_OBJECT (spd_19200), "pressed",
-                             GTK_SIGNAL_FUNC (on_spd_pressed),
-                             (gpointer) B19200);
-   
-   spd_38400 = gtk_radio_button_new_with_label (Speed_group, "38400");
-   Speed_group = gtk_radio_button_group (GTK_RADIO_BUTTON (spd_38400));
-   gtk_widget_set_name (spd_38400, "spd_38400");
-   gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "spd_38400", spd_38400);
-   gtk_widget_show (spd_38400);
-   gtk_box_pack_start (GTK_BOX (vbox1), spd_38400, FALSE, FALSE, 0);
-   gtk_signal_connect_after (GTK_OBJECT (spd_38400), "pressed",
-                             GTK_SIGNAL_FUNC (on_spd_pressed),
-                             (gpointer) B38400);
-   
-   spd_57600 = gtk_radio_button_new_with_label (Speed_group, "57600");
-   Speed_group = gtk_radio_button_group (GTK_RADIO_BUTTON (spd_57600));
-   gtk_widget_set_name (spd_57600, "spd_57600");
-   gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "spd_57600", spd_57600);
-   gtk_widget_show (spd_57600);
-   gtk_box_pack_start (GTK_BOX (vbox1), spd_57600, FALSE, FALSE, 0);
-   gtk_signal_connect_after (GTK_OBJECT (spd_57600), "pressed",
-                             GTK_SIGNAL_FUNC (on_spd_pressed),
-                             (gpointer) B57600);
-   
-   spd_115200 = gtk_radio_button_new_with_label (Speed_group, "115200");
-   Speed_group = gtk_radio_button_group (GTK_RADIO_BUTTON (spd_115200));
-   gtk_widget_set_name (spd_115200, "spd_115200");
-   gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "spd_115200", spd_115200);
-   gtk_widget_show (spd_115200);
-   gtk_box_pack_start (GTK_BOX (vbox1), spd_115200, FALSE, FALSE, 0);
-   gtk_signal_connect_after (GTK_OBJECT (spd_115200), "pressed",
-                             GTK_SIGNAL_FUNC (on_spd_pressed),
-                             (gpointer) B115200);
-   
-   vbox3 = gtk_vbox_new (FALSE, 0);
-   gtk_widget_set_name (vbox3, "vbox3");
-   gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "vbox3", vbox3);
-   gtk_widget_show (vbox3);
-   gtk_container_add (GTK_CONTAINER (notebook1), vbox3);
-   
-   debugToggle = gtk_check_button_new_with_label ("Turn on debugging");
-   gtk_widget_set_name (debugToggle, "debugToggle");
-   gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "debugToggle", debugToggle);
-   gtk_widget_show (debugToggle);
-   gtk_box_pack_start (GTK_BOX (vbox3), debugToggle, FALSE, FALSE, 0);
-   
-   Photos = gtk_label_new ("Photos");
-  gtk_widget_set_name (Photos, "Photos");
-  gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "Photos", Photos);
-  gtk_widget_show (Photos);
-  set_notebook_tab (notebook1, 0, Photos);
-  gtk_label_set_justify (GTK_LABEL (Photos), GTK_JUSTIFY_LEFT);
+   GtkWidget *label;
+   GtkWidget *nbpage[NBPAGES];
+   GtkWidget *notebook1;
+   GtkWidget *otable;
+   GtkWidget *itable;
+   GtkWidget *twgt;
+   GtkWidget *vbox;
+   QM100_CONFIGDATA *cp = &qm100_configData;
+   int        i;
+   int        tabnum=0;
+   char       tstring[60];
 
-  PortSpeed = gtk_label_new ("Port Speed");
-  gtk_widget_set_name (PortSpeed, "PortSpeed");
-  gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "PortSpeed", PortSpeed);
-  gtk_widget_show (PortSpeed);
-  set_notebook_tab (notebook1, 1, PortSpeed);
+   /*------------------------------------------------------------------*
+    *                                                                  *
+    * Set up basic frame and title                                     *
+    *                                                                  *
+    *------------------------------------------------------------------*/
+   qm100ConfigDlg = gtk_dialog_new();
+   gtk_widget_set_name(qm100ConfigDlg, "qm100ConfigDlg");
+   gtk_object_set_data(GTK_OBJECT(qm100ConfigDlg), "qm100ConfigDlg", qm100ConfigDlg);
+   GTK_WIDGET_SET_FLAGS(qm100ConfigDlg, GTK_CAN_DEFAULT);
+   gtk_widget_grab_focus(qm100ConfigDlg);
+   gtk_widget_grab_default(qm100ConfigDlg);
+   gtk_widget_set_extension_events(qm100ConfigDlg, GDK_EXTENSION_EVENTS_ALL);
+   gtk_window_set_title(GTK_WINDOW(qm100ConfigDlg), "Configure Konica/HP Camera");
+   gtk_window_set_policy(GTK_WINDOW(qm100ConfigDlg), TRUE, TRUE, FALSE);
+   gtk_signal_connect_object(GTK_OBJECT(qm100ConfigDlg), "delete_event",
+                             GTK_SIGNAL_FUNC(button_clicked),
+                             (gpointer) CLOSEBUTTON);
 
-  debug = gtk_label_new ("Debug");
-  gtk_widget_set_name (debug, "debug");
-  gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "debug", debug);
-  gtk_widget_show (debug);
-  set_notebook_tab (notebook1, 2, debug);
+   /*------------------------------------------------------------------*
+    *                                                                  *
+    * Create the box and container for the notebook pages              *
+    *                                                                  *
+    *------------------------------------------------------------------*/
+   dialog_vbox1 = GTK_DIALOG(qm100ConfigDlg)->vbox;
+   gtk_widget_set_name(dialog_vbox1, "dialog_vbox1");
+   gtk_object_set_data(GTK_OBJECT(qm100ConfigDlg), "dialog_vbox1", dialog_vbox1);
+   gtk_widget_show(dialog_vbox1);
+   notebook1 = gtk_notebook_new();
+   gtk_widget_set_name(notebook1, "notebook1");
+   gtk_object_set_data(GTK_OBJECT(qm100ConfigDlg), "notebook1", notebook1);
+   gtk_widget_show(notebook1);
+   gtk_box_pack_start(GTK_BOX(dialog_vbox1), notebook1, TRUE, TRUE, 0);
+   
+   /*------------------------------------------------------------------*
+    *                                                                  *
+    * Create the individual notebook pages and tabs.                   *
+    *                                                                  *
+    *------------------------------------------------------------------*/
+   for(i=0; i<NBPAGES; i++)
+      {
+      nbpage[i] = gtk_vbox_new(FALSE, 0);
+      gtk_widget_set_name(nbpage[i], nbtitle[i]);
+      gtk_object_set_data(GTK_OBJECT(qm100ConfigDlg), nbtitle[i], nbpage[i]);
+      gtk_container_add(GTK_CONTAINER(notebook1), nbpage[i]);
+      gtk_widget_show(nbpage[i]);
+      gtk_container_set_border_width(GTK_CONTAINER(nbpage[i]), 20);
 
-  dialog_action_area1 = GTK_DIALOG (qm100ConfigDlg)->action_area;
-  gtk_widget_set_name (dialog_action_area1, "dialog_action_area1");
-  gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "dialog_action_area1", dialog_action_area1);
-  gtk_widget_show (dialog_action_area1);
-  gtk_container_border_width (GTK_CONTAINER (dialog_action_area1), 10);
+      label = gtk_label_new(nbtitle[i]);
+      gtk_widget_set_name(label, nbtitle[i]);
+      gtk_object_set_data(GTK_OBJECT(qm100ConfigDlg), nbtitle[i], label);
+      gtk_widget_show(label);
+      gtk_box_pack_start(GTK_BOX(nbpage[i]), label, FALSE, FALSE, 0);
+      gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_FILL);
+      label = gtk_label_new(nbtab[i]);
+      gtk_widget_set_name(label, nbtab[i]);
+      gtk_object_set_data(GTK_OBJECT(qm100ConfigDlg), nbtab[i], label);
+      gtk_widget_show(label);
+      set_notebook_tab(notebook1, tabnum++, label);
+      }
 
-  hbuttonbox1 = gtk_hbutton_box_new ();
-  gtk_widget_set_name (hbuttonbox1, "hbuttonbox1");
-  gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "hbuttonbox1", hbuttonbox1);
-  gtk_widget_show (hbuttonbox1);
-  gtk_box_pack_start (GTK_BOX (dialog_action_area1), hbuttonbox1, TRUE, TRUE, 0);
+   /*------------------------------------------------------------------*
+    *                                                                  *
+    * Create the frame and radio buttons for port selection            *
+    *                                                                  *
+    *------------------------------------------------------------------*/
+   otable = gtk_table_new (2, 2, FALSE);
+   gtk_table_set_row_spacing(GTK_TABLE(otable), 0, 20);
+   gtk_table_set_col_spacing(GTK_TABLE(otable), 0, 20);
+   gtk_container_add(GTK_CONTAINER(CommPage), otable);
 
-  okBtn = gtk_button_new_with_label ("Ok");
-  gtk_widget_set_name (okBtn, "okBtn");
-  gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "okBtn", okBtn);
-  gtk_widget_show (okBtn);
-  gtk_container_add (GTK_CONTAINER (hbuttonbox1), okBtn);
-  gtk_signal_connect (GTK_OBJECT (okBtn), "clicked",
-                      GTK_SIGNAL_FUNC (on_okBtn_clicked),
-                      qm100ConfigDlg);
-  gtk_signal_connect_object_after (GTK_OBJECT (okBtn), "clicked",
-                                   GTK_SIGNAL_FUNC (gtk_widget_destroy),
-                                   GTK_OBJECT (qm100ConfigDlg));
+   frame = gtk_frame_new(NULL);
+   gtk_frame_set_label(GTK_FRAME(frame), "Port" );
+   gtk_frame_set_label_align(GTK_FRAME(frame), 0.0, 0.0);
+   gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_ETCHED_OUT);
+   gtk_table_attach_defaults(GTK_TABLE(otable), frame, 0, 1, 0, 1);
 
-  resetBtn = gtk_button_new_with_label ("Reset");
-  gtk_widget_set_name (resetBtn, "resetBtn");
-  gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "resetBtn", resetBtn);
-  gtk_widget_show (resetBtn);
-  gtk_container_add (GTK_CONTAINER (hbuttonbox1), resetBtn);
-  gtk_signal_connect (GTK_OBJECT (resetBtn), "clicked",
-                      GTK_SIGNAL_FUNC (on_okBtn_clicked),
-                      qm100ConfigDlg);
-  gtk_signal_connect_object_after (GTK_OBJECT (resetBtn), "clicked",
-                                   GTK_SIGNAL_FUNC (gtk_widget_destroy),
-                                   GTK_OBJECT (qm100ConfigDlg));
+   vbox  = gtk_vbox_new(FALSE, 0);
+   gtk_container_add(GTK_CONTAINER(frame), vbox);
+   for(i=0; i<5; i++)
+      {
+      twgt = gtk_radio_button_new_with_label(Port_group, PortLabel[i]);
+      Port_group = gtk_radio_button_group(GTK_RADIO_BUTTON(twgt));
+      gtk_widget_set_name(twgt, PortLabel[i]);
+      gtk_object_set_data(GTK_OBJECT(qm100ConfigDlg), PortLabel[i], twgt);
+      gtk_widget_show(twgt);
+      gtk_box_pack_start(GTK_BOX(vbox), twgt, FALSE, FALSE, 0);
+      gtk_signal_connect_after(GTK_OBJECT(twgt), "pressed",
+                                GTK_SIGNAL_FUNC(port_pressed),
+                               (gpointer) PortLabel[i]);
+      if (strcasecmp(PortLabel[i], cp->device) == 0)
+         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(twgt), TRUE);
+      }
+   gtk_widget_show(vbox);
+   gtk_widget_show(frame);
 
-  cancelBtn = gtk_button_new_with_label ("Cancel");
-  gtk_widget_set_name (cancelBtn, "cancelBtn");
-  gtk_object_set_data (GTK_OBJECT (qm100ConfigDlg), "cancelBtn", cancelBtn);
-  gtk_widget_show (cancelBtn);
-  gtk_container_add (GTK_CONTAINER (hbuttonbox1), cancelBtn);
-  gtk_signal_connect_object (GTK_OBJECT (cancelBtn), "clicked",
-                             GTK_SIGNAL_FUNC (cancel_btn_clicked),
-                             GTK_OBJECT (qm100ConfigDlg));
-  gtk_signal_connect_object_after (GTK_OBJECT (cancelBtn), "clicked",
-                                   GTK_SIGNAL_FUNC (gtk_widget_destroy),
-                                   GTK_OBJECT (qm100ConfigDlg));
+   /*------------------------------------------------------------------*
+    *                                                                  *
+    * Create the frame and radio buttons for speed selection           *
+    *                                                                  *
+    *------------------------------------------------------------------*/
+   frame = gtk_frame_new(NULL);
+   gtk_frame_set_label(GTK_FRAME(frame), "Speed" );
+   gtk_frame_set_label_align(GTK_FRAME(frame), 0.0, 0.0);
+   gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_ETCHED_OUT);
+   gtk_table_attach_defaults(GTK_TABLE(otable), frame, 1, 2, 0, 1);
+   vbox  = gtk_vbox_new(FALSE, 0);
+   gtk_container_add(GTK_CONTAINER(frame), vbox);
+   for(i=0; i<(sizeof(SpeedLabel)/sizeof(char *)); i++)
+      {
+      twgt   = gtk_radio_button_new_with_label(Speed_group, SpeedLabel[i]);
+      Speed_group = gtk_radio_button_group(GTK_RADIO_BUTTON(twgt));
+      gtk_widget_set_name(twgt, SpeedLabel[i]);
+      gtk_object_set_data(GTK_OBJECT(qm100ConfigDlg), SpeedLabel[i], twgt);
+      gtk_widget_show(twgt);
+      gtk_box_pack_start(GTK_BOX(vbox), twgt, FALSE, FALSE, 0);
+      gtk_signal_connect_after(GTK_OBJECT(twgt), "pressed",
+                                GTK_SIGNAL_FUNC(spd_pressed),
+                               (gpointer) i);
+      if (strcasecmp(SpeedLabel[i], cp->speed) == 0)
+         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(twgt), TRUE);
+      }
+   gtk_widget_show(vbox);
+   gtk_widget_show(otable);
+   gtk_widget_show(frame);
 
-  return qm100ConfigDlg;
+   /*------------------------------------------------------------------*
+    *                                                                  *
+    * Create page for the tracing options                              *
+    *                                                                  *
+    *------------------------------------------------------------------*/
+
+   TraceToggle = gtk_check_button_new_with_label("Trace data packets");
+   gtk_widget_set_name(TraceToggle, "TraceToggle");
+   gtk_object_set_data(GTK_OBJECT(qm100ConfigDlg), "TraceToggle", TraceToggle);
+   gtk_widget_show(TraceToggle);
+   gtk_box_pack_start(GTK_BOX(TracePage), TraceToggle, FALSE, FALSE, 0);
+   gtk_signal_connect(GTK_OBJECT(TraceToggle), "pressed",
+                       GTK_SIGNAL_FUNC(tracePressed),
+                      (gpointer) "Trace");
+   if (strcasecmp("Off", cp->tracefile))
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TraceToggle), TRUE);
+   
+   TraceBytesToggle = gtk_check_button_new_with_label("Trace all bytes");
+   gtk_widget_set_name(TraceBytesToggle, "TraceBytesToggle");
+   gtk_object_set_data(GTK_OBJECT(qm100ConfigDlg), "TraceBytesToggle", TraceBytesToggle);
+   gtk_widget_show(TraceBytesToggle);
+   gtk_box_pack_start(GTK_BOX(TracePage), TraceBytesToggle, FALSE, FALSE, 0);
+   gtk_signal_connect(GTK_OBJECT(TraceBytesToggle), "pressed",
+                       GTK_SIGNAL_FUNC(tracePressed),
+                      (gpointer) "TraceBytes");
+   if (strcasecmp("Off", cp->tracebytes))
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TraceBytesToggle), TRUE);
+
+   /*------------------------------------------------------------------*
+    *                                                                  *
+    * Create page for Camera settings.                                 *
+    *                                                                  *
+    *------------------------------------------------------------------*/
+   otable = gtk_table_new (2, 2, FALSE);
+   gtk_table_set_row_spacing(GTK_TABLE(otable), 0, 20);
+   gtk_table_set_col_spacing(GTK_TABLE(otable), 0, 20);
+   gtk_container_add(GTK_CONTAINER(CameraPage), otable);
+
+   /*------------------------------------------------------------------*
+    *                                                                  *
+    * Timer controls                                                   *
+    *                                                                  *
+    *------------------------------------------------------------------*/
+   frame = gtk_frame_new(NULL);
+   gtk_frame_set_label(GTK_FRAME(frame), "Timers" );
+   gtk_frame_set_label_align(GTK_FRAME(frame), 0.0, 0.0);
+   gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_ETCHED_OUT);
+   gtk_table_attach_defaults(GTK_TABLE(otable), frame, 0, 2, 1, 2);
+   itable = gtk_table_new(2, 2, TRUE);
+
+   gtk_container_add(GTK_CONTAINER(frame), itable);
+   label = gtk_label_new("Self\nTimer");
+   gtk_widget_show(label);
+   gtk_table_attach_defaults(GTK_TABLE(itable), label, 0, 1, 0, 1);
+   selfTimer = gtk_adjustment_new (3.0, 3.0, 45.0, 1.0, 1.0, 1.0);
+   twgt = gtk_hscale_new(GTK_ADJUSTMENT(selfTimer));
+   gtk_table_attach_defaults(GTK_TABLE(itable), twgt, 1, 2, 0, 1);
+   gtk_widget_show (twgt);
+   
+   label = gtk_label_new("Auto\nShut Off");
+   gtk_widget_show(label);
+   gtk_table_attach_defaults(GTK_TABLE(itable), label, 0, 1, 1, 2);
+   autoOff = gtk_adjustment_new (1.0, 1.0, 45.0, 1.0, 1.0, 1.0);
+   twgt = gtk_hscale_new(GTK_ADJUSTMENT(autoOff));
+   gtk_table_attach_defaults(GTK_TABLE(itable), twgt, 1, 2, 1, 2);
+   gtk_widget_show (twgt);
+
+   gtk_widget_show(itable);
+   gtk_widget_show(frame);
+
+   /*------------------------------------------------------------------*
+    *                                                                  *
+    * Date and time                                                    *
+    *                                                                  *
+    *------------------------------------------------------------------*/
+   frame = gtk_frame_new(NULL);
+   gtk_frame_set_label(GTK_FRAME(frame), "Clock" );
+   gtk_frame_set_label_align(GTK_FRAME(frame), 0.0, 0.0);
+   gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_ETCHED_OUT);
+   gtk_table_attach_defaults(GTK_TABLE(otable), frame, 0, 1, 0, 1);
+
+   vbox = gtk_vbox_new(FALSE, 0);
+   gtk_container_add(GTK_CONTAINER(frame), vbox);
+
+   clockLabel = gtk_label_new("yyyy/mm/dd hh:mm");
+   gtk_label_set_justify(GTK_LABEL(clockLabel), GTK_JUSTIFY_FILL);
+   showCameraClock();
+   gtk_box_pack_start(GTK_BOX(vbox), clockLabel, TRUE, TRUE, 0);
+
+   hbuttonbox1 = gtk_hbutton_box_new();
+   gtk_widget_set_name(hbuttonbox1, "hbuttonbox1");
+   gtk_widget_show(hbuttonbox1);
+   gtk_container_add(GTK_CONTAINER(vbox), hbuttonbox1);
+   
+   twgt = gtk_button_new_with_label("Set");
+   gtk_widget_set_name(twgt, "clockbutton");
+   gtk_widget_show(twgt);
+   gtk_container_add(GTK_CONTAINER(hbuttonbox1), twgt);
+   gtk_signal_connect(GTK_OBJECT(twgt), "clicked",
+                      GTK_SIGNAL_FUNC(button_clicked),
+                      (gpointer) CLOCKBUTTON);
+
+   gtk_widget_show(vbox);
+   gtk_widget_show(frame);
+
+   /*------------------------------------------------------------------*
+    *                                                                  *
+    * Beep control                                                     *
+    *                                                                  *
+    *------------------------------------------------------------------*/
+   frame = gtk_frame_new(NULL);
+   gtk_frame_set_label(GTK_FRAME(frame), "Camera Beep");
+   gtk_frame_set_label_align(GTK_FRAME(frame), 0.0, 0.0);
+   gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_ETCHED_OUT);
+   gtk_table_attach_defaults(GTK_TABLE(otable), frame, 1, 2, 0, 1);
+
+   vbox = gtk_vbox_new(FALSE, 0);
+   gtk_container_add(GTK_CONTAINER(frame), vbox);
+   label = gtk_label_new("label1");
+   gtk_widget_show(label);
+   gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+   label = gtk_label_new("label21");
+   gtk_widget_show(label);
+   gtk_box_pack_start(GTK_BOX(vbox), label, TRUE, TRUE, 0);
+   gtk_widget_show(vbox);
+
+   gtk_widget_show(frame);
+   gtk_widget_show(otable);
+
+
+   /*------------------------------------------------------------------*
+    *                                                                  *
+    * Create the action buttons, and connect them to the handlers.     *
+    *                                                                  *
+    *------------------------------------------------------------------*/
+   dialog_action_area1 = GTK_DIALOG(qm100ConfigDlg)->action_area;
+   gtk_widget_set_name(dialog_action_area1, "dialog_action_area1");
+   gtk_object_set_data(GTK_OBJECT(qm100ConfigDlg), "dialog_action_area1", 
+                        dialog_action_area1);
+   gtk_widget_show(dialog_action_area1);
+   gtk_container_border_width(GTK_CONTAINER(dialog_action_area1), 10);
+   
+   hbuttonbox1 = gtk_hbutton_box_new();
+   gtk_widget_set_name(hbuttonbox1, "hbuttonbox1");
+   gtk_object_set_data(GTK_OBJECT(qm100ConfigDlg), "hbuttonbox1", hbuttonbox1);
+   gtk_widget_show(hbuttonbox1);
+   gtk_box_pack_start(GTK_BOX(dialog_action_area1), hbuttonbox1, TRUE, TRUE, 0);
+   
+   for(i=0; i<(sizeof(buttonNames)/sizeof(char *)); i++)
+      {
+      twgt = gtk_button_new_with_label(buttonNames[i]);
+      gtk_widget_set_name(twgt, buttonNames[i]);
+      gtk_object_set_data(GTK_OBJECT(qm100ConfigDlg), buttonNames[i], twgt);
+      gtk_widget_show(twgt);
+      gtk_container_add(GTK_CONTAINER(hbuttonbox1), twgt);
+      gtk_signal_connect(GTK_OBJECT(twgt), "clicked",
+                          GTK_SIGNAL_FUNC(button_clicked),
+                         (gpointer) i);
+      }
+   return qm100ConfigDlg;
 }
 
-void on_okBtn_clicked(GtkButton *button, gpointer user_data)
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * setSize - handle selection of Photo size                            *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+static void setSize(GtkButton *button, gpointer user_data)
 {
-#if defined(QM100MAIN)
-   exit(0);
-#endif
+   needSave = 1;
 }
 
-void setSize(GtkButton *button, gpointer user_data)
-{}
-
-void on_spd_pressed(GtkButton *button, gpointer user_data)
-{}
-
-void cancel_btn_clicked(GtkButton *button, gpointer user_data)
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * port_pressed - handle selection of port/device                      *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+static void port_pressed(GtkButton *button, gpointer user_data)
 {
-#if defined(QM100MAIN)
-   exit(1);
-#endif
+   char *port =(char *) user_data;
+   QM100_CONFIGDATA *cp = &qm100_configData;
+
+   strcpy(cp->device, port);
+   needSave = 1;
 }
+
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * trace_pressed - handle selection of trace options.                  *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+static void tracePressed(GtkButton *button, gpointer user_data)
+{
+   char *wp =(char *) user_data;
+   QM100_CONFIGDATA *cp = &qm100_configData;
+   
+   if (strcmp("Trace", wp))
+      wp = cp->tracebytes;
+   else
+      wp = cp->tracefile;
+
+   if (strcasecmp(wp, "On") == 0)
+      strcpy(wp, "Off");
+   else
+      strcpy(wp, "On");
+   needSave = 1;
+}
+
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * spd_pressed - handle selection of port speed.                       *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+static void spd_pressed(GtkButton *button, gpointer user_data)
+{
+   int speed =(int) user_data;
+   QM100_CONFIGDATA *cp = &qm100_configData;
+
+   strcpy(cp->speed, SpeedLabel[speed]);
+   needSave = 1;
+}
+
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * formatCF - event handler for the Format button                      *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+static void formatCF(GtkButton *button, gpointer user_data)
+{
+  int serialdev;
+  QM100_CONFIGDATA *cp = &qm100_configData;
+  
+  serialdev = qm100_open(cp->device);
+  qm100_formatCF(serialdev);
+  qm100_close(serialdev);
+}
+
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * button_clicked - handle the action buttons                          *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+static void button_clicked(GtkButton *button, gpointer user_data)
+{
+   switch((int) user_data)
+      {
+      case SAVEBUTTON:
+         qm100_saveConfigData(&qm100_configData);
+         needSave = 0;
+         break;
+      case RELOADBUTTON:
+         reloadValues();
+         break;
+      case DEFAULTSBUTTON:
+         resetValues();
+         break;
+      case CLOCKBUTTON:
+         setClock();
+         break;
+      default:
+         printf("button_clicked: unknown button type %x\n", (int) user_data);
+      case CLOSEBUTTON:
+         closeDialog();
+         break;
+      }
+}
+
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * resetValues - reset everything to default values,                   *
+ *               then re-display the dialog.                           *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+static void resetValues(void)
+{
+   printf("Reset to Defaults not yet implemented\n");
+   needSave = 1;
+}
+
+static void reloadValues(void)
+{
+   printf("Reload not yet implemented\n");
+   needSave = 0;
+}
+
+static void closeDialog(void)
+{
+   if (needSave)
+      {
+      printf("Data not saved\n");
+      return;
+      }
+   if (qm100_main)
+      gtk_main_quit();
+   else
+      gtk_widget_destroy(qm100ConfigDlg) ;
+}
+
+static void setClock(void)
+{
+   showCameraClock();
+}
+
+static void showCameraClock(void)
+{
+   gtk_label_set_text(GTK_LABEL(clockLabel), "new clock value");
+   gtk_widget_show(clockLabel);
+}
+

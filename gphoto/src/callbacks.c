@@ -29,6 +29,9 @@
 #include <time.h>
 #include <unistd.h>
 #include <stdlib.h>
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
 
 #include "post_processing_on.xpm"
 #include "post_processing_off.xpm"
@@ -511,7 +514,7 @@ void port_dialog() {
 
 #ifdef linux
         sprintf(serial_port_prefix, "/dev/ttyS");
-#elif defined(__FreeBSD__) || defined(__NetBSD__)
+#elif defined(BSD)
         sprintf(serial_port_prefix, "/dev/tty0");
 #else
         sprintf(serial_port_prefix, "/dev/tty0");

@@ -17,6 +17,7 @@
  *
  */
 
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -27,16 +28,17 @@
 #include <string.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
 #include <sys/uio.h>
 #include <sys/ioctl.h>
 
 #include "log.h"
 #include "os.h"
 
-#ifdef __FreeBSD__
-	#if 3 <= __FreeBSD__
-		#define FreeBSD_3
-	#else
+#ifdef BSD
+	#if (defined (__FreeBSD__) && __FreeBSD__ < 3)
 		#error FreeBSD-2.2.x is not support for kernel sio bug
 	#endif
 #endif
@@ -134,21 +136,23 @@ os_sio_open(char *sio_dev_name, os_sio_mode_t mode)
 	printf("19 V_spare2  0x%02x\n", 0 );
 	#endif
 
-	#if defined(linux) || defined(FreeBSD_3) || defined(__NetBSD__)
-		switch( mode ){
-		case XON_XOFF:	iflag = (IXON|IXOFF|IGNBRK);	break;
-		case CRTS_CTS:	iflag = (CRTSCTS);		break;
-		default:	return FATAL(_("illegual mode"));
-		}
-		sio_termios.c_iflag     = iflag;
-		sio_termios.c_cflag     = (CREAD|CS8);
-		sio_termios.c_oflag     = 0;
-		sio_termios.c_lflag     = 0;
-		//sio_termios.c_cc[VMIN]  = 0;    
-		//sio_termios.c_cc[VTIME] = 100;  
-	#else
-		#error This OS is not support
-	#endif
+	switch( mode ) {
+	case XON_XOFF:	
+		iflag = (IXON|IXOFF|IGNBRK);	
+		break;
+	case CRTS_CTS:	
+		iflag = (CRTSCTS);
+		break;
+	default:	
+		return FATAL(_("illegual mode"));
+	}
+
+	sio_termios.c_iflag     = iflag;
+	sio_termios.c_cflag     = (CREAD|CS8);
+	sio_termios.c_oflag     = 0;
+	sio_termios.c_lflag     = 0;
+	//sio_termios.c_cc[VMIN]  = 0;    
+	//sio_termios.c_cc[VTIME] = 100;  
 
 	cfsetospeed(&sio_termios, B9600);
 	cfsetispeed(&sio_termios, B9600);

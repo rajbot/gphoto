@@ -12,12 +12,16 @@
  *
  ****************************************************************************/
 
+#include "config.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <termios.h>
 #include <fcntl.h>
 #include <sys/time.h>
 #include <errno.h>
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
 
 #include "util.h"
 
@@ -62,7 +66,7 @@ int canon_serial_init(const char *devname)
 
     D(printf("canon_init_serial(): devname %s\n", devname));
 
-    #ifdef __FreeBSD__
+    #ifdef BSD
     fd = open(devname, O_RDWR | O_NOCTTY | O_NONBLOCK);
     #else
     fd = open(devname, O_RDWR | O_NOCTTY | O_SYNC | O_NONBLOCK);

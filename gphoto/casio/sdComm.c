@@ -26,6 +26,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
+
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
 #else HAVE_TERMIOS_H
@@ -119,7 +123,7 @@ sdcOpen(sdcInfo info) {
 	return(SDC_SUCCESS); /* Not technically a failure */
     }
 
-    #ifdef __FreeBSD__ /* by fujisawa */
+    #ifdef BSD /* by fujisawa */
     info->fd = open(info->devName, O_RDWR );
     #else
     info->fd = open(info->devName, O_RDWR | O_SYNC /* | O_NDELAY */);

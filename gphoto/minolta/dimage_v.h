@@ -1,11 +1,15 @@
 #ifndef __MINOLTA_H__
 
+#include "config.h"
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <termios.h>
 #include <sys/stat.h>
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
 #include <errno.h>
 #include <unistd.h>
 #include "../src/gphoto.h"

@@ -42,7 +42,7 @@ rm -rf $RPM_BUILD_ROOT
 %{prefix}/man/man1/gphoto.1
 %{prefix}/bin/*
 %{prefix}/lib/gphoto/*
-%{prefix}/share/gphoto/doc/*
+%{prefix}/share/doc/gphoto/*
 %{prefix}/share/gphoto/gallery/Default/*
 %{prefix}/share/gphoto/gallery/RedNGray/*
 %{prefix}/share/gphoto/gallery/CSStheme/*

@@ -4,7 +4,7 @@ SUBDIRS = canon casio directory fuji gallery kodak \
 kodak_generic konica konica_qmxxx man minolta mustek nikon \
 philips photopc ricoh sony src
 
-gphotodocdir = $(datadir)/gphoto/doc
+gphotodocdir = $(datadir)/doc/gphoto
 
 gphotodoc_DATA = AUTHORS MANUAL
 

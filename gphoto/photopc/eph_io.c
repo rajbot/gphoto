@@ -14,9 +14,12 @@
 
 /*
 	$Log$
+	Revision 1.3  1999/12/05 21:25:09  ole
+	Generic *BSD patch by Dug Song <dugsong@monkey.org>
+
 	Revision 1.2  1999/10/02 23:41:37  ole
 	FreeBSD (and Konica/Q-M200) patch by gphoto@fujisawa.gr.jp (Toshiki Fujisawa)
-
+	
 	Revision 1.1.1.1  1999/05/27 18:32:05  scottf
 	gPhoto- digital camera utility
 	
@@ -67,9 +70,13 @@
 	
 */
 
+#include "config.h"
 #include "eph_io.h"
 #include "eph_priv.h"
 #include <sys/types.h>
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
 #ifdef UNIX
 #include <time.h>
 #include <unistd.h>
@@ -91,7 +98,7 @@ typedef unsigned INT16 uint16;
 #define ERRNO errno
 #endif
 
-#ifdef __FreeBSD__ /* by fujisawa */
+#ifdef BSD /* by fujisawa */
 #undef HAVE_NANOSLEEP
 #endif
 

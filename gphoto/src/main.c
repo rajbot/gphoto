@@ -125,6 +125,15 @@ int main (int argc, char *argv[]) {
 	} else
 	    command_line_mode = 0;
 
+	fprintf(stdout,
+		"gPhoto %s (%s) - the GNU digital camera application\n",
+		VERSION, __DATE__);
+	fprintf(stdout,
+		"Copyright (C) 1998-99 Scott Fritzinger <scottf@unr.edu>\n\n");
+	fprintf(stdout,
+		"Usage: gphoto [-h] [-c] [-n] [-s # filename] [-t # filename]\n");
+	fprintf(stdout, "              [-d #] [-p filename] [-l filename]\n");
+
 	gtk_init(&argc, &argv);
 #if 1 /* by fujisawa */
 	gdk_imlib_init();

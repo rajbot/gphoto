@@ -1,5 +1,9 @@
+#include "config.h"
 #include <stdio.h>
 #include <string.h>
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
 
 #include <gdk_imlib.h>
 #include <gdk/gdk.h>
@@ -79,7 +83,7 @@ convertToBaudRate(int speed) {
 
     switch(speed) {
 	case LIGHT:			/* 115200 baud */
-#if defined(WIN32) || defined (OS2) || defined(__FreeBSD__) || defined(DOS) || defined(__linux__)
+#if defined(WIN32) || defined (OS2) || defined(BSD) || defined(DOS) || defined(__linux__)
 	    baud = B115200;
 #else
 	    baud = B38400;
@@ -87,7 +91,7 @@ convertToBaudRate(int speed) {
 	    break;
 
 	case TOP:			/* 57600 baud */
-#if defined(WIN32) || defined(OS2) || defined(__FreeBSD__) || defined(DOS) || defined(__linux__)
+#if defined(WIN32) || defined(OS2) || defined(BSD) || defined(DOS) || defined(__linux__)
 
 	    baud = B57600;
 #else

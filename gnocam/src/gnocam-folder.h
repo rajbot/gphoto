@@ -5,6 +5,7 @@
 #include <gphoto2.h>
 #include <bonobo.h>
 #include <GnoCam.h>
+#include <gconf/gconf-client.h>
 
 BEGIN_GNOME_DECLS
 
@@ -30,10 +31,10 @@ struct _GnoCamFolderClass {
 };
 
 
-GtkType    		gnocam_folder_get_type			(void);
-GnoCamFolder*		gnocam_folder_new			(Camera* camera, Bonobo_Storage storage, const gchar* path, Bonobo_UIContainer container);
+GtkType    		gnocam_folder_get_type		(void);
+GnoCamFolder*		gnocam_folder_new		(Camera* camera, Bonobo_Storage storage, const gchar* path, BonoboUIContainer* container, GConfClient* client);
 
-void			gnocam_folder_set_ui_container  	(GnoCamFolder* folder, Bonobo_UIContainer container);
+void			gnocam_folder_set_ui_container  	(GnoCamFolder* folder, BonoboUIContainer* container);
 BonoboUIComponent*	gnocam_folder_get_ui_component		(GnoCamFolder* folder);
 
 GtkWidget*      	gnocam_folder_get_widget        	(GnoCamFolder* folder);

@@ -119,69 +119,6 @@ static const int num_destination_drag_types = sizeof (destination_drag_types) / 
 
 static GtkTargetList *target_list;
 
-/*****************/
-/* E-Table model */
-/*****************/
-
-static int
-etree_col_count (ETableModel* etable, void* model_data)
-{
-        return (2);
-}
-
-static void*
-etree_duplicate_value (ETableModel*etable, int col, const void* value, void* model_data)
-{
-	NodeData*	data;
-
-	g_warning ("etree_duplicate_value");
-
-	data = g_new (NodeData, 1);
-
-	data->path = g_strdup (((NodeData*) value)->path);
-	data->directory = ((NodeData*) value)->directory;
-
-	return (data);
-}
-
-static void
-etree_free_value (ETableModel* etable, int col, void* value, void* model_data)
-{
-	NodeData*	data;
-
-	g_warning ("etree_free_value");
-
-	data = value;
-	g_free (data->path);
-	g_free (data);
-}
-
-static void*
-etree_initialize_value (ETableModel* etable, int col, void* model_data)
-{
-	g_warning ("etree_initialize_value");
-	
-	return (NULL);
-}
-
-static gboolean
-etree_value_is_empty (ETableModel* etable, int col, const void* value, void* model_data)
-{
-        if (col == 0)
-                return !(value && *(char*) value);
-        else
-                return !value;
-}
-
-static char *
-etree_value_to_string (ETableModel* etable, int col, const void* value, void* model_data)
-{
-        if (col == 0)
-                return (g_strdup (value));
-        else
-                return (g_strdup (value ? "Yes" : "No"));
-}
-
 /****************/
 /* E-Tree model */
 /****************/
@@ -328,13 +265,14 @@ insert_folders_and_files (GnoCamStorageView* storage_view, ETreePath* parent, co
 	CORBA_Environment		ev;
 	gint				i;
 
-	g_warning ("insert_folders_and_files (?, ?, %s)", path);
+//If you want to do this recursively in order to support folders - good luck...
+//	g_warning ("insert_folders_and_files (?, ?, %s)", path);
 
 	CORBA_exception_init (&ev);
 	if (!strcmp (path, "/")) 
 		list = Bonobo_Storage_listContents (storage_view->priv->storage, "", Bonobo_FIELD_TYPE, &ev);
 	else
-		list = Bonobo_Storage_listContents (storage_view->priv->storage, path, Bonobo_FIELD_TYPE, &ev);
+		list = Bonobo_Storage_listContents (storage_view->priv->storage, path + 1, Bonobo_FIELD_TYPE, &ev);
 	if (BONOBO_EX (&ev)) {
 		CORBA_exception_free (&ev);
 		return;
@@ -343,20 +281,16 @@ insert_folders_and_files (GnoCamStorageView* storage_view, ETreePath* parent, co
 
 	for (i = 0; i < list->_length; i++) {
 		ETreePath*	node;
-		gchar*		tmp;
 		NodeData*	data;
 		
-		tmp = g_strconcat ("/", list->_buffer [i].name, NULL);
-		node = e_tree_model_node_insert_id (storage_view->priv->etree, parent, -1, tmp, tmp);
-		g_free (tmp);
-
-		/* Store some data in this node */
+		/* Insert the node */
 		data = g_new (NodeData, 1);
-		if (!strcmp (path, "/")) 
+		if (!strcmp (path, "/"))
 			data->path = g_strconcat (path, list->_buffer [i].name, NULL);
 		else
-			data->path = g_strconcat (path, G_DIR_SEPARATOR, list->_buffer [i].name, NULL);
+			data->path = g_strdup_printf ("%s/%s", path, list->_buffer [i].name);
 		data->directory = (list->_buffer [i].type == Bonobo_STORAGE_TYPE_DIRECTORY);
+		node = e_tree_model_node_insert_id (storage_view->priv->etree, parent, -1, data->path, data->path);
 		e_tree_model_node_set_data (storage_view->priv->etree, node, (gpointer) data);
 		
 		e_tree_model_node_set_expanded (storage_view->priv->etree, parent, TRUE);
@@ -457,17 +391,7 @@ gnocam_storage_view_new (Bonobo_Storage storage)
 	new->priv->storage = storage;
 
 	/* Create the model */
-	new->priv->etree = e_tree_simple_new (etree_col_count,
-                                               etree_duplicate_value,
-                                               etree_free_value,
-                                               etree_initialize_value,
-                                               etree_value_is_empty,
-                                               etree_value_to_string,
-                                               etree_icon_at,
-                                               etree_value_at,
-                                               etree_set_value_at,
-                                               etree_is_editable,
-                                               new);
+	new->priv->etree = e_tree_simple_new (NULL, NULL, NULL, NULL, NULL, NULL, etree_icon_at, etree_value_at, etree_set_value_at, etree_is_editable, new);
 
 	/* Insert the root node */
 	data = g_new (NodeData, 1);

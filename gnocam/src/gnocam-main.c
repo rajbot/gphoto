@@ -7,7 +7,6 @@
 
 #include <gal/util/e-util.h>
 #include <gal/e-paned/e-hpaned.h>
-#include <gconf/gconf-client.h>
 
 #include "e-clipped-label.h"
 #include "gnocam-preferences.h"
@@ -18,7 +17,8 @@
 static BonoboWindowClass* parent_class = NULL;
 
 struct _GnoCamMainPrivate {
-	Bonobo_UIContainer	container;
+	BonoboUIContainer*	container;
+	BonoboUIComponent*	component;
 
 	GConfClient*		client;
 
@@ -26,30 +26,30 @@ struct _GnoCamMainPrivate {
 };
 
 #define GNOCAM_MAIN_UI														\
-"<Root>"															\
-"  <menu>"															\
-"    <submenu name=\"File\" _label=\"_File\">"											\
-"      <placeholder name=\"FileOperations\"/>"											\
-"      <menuitem name=\"Exit\" verb=\"\" _label=\"E_xit\" pixtype=\"stock\" pixname=\"Quit\"/>"					\
-"    </submenu>"														\
-"    <placeholder name=\"Folder\"/>"												\
-"    <placeholder name=\"Camera\"/>"												\
-"    <submenu name=\"Edit\" _label=\"_Edit\">"											\
-"       <placeholder/>"														\
-"       <menuitem name=\"BonoboCustomize\" verb=\"\" _label=\"Customi_ze...\" pos=\"bottom\"/>"					\
-"    </submenu>"														\
-"    <placeholder name=\"Edit\"/>"												\
-"    <placeholder name=\"View\"/>"												\
-"    <submenu name=\"Settings\" _label=\"_Settings\">"										\
+"<Root>\n"															\
+"  <menu>\n"															\
+"    <submenu name=\"File\" _label=\"_File\">\n"										\
+"      <placeholder name=\"FileOperations\"/>\n"										\
+"      <menuitem name=\"Exit\" verb=\"\" _label=\"E_xit\" pixtype=\"stock\" pixname=\"Quit\"/>\n"				\
+"    </submenu>\n"														\
+"    <placeholder name=\"Folder\"/>\n"                                                                                          \
+"    <placeholder name=\"Camera\"/>\n"                                                                                          \
+"    <submenu name=\"Edit\" _label=\"_Edit\">\n"										\
+"       <placeholder/>\n"													\
+"       <menuitem name=\"BonoboCustomize\" verb=\"\" _label=\"Customi_ze...\" pos=\"bottom\"/>\n"				\
+"    </submenu>\n"														\
+"    <placeholder name=\"Edit\"/>\n"												\
+"    <placeholder name=\"View\"/>\n"												\
+"    <submenu name=\"Settings\" _label=\"_Settings\">\n"									\
 "      <menuitem name=\"Preferences\" verb=\"\" _label=\"_Preferences\" pixtype=\"stock\" pixname=\"Preferences\"/>"		\
 "    </submenu>"														\
-"    <submenu name=\"Help\" _label=\"_Help\">"											\
-"      <menuitem name=\"About\" verb=\"\" _label=\"_About\" pixtype=\"stock\" pixname=\"About\"/>"				\
-"    </submenu>"														\
-"  </menu>"															\
-"  <status>"															\
-"    <item name=\"main\"/>"													\
-"  </status>"															\
+"    <submenu name=\"Help\" _label=\"_Help\">\n"										\
+"      <menuitem name=\"About\" verb=\"\" _label=\"_About\" pixtype=\"stock\" pixname=\"About\"/>\n"				\
+"    </submenu>\n"														\
+"  </menu>\n"															\
+"  <status>\n"															\
+"    <item name=\"main\"/>\n"													\
+"  </status>\n"															\
 "</Root>"
 
 /*************/
@@ -94,7 +94,7 @@ on_shortcut_bar_item_selected (EShortcutBar* shortcut_bar, GdkEvent* event, gint
 	g_free (name);
 
 	CORBA_exception_init (&ev);
-	camera = gnocam_camera_new (url, m->priv->container, GTK_WINDOW (m), &ev);
+	camera = gnocam_camera_new (url, m->priv->container, GTK_WINDOW (m), m->priv->client, &ev);
 	if (BONOBO_EX (&ev)) {
 		gchar*	message;
 
@@ -146,7 +146,7 @@ gnocam_main_destroy (GtkObject* object)
 	m = GNOCAM_MAIN (object);
 
 	gtk_object_unref (GTK_OBJECT (m->priv->client));
-	bonobo_object_release_unref (m->priv->container, NULL);
+	bonobo_object_unref (BONOBO_OBJECT (m->priv->component));
 	g_free (m->priv);
 
 	(*GTK_OBJECT_CLASS (parent_class)->destroy) (object);
@@ -170,12 +170,10 @@ gnocam_main_init (GnoCamMain* m)
 }
 
 GnoCamMain*
-gnocam_main_new (void)
+gnocam_main_new (GConfClient* client)
 {
 	GtkWidget*		widget;
 	GnoCamMain*		new;
-	BonoboUIContainer*	container;
-	BonoboUIComponent*	component;
 	BonoboUIVerb            verb [] = {
 		BONOBO_UI_UNSAFE_VERB ("Exit", gtk_main_quit),
 		BONOBO_UI_VERB ("Preferences", on_preferences_activate),
@@ -187,7 +185,7 @@ gnocam_main_new (void)
 	new = GNOCAM_MAIN (bonobo_window_construct (BONOBO_WINDOW (new), "GnoCamMain", "GnoCam"));
 	gtk_signal_connect (GTK_OBJECT (new), "size_request", GTK_SIGNAL_FUNC (on_window_size_request), new);
 	gtk_signal_connect (GTK_OBJECT (new), "destroy", GTK_SIGNAL_FUNC (gtk_main_quit), new);
-	new->priv->client = gconf_client_get_default ();
+	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
 
 	/* Create the hpaned */
         gtk_widget_show (new->priv->hpaned = e_hpaned_new ());
@@ -204,18 +202,18 @@ gnocam_main_new (void)
         gtk_signal_connect (GTK_OBJECT (widget), "item_selected", (GtkSignalFunc) on_shortcut_bar_item_selected, new);
 	
 	/* Create the container */
-	container = bonobo_ui_container_new ();
-	bonobo_ui_container_set_win (container, BONOBO_WINDOW (new));
-	new->priv->container = BONOBO_OBJREF (container);
+	new->priv->container = bonobo_ui_container_new ();
+	bonobo_ui_container_set_win (new->priv->container, BONOBO_WINDOW (new));
+//	bonobo_object_unref (BONOBO_OBJECT (new->priv->container));
 
 	/* Create the menu */
-	component = bonobo_ui_component_new ("main");
-	bonobo_ui_component_set_container (component, new->priv->container);
-	bonobo_ui_component_freeze (component, NULL);
+	new->priv->component = bonobo_ui_component_new (PACKAGE "main");
+	bonobo_ui_component_set_container (new->priv->component, BONOBO_OBJREF (new->priv->container));
+	bonobo_ui_component_freeze (new->priv->component, NULL);
 	bonobo_ui_engine_config_set_path (bonobo_window_get_ui_engine (BONOBO_WINDOW (new)), "/" PACKAGE "/UIConf/main");
-	bonobo_ui_component_set_translate (component, "/", GNOCAM_MAIN_UI, NULL);
-	bonobo_ui_component_add_verb_list_with_data (component, verb, new);
-	bonobo_ui_component_thaw (component, NULL);
+	bonobo_ui_component_set_translate (new->priv->component, "/", GNOCAM_MAIN_UI, NULL);
+	bonobo_ui_component_add_verb_list_with_data (new->priv->component, verb, new);
+	bonobo_ui_component_thaw (new->priv->component, NULL);
 
 	/* Set the default settings */
 	w = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/width_main", NULL);

@@ -4,6 +4,7 @@
 
 #include <gphoto2.h>
 #include <bonobo.h>
+#include <gconf/gconf-client.h>
 
 BEGIN_GNOME_DECLS
 
@@ -27,7 +28,7 @@ struct _GnoCamCaptureClass {
 };
 
 GtkType		gnocam_capture_get_type 	(void);
-GnoCamCapture*	gnocam_capture_new 		(Camera* camera, CameraCaptureType type);
+GnoCamCapture*	gnocam_capture_new 		(Camera* camera, CameraCaptureType type, GConfClient* client);
 
 END_GNOME_DECLS
 

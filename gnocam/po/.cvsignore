@@ -5,6 +5,7 @@ Makefile
 *.gmo
 GnoCam.pot
 cat-id-tbl.c
+messages
 tmp
 .headerlock
 stamp-cat-id

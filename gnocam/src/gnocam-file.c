@@ -25,6 +25,7 @@ struct _GnoCamFilePrivate
 
 #define GNOCAM_FILE_UI 						\
 "<placeholder name=\"FileOperations\">"				\
+"  <menuitem name=\"Test\" _label=\"test\"/>"			\
 "  <placeholder name=\"Delete\" delimit=\"top\"/>"		\
 "  <placeholder name=\"Configuration\"/>"			\
 "</placeholder>"
@@ -68,9 +69,10 @@ gnocam_file_get_ui_component (GnoCamFile* file)
 }
 
 void
-gnocam_file_set_ui_container (GnoCamFile* file, Bonobo_UIContainer container)
+gnocam_file_set_ui_container (GnoCamFile* file, BonoboUIContainer* container)
 {
-	bonobo_ui_component_set_container (file->priv->component, container);
+	bonobo_ui_component_set_container (file->priv->component, BONOBO_OBJREF (container));
+//	bonobo_object_unref (BONOBO_OBJECT (container));
 }
 
 GtkWidget*
@@ -90,6 +92,7 @@ gnocam_file_destroy (GtkObject* object)
 
 	file = GNOCAM_FILE (object);
 
+	bonobo_object_unref (BONOBO_OBJECT (file->priv->component));
 	gp_camera_unref (file->priv->camera);
 	if (file->priv->configuration) gp_widget_unref (file->priv->configuration);
 	
@@ -121,7 +124,7 @@ gnocam_file_init (GnoCamFile* file)
 }
 
 GnoCamFile*
-gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bonobo_UIContainer container, CORBA_Environment* ev)
+gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, BonoboUIContainer* container, CORBA_Environment* ev)
 {
 	GnoCamFile*		new;
 	Bonobo_Unknown		object;
@@ -141,7 +144,10 @@ gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bono
 
 	/* Get information about the stream */
 	info = Bonobo_Stream_getInfo (stream, Bonobo_FIELD_CONTENT_TYPE, ev);
-	if (BONOBO_EX (ev)) return (NULL);
+	if (BONOBO_EX (ev)) {
+		Bonobo_Stream_unref (stream, NULL);
+		return (NULL);
+	}
 	g_return_val_if_fail (info, NULL);
 	mime_type = g_strdup (info->content_type);
 	CORBA_free (info);
@@ -170,12 +176,12 @@ gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bono
 
 	/* Load the persist stream */
 	Bonobo_PersistStream_load (persist, stream, (const Bonobo_Persist_ContentType) mime_type, ev);
+	Bonobo_PersistStream_unref (persist, NULL);
+	Bonobo_Stream_unref (stream, NULL);
 	g_free (mime_type);
-	if (BONOBO_EX (ev)) return (NULL);
-
-	/* Release */
-	bonobo_object_release_unref (persist, ev);
-	bonobo_object_release_unref (stream, ev);
+	if (BONOBO_EX (ev)) {
+		return (NULL);
+	}
 
 	subcontrol = bonobo_moniker_util_qi_return (object, "IDL:Bonobo/Control:1.0", ev);
 	if (BONOBO_EX (ev)) return (NULL);
@@ -184,7 +190,11 @@ gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bono
 	new->priv->filename = g_strdup (g_basename (path));
 	new->priv->camera = camera;
 	gp_camera_ref (camera);
+
+	/* Create the menu */
 	new->priv->component = bonobo_ui_component_new ("GnoCamFile");
+	bonobo_ui_component_set_container (new->priv->component, BONOBO_OBJREF (container));
+	bonobo_ui_component_set_translate (new->priv->component, "/menu/File/FileOperations", GNOCAM_FILE_UI, NULL);
 
 	/* Dirname? */
 	new->priv->dirname = g_dirname (path);
@@ -193,11 +203,9 @@ gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bono
 		new->priv->dirname = g_strdup ("/");
 	}
 
-	new->priv->widget = bonobo_widget_new_control_from_objref (subcontrol, container);
-
-	/* Create menu */
-        bonobo_ui_component_set_container (new->priv->component, container);
-        bonobo_ui_component_set_translate (new->priv->component, "/menu/File/FileOperations", GNOCAM_FILE_UI, NULL);
+	new->priv->widget = bonobo_widget_new_control_from_objref (subcontrol, BONOBO_OBJREF (container));
+	bonobo_object_unref (BONOBO_OBJECT (container));
+	bonobo_control_frame_control_activate (bonobo_widget_get_control_frame (BONOBO_WIDGET (new->priv->widget)));
 
         /* Delete? */
         if (new->priv->camera->abilities->file_delete) {

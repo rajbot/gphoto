@@ -1,5 +1,5 @@
 
-SUBDIRS = ui
+SUBDIRS =
 
 INCLUDES = \
  -I$(top_srcdir)/libgnocam\

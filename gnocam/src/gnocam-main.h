@@ -4,6 +4,7 @@
 
 #include <gphoto2.h>
 #include <bonobo.h>
+#include <gconf/gconf-client.h>
 
 BEGIN_GNOME_DECLS
 
@@ -27,7 +28,7 @@ struct _GnoCamMainClass {
 };
 
 GtkType		gnocam_main_get_type 	(void);
-GnoCamMain*	gnocam_main_new 	(void);
+GnoCamMain*	gnocam_main_new 	(GConfClient* client);
 
 END_GNOME_DECLS
 

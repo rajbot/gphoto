@@ -6,7 +6,6 @@
 
 #include <bonobo/bonobo-stream-memory.h>
 #include <gal/util/e-util.h>
-#include <gconf/gconf-client.h>
 
 #include "utils.h"
 
@@ -324,7 +323,7 @@ gnocam_capture_init (GnoCamCapture* capture)
 }
 
 GnoCamCapture*
-gnocam_capture_new (Camera* camera, CameraCaptureType type)
+gnocam_capture_new (Camera* camera, CameraCaptureType type, GConfClient* client)
 {
 	GnoCamCapture*		new;
 	BonoboUIContainer*	container;
@@ -336,10 +335,9 @@ gnocam_capture_new (Camera* camera, CameraCaptureType type)
 	new = gtk_type_new (GNOCAM_TYPE_CAPTURE);
 	new = GNOCAM_CAPTURE (bonobo_window_construct (BONOBO_WINDOW (new), "GnoCamCapture", "GnoCam Capture"));
 	gtk_signal_connect (GTK_OBJECT (new), "size_request", GTK_SIGNAL_FUNC (on_window_size_request), new);
-	new->priv->camera = camera;
+	gp_camera_ref (new->priv->camera = camera);
 	new->priv->type = type;
-	new->priv->client = gconf_client_get_default ();
-	gp_camera_ref (camera);
+	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
 
 	bonobo_ui_engine_config_set_path (bonobo_window_get_ui_engine (BONOBO_WINDOW (new)), "/" PACKAGE "/UIConf/capture");
 

@@ -2,6 +2,7 @@
 #ifndef _BONOBO_STORAGE_CAMERA_H_
 #define _BONOBO_STORAGE_CAMERA_H_
 
+#include <gphoto2.h>
 #include <bonobo/bonobo-storage.h>
 
 BEGIN_GNOME_DECLS
@@ -25,7 +26,8 @@ struct _BonoboStorageCameraClass {
 	BonoboStorageClass 		parent_class;
 };
 
-GtkType         bonobo_storage_camera_get_type     (void);
+GtkType         	bonobo_storage_camera_get_type 	(void);
+BonoboStorageCamera*	bonobo_storage_camera_new 	(Camera* camera, const gchar* path, Bonobo_Storage_OpenMode mode, CORBA_Environment* ev);
 
 END_GNOME_DECLS
 

@@ -19,16 +19,12 @@
 /*************/
 
 static void
-load_settings (void)
+load_settings (GConfClient* client)
 {
 	CORBA_Environment	ev;
-	GConfClient*		client;
 	Bonobo_Unknown          bag, property;
 	CORBA_any*              value;
 	gint			result;
-
-	/* Get client */
-	g_return_if_fail (client = gconf_client_get_default ());
 
         /* Init exception. */
         CORBA_exception_init (&ev);
@@ -61,12 +57,9 @@ load_settings (void)
 
         /* Do we already have a prefix stored in our preferences? */
         if (!gconf_client_get_string (client, "/apps/" PACKAGE "/prefix", NULL)) {
-                gchar*                  prefix;
 
                 /* Set prefix to HOME by default. */
-                prefix = g_strconcat ("file:", g_get_home_dir (), NULL);
-                gconf_client_set_string (client, "/apps/" PACKAGE "/prefix", prefix, NULL);
-                g_free (prefix);
+                gconf_client_set_string (client, "/apps/" PACKAGE "/prefix", g_get_home_dir (), NULL);
 
                 /* Popup a welcome message. */
                 g_assert ((glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "welcome_messagebox")));
@@ -74,15 +67,13 @@ load_settings (void)
 
 	/* Free exception */
 	CORBA_exception_free (&ev);
-
-	/* Unref client */
-	gtk_object_unref (GTK_OBJECT (client));
 }
 
 int main (int argc, char *argv[]) 
 {
 	GError*			gerror = NULL;
 	gint			result;
+	GConfClient*		client;
 
 	/* Use translated strings. */
 	bindtextdomain (PACKAGE, GNOME_LOCALEDIR);
@@ -105,17 +96,19 @@ int main (int argc, char *argv[])
 
 	/* Init GConf */
 	if (!gconf_init (argc, argv, &gerror)) g_error ("Could not initialize gconf: %s", gerror->message);
+	g_return_val_if_fail (client = gconf_client_get_default (), 1);
 	
-	load_settings ();
+	load_settings (client);
 
 	/* Create the window */
-	gtk_widget_show (GTK_WIDGET (gnocam_main_new ()));
+	gtk_widget_show (GTK_WIDGET (gnocam_main_new (client)));
 
 	/* Start the event loop. */
 	bonobo_main ();
 
-	/* Clean up (gphoto). */
+	/* Clean up. */
 	if ((result = gp_exit ()) != GP_OK) g_error ("Could not exit gphoto2: %s", gp_result_as_string (result));
+	gtk_object_unref (GTK_OBJECT (client));
 
 	return (0);
 }

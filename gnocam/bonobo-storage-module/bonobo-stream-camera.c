@@ -21,7 +21,7 @@ struct _BonoboStreamCameraPrivate {
 	gchar*		filename;
 
 	gint		mode;
-	long		position;
+	gulong		position;
 };
 
 static Bonobo_StorageInfo*
@@ -40,7 +40,7 @@ camera_get_info (BonoboStream* s, const Bonobo_StorageInfoFields mask, CORBA_Env
 	info = Bonobo_StorageInfo__alloc ();
 	info->size = stream->priv->file->size;
 	info->type = Bonobo_STORAGE_TYPE_REGULAR;
-	info->name = CORBA_string_dup (stream->priv->file->name);
+	info->name = CORBA_string_dup (stream->priv->filename);
 	info->content_type = CORBA_string_dup (stream->priv->file->type);
 
 	return (info);
@@ -69,8 +69,8 @@ camera_read (BonoboStream *s, CORBA_long count, Bonobo_Stream_iobuf **buffer, CO
 {
 	BonoboStreamCamera*	stream;
 	CORBA_octet*		data;
-	long 			length;
-	
+	gulong 			length;
+
 	stream = BONOBO_STREAM_CAMERA (s);
 	
 	/* Create the buffer. */
@@ -81,7 +81,7 @@ camera_read (BonoboStream *s, CORBA_long count, Bonobo_Stream_iobuf **buffer, CO
 	/* How many bytes? */
 	if (stream->priv->position + count >= stream->priv->file->size) length = stream->priv->file->size - stream->priv->position;
 	else length = count;
-	
+
 	memcpy (data, stream->priv->file->data + stream->priv->position, length);
 	stream->priv->position += length;
 	
@@ -202,21 +202,22 @@ bonobo_stream_camera_new (Camera* camera, const gchar* dirname, const gchar* fil
 	BonoboStreamCamera*	new;
 
         /* Reject some unsupported open modes. */
-        if (mode & Bonobo_Storage_TRANSACTED) {
-                CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
-                return (NULL);
-        }
+	if (mode & Bonobo_Storage_TRANSACTED) {
+//		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
+//		return (NULL);
+	}
 
         /* Does the camera support upload? */
         if ((mode & (Bonobo_Storage_WRITE | Bonobo_Storage_CREATE)) && (!camera->abilities->file_put)) {
-                CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
-                return (NULL);
+//		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
+//		return (NULL);
         }
 
 	new = gtk_type_new (BONOBO_STREAM_CAMERA_TYPE);
 	new->priv->dirname = g_strdup (dirname);
 	new->priv->filename = g_strdup (filename);
 	new->priv->mode = mode;
+	new->priv->position = 0;
 	new->priv->camera = camera;
 	new->priv->file = gp_file_new ();
 	gp_camera_ref (camera);
@@ -242,14 +243,18 @@ bonobo_stream_camera_new (Camera* camera, const gchar* dirname, const gchar* fil
 
         /* Get the file. */
         if (mode & Bonobo_Storage_READ) {
-		if (mode & Bonobo_Storage_COMPRESSED)
+		if (mode & Bonobo_Storage_COMPRESSED) {
 			CHECK_RESULT (gp_camera_file_get_preview (new->priv->camera, new->priv->file, new->priv->dirname, new->priv->filename), ev);
-		else
+		} else {
 			CHECK_RESULT (gp_camera_file_get (new->priv->camera, new->priv->file, new->priv->dirname, new->priv->filename), ev);
+		}
 		if (BONOBO_EX (ev)) {
 			bonobo_object_unref (BONOBO_OBJECT (new));
 			return (NULL);
 		}
+		g_return_val_if_fail (new->priv->file, NULL);
+		if (strcmp (new->priv->file->name, new->priv->filename)) 
+			g_warning ("Filenames differ: filename is '%s', file->name is '%s'!", new->priv->filename, new->priv->file->name);
 	}
 
 	return (BONOBO_STREAM_CAMERA (bonobo_object_construct (BONOBO_OBJECT (new), bonobo_stream_corba_object_create (BONOBO_OBJECT (new)))));

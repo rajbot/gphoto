@@ -229,7 +229,6 @@ intl/Makefile
 macros/Makefile
 po/Makefile.in
 src/Makefile
-src/ui/Makefile
 bonobo-moniker/Makefile
 bonobo-storage-module/Makefile
 gnome-vfs-module/Makefile

@@ -1,6 +1,6 @@
 libusb		HEAD	:pserver:anonymous@cvs.libusb.sourceforge.net:/cvsroot/libusb	install
 libmnote	HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif	install
-libexif		HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif	install
+libexif 	HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif	install
 exif		HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif install
 gphoto2-manual	HEAD	:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto	install
 libgphoto2	HEAD	:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto	install

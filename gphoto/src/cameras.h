@@ -73,6 +73,7 @@ struct Model cameras[] = {
 	{"Ricoh RDC-4300", &philips},
 	{"Sanyo VPC-G210", &olympus},
 	{"Sanyo VPC-G250", &olympus},
+	{"Sanyo VPC-X350", &olympus},
 	{"Sony DSC-F1", &sony_dscf1},
 	{"", NULL}
 };

@@ -1,6 +1,6 @@
 /* gPhoto - free digital camera utility - http://www.gphoto.org/
  *
- * Copyright (C) 1999  The gPhoto developers  <gphoto-devel@gphoto.org>
+ * Copyright (C) 1999  Scott Fritzinger <scottf@scs.unr.edu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

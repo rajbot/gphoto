@@ -28,7 +28,7 @@ IMPORTANT NOTICES
 	  specs from http://www.gphoto.org/documentation/programmers.html
 
 REQUIREMENTS:
-        * GNU utils (sed)
+        * GNU sed
 	* Gtk (1.2 and up)
 	* Imlib (1.4 and up)
 	* ImageMagick (4.1 and up)
@@ -43,11 +43,12 @@ WHATS IN THE PACKAGE:
         * Fuji DS/DX library implemented by Matt Martin <matt.martin@ieee.org>
         * Kodak DC-2x library implemented by Del Simmons <del@cimedia.com>
 	* Kodak DC-2x0 library implemented by Brian Hirt <bhirt@mobygames.com>
-	* Kodak DC-240 library by Randy Scott <scottr@wwa.com>
+	* Kodak DC-240/280 library by Randy Scott <scottr@wwa.com>
 	* Kodak DC-240/280 USB support by David Brownell <david-b@pacbell.net>
 	* Konica Q M-100 library implemented by Phill Hugo <phill@gphoto.org>
         * Konica library improvements by Ed Legowski <edlegowski@pobox.com>
         * Minolta Dimage V library by Gus Hartmann <hartmann@cs.wisc.edu> 
+	* Mustek MDC 800 library by Pedro Caria <pmiguel@maquina.com>
 	* Nikon CP 600 library by M. McCormack <mccormac@aals27.alcatel.com.au>
 	* Philips ESP library written by Bob Paauwe <bpaauwe@bobsplace.com>
 	* PhotoPC library written by Eugene Crosser <crosser@average.org> 
@@ -142,11 +143,11 @@ FEATURES/CHANGES:
 INSTALLATION:
 	1) Untar/zip the archive by:
 
-		tar zxvf gphoto-0.x.tgz
+		tar zxvf gphoto-0.x.y.tgz
 
 	   (but you knew that because you're reading this :-)
 
-	2) Enter the gphoto-0.x/ directory, and type './configure'.
+	2) Enter the gphoto-0.x.y/ directory, and type './configure'
 	   Then type 'make' to build the camera model libraries, and
            the gphoto binary.
 
@@ -155,7 +156,7 @@ INSTALLATION:
            into /usr/local/bin/
 
 UNINSTALL:
-	In the gphoto-0.x directory, type 'make uninstall'
+	In the gphoto-0.x.y/ directory, type 'make uninstall'
 
 BUGS/PROBLEMS:
 	* Will occasionally not perform operation if camera is
@@ -186,7 +187,7 @@ GALLERY THEMES DOCUMENTATION:
 	http://cvs.gnome.org/lxr/source/gphoto/THEMES
 
 COPYING:
-	gPhoto v.0.3.6-pre - the GNU digital camera application
+	gPhoto - the GNU Digital Camera Program
 	Copyright (C) 1998-99 Scott Fritzinger <scottf@unr.edu>
 
 	For each camera library, see the authors' source code.  The authors

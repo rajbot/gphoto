@@ -7,5 +7,5 @@ gphotodocdir = $(datadir)/gphoto/doc
 
 gphotodoc_DATA = AUTHORS MANUAL
 
-EXTRA_DIST = $(gphotodoc_DATA) NEWS README THEMES TODO COPYING CREDITS \
+EXTRA_DIST = $(gphotodoc_DATA) NEWS README THEMES TODO COPYING THANKS \
 	ChangeLog FAQ INSTALL PROGRAMMERS gphoto.spec configure

@@ -1,65 +1,170 @@
-gPhoto is registered in the Gnome and the Debian Bug Tracking System.
+From: Ole Aamot <oka@gnure.ping.uio.no>
+To: gphoto-devel@gphoto.org,gphoto-kodak@gphoto.org
+Subject: Hunting bugs for 0.4
+--text follows this line--
+Before Scott can put out a stable release, some bugs should be
+fixed.  (When the 0.4 version is out, the focus moves to 0.5!)
 
-http://bugs.gnome.org and http://bugs.debian.org are tracking systems, 
-which file details of problems reported by users and staff. Each ticket 
-is given a number, and is kept on file until it is marked as having been
-dealt with.
+UNSOLVED BUGS
+=============
+See http://bugs.gnome.org/db/pa/lgphoto.html for a full list of
+outstanding and fixed bugs.  I have browsed through all of them
+and sorted bugs I'm incapable of finding solutions to, in these
+categories:
 
-Please report gPhoto related bugs and problems to these systems.
+Directory browse library:
+* #1697: directory viewer crash on certain filenames
 
-The gphoto bug ticket status page at bugs.gnome.org is available at
-http://bugs.gnome.org/db/pa/lgphoto.html, while Debian bug reports for
-gphoto are availble at http://www.debian.org/Bugs/db/pa/lgphoto.html
+Thumbnail Index:
+* #1707: gPhoto
 
-A problem report, with mail header, looks something like this:
+Gallery plugin:
+* #1740: Gallery Names
+* #1741: Gallery Names
 
-  To: submit@bugs.gnome.org
-  From: ole@gnu.org
-  Subject: invoking error
+Live Camera! plugin:
+* #1730: Segfault - core dumped in gphot
 
-  Package: gphoto
-  Version: 0.3.9
+Progress bar:
+* #2040: No progress-bars makes activity unclear
 
-  When I invoke `gphoto' without arguments from an ordinary shell
-  prompt it prints `goodbye', instead of opening the GTK+ window.
+Casio QV30 on FreeBSD-3.1:
+* #1716: Gphoto core dumps after leaving scdRead -
 
-  Here is a transcript:
+Fuji:
+* #2171: gphoto segv deleting pix from fuji mx-2700 camera
 
-  $ gphoto
-  goodbye
-  $ /usr/local/bin/gphoto
-  goodbye
-  $
+HP C20 / Konica library:
+* #2191: Program freezes during serial I/O
+* #2192: Take picture not working if camera has no pictures
 
-  I suggest that the foo() routine, in main.c, be corrected.
+Kodak DC-20/25:
+* #1620: gphoto fails to get index from DC-20
+* #1630: Thumbnails are flipped horizontally.
+* #1777: DC-20 and Gphoto at it again.
+* #1994: Kodak DC25 not working
 
-  I am using RedHat 6.0, Linux kernel version 2.2.12
-  and GNU libc 2.1.1.
+Kodak (everything else):
+* #1692: gphoto crashes
+
+Kodak DC 210+ (Alt. Serial Permissions)
+* #1745: segfault when accessing input device with insuff.
+
+Kodak DC 210+ (sleep mode issues)
+* #1933: Invoking Error
+
+Kodak DC 210:
+* #1752: DC210+ does not work.
+
+Kodak DC 240:
+* #1708: DC 240 libs makes errors
+* #1916: core dump on 'live camera' with DC240
+
+Ricoh RDC 300Z:
+* #1682: Segfault after transfering pictures on Ricoh RDC-300Z
+
+Portability issues:
+* #1693: compilation problems on solaris
+* #1934: gphoto 0.3.5 fails to compile on Solaris 7 x86
+
+Serial permissions:
+* #2013: serial port issues
+
+Documentation:
+* #2014: minor documentation inconsistency
+
+* #2193: Save to disk can result in strange large file
+
+CLOSING BUGS
+============
+Check the details for 1630 at http://bugs.gnome.org/db/16/1630.html
+and for 2193 at http://bugs.gnome.org/db/21/2193.html
+Close a bug reports by sending email to <1630-done@bugs.gnome.org>.
+
+Notify the list, if you are working on unstable code or have made a 
+new patch with improvements that you think should go into the 0.5
+development branch (odd number version are unstable versions).
+
+ANONYMOUS CVS ACCESS
+====================
+
+For anonymous access to gPhoto in CVS you should follow these steps:
+
+    1. First you need to setup the CVS environmental variables. 
+
+       You might want to put this in your login script.
+       export CVSROOT=:pserver:anonymous@anoncvs.gnome.org:/cvs/gnome
+
+    2. Then use CVS as normal like this:
+
+          cvs login  (There is no password for the 'anonymous' user.)
+          cvs -z3 checkout gphoto
+
+   You can get individual library modules by:
+
+         cvs -z3 checkout gphoto/sony
+         cvs -z3 checkout gphoto/philips
+
+STAY UP-TO-DATE
+===============
+http://cvs.gnome.org/bonsai/cvsquery.cgi?branch=HEAD&file=/gphoto/&date=day
+displays the latest CVS commits to the gphoto module.
+
+HOW TO SUBMIT BUGS
+==================
+If you have found a bug, please send it to <submit@bugs.gnome.org>:
+Problem reports (with mail header) should look something like this:
+
+        To: submit@bugs.gnome.org
+        From: johndoe@gphoto.org
+        Subject: invoking error
+
+        Package: gphoto
+        Version: CVS Mon Sep 27 20:32:29 CEST 1999  (or release)
+
+        When I invoke `gphoto' without arguments from an ordinary
+        shell prompt it prints `goodbye', instead of opening the 
+        GTK+ window.
+
+        Here is a transcript:
+
+        $ gphoto
+        goodbye
+        $ /usr/local/bin/gphoto
+        goodbye
+        $
+
+        I suggest that the foo() routine, in main.c, be corrected.
+
+        (Consider submitting a patch ("diff -uN old/ new/").)
+
+        I am using RedHat 6.0, Linux kernel version 2.2.5-15
+        and GNU libc 2.1.1.
+        -----------------------------------------------------
 
 Please include in your report:
 
-* The exact and complete text of any error messages printed or
-  logged. This is very important!
-* Exactly what you typed or did to demonstrate the problem.
-* A description of the incorrect behaviour: exactly what behaviour
-  you were expecting, and what you observed. A transcript of an
-  example session is a good way of showing this.
-* A suggested fix, or even a patch, if you have one.
-* Details of the configuration of the program with the problem.
-  Include the complete text of its configuration files.
+     * The exact and complete text of any error messages printed or
+       logged. This is very important!
+     * Exactly what you typed or did to demonstrate the problem.
+     * A description of the incorrect behaviour: exactly what
+       behaviour you were expecting, and what you observed. 
+       A transcript of an example session is a good way of showing this.
+     * A suggested fix, or even a patch, if you have one.
+     * Details of the configuration of the program with the problem.
+       Include the complete text of its configuration files.
 
-Include any detail that seems relevant - you are in very little danger
-of making your report too long by including too much information. If
-they are small please include in your report any files you were using
-to reproduce the problem (uuencoding them if they may contain odd
-characters etc.).
+   Include any detail that seems relevant - you are in very little
+   danger of making your report too long by including too much
+   information. If they are small please include in your report any 
+   files you were using to reproduce the problem (uuencoding them if 
+   they may contain odd characters etc.).
 
-Of course, like any email, you should include a clear, descriptive
-Subject line in your main mail header. The subject you give will be
-used as the initial ticket title in the tracking system, so please try
-to make it informative.
+   Of course, like any email, you should include a clear, descriptive
+   Subject line in your main mail header. The subject you give will
+   be used as the initial ticket title in the tracking system, so please
+   try to make it informative.
 
-Visit http://bugs.gnome.org/ for further information about the GNOME
-Bug Tracking System.
+Happy hunting!
 
-Thank you!
+-- Ole

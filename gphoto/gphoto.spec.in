@@ -2,7 +2,7 @@
 %define rel	1
 %define prefix	/usr
 
-Summary: GNU Photo (gphoto)
+Summary: gPhoto - the GNU Digital Camera Program
 Name: gphoto        
 Version: %ver
 Release: %rel
@@ -15,9 +15,10 @@ Docdir: %{prefix}/doc
 Requires: gtk+ >= 1.2.0
 
 %description
-gphoto is part of the GNOME project and is
-a fine interface for a wide variety of digital
-cameras
+gPhoto is a part of the GNU project and is an universal, free
+GTK+ application and library framework that lets you download
+images from several different digital camera models, and from
+the local harddrive, and generate HTML albums.
 
 %prep
 %setup -q
@@ -37,7 +38,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 rm -rf $RPM_BUILD_ROOT
 
 %files
-%doc AUTHORS COPYING CREDITS ChangeLog FAQ MANUAL NEWS README THEMES
+%doc AUTHORS COPYING ChangeLog FAQ MANUAL NEWS README THANKS THEMES
 %{prefix}/man/man1/gphoto.1
 %{prefix}/bin/*
 %{prefix}/share/gphoto/drivers/*

@@ -1,206 +1,113 @@
-From http://www.gphoto.org/news.php3
+A new development version of gPhoto, the GNU Digital Camera Program,
+has been released: gphoto-0.3.9
 
-   gPhoto News, June 1999
-   
-     gPhoto is IN DEVELOPMENT, so please [1]submit bugs and comments to
-                    [2]gphoto-devel@gphoto.org. Thanks!
-                               June 22, 1999
-                                      
-   Casio Qv-7000SX with IrDA
-   
-   Linux Kernel hacker Dag Brattli [3]<dagb@cs.uit.no> announced on the
-   [4]gphoto-devel [5]mailing list today that he will write a gphoto
-   driver for the Casio Qv-7000SX digital camera with Tran-P.
-   
-   Dag Brattli is the founder and maintainer of the [6]Linux-IrDA
-   project. The first Linux-implementation of the IrDATM standards was
-   included in the 2.2 kernel.
-   
-   IrDATM (Infrared Data Association) is an industry standard for
-   infrared wireless communication. Most laptops sold today are equipped
-   with an IrDA compliant infrared transceiver, which enables you to
-   communicate with devices such as printers, modems, fax, LAN, and other
-   laptops, as well as digital cameras.
-   
-                               June 20, 1999
-                                      
-   Negative response from Canon Australia
-   
-   Raymond Newman [7]<raymond@one.com.au> forwarded this to the
-   [8]gphoto-devel@gphoto.org [9]mailing list today:
-Subj: Re: A PS-A5 / Unix possability???
-From: [10]gpaterson@cscpo.canon.com.au
-To:   [11]raymond@one.com.au
+Please report bugs to the Bug Tracking System (http://bugs.gnome.org)
+Mail source diff patches and comments to: <gphoto-devel@gphoto.org>
 
-Dear Mr Newman
 
-I'm sorry, but Canon Inc are still not releasing the requested
-information for the PowerShot A5 Digital Camera (it may well be company
-confidential or 3rd party developed protocol).
+AVAILABILITY
 
-The product has been designed and marketed for the Microsoft Windows and
-Apple Macintosh platforms only.
+* ftp://ftp.gphoto.org/projects/gphoto/pub/tar/0.3/gphoto-0.3.9.tar.gz
 
-If your requirement is still solely for the Unix / Linux environment I
-can only suggest selling or trading in your PS-A5 on another product
-that is qualified for your required platform.
+i386/src RPMs (built on RedHat 6.0) of 0.3.9 (including Canon PowerShot A50,
+Kodak DC-240/280 USB and Mustek MDC-800 digital camera support) are also
+available:
 
-I'm sure that this is not what you wanted to hear, but I don't believe
-that there are any other options within Canon.
+* ftp://ftp.gphoto.org/projects/gphoto/pub/rpm/i386/gphoto-0.3.9-1.i386.rpm
+* ftp://ftp.gphoto.org/projects/gphoto/pub/rpm/SRPMS/gphoto-0.3.9-1.src.rpm
 
-regards
-Glenn Paterson
-CSCPO, Canon Australia
+'slink' packages (for the i386, m68k, powerpc and alpha architectures) for
+fgphoto-0.3.9 will soon be available from a local Debian GNU/Linux mirror.
 
-   We urge Canon and competing camera manufacturers to release open
-   specifications now, and the several million users of free operating
-   systems to not buy camera products from Canon until they provide
-   specs.
-   
-                               June 18, 1999
-                                      
-   gphoto 0.3.2 RPMs and tarball
-   
-   Paul Jenner [12]<psj@mustec.eu.org> has built new RPMs and tarball CVS
-   snapshots of gphoto-0.3.2. gPhoto is still in heavy development, and
-   will hopefully reach a stable 0.4 soon.
-     * [13]gphoto-0.3.2-1.i386.rpm (596 Kb)
-     * [14]gphoto-0.3.2-1.src.rpm (439 Kb)
-     * [15]gphoto-0.3.2.tar.gz (438 Kb)
-       
-                               June 13, 1999
-                                      
-   DC210 support for gPhoto
-   
-   Brian Hirt [16]<bhirt@mobygames.com>, the developer of [17]KDCPI, a
-   command line perl program that interfaces with the Kodak DC210,
-   reported to [18]<gphoto-kodak@gphoto.org> [19]mailing list that he has
-   downloaded the gPhoto source and started working on a gphoto library.
-   
-   A development version of the DC210 library is in gphoto/kodak in GNOME
-   CVS.
-   
-                               June 12, 1999
-                                      
-   The gPhoto roadmap
-   
-   Bob Paauwe [20]<bpaauwe@bobsplace.com> has scanned of the
-   [21]gphoto-devel@gphoto.org [22]mailing list archive and organized a
-   new [23]todo list by version number.
-   
-   The next stable development release (version 0.4, as all stable
-   release will use even number versions) sure will have a lot of new
-   features.
-   
-                               June 10, 1999
-                                      
-   Nikon considers gPhoto support
-   
-   Phill Hugo [24]<phill@gnu.org> has spoken to Nikon as part of gPhoto
-   and have a few leads on developing a driver for them.
-   
-   Please mention gPhoto and this site, if you mail them.
-   
-   It is always a great help for potential camera customers to pressure
-   companies into support our work BEFORE you give them your money.
-   
-   Many companies simply don't have time to look at the issues involved
-   unless there is an financial incentive to do so. The more open we can
-   make them, the better gPhoto can be and the more enjoyment you'll get
-   from your camera.
-   
-   Phill has added the file ``[25]CONTACTS'' in CVS, that contains a list
-   of company members who you can write to asking for GPL drivers or open
-   specifications. There is also a sample letter in ``[26]LETTER''.
-   
-                                June 7, 1999
-                                      
-   Alan Cox plugs gPhoto
-   
-   Today Linux kernel hacker Alan Cox [27]<alan@redhat.com> comments
-   gPhoto in his [28]development diary:
-   
-     "...It also happens to be supported by gphoto which is very cute,
-     very slick and very buggy (but it doesnt claim to be finished). It
-     crashed every download until I attacked it with gdb and fixed my
-     copy up."
-     
-   Some of the driver problems will be sorted out with his help.
-   
-   Thanks, Alan.
-   
-                                June 2, 1999
-                                      
-   autoconf in CVS
-   
-   Paul S Jenner [29]<psj@mustec.eu.org> has committed the final autoconf
-   patch to CVS along with Gary Ross' [30]<gdr@hooked.net> Casio changes
-   that came with it.
-   
-   Now it is finally in CVS you can build gphoto with autoconf provided
-   you have [31]GNU autoconf, [32]GNU automake and [33]GNU libtool on
-   your system. To build simply run:
-   
-./autogen.sh
-make
-make install
 
-   [ [34]May 1999 | [35]April 1999 | [36]March 1999 | [37]February 1999 ]
-                                      
-        [ [38]Main | [39]News | [40]ToDo | [41]Help | [42]Download |
-   [43]Preview | [44]Cameras | [45]Supporting | [46]Feedback | [47]Docs |
-            [48]Discussion | [49]Team | [50]Themes | [51]Links ]
+REQUIREMENTS
 
-References
+* X11 Window system: ftp://ftp.xfree86.org/pub/XFree86/3.3.5/
+* GNU sed: ftp://gnudist.gnu.org/pub/gnu/sed/sed-3.02.tar.gz
+* GTK+ 1.2+: ftp://ftp.gtk.org/pub/gtk/v1.2/gtk+-1.2.5.tar.gz
+* glib 1.2+: ftp://ftp.gtk.org/pub/gtk/v1.2/glib-1.2.5.tar.gz
+* imlib 1.8+: ftp://www.rasterman.com/pub/enlightenment/enlightenment/imlib-1.8.1.tar.gz
 
-   1. http://www.gphoto.org/feedback.php3
-   2. mailto:gphoto-devel@gphoto.org
-   3. mailto:dagb@cs.uit.no
-   4. mailto:gphoto-devel@gphoto.org
-   5. http://www.gphoto.org/lists.php3
-   6. http://www.cs.uit.no/linux-irda/
-   7. mailto:raymond@one.com.au
-   8. mailto:gphoto-devel@gphoto.org
-   9. http://www.gphoto.org/lists.php3
-  10. mailto:gpaterson@cscpo.canon.com.au
-  11. mailto:raymond@one.com.au
-  12. mailto:psj@mustec.eu.org
-  13. ftp://ftp.gphoto.org/projects/gphoto/pub/rpm/i386/gphoto-0.3.2-1.i386.rpm
-  14. ftp://ftp.gphoto.org/projects/gphoto/pub/rpm/SRPMS/gphoto-0.3.2-1.src.rpm
-  15. ftp://ftp.gphoto.org/projects/gphoto/pub/tar/0.3/gphoto-0.3.2.tar.gz
-  16. http://www.gphoto.org/bhirt@mobygames.com
-  17. http://www.berkhirt.com/HomerProductions/products/kdcpi/
-  18. mailto:gphoto-kodak@gphoto.org
-  19. http://www.gphoto.org/lists.php3
-  20. mailto:bpaauwe@bobsplace.com
-  21. mailto:gphoto-devel@gphoto.org
-  22. http://www.gphoto.org/lists.php3
-  23. http://www.gphoto.org/todo.php3
-  24. mailto:phill@gnu.org
-  25. ftp://ftp.gphoto.org/projects/gphoto/pub/CONTACTS
-  26. ftp://ftp.gphoto.org/projects/gphoto/pub/LETTER
-  27. mailto:alan@redhat.com
-  28. http://www.uk.linux.org/diary
-  29. mailto:psj@mustec.eu.org
-  30. mailto:gdr@hooked.net
-  31. http://www.gnu.org/software/autoconf
-  32. http://www.gnu.org/software/automake
-  33. http://www.gnu.org/software/libtool
-  34. http://www.gphoto.org/199905.php3
-  35. http://www.gphoto.org/199904.php3
-  36. http://www.gphoto.org/199903.php3
-  37. http://www.gphoto.org/199902.php3
-  38. http://www.gphoto.org/main.php3
-  39. http://www.gphoto.org/news.php3
-  40. http://cvs.gnome.org/lxr/source/gphoto/TODO
-  41. http://www.gphoto.org/help.php3
-  42. http://www.gphoto.org/download.php3
-  43. http://www.gphoto.org/screenshots.php3
-  44. http://www.gphoto.org/cameras.php3
-  45. http://www.gphoto.org/supporting.php3
-  46. http://www.gphoto.org/feedback.php3
-  47. http://www.gphoto.org/docs.php3
-  48. http://www.gphoto.org/lists.php3
-  49. http://www.gphoto.org/team.php3
-  50. http://www.gphoto.org/themes.php3
-  51. http://www.gphoto.org/links.php3
+
+NEWS
+
+* Kodak DC240 serial/USB driver
+
+Randy D. Scott <scottr@wwa.com> has implemented a Kodak DC240 
+library based on open specifications from Eastman Kodak, Inc.
+
+David Brownell <david-b@pacbell.net> has got gPhoto and Linux 2.3
+kernel support talking to his DC-240 over USB.   You'll need a new
+driver in your Linux kernel. (2.3 development.  2.3.14 works, but
+grab the latest from ftp://ftp.kernel.org/pub/linux/kernel/v2.3/ )
+
+* Canon A50 driver
+
+Despite Canon Inc's lack of co-operation on releasing specifications,
+we're happy to announce that this release has a free Canon A50 driver.
+
+Werner Almesberger <almesber@lrc.di.epfl.ch> reports that it's the
+work of Wolfgang Reissnegger and himself.  Most of the details were
+found by staring at Ray Newman's A5 traces. Also, the analysis of the
+PS350 protocol by Anne Bezemer was quite helpful for understanding the
+overall design.  (Ole W. Saastad <Ole.W.Saastad@chem.sintef.no> works
+on gPhoto support for the Canon PowerShot A5, based on this library.)
+
+* Mustek MDC 800 driver
+
+Pedro Miguel Caria <pmiguel@maquina.com> and Jose Gabriel Marcelino
+<gabriel@maquina.com> have written a gPhoto driver for the Mustek 
+MDC 800 digital camera.  The base code was done in a few hours and 
+gphoto integration was done in 2 days. You get to see the results 
+right away. 
+
+
+CAMERA SUPPORT
+
+gPhoto 0.3.9 ships with 14 different camera libraries and supports 80+
+different digital still camera models, from Agfa, Apple, Canon, Casio,
+Chinon, Epson, Fuji, Hewlett Packard, Kodak, Konica, Minolta, Mustek, 
+Nikon, Olympus, Panasonic, Philips, Polaroid, Ricoh, Sanyo, and Sony.
+Check http://www.gphoto.org/cameras.php3 for a list of camera models.
+
+
+VENDOR SUPPORT
+
+Casio, Kodak, Minolta, Mustek, and Konica provide free, open camera
+communication specifications.  The gPhoto developers encourage other
+vendors to also release specs to their latest digital camera models.
+
+It is always a great help for potential camera customers to ask
+companies if they support gPhoto before you invest in a camera.
+
+Many companies don't have time to look at the issues involved unless 
+there is an financial incentive to do so.  The more open we can make
+them, the better gPhoto can be and the more enjoyment you'll get from 
+your digital camera.
+
+The file ``CONTACTS'' in the distribution contains a list of companies
+that you can write to asking for GPL drivers or camera specifications.
+
+
+MAILINGLISTS
+
+<gphoto-devel@gphoto.org>
+  is the developer mailinglist, with bug reports, camera
+  reports, etc.  If you would like to get involved in
+  gPhoto development, then you may want to read it.
+  Subscribe at http://lists.styx.net/mailman/listinfo/gphoto-devel/
+
+<gphoto-kodak@gphoto.org>
+  is a list for gPhoto Kodak library discussion. 
+  Subscribe at http://lists.styx.net/mailman/listinfo/gphoto-kodak/
+
+<gphoto@gphoto.org >
+  is a general list where gPhoto user issues are discussed, 
+  and announcements are posted by the gPhoto contributors.
+  Subscribe at http://lists.styx.net/mailman/listinfo/gphoto/ 
+
+Check http://www.gphoto.org/ for more details on the gPhoto effort.
+
+
+Happy shooting,
+The gPhoto team

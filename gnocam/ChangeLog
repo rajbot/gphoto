@@ -1,3 +1,7 @@
+2001-08-25  Lutz Müller <urc8@rz.uni-karlsruhe.de>
+
+	* configure.in: Fix check for gconf
+
 2001-08-23  Lutz Müller <urc8@rz.uni-karlsruhe.de>
 
 	* gnocam/*:

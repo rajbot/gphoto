@@ -1,8 +1,9 @@
 #include "config.h"
-#include "GNOME_C.h"
 #include "camera-dir.h"
 #include "camera-file.h"
 #include "camera-utils.h"
+
+#include <libgnocam/GNOME_C.h>
 
 #include <libgnomevfs/gnome-vfs-context.h>
 #include <libgnomevfs/gnome-vfs-handle.h>
@@ -206,36 +207,17 @@ do_open_directory (GnomeVFSMethod *method, GnomeVFSMethodHandle **handle,
 	GnomeVFSURI *uri, GnomeVFSFileInfoOptions options,
 	GnomeVFSContext *context)
 {
-	DirHandle *dh;
-	GnomeVFSResult r;
+	return camera_dir_open (uri, (CameraDir **) handle);
+}
 
-	r = camera_dir_get (uri, &dh);
-	if (r != GNOME_VFS_OK) return r;
-
-	return (GNOME_VFS_OK);
+static GnomeVFSResult
+do_close_directory (GnomeVFSMethod *method, GnomeVFSMethodHandle *handle,
+	GnomeVFSContext *context)
+{
+	return camera_dir_close ((CameraDir *) handle);
 }
 
 #if 0
-static GnomeVFSResult do_close_directory (
-        GnomeVFSMethod*                 method,
-        GnomeVFSMethodHandle*           handle,
-	GnomeVFSContext*                context)
-{
-	DirectoryHandle *directory_handle = (DirectoryHandle *) handle;
-
-	G_LOCK (cameras);
-
-	/* Free the handle */
-	unref_camera (directory_handle->camera);
-	gp_list_free (directory_handle->files);
-	gp_list_free (directory_handle->dirs);
-	g_free (directory_handle->dirname);
-	g_free (directory_handle);
-
-	G_UNLOCK (cameras);
-
-	return (GNOME_VFS_OK);
-}
 
 static GnomeVFSResult do_read_directory (
 	GnomeVFSMethod*                 method,
@@ -576,7 +558,7 @@ static GnomeVFSMethod method = {
         NULL, //do_tell,
         NULL,                           /* do_truncate_handle           */
         do_open_directory,
-        NULL, //do_close_directory,
+	do_close_directory,
         NULL, //do_read_directory,
         NULL, //do_get_file_info,
         NULL, //do_get_file_info_from_handle,

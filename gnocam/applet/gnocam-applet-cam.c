@@ -4,6 +4,7 @@
 #include "GNOME_C.h"
 
 #include <libgnocam/gnocam-chooser.h>
+#include <libgnocam/gnocam-util.h>
 
 #include <gtk/gtkimage.h>
 #include <gtk/gtktogglebutton.h>
@@ -179,66 +180,18 @@ gnocam_applet_cam_disconnect (GnocamAppletCam *c)
 void
 gnocam_applet_cam_connect (GnocamAppletCam *c)
 {
-	Bonobo_ServerInfoList *l;
 	CORBA_Environment ev;
-	GNOME_C_Mngr m;
-	GNOME_C_Mngr_ManufacturerList *ml;
-	GNOME_C_Mngr_ModelList model_l;
-	GNOME_C_Mngr_PortList pl;
-	guint i, j, k, n;
 
 	gnocam_applet_cam_disconnect (c);
 
-	if (!c->priv->model || !c->priv->manuf || !c->priv->port) {
-		g_warning ("Missing parameter!");
-		return;
-	}
-
 	CORBA_exception_init (&ev);
-	l = bonobo_activation_query ("repo_ids.has('IDL:GNOME/C/Mngr')", NULL,
-				     &ev);
-	if (BONOBO_EX (&ev)) {
-		g_warning ("Could not find any camera manager!");
-		CORBA_exception_free (&ev);
-		return;
-	}
-	for (i = 0; i < l->_length; i++) {
-	    m = bonobo_get_object (l->_buffer[i].iid, "IDL:GNOME/C/Mngr", &ev);
-	    if (BONOBO_EX (&ev)) continue;
-	    ml = GNOME_C_Mngr_get_devices (m, &ev);
-	    if (BONOBO_EX (&ev)) {
-		    bonobo_object_release_unref (m, NULL);
-		    continue;
-	    }
-	    for (j = 0; j < ml->_length; j++) {
-		if (strcmp (c->priv->manuf, ml->_buffer[j].manufacturer))
-		    continue;
-		model_l = ml->_buffer[j].models;
-		for (k = 0; k < model_l._length; k++) {
-		    if (strcmp (c->priv->model, model_l._buffer[k].model))
-			continue;
-		    pl = model_l._buffer[k].ports;
-		    for (n = 0; n < pl._length; n++)
-			if (!strcmp (c->priv->port, pl._buffer[n])) {
-			    c->priv->camera = GNOME_C_Mngr_connect (m,
-				c->priv->manuf, c->priv->model, c->priv->port,
-				&ev);
-			    if (BONOBO_EX (&ev))
-				    g_warning ("Could not get camera!");
-			    bonobo_object_release_unref (m, NULL);
-			    CORBA_free (ml);
-			    CORBA_free (l);
-			    CORBA_exception_free (&ev);
-			    gnocam_applet_cam_update (c);
-			    return;
-			}
-		}
-	    }
-	    bonobo_object_release_unref (m, NULL);
-	    CORBA_free (ml);
-	}
-	CORBA_free (l);
+	c->priv->camera = gnocam_util_get_camera (c->priv->manuf,
+		c->priv->model, c->priv->port, &ev);
+	if (BONOBO_EX (&ev))
+		g_warning ("Could not get camera!");
 	CORBA_exception_free (&ev);
+	
+	gnocam_applet_cam_update (c);
 }
 
 static void

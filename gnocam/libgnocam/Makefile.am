@@ -1,5 +1,5 @@
 INCLUDES =						\
-	-I$(top_srcdir)					\
+	-I$(top_srcdir) -I$(top_builddir)		\
 	$(LIBGNOCAM_CFLAGS)				\
 	-DIMAGEDIR=\"$(prefix)/share/pixmaps\"		\
 	-DGNOCAM_GLADE_DIR=\"$(GNOCAM_GLADE_DIR)\"	\
@@ -15,7 +15,8 @@ $(CORBA_GENERATED): $(top_srcdir)/idl/GNOME_C.idl
 noinst_LTLIBRARIES = libgnocam.la
 libgnocam_la_SOURCES = 				\
 	$(CORBA_GENERATED) 			\
-	gnocam-chooser.c gnocam-chooser.h
+	gnocam-chooser.c gnocam-chooser.h	\
+	gnocam-util.c gnocam-util.h
 
 libgnocam_la_LDFLAGS = $(LIBGNOCAM_LIBS)
 

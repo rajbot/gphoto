@@ -1,3 +1,5 @@
+SUBDIRS = dscf55
+
 drivers_LTLIBRARIES = libgphoto_sony_dscf1.la
 
 CFLAGS = @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@ 

@@ -46,6 +46,7 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 	if (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (button), "save")) == 1) {
 		g_assert ((file = gtk_object_get_data (GTK_OBJECT (button), "file")) != NULL);
 		camera_file_save (file, filename_user);
+		gp_file_unref (file);
 	} else {
 		g_assert ((camera = gtk_object_get_data (GTK_OBJECT (button), "camera")) != NULL);
 		g_assert ((path = gtk_object_get_data (GTK_OBJECT (button), "path")) != NULL);
@@ -200,9 +201,6 @@ camera_file_save (CameraFile* file, gchar* filename)
                         dialog_information (_("An error occurred while trying to close the file '%s' (%s)."), filename, gnome_vfs_result_to_string (result));
                 }
         }
-
-	/* Clean up. */
-	gp_file_unref (file);
 }
 
 void
@@ -318,7 +316,10 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 	if (file) {
 		gp_file_ref (file);
 		if (save_as) camera_file_save_as (file);
-		else camera_file_save (file, filename_user);
+		else {
+			camera_file_save (file, filename_user);
+			gp_file_unref (file);
+		}
 	}
 
 	/* Clean up. */

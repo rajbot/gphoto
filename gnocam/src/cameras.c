@@ -39,27 +39,14 @@ void on_camera_tree_folder_drag_data_get        (GtkWidget* widget, GdkDragConte
 void
 on_camera_tree_file_drag_data_get (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data)
 {
-	dialog_information (_("Not yet implemented!"));
+	gchar*		filename;
+	CameraFile*	file;
 
-        /* Check which files have been selected. */
-//      selection = g_list_first (clist->selection);
-//      filenames = g_strdup ("");
-//      for (i = 0; i < g_list_length (selection); i++) {
-//      row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
-//            gtk_clist_get_text (clist, row, 2, &file_name);
-//              g_assert (file_name != NULL);
-//              filenames_old = filenames;
-//              if (i == 0) filenames = g_strdup_printf ("file://tmp/%s\n", g_strdup (file_name));
-//              else filenames = g_strdup_printf ("%sfile://tmp/%s\n", filenames_old, g_strdup (file_name));
-//              g_free (filenames_old);
-//      }
-
-        /* Calculate size of variable filenames. */
-//      for (i =0; ; i++) if (filenames[i] == 0) break;
-
-        //FIXME: Getting files takes too much time. Previews work...
-//      save_all_selected (xml, FALSE, FALSE, TRUE);
-//      gtk_selection_data_set (selection_data, selection_data->target, 8, filenames, i + 1);
+	if (!(file = gtk_object_get_data (GTK_OBJECT (widget), "file"))) g_assert ((file = gtk_object_get_data (GTK_OBJECT (widget), "preview")) != NULL);
+	filename = g_strdup_printf ("file:/tmp/%s\n", file->name);
+	camera_file_save (file, filename);
+	gtk_selection_data_set (selection_data, selection_data->target, 8, filename, strlen (filename));
+	g_free (filename);
 }
 
 void

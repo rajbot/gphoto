@@ -8,23 +8,6 @@
 
 #include "gphoto-extensions.h"
 
-#define GNOCAM_EXT_DEBUG 1
-
-#if GNOCAM_EXT_DEBUG
-#define CAM_EXT_DEBUG_PRINT(x)				\
-G_STMT_START {                                          \
-        printf ("%s:%04d ", __FILE__,__LINE__);		\
-        printf ("%s() ", __FUNCTION__);			\
-        printf x;					\
-        fputc ('\n', stdout);				\
-        fflush (stdout);				\
-}G_STMT_END
-#define CAM_EXT_DEBUG(x) CAM_EXT_DEBUG_PRINT(x)
-#else
-#define CAM_EXT_DEBUG(x)
-#endif
-
-
 GnomeVFSResult
 gp_result_as_gnome_vfs_result (gint result)
 {
@@ -70,9 +53,6 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 	static GStaticMutex hash_table_mutex = G_STATIC_MUTEX_INIT;
 	static GHashTable  *hash_table = NULL;
 
-	CAM_EXT_DEBUG (("ENTER"));
-	CAM_EXT_DEBUG (("name_or_url: %s", name_or_url));
-
 	g_return_val_if_fail (camera, GP_ERROR_BAD_PARAMETERS);
 	g_return_val_if_fail (name_or_url, GP_ERROR_BAD_PARAMETERS);
 
@@ -85,15 +65,12 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 		GError* gerror = NULL;
 		gchar*  argv[1] = {"Whatever"};
 
-		CAM_EXT_DEBUG (("  Initializing gconf..."));
 		g_return_val_if_fail (gconf_init (1, argv, &gerror), GP_ERROR);
 	}
 
 	/* Get the default client if necessary */
-	if (!client) {
-	    	CAM_EXT_DEBUG (("  Getting default client..."));
+	if (!client)
 	    	client = gconf_client_get_default ();
-	}
 	
 	/* Make sure we are given a camera name. */
 	if (!strncmp (name_or_url, "camera:", 7)) name_or_url += 7;
@@ -110,8 +87,6 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 	name = g_strndup (name_or_url, i);
 
 	/* Get the list of configured cameras */
-	CAM_EXT_DEBUG (("  I am going to search for '%s'...", name));
-	CAM_EXT_DEBUG (("  Getting list of configured cameras..."));
 	g_static_mutex_lock (&client_mutex);
 	list = gconf_client_get_list (client, 
 				      "/apps/" PACKAGE "/cameras",
@@ -135,16 +110,13 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 //	g_slist_free (list);
 
 	/* If we don't have a model at this point, exit. */
-	if (!model) {
-		g_warning ("GConf is unable to find a camera for '%s'!", 
-			   name_or_url);
+	if (!model)
 		return (GP_ERROR);
-	}
+
 	g_return_val_if_fail (model, GP_ERROR);
 	g_return_val_if_fail (port, GP_ERROR);
 
 	/* Do we already have this camera? */
-	CAM_EXT_DEBUG (("Looking for model '%s' on port '%s'...", model, port));
 	tmp = g_strconcat (model, port, NULL);
 	g_static_mutex_lock (&hash_table_mutex);
 	*camera = g_hash_table_lookup (hash_table, tmp);
@@ -153,13 +125,11 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 	if (*camera) {
 
 	    	/* Camera found! Ref it so it doesn't get lost... */
-	    	CAM_EXT_DEBUG (("Found camera!"));
 	    	gp_camera_ref (*camera);
 
 	} else {
 
 		/* Create a new camera */
-	        CAM_EXT_DEBUG (("Creating new camera..."));
 		if ((result = gp_camera_new (camera)) != GP_OK) {
 			g_free (model);
 			g_free (port);
@@ -170,13 +140,11 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 		(*camera)->port->speed = 0;
 
 		/* Connect to the camera */
-		CAM_EXT_DEBUG (("Initializing camera..."));
 		if ((result = gp_camera_init (*camera)) != GP_OK) {
 		    	g_free (model);
 			g_free (port);
 		    	gp_camera_unref (*camera);
 			*camera = NULL;
-			CAM_EXT_DEBUG (("gp_camera_init() failed"));
 			return (result);
 		}
 
@@ -196,7 +164,6 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 	g_free (model);
 	g_free (port);
 
-	CAM_EXT_DEBUG (("EXIT"));
 	return (GP_OK);
 }
 

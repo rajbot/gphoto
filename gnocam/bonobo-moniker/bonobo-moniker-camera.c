@@ -23,6 +23,8 @@ camera_resolve (BonoboMoniker 		    *moniker,
 		
 		CORBA_exception_init (&tmp_ev);
 	
+		if (getenv ("DEBUG_GNOCAM"))
+			g_message ("Trying to get stream (rw)...");
 		mode = Bonobo_Storage_READ | Bonobo_Storage_WRITE | comp_mode;
 		stream = bonobo_stream_open_full ("camera", name, mode,
 						  0644, &tmp_ev);
@@ -32,6 +34,8 @@ camera_resolve (BonoboMoniker 		    *moniker,
 
 			CORBA_exception_free (&tmp_ev);
 
+			if (getenv ("DEBUG_GNOCAM"))
+				g_message ("Trying to get stream (r)...");
 			mode = Bonobo_Storage_READ | comp_mode;
 			stream = bonobo_stream_open_full ("camera", name, mode,
 							  0644, ev);

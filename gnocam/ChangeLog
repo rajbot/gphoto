@@ -1,5 +1,13 @@
 2001-07-06	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
+	Do "export DEBUG_GNOCAM=1" in order to get the debugging stuff.
+
+	* bonobo-moniker/bonobo-moniker-camera.c: Debugging stuff.
+	* bonobo-storage-module/bonobo-storage-camera.c: Debugging stuff.
+	* libgnocam/gphoto-extensions.c: Removed debugging stuff.
+
+2001-07-06	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
 	* gnome-vfs-module/Makefile.am: Add BONOBO_[LIBS,CFLAGS].
 
 2001-06-12	Lutz Müller  <urc8@rz.uni-karlsruhe.de>

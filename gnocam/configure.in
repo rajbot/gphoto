@@ -57,6 +57,10 @@ if gnome-config --libs bonobox > /dev/null 2>&1; then
     vers=`gnome-config --modversion bonobo | awk 'BEGIN { FS = "."; } { printf "%d", $1 * 1000 + $2;}'`
         if test "$vers" -ge 37; then
             AC_MSG_RESULT(found)
+	    BONOBO_LIBS="`gnome-config --libs bonobo bonobox bonobox_print`"
+	    BONOBO_CFLAGS="`gnome-config --cflags bonobo bonobox bonobox_print`"
+	    AC_SUBST(BONOBO_LIBS)
+	    AC_SUBST(BONOBO_CFLAGS)
         else
             AC_MSG_ERROR([
 *** You need at least bonobo-0.37 for this version of ${PACKAGE}. 
@@ -90,7 +94,9 @@ AC_MSG_CHECKING(for vfs)
 if gnome-config --libs vfs > /dev/null 2>&1; then
     AC_MSG_RESULT(found)
     VFS_LIBS="`gnome-config --libs vfs`"
+    VFS_CFLAGS="`gnome-config --cflags vfs`"
     AC_SUBST(VFS_LIBS)
+    AC_SUBST(VFS_CFLAGS)
 else
     AC_MSG_ERROR([
 *** You need gnome-vfs for this version of ${PACKAGE}. Get the latest 
@@ -209,8 +215,8 @@ GPHOTO_LIBS="`gphoto2-config --libs` `gphoto2-port-config --cflags`"
 AC_SUBST(GPHOTO_CFLAGS)
 AC_SUBST(GPHOTO_LIBS)
 
-EXTRA_GNOME_CFLAGS=`gnome-config --cflags libglade bonobo bonobox bonobox_print gal vfs`
-EXTRA_GNOME_LIBS=`gnome-config --libs libglade bonobo bonobox bonobox_print gal vfs`
+EXTRA_GNOME_CFLAGS=`gnome-config --cflags libglade gal`
+EXTRA_GNOME_LIBS=`gnome-config --libs libglade gal`
 AC_SUBST(EXTRA_GNOME_CFLAGS)
 AC_SUBST(EXTRA_GNOME_LIBS)
 

@@ -11,7 +11,8 @@ INCLUDES = \
  $(EXTRA_GNOME_CFLAGS)\
  $(GCONF_CFLAGS)\
  $(EXTRA_WARNING_CFLAGS)\
- $(GPHOTO_CFLAGS)
+ $(GPHOTO_CFLAGS)\
+ $(BONOBO_CFLAGS)
 
 common_ldflags = -avoid-version
 
@@ -25,7 +26,6 @@ libstorage_camera_la_SOURCES =\
 libstorage_camera_la_LDFLAGS =\
  $(GPHOTO_LIBS)\
  $(GCONF_LIBS)\
- $(VFS_LIBS)\
  $(common_ldflags)
 
 libstorage_camera_la_LIBADD =\
@@ -34,4 +34,5 @@ libstorage_camera_la_LIBADD =\
  $(GNOME_LIBDIR)\
  $(GCONF_LIBS)\
  $(EXTRA_GNOME_LIBS)\
- $(GPHOTO_LIBS)
+ $(GPHOTO_LIBS)\
+ $(BONOBO_LIBS)

@@ -11,7 +11,8 @@ INCLUDES = \
  $(GCONF_CFLAGS)\
  $(EXTRA_WARNING_CFLAGS)\
  $(EXTRA_GNOME_CFLAGS)\
- $(GPHOTO_CFLAGS)
+ $(GPHOTO_CFLAGS)\
+ $(BONOBO_CFLAGS)
 
 bin_PROGRAMS = gnocam
 
@@ -34,7 +35,8 @@ gnocam_SOURCES =\
 
 gnocam_LDFLAGS =\
  $(GPHOTO2_LIBS)\
- $(GPIO_LIBS)
+ $(GPIO_LIBS)\
+ $(BONOBO_LIBS)
 
 gladedir = $(datadir)/$(PACKAGE)/
 glade_DATA = gnocam.glade

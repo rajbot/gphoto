@@ -42,7 +42,7 @@ gp_result_as_gnome_vfs_result (gint result)
 gint
 gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 {
-	static GConfClient*	client;
+	static GConfClient*	client = NULL;
         gint 			i, result;
 	gchar*			name;
 	GSList*			list;
@@ -58,7 +58,7 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 		gchar*  argv[1] = {"Whatever"};
 		g_return_val_if_fail (gconf_init (1, argv, &gerror), GP_ERROR);
 	}
-	client = gconf_client_get_default ();
+	if (!client) client = gconf_client_get_default ();
 	
 	/* Make sure we are given a camera name. */
 	if (!strncmp (name_or_url, "camera:", 7)) name_or_url += 7;

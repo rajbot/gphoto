@@ -11,7 +11,8 @@ INCLUDES =\
  $(GNOME_INCLUDEDIR)\
  $(EXTRA_WARNING_CFLAGS)\
  $(GNOME_CFLAGS)\
- $(GPHOTO_CFLAGS)
+ $(GPHOTO_CFLAGS)\
+ $(VFS_CFLAGS)
 	
 
 CORBA_SOURCES =\
@@ -31,7 +32,8 @@ libgnocam_la_LIBADD =\
  $(GNOME_LIBDIR)\
  $(GNOME_LIBS)\
  $(OAF_LIBS)\
- $(GCONF_LIBS)
+ $(GCONF_LIBS)\
+ $(VFS_LIBS)
 
 idls = $(top_srcdir)/idl/GnoCam.idl
 

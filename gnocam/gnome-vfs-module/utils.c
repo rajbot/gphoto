@@ -49,10 +49,8 @@ file_handle_new (GnomeVFSURI* uri, GnomeVFSOpenMode mode, GnomeVFSContext* conte
 	
 		/* Preview? */
 		if (gnome_vfs_uri_get_user_name (uri) && (strcmp (gnome_vfs_uri_get_user_name (uri), "previews") == 0)) {
-			g_print ("PREVIEW\n");
 			*result = GNOME_VFS_RESULT (gp_camera_file_get_preview (camera, file, dirname, (gchar*) filename));
 		} else {
-			g_print ("NORMAL\n");
 			*result = GNOME_VFS_RESULT (gp_camera_file_get (camera, file, dirname, (gchar*) filename));
 		}
 
@@ -74,7 +72,7 @@ file_handle_new (GnomeVFSURI* uri, GnomeVFSOpenMode mode, GnomeVFSContext* conte
 	file_handle->camera = camera;
 	file_handle->folder = dirname;
 	file_handle->position = 0;
-	
+
 	return ((GnomeVFSMethodHandle*) file_handle);
 }
 

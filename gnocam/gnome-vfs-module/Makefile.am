@@ -21,6 +21,8 @@ INCLUDES =\
  $(GNOME_INCLUDEDIR)\
  $(EXTRA_WARNING_CFLAGS)\
  $(GNOME_CFLAGS)\
+ $(VFS_CFLAGS)\
+ $(BONOBO_CFLAGS)\
  $(NULL)
 
 libvfs_camera_la_LIBADD =\
@@ -30,6 +32,8 @@ libvfs_camera_la_LIBADD =\
  $(GNOME_LIBS)\
  $(INTLLIBS)\
  $(GPHOTO_LIBS)\
+ $(VFS_LIBS)\
+ $(BONOBO_LIBS)\
  $(NULL)
 
 libvfs_camera_la_LDFLAGS =\

@@ -88,11 +88,13 @@ gnocam_shortcut_bar_destroy (GtkObject *object)
 	GnoCamShortcutBar* bar;
 	
 	bar = GNOCAM_SHORTCUT_BAR (object);
+
 	gconf_client_notify_remove (bar->priv->client, bar->priv->cnxn);
 	gtk_object_unref (GTK_OBJECT (bar->priv->client));
+	
 	g_free (bar->priv);
 
-	(* GTK_OBJECT_CLASS (parent_class)->destroy) (object);
+	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void

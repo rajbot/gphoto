@@ -10,7 +10,8 @@ INCLUDES =\
  $(EXTRA_GNOME_CFLAGS)\
  $(EXTRA_WARNING_CFLAGS)\
  $(GCONF_CFLAGS)\
- $(GPHOTO_CFLAGS)
+ $(GPHOTO_CFLAGS)\
+ $(BONOBO_CFLAGS)
 
 OAF_FILES =\
  Bonobo_Moniker_camera.oaf.in
@@ -29,7 +30,8 @@ bonobo_moniker_camera_SOURCES =\
 bonobo_moniker_camera_LDADD=\
  ../libgnocam/libgnocam.la\
  $(EXTRA_GNOME_LIBS)\
- $(GPHOTO_LIBS)
+ $(GPHOTO_LIBS)\
+ $(BONOBO_LIBS)
 
 EXTRA_DIST = Bonobo_Moniker_camera.oaf.in
 

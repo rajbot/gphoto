@@ -131,6 +131,7 @@ static GnomeVFSMethod method = {
 GnomeVFSMethod*
 vfs_module_init (const gchar* method_name, const gchar* args)
 {
+	gtk_init (0, NULL);
 	gp_init (GP_DEBUG_NONE);
 	gp_frontend_register (NULL, NULL, NULL, NULL, NULL);
 	
@@ -154,8 +155,6 @@ static GnomeVFSResult do_open (
 {
 	GnomeVFSResult	result;
 
-	g_print ("CAMERA: do_open\n");
-	
 	if ((mode == GNOME_VFS_OPEN_READ) || (mode == GNOME_VFS_OPEN_WRITE)) 
 		*handle = file_handle_new (uri, mode, context, &result);
 
@@ -184,8 +183,6 @@ static GnomeVFSResult do_close (
 	file_handle_t*		file_handle;
 	GnomeVFSResult		result;
 	
-	g_print ("CAMERA: do_close\n");
-
 	g_return_val_if_fail (file_handle = (file_handle_t*) handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
 	g_return_val_if_fail ((file_handle->mode == GNOME_VFS_OPEN_WRITE) || (file_handle->mode == GNOME_VFS_OPEN_READ), GNOME_VFS_ERROR_BAD_PARAMETERS);
 	
@@ -213,8 +210,6 @@ static GnomeVFSResult do_read (
 
 	g_return_val_if_fail (file_handle = (file_handle_t*) handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
 	g_return_val_if_fail (file_handle->mode == GNOME_VFS_OPEN_READ, GNOME_VFS_ERROR_BAD_PARAMETERS);
-
-	g_print ("CAMERA: do_read\n");
 
 	/* Do we have num_bytes left? */
 	if (file_handle->position + num_bytes >= file_handle->file->size) {
@@ -258,8 +253,6 @@ static GnomeVFSResult do_seek (
 	
 	g_return_val_if_fail (file_handle = (file_handle_t*) handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
 
-	g_print ("CAMERA: do_seek\n");
-
 	switch (position) {
 	case GNOME_VFS_SEEK_START:
 		file_handle->position = (long) offset;
@@ -284,8 +277,6 @@ static GnomeVFSResult do_tell (
 
 	g_return_val_if_fail (file_handle = (file_handle_t*) handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
 
-	g_print ("CAMERA: do_tell\n");
-
 	*offset_return = file_handle->position;
 	return GNOME_VFS_OK;
 }
@@ -300,8 +291,6 @@ static GnomeVFSResult do_open_directory (
 {
 	GnomeVFSResult		result;
 
-	g_print ("CAMERA: do_open_directory\n");
-	
 	*handle = directory_handle_new (uri, options, context, &result);
 	return (result);
 }
@@ -313,8 +302,6 @@ static GnomeVFSResult do_close_directory (
 {
 	g_return_val_if_fail (handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
 
-	g_print ("CAMERA: do_close_directory\n");
-	
 	return (directory_handle_free (handle));
 }
 
@@ -351,13 +338,11 @@ static GnomeVFSResult do_read_directory (
 		}
 	} else {
 		directory_handle->position = -1;
-		g_print (" -> EOF\n");
 		return (GNOME_VFS_ERROR_EOF);
 	}
 	GNOME_VFS_FILE_INFO_SET_LOCAL (info, FALSE);
 	
 	directory_handle->position++;
-	g_print (" -> (%i) %s\n", directory_handle->position - 1, info->name);
 	return (GNOME_VFS_OK);
 }
 
@@ -375,8 +360,6 @@ static GnomeVFSResult do_get_file_info (
 	Camera*		camera = NULL;
 	gint		i;
 
-	g_print ("CAMERA: do_get_file_info\n");
-	
         /* Connect to the camera. */
         {
                 gchar* url = gnome_vfs_unescape_string (gnome_vfs_uri_get_host_name (uri), NULL);
@@ -445,8 +428,6 @@ static GnomeVFSResult do_get_file_info_from_handle (
         GnomeVFSFileInfoOptions         options,
         GnomeVFSContext*                context)
 {
-	g_print ("CAMERA: do_get_file_info_from_handle\n");
-
 	return (do_get_file_info (method, ((file_handle_t*) handle)->uri, info, options, context));
 }
 

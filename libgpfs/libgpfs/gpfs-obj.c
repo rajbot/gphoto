@@ -1,4 +1,4 @@
-#include <config.h>
+#include "config.h"
 #include "gpfs-obj.h"
 #include "gpfs-i18n.h"
 

@@ -1,12 +1,11 @@
-#include <config.h>
+#include "config.h"
 #include "gpfs-bag.h"
 #include "gpfs-i18n.h"
+#include "gpfs-obj.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
-#include "gpfs-obj.h"
 
 #define CN0(b,e) {							\
 	if (!b) {							\

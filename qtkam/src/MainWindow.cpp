@@ -35,7 +35,6 @@ MainWindow::MainWindow() : KMainWindow()
     if (GPInterface::getCamera().isNull())
         selectCamera();
 
-    /* initCamera(); */
     statusBar()->message("Camera not ready");
 }
 
@@ -143,7 +142,7 @@ void MainWindow::initCamera()
         statusBar()->message("Camera ready");
 
         /* Enable downloading of thumbs */
-        toolBar()->getButton(DownloadThumbsID)->setOn(true);
+        toolBar()->setItemEnabled(DownloadThumbsID,true);
         commandMenu->setItemEnabled(DownloadThumbsMenuID,true);
 
         /* Change window title */
@@ -151,13 +150,13 @@ void MainWindow::initCamera()
     }
     catch (QString msg) {
         /* Disable downloading of thumbs */
-        toolBar()->getButton(DownloadThumbsID)->setOn(false);
+        toolBar()->setItemEnabled(DownloadThumbsID,false);
         commandMenu->setItemEnabled(DownloadThumbsMenuID,false);
 
         /* Change window title */
         setPlainCaption("QtKam");
         KMessageBox::error(this, msg);
-        statusBar()->message("Camera not initialized");
+        statusBar()->message("Camera not ready");
     } 
 }
 

@@ -20,7 +20,10 @@
 /* Definitions */
 /***************/
 
-#define EOG_IMAGE_VIEWER_ID "OAFIID:eog_image_viewer:a30dc90b-a68f-4ef8-a257-d2f8ab7e6c9f"
+#define EOG_IMAGE_VIEWER_ID 		"OAFIID:eog_image_viewer:a30dc90b-a68f-4ef8-a257-d2f8ab7e6c9f"
+#define EOG_EMBEDDABLE_IMAGE_ID		"OAFIID:eog_embeddedable_image:759a2e09-31e1-4741-9ce7-8354d49a16bb"
+#define EOG_IMAGE_GENERIC_ID		"OAFIID:eog_image-generic:0d77ee99-ce0d-4463-94ec-99969f567f33"
+#define NAUTILUS_IMAGE_VIEWER_ID 	"OAFIID:nautilus-image-viewer:30686633-23d5-422b-83c6-4f1b06f8abcd"
 
 /********************/
 /* Global Variables */

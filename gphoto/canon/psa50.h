@@ -18,6 +18,7 @@ struct psa50_dir {
 
 
 extern char psa50_id[]; /* ditto @@@ */
+int A5;
 
 /*
  * All functions returning a pointer have malloc'ed the data. The caller must

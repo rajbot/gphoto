@@ -316,7 +316,7 @@ static unsigned char *psa50_dialogue(unsigned char mtype,unsigned char dir,
 char psa50_id[200]; /* some models may have a lot to report */
 
 
-int psa50_ready(void)
+int psa50_ready()
 {
     static int active = 0;
     unsigned char type,seq;
@@ -360,6 +360,14 @@ int psa50_ready(void)
 	return 0;
     }
     strcpy(psa50_id,pkt+26); /* @@@ check size */
+
+    /* printf("psa50_id : '%s'\n",psa50_id));*/
+
+    if (!strcmp("DE300 Canon Inc.",psa50_id)) A5 = 1;
+    else A5 = 0;
+
+    /* printf("A5  %d in psa50 \n",A5));   */
+
     serial_set_timeout(10);
     (void) psa50_recv_packet(&type,&seq,NULL);
     if (type != PKT_EOT || seq) {

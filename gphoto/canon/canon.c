@@ -5,6 +5,15 @@
  *   Canon Camera library for the gphoto project,
  *   (c) 1999 Wolfgang G. Reissnegger
  *   Developed for the Canon PowerShot A50
+ *   Additions for PowerShot A5 by Ole W. Saastad
+ *
+ ****************************************************************************/
+
+ /****************************************************************************
+ *
+ * OWS 990925 Changed canon_get_picture and canon_number_of_pictures to
+ *            work with A5. 
+ *
  *
  ****************************************************************************/
 
@@ -33,6 +42,7 @@
 
 #define D(c)  c
 
+/* #define A5 TRUE */
 
 /*
  * Directory access may be rather expensive, so we cache some information.
@@ -55,13 +65,14 @@ static void clear_readiness(void)
     cached_ready = 0;
 }
 
-
 static int check_readiness(void)
 {
     if (cached_ready) return 1;
     if (psa50_ready()) {
-	cached_ready = 1;
-	return 1;
+       D(printf("A5 i canon.c %d\n",A5));
+       if (A5) update_status("Powershot A5");
+       cached_ready = 1;
+       return 1;
     }
     update_status("Camera unavailable");
     return 0;
@@ -248,7 +259,6 @@ static void cb_clear(GtkWidget *widget,GtkWidget *window)
     cached_dir = 0;
 }
 
-
 static void cb_done(GtkWidget *widget,GtkWidget *window)
 {
     gtk_widget_destroy(window);
@@ -349,7 +359,14 @@ static struct Image *canon_get_picture(int picture_number, int thumbnail)
     struct Image *image;
     char path[300];
 
-    if (thumbnail) return NULL;
+    if (A5) {
+      picture_number=picture_number*2-1;
+      if (thumbnail) picture_number+=1;
+      D(printf("Picture number %d\n",picture_number));
+
+    } else /* For A50 or others */
+      if (thumbnail) return NULL;
+
     clear_readiness();
     if (!update_dir_cache()) {
 	update_status("Could not obtain directory listing");
@@ -386,12 +403,13 @@ static struct Image *canon_get_picture(int picture_number, int thumbnail)
 
 static int canon_number_of_pictures(void)
 {
-    clear_readiness();
-    if (!update_dir_cache()) {
-	update_status("Could not obtain directory listing");
-	return 0;
-    }
-    return cached_images;
+  clear_readiness();
+  if (!update_dir_cache()) {
+    update_status("Could not obtain directory listing");
+    return 0;
+  }
+  if (A5) return cached_images/2; /* Odd is pictures even is thumbs */
+  else  return cached_images;
 };
 
 /****************************************************************************/
@@ -454,16 +472,16 @@ static char *canon_description(void)
 {
     return ("Canon PowerShot A50 by\n"
 	    "Wolfgang G. Reissnegger,\n"
-	    "Werner Almesberger.\n");
+            "Werner Almesberger.\n"
+            "A5 additions by Ole W. Saastad\n");
+
 }
 
 /****************************************************************************/
 
-
 static struct Image *canon_get_preview(void) { return NULL; }
 static int canon_delete_image(int picture_number) { return 0; }
 static int canon_take_picture(void) { return 0; };
-
 
 struct _Camera canon =
 {

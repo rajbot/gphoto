@@ -1,3 +1,19 @@
+2001-06-05	Lutz Müller  <urc8@rz.uni-karlsruhe.de
+
+	* tests/[.cvsignore,Makefile.am]: New directory including files.
+	* tests/test-vfs-module.c: New file. Test program to test the
+	gnome-vfs-module.
+	* Makefile.am: Add tests to SUBDIRS
+	* configure.in: Generate tests/Makefile
+	* gnome-vfs-module/camera-method.c:
+	(GNOME_VFS_RESULT): Oops - this function always returned
+	GNOME_VFS_ERROR_GENERIC because of a missing 'else'. Fixed.
+	(do_open_directory): Correctly release_unref the storage.
+	(get_basename): New function handling uris with trailing slashes.
+	(do_get_file_info): Get the correct basename. Release_unref the 
+	storage.
+	(vfs_module_init): Make sure gtk is initialized.
+
 2001-05-29	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
 	* gnome-vfs-module/camera-method.c: Added a note about ORBit not 

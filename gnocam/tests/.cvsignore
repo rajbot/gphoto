@@ -1,0 +1,6 @@
+Makefile
+Makefile.in
+test-vfs-module
+*.o
+.libs
+.deps

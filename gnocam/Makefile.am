@@ -10,6 +10,7 @@ SUBDIRS =\
  capplet\
  gnome-vfs-module\
  src\
+ tests\
  intl\
  po
 

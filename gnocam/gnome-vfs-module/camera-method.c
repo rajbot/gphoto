@@ -1,4 +1,5 @@
 #include <libgnome/gnome-defs.h>
+
 #include <libgnomevfs/gnome-vfs-context.h>
 #include <libgnomevfs/gnome-vfs-handle.h>
 #include <libgnomevfs/gnome-vfs-method.h>
@@ -7,7 +8,10 @@
 #include <bonobo/bonobo-exception.h>
 #include <bonobo/bonobo-stream.h>
 #include <bonobo/bonobo-moniker-util.h>
+
 #include <liboaf/oaf-mainloop.h>
+
+#include <gtk/gtkmain.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -49,7 +53,6 @@ GNOME_VFS_RESULT (CORBA_Environment *ev)
 	GnomeVFSResult result;
 	const gchar *id;
 	
-	CAM_VFS_DEBUG (("Processing exception..."));
 	id = CORBA_exception_id (ev);
 	
 	/* Bonobo */
@@ -85,10 +88,9 @@ GNOME_VFS_RESULT (CORBA_Environment *ev)
 		result = GNOME_VFS_ERROR_IO;
 
 	/* Default */
-	result = GNOME_VFS_ERROR_GENERIC;
+	else
+		result = GNOME_VFS_ERROR_GENERIC;
 
-	CAM_VFS_DEBUG (("ERROR: %s", gnome_vfs_result_to_string (result)));
-	
 	return (result);
 }
 
@@ -349,7 +351,6 @@ static GnomeVFSResult do_open_directory (
 	bonobo_object_release_unref (storage, NULL);
 	if (BONOBO_EX (&ev)) {
 		result = GNOME_VFS_RESULT (&ev);
-		bonobo_object_release_unref (storage, NULL);
 		CORBA_exception_free (&ev);
 		MUTEX_UNLOCK (mutex);
 		return (result);
@@ -488,7 +489,32 @@ get_info_from_stream (Bonobo_Stream stream, GnomeVFSFileInfo *info,
 
 	CORBA_free (storage_info);
 }
-	
+
+static gchar *
+get_basename (GnomeVFSURI *uri)
+{
+	gchar *text_uri;
+	gchar *basename;
+	GnomeVFSURI *tmp_uri;
+
+	/* The problem: Trailing slashes. If there is a slash at the end 
+	 * (for example in "file://home/lutz/",
+	 * gnome_vfs_uri_basename will just return NULL, but 
+	 * gnome_vfs_uri_get_parent will return "file://home". Then, bad 
+	 * things will happen. Therefore, remove the trailing slash and 
+	 * rejoice. */
+	text_uri = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE);
+	if (text_uri [strlen (text_uri) - 1] == '/')
+		text_uri [strlen (text_uri) - 1] = '\0';
+
+	tmp_uri = gnome_vfs_uri_new (text_uri);
+	g_free (text_uri);
+
+	basename = g_strdup (gnome_vfs_uri_get_basename (tmp_uri));
+	gnome_vfs_uri_unref (tmp_uri);
+
+	return (basename);
+}
 
 static GnomeVFSResult do_get_file_info (
         GnomeVFSMethod*                 method,
@@ -510,32 +536,33 @@ static GnomeVFSResult do_get_file_info (
 	CORBA_exception_init (&ev);
 
 	if (gnome_vfs_uri_has_parent (uri)) {
+		basename = get_basename (uri);
 		tmp_uri = gnome_vfs_uri_get_parent (uri);
 		moniker = gnome_vfs_uri_to_string (tmp_uri, 
 						   GNOME_VFS_URI_HIDE_NONE);
 		gnome_vfs_uri_unref (tmp_uri);
-	} else
+	} else {
+		basename = g_strdup (".");
 		moniker = gnome_vfs_uri_to_string (uri, 
 						   GNOME_VFS_URI_HIDE_NONE);
+	}
 
 	CAM_VFS_DEBUG (("Trying to get storage for %s...", moniker)); 
 	storage = bonobo_get_object (moniker, "IDL:Bonobo/Storage:1.0", &ev); 
 	CAM_VFS_DEBUG (("... done.")); 
 	g_free (moniker);
 	if (BONOBO_EX (&ev)) {
+		g_free (basename);
 		result = GNOME_VFS_RESULT (&ev);
 		CORBA_exception_free (&ev);
 		MUTEX_UNLOCK (mutex);
 		return (result);
 	}
 
-	if (gnome_vfs_uri_has_parent (uri))
-		basename = g_strdup (gnome_vfs_uri_get_basename (uri));
-	else
-		basename = g_strdup (".");
 	CAM_VFS_DEBUG (("Getting info for %s from storage...", basename));
 	get_info_from_storage (storage, basename, info, &ev);
 	CAM_VFS_DEBUG (("... done."));
+	bonobo_object_release_unref (storage, NULL);
 	g_free (basename);
 	if (BONOBO_EX (&ev)) {
 		result = GNOME_VFS_RESULT (&ev);
@@ -641,6 +668,10 @@ vfs_module_init (const gchar *method_name, const gchar *args)
 	CORBA_ORB orb;
 	
 	CAM_VFS_DEBUG (("ENTER"));
+
+	/* Initialize GTK */
+	if (!gtk_init_check (0, NULL))
+		g_error ("Cannot init GTK");
 
 	/* Initialize ORBit */
 	if (oaf_is_initialized ())

@@ -222,6 +222,7 @@ bonobo-storage-module/Makefile
 capplet/Makefile
 gnome-vfs-module/Makefile
 libgnocam/Makefile
+tests/Makefile
 ])
 
 dnl *********************

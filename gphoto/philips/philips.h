@@ -61,18 +61,25 @@ typedef struct	PHILIPS_CFG {
 	} PhilipsCfgInfo;
 
 static char *philips_description_string = 
-"Philips ESP80 gPhoto Library
+"Philips/Ricoh gPhoto Library
 Bob Paauwe <bpaauwe@bobsplace.com>
 http://www.bobsplace.com/philips/
-May work with Ricoh cameras such as
-the 4300 and 4200.
-Known Issues:
-  1) The configuration dialog box 
-  crashes gPhoto when closed.
-  2) Thumbnails are only displayed
-  in black & white.
-  3) The code that interfaces to gPhoto 
-  needs some work.";
+
+The following cameras are known to work:
+Philips ESP60
+Philips ESP80
+Ricoh RDC-4200
+Ricoh RDC-4300
+Ricoh RDC-5000
+May work with other Ricoh and Philips
+models.
+
+Known Issues as of 8/25/1999:
+  1) Thumbnails are only displayed
+  in black & white. (except RDC-5000)
+  2) The configuration screens are not
+  functional yet.
+";
 
 char *philips_model ( int camera_identifier );
 int philips_open ( char *serial_port, int baudrate, long *camera_identifier );

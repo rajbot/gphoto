@@ -54,6 +54,44 @@ impl_get_description (PortableServer_Servant servant, CORBA_Environment *ev)
 	 }
 }
 
+static GNOME_C_Bag_BagList *
+impl_get_bags (PortableServer_Servant servant, CORBA_Environment *ev)
+{
+	KncCBag *b = KNC_C_BAG (bonobo_object (servant));
+	GNOME_C_Bag_BagList *l = GNOME_C_Bag_BagList__alloc ();
+	KncCBag *c;
+
+	switch (b->priv->t) {
+	case KNC_C_BAG_TYPE_ROOT:
+		l->_length = 1;
+		l->_buffer = GNOME_C_Bag_BagList_allocbuf (l->_length);
+		c = knc_c_bag_new (b->priv->c, KNC_C_BAG_TYPE_LOCALIZATION);
+		l->_buffer[0] = CORBA_Object_duplicate (BONOBO_OBJREF (c), ev);
+		break;
+	case KNC_C_BAG_TYPE_LOCALIZATION:
+	default:
+		l->_length = 0;
+	}
+	CORBA_sequence_set_release (l, TRUE);
+	return l;
+}
+
+static GNOME_C_PropList *
+impl_get_props (PortableServer_Servant servant, CORBA_Environment *ev)
+{
+	KncCBag *b = KNC_C_BAG (bonobo_object (servant));
+	GNOME_C_PropList *l = GNOME_C_PropList__alloc ();
+
+	switch (b->priv->t) {
+	case KNC_C_BAG_TYPE_ROOT:
+	case KNC_C_BAG_TYPE_LOCALIZATION:
+	default:
+		l->_length = 0;
+	}
+	CORBA_sequence_set_release (l, TRUE);
+	return l;
+}
+
 static GNOME_C_Icon *
 impl_get_icon (PortableServer_Servant servant, CORBA_Environment *ev)
 {
@@ -61,8 +99,6 @@ impl_get_icon (PortableServer_Servant servant, CORBA_Environment *ev)
 	GNOME_C_Icon *icon;
 	FILE *f;
 	guint i;
-	size_t n;
-	gchar buf[1024];
 
 	switch (b->priv->t) {
 	case KNC_C_BAG_TYPE_LOCALIZATION:
@@ -77,10 +113,17 @@ impl_get_icon (PortableServer_Servant servant, CORBA_Environment *ev)
 		icon->_length = ftell (f);
 		icon->_buffer = GNOME_C_Icon_allocbuf (icon->_length);
 		CORBA_sequence_set_release (icon, TRUE);
-		for (i = 0; i < icon->_length; i+= 1024) {
-			n = fread (buf, sizeof (gchar), sizeof (buf), f);
-			memcpy (icon->_buffer + i, buf, n);
+		for (i = 0; i < icon->_length; i++) {
+			if (!fread (&icon->_buffer[i], sizeof (gchar), 1, f)) {
+				CORBA_free (icon);
+				fclose (f);
+				CORBA_exception_set (ev,
+					CORBA_SYSTEM_EXCEPTION,
+					ex_CORBA_UNKNOWN, NULL);
+				return NULL;
+			}
 		}
+		fclose (f);
 		return icon;
 	default:
 		CORBA_exception_set (ev, CORBA_SYSTEM_EXCEPTION,
@@ -97,9 +140,11 @@ knc_c_bag_class_init (KncCBagClass *klass)
 
 	parent_class = g_type_class_peek_parent (klass);
 
-	epv->_get_name = impl_get_name;
+	epv->_get_name        = impl_get_name;
 	epv->_get_description = impl_get_description;
-	epv->_get_icon = impl_get_icon;
+	epv->_get_icon        = impl_get_icon;
+	epv->_get_bags        = impl_get_bags;
+	epv->_get_props       = impl_get_props;
 
 	g_class->finalize = knc_c_bag_finalize;
 }

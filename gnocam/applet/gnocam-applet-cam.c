@@ -145,9 +145,11 @@ action_connect (gpointer callback_data, guint callback_action, GtkWidget *w)
 {
 	GnocamAppletCam *c = GNOCAM_APPLET_CAM (callback_data);
 
-	if (GTK_CHECK_MENU_ITEM (w)->active)
+	if (GTK_CHECK_MENU_ITEM (w)->active &&
+	    (c->priv->camera == CORBA_OBJECT_NIL))
 		gnocam_applet_cam_connect (c);
-	else
+	else if (!GTK_CHECK_MENU_ITEM (w)->active &&
+		 (c->priv->camera != CORBA_OBJECT_NIL))
 		gnocam_applet_cam_disconnect (c);
 }
 
@@ -167,10 +169,8 @@ gnocam_applet_cam_update (GnocamAppletCam *c)
 
 	/* Update popup */
 	w = gtk_item_factory_get_widget (c->priv->factory, "/Connect");
-	g_signal_handlers_block_by_func (w, action_connect, c);
 	gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (w), 
 				      c->priv->camera != CORBA_OBJECT_NIL);
-	g_signal_handlers_unblock_by_func (w, action_connect, c);
 	w = gtk_item_factory_get_widget (c->priv->factory, "/Settings");
 	gtk_widget_set_sensitive (w, c->priv->camera != CORBA_OBJECT_NIL);
 }

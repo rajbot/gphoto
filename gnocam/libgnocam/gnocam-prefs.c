@@ -90,20 +90,27 @@ gnocam_prefs_add_bag (GnocamPrefs *p, GtkTreeIter *parent,
 	l = GNOME_C_Bag__get_bags (bag, ev);
 	if (BONOBO_EX (ev)) {CORBA_free (l); return;}
 	for (i = 0; i < l->_length; i++) {
+		g_message ("Adding an entry.");
 		gtk_tree_store_append (p->priv->s, &iter, parent);
 		gtk_tree_store_set (p->priv->s, &iter, COL_ID, l, -1);
-		
+
+		g_message ("Name");
 		name = GNOME_C_Bag__get_name (l->_buffer[i], ev);
 		if (BONOBO_EX (ev)) {CORBA_free (l); return;}
 		gtk_tree_store_set (p->priv->s, &iter, COL_NAME, name, -1);
 		CORBA_free (name);
-		
+
+		g_message ("Icon");
 		icon = GNOME_C_Bag__get_icon (l->_buffer[i], ev);
 		if (BONOBO_EX (ev)) {CORBA_free (l); return;}
 		loader = gdk_pixbuf_loader_new ();
-		gdk_pixbuf_loader_write (loader, icon->_buffer,
-					 icon->_length, NULL);
+		if (!gdk_pixbuf_loader_write (loader, icon->_buffer,
+					      icon->_length, NULL))
+			g_warning ("Could not write data to loader!");
+		CORBA_free (icon);
 		gdk_pixbuf_loader_close (loader, NULL);
+		if (!gdk_pixbuf_loader_get_pixbuf (loader))
+			g_warning ("Could not get pixbuf!");
 		gtk_tree_store_set (p->priv->s, &iter, COL_PIXBUF,
 				    gdk_pixbuf_loader_get_pixbuf (loader), -1);
 		g_object_unref (loader);
@@ -111,6 +118,7 @@ gnocam_prefs_add_bag (GnocamPrefs *p, GtkTreeIter *parent,
 		gnocam_prefs_add_bag (p, &iter, l->_buffer[i], ev);
 		if (BONOBO_EX (ev)) {CORBA_free (l); return;}
 	}
+	CORBA_free (l);
 }
 
 static void
@@ -132,28 +140,33 @@ gnocam_prefs_new (GNOME_C_Bag bag, CORBA_Environment *ev)
 
 	p->priv->bag = bonobo_object_dup_ref (bag, NULL);
 	w = gtk_tree_view_new ();
+	gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (w), FALSE);
 	gtk_widget_show (w);
 	gtk_paned_pack1 (GTK_PANED (p), w, TRUE, FALSE);
 	gtk_tree_view_set_model (GTK_TREE_VIEW (w),
 				 GTK_TREE_MODEL (p->priv->s));
+	g_signal_connect (w, "row_activated", G_CALLBACK (on_row_activated), p);
+
+	/* Column for icons */
 	c = gtk_tree_view_column_new ();
 	gtk_tree_view_append_column (GTK_TREE_VIEW (w), c);
 	r = gtk_cell_renderer_pixbuf_new ();
-	gtk_tree_view_column_pack_start (c, r, FALSE);
+	gtk_tree_view_column_pack_start (c, r, TRUE);
 	gtk_tree_view_column_add_attribute (c, r, "pixbuf", COL_PIXBUF);
+
+	/* Column for names */
 	c = gtk_tree_view_column_new ();
 	gtk_tree_view_append_column (GTK_TREE_VIEW (w), c);
 	r = gtk_cell_renderer_text_new ();
 	gtk_tree_view_column_pack_start (c, r, TRUE);
 	gtk_tree_view_column_add_attribute (c, r, "text", COL_NAME);
-	g_signal_connect (w, "row_activated",
-			  G_CALLBACK (on_row_activated), p);
 
 	gnocam_prefs_add_bag (p, NULL, bag, ev);
 	if (BONOBO_EX (ev)) {
 		gtk_object_destroy (GTK_OBJECT (p));
 		return NULL;
 	}
+	gtk_tree_view_columns_autosize (GTK_TREE_VIEW (w));
 
 	return p;
 }

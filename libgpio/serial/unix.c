@@ -128,13 +128,10 @@ int gpio_library_list (gpio_device_info *list, int *count) {
 	for (x=GPIO_SERIAL_RANGE_LOW; x<=GPIO_SERIAL_RANGE_HIGH; x++) {
 		sprintf(buf, prefix, x);
 #ifdef OS2
-              rc = DosOpen(buf,&fh,&option,0,0,1,OPEN_FLAGS_FAIL_ON_ERROR|OPEN_SHARE_DENYREADWRITE,0);
-              DosClose(fh);
-              if(rc==0)
-              {
+	   rc = DosOpen(buf,&fh,&option,0,0,1,OPEN_FLAGS_FAIL_ON_ERROR|OPEN_SHARE_DENYREADWRITE,0);
+	   DosClose(fh);
+	   if(rc==0) {
 #endif
-
-
 		fd = open (buf, O_RDONLY | O_NDELAY);
 		if (fd != -1) {
 			close(fd);
@@ -146,10 +143,8 @@ int gpio_library_list (gpio_device_info *list, int *count) {
 			*count += 1;
 		}
 #ifdef OS2
-              }
+	   }
 #endif
-
-
 	}
 
 	return (GPIO_OK);

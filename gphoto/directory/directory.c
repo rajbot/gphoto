@@ -8,7 +8,7 @@
 #include "../src/gphoto.h"
 #include "../src/util.h"
 
-extern struct ImageInfo Thumbnails;
+extern struct ImageMembers Thumbnails;
 
 char *dir_directory;
 char dir_images[1024][256];

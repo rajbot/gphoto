@@ -191,8 +191,8 @@ struct Image *ricoh_300z_get_picture (int picNum, int thumbnail) {
 
 	if(!thumbnail) {
 	    /* replace the pseudo thumbnail by a real one */
-	    extern struct ImageInfo Thumbnails;
-	    struct ImageInfo *node;
+	    extern struct ImageMembers Thumbnails;
+	    struct ImageMembers *node;
 	    int i;
 
 	    for(i = 0, node = &Thumbnails; i < picNum && node; i++)

@@ -24,6 +24,13 @@ void gpio_win_convert_path (char *path) {
 			path[x] = '\\';
 }
 
+int GPIO_MKDIR (char *dirname) {
+
+	if (_mkdir(dirname) < 0)
+		return (GPIO_ERROR);
+	return (GPIO_OK);
+}
+
 GPIO_DIR GPIO_OPENDIR (char *dirname) {
 
 	GPIOWINDIR *d;
@@ -51,9 +58,7 @@ GPIO_DIR GPIO_OPENDIR (char *dirname) {
 
 GPIO_DIRENT GPIO_READDIR (GPIO_DIR d) {
 
-	DWORD dr;
 	char dirn[1024];
-	char *drive;
 
 	if (strcmp(d->dir, "/")==0) {
 		if (d->drive_index == d->drive_count)
@@ -124,6 +129,13 @@ int GPIO_IS_DIR (char *dirname) {
 
 
 #else
+
+int GPIO_MKDIR (char *dirname) {
+
+	if (mkdir(dirname, 0700)<0)
+		return (GPIO_ERROR);
+	return (GPIO_OK);
+}
 
 GPIO_DIR GPIO_OPENDIR (char *dirname) {
 	return (opendir(dirname));

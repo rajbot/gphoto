@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <stdio.h>
+#include <direct.h>
 
 #define IOLIBS			"."
 #define strcasecmp		_stricmp
@@ -73,6 +74,7 @@ typedef struct {
 
 #endif /* else */
 
+int		GPIO_MKDIR		(char *dirname);
 GPIO_DIR	GPIO_OPENDIR	(char *dirname);
 GPIO_DIRENT	GPIO_READDIR	(GPIO_DIR d);
 char*		GPIO_FILENAME	(GPIO_DIRENT de);

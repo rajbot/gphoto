@@ -9,16 +9,17 @@
 #include "error.h"
 #include "open.h"
 
-int qm100_transmit(int serialdev, unsigned char *cmd, int cmd_len, qm100_packet_block *packet)
+qm100_packet_block qm100_transmit(int serialdev, unsigned char *cmd, int cmd_len)
 {
+  qm100_packet_block packet;
 
   qm100_attention(serialdev);
   qm100_sendPacket(serialdev, cmd, cmd_len);
   qm100_getAck(serialdev);
-  qm100_getPacket(serialdev, packet);
+  packet = qm100_getPacket(serialdev);
   qm100_endTransmit(serialdev);
 
-  return (1);
+  return packet;
 }
 
 void qm100_attention(int serialdev)
@@ -135,6 +136,7 @@ void qm100_sendPacket(int serialdev, unsigned char *cmd, int cmd_len)
   }
 }
 
+
 void qm100_getAck(int serialdev)
 {
   char c;
@@ -149,11 +151,11 @@ void qm100_getAck(int serialdev)
   qm100_writeByte(serialdev, 0x06);
 }
 
-
-int qm100_getPacket(int serialdev, qm100_packet_block *packet)
+qm100_packet_block qm100_getPacket(int serialdev)
 {
   unsigned char c, qm100_sum=0, sum=0;
   short len, pos=0;
+  qm100_packet_block packet;
   
   c = qm100_readByte(serialdev);
   if (c != 0x02) qm100_error(serialdev, "Get package failed");
@@ -164,22 +166,22 @@ int qm100_getPacket(int serialdev, qm100_packet_block *packet)
   c=qm100_readCodedByte(serialdev);
   len += (c<<8);
   sum += c;
-  packet->packet_len=len;
+  packet.packet_len=len;
   while (len--)
     {
       c=qm100_readCodedByte(serialdev);
-      packet->packet[pos]=c;
+      packet.packet[pos]=c;
       pos++;
       sum+=c;
     }
   c=qm100_readByte(serialdev);
   if (c==0x03)
     {
-      packet->transmission_continues=0;
+      packet.transmission_continues=0;
     }
   else if (c==0x17)
     {
-      packet->transmission_continues=1;
+      packet.transmission_continues=1;
     }
   else qm100_error(serialdev, "qm100: failed trans cont status");
   sum+=c;
@@ -187,14 +189,14 @@ int qm100_getPacket(int serialdev, qm100_packet_block *packet)
   qm100_sum=qm100_readCodedByte(serialdev);
 
 #ifdef _CLI_
-  if (qm100_showReadPackages) qm100_iostat("recv :", packet->packet, packet->packet_len);
+  if (qm100_showReadPackages) qm100_iostat("recv :", packet.packet, packet.packet_len);
 #endif
   
   if (qm100_sum != sum) 
     {
       printf("Checksum wrong : read (0x%x) : calc (0x%x)\n",qm100_sum, sum);
     }
-  return 1;
+  return packet;
 }
 
 void qm100_endTransmit(int serialdev)
@@ -222,7 +224,7 @@ int qm100_getRealPicNum(int serialdev, int picNum)
   char qm100_filename[6];
   int realPicNum;
 
-  qm100_getPicInfo(serialdev, picNum, &packet);
+  packet = qm100_getPicInfo(serialdev, picNum);
   memcpy(&qm100_filename, &packet.packet[183], 5);
   sscanf(qm100_filename,"%d",&realPicNum);
   return (realPicNum);

@@ -1,4 +1,4 @@
-/* Konica Q-M100 Camera Functions */
+/* Konica QM100 Camera Functions */
 
 #include <unistd.h>
 #include <stdio.h>
@@ -21,11 +21,8 @@
 #include "../src/gphoto.h"
 #include "konica_qm100.h"
 
-int konica_picCounter;
-
 int konica_qm100_initialize()
 {
-  konica_picCounter = 0;
   return(1);
 }
 
@@ -36,13 +33,12 @@ int konica_qm100_number_of_pictures ()
   int serialdev;
   
   serialdev = qm100_open(serial_port);
-  qm100_transmit(serialdev, cmd_status, sizeof(cmd_status), &packet);
+  packet = qm100_transmit(serialdev, cmd_status, sizeof(cmd_status));
   qm100_close(serialdev);
   return PICTURE_COUNT;
 }
 
-int konica_qm100_take_picture()
-{
+int konica_qm100_take_picture() {
   int serialdev;
   qm100_packet_block packet;
   char cmd_status[QM100_STATUS_LEN]=QM100_STATUS;
@@ -53,33 +49,33 @@ int konica_qm100_take_picture()
   qm100_takePic(serialdev);
   qm100_setSpeed(serialdev, B9600);
 
-  qm100_transmit(serialdev, cmd_status, sizeof(cmd_status), &packet);
+  packet = qm100_transmit(serialdev, cmd_status, sizeof(cmd_status));
 
   qm100_close(serialdev);
 
   return PICTURE_COUNT;
 }
 
-
 struct Image *konica_qm100_get_picture (int picNum, int thumbnail)
 {
   int serialdev;
   int pid;
   char tempName[1024], rm[1024];
-  FILE *jpgfile;
-  int jpgfile_size;
+
   struct Image *im;
+  FILE *fp;
+  int imagesize;
+  char *imagedata;
+
   pid = getpid();
-  
+
   serialdev = qm100_open(serial_port);
   qm100_setSpeed(serialdev, B115200);
-  
-  sprintf(tempName, "%s/gphoto-konica-%i.jpg", gphotoDir, pid,
-	konica_picCounter);
-  konica_picCounter++;
-  
+
+  sprintf(tempName, "%s/gphoto-konica-%i.jpg", gphotoDir, picNum);
+
   picNum = qm100_getRealPicNum(serialdev, picNum);
-  
+
   if (thumbnail) {
     qm100_saveThumb(serialdev, tempName, picNum);
   } else {
@@ -87,20 +83,21 @@ struct Image *konica_qm100_get_picture (int picNum, int thumbnail)
   }
   
   qm100_setSpeed(serialdev, B9600);
-  qm100_close(serialdev);
-
-  jpgfile = fopen(tempName, "r");
-  fseek(jpgfile, 0, SEEK_END);
-  jpgfile_size = ftell(jpgfile);
-  rewind(jpgfile);
-  im = (struct Image*)malloc(sizeof(struct Image));
-  im->image = (char *)malloc(sizeof(char)*jpgfile_size);
-  fread(im->image, (size_t)sizeof(char), (size_t)jpgfile_size, jpgfile);
-  fclose(jpgfile);
-  strcpy(im->image_type, "jpg");
-  im->image_size = jpgfile_size;
-  im->image_info_size = 0;
-  remove(tempName);
+  qm100_close(serialdev); 
+	/* Updates    -Scott */
+	fp = fopen(tempName, "r");
+	fseek(fp, 0, SEEK_END);
+	imagesize = ftell(fp);
+	rewind(fp);
+	imagedata = (char *)malloc(sizeof(char)*imagesize);
+	fread(imagedata, (size_t)imagesize, (size_t)sizeof(char),fp);
+	fclose(fp);
+	im = (struct Image*)malloc(sizeof(struct Image));
+	im->image = imagedata;
+	im->image_size = imagesize;
+	im->image_info_size = 0;
+	strcpy(im->image_type, "jpg");
+  remove (tempName);
   return (im);
 }
 
@@ -169,29 +166,26 @@ int konica_qm100_configure ()
   return(1);
 }
 
+char summary_string[500];
+
 char *konica_qm100_summary()
 {
-  char summary_string[500];
-  char *summary;
   char cmd_status[QM100_STATUS_LEN]=QM100_STATUS;
   int serialdev;
   qm100_packet_block packet;
   
   update_progress(0);
   serialdev = qm100_open(serial_port);
-  qm100_transmit(serialdev, cmd_status, sizeof(cmd_status), &packet);
+  packet = qm100_transmit(serialdev, cmd_status, sizeof(cmd_status));
   qm100_close(serialdev);
   update_progress(1);
-
   sprintf(summary_string, "This camera is a Konica QM100 or Hewlett Packard C20/C30\nIt has taken %d pictures and currently contains %d picture(s)\nThe time according to the Camera is %d:%d:%d %d/%d/%d",COUNTER, PICTURE_COUNT, TIME_HOUR,TIME_MIN,TIME_SEC,TIME_DAY,TIME_MON,TIME_YEAR);
-  summary = (char *)malloc(sizeof(char)*strlen(summary_string)+32);
-  strcpy(summary, summary_string);
-  return (summary);
+  return (summary_string);
 }
 
 char *konica_qm100_description()
 {
-  return("Konica Q-M100 Digital Camera gPhoto Plugin (C) 1999 Phill Hugo / Jesper Skov Works for Q-M100 / HP C20 / HP C30");
+  return("Konica QM-100 Digital Camera gPhoto Plugin (C) 1999 Phill Hugo / Jesper Skov Works for QM100 / HP C20 / HP C30");
 }
 
 /* Declare the camera function pointers */
@@ -205,9 +199,3 @@ struct _Camera konica_qm100 = {konica_qm100_initialize,
 			       konica_qm100_configure,
 			       konica_qm100_summary,
 			       konica_qm100_description};
-
-
-
-
-
-

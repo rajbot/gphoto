@@ -2,10 +2,10 @@
 #include "getPicInfo.h"
 #include "transmission.h"
 
-int qm100_getPicInfo(int serialdev, int pic, qm100_packet_block *packet)
+qm100_packet_block qm100_getPicInfo(int serialdev, int pic)
 {
   unsigned char cmd[QM100_PICINFO_LEN]=QM100_PICINFO;
-  qm100_packet_block *ack;
+  qm100_packet_block packet, ack;
   
   cmd[5]=(char)(pic>>8 & 0xff);
   cmd[6]=(char)(pic & 0xff);
@@ -14,15 +14,15 @@ int qm100_getPicInfo(int serialdev, int pic, qm100_packet_block *packet)
   qm100_sendPacket(serialdev, cmd, sizeof(cmd));
   qm100_getAck(serialdev);
 
-  qm100_getPacket(serialdev, packet);
+  packet = qm100_getPacket(serialdev);
   
   qm100_continueTransmission(serialdev);
   
-  qm100_getPacket(serialdev, ack);
+  ack = qm100_getPacket(serialdev);
   
   qm100_endTransmit(serialdev);
-
-  return(1);
+ 
+  return (packet);
 }
 
 

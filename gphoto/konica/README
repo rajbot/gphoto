@@ -1,13 +1,9 @@
-Konica Q-M100 Digital Still Camera Utility for GNU/Linux
+Konica QM100 Digital Still Camera Utility for GNU/Linux
 
 Copyright (C) 1999 Phill Hugo (GPL)
 
 Heavily based on reverse engineering work by Jesper Skov and his Perl
 script of similar functionality.
-
-Konica are now developing a GPL driver which will form a semi-supported (ie, if
-the email gets to the right person, they may help) reference driver for Unix
-systems.
 
 "make qm100" will make the CLI tool.
 

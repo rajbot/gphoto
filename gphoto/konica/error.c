@@ -6,7 +6,6 @@
  extern struct termios oldt;
 #else
  #include "../src/gphoto.h"
- #include "../src/util.h"
 #endif
 
 

@@ -5,16 +5,14 @@
 
 #include "defs.h"
 #include "transmission.h"
-#include "../src/gphoto.h"
 #include "saveThumb.h"
 
-void qm100_saveThumb(int serialdev, char *filename, int pic)
+int qm100_saveThumb(int serialdev, char *filename, int pic)
 {
   int jpgfile;
-
   char success=1;
   char cmd_getthumb[QM100_GETTHUMB_LEN]=QM100_GETTHUMB;
-  qm100_packet_block packet;
+  qm100_packet_block packet;  
 
   cmd_getthumb[5] = (pic >> 8) & 0xff;
   cmd_getthumb[6] = (pic & 0xff);
@@ -22,7 +20,7 @@ void qm100_saveThumb(int serialdev, char *filename, int pic)
   qm100_attention(serialdev);
   qm100_sendPacket(serialdev, cmd_getthumb, sizeof(cmd_getthumb));
   qm100_getAck(serialdev);
-  qm100_getPacket(serialdev, &packet);
+  packet = qm100_getPacket(serialdev);
 
   
   if (packet.packet_len == 4)
@@ -37,12 +35,13 @@ void qm100_saveThumb(int serialdev, char *filename, int pic)
       while (packet.transmission_continues)
       {
 	qm100_continueTransmission(serialdev);
-	qm100_getPacket(serialdev, &packet);
+	packet = qm100_getPacket(serialdev);
 	write(jpgfile, packet.packet, packet.packet_len);
       }
       close(jpgfile);     
     }
   qm100_endTransmit(serialdev);
+  return success;
 }
 
 

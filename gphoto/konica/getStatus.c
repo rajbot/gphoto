@@ -9,11 +9,10 @@
 void qm100_getStatus(int serialdev)
 {
   qm100_packet_block packet;
-
   char cmd_status[QM100_STATUS_LEN]=QM100_STATUS;
 
   memset(&packet, 0, sizeof(packet));
-  qm100_transmit(serialdev, cmd_status, sizeof(cmd_status), &packet);
+  packet = qm100_transmit(serialdev, cmd_status, sizeof(cmd_status));
   if (packet.packet_len == 34)
     {
 

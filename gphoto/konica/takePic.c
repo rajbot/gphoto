@@ -12,32 +12,32 @@ void qm100_takePic(int serialdev)
   cmd_setpic[4]=0x00;
   cmd_setpic[5]=0x80;
   cmd_setpic[6]=QUALITY_FINE;
-  qm100_transmit(serialdev, cmd_setpic, sizeof(cmd_setpic), &packet);
+  packet = qm100_transmit(serialdev, cmd_setpic, sizeof(cmd_setpic));
 
   /* Set Flash */
 
   cmd_setpic[4]=0x00;
   cmd_setpic[5]=0x90;
   cmd_setpic[6]=FLASH_AUTO;
-  qm100_transmit(serialdev, cmd_setpic, sizeof(cmd_setpic), &packet);
+  packet = qm100_transmit(serialdev, cmd_setpic, sizeof(cmd_setpic));
 
   /* Set Exposure */
 
   cmd_setpic[4]=0x02;
   cmd_setpic[5]=0x80;
   cmd_setpic[6]=0x00;
-  qm100_transmit(serialdev, cmd_setpic, sizeof(cmd_setpic), &packet);
+  packet = qm100_transmit(serialdev, cmd_setpic, sizeof(cmd_setpic));
 
   /* Set Focus */
 
   cmd_setpic[4]=0x02;
   cmd_setpic[5]=0x90;
   cmd_setpic[6]=FOCUS_AUTO;
-  qm100_transmit(serialdev, cmd_setpic, sizeof(cmd_setpic), &packet);
+  packet = qm100_transmit(serialdev, cmd_setpic, sizeof(cmd_setpic));
 
   /* Take Picture */
 
-  qm100_transmit(serialdev, cmd_takepic, sizeof(cmd_takepic), &packet);
+  packet = qm100_transmit(serialdev, cmd_takepic, sizeof(cmd_takepic));
 
 }
 

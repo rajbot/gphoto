@@ -1,2 +1,2 @@
-void qm100_savePic(int serialdev, char *filename, int pic);
+int qm100_savePic(int serialdev, char *filename, int pic);
 

@@ -1,5 +1,5 @@
 A new development version of gPhoto, the GNU Digital Camera Program,
-has been released: gphoto-0.3.9
+has been released: gphoto-0.3.99
 
 Please report bugs to the Bug Tracking System (http://bugs.gnome.org)
 Mail source diff patches and comments to: <gphoto-devel@gphoto.org>
@@ -7,17 +7,17 @@ Mail source diff patches and comments to: <gphoto-devel@gphoto.org>
 
 AVAILABILITY
 
-* ftp://ftp.gphoto.org/projects/gphoto/pub/tar/0.3/gphoto-0.3.9.tar.gz
+* ftp://ftp.gphoto.org/projects/gphoto/pub/tar/0.3/gphoto-0.3.99.tar.gz
 
-i386/src RPMs (built on RedHat 6.0) of 0.3.9 (including Canon PowerShot A50,
+i386/src RPMs (built on RedHat 6.0) of 0.3.99 (including Canon PowerShot A50,
 Kodak DC-240/280 USB and Mustek MDC-800 digital camera support) are also
 available:
 
-* ftp://ftp.gphoto.org/projects/gphoto/pub/rpm/i386/gphoto-0.3.9-1.i386.rpm
-* ftp://ftp.gphoto.org/projects/gphoto/pub/rpm/SRPMS/gphoto-0.3.9-1.src.rpm
+* ftp://ftp.gphoto.org/projects/gphoto/pub/rpm/i386/gphoto-0.3.99-1.i386.rpm
+* ftp://ftp.gphoto.org/projects/gphoto/pub/rpm/SRPMS/gphoto-0.3.99-1.src.rpm
 
 'slink' packages (for the i386, m68k, powerpc and alpha architectures) for
-fgphoto-0.3.9 will soon be available from a local Debian GNU/Linux mirror.
+gphoto-0.3.99 will soon be available from a local Debian GNU/Linux mirror.
 
 
 REQUIREMENTS
@@ -64,7 +64,7 @@ right away.
 
 CAMERA SUPPORT
 
-gPhoto 0.3.9 ships with 14 different camera libraries and supports 80+
+gPhoto 0.3.99 ships with 16 different camera libraries and supports 80+
 different digital still camera models, from Agfa, Apple, Canon, Casio,
 Chinon, Epson, Fuji, Hewlett Packard, Kodak, Konica, Minolta, Mustek, 
 Nikon, Olympus, Panasonic, Philips, Polaroid, Ricoh, Sanyo, and Sony.

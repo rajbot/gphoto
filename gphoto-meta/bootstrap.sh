@@ -113,6 +113,7 @@ makefiles() {
     files=""
     while read CVSROOT module restofline
     do
+	# add bz2 to dist if available, otherwise gz
 	for tarball in "${distdir}/${module}-"[0-9]*.tar.{bz2,gz}
 	do
 	    if [ -s "${tarball}" ]

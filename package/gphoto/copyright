@@ -1,0 +1,40 @@
+This package was debianized by Javier Fernandez-Sanguino Peña
+<jfs@computer.org> on Tue, 29 Jun 1999 17:06:04 +0200
+
+
+It was downloaded from:  http://www.gphoto.org
+
+gPhoto version 0.4 Developer's Release
+
+Copyright (C) 1998-99  Scott Fritzinger <scottf@scs.unr.edu>
+                       Matt Martin <matt.martin@ieee.org>
+                       Del Simmons <del@freespeech.com>
+                       Bob Paauwe <bpaauwe@bobsplace.com>
+                       Cliff Wright <cliff@snipe444.org>
+                       Phill Hugo <phill@gphoto.org>
+                       Beat Christen <spiff@longstreet.ch>
+                       Brent D. Metz <bmetz@vt.edu>
+                       Warren Baird <wjbaird@bigfoot.com>
+                       Ole K. Aamot <oleaa@ifi.uio.no>
+
+gPhoto uses the PhotoPC library (libeph_io).
+Copyright (c) 1997,1998 Eugene G. Crosser <crosser@average.org>
+
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+  MA 02111-1307, USA.
+
+On Debian systems, full text of the GNU GPL licence can always be
+found in the /usr/share/common-licenses/GPL file.

@@ -1,0 +1,17 @@
+Source: gphoto
+Section: graphics
+Priority: optional
+Maintainer: Christophe Barbe <christophe@debian.org>
+Build-Depends: gdk-imlib-dev, debhelper, libjpeg62-dev, xlibs-dev, libgtk1.2-dev, libglib1.2-dev
+Standards-Version: 3.1.0
+
+Package: gphoto
+Architecture: any
+Depends: ${shlibs:Depends}, imagemagick, gdk-imlib
+Description: Universal application for digital cameras
+ Gphoto will allow downloading, saving and manipulation of images
+ from several different camera models, or from the hardrive.
+ .
+ It also comes with a HTML engine, to publish photos on the
+ web, and a command line interface to use it from a script
+

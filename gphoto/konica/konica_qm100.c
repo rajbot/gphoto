@@ -1,5 +1,4 @@
 /* Konica Q-M100 Camera Functions */
-
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,7 +35,6 @@ int konica_qm100_formatCF()
 static void dlprogress(void)
 {
    qm100_percent += qm100_percentIncr;
-   printf("\ndlprogress percent=%f Incr=%f\n", qm100_percent, qm100_percentIncr);
    update_progress(qm100_percent);
 }
 

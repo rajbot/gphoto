@@ -1,5 +1,14 @@
 #include "qm100.h"
 
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * setSpeed - set baud rate for transmissions.                         *
+ *                                                                     *
+ *          1. Send a packet to the camera telling it about            *
+ *             the new speed.                                          *
+ *          2. Use IOCTL to change the baud rate.                      *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 void qm100_setSpeed(int serialdev, int speed)
 {
   qm100_packet_block packet;
@@ -47,3 +56,6 @@ void qm100_setSpeed(int serialdev, int speed)
         qm100_error(serialdev, "Unable to set serial device attributes", errno);
      }
 }
+
+
+

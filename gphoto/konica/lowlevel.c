@@ -1,5 +1,12 @@
 #include "qm100.h"
+#include <sys/ioctl.h>
+#include <termios.h>
 
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * readByte - read a single byte from the serial port                  *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 char qm100_readByte(int serialdev)
 {
   char byte;
@@ -10,6 +17,12 @@ char qm100_readByte(int serialdev)
   return byte;
 }
 
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * readTimedByte - wait for a byte to arrive at the serial port, but   *
+ *                 timeout after 1ms.                                  *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 char qm100_readTimedByte(int serialdev)
 {
   fd_set rfds;
@@ -22,6 +35,14 @@ char qm100_readTimedByte(int serialdev)
   return (select(1+serialdev, &rfds, NULL, NULL, &tv));
 }
 
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * readCodedByte - return a single data byte from the serial port.     *
+ *                 For  control characters which are 'escaped', we     *
+ *                 must actually read 2 bytes, returning the           *
+ *                 decoded value of the second one.                    *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 char qm100_readCodedByte(int serialdev)
 {
   char byte;
@@ -30,10 +51,18 @@ char qm100_readCodedByte(int serialdev)
     {
       byte=qm100_readByte(serialdev);
       byte=(~byte & 0xff);
+      qm100_escapeCode = 1;
     }
+  else
+      qm100_escapeCode = 0;
   return byte;
 }
 
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * writeByte - send a single byte to the serial port                   *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 void qm100_writeByte(int serialdev, char data)
 {
   usleep(qm100_sendPacing * 1000);
@@ -43,6 +72,11 @@ void qm100_writeByte(int serialdev, char data)
      qm100_iostat("sent :", &data, 1);
 }
 
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * iostat - write a sequence of bytes to the trace file                *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 void qm100_iostat(unsigned char *str, unsigned char *buf, int len)
 {
   fprintf(qm100_trace, "%s ", str);
@@ -56,4 +90,21 @@ void qm100_iostat(unsigned char *str, unsigned char *buf, int len)
           fprintf(qm100_trace, ", 0x%x", (unsigned char)buf[p++]);
     }
   fprintf(qm100_trace,"\n");
+}
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * resetUART - attempt to reset the serial port and camera             *
+ *             by dropping  DTR and RTS for three seconds.  This       *
+ *             sometimes clears the camera from a hung state.          *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+void qm100_resetUart(int serialdev)
+{
+   int out;
+   
+   sleep(1);
+   out = TIOCM_DTR | TIOCM_RTS;
+   ioctl(serialdev, TIOCMBIC, &out);
+   sleep(3);
+   ioctl(serialdev, TIOCMBIS, &out);
 }

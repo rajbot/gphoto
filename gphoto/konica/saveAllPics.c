@@ -1,6 +1,10 @@
 #include "qm100.h"
 #include "saveAllPics.h"
-
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * This module is not used.                                            *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 void qm100_saveAllPics()
 {
   int pic=1, counter=1, total=PICTURE_COUNT, gap=0, ret;

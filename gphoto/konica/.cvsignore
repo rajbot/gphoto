@@ -4,3 +4,11 @@ Makefile
 *.lo
 .libs
 *.la
+qm100
+*~
+trace*
+*.tgz
+*.tif
+*.jpg
+output
+core

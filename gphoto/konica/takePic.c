@@ -1,5 +1,10 @@
 #include "qm100.h"
 
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * takePic - send command to take a picture.                           *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 void qm100_takePic(int serialdev)
 {
   unsigned char cmd_setpic[]=QM100_SETPIC;
@@ -51,3 +56,14 @@ void qm100_takePic(int serialdev)
   qm100_transmit(serialdev, cmd_takepic, sizeof(cmd_takepic), &packet, "Take Picture");
   qm100_getCommandTermination(serialdev);
 }
+
+
+
+
+
+
+
+
+
+
+

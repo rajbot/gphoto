@@ -6,6 +6,12 @@
 #include <stdio.h>
 #include <ctype.h>
 
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * hex - return ascii char which represent                             *
+ *       a hex digit                                                   *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 static unsigned char hex(int digit)
 {
    if (digit <= 9)
@@ -14,6 +20,11 @@ static unsigned char hex(int digit)
       return (digit - 10 + 'A');
 }
 
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * dump - format storage to file in dump format.                       *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 void dump(FILE *fd, const char *title, 
           const void *address, unsigned int len)
 {

@@ -1,5 +1,17 @@
 #include "qm100.h"
 
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * getKeyword - get value for a keyword/variable, from                 *
+ *              the first successful test:                             *
+ *                                                                     *
+ *            1.  Look for an environment variable of the              *
+ *                form "QM100_varname"                                 *
+ *            2.  Look in ~/.gphoto/konicarc for a line                *
+ *                beginning with varname                               *
+ *            3.  default value provided by caller.                    *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 char *qm100_getKeyword(char *key, char *dflt)
 {
    char         fname[128];
@@ -7,14 +19,18 @@ char *qm100_getKeyword(char *key, char *dflt)
    char        *sp=NULL;
    static char  buf[256];
    
-   sprintf(fname, "%s/.gphoto/konicarc", getenv("HOME"));
-   fp = fopen(fname, "r");
-   if (!fp)
+   sprintf(buf, "QM100_%s", key);
+   sp = getenv(buf);
+   if (!sp)
       {
-      sprintf(fname, "%s/konicarc", getenv("HOME"));
+      sprintf(fname, "%s/.gphoto/konicarc", getenv("HOME"));
       fp = fopen(fname, "r");
+      if (!fp)
+         {
+         sprintf(fname, "%s/konicarc", getenv("HOME"));
+         fp = fopen(fname, "r");
       }
-   if (fp)
+      if (fp)
       {
       while ((sp = fgets(buf, sizeof(buf)-1, fp)) != NULL)
          {
@@ -30,18 +46,25 @@ char *qm100_getKeyword(char *key, char *dflt)
          }
       fclose(fp);
       }
-   else
-      printf("Unable to open %s\n", fname);
-   if (!sp)
-      {
-      sprintf(buf, "QM100_%s", key);
-      sp = getenv(buf);
+      else
+         printf("Unable to open %s\n", fname);
       }
    if (!sp)
       sp = dflt;
    return sp;
 }
 
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * setTrace - set tracing options from environment and/or              *
+ *            ~/.gphoto/konicarc:                                      *
+ *                                                                     *
+ *            Trace - specifies name of file, or "Off".                *
+ *                    "On" is synonym for ~/.gphoto/konica.trace       *
+ *            Trace_Bytes - 'On' indicates that low-level byte         *
+ *                    trace should be included.                        *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 void qm100_setTrace(void)
 {
    char *fname;
@@ -71,6 +94,12 @@ void qm100_setTrace(void)
       qm100_showBytes = 1;
 }
 
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * open  - prepare serial port for use, and send initialization        *
+ *         packets to camera.                                          *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 int qm100_open(const char *devname)
 {
   int serialdev;
@@ -103,3 +132,9 @@ int qm100_open(const char *devname)
   qm100_setSpeed(serialdev, qm100_transmitSpeed);
   return serialdev;
 }
+
+
+
+
+
+

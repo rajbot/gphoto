@@ -1,7 +1,7 @@
 #ifndef _QM100_DEFS_H
 #define _QM100_DEFS_H
-#define QM100_MOD      "1999/08/04"
-#define QM100_VER      "0.3.5"   
+#define QM100_MOD      "1999/08/15"
+#define QM100_VER      "0.4.0"   
 
 /*---------------------------------------------------------------------*
  *                                                                     *
@@ -26,7 +26,7 @@
  *---------------------------------------------------------------------*/
 #define QM100_INIT       {0x00, 0x90, 0x00, 0x00};
 #define QM100_SUSPEND    {0x00, 0x90, 0x00, 0x00}
-#define QM100_GETID      {0x10, 0x90, 0x00, 0x00}
+#define QM100_GETID      {0x10, 0x90, 0x00, 0x00, 0x00, 0x00}
 #define QM100_GETSTATUS  {0x20, 0x90, 0x00, 0x00, 0x00, 0x00}
 #define QM100_GETTIME    {0x30, 0x90, 0x00, 0x00}
 #define QM100_GETTIMERS  {0x40, 0x90, 0x00, 0x00, 0x00, 0x00}
@@ -41,8 +41,6 @@
 #define QM100_SETBEEP    {0xc0, 0x90, 0x00, 0x00, 0x06, 0xd0, 0x00, 0x00}
 //                                                            Bool  
 #define QM100_RESETFACT  {0xc1, 0x90, 0x00, 0x00, 0x00, 0x00}
-
-
 #define QM100_SETPIC     {0xC0, 0x90, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 #define QM100_FORMAT     {0x10, 0x80, 0x00, 0x00, 0x02, 0x00}
 #define QM100_GETPIC     {0x30, 0x88, 0x00, 0x00, 0x02, 0x00, 0x00, 0x80}
@@ -50,22 +48,8 @@
 #define QM100_PICINFO    {0x20, 0x88, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00}
 #define QM100_PROTECT    {0x30, 0x80, 0x00, 0x00, 0x02, 0x00, 0x00, 0x80, 0x00, 0x00} 
 //                                                      MSB#  LSB#         1/0
-#define QM100_ERASE    {0x00, 0x80, 0x00, 0x00, 0x02, 0x00, 0x00, 0x80}
-#define QM100_TAKEPIC  {0x00, 0x91, 0x00, 0x00, 0x02, 0x00}
-
-#define QM100_INIT_LEN     4
-#define QM100_STATUS_LEN   6
-#define QM100_SUSPEND_LEN  4
-#define QM100_SPEED_LEN    8
-#define QM100_FORMAT_LEN   6
-#define QM100_GETPIC_LEN   8
-#define QM100_GETTHUMB_LEN 8
-#define QM100_PICINFO_LEN  8
-#define QM100_TIME_LEN    10
-#define QM100_ERASE_LEN    8
-#define QM100_SETPIC_LEN   8
-#define QM100_TAKEPIC_LEN  6
-#define QM100_PROTECT_LEN 10
+#define QM100_ERASE      {0x00, 0x80, 0x00, 0x00, 0x02, 0x00, 0x00, 0x80}
+#define QM100_TAKEPIC    {0x00, 0x91, 0x00, 0x00, 0x02, 0x00}
 
 #define FOCUS_AUTO         0
 #define FOCUS_MANUAL       1
@@ -102,6 +86,12 @@
 #define STATUS_SIZE    34         /* expected size of status response* */
 #define SPEED_SIZE     8          /* expected size of change speed response */
 
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * Format of a generic response packet - data byte from the camera     *
+ * begin at 'packet'.                                                  *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 typedef struct
 {
   short    packet_len;
@@ -109,22 +99,6 @@ typedef struct
   unsigned char packet[PACKET_SIZE];
 } qm100_packet_block;
 
-typedef struct
-{
-  unsigned short picture_count;
-  unsigned char sec;
-  unsigned char min;
-  unsigned char hour;
-  unsigned char day;
-  unsigned char mon;
-  unsigned char year;
-  unsigned char flash;
-  unsigned char quality;
-  unsigned char focus;
-  unsigned char exposure;
-  unsigned short counter;
-  unsigned char whitebal;
-} qm100_info_block;
 /*---------------------------------------------------------------------*
  *                                                                     *
  * Format of the response packet for getTime.                          *
@@ -132,13 +106,68 @@ typedef struct
  *---------------------------------------------------------------------*/
 typedef struct
 {
-   char   cmd[4];
-   char   year;
-   char   month;
-   char   day;
-   char   hour;
-   char   minute;
-   char   second;
-}  PKT_TIME;
+   unsigned char   cmd[4];        
+   unsigned char   year;
+   unsigned char   month;
+   unsigned char   day;
+   unsigned char   hour;
+   unsigned char   minute;
+   unsigned char   second;
+}  QM100_PKT_TIME;
 
+/*--------------------------------------------------------------------*
+ *                                                                     *
+ * Format for the GetStatus response packet.                           *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+typedef struct
+{
+   unsigned char cmd_hdr[4];
+   unsigned char rsvd1[4];
+   unsigned char product[4];
+   unsigned char serial[10];
+   unsigned char hwver;
+   unsigned char hwmod;
+   unsigned char swver;
+   unsigned char swmod;
+   unsigned char rsvd2[2];
+   unsigned char name[30];
+} QM100_PKT_ID;
+
+typedef struct
+{
+   unsigned char cmd_hdr[4];
+   unsigned char rsvd1[8];
+   unsigned short currentCount;
+   unsigned char rsvd2[2];
+   unsigned char year;
+   unsigned char month;
+   unsigned char day;
+   unsigned char hour;
+   unsigned char min;
+   unsigned char sec;
+   unsigned char rsvd3[8];
+   unsigned short totalCount;
+   unsigned short strobeCount;
+} QM100_PKT_STATUS;
+
+typedef struct
+{
+   unsigned short pictureCount;
+   unsigned short totalCount;
+   unsigned short strobeCount;
+   unsigned char  year;
+   unsigned char  month;
+   unsigned char  day;
+   unsigned char  hour;
+   unsigned char  min;
+   unsigned char  sec;
+   unsigned char  hwver;
+   unsigned char  hwmod;
+   unsigned char  swver;
+   unsigned char  swmod;
+   char           product[4];
+   char           serial[10];
+   char           name[40];
+} QM100_CAMERA_INFO;
 #endif  /* _QM100_DEFS_H */

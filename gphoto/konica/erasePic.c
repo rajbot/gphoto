@@ -1,5 +1,9 @@
 #include "qm100.h"
-
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * erasePic - send command to erase a single picture.                  *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 void qm100_erasePic(int serialdev, int pic)
 {
   unsigned char cmd[] = QM100_ERASE;

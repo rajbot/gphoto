@@ -1,5 +1,10 @@
 #include "qm100.h"
-
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * formatCF - send camera command to format/erase the flash memory     *
+ *            card.                                                    *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 void qm100_formatCF(int serialdev)
 {
   unsigned char cmd[] = QM100_FORMAT;

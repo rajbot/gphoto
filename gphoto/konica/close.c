@@ -1,5 +1,10 @@
 #include "qm100.h"
-
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * close - set camera back to default speed, and send the              *
+ *         'close' packet.                                             *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 void qm100_close(int serialdev)
 {
   unsigned char cmd[] = QM100_SUSPEND;

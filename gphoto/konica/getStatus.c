@@ -1,22 +1,30 @@
 #include "qm100.h"
 #include <time.h>
-
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * getDate -  retrieve date and time from camera                       *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 char *qm100_getDate(int serialdev)
 {
    static char fmtdate[64];
    qm100_packet_block packet;
    char cmd[] = QM100_GETTIME;
-   PKT_TIME *pt = (PKT_TIME *) &(packet.packet);
+   QM100_PKT_TIME *pt = (QM100_PKT_TIME *) &(packet.packet);
   
    qm100_transmit(serialdev, cmd, sizeof(cmd), &packet, "GetTime");
    if (pt->year <60)
       pt->year += 100;
-   sprintf(fmtdate, "%4.4d %2.2d/%2.2d %2.2d:%2.2d:%2.2d",
+   sprintf(fmtdate, "%4.4d/%2.2d/%2.2d %2.2d:%2.2d:%2.2d",
            pt->year+1900, pt->month, pt->day, pt->hour,
            pt->minute, pt->second);
    return fmtdate;
 }
-
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * setDate - set camera date and time from system clock.               *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
 char *qm100_setDate(int serialdev)
 {
    qm100_packet_block packet;
@@ -30,7 +38,7 @@ char *qm100_setDate(int serialdev)
       cmd[4] = tp->tm_year - 100;
    else
       cmd[4] = tp->tm_year;
-   cmd[5] = tp->tm_mon;
+   cmd[5] = 1 + tp->tm_mon;
    cmd[6] = tp->tm_mday;
    cmd[7] = tp->tm_hour;
    cmd[8] = tp->tm_min;
@@ -38,50 +46,55 @@ char *qm100_setDate(int serialdev)
    qm100_transmit(serialdev, cmd, sizeof(cmd), &packet, "SetTime");
    return qm100_getDate(serialdev);
 }
-   
-void qm100_getStatus(int serialdev, int showStatus)
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * getStatus - retrieve status packet from camera.  This               *
+ *             contains date, time, # pictures in camera,              *
+ *             total picture count, etc.  Optionally,                  *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+int qm100_getStatus(int serialdev, QM100_CAMERA_INFO *cip)
 {
    qm100_packet_block packet;
-   
-   char cmd[]=QM100_GETSTATUS;
-   
-   memset(&packet, 0, sizeof(packet));
-   qm100_transmit(serialdev, cmd, sizeof(cmd), &packet, "GetStatus");
-   if (packet.packet_len == 34)
+   char cmd_getstatus[]=QM100_GETSTATUS;
+   char cmd_getid[]=QM100_GETID;
+   static char description[512];
+   char *sp = description;
+   QM100_PKT_STATUS *pp = (QM100_PKT_STATUS *) packet.packet;
+   QM100_PKT_ID *ip = (QM100_PKT_ID *) packet.packet;
+
+   if (cip)
       {
-      qm100_pictureCount = PICTURE_COUNT;
-      if (showStatus)
-         {
-         printf("Konica QM100 Status :\n");
-         printf(" Date     : %u:%u:%u %u/%u/%u\n",
-                TIME_HOUR, TIME_MIN, TIME_SEC, TIME_DAY, TIME_MON, TIME_YEAR);
-         printf(" Pictures : %d\n",PICTURE_COUNT);
-         printf(" Counter  : %u\n",COUNTER);
-         printf(" Flash    : ");
-         if (FLASH == FLASH_OFF) printf("Off");
-         if (FLASH & FLASH_ON) printf("On ");
-         if (FLASH & FLASH_AUTO) printf("Auto ");
-         if (FLASH & FLASH_REDEYE) printf("Red");
-         printf("\n");
-         
-         printf(" Quality  : ");
-         if (QUALITY == QUALITY_SUPER) printf ("Super Fine\n");
-         if (QUALITY == QUALITY_FINE) printf ("Fine\n");
-         if (QUALITY == QUALITY_ECONOMY) printf ("Economy\n");
-         printf(" Focus    : ");
-         if (FOCUS == FOCUS_AUTO) printf("Auto\n");
-         if (FOCUS == FOCUS_MANUAL) printf("Manual\n");
-         if (FOCUS == FOCUS_MACRO) printf("Macro\n");
-         printf(" Exposure : %d.0\n",(int)EXPOSURE);
-         printf(" WhiteBalance : ");
-         switch (WHITEBAL)
-            {
-            case 0x0e: printf("Auto"); break;
-            case 0x10: printf("Indoors"); break;
-            default: printf("Unknown"); break;
-            }
-         printf("\n");
-         }
+      qm100_transmit(serialdev, cmd_getid, sizeof(cmd_getid), &packet, "GetId");
+      strcpy(cip->name, ip->name); 
+      memcpy(cip->product, ip->product, sizeof(cip->product));
+      memcpy(cip->serial, ip->serial, sizeof(cip->serial));
+      cip->hwmod   = ip->hwmod;
+      cip->hwver   = ip->hwver;
+      cip->swmod   = ip->swmod;
+      cip->swver   = ip->swver;
       }
-   else qm100_error(serialdev, "GetStatus incorrect response length", 0);
+   qm100_transmit(serialdev, cmd_getstatus, sizeof(cmd_getstatus), &packet, "GetStatus");
+   qm100_pictureCount = pp->currentCount ;
+   if (cip)
+      {
+      cip->pictureCount = pp->currentCount;
+      cip->totalCount   = pp->totalCount;
+      cip->strobeCount  = pp->strobeCount;
+      cip->year         = pp->year;
+      cip->month        = pp->month;
+      cip->day          = pp->day;
+      cip->hour         = pp->hour;
+      cip->min          = pp->min;
+      cip->sec          = pp->sec;
+      }
+   return qm100_pictureCount;
 }
+
+
+
+
+
+
+
+

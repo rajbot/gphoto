@@ -35,7 +35,6 @@ void konica_show_camera_error(void)
 int konica_qm100_number_of_pictures ()
 {
   qm100_packet_block packet;
-  char cmd[]=QM100_GETSTATUS;
   int serialdev;
   
   if (setjmp(qm100_jmpbuf))
@@ -44,16 +43,15 @@ int konica_qm100_number_of_pictures ()
      return 0;
      }
   serialdev = qm100_open(serial_port);
-  qm100_transmit(serialdev, cmd, sizeof(cmd), &packet, "Get Status");
+  qm100_getStatus(serialdev, NULL);
   qm100_close(serialdev);
-  return PICTURE_COUNT;
+  return qm100_pictureCount;
 }
 
 int konica_qm100_take_picture()
 {
   int serialdev;
   qm100_packet_block packet;
-  char cmd[]=QM100_GETSTATUS;
   
   if (setjmp(qm100_jmpbuf))
      {
@@ -62,9 +60,9 @@ int konica_qm100_take_picture()
      }
   serialdev = qm100_open(serial_port);
   qm100_takePic(serialdev);
-  qm100_transmit(serialdev, cmd, sizeof(cmd), &packet, "Get Status");
+  qm100_getStatus(serialdev, NULL);
   qm100_close(serialdev);
-  return PICTURE_COUNT;
+  return qm100_pictureCount;
 }
 
 struct Image *konica_qm100_get_picture (int picNum, int thumbnail)
@@ -191,28 +189,28 @@ int konica_qm100_configure ()
 
 char *konica_qm100_summary()
 {
-  char summary_string[500];
-  char *summary;
-  char cmd[]=QM100_GETSTATUS;
+  char summary[512];
   int serialdev;
   qm100_packet_block packet;
+  QM100_CAMERA_INFO  cinfo;
   
   update_progress(0);
   if (setjmp(qm100_jmpbuf))
      return qm100_errmsg;
   serialdev = qm100_open(serial_port);
-  qm100_transmit(serialdev, cmd, sizeof(cmd), &packet, "Get Status");
+  qm100_getStatus(serialdev, &cinfo);
+  sprintf(summary, 
+          "\nThis camera is a %s,\n"
+          "product code %-4.4s, serial # %-10.10s.\n"
+          "It has taken %u pictures and currently contains %d picture(s).\n"
+          "The time according to the Camera is %d/%02d/%02d %02d:%02d:%02d\n",
+          cinfo.name, cinfo.product, cinfo.serial,
+          cinfo.totalCount, cinfo.pictureCount, 
+          cinfo.year+1900, cinfo.month, cinfo.day,
+          cinfo.hour, cinfo.min, cinfo.sec);
   qm100_close(serialdev);
   update_progress(1);
-
-  sprintf(summary_string, 
-          "This camera is a Konica QM100 or Hewlett Packard C20/C30\n"
-          "It has taken %u pictures and currently contains %d picture(s)\n"
-          "The time according to the Camera is %d:%d:%d %d/%d/%d",
-          COUNTER, PICTURE_COUNT, TIME_HOUR,TIME_MIN,TIME_SEC, TIME_DAY, TIME_MON, TIME_YEAR);
-  summary = (char *)malloc(sizeof(char)*strlen(summary_string)+32);
-  strcpy(summary, summary_string);
-  return (summary);
+  return (strdup(summary));
 }
 
 char *konica_qm100_description()

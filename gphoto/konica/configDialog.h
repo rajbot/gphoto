@@ -4,8 +4,9 @@ void       qm100_addPixmapDirectory(gchar *directory);
 GtkWidget *qm100_createPixmap(GtkWidget *widget, gchar *filename);
 GtkWidget *qm100_createConfigDlg (void);
 
-
 void on_okBtn_clicked(GtkButton *button, gpointer user_data);
 void setSize(GtkButton *button, gpointer user_data);
 void on_spd_pressed(GtkButton *button, gpointer user_data);
 void cancel_btn_clicked(GtkButton *button, gpointer user_data);
+
+

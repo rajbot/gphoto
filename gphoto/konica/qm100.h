@@ -45,6 +45,7 @@ XTRN int      qm100_recovery;
 XTRN int      qm100_showBytes;
 XTRN int      qm100_showStatus;
 XTRN int      qm100_transmitSpeed;
+XTRN int      qm100_escapeCode;
 XTRN jmp_buf  qm100_jmpbuf;
 XTRN struct   termios newt;
 XTRN struct   termios oldt;

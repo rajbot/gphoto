@@ -9,8 +9,7 @@
 #define CNN(i,e) {                                                      \
         if (!i) {                                                       \
                 gpfs_err_set (e, GPFS_ERR_TYPE_BAD_PARAMETERS,          \
-                        _("You need to supply a piece of "		\
-			  "proprmation."));         			\
+                        _("You need to supply a property."));		\
                 return NULL;                                            \
         }                                                               \
 }
@@ -18,8 +17,7 @@
 #define CNV(i,e) {                                                      \
         if (!i) {                                                       \
                 gpfs_err_set (e, GPFS_ERR_TYPE_BAD_PARAMETERS,          \
-                            _("You need to supply a piece of "		\
-			      "proprmation."));     			\
+                            _("You need to supply a property."));	\
                 return;                                                 \
         }                                                               \
 }

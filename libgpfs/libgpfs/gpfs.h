@@ -3,12 +3,9 @@
 
 #include <libgpfs/gpfs-err.h>
 #include <libgpfs/gpfs-file.h>
+#include <libgpfs/gpfs-cache.h>
 
 typedef struct _GPFs GPFs;
-typedef unsigned int (* GPFsFuncCountFiles)   (GPFs *, GPFsErr *, const char *,
-					       void *);
-typedef unsigned int (* GPFsFuncCountFolders) (GPFs *, GPFsErr *, const char *,
-					       void *);
 typedef GPFsFile *     (* GPFsFuncGetFile)    (GPFs *, GPFsErr *, const char *,
 					       unsigned int, void *);
 typedef char *         (* GPFsFuncGetFolder)  (GPFs *, GPFsErr *, const char *,
@@ -19,21 +16,26 @@ void  gpfs_ref   (GPFs *);
 void  gpfs_unref (GPFs *);
 
 /* Listing files */
-unsigned int  gpfs_count_files (GPFs *, GPFsErr *, const char *);
-GPFsFile     *gpfs_get_file    (GPFs *, GPFsErr *, const char *, unsigned int);
+unsigned int  gpfs_file_count (GPFs *, GPFsErr *, const char *);
+GPFsFile     *gpfs_file_get    (GPFs *, GPFsErr *, const char *, unsigned int);
 
 /* Listing folders */
-unsigned int  gpfs_count_folders (GPFs *, GPFsErr *, const char *);
-char         *gpfs_get_folder    (GPFs *, GPFsErr *, const char *,
-				  unsigned int);
+unsigned int  gpfs_folder_count (GPFs *, GPFsErr *, const char *);
+char         *gpfs_folder_get   (GPFs *, GPFsErr *, const char *,
+				 unsigned int);
 
-void gpfs_set_func_count_files   (GPFs *, GPFsFuncCountFiles    , void * );
-void gpfs_get_func_count_files   (GPFs *, GPFsFuncCountFiles *  , void **);
-void gpfs_set_func_get_file      (GPFs *, GPFsFuncGetFile       , void * );
-void gpfs_get_func_get_file      (GPFs *, GPFsFuncGetFile *     , void **);
-void gpfs_set_func_count_folders (GPFs *, GPFsFuncCountFolders  , void * );
-void gpfs_get_func_count_folders (GPFs *, GPFsFuncCountFolders *, void **);
-void gpfs_set_func_get_folder    (GPFs *, GPFsFuncGetFolder     , void * );
-void gpfs_get_func_get_folder    (GPFs *, GPFsFuncGetFolder *   , void **);
+/* Caching */
+GPFsCache    *gpfs_get_cache     (GPFs *);
+
+typedef unsigned int (* GPFsFuncCount) (GPFs *, GPFsErr *, const char *,
+					void *);
+void gpfs_set_func_file_count   (GPFs *, GPFsFuncCount         , void * );
+void gpfs_get_func_file_count   (GPFs *, GPFsFuncCount *       , void **);
+void gpfs_set_func_folder_count (GPFs *, GPFsFuncCount         , void * );
+void gpfs_get_func_folder_count (GPFs *, GPFsFuncCount *       , void **);
+void gpfs_set_func_file_get     (GPFs *, GPFsFuncGetFile       , void * );
+void gpfs_get_func_file_get     (GPFs *, GPFsFuncGetFile *     , void **);
+void gpfs_set_func_folder_get   (GPFs *, GPFsFuncGetFolder     , void * );
+void gpfs_get_func_folder_get   (GPFs *, GPFsFuncGetFolder *   , void **);
 
 #endif /* GP_FS_H__ */

@@ -4,13 +4,26 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "gpfs-obj.h"
+
 struct _GPFsFile
 {
-	unsigned int ref_count;
+	GPFsObj parent;
 
 	GPFsIf **ifs;
 	unsigned int count;
 };
+
+static void
+gpfs_file_free (GPFsObj *o)
+{
+	GPFsFile *f = (GPFsFile *) o;
+	unsigned int i;
+
+	for (i = 0; i < f->count; i++)
+		gpfs_obj_unref (GPFS_OBJ (f->ifs[i]));
+	free (f->ifs);
+}
 
 GPFsFile *
 gpfs_file_new (void)
@@ -21,35 +34,14 @@ gpfs_file_new (void)
 	if (!f)
 		return NULL;
 	memset (f, 0, sizeof (GPFsFile));
-	f->ref_count = 1;
+	gpfs_obj_init (GPFS_OBJ (f));
+	((GPFsObj *) f)->f_free = gpfs_file_free;
 
 	return f;
 }
 
 void
-gpfs_file_ref (GPFsFile *f)
-{
-	if (f)
-		f->ref_count++;
-}
-
-void
-gpfs_file_unref (GPFsFile *f)
-{
-	unsigned int i;
-
-	if (!f)
-		return;
-	if (!--f->ref_count) {
-		for (i = 0; i < f->count; i++)
-			gpfs_if_unref (f->ifs[i]);
-		free (f->ifs);
-		free (f);
-	}
-}
-
-void
-gpfs_file_add_if (GPFsFile *f, GPFsIf *i)
+gpfs_file_if_add (GPFsFile *f, GPFsIf *i)
 {
 	GPFsIf **ifs;
 
@@ -61,18 +53,18 @@ gpfs_file_add_if (GPFsFile *f, GPFsIf *i)
 		return;
 	f->ifs = ifs;
 	f->ifs[f->count] = i;
-	gpfs_if_ref (i);
+	gpfs_obj_ref (GPFS_OBJ (i));
 	f->count++;
 }
 
 unsigned int
-gpfs_file_count_ifs (GPFsFile *f)
+gpfs_file_if_count (GPFsFile *f)
 {
 	return (f ? f->count : 0);
 }
 
 GPFsIf *
-gpfs_file_get_if (GPFsFile *f, unsigned int n)
+gpfs_file_if_get (GPFsFile *f, unsigned int n)
 {
 	if (!f || n >= f->count)
 		return NULL;

@@ -2,6 +2,7 @@
 #include "libgpfs/gpfs.h"
 #include "libgpfs/gpfs-cache.h"
 #include "libgpfs/gpfs-i18n.h"
+#include "libgpfs/gpfs-obj.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -12,7 +13,7 @@
 /*****************************************************************************/
 
 static unsigned int
-func_count_files (GPFs *fs, GPFsErr *e, const char *folder, void *d)
+func_file_count (GPFs *fs, GPFsErr *e, const char *folder, void *d)
 {
 	return 1;
 }
@@ -39,13 +40,13 @@ func_read2 (GPFsIf *i, GPFsErr *e, GPFsIfFuncReadCb f, void *f_data, void *d)
 }
 
 static unsigned int
-func_count_prop (GPFsIf *i, GPFsErr *e, void *ud)
+func_prop_count (GPFsBag *b, GPFsErr *e, void *ud)
 {
 	return 3;
 }
 
 static GPFsProp *
-func_get_prop (GPFsIf *interface, GPFsErr *e, unsigned int n, void *ud)
+func_prop_get (GPFsBag *b, GPFsErr *e, unsigned int n, void *ud)
 {
 	GPFsVal v;
 	GPFsProp *i = NULL;
@@ -62,11 +63,7 @@ func_get_prop (GPFsIf *interface, GPFsErr *e, unsigned int n, void *ud)
 	case 1:
 		gpfs_val_init (&v);
 		v.t = GPFS_VAL_TYPE_STRING;
-		if (!strcmp (gpfs_if_get_name (interface), "default"))
-			v.v.v_string = strdup (_("The default interface"));
-		else
-			v.v.v_string = strdup (_("The interface supplying a "
-					         "preview"));
+		v.v.v_string = strdup (_("Some interface"));
 		i = gpfs_prop_new ("description", _("Description"),
 				_("The description of the interface"), &v);
 		gpfs_val_clear (&v);
@@ -95,8 +92,26 @@ func_get_prop (GPFsIf *interface, GPFsErr *e, unsigned int n, void *ud)
 	return i;
 }
 
+static unsigned int
+func_bag_count (GPFsObj *o, GPFsErr *e, void *ud)
+{
+	return 1;
+}
+
+static GPFsBag *
+func_bag_get (GPFsObj *o, GPFsErr *e, unsigned int n, void *ud)
+{
+	GPFsBag *b;
+
+	b = gpfs_bag_new ();
+	gpfs_bag_set_func_prop_count (b, func_prop_count, NULL);
+	gpfs_bag_set_func_prop_get (b, func_prop_get, NULL);
+
+	return b;
+}
+
 static GPFsFile *
-func_get_file (GPFs *fs, GPFsErr *e, const char *folder, unsigned int n, void *d)
+func_file_get (GPFs *fs, GPFsErr *e, const char *folder, unsigned int n, void *d)
 {
 	GPFsFile *f;
 	GPFsIf *i;
@@ -105,20 +120,22 @@ func_get_file (GPFs *fs, GPFsErr *e, const char *folder, unsigned int n, void *d
 	f = gpfs_file_new ();
 
 	/* Interface 'default' */
-	i = gpfs_if_new ("default");
+	i = gpfs_if_new ();
+	gpfs_obj_set_name (GPFS_OBJ (i), NULL, "default");
 	gpfs_if_set_func_read (i, func_read1, NULL);
-	gpfs_if_set_func_count_prop (i, func_count_prop, NULL);
-	gpfs_if_set_func_get_prop (i, func_get_prop, NULL);
-	gpfs_file_add_if (f, i);
-	gpfs_if_unref (i);
+	gpfs_obj_set_func_bag_count (GPFS_OBJ (i), func_bag_count, NULL);
+	gpfs_obj_set_func_bag_get (GPFS_OBJ (i), func_bag_get, NULL);
+	gpfs_file_if_add (f, i);
+	gpfs_obj_unref (GPFS_OBJ (i));
 
 	/* Interface 'preview' */
-	i = gpfs_if_new ("preview");
+	i = gpfs_if_new ();
+	gpfs_obj_set_name (GPFS_OBJ (i), NULL, "preview");
 	gpfs_if_set_func_read (i, func_read2, NULL);
-	gpfs_if_set_func_count_prop (i, func_count_prop, NULL);
-	gpfs_if_set_func_get_prop (i, func_get_prop, NULL);
-	gpfs_file_add_if (f, i);
-	gpfs_if_unref (i);
+	gpfs_obj_set_func_bag_count (GPFS_OBJ (i), func_bag_count, NULL);
+	gpfs_obj_set_func_bag_get (GPFS_OBJ (i), func_bag_get, NULL);
+	gpfs_file_if_add (f, i);
+	gpfs_obj_unref (GPFS_OBJ (i));
 
 	return f;
 }
@@ -139,69 +156,69 @@ func_read_cb (GPFsIf *i, GPFsErr *e, const char *data, unsigned int size,
 	c[size] = '\0';
 	memcpy (c, data, size);
 	printf ("Received data '%s' from interface '%s'!\n", c,
-		gpfs_if_get_name (i));
-	free ©;
+		gpfs_obj_get_name (GPFS_OBJ (i), NULL));
+	free (c);
 }
 
 int
 main (int argc, char **argv)
 {
 	GPFs *fs;
-	unsigned int n, j, k;
+	unsigned int n, j;
 	GPFsFile *f;
 	GPFsIf *i;
 	GPFsCache *c;
-	GPFsProp *prop;
 
 	/* Create a cache */
 	c = gpfs_cache_new ();
 
 	/* Set up the filesystem */
 	fs = gpfs_new ();
-	gpfs_set_func_count_files (fs, func_count_files, NULL);
-	gpfs_set_func_get_file    (fs, func_get_file, NULL);
+	gpfs_set_func_file_count (fs, func_file_count, NULL);
+	gpfs_set_func_file_get    (fs, func_file_get, NULL);
 
 	/* Test the filesystem */
-	n = gpfs_count_files (fs, NULL, "/");
+	n = gpfs_file_count (fs, NULL, "/");
 	printf ("Found %i file(s).\n", n);
 
-	f = gpfs_get_file (fs, NULL, "/", 0);
+	f = gpfs_file_get (fs, NULL, "/", 0);
 	gpfs_unref (fs);
 
-	n = gpfs_file_count_ifs (f);
+	n = gpfs_file_if_count (f);
 	printf ("Found %i interface(s).\n", n);
 	for (j = 0; j < n; j++) {
-		i = gpfs_file_get_if (f, j);
+		i = gpfs_file_if_get (f, j);
 
 		/* Add the interface to our cache. */
-		gpfs_cache_add_if (c, i);
+		gpfs_cache_if_add (c, i);
 		gpfs_cache_if_set_limit_read (c, i, j * 20);
 
+#if 0
 		printf (" %i: Interface '%s' with %i properties\n",
 			j, gpfs_if_get_name (i), gpfs_if_count_prop (i, NULL));
 		for (k = 0; k < gpfs_if_count_prop (i, NULL); k++) {
 			prop = gpfs_if_get_prop (i, NULL, k);
 			gpfs_prop_dump (prop);
 		}
+#endif
 	}
 
 	printf ("Testing interfaces...\n");
 	for (j = 0; j < n; j++) {
-		i = gpfs_file_get_if (f, j);
+		i = gpfs_file_if_get (f, j);
 		gpfs_if_read (i, NULL, func_read_cb, NULL);
 	}
 
 	printf ("There are now %i interfaces in our cache.\n", 
-		gpfs_cache_count_if ©);
+		gpfs_cache_if_count (c));
 	printf ("Testing interfaces again...\n");
 	for (j = 0; j < n; j++) {
-		i = gpfs_file_get_if (f, j);
+		i = gpfs_file_if_get (f, j);
 		gpfs_if_read (i, NULL, func_read_cb, NULL);
 	}
 
-	gpfs_file_unref (f);
-
-	gpfs_cache_unref ©;
+	gpfs_obj_unref (GPFS_OBJ (f));
+	gpfs_obj_unref (GPFS_OBJ (c));
 
 	return 0;
 }

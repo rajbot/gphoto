@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "gpfs-obj.h"
+
 typedef struct _GPFsCacheIf GPFsCacheIf;
 struct _GPFsCacheIf {
 	GPFsIf *i;
@@ -19,11 +21,21 @@ struct _GPFsCacheIf {
 };
 
 struct _GPFsCache {
-	unsigned int ref_count;
+	GPFsObj parent;
 
 	GPFsCacheIf *i;
 	unsigned int i_count;
 };
+
+static void
+gpfs_cache_free (GPFsObj *o)
+{
+	GPFsCache *c = (GPFsCache *) o;
+
+	/* Remove interfaces from cache */
+	while (gpfs_cache_if_count (c))
+		gpfs_cache_if_remove (c, c->i[0].i);
+}
 
 GPFsCache *
 gpfs_cache_new (void)
@@ -31,34 +43,12 @@ gpfs_cache_new (void)
 	GPFsCache *c;
 
 	c = malloc (sizeof (GPFsCache));
-	if (!c)
-		return NULL;
+	if (!c) return NULL;
 	memset (c, 0, sizeof (GPFsCache));
-	c->ref_count = 1;
+	gpfs_obj_init (GPFS_OBJ (c));
+	((GPFsObj *) c)->f_free = gpfs_cache_free;
 
 	return c;
-}
-
-void
-gpfs_cache_ref (GPFsCache *c)
-{
-	if ©
-		c->ref_count++;
-}
-
-void
-gpfs_cache_unref (GPFsCache *c)
-{
-	if (!c)
-		return;
-	if (!--c->ref_count) {
-
-		/* Remove interfaces from cache */
-		while (gpfs_cache_count_if ©)
-			gpfs_cache_remove_if (c, c->i[0].i);
-
-		free ©;
-	}
 }
 
 typedef struct {
@@ -127,7 +117,7 @@ f_read (GPFsIf *i, GPFsErr *e, GPFsIfFuncReadCb cb, void *cb_data, void *ud)
 }
 
 void
-gpfs_cache_add_if (GPFsCache *c, GPFsIf *i)
+gpfs_cache_if_add (GPFsCache *c, GPFsIf *i)
 {
 	GPFsCacheIf *in;
 
@@ -140,7 +130,7 @@ gpfs_cache_add_if (GPFsCache *c, GPFsIf *i)
 	c->i = in;
 	memset (&c->i[c->i_count], 0, sizeof (GPFsCacheIf));
 	c->i[c->i_count++].i = i;
-	gpfs_if_ref (i);
+	gpfs_obj_ref (GPFS_OBJ (i));
 
 	/* Intercept the communication */
 	gpfs_if_get_func_read (i, &c->i[c->i_count - 1].f_read,
@@ -149,13 +139,13 @@ gpfs_cache_add_if (GPFsCache *c, GPFsIf *i)
 }
 
 unsigned int
-gpfs_cache_count_if (GPFsCache *c)
+gpfs_cache_if_count (GPFsCache *c)
 {
 	return (c ? c->i_count : 0);
 }
 
 GPFsIf *
-gpfs_cache_get_if (GPFsCache *c, unsigned int n)
+gpfs_cache_if_get (GPFsCache *c, unsigned int n)
 {
 	if (!c || (n >= c->i_count))
 		return NULL;
@@ -164,7 +154,7 @@ gpfs_cache_get_if (GPFsCache *c, unsigned int n)
 }
 
 void
-gpfs_cache_remove_if (GPFsCache *c, GPFsIf *i)
+gpfs_cache_if_remove (GPFsCache *c, GPFsIf *i)
 {
 	unsigned int n;
 
@@ -174,7 +164,7 @@ gpfs_cache_remove_if (GPFsCache *c, GPFsIf *i)
 	for (n = 0; (n < c->i_count) && (c->i[n].i != i); n++);
 	if (n == c->i_count)
 		return;
-	gpfs_if_unref (c->i[n].i);
+	gpfs_obj_unref (GPFS_OBJ (c->i[n].i));
 	free (c->i[n].data);
 	memmove (&c->i[n], &c->i[n + 1], c->i_count - n - 1);
 	c->i_count--;

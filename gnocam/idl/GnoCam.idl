@@ -5,14 +5,14 @@ module GNOME {
 	exception Cancelled {};
 
 	interface Camera : Bonobo::Unknown {
-		/* The Camera can be accessed through BonoboStorage and
-		   BonoboControl, latter will give you access to the
-		   configuration options. */
+		/* The Camera can be accessed through BonoboStorage */
 
 		exception NotSupported {};
 		exception IOError {};
 
 		Bonobo::Stream capturePreview ();
+
+		void showConfiguration ();
 		
 		/* The path to the new image will be returned. */
 		string captureImage ()

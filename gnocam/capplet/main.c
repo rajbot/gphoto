@@ -1,10 +1,9 @@
-#ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
 
 #include <gphoto2.h>
+#include <liboaf/liboaf.h>
+#include <bonobo/bonobo-main.h>
 
-#include <gnome.h>
 #include <gconf/gconf.h>
 #include <capplet-widget.h>
 
@@ -15,15 +14,20 @@
 /***************/
 
 static void
-log_handler (const gchar* log_domain, GLogLevelFlags log_level, const gchar* message, gpointer user_data)
+log_handler (const gchar *log_domain, GLogLevelFlags log_level,
+	     const gchar *message, gpointer user_data)
 {
-        GtkWindow*      window;
+        GtkWindow *window;
         
         window = GTK_WINDOW (user_data);
 
-        if (log_level == G_LOG_LEVEL_CRITICAL) gnome_error_dialog_parented (message, window);
-        else if (log_level == G_LOG_LEVEL_WARNING) gnome_warning_dialog_parented (message, window);
-        else if ((log_level == G_LOG_LEVEL_INFO) || (log_level == G_LOG_LEVEL_MESSAGE)) gnome_ok_dialog_parented (message, window);
+        if (log_level == G_LOG_LEVEL_CRITICAL)
+		gnome_error_dialog_parented (message, window);
+        else if (log_level == G_LOG_LEVEL_WARNING)
+		gnome_warning_dialog_parented (message, window);
+        else if ((log_level == G_LOG_LEVEL_INFO) ||
+		 (log_level == G_LOG_LEVEL_MESSAGE))
+		gnome_ok_dialog_parented (message, window);
 }
 
 /*************/
@@ -76,13 +80,20 @@ on_cancel (CappletWidget* widget, gpointer user_data)
 
 int main (int argc, char** argv)
 {
-	GError*		error;
-	GtkWidget*	content;
-	GtkWidget*	capplet;
+	GError *error;
+	GtkWidget *content;
+	GtkWidget *capplet;
+	CORBA_ORB orb;
 	
 	/* Internationalization */
 	bindtextdomain (PACKAGE, GNOME_LOCALEDIR);
 	textdomain (PACKAGE);
+
+	gtk_type_init ();
+
+	orb = oaf_init (argc, argv);
+	if (!bonobo_init (orb, NULL, NULL))
+		g_error ("Can not initialize bonobo!");
 
 	if (gnome_capplet_init (PACKAGE, VERSION, argc, argv, NULL, 0, NULL) < 0) return (1);
 

@@ -10,7 +10,7 @@ extern struct _Camera *Camera;
 char command_prefix[256];
 
 void command_license () {
- 	printf("GNU Photo v.0.3\n");
+ 	printf("GNU Photo v.%s\n", VERSION);
  	printf("Copyright (C) 1998 Scott Fritzinger <scottf@unr.edu>");
  	printf("Copyright (C) 1998 Ole Kristian Aamot <oleaa@ifi.uio.no>");
         printf("Report bugs and details on your camera to ");
@@ -26,7 +26,7 @@ void command_license () {
 
 void command_usage () {
 
- 	printf("GNU Photo v.0.3\n");
+ 	printf("GNU Photo v.%s\n", VERSION);
 	printf("Covered by the GNU Public License. See \"man gphoto\" for details.\n");
 	printf("Usage: gphoto [-h] [-n] [-s # filename] [-t # filename]\n");
 	printf("              [-d #] [-l filename]\n");

@@ -635,12 +635,13 @@ void save_config() {
 }
 
 void version_dialog() {
+    char msg[1024];
 
-	error_dialog("
+	sprintf(msg, "
 Version Information
 -------------------
 
-Current Version: v0.3
+Current Version: %s
 
 This developer's release should be much more stable than
 the pre-release. A lot has changed internally, and we
@@ -653,8 +654,9 @@ and it should get the index a lot faster.
 As always, report bugs gphoto-devel@lists.styx.net
 
 Thanx much. :)
-");
+", VERSION);
 
+	error_dialog(msg);
 }
 	
 void usersmanual_dialog() {
@@ -816,9 +818,10 @@ void faq_dialog() {
 }
  
 void about_dialog() {
+    char msg[1024];
    
-  error_dialog("
-gPhoto version 0.3 Developer's Release
+  sprintf(msg, "
+gPhoto version %s Developer's Release
 
 Copyright (C) 1998-99  Scott Fritzinger <scottf@scs.unr.edu>
                        Matt Martin <matt.martin@ieee.org>
@@ -826,6 +829,7 @@ Copyright (C) 1998-99  Scott Fritzinger <scottf@scs.unr.edu>
                        Bob Paauwe <bpaauwe@bobsplace.com>
                        Cliff Wright <cliff@snipe444.org>
                        Phill Hugo <phill@gphoto.org>
+		       Gary Ross <gdr@hooked.net>
                        Beat Christen <spiff@longstreet.ch>
                        Brent D. Metz <bmetz@vt.edu>
                        Warren Baird <wjbaird@bigfoot.com>
@@ -835,7 +839,9 @@ gPhoto uses the PhotoPC library (libeph_io).
 Copyright (c) 1997,1998 Eugene G. Crosser <crosser@average.org>
 Copyright (c) 1998 Bruce D. Lightner (DOS/Windows support)
 
-Visit http://www.gphoto.org/ for updates.");
+Visit http://www.gphoto.org/ for updates.", VERSION);
+
+  error_dialog(msg);
 }
  
  void show_license() {

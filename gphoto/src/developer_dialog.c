@@ -19,6 +19,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.4  1999/06/18 15:57:35  gdr
+ * Get version number from configure.in rather than hardcode it in a string.
+ *
  * Revision 1.3  1999/06/15 16:05:03  scottf
  * removed the #ifdef's for gtk < 1.2
  * windows show in middle of screen now instead of random places :)
@@ -99,9 +102,12 @@ developer_dialog_create ()
   
   if (!developer_dialog)
     {
+      char title[256];
+      
       developer_dialog = gtk_window_new (GTK_WINDOW_DIALOG);
       gtk_window_set_wmclass (GTK_WINDOW (developer_dialog), "developer", "gPhoto");
-      gtk_window_set_title (GTK_WINDOW (developer_dialog), ("gPhoto release 0.3 was brought to you by"));
+      sprintf(title, "gPhoto release %s was brought to you by", VERSION);
+      gtk_window_set_title (GTK_WINDOW (developer_dialog), title);
       gtk_window_set_position (GTK_WINDOW (developer_dialog), GTK_WIN_POS_CENTER);
       gtk_signal_connect (GTK_OBJECT (developer_dialog), "delete_event",
 			  GTK_SIGNAL_FUNC (developer_dialog_hide), NULL);

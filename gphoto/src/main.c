@@ -68,6 +68,7 @@ int main (int argc, char *argv[]) {
 	GdkBitmap *bitmap;
 	FILE *conf;
 	char fname[1024];
+	char title[256];
 
 	gtk_init(&argc, &argv);
 	gdk_imlib_init();
@@ -114,7 +115,8 @@ int main (int argc, char *argv[]) {
 	/* set up the main window -------------------------------- */
 	mainWin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 	gtk_container_border_width (GTK_CONTAINER(mainWin), 0);
-	gtk_window_set_title (GTK_WINDOW(mainWin), TITLE_VER);
+	sprintf(title, "GNU Photo (gPhoto) - %s", VERSION);
+	gtk_window_set_title (GTK_WINDOW(mainWin), title);
 	gtk_signal_connect (GTK_OBJECT(mainWin), "delete_event",
 			    GTK_SIGNAL_FUNC(delete_event), NULL);
 	gtk_widget_set_usize(mainWin, 700, 480);

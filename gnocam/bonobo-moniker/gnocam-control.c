@@ -42,8 +42,8 @@
 #include "e-shell-folder-title-bar.h"
 #include "utils.h"
 #include "gnocam-storage-view.h"
-#include "gnocam-control-folder.h"
-#include "gnocam-control-file.h"
+#include "gnocam-folder.h"
+#include "gnocam-file.h"
 
 #define PARENT_TYPE bonobo_control_get_type ()
 static BonoboControlClass* gnocam_control_parent_class = NULL;
@@ -65,6 +65,10 @@ struct _GnoCamControlPrivate
 	GnoCamControlStorageViewMode	storage_view_mode;
 
 	GHashTable*			hash_table;
+
+	gboolean			current_is_directory;
+	GnoCamFolder*			folder;
+	GnoCamFile*			file;
 };
 
 /**************/
@@ -78,8 +82,6 @@ static int 	on_storage_view_vbox_button_release_event 	(GtkWidget* widget, GdkEv
 
 static void 	disconnect_popup_signals 	(GnoCamControl* control);
 static void 	popdown_transient_folder_bar 	(GnoCamControl* control);
-static void 	set_current_notebook_page 	(GnoCamControl* control, GtkWidget* widget);
-
 
 /*************/
 /* Callbacks */
@@ -90,33 +92,52 @@ on_file_selected (GnoCamStorageView* storage_view, const gchar* path, void* data
 {
 	GnoCamControl*		control;
 	GtkWidget*		widget;
+	GnoCamFile*		file;
+	Bonobo_UIContainer      container;
+	gint 			notebook_page, current_page;
 
 	control = GNOCAM_CONTROL (data);
 
 	if (control->priv->storage_view_mode == GNOCAM_CONTROL_STORAGE_VIEW_MODE_TRANSIENT)
 		popdown_transient_folder_bar (control);
 
-	widget = g_hash_table_lookup (control->priv->hash_table, path);
-	if (!widget) {
-		GnoCamControlFile*      control_file;
+	file = g_hash_table_lookup (control->priv->hash_table, path);
+	if (!file) {
 		CORBA_Environment	ev;
 
 		CORBA_exception_init (&ev);
-		control_file = gnocam_control_file_new (control->priv->camera, control->priv->storage, g_basename (path), &ev);
+		file = gnocam_file_new (control->priv->camera, control->priv->storage, g_basename (path), BONOBO_CONTROL (control), &ev);
 		if (BONOBO_EX (&ev)) {
 			g_warning ("Could not get control for '%s': %s", path, bonobo_exception_get_text (&ev));
 			return;
 		}
 		CORBA_exception_free (&ev);
-		g_return_if_fail (control_file);
+		g_return_if_fail (file);
 
-		gtk_widget_show (widget = bonobo_control_get_widget (BONOBO_CONTROL (control_file)));
+		gtk_widget_show (widget = gnocam_file_get_widget (file));
 		gtk_notebook_append_page (GTK_NOTEBOOK (control->priv->notebook), widget, NULL);
-		g_hash_table_insert (control->priv->hash_table, g_strdup (path), widget);
+		g_hash_table_insert (control->priv->hash_table, g_strdup (path), file);
+	} else {
+		widget = gnocam_file_get_widget (file);
 	}
 
-	set_current_notebook_page (control, widget);
+	container = bonobo_control_get_remote_ui_container (BONOBO_CONTROL (control));
+	gnocam_file_set_ui_container (file, container);
+
 	e_shell_folder_title_bar_set_title (E_SHELL_FOLDER_TITLE_BAR (control->priv->title_bar), path);
+
+        current_page = gtk_notebook_get_current_page (GTK_NOTEBOOK (control->priv->notebook));
+        if (current_page != 0) {
+                if (control->priv->current_is_directory) 
+                        gnocam_folder_unset_ui_container (control->priv->folder);
+                else
+                        gnocam_file_unset_ui_container (control->priv->file);
+        }
+	control->priv->current_is_directory = FALSE;
+	control->priv->file = file;
+
+	notebook_page = gtk_notebook_page_num (GTK_NOTEBOOK (control->priv->notebook), widget);
+	gtk_notebook_set_page (GTK_NOTEBOOK (control->priv->notebook), notebook_page);
 }
 
 static void
@@ -124,26 +145,46 @@ on_directory_selected (GnoCamStorageView* storage_view, const gchar* path, void*
 {
 	GnoCamControl*		control;
 	GtkWidget*		widget;
+	GnoCamFolder*		folder;
+	Bonobo_UIContainer      container;
+	gint			notebook_page, current_page;
+
+	g_warning ("BEGIN: on_directory_selected");
 
 	control = GNOCAM_CONTROL (data);
 
 	if (control->priv->storage_view_mode == GNOCAM_CONTROL_STORAGE_VIEW_MODE_TRANSIENT)
 		popdown_transient_folder_bar (control);
 
-	widget = g_hash_table_lookup (control->priv->hash_table, path);
-	if (!widget) {
-		GnoCamControlFolder*	control_folder;
+	folder = g_hash_table_lookup (control->priv->hash_table, path);
+	if (!folder) {
+		folder = gnocam_folder_new (control->priv->camera, control->priv->storage, path, BONOBO_CONTROL (control));
+		g_return_if_fail (folder);
 
-		control_folder = gnocam_control_folder_new (control->priv->camera, control->priv->storage, path);
-		g_return_if_fail (control_folder);
-
-		gtk_widget_show (widget = bonobo_control_get_widget (BONOBO_CONTROL (control_folder)));
+		gtk_widget_show (widget = gnocam_folder_get_widget (folder));
 		gtk_notebook_append_page (GTK_NOTEBOOK (control->priv->notebook), widget, NULL);
-		g_hash_table_insert (control->priv->hash_table, g_strdup (path), widget);
+		g_hash_table_insert (control->priv->hash_table, g_strdup (path), folder);
+	} else {
+		widget = gnocam_folder_get_widget (folder);
 	}
 	
-	set_current_notebook_page (control, widget);
+	container = bonobo_control_get_remote_ui_container (BONOBO_CONTROL (control));
+	gnocam_folder_set_ui_container (folder, container);
+	
 	e_shell_folder_title_bar_set_title (E_SHELL_FOLDER_TITLE_BAR (control->priv->title_bar), path);
+
+	current_page = gtk_notebook_get_current_page (GTK_NOTEBOOK (control->priv->notebook));
+	if (current_page != 0) {
+                if (control->priv->current_is_directory)
+                        gnocam_folder_unset_ui_container (control->priv->folder);
+                else
+                        gnocam_file_unset_ui_container (control->priv->file);
+        }
+        control->priv->current_is_directory = TRUE;
+	control->priv->folder = folder;
+
+	notebook_page = gtk_notebook_page_num (GTK_NOTEBOOK (control->priv->notebook), widget);
+	gtk_notebook_set_page (GTK_NOTEBOOK (control->priv->notebook), notebook_page);
 }
 
 static void
@@ -254,38 +295,6 @@ hash_table_forall_destroy_control (void* name, void* value, void* data)
 }
 
 static void
-set_current_notebook_page (GnoCamControl* control, GtkWidget* widget)
-{
-	gint			notebook_page, current_page;
-	GtkWidget*		current;
-	BonoboControlFrame*	control_frame;
-
-	/* Check if we already display the page */
-	notebook_page = gtk_notebook_page_num (GTK_NOTEBOOK (control->priv->notebook), widget);
-	current_page = gtk_notebook_get_current_page (GTK_NOTEBOOK (control->priv->notebook));
-	if (notebook_page == current_page) return;
-	g_return_if_fail (notebook_page != -1);
-
-	/* Make the old menus disappear */
-	if (current_page != 0) {
-		g_warning ("Make old menus disappear");
-		current = gtk_notebook_get_nth_page (GTK_NOTEBOOK (control->priv->notebook), current_page);
-		control_frame = bonobo_widget_get_control_frame (BONOBO_WIDGET (current));
-		bonobo_control_frame_set_autoactivate (control_frame, FALSE);
-		bonobo_control_frame_control_deactivate (control_frame);
-	}
-
-	gtk_notebook_set_page (GTK_NOTEBOOK (control->priv->notebook), notebook_page);
-
-	/* Show the new menus */
-	g_warning ("Show new menus");
-	current = gtk_notebook_get_nth_page (GTK_NOTEBOOK (control->priv->notebook), notebook_page);
-	control_frame = bonobo_widget_get_control_frame (BONOBO_WIDGET (current));
-	bonobo_control_frame_set_autoactivate (control_frame, FALSE);
-	bonobo_control_frame_control_activate (control_frame);
-}
-
-static void
 disconnect_popup_signals (GnoCamControl* control)
 {
         gtk_signal_disconnect_by_func (GTK_OBJECT (control->priv->storage_view_vbox), GTK_SIGNAL_FUNC (on_storage_view_vbox_button_release_event), control);
@@ -351,19 +360,19 @@ activate (BonoboControl* object, gboolean state)
 	BonoboUIComponent*	component;
 	Bonobo_UIContainer	container;
 	GnoCamControl*		control;
-	
+
 	control = GNOCAM_CONTROL (object);
 	container = bonobo_control_get_remote_ui_container (BONOBO_CONTROL (control));
 	component = bonobo_control_get_ui_component (BONOBO_CONTROL (control));
 	bonobo_ui_component_set_container (component, container);
-	
+
         if (state) {
 		if (control->priv->camera->abilities->config) {
 			CameraWidget*	widget = NULL;
                         gint 		result;
 
 			result = gp_camera_config_get (control->priv->camera, &widget);
-			if (result == GP_OK) menu_setup (object, control->priv->camera, widget, "Camera Configuration", NULL, NULL);
+			if (result == GP_OK) menu_setup (component, control->priv->camera, widget, "Camera Configuration", NULL, NULL);
 		}
 	} else {
 		bonobo_ui_component_unset_container (component);
@@ -445,7 +454,7 @@ gnocam_control_new (BonoboMoniker* moniker, CORBA_Environment* ev)
 	e_paned_pack1 (E_PANED (new->priv->hpaned), new->priv->storage_view_vbox, FALSE, FALSE);
 	
 	/* Create the title for the storage view */
-	gtk_widget_show (new->priv->storage_view_title_bar = e_title_bar_new (_("Folders")));
+	gtk_widget_show (new->priv->storage_view_title_bar = e_title_bar_new (_("Contents")));
 	gtk_box_pack_start (GTK_BOX (new->priv->storage_view_vbox), new->priv->storage_view_title_bar, FALSE, FALSE, 0);
 	gtk_signal_connect (GTK_OBJECT (new->priv->storage_view_title_bar), "button_clicked", GTK_SIGNAL_FUNC (on_storage_view_title_bar_button_clicked), new);
 
@@ -462,13 +471,15 @@ gnocam_control_new (BonoboMoniker* moniker, CORBA_Environment* ev)
 	gtk_signal_connect (GTK_OBJECT (new->priv->storage_view), "file_selected", GTK_SIGNAL_FUNC (on_file_selected), new);
 
 	/* Select the selected file/folder */
-	name = (gchar*) bonobo_moniker_get_name (moniker);
-	name += 2;
-	for (; *name != 0; name++) if (*name == '/') break;
-	gnocam_storage_view_set (name);
+//FIXME: Problems with container == CORBA_OBJECT_NIL
+//	name = (gchar*) bonobo_moniker_get_name (moniker);
+//	name += 2;
+//	for (; *name != 0; name++) if (*name == '/') break;
+//	gtk_signal_emit_by_name (GTK_OBJECT (new->priv->storage_view), "directory_selected", name);
 
 	/* Set default settings */
 	new->priv->storage_view_mode = GNOCAM_CONTROL_STORAGE_VIEW_MODE_STICKY;
+	e_shell_folder_title_bar_set_clickable (E_SHELL_FOLDER_TITLE_BAR (new->priv->title_bar), FALSE);
 
 	return (new);
 }

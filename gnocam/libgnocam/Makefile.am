@@ -15,10 +15,10 @@ INCLUDES =\
 	
 
 CORBA_SOURCES =\
- Gphoto.h\
- Gphoto-common.c\
- Gphoto-stubs.c\
- Gphoto-skels.c
+ GnoCam.h\
+ GnoCam-common.c\
+ GnoCam-stubs.c\
+ GnoCam-skels.c
 
 noinst_LTLIBRARIES = libgnocam.la
 
@@ -33,14 +33,14 @@ libgnocam_la_LIBADD =\
  $(OAF_LIBS)\
  $(GCONF_LIBS)
 
-idls = $(top_srcdir)/idl/Gphoto.idl
+idls = $(top_srcdir)/idl/GnoCam.idl
 
 idl_flags = `$(GNOME_CONFIG) --cflags idl` -D__GNOCAM_COMPILATION
 
 $(CORBA_SOURCES): $(idls)
-	$(ORBIT_IDL) $(top_srcdir)/idl/Gphoto.idl -I$(top_srcdir)/idl $(idl_flags)
+	$(ORBIT_IDL) $(top_srcdir)/idl/GnoCam.idl -I$(top_srcdir)/idl $(idl_flags)
 
-Gphoto.h: $(idls)
+GnoCam.h: $(idls)
 
 BUILT_SOURCES=$(CORBA_SOURCES)
 

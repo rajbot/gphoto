@@ -16,7 +16,7 @@
 #include "preferences.h"
 #include "file-operations.h"
 #include "gnocam-shortcut-bar.h"
-#include "Gphoto.h"
+#include "GnoCam.h"
 
 /********************/
 /* Global Variables */
@@ -117,8 +117,8 @@ int main (int argc, char *argv[])
 
                 property = bonobo_get_object ("config:/apps/" PACKAGE "/debug_level", "IDL:Bonobo/Property:1.0", &ev);
                 if (BONOBO_EX (&ev)) g_error (_("Could not get property 'debug_level'! (%s)"), bonobo_exception_get_text (&ev));
-                arg = bonobo_arg_new (TC_GNOME_Gphoto_DebugLevel);
-                BONOBO_ARG_SET_GENERAL (arg, GNOME_Gphoto_DEBUG_LEVEL_NONE, TC_GNOME_Gphoto_DebugLevel, int, NULL);
+                arg = bonobo_arg_new (TC_GNOME_GnoCam_DebugLevel);
+                BONOBO_ARG_SET_GENERAL (arg, GNOME_GnoCam_DEBUG_LEVEL_NONE, TC_GNOME_GnoCam_DebugLevel, int, NULL);
                 Bonobo_Property_setValue (property, arg, &ev);
 		bonobo_arg_release (arg);
                 if (BONOBO_EX (&ev)) g_error (_("Could not set property 'debug_level'! (%s)"), bonobo_exception_get_text (&ev));

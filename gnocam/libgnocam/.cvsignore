@@ -2,6 +2,6 @@ Makefile.in
 Makefile
 *.lo
 *.la
-Gphoto*
+GnoCam*
 .deps
 .libs

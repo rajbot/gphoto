@@ -181,8 +181,6 @@ bonobo_storage_camera_open (const char *path, gint flags, gint mode, CORBA_Envir
 	CameraList 		list;
 	Camera*			camera = NULL;
 
-	g_warning ("bonobo_storage_camera_open (%s, ?, ?, ?)", path);
-
         /* Reject some unsupported open modes. */
 	if (flags & (Bonobo_Storage_COMPRESSED | Bonobo_Storage_TRANSACTED)) {
         	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
@@ -190,7 +188,6 @@ bonobo_storage_camera_open (const char *path, gint flags, gint mode, CORBA_Envir
         }
 
 	/* Create the camera. */
-	g_warning ("Creating camera...");
 	CHECK_RESULT (gp_camera_new_from_gconf (&camera, path), ev);
 	if (BONOBO_EX (ev)) {
 		return (NULL);
@@ -210,7 +207,6 @@ bonobo_storage_camera_open (const char *path, gint flags, gint mode, CORBA_Envir
 		return NULL;
 	}
 
-	g_warning ("Returning storage...");
         return (BONOBO_STORAGE (storage));
 }
 
@@ -222,8 +218,6 @@ camera_open_storage (BonoboStorage *storage, const CORBA_char *path, Bonobo_Stor
 	BonoboStorageCamera *storage_new;
 	gint i;
 
-	g_warning ("camera_open_storage (?, %s, ?, ?)", path);
-	
 	/* Reject some unsupported open modes. */
 	if (mode & (Bonobo_Storage_COMPRESSED | Bonobo_Storage_TRANSACTED)) {
 		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);

@@ -10,15 +10,12 @@
 #include <gphoto2.h>
 #include <bonobo/bonobo-moniker-extender.h>
 
-#include "gnocam-control-file.h"
-#include "gnocam-control-folder.h"
+#include "gnocam-control.h"
 #include "bonobo-moniker-camera.h"
 
 static Bonobo_Unknown
 camera_resolve (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options, const CORBA_char *requested_interface, CORBA_Environment *ev)
 {
-
-	g_warning ("BEGIN: camera_resolve (?, ?, %s, ?)", requested_interface);
 
 	/* Stream? */
 	if (!strcmp (requested_interface, "IDL:Bonobo/Stream:1.0")) {

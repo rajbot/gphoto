@@ -1,6 +1,6 @@
 idldir = $(datadir)/idl
 
 idl_DATA =\
- Gphoto.idl
+ GnoCam.idl
 
 EXTRA_DIST = $(idl_DATA)

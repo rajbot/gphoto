@@ -5,13 +5,19 @@
 
 module GNOME {
 
-	module Gphoto {
+	module GnoCam {
 
 		enum DebugLevel {
 			DEBUG_LEVEL_NONE,
 			DEBUG_LEVEL_LOW,
 			DEBUG_LEVEL_MEDIUM,
 			DEBUG_LEVEL_HIGH
+		};
+		
+		interface file : Bonobo::Unknown {
+		};
+
+		interface folder : Bonobo::Unknown {
 		};
 	};
 };

@@ -36,6 +36,8 @@
 #include <gal/e-table/e-cell-tree.h>
 #include <gal/e-table/e-cell-text.h>
 
+#include "e-shell-constants.h"
+
 #define ETABLE_SPEC "\
 <ETableSpecification no-headers=\"true\" selection-mode=\"single\" cursor-mode=\"line\" draw-grid=\"true\" horizontal-scrolling=\"true\"> 		\
   <ETableColumn model_col=\"0\" _title=\"Folder\" expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"render_tree\" compare=\"string\"/> 	\
@@ -67,6 +69,12 @@ enum {
 };
 
 static unsigned int signals[LAST_SIGNAL] = { 0 };
+
+/**************/
+/* Prototypes */
+/**************/
+
+GdkPixbuf* scale_pixbuf (GdkPixbuf* pixbuf);
 
 /*******************************/
 /* Custom marshalling function */
@@ -127,26 +135,36 @@ etree_col_count (ETableModel* etable, void* model_data)
 static void*
 etree_duplicate_value (ETableModel*etable, int col, const void* value, void* model_data)
 {
-        if (col == 0)
-                return g_strdup (value);
-        else
-                return (void*) value;
+	NodeData*	data;
+
+	g_warning ("etree_duplicate_value");
+
+	data = g_new (NodeData, 1);
+
+	data->path = g_strdup (((NodeData*) value)->path);
+	data->directory = ((NodeData*) value)->directory;
+
+	return (data);
 }
 
 static void
 etree_free_value (ETableModel* etable, int col, void* value, void* model_data)
 {
-        if (col == 0)
-                g_free (value);
+	NodeData*	data;
+
+	g_warning ("etree_free_value");
+
+	data = value;
+	g_free (data->path);
+	g_free (data);
 }
 
 static void*
 etree_initialize_value (ETableModel* etable, int col, void* model_data)
 {
-        if (col == 0)
-                return (g_strdup (""));
-        else
-                return (NULL);
+	g_warning ("etree_initialize_value");
+	
+	return (NULL);
 }
 
 static gboolean
@@ -172,9 +190,23 @@ etree_value_to_string (ETableModel* etable, int col, const void* value, void* mo
 /****************/
 
 static GdkPixbuf*
-etree_icon_at (ETreeModel* etree, ETreePath* tree_path, void* model_data)
+etree_icon_at (ETreeModel* etree, ETreePath* node, void* model_data)
 {
-	return (NULL);
+	NodeData*	data;
+
+	data = (NodeData*) e_tree_model_node_get_data (etree, node);
+
+	//FIXME: Do we have to distribute our own pixmaps?
+
+	/* Directory? */
+	if (data->directory) {
+		if (!g_file_exists ("/usr/share/pixmaps/gnome-folder.png")) return (NULL);
+		return (scale_pixbuf (gdk_pixbuf_new_from_file ("/usr/share/pixmaps/gnome-folder.png")));
+	} 
+
+	/* File? */
+	if (!g_file_exists ("/usr/share/pixmaps/gnome-file-h.png")) return (NULL);
+	return (scale_pixbuf (gdk_pixbuf_new_from_file ("/usr/share/pixmaps/gnome-file-h.png")));
 }
 
 static void*
@@ -182,17 +214,20 @@ etree_value_at (ETreeModel* etree, ETreePath* node, int col, void* model_data)
 {
 	NodeData*	data;
 
-	data = e_tree_model_node_get_data (etree, node);
+	data = (NodeData*) e_tree_model_node_get_data (etree, node);
 
-	if (data->directory)
-		return (data->path);
-	else 
-		return (g_basename (data->path));
+	/* If root folder, return path. */
+	if (!strcmp (data->path, "/")) return (data->path);
+
+	return (g_basename (data->path));
 }
 
 static void
-etree_set_value_at (ETreeModel* etree, ETreePath* tree_path, int col, const void* val, void* model_data)
+etree_set_value_at (ETreeModel* etree, ETreePath* node, int col, const void* val, void* model_data)
 {
+	g_warning ("etree_set_value_at");
+	
+	return;
 }
 
 static gboolean
@@ -272,6 +307,20 @@ table_drag_data_received (ETable* etable, int row, int col, GdkDragContext* cont
 /* Helper functions */
 /********************/
 
+GdkPixbuf*
+scale_pixbuf (GdkPixbuf* pixbuf)
+{
+	GdkPixbuf*	pixbuf_scaled;
+
+	pixbuf_scaled = gdk_pixbuf_new (
+		gdk_pixbuf_get_colorspace (pixbuf), gdk_pixbuf_get_has_alpha (pixbuf), gdk_pixbuf_get_bits_per_sample (pixbuf), 
+		E_SHELL_MINI_ICON_SIZE, E_SHELL_MINI_ICON_SIZE);
+	gdk_pixbuf_scale (pixbuf, pixbuf_scaled, 0, 0, E_SHELL_MINI_ICON_SIZE, E_SHELL_MINI_ICON_SIZE, 0.0, 0.0, 
+		(double) E_SHELL_MINI_ICON_SIZE / gdk_pixbuf_get_width (pixbuf), 
+		(double) E_SHELL_MINI_ICON_SIZE / gdk_pixbuf_get_height (pixbuf), GDK_INTERP_HYPER);
+	return (pixbuf_scaled);
+}
+
 static void
 insert_folders_and_files (GnoCamStorageView* storage_view, ETreePath* parent, const gchar* path)
 {
@@ -320,12 +369,6 @@ insert_folders_and_files (GnoCamStorageView* storage_view, ETreePath* parent, co
 /*****************/
 /* Our functions */
 /*****************/
-
-void
-gnocam_storage_view_set (const gchar* name)
-{
-	g_warning ("Here, we should select '%s'...", name);
-}
 
 /*******************/
 /* GtkObject stuff */
@@ -435,9 +478,8 @@ gnocam_storage_view_new (Bonobo_Storage storage)
 	
 	/* Create extras */
 	extras = e_table_extras_new ();
-        cell = e_cell_text_new (NULL, GTK_JUSTIFY_LEFT);
-        gtk_object_set (GTK_OBJECT (cell), "bold_column", 1, NULL);
-        e_table_extras_add_cell (extras, "render_tree", e_cell_tree_new (NULL, NULL, TRUE, cell));
+	cell = e_cell_text_new (NULL, GTK_JUSTIFY_LEFT);
+	e_table_extras_add_cell (extras, "render_tree", e_cell_tree_new (NULL, NULL, TRUE, cell));
 
 	/* Construct the table */
         e_table_construct (E_TABLE (new), E_TABLE_MODEL (new->priv->etree), extras, ETABLE_SPEC, NULL);

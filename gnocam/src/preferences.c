@@ -5,7 +5,7 @@
 #include <gconf/gconf-client.h>
 #include <bonobo.h>
 
-#include <Gphoto.h>
+#include <GnoCam.h>
 
 #include "preferences.h"
 #include "gnocam.h"

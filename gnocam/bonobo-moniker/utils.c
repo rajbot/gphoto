@@ -171,7 +171,7 @@ on_date_changed (GtkObject* object, gpointer user_data)
 /*************/
 
 void
-menu_setup (BonoboControl* control, Camera* camera, CameraWidget* widget, gchar* name, gchar* folder, gchar* file)
+menu_setup (BonoboUIComponent* component, Camera* camera, CameraWidget* widget, gchar* name, gchar* folder, gchar* file)
 {
         gchar*          tmp = NULL;
         xmlDocPtr       doc = xmlNewDoc ("1.0");
@@ -195,17 +195,12 @@ menu_setup (BonoboControl* control, Camera* camera, CameraWidget* widget, gchar*
         /* Send it to the component. */
         xmlDocDumpMemory (doc, (xmlChar**) &tmp, &i);
         xmlFreeDoc (doc);
-        bonobo_ui_component_set_translate (bonobo_control_get_ui_component (control), "/", tmp, NULL);
+        bonobo_ui_component_set_translate (component, "/", tmp, NULL);
         g_free (tmp);
 
 	/* Finish. */
 	tmp = g_strconcat ("/menu/Edit/", name, NULL);
-	{
-		BonoboUIComponent*	component;
-
-		component = bonobo_control_get_ui_component (BONOBO_CONTROL (control));
-		menu_fill (component, camera, tmp, widget, widget, folder, file);
-	}
+	menu_fill (component, camera, tmp, widget, widget, folder, file);
 	g_free (tmp);
 }
 

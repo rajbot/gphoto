@@ -59,10 +59,6 @@ static GnomeVFSResult do_seek (
 	GnomeVFSSeekPosition		whence,
 	GnomeVFSFileOffset		offset,
 	GnomeVFSContext*		context);
-static GnomeVFSResult do_tell (
-	GnomeVFSMethod*			method,
-	GnomeVFSMethodHandle* 		handle,
-	GnomeVFSFileOffset*		offset);
 static GnomeVFSResult do_truncate_handle (
         GnomeVFSMethod*                 method,
         GnomeVFSMethodHandle*           handle,
@@ -135,15 +131,6 @@ static GnomeVFSResult do_truncate (
 	GnomeVFSURI*			uri,
 	GnomeVFSFileSize		where,
 	GnomeVFSContext*		context);
-static GnomeVFSResult do_find_directory (
-	GnomeVFSMethod*			method,
-	GnomeVFSURI*			near_uri,
-	GnomeVFSFindDirectoryKind	kind,
-	GnomeVFSURI**			result_uri,
-	gboolean			create_if_needed,
-	gboolean			find_if_needed,
-	guint				permissions,
-	GnomeVFSContext*		context);
 static GnomeVFSResult do_create_symbolic_link (
 	GnomeVFSMethod*			method,
 	GnomeVFSURI*			uri,
@@ -161,7 +148,7 @@ static GnomeVFSMethod method = {
 	do_read,
 	do_write,
 	do_seek,
-	do_tell,
+	NULL, 				/* do_tell */
 	do_truncate_handle,
 	do_open_directory,
 	do_close_directory,
@@ -176,7 +163,7 @@ static GnomeVFSMethod method = {
 	do_check_same_fs,
 	do_set_file_info,
 	do_truncate,
-	NULL, //do_find_directory,
+	NULL,				/* do_find_directory */
 	do_create_symbolic_link};
 
 /*************/
@@ -239,7 +226,8 @@ static GnomeVFSResult do_open (
 	
 	g_print ("CAMERA: do_open (%s)\n", gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE));
 	
-	if ((mode == GNOME_VFS_OPEN_READ) || (mode = GNOME_VFS_OPEN_WRITE)) *handle = file_handle_new (uri, mode, client, client_mutex, &result);
+	if ((mode == GNOME_VFS_OPEN_READ) || (mode = GNOME_VFS_OPEN_WRITE)) 
+		*handle = file_handle_new (uri, mode, client, client_mutex, context, &result);
 	else result = GNOME_VFS_ERROR_INVALID_OPEN_MODE;
 	
 	return (result);
@@ -343,15 +331,6 @@ static GnomeVFSResult do_seek (
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 
-static GnomeVFSResult do_tell (
-	GnomeVFSMethod*                 method,
-	GnomeVFSMethodHandle*           handle,
-	GnomeVFSFileOffset*             offset)
-{
-	g_print ("CAMERA: do_tell\n");
-	return (GNOME_VFS_ERROR_INTERNAL);
-}
-
 static GnomeVFSResult do_truncate_handle (
         GnomeVFSMethod*                 method,
         GnomeVFSMethodHandle*           handle, 
@@ -371,10 +350,10 @@ static GnomeVFSResult do_open_directory (
         GnomeVFSContext*                context)
 {
 	GnomeVFSResult		result;
+
+	g_print ("CAMERA: do_open_directory\n");
 	
-	g_print ("CAMERA: do_open_directory (%s)\n", gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE));
-	
-	*handle = directory_handle_new (uri, client, client_mutex, options, &result);
+	*handle = directory_handle_new (uri, client, client_mutex, options, context, &result);
 	return (result);
 }
 
@@ -384,9 +363,7 @@ static GnomeVFSResult do_close_directory (
 	GnomeVFSContext*                context)
 {
 	g_print ("CAMERA: do_close_directory\n");
-
 	if (!handle) return (GNOME_VFS_ERROR_BAD_PARAMETERS);
-
 	return (directory_handle_free (handle));
 }
 
@@ -424,11 +401,13 @@ static GnomeVFSResult do_read_directory (
 		}
 	} else {
 		directory_handle->position = -1;
+		g_print (" -> EOF\n");
 		return (GNOME_VFS_ERROR_EOF);
 	}
 	GNOME_VFS_FILE_INFO_SET_LOCAL (info, FALSE);
 	
 	directory_handle->position++;
+	g_print (" -> (%i) %s\n", directory_handle->position - 1, info->name);
 	return (GNOME_VFS_OK);
 }
 
@@ -446,10 +425,8 @@ static GnomeVFSResult do_get_file_info (
 	Camera*		camera;
 	gint		i;
 	
-	g_print ("CAMERA: do_get_file_info (%s)\n", gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE));
-
 	/* Connect to the camera. */
-	if (!(camera = camera_new_by_uri (uri, client, client_mutex, &result))) return (result);
+	if (!(camera = camera_new_by_uri (uri, client, client_mutex, context, &result))) return (result);
 
 	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_NONE;
 	filename = (gchar*) gnome_vfs_uri_get_basename (uri);
@@ -501,12 +478,11 @@ static GnomeVFSResult do_get_file_info (
 static GnomeVFSResult do_get_file_info_from_handle (
 	GnomeVFSMethod*                 method,
 	GnomeVFSMethodHandle*           handle,
-        GnomeVFSFileInfo*               file_info,
+        GnomeVFSFileInfo*               info,
         GnomeVFSFileInfoOptions         options,
         GnomeVFSContext*                context)
 {
-	g_print ("CAMERA: do_get_file_info_from_handle\n");
-	return (GNOME_VFS_ERROR_INTERNAL);
+	return (do_get_file_info (method, ((file_handle_t*) handle)->uri, info, options, context));
 }
 
 static gboolean do_is_local (
@@ -563,8 +539,6 @@ static GnomeVFSResult do_check_same_fs (
 	gboolean*                       same_fs_return,
 	GnomeVFSContext*                context)
 {
-	g_print ("do_check_same_fs\n");
-
 	*same_fs_return = !strcmp (gnome_vfs_uri_get_host_name (a), gnome_vfs_uri_get_host_name (b));
 	return (GNOME_VFS_OK);
 }
@@ -587,20 +561,6 @@ static GnomeVFSResult do_truncate (
 	GnomeVFSContext*                context)
 {
 	g_print ("do_truncate\n");
-	return (GNOME_VFS_ERROR_INTERNAL);
-}
-
-static GnomeVFSResult do_find_directory (
-	GnomeVFSMethod*                 method,
-	GnomeVFSURI*                    near_uri,
-	GnomeVFSFindDirectoryKind       kind,
-	GnomeVFSURI**                   result_uri,
-	gboolean                        create_if_needed,
-	gboolean                        find_if_needed,
-	guint                           permissions,
-	GnomeVFSContext*                context)
-{
-	g_print ("do_find_directory\n");
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 

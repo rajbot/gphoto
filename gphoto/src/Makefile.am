@@ -12,6 +12,7 @@ gphoto_LDADD = ../konica/libgphoto_konica_qm100.la \
 	../fuji/libgphoto_fuji.la \
 	../photopc/libgphoto_photopc.la \
 	../kodak/libgphoto_kodak_dc2x.la \
+	../kodak_generic/libgphoto_kodak_generic.la \
 	../ricoh/libgphoto_ricoh300z.la \
 	../sony/libgphoto_sony_dscf1.la \
 	../directory/libgphoto_dir.la \

@@ -255,7 +255,7 @@ void GPInterface::downloadPicture(QString file, QString folder)
     gp_file_new(&f);
 
     /* Try downloading thumb */
-    if (gp_camera_file_get(theCamera, "/", file.latin1(),
+    if (gp_camera_file_get(theCamera, folder, file.latin1(),
                            GP_FILE_TYPE_NORMAL, f) != GP_OK)
         throw QString("Couldn't get thumb ") + file +
               QString(" in folder ") + QString(folder);
@@ -266,6 +266,14 @@ void GPInterface::downloadPicture(QString file, QString folder)
     /* Release file */
     gp_file_free(f);
 }
+
+
+void GPInterface::deletePicture(QString file, QString folder)
+{
+    if (gp_camera_file_delete(theCamera, folder, file.latin1()) != GP_OK)
+        throw QString("Error while deleting") + file;
+}
+
 
 void GPInterface::downloadThumbs(QIconView* iconView)
 {

@@ -248,7 +248,19 @@ void MainWindow::selectionChanged()
 
 void MainWindow::deleteSelected()
 {
-    
+    if (KMessageBox::questionYesNo(this, 
+        "Are you sure you want to delete the selected pictures ?", 
+        "Delete") == KMessageBox::Yes) {
+        try {
+        for (QIconViewItem *i = iconView->firstItem();i; i=i->nextItem()) {
+            if (i->isSelected()) {
+                GPInterface::deletePicture(i->text(),"/");
+                delete i;
+                iconView->arrangeItemsInGrid();
+            }
+        }
+        } catch (QString err) { KMessageBox::error(this, err); }
+    }
 }
 
 void MainWindow::configureCamera()

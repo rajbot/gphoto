@@ -40,6 +40,7 @@ class GPInterface
     static QStringList getSupportedSpeeds(const QString& camera);
     static void downloadThumbs(QIconView* iconView);
     static void downloadPicture(QString name, QString folder);
+    static void deletePicture(QString name, QString folder);
 
 private:
     static QPixmap downloadThumb(const char* name, const char* folder);

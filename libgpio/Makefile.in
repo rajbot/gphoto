@@ -70,7 +70,6 @@ GPIO_INCLUDEDIR = @GPIO_INCLUDEDIR@
 GPIO_LIBDIR = @GPIO_LIBDIR@
 GPIO_LIBS = @GPIO_LIBS@
 GPIO_USB = @GPIO_USB@
-LD = @LD@
 LIBGPIO_MAJOR_VERSION = @LIBGPIO_MAJOR_VERSION@
 LIBGPIO_MICRO_VERSION = @LIBGPIO_MICRO_VERSION@
 LIBGPIO_MINOR_VERSION = @LIBGPIO_MINOR_VERSION@
@@ -81,7 +80,6 @@ LIBUSB_CONFIG = @LIBUSB_CONFIG@
 LN_S = @LN_S@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
-NM = @NM@
 OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
@@ -168,7 +166,7 @@ install-sh libgpio.spec.in ltconfig ltmain.sh missing mkinstalldirs
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = tar
+TAR = gtar
 GZIP_ENV = --best
 DEP_FILES =  .deps/gpio-ieee1394.P .deps/gpio-parallel.P \
 .deps/gpio-serial.P .deps/gpio-test.P .deps/gpio-usb.P .deps/gpio.P

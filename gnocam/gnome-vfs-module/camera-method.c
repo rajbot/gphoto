@@ -19,13 +19,7 @@ static GnomeVFSResult
 do_open (GnomeVFSMethod *method, GnomeVFSMethodHandle **handle, 
 	 GnomeVFSURI *uri, GnomeVFSOpenMode mode, GnomeVFSContext *context)
 {
-	FileHandle *fh;
-	GnomeVFSResult r;
-
-	r = camera_file_get (uri, &fh);
-	if (r != GNOME_VFS_OK) return r;
-
-	return (GNOME_VFS_OK);
+	return camera_file_open (uri, (CameraFile **) handle);
 }
 
 #if 0
@@ -71,65 +65,24 @@ static GnomeVFSResult do_create (
 
 	return (GNOME_VFS_OK);
 }
+#endif
 
-static GnomeVFSResult do_close (
-        GnomeVFSMethod*                 method,
-        GnomeVFSMethodHandle*           handle,
-        GnomeVFSContext*                context)
+static GnomeVFSResult
+do_close (GnomeVFSMethod *method, GnomeVFSMethodHandle *handle,
+	  GnomeVFSContext *context)
 {
-	FileHandle *fh = (FileHandle *) handle;
-	GnomeVFSResult result = GNOME_VFS_OK;
-
-	G_LOCK (cameras);
-
-	if (fh->create)
-		result = GNOME_VFS_RESULT (gp_camera_folder_put_file (
-				fh->camera, fh->dirname, fh->file, NULL));
-
-	unref_camera (fh->camera);
-	gp_file_unref (fh->file);
-	g_free (fh->dirname);
-	g_free (fh);
-
-	G_UNLOCK (cameras);
-
-	return (result);
+	return camera_file_close ((CameraFile *) handle);
 }
 
-static GnomeVFSResult do_read (
-        GnomeVFSMethod*                 method,
-        GnomeVFSMethodHandle*           handle,
-        gpointer                        buffer,
-        GnomeVFSFileSize                num_bytes,
-        GnomeVFSFileSize*               bytes_read,
-        GnomeVFSContext*                context)
+static GnomeVFSResult
+do_read (GnomeVFSMethod *method, GnomeVFSMethodHandle *h,
+	 gpointer b, GnomeVFSFileSize num_bytes,
+	 GnomeVFSFileSize *bytes_read, GnomeVFSContext *context)
 {
-	FileHandle *fh = (FileHandle *) handle;
-	const char *data;
-	long int size;
-	GnomeVFSResult result;
-
-	G_LOCK (cameras);
-	result = gp_file_get_data_and_size (fh->file, &data, &size);
-	if (result != GNOME_VFS_OK) {
-		G_UNLOCK (cameras);
-		return (result);
-	}
-
-	*bytes_read = MIN (size - fh->pos, num_bytes);
-	if (!*bytes_read) {
-		G_UNLOCK (cameras);
-		return (GNOME_VFS_ERROR_EOF);
-	}
-
-	memcpy (buffer, data + fh->pos, *bytes_read);
-	fh->pos += *bytes_read;
-
-	G_UNLOCK (cameras);
-
-	return (GNOME_VFS_OK);
+	return camera_file_read ((CameraFile *) h, b, num_bytes, bytes_read);
 }
 
+#if 0
 static GnomeVFSResult do_write (
 	GnomeVFSMethod       *method,
 	GnomeVFSMethodHandle *handle,
@@ -493,8 +446,8 @@ static GnomeVFSMethod method = {
         sizeof (GnomeVFSMethod),
         do_open,
         NULL, //do_create,
-        NULL, //do_close,
-        NULL, //do_read,
+        do_close,
+        do_read,
         NULL, //do_write,
         NULL, //do_seek,
         NULL, //do_tell,

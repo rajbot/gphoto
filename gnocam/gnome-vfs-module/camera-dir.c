@@ -74,9 +74,7 @@ camera_dir_open (GnomeVFSURI *uri, CameraDir **d)
 	    if (BONOBO_EX (&ev)) {
 		g_warning ("Failed to list directories in '%s': %s",
 			   (char *) p->data, bonobo_exception_get_text (&ev));
-		for (i = 0; i < g_list_length (l); i++) 
-		    g_free (g_list_nth_data (l, i));
-		g_list_free (l);
+		g_list_foreach (l, (GFunc) g_free, NULL); g_list_free (l);
 		bonobo_object_release_unref (dir, NULL);
 		CORBA_exception_free (&ev);
 		return GNOME_VFS_ERROR_GENERIC;
@@ -85,9 +83,7 @@ camera_dir_open (GnomeVFSURI *uri, CameraDir **d)
 		subdir = GNOME_C_Dir_get_dir (dir, dl->_buffer[i], &ev);
 		if (BONOBO_EX (&ev)) {
 		    CORBA_free (dl);
-		    for (i = 0; i < g_list_length (l); i++) 
-			g_free (g_list_nth_data (l, i));
-		    g_list_free (l);
+		    g_list_foreach (l, (GFunc) g_free, NULL); g_list_free (l);
 		    bonobo_object_release_unref (dir, NULL);
 		    CORBA_exception_free (&ev); 
 		    return GNOME_VFS_ERROR_GENERIC;
@@ -95,9 +91,7 @@ camera_dir_open (GnomeVFSURI *uri, CameraDir **d)
 		n = GNOME_C_Dir__get_name (subdir, &ev);
 		if (BONOBO_EX (&ev)) {
 		    CORBA_free (dl);
-		    for (i = 0; i < g_list_length (l); i++)
-			g_free (g_list_nth_data (l, i));
-		    g_list_free (l);
+		    g_list_foreach (l, (GFunc) g_free, NULL); g_list_free (l);
 		    bonobo_object_release_unref (dir, NULL);
 		    bonobo_object_release_unref (subdir, NULL);
 		    CORBA_exception_free (&ev);
@@ -116,9 +110,7 @@ camera_dir_open (GnomeVFSURI *uri, CameraDir **d)
 	    }
 	    if (i == dl->_length) {
 		CORBA_free (dl);
-		for (i = 0; i < g_list_length (l); i++)
-		    g_free (g_list_nth_data (l, i));
-		g_list_free (l);
+		g_list_foreach (l, (GFunc) g_free, NULL); g_list_free (l);
 		bonobo_object_release_unref (dir, NULL);
 		CORBA_exception_free (&ev);
 		return GNOME_VFS_ERROR_GENERIC;

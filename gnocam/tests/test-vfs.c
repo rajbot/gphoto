@@ -16,6 +16,8 @@ main (int argc, char **argv)
 	gboolean b;
 	GnomeVFSDirectoryHandle *dh = NULL;
 	GnomeVFSFileInfo *fi;
+	GnomeVFSHandle *fh = NULL;
+	gchar *s, buf;
 
 	/* Initialize libgnomevfs */
 	if (!gnome_vfs_init ()) g_error ("Could not initialize gnome-vfs!");
@@ -52,6 +54,19 @@ main (int argc, char **argv)
 			g_error ("Could not read next entry: %s",
 				 gnome_vfs_result_to_string (r));
 		g_message (" - '%s'", fi->name);
+		if (fi->type == GNOME_VFS_FILE_TYPE_REGULAR) {
+			s = g_strdup_printf ("%s%s", URI1, fi->name);
+			r = gnome_vfs_open (&fh, s, GNOME_VFS_OPEN_READ);
+			if (r != GNOME_VFS_OK)
+				g_error ("Could not open '%s': %s",
+					 s, gnome_vfs_result_to_string (r));
+			g_free (s);
+			r = gnome_vfs_read (fh, &buf, 1, NULL);
+			if (r != GNOME_VFS_OK)
+				g_error ("Could not read: %s",
+					 gnome_vfs_result_to_string (r));
+			gnome_vfs_close (fh);
+		}
 	}
 	gnome_vfs_file_info_unref (fi);
 	gnome_vfs_directory_close (dh);

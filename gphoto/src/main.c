@@ -90,12 +90,6 @@ int main (int argc, char *argv[]) {
                         fprintf(stderr,"failed to set priority\n");
 	}
 #endif
-	/* Command line mode anyone? ----------------------------- */
-	if (argc > 1) {
-		command_line_mode = 1;
-		command_line(argc, argv);
-	} else
-		command_line_mode = 0;
 
 	/* Make sure there's a .gphoto directory in their home ---- */
 
@@ -111,6 +105,13 @@ int main (int argc, char *argv[]) {
 
 	library_name = gtk_label_new("");
 	set_camera(camera_model);
+
+	/* Command line mode anyone? ----------------------------- */
+	if (argc > 1) {
+		command_line_mode = 1;
+		command_line(argc, argv);
+	} else
+		command_line_mode = 0;
 
 	/* set up the main window -------------------------------- */
 	mainWin = gtk_window_new (GTK_WINDOW_TOPLEVEL);

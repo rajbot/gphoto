@@ -16,7 +16,6 @@
 #include <sched.h>
 #endif
 
-extern int command_line_mode;
 extern char *filesel_cwd;
 extern GtkWidget *browse_button;
 

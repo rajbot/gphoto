@@ -4,7 +4,7 @@ VERSION_FLAGS = -DLIBGPIO_VERSION=\"@LIBGPIO_VERSION@\"
 CFLAGS = @IOLIB_CFLAGS@ \
 	-DIOLIBS=\"$(prefix)/lib/gpio\" \
 	-g
-LDFLAGS = @LDFLAGS@ -g
+LDFLAGS = @LDFLAGS@ -g -ldl
 
 ## Compile the IO library into a shared library
 lib_LTLIBRARIES = libgpio.la

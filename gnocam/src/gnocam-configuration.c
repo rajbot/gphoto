@@ -351,27 +351,15 @@ on_adjustment_value_changed (GtkAdjustment* adjustment, gpointer user_data)
 }
 
 static void
-on_dialog_button_clicked (GtkButton* button, gint button_number, gpointer user_data)
+on_dialog_clicked (GtkButton* button, gint button_number, gpointer user_data)
 {
 	GnoCamConfiguration*	configuration;
 
 	configuration = GNOCAM_CONFIGURATION (user_data);
 
-	if (button_number == 0) {
-		set_config (configuration);
-		gtk_widget_unref (GTK_WIDGET (configuration));
-		return;
-	}
+	if ((button_number == 0) || (button_number == 1)) set_config (configuration);
 
-	if (button_number == 1) {
-		set_config (configuration);
-		return;
-	}
-
-	if (button_number == 2) {
-		gtk_widget_unref (GTK_WIDGET (configuration));
-		return;
-	}
+	if ((button_number == 0) || (button_number == 2)) gtk_widget_unref (GTK_WIDGET (configuration));
 }
 
 /*************************/
@@ -396,7 +384,7 @@ gnocam_configuration_destroy (GtkObject* object)
 	g_free (configuration->priv);
 	configuration->priv = NULL;
 
-	GTK_OBJECT_CLASS (parent_class)->destroy (object);
+//	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void
@@ -441,18 +429,25 @@ gnocam_configuration_new (Camera* camera, const gchar* dirname, const gchar* fil
 		return (NULL);
 	}
 
+	/* Set up the dialog */
 	new = gtk_type_new (GNOCAM_TYPE_CONFIGURATION);
-	gp_camera_ref (new->priv->camera = camera);
-	if (filename) new->priv->filename = g_strdup (filename);
-	if (dirname) new->priv->dirname = g_strdup (dirname);
-	new->priv->widget = widget;
-	new->priv->hash_table = g_hash_table_new (g_int_hash, g_int_equal);
-	gnome_dialog_constructv (GNOME_DIALOG (new), gp_widget_label (new->priv->widget), buttons);
+	gnome_dialog_constructv (GNOME_DIALOG (new), gp_widget_label (widget), buttons);
 	gnome_dialog_set_parent (GNOME_DIALOG (new), window);
 	gnome_dialog_set_close (GNOME_DIALOG (new), FALSE);
 
+	/* Keep filename and dirname */
+	if (filename) new->priv->filename = g_strdup (filename);
+	if (dirname) new->priv->dirname = g_strdup (dirname);
+
+	/* Hash table. We need it for looking up the notebook page. */
+	new->priv->hash_table = g_hash_table_new (g_int_hash, g_int_equal);
+
+	/* Keep the camera and widget */
+	gp_camera_ref (new->priv->camera = camera);
+	new->priv->widget = widget;
+
 	/* Connect signals */
-	gtk_signal_connect (GTK_OBJECT (new), "clicked", GTK_SIGNAL_FUNC (on_dialog_button_clicked), new);
+	gtk_signal_connect (GTK_OBJECT (new), "clicked", GTK_SIGNAL_FUNC (on_dialog_clicked), new);
 
 	/* Create the notebook */
 	gtk_widget_show (new->priv->notebook = gtk_notebook_new ());

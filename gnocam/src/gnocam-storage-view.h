@@ -36,7 +36,7 @@ struct _GnoCamStorageViewClass {
 };
 
 GtkType		gnocam_storage_view_get_type 	(void);
-GtkWidget*	gnocam_storage_view_new		(Bonobo_Storage storage);
+GtkWidget*	gnocam_storage_view_new		(BonoboStorage* storage);
 
 END_GNOME_DECLS
 

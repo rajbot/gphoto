@@ -212,12 +212,11 @@ do_capture (GnoCamCapture* capture)
 	}
 
 	/* Destroy old widget */
-	if ((widget = bonobo_window_get_contents (BONOBO_WINDOW (capture)))) gtk_widget_destroy (widget);
+	if ((widget = bonobo_window_get_contents (BONOBO_WINDOW (capture)))) gtk_widget_unref (widget);
 
 	/* Show new widget */
 	widget = bonobo_widget_new_control_from_objref (control, BONOBO_OBJREF (capture->priv->container));
 	gtk_widget_show (widget);
-	gtk_widget_ref (widget);
         bonobo_window_set_contents (BONOBO_WINDOW (capture), widget);
 
 	Bonobo_Control_activate (control, TRUE, &ev);
@@ -367,7 +366,7 @@ gnocam_capture_destroy (GtkObject* object)
 	gtk_object_unref (GTK_OBJECT (capture->priv->client));
         g_free (capture->priv);
 
-        (*GTK_OBJECT_CLASS (parent_class)->destroy) (object);
+//	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void

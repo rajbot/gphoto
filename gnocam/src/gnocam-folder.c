@@ -17,11 +17,11 @@ static ETableClass* parent_class;
 struct _GnoCamFolderPrivate
 {
 	GtkWindow*			window;
-	
-	Bonobo_UIContainer		container;
+	BonoboUIContainer*		container;
+
 	BonoboUIComponent*		component;
 	
-	Bonobo_Storage			storage;
+	BonoboStorage*			storage;
 	Bonobo_Storage_DirectoryList*	list;
 
 	GConfClient*			client;
@@ -106,14 +106,15 @@ static void	on_cancel_button_clicked	(GtkButton* button, gpointer user_data);
 static gint
 set_container (gpointer user_data)
 {
-	GnoCamFolder*	folder;
+	GnoCamFolder*		folder;
 
 	folder = GNOCAM_FOLDER (user_data);
 
 	if (!folder->priv->component) return (TRUE);
 
-	if (bonobo_ui_component_get_container (folder->priv->component) != folder->priv->container)
-		bonobo_ui_component_set_container (folder->priv->component, folder->priv->container);
+	if (bonobo_ui_component_get_container (folder->priv->component) == BONOBO_OBJREF (folder->priv->container)) return (FALSE);
+
+	bonobo_ui_component_set_container (folder->priv->component, BONOBO_OBJREF (folder->priv->container));
 
 	return (FALSE);
 }
@@ -127,7 +128,7 @@ create_menu (gpointer user_data)
 	folder = GNOCAM_FOLDER (user_data);
 
 	folder->priv->component = bonobo_ui_component_new (PACKAGE "Folder");
-	bonobo_ui_component_set_container (folder->priv->component, folder->priv->container);
+	bonobo_ui_component_set_container (folder->priv->component, BONOBO_OBJREF (folder->priv->container));
 	
         bonobo_ui_component_freeze (folder->priv->component, NULL);
 	
@@ -207,7 +208,7 @@ upload_file (GnoCamFolder* folder, const gchar* source)
         }
 
 	/* Write */
-	dest = Bonobo_Storage_openStream (folder->priv->storage, destination, Bonobo_Storage_WRITE | Bonobo_Storage_FAILIFEXIST, &ev);
+	dest = Bonobo_Storage_openStream (BONOBO_OBJREF (folder->priv->storage), destination, Bonobo_Storage_WRITE | Bonobo_Storage_FAILIFEXIST, &ev);
 	if (BONOBO_EX (&ev)) {
                 g_warning (_("Could not open stream for '%s': %s!"), destination, bonobo_exception_get_text (&ev));
                 CORBA_free (buffer);
@@ -233,16 +234,16 @@ save_file (GnoCamFolder* folder, const gchar* name, const gchar* destination)
         Bonobo_Stream           stream;
         BonoboStream*           dest;
         Bonobo_Stream_iobuf*    buffer;
+	Bonobo_Storage_OpenMode	mode;
 	CORBA_Environment	ev;
 
         CORBA_exception_init (&ev);
 
 	/* Read */
-        if (folder->priv->camera->abilities->file_preview && gconf_client_get_bool (folder->priv->client, "/apps/" PACKAGE "/preview", NULL)) {
-                stream = Bonobo_Storage_openStream (folder->priv->storage, name, Bonobo_Storage_READ | Bonobo_Storage_COMPRESSED, &ev);
-        } else {
-                stream = Bonobo_Storage_openStream (folder->priv->storage, name, Bonobo_Storage_READ, &ev);
-        }
+	mode = Bonobo_Storage_READ;
+        if (folder->priv->camera->abilities->file_preview && gconf_client_get_bool (folder->priv->client, "/apps/" PACKAGE "/preview", NULL))
+		mode |= Bonobo_Storage_COMPRESSED;
+        stream = Bonobo_Storage_openStream (BONOBO_OBJREF (folder->priv->storage), name, mode, &ev);
         if (BONOBO_EX (&ev)) {
                 g_warning (_("Could not get stream for '%s': %s!"), name, bonobo_exception_get_text (&ev));
                 CORBA_exception_free (&ev);
@@ -393,8 +394,7 @@ gnocam_folder_show_menu (GnoCamFolder* folder)
 {
 	g_return_if_fail (folder);
 
-gtk_idle_add (set_container, folder);
-//	bonobo_ui_component_set_container (folder->priv->component, folder->priv->container);
+	gtk_idle_add (set_container, folder);
 }
 
 void
@@ -495,24 +495,21 @@ gnocam_folder_destroy (GtkObject* object)
 {
 	GnoCamFolder* folder;
 
-printf ("gnocam_folder_destroy\n");
-
 	folder = GNOCAM_FOLDER (object);
 
-	bonobo_object_release_unref (folder->priv->container, NULL);
 	bonobo_object_unref (BONOBO_OBJECT (folder->priv->component));
-
-	bonobo_object_release_unref (folder->priv->storage, NULL);
 
 	if (folder->priv->configuration) gp_widget_unref (folder->priv->configuration);
 	gp_camera_unref (folder->priv->camera);
+
 	g_free (folder->priv->path);
+
 	gtk_object_unref (GTK_OBJECT (folder->priv->client));
 	
 	g_free (folder->priv);
 	folder->priv = NULL;
 
-//	GTK_OBJECT_CLASS (parent_class)->destroy (object);
+	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void
@@ -533,7 +530,7 @@ gnocam_folder_init (GnoCamFolder* folder)
 }
 
 GtkWidget*
-gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bonobo_UIContainer container, GConfClient* client, GtkWindow* window)
+gnocam_folder_new (Camera* camera, BonoboStorage* storage, const gchar* path, BonoboUIContainer* container, GConfClient* client, GtkWindow* window)
 {
 	GnoCamFolder*			new;
 	Bonobo_Storage_DirectoryList*   list;
@@ -546,7 +543,7 @@ gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bo
 	else directory = g_basename (path);
 
 	CORBA_exception_init (&ev);
-        list = Bonobo_Storage_listContents (storage, directory, Bonobo_FIELD_TYPE, &ev);
+        list = Bonobo_Storage_listContents (BONOBO_OBJREF (storage), directory, Bonobo_FIELD_TYPE, &ev);
         if (BONOBO_EX (&ev)) {
 		g_warning (_("Could not get list of files for '%s': %s!"), path, bonobo_exception_get_text (&ev));
 		CORBA_exception_free (&ev);
@@ -558,9 +555,9 @@ gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bo
 	gp_camera_ref (new->priv->camera = camera);
 	new->priv->window = window;
 	new->priv->path = g_strdup (path);
-	new->priv->storage = bonobo_object_dup_ref (storage, NULL);
+	new->priv->storage = storage;
 	new->priv->list = list;
-	new->priv->container = bonobo_object_dup_ref (container, NULL);
+	new->priv->container = container;
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
 
 	/* Create the model */

@@ -37,7 +37,7 @@ struct _GnoCamCameraClass {
 };
 
 GtkType 	gnocam_camera_get_type			(void);
-GtkWidget*	gnocam_camera_new			(const gchar* url, Bonobo_UIContainer container, GtkWindow* window, GConfClient* client, CORBA_Environment* ev);
+GtkWidget*	gnocam_camera_new			(const gchar* url, BonoboUIContainer* container, GtkWindow* window, GConfClient* client, CORBA_Environment* ev);
 
 void 		gnocam_camera_set_storage_view_mode 	(GnoCamCamera* camera, GnoCamCameraStorageViewMode mode);
 

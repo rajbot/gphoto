@@ -55,7 +55,7 @@ static ETableClass* parent_class = NULL;
 
 struct _GnoCamStorageViewPrivate {
 
-	Bonobo_Storage	storage;
+	BonoboStorage*	storage;
 
 	ETreeModel*	model;
 };
@@ -188,6 +188,52 @@ treepath_compare (ETreeModel* model, ETreePath* node1, ETreePath* node2)
 	return (strcasecmp (value1->path, value2->path));
 }
 
+/******************/
+/* E-Tree signals */
+/******************/
+
+static void
+on_node_expanded (ETreeModel* model, ETreePath* parent, gboolean* allow_expanded)
+{
+	Bonobo_Storage_DirectoryList*   list;
+	CORBA_Environment               ev;
+	gint                            i;
+	NodeValue*			value;
+
+	value = e_tree_model_node_get_data (model, parent);
+	g_return_if_fail (value);
+
+	CORBA_exception_init (&ev);
+	if (!strcmp (value->path, "/"))
+		list = Bonobo_Storage_listContents (BONOBO_OBJREF (storage_view->priv->storage), "", Bonobo_FIELD_TYPE, &ev);
+	else
+		list = Bonobo_Storage_listContents (BONOBO_OBJREF (storage_view->priv->storage), value->path + 1, Bonobo_FIELD_TYPE, &ev);
+	if (BONOBO_EX (&ev)) {
+		g_warning (_("Could not get list of contents for '%s': %s!"), value->path, bonobo_exception_get_text (&ev));
+		CORBA_exception_free (&ev);
+		return;
+	}
+	CORBA_exception_free (&ev);
+
+	for (i = 0; i < list->_length; i++) {
+                ETreePath*      node;
+                NodeValue*      new_value;
+
+                /* Insert the node */
+		new_value = g_new (NodeValue, 1);
+                if (!strcmp (value->path, "/"))
+                        new_value->path = g_strconcat (value->path, list->_buffer [i].name, NULL);
+                else
+                        new_value->path = g_strdup_printf ("%s/%s", value->path, list->_buffer [i].name);
+		new_value->directory = (list->_buffer [i].type == Bonobo_STORAGE_TYPE_DIRECTORY);
+                node = e_tree_model_node_insert (storage_view->priv->model, parent, i, new_value);
+
+                e_tree_model_node_set_compare_function (storage_view->priv->model, node, treepath_compare);
+	}
+
+	CORBA_free (list);
+}
+
 /*******************/
 /* E-Table methods */
 /*******************/
@@ -277,9 +323,9 @@ insert_folders_and_files (GnoCamStorageView* storage_view, ETreePath* parent, co
 
 	CORBA_exception_init (&ev);
 	if (!strcmp (path, "/")) 
-		list = Bonobo_Storage_listContents (storage_view->priv->storage, "", Bonobo_FIELD_TYPE, &ev);
+		list = Bonobo_Storage_listContents (BONOBO_OBJREF (storage_view->priv->storage), "", Bonobo_FIELD_TYPE, &ev);
 	else
-		list = Bonobo_Storage_listContents (storage_view->priv->storage, path + 1, Bonobo_FIELD_TYPE, &ev);
+		list = Bonobo_Storage_listContents (BONOBO_OBJREF (storage_view->priv->storage), path + 1, Bonobo_FIELD_TYPE, &ev);
 	if (BONOBO_EX (&ev)) {
 		CORBA_exception_free (&ev);
 		return;
@@ -362,12 +408,10 @@ gnocam_storage_view_destroy (GtkObject* object)
 
 	storage_view = GNOCAM_STORAGE_VIEW (object);
 
-	bonobo_object_release_unref (storage_view->priv->storage, NULL);
-
 	g_free (storage_view->priv);
 	storage_view->priv = NULL;
 
-//	GTK_OBJECT_CLASS (parent_class)->destroy (object);
+	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void
@@ -382,13 +426,13 @@ gnocam_storage_view_class_init (GnoCamStorageViewClass* klass)
 	object_class->destroy = gnocam_storage_view_destroy;
 
 	etable_class = E_TABLE_CLASS (klass);
-	etable_class->right_click		= right_click;
+//	etable_class->right_click		= right_click;
 	etable_class->cursor_change 		= cursor_change;
-	etable_class->table_drag_begin		= table_drag_begin;
-	etable_class->table_drag_data_get	= table_drag_data_get;
-	etable_class->table_drag_motion		= table_drag_motion;
-	etable_class->table_drag_drop		= table_drag_drop;
-	etable_class->table_drag_data_received	= table_drag_data_received;
+//	etable_class->table_drag_begin		= table_drag_begin;
+//	etable_class->table_drag_data_get	= table_drag_data_get;
+//	etable_class->table_drag_motion		= table_drag_motion;
+//	etable_class->table_drag_drop		= table_drag_drop;
+//	etable_class->table_drag_data_received	= table_drag_data_received;
 
 	signals[DIRECTORY_SELECTED] = gtk_signal_new ("directory_selected",
 	                                GTK_RUN_FIRST,
@@ -429,17 +473,18 @@ gnocam_storage_view_init (GnoCamStorageView* storage_view)
 }
 
 GtkWidget*
-gnocam_storage_view_new (Bonobo_Storage storage)
+gnocam_storage_view_new (BonoboStorage* storage)
 {
 	GnoCamStorageView*	new;
 	ETableExtras*		extras;
 	ECell*			cell;
 
 	new = gtk_type_new (GNOCAM_TYPE_STORAGE_VIEW);
-	new->priv->storage = bonobo_object_dup_ref (storage, NULL);
+	new->priv->storage = storage;
 
 	/* Create the model */
 	new->priv->model = e_tree_simple_new (col_count, NULL, free_value, NULL, NULL, NULL, etree_icon_at, etree_value_at, NULL, etree_is_editable, new);
+	gtk_signal_connect (GTK_OBJECT (new->priv->model), "node_expanded", GTK_SIGNAL_FUNC (on_node_expanded), new);
 
 	/* Create extras */
 	extras = e_table_extras_new ();
@@ -455,7 +500,7 @@ gnocam_storage_view_new (Bonobo_Storage storage)
         e_table_drag_dest_set (E_TABLE (new), GTK_DEST_DEFAULT_ALL, source_drag_types, num_source_drag_types, GDK_ACTION_MOVE | GDK_ACTION_COPY);
 
 	/* Populate the tree */
-	gtk_idle_add (populate_tree, new);
+//	gtk_idle_add (populate_tree, new);
 
 	return (GTK_WIDGET (new));
 }

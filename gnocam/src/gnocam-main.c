@@ -17,7 +17,7 @@
 static BonoboWindowClass* parent_class = NULL;
 
 struct _GnoCamMainPrivate {
-	Bonobo_UIContainer	container;
+	BonoboUIContainer*	container;
 	BonoboUIComponent*	component;
 
 	GConfClient*		client;
@@ -127,7 +127,7 @@ create_menu (gpointer user_data)
 	m = GNOCAM_MAIN (user_data);
 
 	m->priv->component = bonobo_ui_component_new (PACKAGE "Main");
-        bonobo_ui_component_set_container (m->priv->component, m->priv->container);
+        bonobo_ui_component_set_container (m->priv->component, BONOBO_OBJREF (m->priv->container));
 	
         bonobo_ui_component_freeze (m->priv->component, NULL);
 	
@@ -243,8 +243,9 @@ gnocam_main_destroy (GtkObject* object)
 	m = GNOCAM_MAIN (object);
 
 	gtk_object_unref (GTK_OBJECT (m->priv->client));
+
+	bonobo_object_unref (BONOBO_OBJECT (m->priv->container));
 	bonobo_object_unref (BONOBO_OBJECT (m->priv->component));
-	bonobo_object_release_unref (m->priv->container, NULL);
 
 	g_hash_table_destroy (m->priv->hash_table);
 	
@@ -274,7 +275,6 @@ gnocam_main_init (GnoCamMain* m)
 GtkWidget*
 gnocam_main_new (GConfClient* client)
 {
-	BonoboUIContainer*	container;
 	GtkWidget*		label;
 	GnoCamMain*		new;
 	gint			position, w, h;
@@ -307,9 +307,8 @@ gnocam_main_new (GConfClient* client)
         gtk_notebook_append_page (GTK_NOTEBOOK (new->priv->notebook), label, NULL);
 
 	/* Create the container */
-	container = bonobo_ui_container_new ();
-	bonobo_ui_container_set_win (container, BONOBO_WINDOW (new));
-	new->priv->container = BONOBO_OBJREF (container);
+	new->priv->container = bonobo_ui_container_new ();
+	bonobo_ui_container_set_win (new->priv->container, BONOBO_WINDOW (new));
 
 	/* Create the menu */
 	create_menu (new);

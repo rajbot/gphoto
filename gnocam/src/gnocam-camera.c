@@ -52,11 +52,11 @@ static GtkVBoxClass* parent_class = NULL;
 struct _GnoCamCameraPrivate
 {
 	GtkWindow*			window;
-	
-	Bonobo_UIContainer		container;
+	BonoboUIContainer*		container;
+
 	BonoboUIComponent*		component;
 	
-	Bonobo_Storage			storage;
+	BonoboStorage*			storage;
 	
         Camera*                 	camera;
 	CameraWidget*                   configuration;
@@ -149,11 +149,11 @@ create_menu (gpointer user_data)
 {
 	GnoCamCamera*	camera;
 
-	g_return_val_if_fail (user_data, FALSE);
+	g_return_val_if_fail (GNOCAM_IS_CAMERA (user_data), FALSE);
 	camera = GNOCAM_CAMERA (user_data);
 
 	camera->priv->component = bonobo_ui_component_new (PACKAGE "Camera");
-	bonobo_ui_component_set_container (camera->priv->component, camera->priv->container);
+	bonobo_ui_component_set_container (camera->priv->component, BONOBO_OBJREF (camera->priv->container));
 	
 	bonobo_ui_component_freeze (camera->priv->component, NULL);
 
@@ -224,7 +224,7 @@ gp_frontend_confirm (Camera* camera, char* message)
 
         widget = gnome_dialog_new (message, GNOME_STOCK_BUTTON_YES, GNOME_STOCK_BUTTON_NO, NULL);
         result = gnome_dialog_run_and_close (GNOME_DIALOG (widget));
-        gtk_widget_destroy (widget);
+        gtk_widget_unref (widget);
 
         if (result == 1) return (GP_PROMPT_CANCEL);
         return (GP_PROMPT_OK);
@@ -637,15 +637,11 @@ gnocam_camera_set_storage_view_mode (GnoCamCamera* camera, GnoCamCameraStorageVi
 void
 gnocam_camera_show_menu (GnoCamCamera* camera)
 {
-	Bonobo_UIContainer	container;
-	
-	g_return_if_fail (camera);
+	g_return_if_fail (GNOCAM_IS_CAMERA (camera));
 
-	container = bonobo_ui_component_get_container (camera->priv->component);
-	bonobo_object_release_unref (container, NULL);
-	if (container == camera->priv->container) return;
+	if (bonobo_ui_component_get_container (camera->priv->component) == BONOBO_OBJREF (camera->priv->container)) return;
 
-	bonobo_ui_component_set_container (camera->priv->component, camera->priv->container);
+	bonobo_ui_component_set_container (camera->priv->component, BONOBO_OBJREF (camera->priv->container));
 	show_current_menu (camera);
 }
 
@@ -658,12 +654,12 @@ gnocam_camera_hide_menu (GnoCamCamera* camera)
 	hide_current_menu (camera);
 }
 
-/*************************/
-/* Bonobo-X-Object stuff */
-/*************************/
+/********************/
+/* Gtk-Object stuff */
+/********************/
 
 GtkWidget*
-gnocam_camera_new (const gchar* url, Bonobo_UIContainer container, GtkWindow* window, GConfClient* client, CORBA_Environment* ev)
+gnocam_camera_new (const gchar* url, BonoboUIContainer* container, GtkWindow* window, GConfClient* client, CORBA_Environment* ev)
 {
 	GnoCamCamera*		new;
 	gchar*			name;
@@ -676,6 +672,9 @@ gnocam_camera_new (const gchar* url, Bonobo_UIContainer container, GtkWindow* wi
 
 	g_return_val_if_fail (url, NULL);
 	g_return_val_if_fail (ev, NULL);
+	g_return_val_if_fail (GTK_IS_WINDOW (window), NULL);
+	g_return_val_if_fail (BONOBO_IS_UI_CONTAINER (container), NULL);
+	g_return_val_if_fail (GCONF_IS_CLIENT (client), NULL);
 
 	/* Try to get a camera */
 	CHECK_RESULT (gp_camera_new_from_gconf (&camera, url), ev);
@@ -698,8 +697,8 @@ gnocam_camera_new (const gchar* url, Bonobo_UIContainer container, GtkWindow* wi
 	gp_camera_ref (new->priv->camera = camera);
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
 	new->priv->configuration = NULL;
-	new->priv->storage = BONOBO_OBJREF (storage);
-	new->priv->container = bonobo_object_dup_ref (container, NULL);
+	new->priv->storage = storage;
+	new->priv->container = container;
 	new->priv->hash_table = g_hash_table_new (g_str_hash, g_str_equal);
 
 	/* Callbacks for the backend */
@@ -774,12 +773,12 @@ static void
 gnocam_camera_destroy (GtkObject* object)
 {
 	GnoCamCamera*  camera;
-	
+
 	camera = GNOCAM_CAMERA (object);
 
-	bonobo_object_release_unref (camera->priv->storage, NULL);
+	bonobo_object_unref (BONOBO_OBJECT (camera->priv->storage));
+
 	bonobo_object_unref (BONOBO_OBJECT (camera->priv->component));
-	bonobo_object_release_unref (camera->priv->container, NULL);
 
 	gtk_object_unref (GTK_OBJECT (camera->priv->client));
 

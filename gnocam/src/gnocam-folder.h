@@ -31,7 +31,7 @@ struct _GnoCamFolderClass {
 
 
 GtkType    	gnocam_folder_get_type		(void);
-GtkWidget*	gnocam_folder_new		(Camera* camera, Bonobo_Storage storage, const gchar* path, Bonobo_UIContainer container, 
+GtkWidget*	gnocam_folder_new		(Camera* camera, BonoboStorage* storage, const gchar* path, BonoboUIContainer* container, 
 							 GConfClient* client, GtkWindow* window);
 
 void		gnocam_folder_show_menu		(GnoCamFolder* folder);

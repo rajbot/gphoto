@@ -28,16 +28,23 @@ static CORBA_string
 impl_get_name (PortableServer_Servant servant, CORBA_Environment *ev)
 {
 	KncCIf *i = KNC_C_IF (bonobo_object (servant));
+	gchar *name = g_strdup_printf ("%06li.jpeg", i->priv->n);
+	CORBA_string n = CORBA_string_dup (name);
+
+	g_free (name);
+	return n;
+}
+
+static CORBA_string
+impl_get_type (PortableServer_Servant servant, CORBA_Environment *ev)
+{
+	KncCIf *i = KNC_C_IF (bonobo_object (servant));
 
 	switch (i->priv->i) {
-	case KNC_IMAGE_THUMB:
-		return CORBA_string_dup ("Preview");
-	case KNC_IMAGE_JPEG:
-		return CORBA_string_dup ("File (short)");
-	case KNC_IMAGE_EXIF:
-		return CORBA_string_dup ("File");
-	default:
-		return NULL;
+	case KNC_IMAGE_THUMB: return CORBA_string_dup ("preview");
+	case KNC_IMAGE_JPEG: return CORBA_string_dup ("image only");
+	case KNC_IMAGE_EXIF: return CORBA_string_dup ("default");
+	default: return NULL;
 	}
 }
 
@@ -88,6 +95,7 @@ knc_c_if_class_init (KncCIfClass *klass)
 
 	epv->read = impl_read;
 	epv->_get_name = impl_get_name;
+	epv->_get_type = impl_get_type;
 
 	g_class->finalize = knc_c_if_finalize;
 }

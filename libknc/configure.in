@@ -130,14 +130,12 @@ AC_ARG_WITH(corba,[  --without-corba  Don't compile the corba server],[
 		corba_msg="no (not requested)"
 	fi])
 if $try_corba; then
-	PKG_CHECK_MODULES(CORBA, libglade-2.0 libbonoboui-2.0 ORBit-2.0, [
-		GNOME_C_IDL="/usr/share/idl/GNOME_C.idl"
-		if test -f "${GNOME_C_IDL}"; then
-		    ORBIT_IDL="`$PKG_CONFIG --variable=orbit_idl ORBit-2.0`"
-		    have_corba=true
-		    corba_msg="yes (using ${GNOME_C_IDL})"
-		fi
-	])
+    PKG_CHECK_MODULES(CORBA, libglade-2.0 libbonoboui-2.0 ORBit-2.0 gnocam, [
+	GNOME_C_IDL="`$PKG_CONFIG --variable=datadir gnocam`/idl/GNOME_C.idl"
+	ORBIT_IDL="`$PKG_CONFIG --variable=orbit_idl ORBit-2.0`"
+	have_corba=true
+	corba_msg="yes (using ${GNOME_C_IDL})"
+    ])
 fi
 CORBA_CFLAGS="${CORBA_CFLAGS} `$GP_PORT_CONFIG --cflags`"
 CORBA_LIBS="${CORBA_LIBS} `$GP_PORT_CONFIG --libs`"

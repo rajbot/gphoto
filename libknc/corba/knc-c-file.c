@@ -1,5 +1,8 @@
 #include <config.h>
 #include "knc-c-file.h"
+#include "knc-c-if.h"
+
+#include <bonobo/bonobo-exception.h>
 
 #include <libknc/knc.h>
 
@@ -34,6 +37,24 @@ impl_get_ifs (PortableServer_Servant servant, CORBA_Environment *ev)
 	return l;
 }
 
+static GNOME_C_If
+impl_get_if (PortableServer_Servant servant, GNOME_C_ID id,
+	     CORBA_Environment *ev)
+{
+	KncCFile *f = KNC_C_FILE (bonobo_object (servant));
+	KncCIf *i;
+	KncImage im = 0;
+
+	switch (id) {
+	case 0: im = KNC_IMAGE_EXIF; break;
+	case 1: im = KNC_IMAGE_THUMB; break;
+	case 2: im = KNC_IMAGE_JPEG; break;
+	}
+	i = knc_c_if_new (f->priv->c, 0, im, ev);
+	if (BONOBO_EX (ev)) return CORBA_OBJECT_NIL;
+	return CORBA_Object_duplicate (BONOBO_OBJREF (i), ev);
+}
+
 static void
 knc_c_file_class_init (KncCFileClass *klass)
 {
@@ -45,6 +66,7 @@ knc_c_file_class_init (KncCFileClass *klass)
 	g_class->finalize = knc_c_file_finalize;
 
 	epv->get_ifs = impl_get_ifs;
+	epv->get_if = impl_get_if;
 }
 
 static void

@@ -31,12 +31,13 @@
 #define PARENT_TYPE GTK_TYPE_BUTTON
 static GtkButtonClass *parent_class;
 
+#if 0
 enum {
-	CHANGED,
 	LAST_SIGNAL
 };
 
 static guint signals[LAST_SIGNAL] = {0};
+#endif
 
 struct _GnocamAppletCamPriv
 {
@@ -121,11 +122,6 @@ gnocam_applet_cam_class_init (gpointer g_class, gpointer class_data)
 	gobject_class->finalize = gnocam_applet_cam_finalize;
 
 	parent_class = g_type_class_peek_parent (g_class);
-
-	signals[CHANGED] = g_signal_new ("changed",
-		G_TYPE_FROM_CLASS (g_class), G_SIGNAL_RUN_FIRST,
-		G_STRUCT_OFFSET (GnocamAppletCamClass, changed), NULL, NULL,
-		g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
 
 GType

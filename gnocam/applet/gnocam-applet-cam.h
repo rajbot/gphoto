@@ -21,8 +21,6 @@ struct _GnocamAppletCam
 struct _GnocamAppletCamClass
 {
 	GtkButtonClass parent_class;
-
-	void (* changed) (GnocamAppletCam *);
 };
 
 GType            gnocam_applet_cam_get_type (void);
@@ -32,7 +30,7 @@ void         gnocam_applet_cam_set_manufacturer (GnocamAppletCam *,
 						 const gchar *);
 const gchar *gnocam_applet_cam_get_manufacturer (GnocamAppletCam *);
 
-void gnocam_applet_cam_set_model         (GnocamAppletCam *, const gchar *);
+void         gnocam_applet_cam_set_model (GnocamAppletCam *, const gchar *);
 const gchar *gnocam_applet_cam_get_model (GnocamAppletCam *);
 
 void         gnocam_applet_cam_set_port (GnocamAppletCam *, const gchar *);

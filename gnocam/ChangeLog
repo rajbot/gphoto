@@ -1,3 +1,7 @@
+2003-02-02  Lutz Mueller <lutz@users.sourceforge.net>
+
+	* capplet/*: Watch out for changes done using the capplet.
+
 2003-01-27  Lutz Mller <lutz@users.sourceforge.net>
 
 	* capplet/*: Get it somewhat working. GConf is no pleasure to work

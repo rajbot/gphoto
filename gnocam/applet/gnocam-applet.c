@@ -47,15 +47,9 @@ struct _GnocamAppletPrivate
 
 	GtkBox *box;
 	GtkWidget *image;
-	GList *cameras;
-};
 
-static GnocamAppletCam *
-gnocam_applet_get_cam (GnocamApplet *a, const gchar *name)
-{
-	g_warning ("Fixme!");
-	return NULL;
-}
+	GHashTable *cameras;
+};
 
 static void
 gnocam_applet_update (GnocamApplet *a)
@@ -93,31 +87,20 @@ gnocam_applet_update (GnocamApplet *a)
 #endif
 }
 
-static void
-on_changed (GnocamAppletCam *c, GnocamApplet *a)
+static GnocamAppletCam *
+gnocam_applet_add_cam (GnocamApplet *a, const gchar *id)
 {
-	gchar *key = panel_applet_get_preferences_key (a->priv->applet);
-	guint i = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (c), "number"));
-	gchar *s;
-	const gchar *t;
-	
-	/* New camera? */
-	if (!i) i = g_list_length (a->priv->cameras) + 1;
-	s = g_strdup_printf ("%s/%i", key, i);
-	
-	t = gnocam_applet_cam_get_manufacturer (c);
-	if (t) panel_applet_gconf_set_string (a->priv->applet,
-					      "manufacturer", t, NULL);
-	t = gnocam_applet_cam_get_model (c);
-	if (t) panel_applet_gconf_set_string (a->priv->applet,
-					      "model", t, NULL);
-	t = gnocam_applet_cam_get_port (c);
-	if (t) panel_applet_gconf_set_string (a->priv->applet, "port", t, NULL);
-	panel_applet_gconf_set_bool (a->priv->applet, "connect_auto", 
-		gnocam_applet_cam_get_connect_auto (c), NULL);
+	GnocamAppletCam *c;
 
-	g_free (key);
-	g_free (s);
+	g_return_val_if_fail (GNOCAM_IS_APPLET (a), NULL);
+	g_return_val_if_fail (id != NULL, NULL);
+
+	c = gnocam_applet_cam_new (panel_applet_get_size (a->priv->applet));
+	gtk_widget_show (GTK_WIDGET (c));
+	gtk_box_pack_start (a->priv->box, GTK_WIDGET (c), FALSE, FALSE, 0);
+	g_hash_table_insert (a->priv->cameras, g_strdup (id), c);
+
+	return c;
 }
 
 static void
@@ -136,13 +119,7 @@ gnocam_applet_load_preferences (GnocamApplet *a)
 	for (i = 0; i < g_slist_length (l); i++) {
 
 		/* Create the widget */
-		c = gnocam_applet_cam_new (
-				panel_applet_get_size (a->priv->applet));
-		g_signal_connect (c, "changed", G_CALLBACK (on_changed), a);
-		a->priv->cameras = g_list_append (a->priv->cameras, c);
-		gtk_widget_show (GTK_WIDGET (c));
-		gtk_box_pack_start (a->priv->box, GTK_WIDGET (c),
-				    FALSE, FALSE, 0);
+		c = gnocam_applet_add_cam (a, g_slist_nth_data (l, i));
 
 		/* Load the preferences into the widget. */
 		key = g_slist_nth_data (l, i);
@@ -215,7 +192,7 @@ gnocam_applet_finalize (GObject *object)
 {
 	GnocamApplet *a = GNOCAM_APPLET (object);
 
-	g_list_free (a->priv->cameras);
+	g_hash_table_destroy (a->priv->cameras);
 	g_free (a->priv);
 
 	G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -450,19 +427,6 @@ gnocam_applet_capture_cb (BonoboUIComponent *uic, GnocamApplet *a,
 #endif
 
 static void
-gnocam_applet_add_cb (BonoboUIComponent *uic, GnocamApplet *a,
-		      const char *verbname)
-{
-	GnocamAppletCam *c;
-	
-	c = gnocam_applet_cam_new (panel_applet_get_size (a->priv->applet));
-	g_signal_connect (c, "changed", G_CALLBACK (on_changed), a);
-	a->priv->cameras = g_list_append (a->priv->cameras, c);
-	gtk_widget_show (GTK_WIDGET (c));
-	gtk_box_pack_start (a->priv->box, GTK_WIDGET (c), FALSE, FALSE, 0);
-}
-
-static void
 gnocam_applet_about_cb (BonoboUIComponent *uic, GnocamApplet *a,
 			const char *verbname)
 {
@@ -510,7 +474,6 @@ gnocam_applet_about_cb (BonoboUIComponent *uic, GnocamApplet *a,
 }
 
 static const BonoboUIVerb gnocam_applet_menu_verbs[] = {
-	BONOBO_UI_UNSAFE_VERB ("Add", gnocam_applet_add_cb),
 	BONOBO_UI_UNSAFE_VERB ("About", gnocam_applet_about_cb),
 	BONOBO_UI_VERB_END
 };
@@ -520,22 +483,39 @@ notify_func (GConfClient *client, guint cnxn_id, GConfEntry *entry,
 	     gpointer user_data)
 {
 	GnocamApplet *a = GNOCAM_APPLET (user_data);
-	const gchar *s;
-	gchar *name;
 	GnocamAppletCam *c;
+	const gchar *b = g_basename (entry->key);
+	gchar *id;
 
 	if (!strcmp (entry->key, "/desktop/gnome/cameras")) return;
 
 	g_message ("Key: '%s'", entry->key);
 	if (!entry->value) {
-		s = g_basename (gconf_entry_get_key (entry));
-		name = gconf_unescape_key (s, strlen (s));
-		c = gnocam_applet_get_cam (a, name);
-		if (!c) {g_free (name); return;}
-		g_warning ("Implement!");
-		g_free (name);
+		c = g_hash_table_lookup (a->priv->cameras, entry->key);
+		if (c) {
+			gtk_object_destroy (GTK_OBJECT (c));
+			g_hash_table_remove (a->priv->cameras, entry->key);
+		}
 	} else {
-		g_warning ("Fixme!");
+		if (strcmp (b, "name") && strcmp (b, "manufacturer") &&
+		    strcmp (b, "model") && strcmp (b, "port")) return;
+		
+		id = g_path_get_dirname (entry->key);
+		c = g_hash_table_lookup (a->priv->cameras, id);
+		if (!c) c = gnocam_applet_add_cam (a, id);
+		if (!strcmp (b, "name"))
+			gnocam_applet_cam_set_name (c,
+				gconf_value_get_string (entry->value));
+		if (!strcmp (b, "model"))
+			gnocam_applet_cam_set_model (c,
+				gconf_value_get_string (entry->value));
+		if (!strcmp (b, "manufacturer"))
+			gnocam_applet_cam_set_manufacturer (c,
+				gconf_value_get_string (entry->value));
+		if (!strcmp (b, "port"))
+			gnocam_applet_cam_set_port (c,
+				gconf_value_get_string (entry->value));
+		g_free (id);
 	}
 }
 
@@ -603,6 +583,7 @@ gnocam_applet_init (GTypeInstance *instance, gpointer g_class)
         GnocamApplet *a = GNOCAM_APPLET (instance);
 
 	a->priv = g_new0 (GnocamAppletPrivate, 1);
+	a->priv->cameras = g_hash_table_new (g_str_hash, g_str_equal);
 }
 
 GType

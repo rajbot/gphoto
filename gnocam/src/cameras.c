@@ -131,9 +131,7 @@ camera_tree_item_remove (GtkTreeItem* item)
 
 	/* If it's the root folder, unref the camera. */
 	if (root) {
-		gp_camera_lock (camera);
 		gp_camera_unref (camera);
-		gp_camera_unlock (camera);
 	}
 
 	/* If this is the last item, we have to make sure we don't loose the 	*/

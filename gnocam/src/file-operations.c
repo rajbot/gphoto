@@ -136,7 +136,7 @@ upload (GtkTreeItem* folder, gchar* filename)
 	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (folder), "camera"));
 	g_return_if_fail (path = gtk_object_get_data (GTK_OBJECT (folder), "path"));
 
-	if (uri) {
+	if (filename) {
 		uri = gnome_vfs_uri_new (filename);
 	
 		/* Read the data and upload the file. */
@@ -285,14 +285,14 @@ save_all_selected (GtkTree* tree, gboolean preview, gboolean save_as, gboolean t
         gchar*          filename;
 	GtkTreeItem*	item;
 
-        g_assert (tree != NULL);
-	g_assert (!(save_as && temporary));
+        g_return_if_fail (tree);
+	g_return_if_fail (!(save_as && temporary));
 
 	/* Look into folders first. */
 	for (i = 0; i < g_list_length (tree->children); i++) {
 		item = GTK_TREE_ITEM (g_list_nth_data (tree->children, i));
-		g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
-                g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
+		g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
+                g_return_if_fail (path = gtk_object_get_data (GTK_OBJECT (item), "path"));
 		
 		/* Is this item a folder? */
 		if (!(filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) {
@@ -323,13 +323,13 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 	gint		return_status;
 	GnomeVFSURI*	uri = NULL;
 
-	g_assert (item != NULL);
-	g_assert (!(save_as && temporary));
-	g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
-	g_assert ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename")) != NULL);
-	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
-        g_assert ((value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL)));
-        g_assert (value->type == GCONF_VALUE_STRING);
+	g_return_if_fail (item);
+	g_return_if_fail (!(save_as && temporary));
+	g_return_if_fail (path = gtk_object_get_data (GTK_OBJECT (item), "path"));
+	g_return_if_fail (filename = gtk_object_get_data (GTK_OBJECT (item), "filename"));
+	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
+        g_return_if_fail (value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL));
+        g_return_if_fail (value->type == GCONF_VALUE_STRING);
 
 	/* Assemble the uri. */
 	if (temporary) filename_user = g_strdup_printf ("file:%s/%s", g_get_tmp_dir (), filename);
@@ -375,7 +375,7 @@ delete_all_selected (GtkTree* tree)
 	gint		i;
 	GtkTreeItem*	item;
 
-        g_assert (tree != NULL);
+        g_return_if_fail (tree);
 
         /* Look into folders first. */
         for (i = 0; i < g_list_length (tree->children); i++) {
@@ -392,11 +392,7 @@ delete_all_selected (GtkTree* tree)
         /* Files. */
         for (i = 0; i < g_list_length (tree->selection); i++) {
                 item = GTK_TREE_ITEM (g_list_nth_data (tree->selection, i));
-                if ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) {
-
-			/* Delete. */
-			delete (item);
-		}
+                if ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) delete (item);
 	}
 }
 
@@ -407,9 +403,9 @@ delete (GtkTreeItem* item)
 	gchar*	filename;
 	Camera*	camera;
 
-	g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
-	g_assert ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename")) != NULL);
-	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
+	g_return_if_fail (path = gtk_object_get_data (GTK_OBJECT (item), "path"));
+	g_return_if_fail (filename = gtk_object_get_data (GTK_OBJECT (item), "filename"));
+	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
 
 	if (gp_camera_file_delete (camera, path, filename) == GP_OK) camera_tree_item_remove (item);
 	else {

@@ -253,6 +253,7 @@ macros/Makefile
 po/Makefile.in
 src/Makefile
 src/stock/Makefile
+src/ui/Makefile
 ])
 
 dnl *********************

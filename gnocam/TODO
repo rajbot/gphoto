@@ -24,9 +24,9 @@ Drag & Drop:
 ------------
 - correctly implement drag (files/previews). Timeout issue?
 
-Else:
------
-- Camera properties not yet implemented properly.
+Main Window:
+------------
+- Use bonobo-eog for displaying the preview.
 
 Threads:
 --------

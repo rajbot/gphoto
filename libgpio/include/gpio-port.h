@@ -13,7 +13,6 @@
 #define IOLIBS			"."
 #define strcasecmp		_stricmp
 #define snprintf		_snprintf
->>>>>>> 1.6
 
 /* Work-around for readdir() */
 typedef struct {

@@ -536,7 +536,7 @@ static int canon_configure(void)
   //    GtkWidget *window,*box,*scrolled_win,*tree,*clear,*done;
   GtkWidget *dialog, *hbox, *vbox, *label, *tree, *vseparator;
   GtkWidget *file_list, *button, *cbutton, *clear,*set_button;
-  GtkWidget *combo, *swoff, *sync, *linkCombo;
+  GtkWidget *combo, *swoff, *sync;
   GtkWidget *owner_entry, *ga;
   GList *list;
 

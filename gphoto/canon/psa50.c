@@ -544,7 +544,6 @@ static unsigned char *psa50_usb_dialogue(char cmd1, char cmd2, int cmd3, int *re
   int msgsize;
   char packet[0x3000];
   static char buffer[0x3000];
-  int i;
   int lonlen;
 
     memset(packet,0x00,0x3000);  /* zero block */
@@ -1322,7 +1321,6 @@ unsigned char *psa50_get_file_usb(const char *name,int *length) {
     unsigned char msg[0x3000];
     unsigned char *msgg;
     char newstr[100];
-    unsigned char *namn;
     unsigned int total = 0,expect = 0,size;
     int name_len,len,maxfilesize;
     

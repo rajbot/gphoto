@@ -17,7 +17,7 @@
     </submenu>
   </menu>
   <dockitem name="Toolbar" homogenous="0" look="icons">
-    <control name="ViewMode" _tip="View Mode"/>
+    <control name="ViewMode" _tip="Default View Mode"/>
     <separator/>
     <toolitem name="SavePreviews" verb="" _label="Save Previews" _tip="Save Previews" pixtype="stock" pixname="Save"/>
     <toolitem name="SavePreviewsAs" verb="" _label="Save Previews As" _tip="Save Previews As" pixtype="stock" pixname="Save As"/>

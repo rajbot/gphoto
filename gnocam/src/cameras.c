@@ -177,9 +177,11 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 	Bonobo_Control		control;
 	GtkWidget*		widget;
 	GnomeVFSURI*		uri;
+	Camera*			camera;
 
 	g_return_if_fail (item);
 	g_return_if_fail (main_paned);
+	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
 
 	/* We don't display anything if a folder gets selected or if the user selected GNOCAM_VIEW_MODE_NONE. */
 	if (!gtk_object_get_data (GTK_OBJECT (item), "file") || view_mode == GNOCAM_VIEW_MODE_NONE) return;
@@ -195,7 +197,7 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 	/* Save the file temporarily. */
 	tmp = g_strdup_printf ("file:%s/%s", g_get_tmp_dir (), gnome_vfs_uri_get_basename (gtk_object_get_data (GTK_OBJECT (item), "uri")));
 	uri = gnome_vfs_uri_new (tmp);
-	download (item, uri, (view_mode == GNOCAM_VIEW_MODE_PREVIEW));
+	download (item, uri, camera->abilities->file_preview && (view_mode == GNOCAM_VIEW_MODE_PREVIEW));
 	gnome_vfs_uri_unref (uri);
 
 	/* Get the control. */

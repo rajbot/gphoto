@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Digital Cameras
-Name[de]=Digitale Kameras
-Comment=Configuration of digital cameras
-Comment[de]=Konfiguration der digitalen Kameras
-Exec=camera-capplet
-Icon=gnome-default.png
-Terminal=0
-Type=Application

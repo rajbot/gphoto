@@ -1,3 +1,7 @@
+2002-11-29  Lutz Müller <lutz@users.sourceforge.net>
+
+	* capplet/*: Prepare plugin for gnome-control-center.
+
 2002-11-26  Lutz Müller <lutz@users.sourceforge.net>
 
 	* applet/*: Fix various segfaults.

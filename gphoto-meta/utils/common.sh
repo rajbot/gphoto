@@ -36,6 +36,7 @@ cmd() {
     fi
 }
 
-cmd cd "${metadir}"
 cmd mkdir -p "${tmpdir}"
 cmd cd "${tmpdir}"
+
+cmd cd "${metadir}"

@@ -21,10 +21,17 @@
 
 /* Solaris */
 #ifdef sun
-#define GPIO_PARALLEL_PREFIX 		NULL
-#define	GPIO_PARALLEL_RANGE_LOW		0
-#define	GPIO_PARALLEL_RANGE_HIGH	16
+#  ifdef i386 
+#    define GPIO_PARALLEL_PREFIX "/dev/lp%i" /* x86 parallel port prefix*/
+#    define GPIO_PARALLEL_RANGE_LOW	1
+#    define GPIO_PARALLEL_RANGE_HIGH	16
+#  else
+#    define GPIO_PARALLEL_PREFIX "/dev/bpp%02i" /* Sparc parallel port prefix*/
+#    define GPIO_PARALLEL_RANGE_LOW	0
+#    define GPIO_PARALLEL_RANGE_HIGH	16
+#  endif
 #endif
+
 
 /* BeOS */
 #ifdef beos

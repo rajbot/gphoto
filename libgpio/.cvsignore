@@ -10,6 +10,7 @@ config.status
 stamp-h
 libgpio.spec
 Makefile
+Makefile.in
 gpio-config
 gpio.h
 .deps
@@ -18,6 +19,8 @@ gpio_test
 gpio.lo
 gpio-serial.lo
 gpio-parallel.lo
+gpio-network.lo
+gpio-ieee1394.lo
 gpio-usb.lo
 gpioConf.sh
 libgpio.la

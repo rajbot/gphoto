@@ -24,9 +24,9 @@
 
 /* Solaris */
 #ifdef sun
-#define GPIO_SERIAL_PREFIX "/dev/ttya%i"
-#define GPIO_SERIAL_RANGE_LOW	0
-#define GPIO_SERIAL_RANGE_HIGH	32
+#define GPIO_SERIAL_PREFIX "/dev/tty%c"
+#define GPIO_SERIAL_RANGE_LOW	'a'
+#define GPIO_SERIAL_RANGE_HIGH	'z'
 #endif
 
 /* BeOS */

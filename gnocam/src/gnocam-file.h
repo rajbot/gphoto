@@ -4,6 +4,7 @@
 
 #include <gphoto2.h>
 #include <bonobo.h>
+#include <gconf/gconf-client.h>
 #include <GnoCam.h>
 
 BEGIN_GNOME_DECLS
@@ -28,16 +29,18 @@ struct _GnoCamFileClass {
 	BonoboXObjectClass	 	parent_class;
 
 	POA_GNOME_GnoCam_file__epv 	epv;
+
+	void (* widget_changed)		(GnoCamFile* file);
 };
 
 
-GtkType    		gnocam_file_get_type	(void);
-GnoCamFile*		gnocam_file_new		(Camera* camera, Bonobo_Storage storage, const gchar* path, BonoboUIContainer* container, CORBA_Environment* ev);
+GtkType    	gnocam_file_get_type		(void);
+GnoCamFile*	gnocam_file_new			(Camera* camera, Bonobo_Storage storage, const gchar* path, BonoboUIContainer* container, GConfClient* client);
 
-void 			gnocam_file_set_ui_container 	(GnoCamFile* file, BonoboUIContainer* container);
-BonoboUIComponent*	gnocam_file_get_ui_component	(GnoCamFile* file);
+void 		gnocam_file_show_menu 		(GnoCamFile* file, BonoboUIContainer* container);
+void		gnocam_file_hide_menu		(GnoCamFile* file);
 
-GtkWidget*		gnocam_file_get_widget		(GnoCamFile* file);
+GtkWidget*	gnocam_file_get_widget		(GnoCamFile* file);
 
 END_GNOME_DECLS
 

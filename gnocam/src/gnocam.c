@@ -18,6 +18,17 @@
 /* Functions */
 /*************/
 
+static gint
+create_app (gpointer user_data)
+{
+	GConfClient*	client;
+
+	client = GCONF_CLIENT (user_data);
+	gtk_widget_show (GTK_WIDGET (gnocam_main_new (client)));
+
+	return (FALSE);
+}
+
 static void
 load_settings (GConfClient* client)
 {
@@ -99,9 +110,7 @@ int main (int argc, char *argv[])
 	g_return_val_if_fail (client = gconf_client_get_default (), 1);
 	
 	load_settings (client);
-
-	/* Create the window */
-	gtk_widget_show (GTK_WIDGET (gnocam_main_new (client)));
+	gtk_idle_add (create_app, client);
 
 	/* Start the event loop. */
 	bonobo_main ();

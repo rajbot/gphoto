@@ -26,30 +26,30 @@ struct _GnoCamMainPrivate {
 };
 
 #define GNOCAM_MAIN_UI														\
-"<Root>\n"															\
-"  <menu>\n"															\
-"    <submenu name=\"File\" _label=\"_File\">\n"										\
-"      <placeholder name=\"FileOperations\"/>\n"										\
+"<Root>"															\
+"  <menu>"															\
+"    <submenu name=\"File\" _label=\"_File\">"											\
+"      <placeholder name=\"FileOperations\"/>"											\
 "      <menuitem name=\"Exit\" verb=\"\" _label=\"E_xit\" pixtype=\"stock\" pixname=\"Quit\"/>\n"				\
-"    </submenu>\n"														\
-"    <placeholder name=\"Folder\"/>\n"                                                                                          \
-"    <placeholder name=\"Camera\"/>\n"                                                                                          \
-"    <submenu name=\"Edit\" _label=\"_Edit\">\n"										\
-"       <placeholder/>\n"													\
-"       <menuitem name=\"BonoboCustomize\" verb=\"\" _label=\"Customi_ze...\" pos=\"bottom\"/>\n"				\
-"    </submenu>\n"														\
-"    <placeholder name=\"Edit\"/>\n"												\
-"    <placeholder name=\"View\"/>\n"												\
-"    <submenu name=\"Settings\" _label=\"_Settings\">\n"									\
+"    </submenu>"														\
+"    <placeholder name=\"Folder\"/>"												\
+"    <placeholder name=\"Camera\"/>"												\
+"    <submenu name=\"Edit\" _label=\"_Edit\">"											\
+"       <placeholder/>"														\
+"       <menuitem name=\"BonoboCustomize\" verb=\"\" _label=\"Customi_ze...\" pos=\"bottom\"/>"					\
+"    </submenu>"														\
+"    <placeholder name=\"Edit\"/>"												\
+"    <placeholder name=\"View\"/>"												\
+"    <submenu name=\"Settings\" _label=\"_Settings\">"										\
 "      <menuitem name=\"Preferences\" verb=\"\" _label=\"_Preferences\" pixtype=\"stock\" pixname=\"Preferences\"/>"		\
 "    </submenu>"														\
-"    <submenu name=\"Help\" _label=\"_Help\">\n"										\
-"      <menuitem name=\"About\" verb=\"\" _label=\"_About\" pixtype=\"stock\" pixname=\"About\"/>\n"				\
-"    </submenu>\n"														\
-"  </menu>\n"															\
-"  <status>\n"															\
-"    <item name=\"main\"/>\n"													\
-"  </status>\n"															\
+"    <submenu name=\"Help\" _label=\"_Help\">"											\
+"      <menuitem name=\"About\" verb=\"\" _label=\"_About\" pixtype=\"stock\" pixname=\"About\"/>"				\
+"    </submenu>"														\
+"  </menu>"															\
+"  <status>"															\
+"    <item name=\"main\"/>"													\
+"  </status>"															\
 "</Root>"
 
 /*************/
@@ -147,6 +147,7 @@ gnocam_main_destroy (GtkObject* object)
 
 	gtk_object_unref (GTK_OBJECT (m->priv->client));
 	bonobo_object_unref (BONOBO_OBJECT (m->priv->component));
+	
 	g_free (m->priv);
 
 	(*GTK_OBJECT_CLASS (parent_class)->destroy) (object);
@@ -166,7 +167,7 @@ gnocam_main_class_init (GnoCamMainClass* klass)
 static void
 gnocam_main_init (GnoCamMain* m)
 {
-	m->priv = g_new (GnoCamMainPrivate, 1);
+	m->priv = g_new0 (GnoCamMainPrivate, 1);
 }
 
 GnoCamMain*

@@ -1,6 +1,6 @@
 AC_INIT(src/gnocam.c)
 
-AM_INIT_AUTOMAKE(GnoCam, 0.8)
+AM_INIT_AUTOMAKE(GnoCam, 0.9)
 AM_CONFIG_HEADER(config.h)
 
 AM_MAINTAINER_MODE
@@ -51,14 +51,14 @@ fi
 dnl ******
 dnl bonobo
 dnl ******
-AC_MSG_CHECKING(for bonobo>=0.35)
+AC_MSG_CHECKING(for bonobo>=0.37)
 if gnome-config --libs bonobox > /dev/null 2>&1; then
     vers=`gnome-config --modversion bonobo | awk 'BEGIN { FS = "."; } { printf "%d", $1 * 1000 + $2;}'`
-        if test "$vers" -ge 35; then
+        if test "$vers" -ge 37; then
             AC_MSG_RESULT(found)
         else
             AC_MSG_ERROR([
-*** You need at least bonobo-0.31 for this version of ${PACKAGE}. 
+*** You need at least bonobo-0.37 for this version of ${PACKAGE}. 
 *** Get the latest version from http://www.gnome.org. Mirrors can
 *** be found at http://www.gnome.org/mirrors.])
         fi

@@ -180,17 +180,16 @@ on_save_as_clicked (BonoboUIComponent* component, gpointer user_data, const gcha
 /* Our functions */
 /*****************/
 
-BonoboUIComponent*
-gnocam_folder_get_ui_component (GnoCamFolder* folder)
+void
+gnocam_folder_show_menu (GnoCamFolder* folder, BonoboUIContainer* container)
 {
-	return (folder->priv->component);
+        bonobo_ui_component_set_container (folder->priv->component, BONOBO_OBJREF (container));
 }
 
 void
-gnocam_folder_set_ui_container (GnoCamFolder* folder, BonoboUIContainer* container)
+gnocam_folder_hide_menu (GnoCamFolder* folder)
 {
-        bonobo_ui_component_set_container (folder->priv->component, BONOBO_OBJREF (container));
-//	bonobo_object_unref (BONOBO_OBJECT (container));
+	bonobo_ui_component_unset_container (folder->priv->component);
 }
 
 GtkWidget*
@@ -211,6 +210,7 @@ gnocam_folder_destroy (GtkObject* object)
 	folder = GNOCAM_FOLDER (object);
 
 	bonobo_object_unref (BONOBO_OBJECT (folder->priv->component));
+
 	if (folder->priv->configuration) gp_widget_unref (folder->priv->configuration);
 	gp_camera_unref (folder->priv->camera);
 	g_free (folder->priv->path);
@@ -233,11 +233,7 @@ gnocam_folder_class_init (GnoCamFolderClass* klass)
 static void
 gnocam_folder_init (GnoCamFolder* folder)
 {
-	GnoCamFolderPrivate*	priv;
-
-	priv = g_new (GnoCamFolderPrivate, 1);
-	folder->priv = priv;
-	folder->priv->configuration = NULL;
+	folder->priv = g_new0 (GnoCamFolderPrivate, 1);
 }
 
 GnoCamFolder*
@@ -287,6 +283,7 @@ gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bo
 	/* Create menu */
 	new->priv->component = bonobo_ui_component_new (PACKAGE "Folder");
 	bonobo_ui_component_set_container (new->priv->component, BONOBO_OBJREF (container));
+	bonobo_ui_component_freeze (new->priv->component, NULL);
 	bonobo_ui_component_set_translate (new->priv->component, "/", GNOCAM_FOLDER_UI, NULL);
 	bonobo_ui_component_add_verb (new->priv->component, "Save", on_save_clicked, new);
 	bonobo_ui_component_add_verb (new->priv->component, "SaveAs", on_save_as_clicked, new);
@@ -301,6 +298,8 @@ gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bo
         /* Folder configuration? */
         result = gp_camera_folder_config_get (new->priv->camera, &(new->priv->configuration), new->priv->path);
 	if (result == GP_OK) menu_setup (new->priv->component, new->priv->camera, new->priv->configuration, "/menu/Folder/Folder", new->priv->path, NULL);
+
+	bonobo_ui_component_thaw (new->priv->component, NULL);
 
 	return (new);
 }

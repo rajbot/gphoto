@@ -125,7 +125,7 @@ gnocam_applet_cam_set_property (GObject *object, guint n, const GValue *v,
 
 	switch (n) {
 	case PROP_NAME:
-		g_free (c->priv->name); 
+		g_free (c->priv->name);
 		c->priv->name = g_strdup (g_value_get_string (v));
 		break;
 	case PROP_MANUFACTURER:
@@ -275,7 +275,7 @@ gnocam_applet_cam_update (GnocamAppletCam *c)
 
 	/* Update popup */
 	w = gtk_item_factory_get_widget (c->priv->factory, "/Connect");
-	gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (w), 
+	gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (w),
 				      c->priv->camera != CORBA_OBJECT_NIL);
 	w = gtk_item_factory_get_widget (c->priv->factory, "/Settings");
 	gtk_widget_set_sensitive (w, c->priv->camera != CORBA_OBJECT_NIL);
@@ -304,7 +304,7 @@ gnocam_applet_cam_connect (GnocamAppletCam *c)
 		c->priv->model, c->priv->port, &ev);
 	if (BONOBO_EX (&ev)) {
 		if (c->priv->camera) {
-			//bonobo_object_release_unref (c->priv->camera, NULL);
+			/* bonobo_object_release_unref (c->priv->camera, NULL); */
 			c->priv->camera = CORBA_OBJECT_NIL;
 		}
 		g_warning ("Could not get camera!");
@@ -414,7 +414,7 @@ action_settings (gpointer callback_data, guint callback_action, GtkWidget *w)
 		G_CALLBACK (on_prefs_destroy), c);
 	gtk_widget_show (vbox = gtk_vbox_new (FALSE, 5));
 	bonobo_window_set_contents (BONOBO_WINDOW (c->priv->prefs), vbox);
-	
+
 	gtk_widget_show (widget = bonobo_widget_new_control_from_objref (
 		control, BONOBO_OBJREF (bonobo_window_get_ui_container (
 					BONOBO_WINDOW (c->priv->prefs)))));

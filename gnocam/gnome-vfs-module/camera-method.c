@@ -16,14 +16,14 @@
 #include <bonobo/bonobo-main.h>
 
 static GnomeVFSResult
-do_open (GnomeVFSMethod *method, GnomeVFSMethodHandle **handle, 
+do_open (GnomeVFSMethod *method, GnomeVFSMethodHandle **handle,
 	 GnomeVFSURI *uri, GnomeVFSOpenMode mode, GnomeVFSContext *context)
 {
 	return camera_file_open (uri, (CameraFile **) handle);
 }
 
 #if 0
-static GnomeVFSResult do_create ( 
+static GnomeVFSResult do_create (
         GnomeVFSMethod        *method,
         GnomeVFSMethodHandle **handle,
         GnomeVFSURI           *uri,
@@ -341,7 +341,7 @@ printf ("Found folder!\n");
 		g_free (basename);
 		G_UNLOCK (cameras);
 		return (GNOME_VFS_RESULT (count));
-	} 
+	}
 
 	for (i = 0; i < count; i++) {
 		result = GNOME_VFS_RESULT (gp_list_get_name (list, i, &name));
@@ -445,18 +445,18 @@ static GnomeVFSResult do_check_same_fs (
 static GnomeVFSMethod method = {
         sizeof (GnomeVFSMethod),
         do_open,
-        NULL, //do_create,
+        NULL, /* do_create, */
         do_close,
         do_read,
-        NULL, //do_write,
-        NULL, //do_seek,
-        NULL, //do_tell,
+        NULL, /* do_write, */
+        NULL, /* do_seek, */
+        NULL, /* do_tell, */
         NULL,                           /* do_truncate_handle           */
         do_open_directory,
 	do_close_directory,
         do_read_directory,
-        NULL, //do_get_file_info,
-        NULL, //do_get_file_info_from_handle,
+        NULL, /* do_get_file_info, */
+        NULL, /* do_get_file_info_from_handle, */
         do_is_local,
         NULL,                           /* do_make_directory */
         NULL,                           /* do_remove_directory          */
@@ -470,7 +470,7 @@ static GnomeVFSMethod method = {
 };
 
 GnomeVFSMethod *vfs_module_init (const gchar *method_name, const gchar *args);
-	
+
 GnomeVFSMethod *
 vfs_module_init (const gchar *method_name, const gchar *args)
 {

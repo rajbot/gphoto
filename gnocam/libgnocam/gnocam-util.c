@@ -14,7 +14,7 @@ gnocam_util_get_camera (const gchar *manuf, const gchar *model,
 			const gchar *port, CORBA_Environment *ev)
 {
 	Bonobo_ServerInfoList *l;
-        GNOME_C_Mngr m; 
+        GNOME_C_Mngr m;
         GNOME_C_Mngr_ManufacturerList *ml;
         GNOME_C_Mngr_ModelList model_l;
         GNOME_C_Mngr_PortList pl;
@@ -58,7 +58,7 @@ gnocam_util_get_camera (const gchar *manuf, const gchar *model,
                             CORBA_free (ml);
                             CORBA_free (l);
 			    if (BONOBO_EX (ev)) {
-				    //bonobo_object_release_unref (c, NULL);
+				    /* bonobo_object_release_unref (c, NULL); */
 				    return CORBA_OBJECT_NIL;
 			    }
                             return c;

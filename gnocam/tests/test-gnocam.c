@@ -2,7 +2,7 @@
 #include <bonobo/bonobo-main.h>
 #include <bonobo/bonobo-exception.h>
 #include <bonobo/bonobo-moniker-util.h>
-#include <bonobo/bonobo-listener.h>
+#include <bonobo/bonobo-event-source.h>
 #include <gtk/gtkmain.h>
 
 #include "GnoCam.h"
@@ -31,28 +31,13 @@ listener_cb (BonoboListener *listener, gchar *event_name, CORBA_any *any,
 static gboolean
 do_idle_tests (gpointer data)
 {
-	Bonobo_EventSource event_source;
-	BonoboListener *listener;
 	CORBA_Environment ev;
 
 	CORBA_exception_init (&ev);
 
-	g_message ("Getting event source...");
-	event_source = Bonobo_Unknown_queryInterface (camera,
-			"IDL:Bonobo/EventSource:1.0", &ev);
-	CHECK (ev);
-
 	g_message ("Adding listener...");
-	listener = bonobo_listener_new (listener_cb, NULL);
-	id = Bonobo_EventSource_addListenerWithMask (event_source,
-			BONOBO_OBJREF (listener),
-			"GNOME/Camera:CaptureImage", &ev);
-	bonobo_object_unref (BONOBO_OBJECT (listener));
-	bonobo_object_release_unref (event_source, NULL);
-	CHECK (ev);
-
-	g_message ("Capturing image...");
-	GNOME_Camera_captureImage (camera, &ev);
+	id = bonobo_event_source_client_add_listener (camera, listener_cb, 
+				"GNOME/Camera:CaptureImage", &ev, NULL);
 	CHECK (ev);
 
 	CORBA_exception_free (&ev);
@@ -68,7 +53,6 @@ main (int argc, char *argv[])
 	CORBA_Object gnocam;
 	CORBA_Environment ev;
 	Bonobo_Storage storage;
-	Bonobo_EventSource event_source;
 
 	gtk_init (&argc, &argv);
 
@@ -95,17 +79,15 @@ main (int argc, char *argv[])
 
 	gtk_idle_add (do_idle_tests, NULL);
 
-	bonobo_main ();
-	
-	g_message ("Getting event source...");
-	event_source = Bonobo_Unknown_queryInterface (camera,
-			"IDL:Bonobo/EventSource:1.0", &ev);
-	bonobo_object_release_unref (camera, NULL);
+	g_message ("Capturing image...");
+	GNOME_Camera_captureImage (camera, &ev);
 	CHECK (ev);
 
+	bonobo_main ();
+	
 	g_message ("Removing listener...");
-	Bonobo_EventSource_removeListener (event_source, id, &ev);
-	bonobo_object_release_unref (event_source, NULL);
+	bonobo_event_source_client_remove_listener (camera, id, &ev);
+	bonobo_object_release_unref (camera, NULL);
 	CHECK (ev);
 
 	CORBA_exception_free (&ev);

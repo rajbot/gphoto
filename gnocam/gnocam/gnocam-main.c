@@ -183,6 +183,17 @@ impl_GNOME_GnoCam_getCameraByName (PortableServer_Servant servant,
 	return (CORBA_Object_duplicate (BONOBO_OBJREF (gnocam_camera), ev));
 }
 
+static gboolean
+foreach_func (gpointer key, gpointer value, gpointer user_data)
+{
+	Camera *camera;
+
+	camera = value;
+	gp_camera_unref (camera);
+
+	return (TRUE);
+}
+
 static void
 gnocam_main_destroy (GtkObject *object)
 {
@@ -190,18 +201,21 @@ gnocam_main_destroy (GtkObject *object)
 
 	gnocam_main = GNOCAM_MAIN (object);
 
-	gtk_object_unref (GTK_OBJECT (gnocam_main->priv->client));
+	g_message ("Destroying GnoCamMain...");
+
+	if (gnocam_main->priv->hash_table) {
+		g_hash_table_foreach_remove (gnocam_main->priv->hash_table,
+					     foreach_func, NULL);
+		g_hash_table_destroy (gnocam_main->priv->hash_table);
+		gnocam_main->priv->hash_table = NULL;
+	}
+
+	if (gnocam_main->priv->client) {
+		gtk_object_unref (GTK_OBJECT (gnocam_main->priv->client));
+		gnocam_main->priv->client = NULL;
+	}
 
 	GTK_OBJECT_CLASS (parent_class)->destroy (object);
-}
-
-static void
-foreach_func (gpointer key, gpointer value, gpointer user_data)
-{
-	Camera *camera;
-
-	camera = value;
-	gp_camera_unref (camera);
 }
 
 static void
@@ -210,10 +224,6 @@ gnocam_main_finalize (GtkObject *object)
 	GnoCamMain *gnocam_main;
 
 	gnocam_main = GNOCAM_MAIN (object);
-
-	g_hash_table_foreach (gnocam_main->priv->hash_table,
-			      foreach_func, NULL);
-	g_hash_table_destroy (gnocam_main->priv->hash_table);
 
 	g_free (gnocam_main->priv);
 
@@ -244,7 +254,7 @@ gnocam_main_class_init (GnoCamMainClass *klass)
 	parent_class = gtk_type_class (PARENT_TYPE);
 
 	object_class = GTK_OBJECT_CLASS (klass);
-	object_class->destroy = gnocam_main_destroy;
+	object_class->destroy  = gnocam_main_destroy;
 	object_class->finalize = gnocam_main_finalize;
 
 	epv = &klass->epv;

@@ -86,11 +86,24 @@ gnocam_capture_destroy (GtkObject* object)
 	if (capture->priv->do_capture_timeout)
 		gtk_timeout_remove (capture->priv->do_capture_timeout);
 
-        gp_camera_unref (capture->priv->camera);
-
-        g_free (capture->priv);
+	if (capture->priv->camera) {
+        	gp_camera_unref (capture->priv->camera);
+		capture->priv->camera = NULL;
+	}
 
 	GTK_OBJECT_CLASS (parent_class)->destroy (object);
+}
+
+static void
+gnocam_capture_finalize (GtkObject* object)
+{
+	GnoCamCapture*  capture;
+
+	capture = GNOCAM_CAPTURE (object);
+
+	g_free (capture->priv);
+
+	GTK_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -99,7 +112,8 @@ gnocam_capture_class_init (GnoCamCaptureClass* klass)
 	GtkObjectClass*	object_class;
 
 	object_class = (GtkObjectClass*) klass;
-	object_class->destroy = gnocam_capture_destroy;
+	object_class->destroy  = gnocam_capture_destroy;
+	object_class->finalize = gnocam_capture_finalize;
 
 	parent_class = gtk_type_class (PARENT_TYPE);
 }

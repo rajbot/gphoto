@@ -67,7 +67,7 @@ void live_video (GtkWidget *button, GtkWidget *dialog) {
 }
 
 void live_main () {
-	int w, h;
+	int w, h, error = 0;
 
 	GtkWidget *dialog;
 	GtkWidget *button, *ubutton, *cbutton, *tbutton, *hbox;
@@ -118,10 +118,9 @@ void live_main () {
                            dialog); 
 
         if ((im = Camera->ops->get_preview()) == 0) {
-	        error_dialog("Could not get preview");
-		return;
-	}
-	if (im) {
+	        error_dialog(N_("Could not get preview"));
+		error = 1;
+	} else {
 		imlibimage = gdk_imlib_load_image_mem(im->image, im->image_size);
 		if (imlibimage) {
 			free(im->image);
@@ -134,8 +133,18 @@ void live_main () {
 			gtk_widget_show(gpixmap);
 			gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
 	                         gpixmap);
+		} else {
+			error = 1;
 		}
 	}
-	gtk_widget_show(dialog);
-	update_status(N_("Done."));
+	if (error) {
+		message_window(
+N_("Live Preview Error"),
+N_("Could not retrieve the live preview.\nThe camera either couldn't be accessed\n or it doesn't support live previews."),
+GTK_JUSTIFY_FILL);
+		gtk_widget_destroy(dialog);
+	} else {
+		gtk_widget_show(dialog);
+		update_status(N_("Done."));
+	}
 }

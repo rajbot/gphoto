@@ -235,7 +235,7 @@ on_delete_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 
 	if (result != GP_OK) {
 		g_warning ("Could not delete file '%s' in folder '%s'! (%s)", file->priv->filename, file->priv->dirname, 
-			gp_camera_result_as_string (file->priv->camera, result));
+			gp_camera_get_result_as_string (file->priv->camera, result));
 		return;
 	}
 	

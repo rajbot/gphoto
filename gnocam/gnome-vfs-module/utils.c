@@ -49,9 +49,9 @@ file_handle_new (GnomeVFSURI* uri, GnomeVFSOpenMode mode, GnomeVFSContext* conte
 	
 		/* Preview? */
 		if (gnome_vfs_uri_get_user_name (uri) && (strcmp (gnome_vfs_uri_get_user_name (uri), "previews") == 0)) {
-			*result = GNOME_VFS_RESULT (gp_camera_file_get_preview (camera, file, dirname, (gchar*) filename));
+			*result = GNOME_VFS_RESULT (gp_camera_file_get_preview (camera, dirname, (gchar*) filename, file));
 		} else {
-			*result = GNOME_VFS_RESULT (gp_camera_file_get (camera, file, dirname, (gchar*) filename));
+			*result = GNOME_VFS_RESULT (gp_camera_file_get_file (camera, dirname, (gchar*) filename, file));
 		}
 
 		/* Everything's ok? */
@@ -123,7 +123,7 @@ directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options, GnomeVF
         if (gnome_vfs_context_check_cancellation (context)) {gp_camera_unref (camera); *result = GNOME_VFS_ERROR_CANCELLED; return (NULL);}
 
 	/* Get folder list. */
-	if ((*result = GNOME_VFS_RESULT (gp_camera_folder_list (camera, &camera_list, gnome_vfs_uri_extract_dirname (uri)))) != GNOME_VFS_OK) {
+	if ((*result = GNOME_VFS_RESULT (gp_camera_folder_list_folders (camera, gnome_vfs_uri_extract_dirname (uri), &camera_list))) != GNOME_VFS_OK) {
 		gp_camera_unref (camera);
 		return (NULL);
 	}
@@ -131,7 +131,7 @@ directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options, GnomeVF
 	for (i = 0; i < gp_list_count (&camera_list); i++) folders = g_slist_append (folders, g_strdup (gp_list_entry (&camera_list, i)->name));
 
 	/* Get file list. */
-	if ((*result = GNOME_VFS_RESULT (gp_camera_file_list (camera, &camera_list, gnome_vfs_uri_extract_dirname (uri)))) != GNOME_VFS_OK) {
+	if ((*result = GNOME_VFS_RESULT (gp_camera_folder_list_files (camera, gnome_vfs_uri_extract_dirname (uri), &camera_list))) != GNOME_VFS_OK) {
 		for (i = 0; i < g_slist_length (folders); i++) g_free (g_slist_nth_data (folders, i));
 		g_slist_free (folders);
 		gp_camera_unref (camera);

@@ -120,7 +120,7 @@ camera_commit (BonoboStream* s, CORBA_Environment* ev)
 	
 	stream = BONOBO_STREAM_CAMERA (s);
 	
-	CHECK_RESULT (gp_camera_folder_put_file (stream->priv->camera, stream->priv->file, stream->priv->dirname), ev);
+	CHECK_RESULT (gp_camera_folder_put_file (stream->priv->camera, stream->priv->dirname, stream->priv->file), ev);
 }
 
 static void
@@ -227,7 +227,7 @@ bonobo_stream_camera_new (Camera* camera, const gchar* dirname, const gchar* fil
 		gint		i;
 		CameraList	list;
 
-                CHECK_RESULT (gp_camera_file_list (new->priv->camera, &list, new->priv->dirname), ev);
+                CHECK_RESULT (gp_camera_folder_list_files (new->priv->camera, new->priv->dirname, &list), ev);
                 if (BONOBO_EX (ev)) {
 			bonobo_object_unref (BONOBO_OBJECT (new));
 			return (NULL);
@@ -244,9 +244,9 @@ bonobo_stream_camera_new (Camera* camera, const gchar* dirname, const gchar* fil
         /* Get the file. */
         if (mode & Bonobo_Storage_READ) {
 		if (mode & Bonobo_Storage_COMPRESSED) {
-			CHECK_RESULT (gp_camera_file_get_preview (new->priv->camera, new->priv->file, new->priv->dirname, new->priv->filename), ev);
+			CHECK_RESULT (gp_camera_file_get_preview (new->priv->camera, new->priv->dirname, new->priv->filename, new->priv->file), ev);
 		} else {
-			CHECK_RESULT (gp_camera_file_get (new->priv->camera, new->priv->file, new->priv->dirname, new->priv->filename), ev);
+			CHECK_RESULT (gp_camera_file_get_file (new->priv->camera, new->priv->dirname, new->priv->filename, new->priv->file), ev);
 		}
 		if (BONOBO_EX (ev)) {
 			bonobo_object_unref (BONOBO_OBJECT (new));

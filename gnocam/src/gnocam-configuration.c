@@ -68,15 +68,15 @@ set_config (GnoCamConfiguration* configuration)
         gint    result;
 
         if (configuration->priv->filename) 
-		result = gp_camera_file_config_set (configuration->priv->camera, configuration->priv->widget, 
-			configuration->priv->dirname, configuration->priv->filename);
+		result = gp_camera_file_set_config (configuration->priv->camera,
+			configuration->priv->dirname, configuration->priv->filename, configuration->priv->widget);
         else if (configuration->priv->dirname) 
-		result = gp_camera_folder_config_set (configuration->priv->camera, configuration->priv->widget, configuration->priv->dirname);
-        else result = gp_camera_config_set (configuration->priv->camera, configuration->priv->widget);
+		result = gp_camera_folder_set_config (configuration->priv->camera, configuration->priv->dirname, configuration->priv->widget);
+        else result = gp_camera_set_config (configuration->priv->camera, configuration->priv->widget);
 
         if (result != GP_OK)
                 g_warning (_("Could not set configuration of '%s'!\n(%s)"), 
-			gp_widget_label (configuration->priv->widget), gp_camera_result_as_string (configuration->priv->camera, result));
+			gp_widget_label (configuration->priv->widget), gp_camera_get_result_as_string (configuration->priv->camera, result));
 }
 
 static GtkWidget*
@@ -294,7 +294,7 @@ on_button_clicked (GtkButton* button, gpointer user_data)
 	callback = gp_widget_callback (widget);
 
 	if ((result = callback (configuration->priv->camera, widget)) != GP_OK)
-		g_warning (_("Could not execute command '%s': %s!"), gp_widget_label (widget), gp_camera_result_as_string (configuration->priv->camera, result));
+		g_warning (_("Could not execute command '%s': %s!"), gp_widget_label (widget), gp_camera_get_result_as_string (configuration->priv->camera, result));
 }
 
 static void
@@ -414,12 +414,12 @@ gnocam_configuration_new (Camera* camera, const gchar* dirname, const gchar* fil
 
 	g_return_val_if_fail (camera, NULL);
 
-	if (filename) result = gp_camera_file_config_get (camera, &widget, (gchar*) dirname, (gchar*) filename);
-	else if (dirname) result = gp_camera_folder_config_get (camera, &widget, (gchar*) dirname);
-	else result = gp_camera_config_get (camera, &widget);
+	if (filename) result = gp_camera_file_get_config (camera, (gchar*) dirname, (gchar*) filename, &widget);
+	else if (dirname) result = gp_camera_folder_get_config (camera, (gchar*) dirname, &widget);
+	else result = gp_camera_get_config (camera, &widget);
 
 	if (result != GP_OK) {
-		g_warning (_("Could not get configuration: %s"), gp_camera_result_as_string (camera, result));
+		g_warning (_("Could not get configuration: %s"), gp_camera_get_result_as_string (camera, result));
 		return (NULL);
 	}
 

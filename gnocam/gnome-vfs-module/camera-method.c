@@ -62,7 +62,7 @@ static GnomeVFSResult do_close (
 	g_return_val_if_fail ((file_handle->mode == GNOME_VFS_OPEN_WRITE) || (file_handle->mode == GNOME_VFS_OPEN_READ), GNOME_VFS_ERROR_BAD_PARAMETERS);
 	
 	if (file_handle->mode == GNOME_VFS_OPEN_WRITE) {
-		result = GNOME_VFS_RESULT (gp_camera_folder_put_file (file_handle->camera, file_handle->file, file_handle->folder));
+		result = GNOME_VFS_RESULT (gp_camera_folder_put_file (file_handle->camera, file_handle->folder, file_handle->file));
 		file_handle_free (handle);
 
 	} else if (file_handle->mode == GNOME_VFS_OPEN_READ) {
@@ -261,7 +261,7 @@ static GnomeVFSResult do_get_file_info (
 	if (filename) {
 
 		/* Check if existent. */
-		if (gp_camera_file_list (camera, &camera_list, dirname) != GP_OK) {
+		if (gp_camera_folder_list_files (camera, dirname, &camera_list) != GP_OK) {
 			gp_camera_unref (camera);
 			return (GNOME_VFS_ERROR_GENERIC);
 		}
@@ -279,7 +279,7 @@ static GnomeVFSResult do_get_file_info (
 
 		/* Check if existent (only non-root). */
 		if (strcmp (dirname, "/")) {
-			if (gp_camera_folder_list (camera, &camera_list, dirname) != GP_OK) {
+			if (gp_camera_folder_list_folders (camera, dirname, &camera_list) != GP_OK) {
 				gp_camera_unref (camera);
 				return (GNOME_VFS_ERROR_GENERIC);
 			}

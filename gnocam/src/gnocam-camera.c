@@ -343,9 +343,9 @@ on_manual_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 
 	camera = GNOCAM_CAMERA (user_data);
 
-        result = gp_camera_manual (camera->priv->camera, &manual);
+        result = gp_camera_get_manual (camera->priv->camera, &manual);
 	
-	if (result != GP_OK) g_warning (_("Could not get camera manual!\n(%s)"), gp_camera_result_as_string (camera->priv->camera, result));
+	if (result != GP_OK) g_warning (_("Could not get camera manual!\n(%s)"), gp_camera_get_result_as_string (camera->priv->camera, result));
         else g_message (manual.text);
 }
 

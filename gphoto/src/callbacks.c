@@ -821,7 +821,8 @@ void insert_thumbnail(struct ImageInfo *node) {
   struct ImageInfo *other=&Thumbnails;
   struct Image *im;
   double aspectRatio;
-  char info[1024], tag[256];
+  char info[1024];
+  GString *tag;
 
 
   /* maybe this info should be part of the imageinfo structure */
@@ -848,9 +849,9 @@ void insert_thumbnail(struct ImageInfo *node) {
   }
 
   sprintf(info, "Picture #%i\n", i); 
+  tag=g_string_new("");
   for (x=0; x<im->image_info_size; x+=2) {
-	sprintf(tag, "%s:%s\n",im->image_info[x],im->image_info[x+1]);
-	strcat(info, tag);
+	g_string_sprintf(tag, "%s:%s\n",im->image_info[x],im->image_info[x+1]);
   }
 
   tooltip = gtk_tooltips_new();

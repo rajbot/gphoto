@@ -2085,27 +2085,33 @@ Hyper
 	      <name>new_gallery</name>
 	      <signal>
 		<name>activate</name>
-		<handler>on_app_gallery_new_gallery_activate</handler>
-		<last_modification_time>Sat, 14 Oct 2000 08:25:06 GMT</last_modification_time>
+		<handler>on_new_gallery_activate</handler>
+		<last_modification_time>Sun, 22 Oct 2000 20:58:59 GMT</last_modification_time>
 	      </signal>
 	      <stock_item>GNOMEUIINFO_MENU_NEW_ITEM</stock_item>
 	      <label>_New Gallery</label>
 	    </widget>
 
 	    <widget>
-	      <class>GtkPixmapMenuItem</class>
-	      <name>app_gallery_save</name>
-	      <signal>
-		<name>activate</name>
-		<handler>on_app_gallery_save_activate</handler>
-		<last_modification_time>Sat, 14 Oct 2000 08:25:06 GMT</last_modification_time>
-	      </signal>
-	      <stock_item>GNOMEUIINFO_MENU_SAVE_ITEM</stock_item>
+	      <class>GtkMenuItem</class>
+	      <name>separator15</name>
+	      <right_justify>False</right_justify>
 	    </widget>
 
 	    <widget>
 	      <class>GtkPixmapMenuItem</class>
-	      <name>save_as</name>
+	      <name>app_gallery_open</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_app_gallery_open_activate</handler>
+		<last_modification_time>Sun, 22 Oct 2000 20:03:35 GMT</last_modification_time>
+	      </signal>
+	      <stock_item>GNOMEUIINFO_MENU_OPEN_ITEM</stock_item>
+	    </widget>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>app_gallery_save_as</name>
 	      <signal>
 		<name>activate</name>
 		<handler>on_app_gallery_save_as_activate</handler>
@@ -2250,12 +2256,7 @@ Hyper
 	</widget>
 
 	<widget>
-	  <class>GtkButton</class>
-	  <child_name>Toolbar:button</child_name>
-	  <name>button2</name>
-	  <tooltip>Open File</tooltip>
-	  <label>Save</label>
-	  <stock_pixmap>GNOME_STOCK_PIXMAP_SAVE</stock_pixmap>
+	  <class>Placeholder</class>
 	</widget>
 
 	<widget>
@@ -2285,7 +2286,12 @@ Hyper
 
 	<widget>
 	  <class>OAFIID:control:html-editor:63c5499b-8b0c-475a-9948-81ec96a9662c</class>
-	  <name>oafiid:control:html-editor:63c5499b-8b0c-475a-9948-81ec96a9662c1</name>
+	  <name>editor</name>
+	  <signal>
+	    <name>drag_data_received</name>
+	    <handler>on_editor_drag_data_received</handler>
+	    <last_modification_time>Sun, 22 Oct 2000 21:25:09 GMT</last_modification_time>
+	  </signal>
 	</widget>
       </widget>
     </widget>
@@ -3061,7 +3067,7 @@ Hyper
 
     <widget>
       <class>GtkToolbar</class>
-      <name>toolbar3</name>
+      <name>toolbar_close</name>
       <orientation>GTK_ORIENTATION_HORIZONTAL</orientation>
       <type>GTK_TOOLBAR_ICONS</type>
       <space_size>5</space_size>
@@ -3139,7 +3145,7 @@ Hyper
 
     <widget>
       <class>GtkToolbar</class>
-      <name>toolbar4</name>
+      <name>toolbar_zoom</name>
       <orientation>GTK_ORIENTATION_VERTICAL</orientation>
       <type>GTK_TOOLBAR_ICONS</type>
       <space_size>5</space_size>
@@ -3221,7 +3227,7 @@ Hyper
 
     <widget>
       <class>GtkToolbar</class>
-      <name>toolbar5</name>
+      <name>toolbar_save</name>
       <orientation>GTK_ORIENTATION_HORIZONTAL</orientation>
       <type>GTK_TOOLBAR_ICONS</type>
       <space_size>5</space_size>

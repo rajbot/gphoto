@@ -4,10 +4,22 @@
 #include <gconf/gconf-client.h>
 #include <glade/glade.h>
 #include <gphoto2.h>
+#ifdef GNOCAM_USES_GTKHTML
+#  include <bonobo.h>
+#endif
 #include "information.h"
 #include "cameras.h"
 #include "file-operations.h"
 #include "frontend.h"
+
+/***************/
+/* Definitions */
+/***************/
+
+#define OPERATION_FILE_UPLOAD	0
+#define OPERATION_FILE_SAVE	1
+#define OPERATION_GALLERY_OPEN	2
+#define OPERATION_GALLERY_SAVE	3
 
 /**********************/
 /* External Variables */
@@ -33,45 +45,75 @@ void
 on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 {
 	CameraFile*		file;
-	gchar* 			filename_user;
 	GtkFileSelection*	fileselection;
+#ifdef GNOCAM_USES_GTKHTML
+	GladeXML*		xml_gallery;
+	CORBA_Object 		interface;
+	CORBA_Environment	ev;
+	BonoboObjectClient*	client;
+#endif
 
-	g_assert ((fileselection = GTK_FILE_SELECTION (gtk_object_get_data (GTK_OBJECT (button), "fileselection"))) != NULL);
+	g_assert ((fileselection = GTK_FILE_SELECTION (glade_xml_get_widget (gtk_object_get_data (GTK_OBJECT (button), "xml_fileselection"), "fileselection"))));
 
-	filename_user = g_strdup (gtk_file_selection_get_filename (fileselection));
-
-	/* Save or upload? */
-	if (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (button), "save")) == 1) {
+	switch (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (button), "operation"))) {
+	case OPERATION_FILE_UPLOAD:
+		upload (gtk_object_get_data (GTK_OBJECT (button), "folder"), gtk_file_selection_get_filename (fileselection));
+		break;
+	case OPERATION_FILE_SAVE: 
 		g_assert ((file = gtk_object_get_data (GTK_OBJECT (button), "file")) != NULL);
-		camera_file_save (file, filename_user);
+		camera_file_save (file,  gtk_file_selection_get_filename (fileselection));
 		gp_file_unref (file);
-	} else {
-		upload (gtk_object_get_data (GTK_OBJECT (button), "folder"), filename_user);
+		break;
+#ifdef GNOCAM_USES_GTKHTML
+	case OPERATION_GALLERY_OPEN:
+		g_assert ((xml_gallery = gtk_object_get_data (GTK_OBJECT (button), "xml_gallery")));
+		g_assert ((client = bonobo_widget_get_server (BONOBO_WIDGET (glade_xml_get_widget (xml_gallery, "editor")))));
+		g_assert ((interface =  bonobo_object_client_query_interface (client, "IDL:Bonobo/PersistFile:1.0", NULL)));
+        	CORBA_exception_init (&ev);
+		Bonobo_PersistFile_load (interface, gtk_file_selection_get_filename (fileselection), &ev);
+		if (ev._major != CORBA_NO_EXCEPTION) dialog_information (_("Could not save gallery."));
+	        CORBA_exception_free (&ev);
+		break;
+	case OPERATION_GALLERY_SAVE:
+		g_assert ((xml_gallery = gtk_object_get_data (GTK_OBJECT (button), "xml_gallery")));
+                g_assert ((client = bonobo_widget_get_server (BONOBO_WIDGET (glade_xml_get_widget (xml_gallery, "editor")))));
+                g_assert ((interface =  bonobo_object_client_query_interface (client, "IDL:Bonobo/PersistFile:1.0", NULL)));
+                CORBA_exception_init (&ev);
+                Bonobo_PersistFile_load (interface, gtk_file_selection_get_filename (fileselection), &ev);
+                if (ev._major != CORBA_NO_EXCEPTION) dialog_information (_("Could not load gallery."));
+		CORBA_exception_free (&ev);
+                break;
+#endif
+	default:
+		g_assert_not_reached ();
 	}
-
-	/* Clean up. */
-	g_free (filename_user);
 	gtk_widget_destroy (GTK_WIDGET (fileselection));
 }
 
 void
 on_fileselection_cancel_button_clicked (GtkButton *button, gpointer user_data)
 {
-	CameraFile*	file;
-	GtkWidget*	widget;
-	Camera*		camera;
+	GtkFileSelection*	fileselection;
+	CameraFile*		file;
+	Camera*			camera;
 
-	g_assert ((widget = GTK_WIDGET (gtk_object_get_data (GTK_OBJECT (button), "fileselection"))) != NULL);
+	g_assert ((fileselection = GTK_FILE_SELECTION (glade_xml_get_widget (gtk_object_get_data (GTK_OBJECT (button), "xml_fileselection"), "fileselection"))));
 
-	/* Clean up. */
-	if (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (button), "save")) == 1) {
+	switch (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (button), "operation"))) {
+	case OPERATION_FILE_UPLOAD:
+		g_assert ((camera = gtk_object_get_data (GTK_OBJECT (button), "camera")) != NULL);
+                gp_camera_unref (camera);
+		break;
+	case OPERATION_FILE_SAVE:
 		g_assert ((file = gtk_object_get_data (GTK_OBJECT (button), "file")) != NULL);
 		gp_file_unref (file);
-	} else {
-		g_assert ((camera = gtk_object_get_data (GTK_OBJECT (button), "camera")) != NULL);
-		gp_camera_unref (camera);
+		break;
+	case OPERATION_GALLERY_OPEN:
+		break;
+	default:
+		g_assert_not_reached ();
 	}
-	gtk_widget_destroy (widget);
+	gtk_widget_destroy (GTK_WIDGET (fileselection));
 }
 
 /*************/
@@ -84,7 +126,6 @@ upload (GtkTreeItem* folder, gchar* filename)
 	Camera*			camera;
 	gchar*			path;
 	GladeXML*		xml_fileselection;
-	GtkFileSelection*	fileselection;
 	GtkObject*		object;
         gint			k;
 	glong			j;
@@ -146,19 +187,18 @@ upload (GtkTreeItem* folder, gchar* filename)
 
 	        /* Ask the user for a filename. Pop up the file selection dialog. */
 	        g_assert ((xml_fileselection = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "fileselection")) != NULL);
-	        g_assert ((fileselection = GTK_FILE_SELECTION (glade_xml_get_widget (xml_fileselection, "fileselection"))) != NULL);
 	
 	        /* Store some data in the ok button. */
 	        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_ok_button"))) != NULL);
 	        gtk_object_set_data (object, "folder", folder);
-	        gtk_object_set_data (object, "fileselection", fileselection);
-	        gtk_object_set_data (object, "save", GINT_TO_POINTER (0));
+	        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
+	        gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_FILE_UPLOAD));
 	
 	        /* Store some data in the cancel button. */
 	        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_cancel_button"))) != NULL);
 		gtk_object_set_data (object, "camera", camera);
-	        gtk_object_set_data (object, "fileselection", fileselection);
-		gtk_object_set_data (object, "save", GINT_TO_POINTER (0));
+	        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
+		gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_FILE_UPLOAD));
 	
 	        /* Connect the signals. */
 	        glade_xml_signal_autoconnect (xml_fileselection);
@@ -208,28 +248,26 @@ camera_file_save_as (CameraFile* file)
 {
 	GladeXML*		xml_fileselection;
         GtkObject*              object;
-        GtkFileSelection*       fileselection;
 
         g_assert (file != NULL);
 
         /* Pop up the file selection dialog. */
         g_assert ((xml_fileselection = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "fileselection")) != NULL);
-        g_assert ((fileselection = GTK_FILE_SELECTION (glade_xml_get_widget (xml_fileselection, "fileselection"))) != NULL);
 
         /* Suggest the filename. */
-        gtk_file_selection_set_filename (fileselection, file->name);
+        gtk_file_selection_set_filename (GTK_FILE_SELECTION (glade_xml_get_widget (xml_fileselection, "fileselection")), file->name);
 
         /* Store some data in the ok button. */
         g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_ok_button"))) != NULL);
         gtk_object_set_data (object, "file", file);
-        gtk_object_set_data (object, "fileselection", fileselection);
-	gtk_object_set_data (object, "save", GINT_TO_POINTER (1));
+        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
+	gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_FILE_SAVE));
 
         /* Store some data in the cancel button. */
         g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_cancel_button"))) != NULL);
         gtk_object_set_data (object, "file", file);
-        gtk_object_set_data (object, "fileselection", fileselection);
-	gtk_object_set_data (object, "save", GINT_TO_POINTER (1));
+        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
+	gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_FILE_SAVE));
 
         /* Connect the signals. */
         glade_xml_signal_autoconnect (xml_fileselection);
@@ -378,4 +416,59 @@ delete (GtkTreeItem* item)
 		else dialog_information (_("Could not delete '%s/%s'!"), path, filename);
 	}
 }
+
+void
+gallery_open (GladeXML* xml_gallery)
+{
+	GladeXML*	xml_fileselection;
+	GtkObject*	object;
+
+	g_assert (xml_gallery);
+
+        /* Pop up the file selection dialog. */
+        g_assert ((xml_fileselection = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "fileselection")));
+
+        /* Store some data in the ok button. */
+        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_ok_button"))));
+        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
+	gtk_object_set_data (object, "xml_gallery", xml_gallery);
+        gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_GALLERY_OPEN));
+
+        /* Store some data in the cancel button. */
+        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_cancel_button"))));
+        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
+        gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_GALLERY_OPEN));
+
+        /* Connect the signals. */
+        glade_xml_signal_autoconnect (xml_fileselection);
+}
+
+void
+gallery_save_as (GladeXML* xml_gallery)
+{
+        GladeXML*       xml_fileselection;
+        GtkObject*      object;
+
+        g_assert (xml_gallery);
+
+        /* Pop up the file selection dialog. */
+        g_assert ((xml_fileselection = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "fileselection")));
+
+        /* Store some data in the ok button. */
+        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_ok_button"))));
+        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
+        gtk_object_set_data (object, "xml_gallery", xml_gallery);
+        gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_GALLERY_SAVE));
+
+        /* Store some data in the cancel button. */
+        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_cancel_button"))));
+        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
+        gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_GALLERY_SAVE));
+
+        /* Connect the signals. */
+        glade_xml_signal_autoconnect (xml_fileselection);
+}
+
+
+
 

@@ -40,6 +40,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.9  1999/06/21 18:26:43  ole
+ * Removed deactivate_button(browse_button);
+ *
  * Revision 1.8  1999/06/21 18:04:12  ole
  * 1999-06-21  Ole Aamot  <oleaa@ifi.uio.no>
  *
@@ -214,7 +217,6 @@ Then, re-run the HTML Gallery.");
 	if (num_selected == 0) {
 		error_dialog(
 			"You need to select images to add\nto the gallery.");
-		deactivate_button(browse_button);
 		return;
 	}
 

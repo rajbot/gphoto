@@ -1,3 +1,7 @@
+2001-07-06	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
+	* gnome-vfs-module/Makefile.am: Add BONOBO_[LIBS,CFLAGS].
+
 2001-06-12	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
 	* configure.in: Version 0.10 - there are people out there that want

@@ -6,10 +6,12 @@ modules_LTLIBRARIES = libvfs-camera.la
 libvfs_camera_la_SOURCES = camera-method.c
 
 INCLUDES =\
- $(VFS_CFLAGS)
+ $(VFS_CFLAGS)\
+ $(BONOBO_CFLAGS)
 
 libvfs_camera_la_LIBADD =\
- $(VFS_LIBS)
+ $(VFS_LIBS)\
+ $(BONOBO_LIBS)
 
 libvfs_camera_la_LDFLAGS = -export_dynamic -avoid-version
 

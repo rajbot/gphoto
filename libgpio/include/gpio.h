@@ -156,12 +156,13 @@ struct gpio_device {
 	struct usb_device *usb_device;
 #endif
 
+	int debug_level;
 };
 
 /* gpio Core functions
    -------------------------------------------------------------- */
 
-	void gpio_debug_printf (char *format, ...);
+	void gpio_debug_printf (int target_debug_level, int debug_level, char *format, ...);
 		/* issues debugging messages */
 
 	int gpio_init (int debug_level);
@@ -199,6 +200,10 @@ gpio_device *gpio_new		(gpio_device_type type);
 				unsuccessful: GPIO_ERROR
 		*/
 
+	int gpio_set_debug (gpio_device *dev, int debug_level);
+		/* 
+			Set the debugging level specific to a device 
+		*/
 
 	int gpio_open       	(gpio_device *dev);
 		/* Open the device for reading and writing

@@ -284,63 +284,41 @@ void
 camera_tree_folder_populate (GtkTreeItem* folder)
 {
 	GnomeVFSURI*		uri;
-        CameraList              folder_list, file_list;
-        CameraListEntry*        folder_list_entry;
-        CameraListEntry*        file_list_entry;
-        Camera*                 camera;
 	gchar*			path;
-	gchar*			message;
-	gchar*			camera_name;
-        gint                    folder_list_count, file_list_count;
+	gchar*			tmp;
         gint                    i;
-	gint			result;
+	Bonobo_Storage_DirectoryList* 	list;
+	CORBA_Environment		ev;
 
-        g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (folder), "camera"));
-	g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (folder), "uri"));
 	g_return_if_fail (folder->subtree);
-	g_return_if_fail (camera_name = ((frontend_data_t*) camera->frontend_data)->name);
-	g_return_if_fail (path = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_path (uri)));
+	g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (folder), "uri"));
 
-//FIXME: Migrate the following stuff to use our Bonobo_Storage.
-
-        /* Get file and folder list. */
-        if ((result = gp_camera_folder_list (camera, &folder_list, path)) != GP_OK) {
-                message = g_strdup_printf ("Could not get folder list for folder '%s'!\n(%s)", path, gp_camera_result_as_string (camera, result));
-		gnome_error_dialog_parented (message, main_window);
-		g_free (message);
+	CORBA_exception_init (&ev);
+	list = Bonobo_Storage_listContents (gtk_object_get_data (GTK_OBJECT (folder), "corba_storage"), "", Bonobo_FIELD_TYPE, &ev);
+	if (!BONOBO_EX (&ev)) {
+		for (i = 0; i < list->_length; i++) {
+			switch (list->_buffer [i].type) {
+			case Bonobo_STORAGE_TYPE_DIRECTORY:
+				camera_tree_folder_add (GTK_TREE (folder->subtree), NULL, gnome_vfs_uri_append_path (uri, list->_buffer [i].name));
+				break;
+			case Bonobo_STORAGE_TYPE_REGULAR:
+				camera_tree_file_add (GTK_TREE (folder->subtree), gnome_vfs_uri_append_file_name (uri, list->_buffer [i].name));
+				break;
+			default:
+				g_assert_not_reached ();
+			}
+		}
+		//FIXME: Do I have to free 'list'?
+	} else {
+		path = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_path (uri));
+		tmp = g_strdup_printf ("Could not get contents of folder '%s'!\n(%s)", path, bonobo_exception_get_text (&ev));
 		g_free (path);
-                return;
-        }
-        if ((result = gp_camera_file_list (camera, &file_list, path)) != GP_OK) {
-                message = g_strdup_printf ("Could not get file list for folder '%s'!\n(%s)", path, gp_camera_result_as_string (camera, result));
-		gnome_error_dialog_parented (message, main_window);
-		g_free (message);
-		g_free (path);
-                return;
-        }
-
-        /* Add folders to tree. */
-        folder_list_count = gp_list_count (&folder_list);
-        if (folder_list_count > 0) {
-                for (i = 0; i < folder_list_count; i++) {
-                        folder_list_entry = gp_list_entry (&folder_list, i);
-                        camera_tree_folder_add (GTK_TREE (folder->subtree), NULL, gnome_vfs_uri_append_path (uri, folder_list_entry->name));
-                }
-        }
-
-        /* Add files to tree. */
-        file_list_count = gp_list_count (&file_list);
-        if (file_list_count > 0) {
-                for (i = 0; i < file_list_count; i++) {
-                        file_list_entry = gp_list_entry (&file_list, i);
-                        camera_tree_file_add (GTK_TREE (folder->subtree), gnome_vfs_uri_append_file_name (uri, file_list_entry->name));
-                }
-        }
+		gnome_error_dialog_parented (tmp, main_window);
+		g_free (tmp);
+	}
+	CORBA_exception_free (&ev);
 
 	gtk_object_set_data (GTK_OBJECT (folder), "populated", GINT_TO_POINTER (1));
-
-	/* Clean up. */
-	g_free (path);
 }
 
 void
@@ -408,11 +386,6 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
 {
 	GtkWidget*		item;
 	GtkWidget*		subtree;
-	CameraList		folder_list;
-	CameraList		file_list;
-	gint			folder_list_count;
-	gint			file_list_count;
-	gint			result;
 	gchar*			path;
 	gchar*			tmp;
 	GtkTargetEntry 		target_table[] = {{"text/uri-list", 0, 0}};
@@ -422,7 +395,6 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
 
 	g_return_if_fail (tree);
 	g_return_if_fail (uri);
-	g_return_if_fail (path = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_path (uri)));
 
 	/* Root items (camera != NULL) differ from non-root items. */
 
@@ -451,10 +423,11 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
 		g_free (tmp);
 	}
 	if (BONOBO_EX (&ev)) {
+		path = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_basename (uri));
 		tmp = g_strdup_printf (_("Could not get storage for folder '%s'!\n(%s)"), path, bonobo_exception_get_text (&ev));
+		g_free (path);
 		gnome_error_dialog_parented (tmp, main_window);
 		g_free (tmp);
-		g_free (path);
 		CORBA_exception_free (&ev);
 		return;
 	}
@@ -496,34 +469,11 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
 	gtk_object_set_data (GTK_OBJECT (item), "corba_storage", corba_storage);
         gtk_object_set_data (GTK_OBJECT (item), "checked", GINT_TO_POINTER (1));
 
-//FIXME: Use the Bonobo_Storage for the following.
-
-        /* Do we have folders? */
-        if ((result = gp_camera_folder_list (camera, &folder_list, path)) != GP_OK) {
-        	tmp = g_strdup_printf (_("Could not get folder list for folder '%s'!\n(%s)"), path, gp_camera_result_as_string (camera, result));
-		gnome_error_dialog_parented (tmp, main_window);
-		g_free (tmp);
-                folder_list_count = 0;
-        } else folder_list_count = gp_list_count (&folder_list);
-        gtk_object_set_data (GTK_OBJECT (item), "folder_list_count", GINT_TO_POINTER (folder_list_count));
-
-        /* Do we have files? */
-        if ((result = gp_camera_file_list (camera, &file_list, path)) != GP_OK) {
-                tmp = g_strdup_printf (_("Could not get file list for folder '%s'!\n(%s)"), path, gp_camera_result_as_string (camera, result));
-		gnome_error_dialog_parented (tmp, main_window);
-		g_free (tmp);
-                file_list_count = 0;
-        } else file_list_count = gp_list_count (&file_list);
-        gtk_object_set_data (GTK_OBJECT (item), "file_list_count", GINT_TO_POINTER (file_list_count));
-
         /* Create the subtree. Don't populate it yet. */
         subtree = gtk_tree_new ();
         gtk_widget_ref (subtree);
         gtk_widget_show (subtree);
         gtk_tree_item_set_subtree (GTK_TREE_ITEM (item), subtree);
-
-	/* Clean up. */
-	g_free (path);
 }
 
 void

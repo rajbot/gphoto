@@ -6,6 +6,8 @@ then
     metadir="${PWD}"
 fi
 
+run_niced=false
+
 cvsmodulelistsource="${metadir}/cvs-module-list"
 cvsmodulelist="${metadir}/cvs-module-list.filtered"
 buildtoollistsource="${metadir}/build-tool-list"
@@ -30,11 +32,11 @@ fail() {
 
 cmd() {
     echo "#> ${@}" >&2
-    if [ "$1" = "cd" ]
+    if $run_niced && [ "$1" != "cd" ]
     then
-	"${@}"
-    else
 	nice "${@}"
+    else
+	"${@}"
     fi
     status=$?
     if [ $status -ne 0 ]

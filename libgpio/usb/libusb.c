@@ -31,7 +31,7 @@
 #include <usb.h>
 #include "gpio.h"
 
-#undef GPIO_USB_DEBUG
+#define GPIO_USB_DEBUG
 
 int gpio_usb_list(gpio_device_info *list, int *count);
 int gpio_usb_init(gpio_device *dev);
@@ -81,9 +81,6 @@ gpio_operations *gpio_library_operations () {
 
 int gpio_library_list(gpio_device_info *list, int *count)
 {
-	usb_init();
-	usb_find_busses();
-	usb_find_devices();
 
 	list[*count].type = GPIO_DEVICE_USB;
 	strcpy(list[*count].name, "Universal Serial Bus");
@@ -96,10 +93,15 @@ int gpio_library_list(gpio_device_info *list, int *count)
 
 int gpio_usb_init(gpio_device *dev)
 {
+	usb_init();
+	usb_find_busses();
+	usb_find_devices();
+	return (GPIO_OK);
 }
 
 int gpio_usb_exit(gpio_device *dev)
 {
+	return (GPIO_OK);
 }
 
 int gpio_usb_open(gpio_device *dev)
@@ -230,9 +232,10 @@ int gpio_usb_find_device_lib(gpio_device * d, int idvendor, int idproduct)
 {
 	struct usb_bus *bus;
 	struct usb_device *dev;
-
+printf("here\n");
 	for (bus = usb_busses; bus; bus = bus->next) {
 		for (dev = bus->devices; dev; dev = dev->next) {
+printf("vendor=%x product=%x\n", dev->descriptor.idVendor, dev->descriptor.idProduct);
 			if ((dev->descriptor.idVendor == idvendor) &&
 			    (dev->descriptor.idProduct == idproduct)) {
 				d->usb_device = dev;

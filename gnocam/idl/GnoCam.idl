@@ -22,9 +22,12 @@ module GNOME {
 	};
 
 	interface GnoCam : Bonobo::Unknown {
+		typedef sequence<string> CameraList;
 
 		exception NotFound {};
 	
+		CameraList getCameraList ();
+
 		Camera getCamera ()
 			raises (NotFound, Cancelled);
 		Camera getCameraByName (in string name)

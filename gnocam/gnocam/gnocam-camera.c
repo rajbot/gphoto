@@ -210,6 +210,7 @@ impl_GNOME_Camera_captureImage (PortableServer_Servant servant,
 
 	c = GNOCAM_CAMERA (bonobo_object_from_servant (servant));
 
+	g_message ("Creating GnoCamCapture...");
 	capture = gnocam_capture_new (c->priv->camera, ev);
 	if (BONOBO_EX (ev))
 		return;

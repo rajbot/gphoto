@@ -32,7 +32,7 @@ listener_cb (BonoboListener *listener, gchar *event_name, CORBA_any *any,
 		bonobo_object_release_unref (camera, NULL);
 		CHECK (ev);
 
-		g_message ("Getting stream for '%s'...",
+		g_message ("Getting stream for '%s' (preview only)...",
 			   BONOBO_ARG_GET_STRING (any));
 		stream = Bonobo_Storage_openStream (storage,
 					BONOBO_ARG_GET_STRING (any),
@@ -89,6 +89,8 @@ main (int argc, char *argv[])
 	CORBA_Object gnocam;
 	CORBA_Environment ev;
 	Bonobo_Storage storage;
+	GNOME_GnoCam_CameraList *list;
+	int i;
 
 	gtk_init (&argc, &argv);
 
@@ -101,6 +103,15 @@ main (int argc, char *argv[])
 	g_message ("Getting GnoCam...");
 	gnocam = oaf_activate_from_id ("OAFIID:GNOME_GnoCam", 0, NULL, &ev);
 	CHECK (&ev);
+
+	g_message ("Getting list of cameras...");
+	list = GNOME_GnoCam_getCameraList (gnocam, &ev);
+	CHECK (&ev);
+
+	g_message ("... done. Got the following camera(s):");
+	for (i = 0; i < list->_length; i++)
+		g_message ("  %2i: '%s'", i, list->_buffer[i]);
+	CORBA_free (list);
 
 	g_message ("Getting default Camera...");
 	camera = GNOME_GnoCam_getCamera (gnocam, &ev);

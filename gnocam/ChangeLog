@@ -1,23 +1,29 @@
-2001-08-03	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+2001-08-09  Lutz Müller <urc8@rz.uni-karlsruhe.de>
+
+	* gnocam/gnocam-main.c: (impl_GNOME_GnoCam_getCameraList): New
+	* idl/GnoCam.idl: Introduce getCameraList
+	* tests/test-gnocam.c: Test getCameraList
+
+2001-08-03  Lutz Müller <urc8@rz.uni-karlsruhe.de>
 
 	* gnocam/gnocam-main.c:
 	* gnocam/gnocam-capture.c: Let the dialogs disappear immediately after
 	user clicked on the buttons.
 
-2001-08-01	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+2001-08-01  Lutz Müller <urc8@rz.uni-karlsruhe.de>
 
 	* tests/test-gnocam.c:
 	* gnocam/gnocam-capture.c:
 	* gnocam/gnocam-camera.c: Make capturing of images async.
 
-2001-07-31	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+2001-07-31  Lutz Müller <urc8@rz.uni-karlsruhe.de>
 
 	* configure.in:
 	* gnocam/Makefile.am:
 	* capplet/Makefile.am: Fix "make distcheck".
 	* gnocam.spec.in: Removed.
 
-2001-07-31	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+2001-07-31  Lutz Müller <urc8@rz.uni-karlsruhe.de>
 
 	* gnocam/gnocam-camera-selector.c: Make UI nicer. Fix error message.
 	* libgnocam/gnocam-capplet-model.c: Don't loop forever if table is

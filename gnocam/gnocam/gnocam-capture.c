@@ -167,6 +167,9 @@ gnocam_capture_new (Camera *camera, CORBA_Environment *ev)
 	GnoCamCapture *new;
 	const gchar *buttons[] = {_("Capture"), GNOME_STOCK_BUTTON_CANCEL,
 				  NULL};
+	
+	gtk_widget_push_colormap (gdk_rgb_get_cmap ());
+	gtk_widget_push_visual (gdk_rgb_get_visual ());
 
 	bonobo_return_val_if_fail (camera, NULL, ev);
 

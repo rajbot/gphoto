@@ -21,6 +21,31 @@ struct _GnoCamMainPrivate
 	GHashTable *hash_table;
 };
 
+static GNOME_GnoCam_CameraList *
+impl_GNOME_GnoCam_getCameraList (PortableServer_Servant servant,
+				 CORBA_Environment *ev)
+{
+	GnoCamMain *gnocam_main;
+	GSList *l;
+	GNOME_GnoCam_CameraList *list;
+	int i;
+	
+	gnocam_main = GNOCAM_MAIN (bonobo_object_from_servant (servant));
+	l = gconf_client_get_list (gnocam_main->priv->client,
+				   "/apps/" PACKAGE "/cameras",
+				   GCONF_VALUE_STRING, NULL);
+
+	list = GNOME_GnoCam_CameraList__alloc ();
+	list->_length = (g_slist_length (l) + 2) / 3;
+	list->_buffer = CORBA_sequence_CORBA_string_allocbuf (list->_length);
+	CORBA_sequence_set_release (list, TRUE);
+	
+	for (i = 0; i < g_slist_length (l); i += 3)
+		list->_buffer [i] = g_slist_nth_data (l, i);
+
+	return (list);
+}
+
 static void
 initialize_camera (GSList *list, Camera *camera, const gchar *name,
 		   CORBA_Environment *ev)
@@ -51,6 +76,8 @@ impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant,
 	GnoCamCamera *gnocam_camera;
 	Camera *camera = NULL;
 	GSList *list;
+
+	g_message ("impl_GNOME_GnoCam_getCamera");
 
 	gnocam_main = GNOCAM_MAIN (bonobo_object_from_servant (servant));
 	CHECK_RESULT (gp_camera_new (&camera), ev);
@@ -165,9 +192,7 @@ impl_GNOME_GnoCam_getCameraByName (PortableServer_Servant servant,
 		return GNOME_GnoCam_getCamera (BONOBO_OBJREF (gnocam_main), ev);
 
 	camera = g_hash_table_lookup (gnocam_main->priv->hash_table, name);
-	if (camera)
-		gp_camera_ref (camera);
-	else {
+	if (!camera) {
 		CHECK_RESULT (gp_camera_new (&camera), ev);
 		if (BONOBO_EX (ev))
 			return (CORBA_OBJECT_NIL);
@@ -176,10 +201,11 @@ impl_GNOME_GnoCam_getCameraByName (PortableServer_Servant servant,
 			gp_camera_unref (camera);
 			return (CORBA_OBJECT_NIL);
 		}
+		g_hash_table_insert (gnocam_main->priv->hash_table,
+				     g_strdup (name), camera);
 	}
 
 	gnocam_camera = gnocam_camera_new (camera, ev);
-	gp_camera_unref (camera);
 	if (BONOBO_EX (ev))
 		return (CORBA_OBJECT_NIL);
 
@@ -261,7 +287,8 @@ gnocam_main_class_init (GnoCamMainClass *klass)
 	object_class->finalize = gnocam_main_finalize;
 
 	epv = &klass->epv;
-	epv->getCamera = impl_GNOME_GnoCam_getCamera;
+	epv->getCameraList   = impl_GNOME_GnoCam_getCameraList;
+	epv->getCamera       = impl_GNOME_GnoCam_getCamera;
 	epv->getCameraByName = impl_GNOME_GnoCam_getCameraByName;
 }
 

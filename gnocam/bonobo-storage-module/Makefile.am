@@ -8,10 +8,14 @@ INCLUDES = \
  $(GNOME_INCLUDEDIR)
 
 CFLAGS = @CFLAGS@\
+ `gphoto2-port-config --cflags`\
  `gphoto2-config --cflags`\
- `gpio-config --cflags`\
  `gconf-config --cflags`\
  `xml-config --cflags`
+
+LDFLAGS = @LDFLAGS@\
+ `gnome-config --libs libglade gdk_pixbuf gnomeui vfs xml bonobox gal`\
+ `gconf-config --libs gconf gconf-gtk`
 
 common_ldflags = -avoid-version
 
@@ -25,6 +29,6 @@ libstorage_camera_la_SOURCES =\
 
 libstorage_camera_la_LDFLAGS =\
  $(GPHOTO2_LIBS)\
- $(GPIO_LIBS)\
  $(GCONF_LIBS)\
+ $(VFS_LIBS)\
  $(common_ldflags)

@@ -58,6 +58,10 @@ static GnomeVFSResult do_seek (
 	GnomeVFSSeekPosition		whence,
 	GnomeVFSFileOffset		offset,
 	GnomeVFSContext*		context);
+static GnomeVFSResult do_tell (
+	GnomeVFSMethod*			method,
+	GnomeVFSMethodHandle*		method_handle,
+	GnomeVFSFileOffset*		offset_return);
 static GnomeVFSResult do_open_directory (
 	GnomeVFSMethod*			method,
 	GnomeVFSMethodHandle**		handle,
@@ -122,13 +126,14 @@ static GnomeVFSResult do_set_file_info (
 /********************/
 
 static GnomeVFSMethod method = {
+	sizeof (GnomeVFSMethod),
 	do_open,
 	do_create,
 	do_close,
 	do_read,
 	do_write,
 	do_seek,
-	NULL, 				/* do_tell 			*/
+	do_tell,
 	NULL, 				/* do_truncate_handle		*/
 	do_open_directory,
 	do_close_directory,
@@ -149,12 +154,6 @@ static GnomeVFSMethod method = {
 /*************/
 /* Functions */
 /*************/
-
-int gp_frontend_message (Camera* camera, char *message)
-{
-	g_print ("MESSAGE: %s\n", message);
-	return (GP_OK);
-}
 
 GnomeVFSMethod*
 vfs_module_init (const gchar* method_name, const gchar* args)
@@ -181,7 +180,7 @@ vfs_module_init (const gchar* method_name, const gchar* args)
 	
 	/* GPhoto */
 	gp_init (GP_DEBUG_NONE);
-	gp_frontend_register (NULL, NULL, gp_frontend_message, NULL, NULL);
+	gp_frontend_register (NULL, NULL, NULL, NULL, NULL);
 	
 	return &method;
 }
@@ -330,6 +329,21 @@ static GnomeVFSResult do_seek (
 	default:
 		return (GNOME_VFS_ERROR_BAD_PARAMETERS);
 	}
+}
+
+static GnomeVFSResult do_tell (
+	GnomeVFSMethod*		method,
+	GnomeVFSMethodHandle*	handle,
+	GnomeVFSFileOffset*	offset_return)
+{
+	file_handle_t*		file_handle = NULL;
+
+	g_return_val_if_fail (file_handle = (file_handle_t*) handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
+
+	g_print ("CAMERA: do_tell\n");
+
+	*offset_return = file_handle->position;
+	return GNOME_VFS_OK;
 }
 
 static GnomeVFSResult do_open_directory (

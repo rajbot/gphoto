@@ -24,12 +24,11 @@ libvfs_camera_la_LIBADD =\
 libvfs_camera_la_LDFLAGS =\
  -export_dynamic\
  -avoid-version\
- $(GPHOTO2_LIBS)\
- $(GPIO_LIBS)
+ $(GPHOTO2_LIBS)
 
 CFLAGS = @CFLAGS@\
+ `gphoto2-port-config --cflags`\
  `gphoto2-config --cflags`\
- `gpio-config --cflags`\
  `gnome-config --cflags vfs`\
  `gconf-config --cflags`\
  `xml-config --cflags`\

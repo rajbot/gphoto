@@ -1,0 +1,7 @@
+Makefile.am
+Makefile.in
+*.o
+bonobo-moniker-camera
+Bonobo_Moniker_camera.oaf
+.libs
+.deps

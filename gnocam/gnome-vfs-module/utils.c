@@ -18,8 +18,6 @@ GNOME_VFS_RESULT (int result)
 		return (GNOME_VFS_OK);
 	case GP_ERROR:
 		return (GNOME_VFS_ERROR_GENERIC);
-	case GP_ERROR_NONCRITICAL:
-		return (GNOME_VFS_ERROR_GENERIC);
 	case GP_ERROR_BAD_PARAMETERS:
 		return (GNOME_VFS_ERROR_BAD_PARAMETERS);
 	case GP_ERROR_IO:
@@ -81,11 +79,11 @@ camera_new_by_uri (GnomeVFSURI* uri, GSList* list, GnomeVFSContext* context, Gno
 	strcpy (camera->model, model);
 	if (!strcmp ("Directory Browse", model)) strcpy (camera->port->path, "");
 	else {
-		for (i = 0; i < gp_port_count (); i++) {
-			if (gp_port_info (i, camera->port) != GP_OK) continue;
+		for (i = 0; i < gp_port_count_get (); i++) {
+			if (gp_port_info_get (i, camera->port) != GP_OK) continue;
 			if (!strcmp (camera->port->name, port)) break;
 		}
-		if ((i == gp_port_count ()) || (i < 0)) return (NULL);
+		if ((i == gp_port_count_get ()) || (i < 0)) return (NULL);
 		camera->port->speed = atoi (speed);
 	}
 

@@ -312,6 +312,9 @@ bonobo_storage_camera_class_init (BonoboStorageCameraClass *class)
 	sclass->erase          = camera_erase;
 
 	object_class->destroy = bonobo_storage_camera_destroy;
+
+	/* Make sure gnome-vfs is initialized. */
+	if (!gnome_vfs_initialized ()) gnome_vfs_init ();
 }
 
 GtkType

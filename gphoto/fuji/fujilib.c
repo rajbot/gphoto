@@ -483,19 +483,23 @@ void get_command_list (void)
 
 int get_picture_info(int num,char *name){
 
-          if(fuji_debug)  printf("Getting name...");
+          if(fuji_debug)  fprintf(stderr,"Getting name...");
 
 	  fflush(stdout);
 	  strncpy(name,dc_picture_name(num),100);
 
-	  if (fuji_debug) printf("%s\n",name);
+	  if (fuji_debug) fprintf(stderr,"%s\n",name);
 
 	  /*
 	   * To find the picture number, go to the first digit. According to
 	   * recent Exif specs, n_off can be either 3 or 4.
 	   */
 	  if (has_cmd[0x17])   fuji_size=dc_picture_size(num);
-	  else fuji_size=70000;  /* this is an overestimation for DS7 */
+	  else {
+	    if (fuji_debug)
+	    fuji_size=70000;  /* this is an overestimation for DS7 */
+	    fprintf(stderr,"Image size not obtained, guessing %d\n",fuji_size);
+	  };
 	  return (fuji_size);
 };
 
@@ -510,12 +514,12 @@ void get_picture_list (void)
 	free(pinfo);
 	pinfo = calloc(pictures+1, sizeof(struct pict_info));
 	for (i = 1; i <= pictures; i++) {
-	        if (fuji_debug) printf("Getting name..."); /* mgm1 debug*/
+	        if (fuji_debug) fprintf(stderr,"Getting name...");
 	        fflush(stdout);
 	        name = strdup(dc_picture_name(i));
 	        pinfo[i].name = name;
 
-		if (fuji_debug) printf("%s\n",name); /* mgm1 debug*/
+		if (fuji_debug) fprintf(stderr,"%s\n",name);
 
 		/*
 		 * To find the picture number, go to the first digit. According to
@@ -539,7 +543,7 @@ void list_pictures (void)
 	for (i = 1; i <= pictures; i++) {
 		pi = &pinfo[i];
 		ex = pi->ondisk ? '*' : ' ';
-		printf("%3d%c  %12s  %7d\n", i, ex, pi->name, pi->size);
+		fprintf(stderr,"%3d%c  %12s  %7d\n", i, ex,pi->name, pi->size);
 	}
 }
 
@@ -630,8 +634,7 @@ int download_picture(int n,int thumb,struct Image *im)
 
 	if (!thumb) {
 	        fuji_size=get_picture_info(n,name);
-
-		if (fuji_debug) printf("%3d   %12s  \n", n, name);
+		if (fuji_debug) fprintf(stderr,"%3d   %12s  \n", n, name);
 	}
 	else fuji_size=10500;  /* Probly not same for all cams, better way ? */
 	im->image_size=fuji_size;
@@ -640,7 +643,8 @@ int download_picture(int n,int thumb,struct Image *im)
 	t1 = times(0);
 	if (cmd2(0, (thumb?0:0x02), n, im->image)==-1) return(-1);
 
-	if (fuji_debug) printf("Download %s: %4d actual bytes vs %4d bytes\n", 
+	if (fuji_debug) fprintf(stderr,
+				"Download %s:%4d actual bytes vs %4d bytes\n", 
 			       (thumb?"thumbnail":"picture"),fuji_count , 
 			       im->image_size);
 	if (im->image_size>(fuji_count*2)) {
@@ -652,8 +656,9 @@ int download_picture(int n,int thumb,struct Image *im)
 	t2 = times(0);
 
 	if (fuji_debug){
-	        printf("%3d seconds, ", (int)(t2-t1) / CLK_TCK);
-		printf("%4d bytes/s\n", fuji_count * CLK_TCK / (int)(t2-t1));
+	        fprintf(stderr,"%3d seconds, ", (int)(t2-t1) / CLK_TCK);
+		fprintf(stderr,"%4d bytes/s\n", 
+			fuji_count * CLK_TCK / (int)(t2-t1));
 	};
 
 	if (has_cmd[17]&&!thumb){
@@ -814,8 +819,8 @@ struct Image *fuji_get_picture (int picture_number,int thumbnail){
   exifparser exifdat;
 
 
-  if (fuji_debug) printf("fuji_get_picture called for #%d %s\n",picture_number,
-			 thumbnail?"thumb":"photo");
+  if (fuji_debug) fprintf(stderr,"fuji_get_picture called for #%d %s\n",
+			  picture_number, thumbnail?"thumb":"photo");
 
   if (fuji_init()) return(0);/*goto bugout*/;
 

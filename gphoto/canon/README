@@ -1,0 +1,67 @@
+This driver is for the Canon PowerShot A50. It may work with similar
+Canon models, such as the A5 and the A5 Zoom. It doesn't work with
+the PowerShot 350. However, the PS350 uses a vaguely similar protocol,
+so some parts of the sources can probably be shared.
+
+The driver caches a lot of information. If the camera status changes
+during a session or if the driver gets stuck for some other reason,
+the caches can be manually flushed using "Configure camera".
+
+
+Change history
+==============
+
+Version 2 (29-AUG-1999)
+---------
+
+ - integrated into gphoto-2.3.5 (from CVS)
+ - added support for large directories (listing occupies > 1 message)
+ - receive timeout is now raised from 1 to 10 seconds after first response
+ - renamed a50_select_disk to a50_disk_info. It now returns disk capacity
+   and available space.
+ - completed CRC table
+ - properly integrated into gPhoto
+ - lots of cleanups
+
+
+Version 1 (27-AUG-1999)
+---------
+
+ - a little bit of code cleanup, added a50.h, doc/, full recursive download
+   in canon.c, and fixed a few documentation bugs, adjusted send/receive
+   buffers
+ - a50_send_msg incremented seq_tx when skipping retransissions while waiting
+   for ACK
+
+
+Version 0 (27-AUG-1999)
+---------
+
+ - initial release which demonstrates most functions in a way that's
+   completely useless for gPhoto
+
+
+To do
+=====
+
+- code structure is still pretty ugly. Things that absolutely need fixing:
+  - command codes and fffbs are spread all over the place
+  - "ping" (empty message) should probably be merged into normal message
+    handling; perhaps also 03 message -> wait_for_ack can be merged too
+  - psa50.c must not invoke GUI functions
+  - change many fprintf(stderr,... to GUI calls or callbacks
+- improve error handling: distinguish between severe and harmless errors
+  (e.g. duplicate EOT vs. ten timeouts in a row)
+- move camera bringup to a50.c
+- find out how to generate thumbnails
+- find out how error recovery works (need traces)
+- find out how higher bit rates work
+- get traces for other operations:
+   - idle period/restart (keepalive ?)
+   - delete file
+   - complete shutdown
+   - get/set date
+   - get battery status
+   - upload file, create directory
+- find out how to avoid blocking gPhoto during transfer
+- improve the performance of the serial interface (fewer system calls)

@@ -1,0 +1,284 @@
+Lower protocol layers
+=====================
+
+The following figure illustrates the lower layers of the protocol
+used by some Canon PowerShot A-series cameras:
+
+[ Upper protocol layers ]	Example: 00 C0 01
+   | ^
+   | |		   00 C0    01
+  <CRC>
+   | |		   00 C0    01 12 34	(fictious CRC)
+  <Escaping>
+   | |		   00 7E E0 01 12 34
+  <Framing>
+   | |		C0 00 7E E0 01 12 34 C1
+   v |
+[ Wire format ]
+
+The upper layers are described in the file "UpperLayers" in this
+directory.
+
+
+0) Serial timing
+----------------
+
+Initialization: PC sends sequences of "U" bytes at 9600 bps until the
+camera responds. Each sequence has a length of 2-8 bytes. The interval
+between sequences is 0.9-1.04 sec (measured for 8 bytes).
+
+It is not known yet how the bit rate can be changed.
+
+Afterwards, a larger timeout should be set. E.g. retrieving a directory
+with 1200 files takes several seconds.
+
+
+1) Framing
+----------
+
+Each message begins with the byte C0 and ends with the byte C1. The length
+of a message including the framing bytes and any escape bytes (see below)
+never exceeds 1024 bytes.
+
+
+2) Escaping
+-----------
+
+The value 7E is used to XOR the following byte with the value 0x20. This
+is used for the following three combinations:
+  7E 5E -> 7E
+  7E E0 -> C0
+  7E E1 -> C1
+
+
+3) CRC
+------
+
+The last two bytes of a message (without framing and escaping) contain a
+16-bit "CCITT" CRC in little-endian order. The CRC is calculated over the
+entire message, without framing and escaping, and without including the
+CRC bytes. The CRC generator [1] is initialized to a length-dependent
+value. The algorithim for the initial value is not known. However, a
+table of values emitted by the camera has been compiled and is in
+crc.c:crc_init. It is indexed by the length, i.e. the number of bytes over
+which the CRC is taken.
+
+
+[1] Assuming the use of
+    http://www.cse.fau.edu/~sam/course/dc_htm/src_dir/crc_att.c,
+    generator polynom 0102010 (octal), the initial value of "crc" is
+    the CRC generator's initial value (in the original code always
+    zero).
+
+
+Upper protocol layers
+=====================
+
+Communication is with messages, which may be split into several fragments,
+which are then sent as individual packets. Packets are framed as described
+earlier in this file.
+
+
+Packet level
+------------
+
+Each message ends with an EOT packet, which is confirmed using an ACK
+packet.
+
+Each packet consists of the following two-byte header:
+
+<sequence> <ptype>
+
+There are two sequence numbers: the message sequence number <mseq>
+and the fragment sequence number <fseq>. They are counted independently
+and start at zero. <mseq> is reset at the beginning of a session,
+while <fseq> is reset at the beginning of each message.
+
+The following packet types are known:
+  00	Message fragment
+  03	Unknown 03
+  04	EOT
+  05	ACK
+  06	Compatibility?
+
+A packet with type 03 is sent once, early in the initialization.
+
+EOT has the following format:
+xx 04 xx 00 00 00
+|     |
+|     indication of the message length. Known values:
+<mseq>		00	empty message (no fragments)
+		01	short message (one fragment)
+		ff	maximum length data packet, more to follow
+		else	data packet, at end (observed values: 0f, 7f)
+
+ACK has the following format:
+xx 05 00 00 00 00
+|
+<mseq>
+
+A packet with type 06 is sent once, as the first packet coming from
+the camera. It contains a length, just like a normal message fragment,
+but the message structure is different.
+
+An empty message can be used to test if the camera is still responding.
+If yes, it will respond with an ACK. Example:
+PC->CAM  xx 04 00 00 00 00
+CAM->PC  xx 05 00 00 00 00
+
+
+Message fragment level
+----------------------
+
+Message fragments have the following structure:
+
+xx 00 xx xx ...
+|     |  |  |
+|     |  |  fragment data
+|     |  data length, MSB
+|     data length, LSB
+<fseq>
+
+The data length is the length (in bytes) of the fragment data that
+follows the length. Fragment data is simply concatenated to form the
+complete message.
+
+
+Message level
+-------------
+
+All messages (except the one with type 03) have the following structure:
+
+00 02 00 00  xx 00 00 xx  xx xx 00 00  ...
+	     |        |   |  |         |
+	     |        |   |  |         message payload
+             |        |   |  message length, MSB
+             |        |   message length, LSB
+	     |        direction code <dir>
+             message type <mtype>
+
+The message length is the length of the entire message, including the
+header shown above.
+
+The first four bytes of the message payload <fffb> seem to depend on
+the message type. The following combinations have been sighted:
+
+<mtype> <dir> <fffb>	    Operation
+01      11    6a 08 79 04   Download image request
+01      11    aa 06 79 04   Download thumbnail request
+01      12    14 f7 8a 00   Identify camera request
+01      21    6a 08 79 04   Image data
+01      21    aa 06 79 04   Thumbnail data
+01      22    14 f7 8a 00   Identify camera response
+09      11    d8 f7 8a 00   Disk info request
+09      21    d8 f7 8a 00   Disk info response
+0a      11    dc f7 8a 00   Get disk(s) request
+0a      12    70 f6 8a 00   Unknown
+0a      21    dc f7 8a 00   Get disk(s) response
+0a      22    70 f6 8a 00   Unknown response
+0b      11    94 f6 8a 00   List without date request
+0b      11    a8 f6 8a 00   List with date request
+0b      21    94 f6 8a 00   List without date response
+0b      21    a8 f6 8a 00   List with date response
+
+Below, I'm describing some message contents, without <fffb>.
+
+
+Identify camera
+---------------
+
+The identify camera request has no data.
+
+The identify camera response has the following structure:
+00 00 00 00  00 02 00 00  00 00 00 01  <camera_name> 00  (more 00s)
+
+
+Get disk(s)
+-----------
+
+The get disk(s) request has no data.
+
+The get disk response has the following structure:
+00 00 00 00  <disk_name> 00
+
+Disk name example: "C:"
+
+
+Disk info
+---------
+
+Disk info requests have the following structure:
+<root_name> 00
+
+Disk info responses have the following structure:
+00 00 00 00  xx xx xx xx  xx xx xx xx
+             |            |
+             |            Free space (in bytes)
+             Total capacity (in bytes)
+
+Root name example: "C:\" (The trailing slash is required.)
+
+
+List (show directory contents)
+------------------------------
+
+List requests have the following structure:
+xx <directory_name> 00 00 00
+|
+00 if with date, 02 if without date
+
+Directory name example: "C:\PWRSHOT", "D:", or "D:\.", but not
+"D:\" (trailing slash), or "D:\.\FOO" (dot not allowed in path ?)
+
+List responses have the following structure:
+Failure:
+00 00 00 00  01 00 00 00  00 00 00 00
+
+Success:
+00 00 00 00  xx 80 00 00  00 00 00 00  00 00 00 00
+	     |
+	     01 if last message, 00 if more
+<directory_name> 00
+<type> 00 <size> <date> <entry_name> 00
+...
+<type> 00 <size> <date> <entry_name> 00  (many 00s)
+
+<type> is 10 for directories, 20 for regular files. <size> is the size
+in bytes. Directory size is always 0.
+
+Entry name example: "AUT_1201.JPG" or "MISC"
+
+The date is a four bytes Unix-style date. The list without date responses
+also contains the four data bytes, but sets them to zero.
+
+Note: it's unclear if the list with/without date commands differ in any
+other way than the inclusion of the date.
+
+If the directory is so large that additional messages are needed, they
+have the following structure:
+00 00 00 00  xx <entry>
+             |
+             1 if last message, 00 if more
+
+The boundary between messages is always chosen such that the terminating
+00 of an entry is the last byte in the earlier message.
+
+
+Download and Data
+-----------------
+
+Download requests have the following structure:
+00 00 00 00  00 xx 00 00  <name> 00
+	         |
+		 Length of name (including terminating \0)
+
+Data messages have the following structure:
+00 00 00 00  xx xx xx xx  xx xx xx xx  xx xx xx xx  xx 00 00 00 ...
+	     |		  |	       |            |           |
+	     |		  |	       |            |           data
+	     |		  |	       |            00 if more, 01 at end
+	     |		  |	       data size in this message
+	     |		  current offset
+             total length
+
+All lengths are measured in bytes.

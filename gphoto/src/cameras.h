@@ -1,4 +1,5 @@
 extern struct _Camera konica_qm100;
+extern struct _Camera canon;
 extern struct _Camera casio_qv;
 extern struct _Camera philips;
 extern struct _Camera fuji;
@@ -19,6 +20,7 @@ struct Model cameras[] = {
 	{"Agfa ePhoto 1680", &olympus},
 	{"Apple QuickTake 150", &olympus},
 	{"Apple QuickTake 200", &olympus},
+	{"Canon PowerShot A50", &canon},
 	{"Casio QV-10", &casio_qv},
 	{"Casio QV-11", &casio_qv},
 	{"Casio QV-30", &casio_qv},

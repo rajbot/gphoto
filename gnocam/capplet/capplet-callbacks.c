@@ -7,7 +7,7 @@
 #include "capplet-callbacks.h"
 #include "gphoto-extensions.h"
 #include "preferences.h"
-#include "properties.h"
+//#include "properties.h" FIXME: Include this when the properties work again...
 #include "capplet.h"
 
 
@@ -161,7 +161,8 @@ on_button_camera_properties_clicked (GtkButton *button, gpointer user_data)
 	selection = g_list_first (clist->selection);
 	for (i = 0; i < g_list_length (selection); i++) {
 		gtk_clist_get_text (clist, i, 0, &name);
-		camera_properties (gtk_clist_get_row_data (clist, GPOINTER_TO_INT (g_list_nth_data (selection, i))), name);
+		gnome_error_dialog ("Sorry, currently no properties...");
+//FIXME		camera_properties (gtk_clist_get_row_data (clist, GPOINTER_TO_INT (g_list_nth_data (selection, i))), name);
 	}
 }
 

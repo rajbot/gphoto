@@ -121,31 +121,6 @@
 
 	<widget>
 	  <class>GtkMenuItem</class>
-	  <name>edit1</name>
-	  <stock_item>GNOMEUIINFO_MENU_EDIT_TREE</stock_item>
-
-	  <widget>
-	    <class>GtkMenu</class>
-	    <name>edit1_menu</name>
-
-	    <widget>
-	      <class>GtkPixmapMenuItem</class>
-	      <name>camera_properties</name>
-	      <signal>
-		<name>activate</name>
-		<handler>on_camera_properties_activate</handler>
-		<after>True</after>
-		<last_modification_time>Fri, 08 Sep 2000 09:51:36 GMT</last_modification_time>
-	      </signal>
-	      <label>Camera _Properties...</label>
-	      <right_justify>False</right_justify>
-	      <stock_icon>GNOME_STOCK_MENU_PROP</stock_icon>
-	    </widget>
-	  </widget>
-	</widget>
-
-	<widget>
-	  <class>GtkMenuItem</class>
 	  <name>settings1</name>
 	  <stock_item>GNOMEUIINFO_MENU_SETTINGS_TREE</stock_item>
 
@@ -1082,46 +1057,6 @@
   <authors>Lutz Müller &lt;urc8@rz.uni-karlsruhe.de&gt;
 </authors>
   <comments>GnoCam - a small but powerful front-end to gphoto2 for the GNOME desktop</comments>
-</widget>
-
-<widget>
-  <class>GnomePropertyBox</class>
-  <name>propertybox_camera_properties</name>
-  <signal>
-    <name>apply</name>
-    <handler>on_propertybox_camera_properties_apply</handler>
-    <last_modification_time>Thu, 07 Sep 2000 09:13:22 GMT</last_modification_time>
-  </signal>
-  <signal>
-    <name>close</name>
-    <handler>on_propertybox_camera_properties_close</handler>
-    <last_modification_time>Thu, 07 Sep 2000 09:13:33 GMT</last_modification_time>
-  </signal>
-  <title></title>
-  <position>GTK_WIN_POS_NONE</position>
-  <modal>False</modal>
-  <allow_shrink>False</allow_shrink>
-  <allow_grow>False</allow_grow>
-  <auto_shrink>False</auto_shrink>
-
-  <widget>
-    <class>GtkNotebook</class>
-    <child_name>GnomePropertyBox:notebook</child_name>
-    <name>notebook_camera_properties</name>
-    <can_focus>True</can_focus>
-    <show_tabs>True</show_tabs>
-    <show_border>True</show_border>
-    <tab_pos>GTK_POS_TOP</tab_pos>
-    <scrollable>False</scrollable>
-    <tab_hborder>2</tab_hborder>
-    <tab_vborder>2</tab_vborder>
-    <popup_enable>False</popup_enable>
-    <child>
-      <padding>0</padding>
-      <expand>True</expand>
-      <fill>True</fill>
-    </child>
-  </widget>
 </widget>
 
 </GTK-Interface>

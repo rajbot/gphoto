@@ -229,6 +229,7 @@ macros/Makefile
 po/Makefile.in
 src/Makefile
 src/ui/Makefile
+bonobo-storage-module/Makefile
 gnome-vfs-module/Makefile
 ])
 

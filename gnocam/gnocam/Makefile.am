@@ -54,7 +54,7 @@ oaf_DATA = $(oaf_in_files:.oaf.in=.oaf)
 endif
 @XML_I18N_MERGE_OAF_RULE@
 
-EXTRA_DIST=$(oaf_in_files) $(oaf_DATA)
+EXTRA_DIST= GNOME_GnoCam.oaf.in GNOME_GnoCam.oaf
 
 dist-hook:
 	cd $(distdir); rm -f $(BUILT_SOURCES)

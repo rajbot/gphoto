@@ -129,8 +129,6 @@ int main (int argc, char** argv)
 	
 	capplet_gtk_main ();
 
-	gp_exit ();
-
 	return (0);
 }
 

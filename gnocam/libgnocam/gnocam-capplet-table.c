@@ -4,12 +4,15 @@
 #include <gal/widgets/e-popup-menu.h>
 #include <gal/util/e-util.h>
 #include <gal/widgets/e-gui-utils.h>
+#include <gphoto2/gphoto2-abilities-list.h>
 
 #include "gnocam-capplet-model.h"
 #include "gnocam-configuration.h"
 
 struct _GnoCamCappletTablePrivate
 {
+	CameraAbilitiesList *al;
+
 	ETableModel *model;
 };
 
@@ -40,9 +43,12 @@ static ETableClass *parent_class;
 static void
 gnocam_capplet_table_destroy (GtkObject *object)
 {
-	GnoCamCappletTable *table;
+	GnoCamCappletTable *table = GNOCAM_CAPPLET_TABLE (object);
 
-	table = GNOCAM_CAPPLET_TABLE (object);
+	if (table->priv->al) {
+		gp_abilities_list_free (table->priv->al);
+		table->priv->al = NULL;
+	}
 
 	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
@@ -86,6 +92,7 @@ configure_camera (GnoCamCappletTable *table, guint number)
 	const gchar *model, *port;
 	GtkWidget *widget;
 	gint result;
+	int m;
 
 	model = e_table_model_value_at (table->priv->model, 1, number);
 	port  = e_table_model_value_at (table->priv->model, 2, number);
@@ -99,7 +106,8 @@ configure_camera (GnoCamCappletTable *table, guint number)
 	}
 
 	/* Set the model */
-	gp_camera_abilities_by_name (model, &abilities);
+	m = gp_abilities_list_lookup_model (table->priv->al, model);
+	gp_abilities_list_get_abilities (table->priv->al, m, &abilities);
 	result = gp_camera_set_abilities (camera, abilities);
 	if (result < 0) {
 		g_warning ("Could not set model: %s",
@@ -158,6 +166,7 @@ get_info (GnoCamCappletTable *table, guint number)
 	const gchar *model, *port;
 	gint result;
 	CameraText text;
+	int m;
 
 	model = e_table_model_value_at (table->priv->model, 1, number);
 	port  = e_table_model_value_at (table->priv->model, 2, number);
@@ -171,7 +180,8 @@ get_info (GnoCamCappletTable *table, guint number)
 	}
 
 	/* Set the model */
-	gp_camera_abilities_by_name (model, &abilities);
+	m = gp_abilities_list_lookup_model (table->priv->al, model);
+	gp_abilities_list_get_abilities (table->priv->al, m, &abilities);
 	result = gp_camera_set_abilities (camera, abilities);
 	if (result < 0) {
 		g_warning ("Could not set model: %s",
@@ -331,10 +341,13 @@ gnocam_capplet_table_new (CappletWidget *capplet)
 	ECell *popup_cell;
 	GList *list;
 	gint number, i;
-	const char *buffer;
 	GPPortInfo info;
+	CameraAbilities a;
 
 	table = gtk_type_new (GNOCAM_TYPE_CAPPLET_TABLE);
+
+	gp_abilities_list_new (&(table->priv->al));
+	gp_abilities_list_load (table->priv->al);
 
 	/* Create the model */
 	table->priv->model = gnocam_capplet_model_new (capplet);
@@ -359,10 +372,11 @@ gnocam_capplet_table_new (CappletWidget *capplet)
 	cell = e_cell_text_new (NULL, GTK_JUSTIFY_LEFT);
 	popup_cell = e_cell_combo_new ();
 	list = NULL;
-	number = gp_camera_count ();
-	for (i = 0; i < number; i++)
-		if (gp_camera_name (i, &buffer) == GP_OK)
-			list = g_list_append (list, g_strdup (buffer));
+	number = gp_abilities_list_count (table->priv->al);
+	for (i = 0; i < number; i++) {
+		gp_abilities_list_get_abilities (table->priv->al, i, &a);
+		list = g_list_append (list, g_strdup (a.model));
+	}
 	e_cell_combo_set_popdown_strings (E_CELL_COMBO (popup_cell), list);
 	e_cell_popup_set_child (E_CELL_POPUP (popup_cell), cell);
 	gtk_object_unref (GTK_OBJECT (cell));

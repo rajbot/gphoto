@@ -136,7 +136,7 @@ AC_SUBST(TEST_GNOCAM_LIBS)
 dnl ---------------------------------------------------------------------------
 dnl Makefiles
 dnl ---------------------------------------------------------------------------
-AC_OUTPUT([ intl/Makefile 
+AC_OUTPUT([
 Makefile
 art/Makefile
 idl/Makefile

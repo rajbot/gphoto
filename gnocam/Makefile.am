@@ -1,4 +1,4 @@
-SUBDIRS = m4 art libgnocam tests applet gnome-vfs-module capplet intl po
+SUBDIRS = art libgnocam tests applet gnome-vfs-module capplet po
 
 EXTRA_DIST = 	\
  AUTHORS	\
@@ -6,5 +6,3 @@ EXTRA_DIST = 	\
  THANKS		\
  TODO		\
  xmldocs.make
-
-ACLOCAL_AMFLAGS = -I m4

@@ -4,7 +4,6 @@ extern struct _Camera philips;
 extern struct _Camera fuji;
 extern struct _Camera kodak_dc2x;
 extern struct _Camera kodak_dc210;
-extern struct _Camera quickcam;
 extern struct _Camera ricoh_300z;
 extern struct _Camera olympus;
 extern struct _Camera sony_dscf1;
@@ -66,7 +65,6 @@ struct Model cameras[] = {
 	{"Philips ESP60", &philips},
 	{"Philips ESP80", &philips},
 	{"Polaroid PDC 640", &olympus},
-	{"Quickcam I / II", &quickcam},
 	{"Ricoh RDC-300", &ricoh_300z},
         {"Ricoh RDC-300Z", &ricoh_300z},
   	{"Ricoh RDC-4200", &philips},

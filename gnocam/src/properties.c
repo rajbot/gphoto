@@ -105,13 +105,13 @@ values_set (GladeXML* xml_properties, CameraWidget *camera_widget)
 	g_assert (camera_widget != NULL);
 	g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_properties, "properties"))) != NULL);
 
-	c = g_new (gchar, 1024);
         switch (gp_widget_type (camera_widget)) {
         case GP_WIDGET_TEXT:
-		gp_widget_value_get (camera_widget, c);
+		gp_widget_value_get (camera_widget, &c);
                 if ((preference_widget = gtk_object_get_data (object, gp_widget_label (camera_widget))) == NULL) break;
 		c_new = gtk_entry_get_text (GTK_ENTRY (preference_widget));
-		if (strcmp (c, c_new) != 0) gp_widget_value_set (camera_widget, c_new);
+		if (c) if (strcmp (c, c_new) != 0) gp_widget_value_set (camera_widget, c_new);
+		else gp_widget_value_set (camera_widget, c_new);
                 break;
         case GP_WIDGET_RANGE:
 		gp_widget_value_get (camera_widget, &f);
@@ -127,21 +127,23 @@ values_set (GladeXML* xml_properties, CameraWidget *camera_widget)
 		if (i != i_new) gp_widget_value_set (camera_widget, &i_new);
                 break;
         case GP_WIDGET_RADIO:
-		gp_widget_value_get (camera_widget, c);
+		gp_widget_value_get (camera_widget, &c);
 		if ((preference_widget = gtk_object_get_data (object, gp_widget_label (camera_widget))) == NULL) break;
                 for (i = 0; i < gp_widget_choice_count (camera_widget); i++) {
                         if ((choice_widget = gtk_object_get_data (GTK_OBJECT (preference_widget), gp_widget_choice (camera_widget, i))) == NULL) break;
                         if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (choice_widget))) {
 				c_new = gp_widget_choice (camera_widget, i);
-				if (strcmp (c_new, c) != 0) gp_widget_value_set (camera_widget, c_new);
+				if (c) if (strcmp (c_new, c) != 0) gp_widget_value_set (camera_widget, c_new);
+				else gp_widget_value_set (camera_widget, c_new);
 			}
                 }
                 break;
         case GP_WIDGET_MENU:
-		gp_widget_value_get (camera_widget, c);
+		gp_widget_value_get (camera_widget, &c);
                 if ((preference_widget = gtk_object_get_data (object, gp_widget_label (camera_widget))) == NULL) break;
 		c_new = gtk_entry_get_text (GTK_ENTRY (GTK_COMBO (preference_widget)->entry));
-		if (strcmp (c, c_new) != 0) gp_widget_value_set (camera_widget, c_new);
+		if (c) if (strcmp (c, c_new) != 0) gp_widget_value_set (camera_widget, c_new);
+		else gp_widget_value_set (camera_widget, c_new);
                 break;
         case GP_WIDGET_BUTTON:
 		break;
@@ -160,7 +162,6 @@ values_set (GladeXML* xml_properties, CameraWidget *camera_widget)
         default:
                 g_assert_not_reached ();
         }
-	g_free (c);
 }
 
 void 
@@ -188,12 +189,11 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 	gtk_box_pack_start (GTK_BOX (vbox), frame, FALSE, FALSE, 0);
 
 	/* Create the widget. */
-	c = g_new0 (gchar, 1024);
 	switch (gp_widget_type (camera_widget)) {
 	case GP_WIDGET_TEXT:
-		gp_widget_value_get (camera_widget, c);
+		gp_widget_value_get (camera_widget, &c);
 		widget = gtk_entry_new ();
-		gtk_entry_set_text (GTK_ENTRY (widget), c);
+		if (c) gtk_entry_set_text (GTK_ENTRY (widget), c);
 		gtk_container_add (GTK_CONTAINER (frame), widget);
 		gtk_signal_connect_object (GTK_OBJECT (widget), "changed", GTK_SIGNAL_FUNC (on_entry_changed), (gpointer) widget);
 		gtk_object_set_data (GTK_OBJECT (widget), "propertybox", propertybox);
@@ -220,7 +220,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 		gtk_object_set_data (GTK_OBJECT (propertybox), gp_widget_label (camera_widget), widget);
 		break;
 	case GP_WIDGET_RADIO:
-		gp_widget_value_get (camera_widget, c);
+		gp_widget_value_get (camera_widget, &c);
                 hbox = gtk_hbox_new (FALSE, 10);
        	        gtk_container_add (GTK_CONTAINER (frame), hbox);
 		gtk_object_set_data (GTK_OBJECT (propertybox), gp_widget_label (camera_widget), hbox);
@@ -228,7 +228,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 		for (i = 0; i < gp_widget_choice_count (camera_widget); i++) {
 			widget = gtk_radio_button_new_with_label (slist, gp_widget_choice (camera_widget, i));
 			slist = gtk_radio_button_group (GTK_RADIO_BUTTON (widget));
-			if (strcmp (c, gp_widget_choice (camera_widget, i)) == 0) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (widget), TRUE);
+			if (c) if (strcmp (c, gp_widget_choice (camera_widget, i)) == 0) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (widget), TRUE);
                         gtk_box_pack_start (GTK_BOX (hbox), widget, TRUE, TRUE, 0);
 			gtk_signal_connect_object (GTK_OBJECT (widget), "toggled", GTK_SIGNAL_FUNC (on_radiobutton_toggled), (gpointer) widget);
 			gtk_object_set_data (GTK_OBJECT (widget), "propertybox", propertybox);
@@ -236,14 +236,14 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 		}
 		break;
 	case GP_WIDGET_MENU:
-		gp_widget_value_get (camera_widget, c);
+		gp_widget_value_get (camera_widget, &c);
 		widget = gtk_combo_new ();
 		gtk_container_add (GTK_CONTAINER (frame), widget);
 		list = NULL;
 		for (i = 0; i < gp_widget_choice_count (camera_widget); i++) list = g_list_append (list, g_strdup (gp_widget_choice (camera_widget, i)));
 		gtk_combo_set_popdown_strings (GTK_COMBO (widget), list);
 		g_list_free (list);
-		gtk_entry_set_text (GTK_ENTRY (GTK_COMBO (widget)->entry), c);
+		if (c) gtk_entry_set_text (GTK_ENTRY (GTK_COMBO (widget)->entry), c);
 		gtk_container_add (GTK_CONTAINER (frame), widget);
 		gtk_signal_connect_object (GTK_OBJECT (GTK_COMBO (widget)->entry), "changed", GTK_SIGNAL_FUNC (on_entry_changed), (gpointer) widget);
 		gtk_object_set_data (GTK_OBJECT (GTK_COMBO (widget)->entry), "propertybox", propertybox);
@@ -273,7 +273,6 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 		g_assert_not_reached ();
 	}
 	gtk_widget_show_all (frame);
-	g_free (c);
 }
 
 GtkWidget*

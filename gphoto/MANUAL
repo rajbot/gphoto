@@ -2,9 +2,6 @@
 gPhoto 0.4 User's Manual
 ------------------------
 
-gPhoto has been written to be as intuitive as possible from the start of
-the project.
-
 Table of Contents
 -----------------
 	Setting up gPhoto
@@ -25,6 +22,7 @@ Table of Contents
 	Plug-Ins
 		Live Camera!
 		HTML Gallery
+	Command-line flags
 -----------------------------------------------------------------
 
 -----------------
@@ -291,6 +289,46 @@ Currently, there are 2 plug-ins included in gPhoto:
 		For more information on creating your OWN gallery themes,
 		please visit http://www.gphoto.org/docs.php3 and
 		view the "HTML Gallery engine specs".
+
+-----------------
+Command-line mode
+----------------------------------------------------------------
+
+The command-line mode allows you to script gPhoto to perform common
+functions from a shell script. Once thing to note though is that
+gPhoto will still need X running in order to retrieve the images.
+Also, the directory browse mode and camera configuration will not
+work due to the high amount of input needed to do either of those
+tasks.
+
+Below is a list of the available options, as well as some examples.
+
+Usage: gphoto [-h] [-n] [-s # filename] [-t # filename]
+              [-d #] [-l filename]
+	-n			display the # of pictures
+	-s # filename		save image # as filename
+	-t # filename		save thumbnail # as filename
+	-d #			delete image # from camera
+	-l filename		save live preview as filename
+	-h 			display this help screen
+
+Examples:
+	- Save image number 2 as /www/images/tree.jpg
+		gphoto -s 2 /www/images/tree.jpg
+
+	- Save image and thumbnail number 5 as car.jpg and car-thumb.jpg
+		gphoto -s 5 car.jpg -t 5 car-thumb.jpg
+
+	- Save image 10 as guinea-pig.tif and then delete it
+		gphoto -s 10 guinea-pig.jpg -d 10
+
+	- Save a live preview as pretty-boy.gif
+		gphoto -l pretty-boy.jpg
+
+It would be quite easy to write shell scripts to perform all of the
+functions you would need from a digital camera application. If you write
+any scripts that you find useful, consider sending them to
+gphoto@gphoto.org for others to use.
 
 ----------------
 More Information

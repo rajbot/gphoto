@@ -287,17 +287,21 @@ static GnomeVFSResult do_read (
         GnomeVFSFileSize*               bytes_read,
         GnomeVFSContext*                context)
 {
-	FileHandle *file_handle;
+	FileHandle *fh = (FileHandle *) handle;
+	const char *data;
+	long int size;
+	GnomeVFSResult result;
 
-	file_handle = (FileHandle *) handle;
+	result = gp_file_get_data_and_size (fh->file, &data, &size);
+	if (result != GNOME_VFS_OK)
+		return (result);
 
-	*bytes_read = MIN (file_handle->file->size - file_handle->pos,
-			  num_bytes);
+	*bytes_read = MIN (size - fh->pos, num_bytes);
 	if (!*bytes_read)
 		return (GNOME_VFS_ERROR_EOF);
 
-	memcpy (buffer, file_handle->file->data + file_handle->pos,*bytes_read);
-	file_handle->pos += *bytes_read;
+	memcpy (buffer, data + fh->pos, *bytes_read);
+	fh->pos += *bytes_read;
 	
 	return (GNOME_VFS_OK);
 }

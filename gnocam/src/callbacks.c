@@ -1,5 +1,7 @@
 #include <config.h>
 #include <gnome.h>
+#include <pspell/pspell.h>
+#include <gtkhtml/gtkhtml.h>
 #include <libgnomevfs/gnome-vfs.h>
 #include <glade/glade.h>
 #include <gdk-pixbuf/gdk-pixbuf-loader.h>
@@ -36,6 +38,7 @@ void on_button_save_files_clicked 	(GtkButton* button, gpointer user_data);
 void on_button_save_files_as_clicked 	(GtkButton* button, gpointer user_data);
 void on_button_delete_clicked 		(GtkButton* button, gpointer user_data);
 
+void on_new_gallery_activate		(GtkMenuItem* menuitem, gpointer user_data);
 void on_save_previews_activate 		(GtkMenuItem* menuitem, gpointer user_data);
 void on_save_previews_as_activate 	(GtkMenuItem* menuitem, gpointer user_data);
 void on_save_files_activate 		(GtkMenuItem* menuitem, gpointer user_data);
@@ -72,6 +75,9 @@ void on_app_preview_refresh_activate 	(GtkMenuItem* menuitem, gpointer user_data
 void on_app_preview_button_refresh_clicked 	(GtkButton* button, gpointer user_data);
 void on_app_preview_button_save_clicked 	(GtkButton* button, gpointer user_data);
 void on_app_preview_button_save_as_clicked 	(GtkButton* button, gpointer user_data);
+
+void on_app_gallery_close_activate 	(GtkMenuItem* menuitem, gpointer user_data);
+void on_app_gallery_exit_activate 	(GtkMenuItem* menuitem, gpointer user_data);
 
 /**************/
 /* Callbacks. */
@@ -129,6 +135,28 @@ void
 on_button_delete_clicked (GtkButton *button, gpointer user_data)
 {
 	delete_all_selected (GTK_TREE (glade_xml_get_widget (xml, "tree_cameras")));
+}
+
+void
+on_new_gallery_activate (GtkMenuItem *menuitem, gpointer user_data)
+{
+	GladeXML*	xml_gallery;
+	GtkWidget*	widget;
+	GdkColor	bgColor = {0, 0xdfff, 0xdfff, 0xffff};
+
+	g_assert ((xml_gallery = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "app_gallery")) != NULL);
+	widget = gtk_html_new ();
+	gtk_widget_show (widget);
+	gtk_html_load_empty (GTK_HTML (widget));
+	gtk_html_set_default_background_color (GTK_HTML (widget), &bgColor);
+	gtk_html_set_editable (GTK_HTML (widget), TRUE);
+	gtk_container_add (GTK_CONTAINER (glade_xml_get_widget (xml_gallery, "app_gallery_scrolledwindow")), widget);
+
+	/* Store some data. */
+	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_gallery, "app_gallery_close")), "xml_gallery", xml_gallery);
+
+	/* Connect the signals. */
+	glade_xml_signal_autoconnect (xml_gallery);
 }
 
 void
@@ -685,8 +713,6 @@ on_button_rotate_clicked (GtkButton* button, gpointer user_data)
 	GtkPixmap*	widget;
 	GdkPixbuf*	pixbuf;
 	GdkPixbuf*	pixbuf_old;
-	GdkPixmap*	pixmap;
-	GdkBitmap*	bitmap;
 
 //FIXME: Where is gdk_pixbuf_rotate? Not implemented. 
 	dialog_information (_("Not yet implemented!"));
@@ -769,4 +795,23 @@ on_app_preview_button_save_as_clicked (GtkButton* button, gpointer user_data)
 	preview_save_as (gtk_object_get_data (GTK_OBJECT (button), "camera"));
 }
 
+/************************/
+/* app_gallery_specific */
+/************************/
+
+void
+on_app_gallery_close_activate (GtkMenuItem* menuitem, gpointer user_data)
+{
+	GladeXML*	xml_gallery;
+
+	g_assert ((xml_gallery = gtk_object_get_data (GTK_OBJECT (menuitem), "xml_gallery")) != NULL);
+
+	gtk_widget_destroy (glade_xml_get_widget (xml_gallery, "app_gallery"));
+}
+
+void
+on_app_gallery_exit_activate (GtkMenuItem* menuitem, gpointer user_data)
+{
+	gtk_main_quit ();
+}
 

@@ -138,6 +138,14 @@ int main(int argc, char *argv[])
 	} else
 	    command_line_mode = 0;
 
+
+	/* Check for DISPLAY. If not set, exit */
+	if (!getenv("DISPLAY")) {
+		printf(N_("Error: $DISPLAY variable is not set\n"));
+		printf(N_("Please run \"gphoto -h\" for command-line options.\n"));
+		_exit(0);
+	}
+
 	fprintf(stdout,
 		N_("gPhoto %s (%s)\n"),
 		VERSION, __DATE__);

@@ -131,9 +131,25 @@ static int 	on_storage_view_vbox_button_release_event 	(GtkWidget* widget, GdkEv
 
 static void 	on_popup_storage_view_title_bar_button_clicked 	(ETitleBar* title_bar, void* data);
 
+static void 	show_current_menu 	(GnoCamCamera* camera);
+
 /**********************/
 /* Internal functions */
 /**********************/
+
+static gint
+set_container (gpointer user_data)
+{
+	GnoCamCamera*	camera;
+
+	camera = GNOCAM_CAMERA (user_data);
+
+	if (!camera->priv->component) return (TRUE);
+
+	bonobo_ui_component_set_container (camera->priv->component, camera->priv->container);
+	show_current_menu (camera);
+	return (FALSE);
+}
 
 static gint
 create_menu (gpointer user_data)
@@ -143,6 +159,7 @@ create_menu (gpointer user_data)
 	g_return_val_if_fail (user_data, FALSE);
 	camera = GNOCAM_CAMERA (user_data);
 
+//	camera->priv->component = bonobo_ui_component_new (PACKAGE "Camera");
 	bonobo_ui_component_set_container (camera->priv->component, camera->priv->container);
 	
 	bonobo_ui_component_freeze (camera->priv->component, NULL);
@@ -625,10 +642,17 @@ gnocam_camera_get_widget (GnoCamCamera* camera)
 void
 gnocam_camera_show_menu (GnoCamCamera* camera)
 {
+	Bonobo_UIContainer	container;
+	
 	g_return_if_fail (camera);
 
-	bonobo_ui_component_set_container (camera->priv->component, camera->priv->container);
-	show_current_menu (camera);
+	container = bonobo_ui_component_get_container (camera->priv->component);
+	bonobo_object_release_unref (container, NULL);
+	if (container == camera->priv->container) return;
+
+gtk_idle_add (set_container, camera);
+//	bonobo_ui_component_set_container (camera->priv->component, camera->priv->container);
+//	show_current_menu (camera);
 }
 
 void
@@ -733,8 +757,8 @@ gnocam_camera_new (const gchar* url, Bonobo_UIContainer container, GtkWindow* pa
 
         /* Create the menu */
 	new->priv->component = bonobo_ui_component_new (PACKAGE "Camera");
-	bonobo_object_ref (BONOBO_OBJECT (new->priv->component));
-	gtk_idle_add (create_menu, new);
+//	gtk_idle_add (create_menu, new);
+	create_menu (new);
 
 	/* Select the selected file/folder */
 	name = (gchar*) url + 9;

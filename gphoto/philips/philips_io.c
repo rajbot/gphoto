@@ -2020,12 +2020,12 @@ char *philips_model ( int id )
 	sprintf ( errorstr, "Unknown model %d", id );
 
 	switch ( id ) {
-		case 4200: return ( "Ricoh RCD-4200" );
-		case 4300: return ( "Ricoh RCD-4300" );
+		case 4200: return ( "Ricoh RDC-4200" );
+		case 4300: return ( "Ricoh RDC-4300" );
 		case 4000: return ( "Philips ESP80SXG" );
-		case 5000: return ( "Ricoh RCD-5000" );
-		case 3100: return ( "Ricoh RCD-300Z" );
-		case 3000: return ( "Ricoh RCD-300" ); /* philips ESP2 ? */
+		case 5000: return ( "Ricoh RDC-5000" );
+		case 3100: return ( "Ricoh RDC-300Z" );
+		case 3000: return ( "Ricoh RDC-300" ); /* philips ESP2 ? */
 		default:   return ( errorstr );
 		}
 }

@@ -64,20 +64,6 @@ else
 *** http://www.gnome.org/mirrors.])
 fi
 
-dnl ****************
-dnl eog-image-viewer
-dnl ****************
-AC_MSG_CHECKING(for eog-image-viewer)
-if test -x /bin/html-editor-control || test -x /usr/bin/eog-image-viewer; then
-    AC_MSG_RESULT(found)
-else
-    AC_MSG_ERROR([
-*** You need the eog-image-viewer for this version of ${PACKAGE}.
-*** Get the latest version of eog from
-*** http://www.gnome.org. Mirrors can be found at 
-*** http://www.gnome.org/mirrors.])
-fi
-
 dnl ******
 dnl bonobo
 dnl ******

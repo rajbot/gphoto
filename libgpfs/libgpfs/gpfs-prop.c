@@ -154,7 +154,7 @@ gpfs_prop_dump (GPFsProp *i)
 	GPFsVal v;
 	unsigned int n;
 
-	printf ("Proprmation '%s':\n", gpfs_prop_get_id (i));
+	printf ("Property '%s':\n", gpfs_prop_get_id (i));
 	printf (" - Name: '%s'\n", gpfs_prop_get_name (i));
 	printf (" - Description: '%s'\n", gpfs_prop_get_description (i));
 	gpfs_val_init (&v);
@@ -199,9 +199,8 @@ gpfs_prop_dump (GPFsProp *i)
 		break;
 	case GPFS_ALT_TYPE_RANGE:
 		printf (" - Alternative values in range between %f and %f "
-			"(precision %i, step %f)\n", i->alt.range.min,
-			i->alt.range.max, i->alt.range.precision,
-			i->alt.range.incr);
+			"(step %f)\n", i->alt.range.min,
+			i->alt.range.max, i->alt.range.incr);
 		break;
 	default:
 		break;

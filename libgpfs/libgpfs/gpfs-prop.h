@@ -28,7 +28,6 @@ struct _GPFsProp {
 
 		/* A range of values */
 		struct {
-			unsigned int precision;
 			float min, max, incr;
 		} range;
 	} alt;

@@ -51,15 +51,15 @@ typedef struct
    unsigned short creation_time;
    unsigned short creation_date;
    unsigned char size[4];
-} DIRECTORY_ENTRY_TYPE;
+} DIRECTORY_ENTRY_TYPE;			/* from camera */
 
 typedef struct
 {
-   unsigned char *filename;
+   unsigned char filename [50];
    unsigned long thumbnail_size;
    unsigned long picture_size;
    unsigned char valid;
-} PICTURE_TYPE;
+} PICTURE_TYPE;				/* constructed here */
 
 typedef struct
 {
@@ -73,7 +73,7 @@ typedef struct
    unsigned char adapter_flag;
    unsigned char strobe_status;
    unsigned char padding[256 - 11];
-} STATUS_PACKET_TYPE;
+} STATUS_PACKET_TYPE;			/* from camera */
 
 typedef struct
 {
@@ -85,7 +85,7 @@ typedef struct
 {
    unsigned short num_entries;
    DIRECTORY_ENTRY_TYPE entries[1];
-} DIRECTORY_PACKET_DATA_TYPE;
+} DIRECTORY_PACKET_DATA_TYPE;		/* from camera */
 
 typedef struct
 {
@@ -685,6 +685,16 @@ kdc240_take_picture_read
    return CC_RESPONSE_LAST_PACKET;
 }
 
+static int compare_picture_names (
+   const void *left,
+   const void *right
+)
+{
+   const PICTURE_TYPE *l = (const PICTURE_TYPE *) left;
+   const PICTURE_TYPE *r = (const PICTURE_TYPE *) right;
+   return strncmp (l->filename, r->filename, sizeof *l);
+}
+
 /*******************************************************************************
 * FUNCTION: kdc240_number_of_pictures
 *
@@ -743,8 +753,7 @@ kdc240_number_of_pictures
              PICTURE_TYPE *t = &picture_index[i];
 
              t->valid = FALSE;
-             t->filename = (unsigned char *)malloc(128);
-             memset(t->filename, 0, 128);
+             memset(t->filename, 0, sizeof t->filename);
              strcpy (t->filename, "\\DCIM\\100DC240\\");
              memcpy (t->filename + strlen(t->filename),
                 buffer.rx_buffer->entries[i].filename, 8);
@@ -755,7 +764,9 @@ kdc240_number_of_pictures
 #ifdef DIRECTORY_DEBUG
              printf ("    Entry %d: %s\n", i, t->filename);
 #endif
-         }
+	 }
+	 qsort (picture_index, retval, sizeof picture_index [0],
+	 	compare_picture_names);
       }
    }
 

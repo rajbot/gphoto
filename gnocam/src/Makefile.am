@@ -22,12 +22,12 @@ bin_PROGRAMS = gnocam
 
 gnocam_SOURCES =\
  cameras.h cameras.c\
+ capture.h capture.c\
  file-operations.h file-operations.c\
  frontend.h frontend.c\
  gnocam.h gnocam.c\
  gphoto-extensions.h gphoto-extensions.c\
  preferences.h preferences.c\
- preview.h preview.c\
  utils.h utils.c
 
 gnocam_LDFLAGS =\

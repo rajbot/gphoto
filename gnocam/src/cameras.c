@@ -19,7 +19,7 @@
 #include "cameras.h"
 #include "file-operations.h"
 #include "utils.h"
-#include "preview.h"
+#include "capture.h"
 
 /**********************/
 /* External Variables */
@@ -76,19 +76,19 @@ on_refresh_activate (BonoboUIComponent* component, gpointer folder, const gchar 
 void
 on_capture_preview_activate (BonoboUIComponent* component, gpointer folder, const gchar* name)
 {
-	g_return_if_fail (preview_new (gtk_object_get_data (GTK_OBJECT (folder), "camera")));
+	g_return_if_fail (capture_new (gtk_object_get_data (GTK_OBJECT (folder), "camera"), GP_CAPTURE_PREVIEW));
 }
 
 void
 on_capture_image_activate (BonoboUIComponent* component, gpointer folder, const gchar* name)
 {
-        capture_image (gtk_object_get_data (GTK_OBJECT (folder), "camera"));
+        g_return_if_fail (capture_new (gtk_object_get_data (GTK_OBJECT (folder), "camera"), GP_CAPTURE_IMAGE));
 }
 
 void
 on_capture_video_activate (BonoboUIComponent* component, gpointer folder, const gchar* name)
 {
-        capture_video (gtk_object_get_data (GTK_OBJECT (folder), "camera"));
+	g_return_if_fail (capture_new (gtk_object_get_data (GTK_OBJECT (folder), "camera"), GP_CAPTURE_VIDEO));
 }
 
 void
@@ -273,11 +273,12 @@ camera_tree_folder_clean (GtkTreeItem* folder)
 	g_return_if_fail (corba_storage = gtk_object_get_data (GTK_OBJECT (folder), "corba_storage"));
 	g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (folder), "uri"));
 
-	/* Delete all items of tree. */
+	/* Delete all items of subtree. Then, delete the subtree.*/
 	if (folder->subtree) {
 		for (i = g_list_length (GTK_TREE (folder->subtree)->children) - 1; i >= 0; i--) {
 			gtk_container_remove (GTK_CONTAINER (folder->subtree), GTK_WIDGET (g_list_nth_data (GTK_TREE (folder->subtree)->children, i)));
 		}
+		gtk_tree_item_remove_subtree (folder);
 	}
 
 	/* Does the folder contain anything? */

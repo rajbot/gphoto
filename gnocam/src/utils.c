@@ -28,9 +28,6 @@ void on_adjustment_value_changed 	(GtkObject* object, gpointer user_data);
 void on_togglebutton_toggled 		(GtkObject* object, gpointer user_data);
 void on_date_changed 			(GtkObject* object, gpointer user_data);
 
-void on_duration_button_ok_clicked      (GtkButton* button, gpointer user_data);
-void on_duration_button_cancel_clicked  (GtkButton* button, gpointer user_data);
-
 /*************/
 /* Callbacks */
 /*************/
@@ -258,94 +255,9 @@ on_date_changed (GtkObject* object, gpointer user_data)
 	}
 }
 
-void
-on_duration_button_ok_clicked (GtkButton* button, gpointer user_data)
-{
-        GtkAdjustment*          adjustment;
-        CameraCaptureInfo       info;
-        CameraFile*             file;
-	Camera*			camera;
-
-        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (button), "camera")));
-        g_assert ((adjustment = gtk_range_get_adjustment (GTK_RANGE (gtk_object_get_data (GTK_OBJECT (button), "hscale")))));
-
-        /* Prepare the video. */
-        info.type = GP_CAPTURE_VIDEO;
-        info.duration = adjustment->value;
-        file = gp_file_new ();
-
-        /* Capture. */
-        gp_camera_capture (camera, file, &info);
-
-        /* Clean up. */
-        gtk_widget_destroy (gtk_object_get_data (GTK_OBJECT (button), "messagebox"));
-        gp_file_free (file);
-	gp_camera_unref (camera);
-}
-
-void
-on_duration_button_cancel_clicked (GtkButton* button, gpointer user_data)
-{
-	Camera*	camera;
-
-	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (button), "camera")));
-
-	/* Clean up. */
-	gtk_widget_destroy (gtk_object_get_data (GTK_OBJECT (button), "messagebox"));
-	gp_camera_unref (camera);
-}
-
 /*************/
 /* Functions */
 /*************/
-
-void
-capture_image (Camera* camera)
-{
-        CameraCaptureInfo       info;
-        CameraFile*             file;
-
-        g_assert (camera);
-
-        /* Prepare the image. */
-        info.type = GP_CAPTURE_IMAGE;
-        info.duration = 0;
-        file = gp_file_new ();
-
-        /* Capture. */
-        gp_camera_capture (camera, file, &info);
-
-        /* Clean up. */
-        gp_file_free (file);
-}
-
-void
-capture_video (Camera* camera)
-{
-        GladeXML*               xml_duration;
-        GladeXML*               xml_hscale;
-        GnomeMessageBox*        messagebox;
-
-        /* Ask for duration. */
-        g_assert ((xml_duration = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "duration_messagebox")));
-        glade_xml_signal_autoconnect (xml_duration);
-
-        //FIXME: As soon libglade is fixed, delete this code.
-        /* This is annoying: The hscale doesn't get displayed... We have to create it manually. */
-        g_assert ((xml_hscale = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "duration_hscale")));
-        g_assert ((messagebox = GNOME_MESSAGE_BOX (glade_xml_get_widget (xml_duration, "duration_messagebox"))));
-        gtk_container_add (GTK_CONTAINER ((GNOME_DIALOG (messagebox))->vbox), glade_xml_get_widget (xml_hscale, "duration_hscale"));
-
-        /* Store some data. */
-        gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_duration, "duration_button_ok")), "camera", camera);
-        gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_duration, "duration_button_ok")), "messagebox", messagebox);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_duration, "duration_button_ok")), "hscale",  glade_xml_get_widget (xml_hscale, "duration_hscale"));
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_duration, "duration_button_cancel")), "camera", camera);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_duration, "duration_button_cancel")), "messagebox", messagebox);
-
-	/* Ref the camera. */
-	gp_camera_ref (camera);
-}
 
 void 
 popup_prepare (BonoboUIComponent* component, CameraWidget* widget, xmlNodePtr popup, xmlNodePtr command, xmlNsPtr ns)

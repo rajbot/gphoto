@@ -283,11 +283,11 @@ on_clist_cameras_row_selection_changed (GtkWidget *clist, gint row, gint column,
 		gtk_clist_get_text (GTK_CLIST (clist), row, 1, &model);
 		gtk_clist_get_text (GTK_CLIST (clist), row, 2, &port);
 		gtk_clist_get_text (GTK_CLIST (clist), row, 3, &speed);
+		update_speed_and_port_list (model);
                 gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "entry_name")), name);
                 gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_model")), model);
                 gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_speed")), speed);
                 gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_port")), port);
-		update_speed_and_port_list (model);
 
 	} else {
 		
@@ -296,6 +296,8 @@ on_clist_cameras_row_selection_changed (GtkWidget *clist, gint row, gint column,
 		gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_model")), "");
 		gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_speed")), "");
 		gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_port")), "");
+		gtk_combo_set_popdown_strings (GTK_COMBO (glade_xml_get_widget (xml_preferences, "combo_port")), g_list_append (NULL, g_strdup ("")));
+		gtk_combo_set_popdown_strings (GTK_COMBO (glade_xml_get_widget (xml_preferences, "combo_speed")), g_list_append (NULL, g_strdup ("")));
 	}
 }
 
@@ -361,16 +363,17 @@ update_speed_and_port_list (gchar* model)
 
                 /* Construct list for speed. */
                 i = 0;
-		list = g_list_append (NULL, g_strdup (""));
+		list = NULL;
                 while (abilities.speed[i] != 0) {
                         list = g_list_append (list, g_strdup_printf ("%i", abilities.speed[i]));
                         i++;
                 }
+		if (!list) list = g_list_append (NULL, g_strdup (""));
                 gtk_combo_set_popdown_strings (combo_speed, list);
 
                 /* Construct list for ports. */
                 i = 0;
-                list = g_list_append (NULL, g_strdup (""));
+                list = NULL;
                 for (i = 0; i < gp_port_count (); i++) {
                         if ((result = gp_port_info (i, &info)) != GP_OK) {
                                 tmp = g_strdup_printf (_("Could not get information about port number %i!\n(%s)"), i, gp_result_as_string (result));
@@ -385,6 +388,7 @@ update_speed_and_port_list (gchar* model)
                                         list = g_list_append (list, g_strdup (info.name));
 			}
                 }
+		if (!list) list = g_list_append (NULL, g_strdup (""));
 		gtk_combo_set_popdown_strings (combo_port, list);
 
         } else {

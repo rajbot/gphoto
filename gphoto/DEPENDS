@@ -1,0 +1,5 @@
+gPhoto 0.4.x has these library dependencies:
+
+* imlib 1.8+
+* gtk+ 1.2+
+* glib 1.2+

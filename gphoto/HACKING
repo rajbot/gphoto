@@ -1,0 +1,11 @@
+Please use the "gphoto_0_5_dev" CVS branch for 
+experimental code and libraries rewritten to 
+use libgpio (gPhoto I/O library).
+
+Use:
+
+# export CVSROOT=":pserver:anonymous@anoncvs.gnome.org:/cvs/gnome"
+# cvs co -r gphoto_0_5_dev gphoto
+
+to checkout the experimental code branch (with libgpio).
+

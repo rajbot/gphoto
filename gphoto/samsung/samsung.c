@@ -431,7 +431,8 @@ SDSC_ReadImage (int picnum, int thumbnail)
       left -= 0x400;
       i += 0x400;
 
-      update_progress (100 * i / size);
+      if (size)
+	      update_progress (100 * i / size);
 
       sendcommand (SDSC_BINARY);  /*Next block */
     }

@@ -17,9 +17,12 @@ static char *rcsid="$Id$";
 
 /*
 	$Log$
+	Revision 1.6  2000/09/08 18:40:35  scottf
+	fixed divide-by-zero bug for all percentages :P
+
 	Revision 1.5  2000/08/25 21:22:46  scottf
 	changed update_progress prototype to an int 0<percent<100
-
+	
 	Revision 1.4  2000/08/25 20:36:38  scottf
 	readded in percentage updates. no more freezing GUI
 	
@@ -334,7 +337,8 @@ writeagain:
 	if ((rc=eph_writecmd(iob,buf,2))) return rc;
 	index=0;
 readagain:
-update_progress(100 * picread / picsize);
+	if (picsize)
+		update_progress(100 * picread / picsize);
 	if (buffer) { /* read to memory reallocating it */
 		if (((*bufsize) - index) < 2048) {
 			if (iob->debug)

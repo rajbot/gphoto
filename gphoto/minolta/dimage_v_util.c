@@ -535,7 +535,8 @@ char* dimage_v_write_picture_to_file(int picture_number)
 
 		packet = dimage_v_read_packet(dev, 1);
 		payload = dimage_v_strip_packet(packet);
-		update_progress(100 * packets_gotten / total_packets);
+		if (total_packets)
+			update_progress(100 * packets_gotten / total_packets);
 		fwrite(payload->contents, 1, payload->length, imagefile);
 		fflush(imagefile);
 /*		gdk_flush();*/

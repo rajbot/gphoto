@@ -444,7 +444,8 @@ static struct Image *DSC_ReadImage(int picnum, int thumbnail)
             free(image);
             return NULL;
         }
-        update_progress(100 * i/ blocks);
+	if (blocks)
+	        update_progress(100 * i/ blocks);
     }
 
     strcpy(image->image_type,"jpg");

@@ -9,6 +9,4 @@ bin_PROGRAMS = minolta-dump
 
 minolta_dump_SOURCES = dimage_v.h dimage_v_gphoto.c dimage_v_util.c test.c 
 
-minolta_dump_LDADD = -lgpio
-
 libgphoto_dimage_v_la_LDFLAGS = -version-info 0:0:0

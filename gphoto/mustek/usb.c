@@ -217,7 +217,8 @@ int mdc800_usb_sendCommand (char* command, char* buffer, int length)
 						return 0;
 					}
 					readen+=64;
-					update_progress (100 * readen/length);
+					if (length)
+						update_progress (100 * readen/length);
 				}
 			}
 			break;

@@ -50,7 +50,8 @@ dnl Check for gtk
 AM_PATH_GTK(1.2.6)
 dnl Check for gdk_imlib
 AM_PATH_GDK_IMLIB(1.9.0)
-CFLAGS="$CFLAGS -I../libgpio -I./libgpio -I../../libgpio -I../../../libgpio"
+CFLAGS="$CFLAGS -I`pwd`/libgpio"
+LDFLAGS="$LDFLAGS -L`pwd`/libgpio -lgpio0"
 
 AC_SUBST(CFLAGS)
 AC_SUBST(LIBS)

@@ -36,7 +36,7 @@ XGETTEXT = PATH=../src:$$PATH /usr/bin/xgettext
 MSGMERGE = PATH=../src:$$PATH msgmerge
 
 DEFS = -DHAVE_CONFIG_H
-CFLAGS = -g -O2 -I../libgpio -I./libgpio -I../../libgpio -I../../../libgpio -I/usr/local/include
+CFLAGS = -g -O2 -I/home/scottf/sourceforge/gphoto/libgpio -I/usr/local/include
 CPPFLAGS = 
 
 INCLUDES = -I.. -I$(top_srcdir)/intl

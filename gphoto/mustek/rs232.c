@@ -194,7 +194,8 @@ int mdc800_rs232_download (char* buffer, int size)
 	
 	while (readen < size)
 	{
-		update_progress (100 * readen / size);
+		if (size)
+			update_progress (100 * readen / size);
 		if (!mdc800_rs232_receive (&buffer[readen],512))
 			return readen;
 		checksum=0;
@@ -237,7 +238,7 @@ int mdc800_rs232_download (char* buffer, int size)
 		}
 	}
 
-	
-	update_progress (100 * readen/size);
+	if (size)
+		update_progress (100 * readen/size);
 	return readen;
 }

@@ -4,9 +4,6 @@ SUBDIRS = intl po libgpio barbie canon casio digita dimera directory fuji galler
 kodak_generic konica konica_qmxxx man minolta mustek nikon \
 philips photopc polaroid ricoh samsung sony src
 
-CFLAGS= @CFLAGS@ -I../libgpio -I../../libgpio -I../../../libgpio 
-LDFLAGS= @LDFLAGS@ -L../libgpio -L./libgpio -lgpio
-
 gphotodocdir = $(datadir)/gphoto/doc
 
 gphotodoc_DATA = AUTHORS MANUAL

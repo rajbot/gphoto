@@ -31,7 +31,8 @@ int konica_qm100_formatCF()
 static void dlprogress(void)
 {
    qm100_percent += qm100_percentIncr;
-   update_progress((int)(100.0 * qm100_percent));
+   if (qm100_percent)
+	   update_progress((int)(100.0 * qm100_percent));
 }
 int konica_qm100_initialize()
 {

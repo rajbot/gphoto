@@ -1285,7 +1285,8 @@ unsigned char *psa50_get_file_serial(const char *name,int *length) {
 	}
 	memcpy(file+expect,msg+20,size);
 	expect += size;
-	update_progress(total ? 100 * expect/ total : 100);
+	if (total)
+		update_progress(total ? 100 * expect/ total : 100);
 	if ((expect == total) != get_int(msg+16)) {
 	    debug_message("ERROR: end mark != end of data\n");
 	    break;
@@ -1359,7 +1360,8 @@ unsigned char *psa50_get_file_usb(const char *name,int *length) {
       
       expect += size;
       
-      update_progress(total ? 100 * expect/ total : 100);
+      if (total)
+      	update_progress(total ? 100 * expect/ total : 100);
       if (expect == total) return file;
       
       if ((total-expect) <= 0x2000)
@@ -1467,7 +1469,8 @@ unsigned char *psa50_get_thumbnail(const char *name,int *length)
 	}
 	memcpy(file+expect,msg+20,size);
 	expect += size;
-	update_progress(total ? 100 * expect/ total : 100);
+  	if (total)
+		update_progress(total ? 100 * expect/ total : 100);
 	if ((expect == total) != get_int(msg+16)) {
 	  debug_message("ERROR: end mark != end of data\n");
 	  return NULL;

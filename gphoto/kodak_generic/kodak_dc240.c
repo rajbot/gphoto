@@ -444,7 +444,8 @@ kdc240_get_picture_read
    printf ("kdc240_get_picture_read: read %d bytes\n", buffer->rx_bytes);
 #endif
 
-   update_progress(100 * buffer->rx_bytes / buffer->size);
+   if (buffer->size)
+	   update_progress(100 * buffer->rx_bytes / buffer->size);
 
    return retval;
 }

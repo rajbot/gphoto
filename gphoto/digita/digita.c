@@ -132,7 +132,8 @@ struct Image *digita_get_picture(int index, int thumbnail)
 	len = ntohl(tag.filesize);
 	pos = ntohl(tag.length);
 	while (pos < len) {
-		update_progress(100 * pos / len);
+		if (len)
+			update_progress(100 * pos / len);
 		tag.offset = htonl(pos);
 		if ((len - pos) > GFD_BUFSIZE)
 			tag.length = htonl(GFD_BUFSIZE);

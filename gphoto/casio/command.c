@@ -428,7 +428,8 @@ QVblockrecv(sdcInfo info, unsigned char *buf, int filesize, int show_percent_rea
 				       get_u_short(buf + 6);
 	    }
 	    percentRead = ((float)totalRead) / expectedAmount;
-	    update_progress(100 * totalRead / expectedAmount);
+	    if (expectedAmount)
+		    update_progress(100 * totalRead / expectedAmount);
 	}
 
 	if (casio_qv_read(info, &t, 1) == SDC_FAIL) {

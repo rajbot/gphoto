@@ -569,7 +569,7 @@ struct Image *kodak_dc210_get_thumbnail (int serialdev, int picNum)
 
 	/* on the last block numRead will be > fileSize, so don't report it
 	   in these situations */
-	if (numRead <= fileSize)
+	if ((numRead <= fileSize)&&(fileSize))
 	  update_progress( 100 * numRead / fileSize);
       }
       else
@@ -664,7 +664,7 @@ struct Image *kodak_dc210_get_picture (int picNum, int thumbnail)
 	kodak_dc210_read_packet( serialdev,picData+numRead,blockSize);
 	numRead += blockSize;
 
-	if (numRead <= fileSize)
+	if ((numRead <= fileSize)&&(fileSize))
 	  update_progress( 100 * numRead / fileSize);
       }
       fprintf(stderr,"%d/%d\n",numRead,fileSize);

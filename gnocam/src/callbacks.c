@@ -515,6 +515,7 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 	gchar*			filename;
 	gchar*			path;
 	gchar*			text;
+	gchar*			contents = NULL;
 	gchar*			list_text[1];
 	GtkWidget*		page;
 	GtkWidget*		label;
@@ -528,6 +529,8 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
         GdkPixbufLoader*	loader;
         GdkPixmap*		pixmap;
         GdkBitmap*		bitmap;
+	CameraText*		buffer;
+	gint			folder_count, file_count;
 
 	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (item), "xml")) != NULL);
 	g_assert ((notebook = GTK_NOTEBOOK (glade_xml_get_widget (xml, "notebook_files"))) != NULL);
@@ -600,12 +603,38 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 	} else {
 	
 		/* We've got a folder. */
-		text = g_strdup_printf (
-			_("Folder '%s' contains %i folders and %i files."), 
-			path, 
-			GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (item), "folder_list_count")),
-			GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (item), "file_list_count")));
+		folder_count = GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (item), "folder_list_count"));
+		file_count = GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (item), "file_list_count"));
+		if ((folder_count == 0) && (file_count == 0)) 
+			contents = g_strdup_printf (_("Folder '%s' does neither contain folders nor files."), path);
+		else if ((folder_count == 1) && (file_count == 0)) 
+			contents = g_strdup_printf (_("Folder '%s' contains 1 folder."), path);
+		else if ((folder_count > 1) && (file_count == 0))
+			contents = g_strdup_printf (_("Folder '%s' contains %i folders."), path, folder_count);
+		else if ((folder_count == 0) && (file_count == 1))
+			contents = g_strdup_printf (_("Folder '%s' contains 1 file."), path);
+		else if ((folder_count == 1) && (file_count == 1))
+			contents = g_strdup_printf (_("Folder '%s' contains 1 folder and 1 file."), path);
+		else if ((folder_count > 1) && (file_count == 1))
+			contents = g_strdup_printf (_("Folder '%s' contains %i folders and 1 file."), path, folder_count);
+		else if ((folder_count == 0) && (file_count > 1))
+			contents = g_strdup_printf (_("Folder '%s' contains %i files."), path, file_count);
+		else if ((folder_count == 1) && (file_count > 1))
+			contents = g_strdup_printf (_("Folder '%s' contains 1 folder and %i files."), path, file_count);
+		else if ((folder_count > 1) && (file_count > 1))
+			contents = g_strdup_printf (_("Folder '%s' contains %i folders and %i files. "), path, folder_count, file_count);
+		else g_assert_not_reached ();
+		if (strcmp ("/", path) == 0) {
+			buffer = g_new0 (CameraText, 1);
+			if (gp_camera_summary (camera, buffer) != GP_OK) strcpy ("?", (gchar*) buffer);
+			text = g_strdup_printf (_("%s\n\nCamera summary:\n%s"), contents, buffer);
+			g_free (buffer);
+			g_free (contents);
+		} else {
+			text = contents;
+		}
 		page = gtk_label_new (text);
+		gtk_label_set_justify (GTK_LABEL (page), GTK_JUSTIFY_LEFT);
 		g_free (text);
 		
 		label = gtk_label_new (path);

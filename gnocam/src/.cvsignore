@@ -1,0 +1,9 @@
+Makefile
+Makefile.in
+callbacks.o
+gnocam
+gnocam.glade.bak
+gnocam.o
+preferences.o
+save.o
+

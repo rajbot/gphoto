@@ -551,6 +551,7 @@ static GnomeVFSResult do_get_file_info (
 	}
 
 	CAM_VFS_DEBUG (("Trying to get storage for %s...", moniker)); 
+	usleep (300);
 	storage = bonobo_get_object (moniker, "IDL:Bonobo/Storage:1.0", &ev); 
 	CAM_VFS_DEBUG (("... done.")); 
 	g_free (moniker);

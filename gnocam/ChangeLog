@@ -1,3 +1,11 @@
+2001-06-07	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
+	* bonobo-moniker/bonobo-moniker-camera.c: If resolving as stream, check
+	if we have to pass the COMPRESSED flag. That lets us display previews
+	again.
+	* gnome-vfs-module/camera-method.c: (do_get_file_info): Add another
+	usleep(300) :-(
+
 2001-06-06	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
 	* bonobo-storage-module/bonobo-stream-camera.c: 

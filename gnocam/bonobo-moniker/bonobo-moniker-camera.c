@@ -9,11 +9,13 @@ camera_resolve (BonoboMoniker 		    *moniker,
 		const CORBA_char 	    *requested_interface, 
 		CORBA_Environment 	    *ev)
 {
+	Bonobo_Storage_OpenMode mode, comp_mode = 0;
 	CORBA_Environment tmp_ev;
 	const gchar *name;
 
 	name = bonobo_moniker_get_name (moniker);
-	g_message ("Trying to resolve %s...", name);
+	if ((strlen (name) > 11) && !strncmp (name, "//previews@", 11))
+		comp_mode = Bonobo_Storage_COMPRESSED;
     
 	/* Stream? */
 	if (!strcmp (requested_interface, "IDL:Bonobo/Stream:1.0")) {
@@ -21,10 +23,8 @@ camera_resolve (BonoboMoniker 		    *moniker,
 		
 		CORBA_exception_init (&tmp_ev);
 	
-		g_message ("... as stream.");
-		stream = bonobo_stream_open_full ("camera", name, 
-						  Bonobo_Storage_READ |
-						  Bonobo_Storage_WRITE, 
+		mode = Bonobo_Storage_READ | Bonobo_Storage_WRITE | comp_mode;
+		stream = bonobo_stream_open_full ("camera", name, mode,
 						  0644, &tmp_ev);
 		if (BONOBO_EX (&tmp_ev)) {
 			g_warning ("Could not get stream: %s",
@@ -32,8 +32,8 @@ camera_resolve (BonoboMoniker 		    *moniker,
 
 			CORBA_exception_free (&tmp_ev);
 
-			stream = bonobo_stream_open_full ("camera", name,
-							  Bonobo_Storage_READ,
+			mode = Bonobo_Storage_READ | comp_mode;
+			stream = bonobo_stream_open_full ("camera", name, mode,
 							  0644, ev);
 			if (BONOBO_EX (ev)) {
 				g_warning ("Could not get stream: %s", 
@@ -44,8 +44,6 @@ camera_resolve (BonoboMoniker 		    *moniker,
 
 		CORBA_exception_free (&tmp_ev);
 
-		g_message ("Returning stream...");
-
 		return CORBA_Object_duplicate (BONOBO_OBJREF (stream), ev);
 	}
 
@@ -53,18 +51,14 @@ camera_resolve (BonoboMoniker 		    *moniker,
 	if (!strcmp (requested_interface, "IDL:Bonobo/Storage:1.0")) {
 		BonoboStorage* storage;
 
-		g_message ("... as storage.");
-		storage = bonobo_storage_open_full ("camera", name, 
-						    Bonobo_Storage_READ | 
-						    Bonobo_Storage_WRITE, 
+		mode = Bonobo_Storage_READ | Bonobo_Storage_WRITE;
+		storage = bonobo_storage_open_full ("camera", name, mode,
 						    0644, ev);
 		if (BONOBO_EX (ev)) {
 			g_warning ("Could not get storage: %s", 
 				   bonobo_exception_get_text (ev));
 			return CORBA_OBJECT_NIL;
 		}
-
-		g_message ("Returning storage...");
 
 		return CORBA_Object_duplicate (BONOBO_OBJREF (storage), ev);
 	}

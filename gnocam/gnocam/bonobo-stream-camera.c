@@ -263,9 +263,11 @@ bonobo_stream_camera_new (Camera            *camera,
     	BonoboObject	   *object;
 	BonoboStreamCamera *new;
 	Bonobo_Stream	    corba_new;
-	CameraList          list;
+	CameraList         *list;
 	CameraFile         *file;
 	gint i;
+	int count;
+	const char *name;
 
 	g_message ("Creating new BonoboStreamCamera...");
 
@@ -285,28 +287,40 @@ bonobo_stream_camera_new (Camera            *camera,
 		return (NULL);
         }
 
-	/* You cannot do a gp_camera_file_get_file() if you have not 
-	 * performed a gp_camera_folder_list_files() previously to populate 
-	 * the filesystem struct of the driver. 
-	 */
-	CHECK_RESULT (gp_camera_folder_list_files (camera, dirname, &list), ev);
-	if (BONOBO_EX (ev)) {
-		g_warning ("Couldn't get list of files: %s",
-			   bonobo_exception_get_text (ev));
-		return (NULL);
-	}
-
         /* Does the requested file exist? */
         if (flags & Bonobo_Storage_FAILIFEXIST) {
-                for (i = 0; i < gp_list_count (&list); i++) {
-                        if (!strcmp ((gp_list_entry (&list, i))->name, 
-				     filename)) {
+
+		CHECK_RESULT (gp_list_new (&list), ev);
+		if (BONOBO_EX (ev))
+			return (NULL);
+
+		count = gp_list_count (list);
+		CHECK_RESULT (count, ev);
+		if (BONOBO_EX (ev)) {
+			gp_list_free (list);
+			return (NULL);
+		}
+
+                for (i = 0; i < count; i++) {
+			CHECK_RESULT (gp_list_get_name (list, i, &name), ev);
+			if (BONOBO_EX (ev)) {
+				gp_list_free (list);
+				return (NULL);
+			}
+                        if (!strcmp (name, filename)) {
+				CHECK_RESULT (gp_list_free (list), ev);
+				if (BONOBO_EX (ev))
+					return (NULL);
                                 CORBA_exception_set (
 					ev, CORBA_USER_EXCEPTION, 
 					ex_Bonobo_Storage_NameExists, NULL);
                                 return (NULL);
                         }
                 }
+		
+		CHECK_RESULT (gp_list_free (list), ev);
+		if (BONOBO_EX (ev))
+			return (NULL); 
         }
 
         /* Get the file. */

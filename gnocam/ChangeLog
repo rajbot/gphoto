@@ -1,3 +1,8 @@
+2001-08-23  Lutz Müller <urc8@rz.uni-karlsruhe.de>
+
+	* gnocam/*:
+	* gnome-vfs-module/*: Adaption to gphoto2 API changes
+
 2001-08-21  Lutz Müller <urc8@rz.uni-karlsruhe.de>
 
 	* applet/gnocam-applet.desktop.in: New

@@ -3,7 +3,7 @@
 /* Prototypes */
 /**************/
 
-Camera* util_camera_new (gchar* name, CORBA_Environment* ev);
+Camera* util_camera_new (gchar* name);
 
 void menu_create	(GnoCamControl* control);
 

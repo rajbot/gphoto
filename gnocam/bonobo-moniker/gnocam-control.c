@@ -9,10 +9,6 @@
 #include "gnocam-control.h"
 #include "utils.h"
 
-struct _GnoCamControlPrivate {
-        GtkWidget*	vbox;
-};
-
 static BonoboControlClass *gnocam_control_parent_class;
 
 /*************/
@@ -28,39 +24,44 @@ gnocam_control_activate (BonoboControl *object, gboolean state)
         if (BONOBO_CONTROL_CLASS (gnocam_control_parent_class)->activate) BONOBO_CONTROL_CLASS (gnocam_control_parent_class)->activate (object, state);
 }
 
-
 GnoCamControl*
-gnocam_control_construct (GnoCamControl* control, BonoboMoniker *moniker, const Bonobo_ResolveOptions *options)
+gnocam_control_new (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options)
 {
+        GnoCamControl*		control;
 	Bonobo_Unknown 		subcontrol;
-	CORBA_Environment	ev;
 	gint			i;
 	gchar*			name;
 	const gchar*		name_full;
-	Camera*			camera = NULL;
+	GtkWidget*		vbox;
+	Camera*			camera;
+	CORBA_Environment	ev;
 
-printf ("BEGIN: gnocam_control_construct\n");
-	
-	/* Disassemble the moniker's name. */
+	/* Make sure we are given a camera name. */
 	name_full = bonobo_moniker_get_name (moniker);
-	name = (gchar*) name_full + 8;
-	if (name[0] == '/') {
-		
-		/* Create the camera. */
-		for (i = 0; name[i] != 0; i++) if (name[i] == '/') break;
-		name = g_strndup (name, i);
-		camera = util_camera_new (name, &ev);
+	if ((strlen(name_full) < 2) || (name_full [0] != '/') || (name_full [1] != '/')) {
+		g_warning (_("Could not find camera name in '%s'!"), name_full);
+		return (NULL);
 	}
-	
-	g_return_val_if_fail (camera, NULL);
-	
-	gtk_widget_show (control->priv->vbox = gtk_vbox_new (TRUE, 0));
+
+	/* Create the camera. */
+	name = (gchar*) name_full + 2;
+	for (i = 0; name[i] != 0; i++) if (name[i] == '/') break;
+	name = g_strndup (name, i);
+	if (!(camera = util_camera_new (name))) {
+		g_warning (_("Could not create camera '%s'!"), name);
+		return (NULL);
+	}
+
+	/* Create control. */
+	control = gtk_type_new (gnocam_control_get_type ());
+	gtk_widget_show (vbox = gtk_vbox_new (TRUE, 0));
 
 	/* Create the control. */
-	if (!bonobo_control_construct (BONOBO_CONTROL (control), control->priv->vbox)) return (NULL);
+	if (!bonobo_control_construct (BONOBO_CONTROL (control), vbox)) return (NULL);
 	control->path = g_strdup (name + i);
 	control->config_camera = NULL;
-	control->config_object = NULL;
+	control->config_folder = NULL;
+	control->config_file = NULL;
 
 	/* Init exception. */
 	CORBA_exception_init (&ev);
@@ -73,7 +74,7 @@ printf ("BEGIN: gnocam_control_construct\n");
 		GtkWidget*		widget = bonobo_widget_new_control_from_objref (subcontrol, container);
 
 		gtk_widget_show (widget);
-		gtk_container_add (GTK_CONTAINER (control->priv->vbox), widget);
+		gtk_container_add (GTK_CONTAINER (vbox), widget);
 	}
 
 	/* Keep the camera. */
@@ -82,7 +83,6 @@ printf ("BEGIN: gnocam_control_construct\n");
 	/* Free exception. */
 	CORBA_exception_free (&ev);
 
-printf ("END: gnocam_control_construct\n");
 	return (control);
 }
 
@@ -91,19 +91,13 @@ gnocam_control_finalize (GtkObject *object)
 {
         GnoCamControl*	control = GNOCAM_CONTROL (object);
 
-printf ("BEGIN: gnocam_control_finalize\n");
-
-        if (control->priv) {
-		if (control->priv->vbox) gtk_widget_destroy (control->priv->vbox);
-		control->priv->vbox = NULL;
-		g_free (control->priv);
-		control->priv = NULL;
-	}
+	if (control->config_camera) {gp_widget_unref (control->config_camera); control->config_camera = NULL;}
+	if (control->config_folder) {gp_widget_unref (control->config_folder); control->config_folder = NULL;}
+	if (control->config_file) {gp_widget_unref (control->config_file); control->config_file = NULL;}
+	if (control->camera) {gp_camera_unref (control->camera); control->camera = NULL;};
+	if (control->path) {g_free (control->path); control->path = NULL;};
 
         GTK_OBJECT_CLASS (gnocam_control_parent_class)->finalize (object);
-
-printf ("END: gnocam_control_finalize\n");
-
 }
 
 static void
@@ -115,13 +109,7 @@ gnocam_control_destroy (GtkObject *object)
 static void
 gnocam_control_init (GnoCamControl *control)
 {
-
-printf ("BEGIN: gnocam_control_init\n");
-
-        control->priv = g_new0 (GnoCamControlPrivate, 1);
-
-printf ("END: gnocam_control_init\n");
-
+	/* Don't do anything here... */
 }
 
 
@@ -131,17 +119,12 @@ gnocam_control_class_init (GnoCamControl *klass)
         GtkObjectClass *object_class = (GtkObjectClass *)klass;
         BonoboControlClass *control_class = (BonoboControlClass *)klass;
 
-printf ("BEGIN: gnocam_control_class_init\n");
-
         gnocam_control_parent_class = gtk_type_class (bonobo_control_get_type ());
 
         object_class->destroy = gnocam_control_destroy;
         object_class->finalize = gnocam_control_finalize;
 
         control_class->activate = gnocam_control_activate;
-
-printf ("END: gnocam_control_class_init\n");
-
 }
 
 GtkType
@@ -167,14 +150,5 @@ gnocam_control_get_type (void)
         return type;
 }
 
-GnoCamControl*
-gnocam_control_new (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options)
-{
-        GnoCamControl *control;
-        
-        control = gtk_type_new (gnocam_control_get_type ());
-
-        return (gnocam_control_construct (control, moniker, options));
-}
 
 

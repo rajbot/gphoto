@@ -24,7 +24,6 @@ BEGIN_GNOME_DECLS
 
 typedef struct _GnoCamControl         GnoCamControl;
 typedef struct _GnoCamControlClass    GnoCamControlClass;
-typedef struct _GnoCamControlPrivate  GnoCamControlPrivate;
 
 struct _GnoCamControl {
 	BonoboControl 	control;
@@ -32,11 +31,10 @@ struct _GnoCamControl {
 	Camera* 	camera;
 
 	CameraWidget*	config_camera;
-	CameraWidget*	config_object;
+	CameraWidget*	config_folder;
+	CameraWidget*	config_file;
 
 	gchar*		path;
-
-	GnoCamControlPrivate *priv;
 };
 
 struct _GnoCamControlClass {
@@ -45,7 +43,6 @@ struct _GnoCamControlClass {
 
 GtkType           gnocam_control_get_type                    (void);
 GnoCamControl    *gnocam_control_new                         (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options);
-GnoCamControl    *gnocam_control_construct                   (GnoCamControl *control, BonoboMoniker *moniker, const Bonobo_ResolveOptions *options);
 
 END_GNOME_DECLS
 

@@ -50,7 +50,9 @@ camera_resolve (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options, co
 static BonoboObject *
 bonobo_moniker_camera_factory (BonoboGenericFactory *this, void* data)
 {
-	g_return_val_if_fail (gp_init (GP_DEBUG_NONE) == GP_OK, NULL);
+	gint result = gp_init (GP_DEBUG_NONE);
+	
+	if (result != GP_OK) g_warning (_("Could not initialize gphoto2! (%s)"), gp_result_as_string (result));
 	
 	return BONOBO_OBJECT (bonobo_moniker_simple_new ("camera:", camera_resolve));
 }

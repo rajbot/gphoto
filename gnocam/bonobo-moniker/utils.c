@@ -106,6 +106,8 @@ on_adjustment_value_changed (GtkObject* object, gpointer user_data)
 	g_return_if_fail (widget = gtk_object_get_data (object, "widget"));
 	g_return_if_fail (camera = gtk_object_get_data (object, "camera"));
 
+	g_warning (_("on_adjustment_value_changed"));
+
 	gp_widget_value_get (widget, &f);
 	f_new = GTK_ADJUSTMENT (object)->value;
 	if (f != f_new) {
@@ -166,13 +168,12 @@ on_date_changed (GtkObject* object, gpointer user_data)
 /*************/
 
 Camera*
-util_camera_new (gchar* name, CORBA_Environment* ev) 
+util_camera_new (gchar* name) 
 {
         GConfClient*    client;
         guint           i, result;
 
 	g_return_val_if_fail (name, NULL);
-	g_return_val_if_fail (ev, NULL);
 
 	/* Make sure GConf is initialized. */
         if (!gconf_is_initialized ()) {
@@ -189,7 +190,6 @@ util_camera_new (gchar* name, CORBA_Environment* ev)
                 
                 if (!gconf_client_dir_exists (client, path, NULL)) {
                         g_warning (_("Directory '%s' does not exist. Camera '%s' unknown!"), path, name);
-                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
                         g_free (path);
                         break;
                 }
@@ -216,7 +216,6 @@ util_camera_new (gchar* name, CORBA_Environment* ev)
                         /* Create the camera */
                         if ((result = gp_camera_new (&camera)) != GP_OK) {
                                 g_warning (_("Could not create camera! (%s)"), gp_result_as_string (result));
-                                CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
                         } else {
                                 strcpy (camera->model, model);
 
@@ -228,19 +227,14 @@ util_camera_new (gchar* name, CORBA_Environment* ev)
                                         }
                                         if (!strcmp (camera->port->name, port)) break;
                                 }
-                                if (i == gp_port_count_get ()) {
-                                        g_warning (_("Port '%s' not found!"), port);
-                                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
-				} else if (i < 0) {
-					g_warning (_("Could not get number of ports! (%s)"), gp_result_as_string (i));
-                                } else {
+                                if (i == gp_port_count_get ()) g_warning (_("Port '%s' not found!"), port);
+				else if (i < 0) g_warning (_("Could not get number of ports! (%s)"), gp_result_as_string (i));
+                                else {
                                         camera->port->speed = 0;
 
                                         /* Connect to the camera */
-                                        if ((result = gp_camera_init (camera)) != GP_OK) {
+                                        if ((result = gp_camera_init (camera)) != GP_OK) 
                                                 g_warning (_("Could not initialize camera! (%s)"), gp_result_as_string (result));
-                                                CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
-                                        }
                                 }
                         }
 
@@ -267,24 +261,34 @@ menu_create (GnoCamControl* control)
 		bonobo_ui_component_set_container (component, container);
 
 		/* Camera Configuration? */
-		if (control->camera->abilities->config && !control->config_camera) 
-		{
-			gint result = gp_camera_config_get (control->camera, &(control->config_camera), NULL);
+		if (control->camera->abilities->config && !control->config_camera) {
+			gint result = gp_camera_config_get (control->camera, &(control->config_camera));
 			if (result != GP_OK) 
 				g_warning (_("Could not get widget for camera configuration! (%s)"), 
 					gp_camera_result_as_string (control->camera, result));
 		}
-		if (control->config_camera) menu_setup (control, control->config_camera, "Camera Configuration", TRUE);
+		if (control->config_camera) menu_setup (control, control->config_camera, "CameraConfiguration", TRUE);
 
-		/* File/Folder Configuration? */
-		if (!control->config_object) 
-		{
-			gint result = gp_camera_config_get (control->camera, &(control->config_object), control->path);
+		/* File Configuration? */
+		if (!control->config_file) {
+			gchar* 	file = g_basename (control->path);
+			gchar*	folder = g_dirname (control->path);
+			gint result = gp_camera_file_config_get (control->camera, &(control->config_file), folder, file);
+			if (result != GP_OK) 
+				g_warning (_("Could not get widget for configuration of file '%s' in folder '%s'! (%s)"), 
+					file, folder, gp_camera_result_as_string (control->camera, result));
+			g_free (folder);
+		}
+		if (control->config_file) menu_setup (control, control->config_file, "FileConfiguration", FALSE);
+
+		/* Folder Configuration? */
+		if (!control->config_folder) {
+			gint result = gp_camera_folder_config_get (control->camera, &(control->config_folder), control->path);
 			if (result != GP_OK) 
 				g_warning (_("Could not get widget for configuration of '%s'! (%s)"), 
 					control->path, gp_camera_result_as_string (control->camera, result));
 		}
-		if (control->config_object) menu_setup (control, control->config_object, "Object Configuration", TRUE);
+		if (control->config_folder) menu_setup (control, control->config_folder, "FolderConfiguration", FALSE);
 		
 		/* Release the container. */
 		bonobo_object_release_unref (container, NULL);
@@ -307,10 +311,11 @@ menu_setup (GnoCamControl* control, CameraWidget* widget, gchar* name, gboolean 
         xmlAddChild (node, child = xmlNewNode (ns, "menu"));
         xmlAddChild (child, node = xmlNewNode (ns, "submenu"));
         xmlSetProp (node, "name", "Edit");
+	xmlSetProp (node, "_label", "_Edit");
         xmlAddChild (node, child = xmlNewNode (ns, "submenu"));
         xmlSetProp (child, "name", name);
         xmlSetProp (child, "_label", name);
-        menu_prepare (widget, node, commands, ns);
+        menu_prepare (widget, child, commands, ns);
 
         /* Send it to the component. */
         xmlDocDumpMemory (doc, (xmlChar**) &tmp, &i);
@@ -319,7 +324,9 @@ menu_setup (GnoCamControl* control, CameraWidget* widget, gchar* name, gboolean 
         g_free (tmp);
 
 	/* Finish. */
-	menu_fill (control, "/menu/Edit", widget, widget, for_camera);
+	tmp = g_strconcat ("/menu/Edit/", name, NULL);
+	menu_fill (control, tmp, widget, widget, for_camera);
+	g_free (tmp);
 }
 
 void 
@@ -329,8 +336,6 @@ menu_prepare (CameraWidget* widget, xmlNodePtr menu, xmlNodePtr command, xmlNsPt
 	gint 			i;
 	xmlNodePtr		node;
 	gchar*			id;
-
-printf ("BEGIN: menu_prepare\n");
 
 	for (i = 0; i < gp_widget_child_count (widget); i++) {
 		child = gp_widget_child (widget, i);
@@ -362,8 +367,6 @@ printf ("BEGIN: menu_prepare\n");
 		}
 		g_free (id);
 	}
-
-printf ("END: menu_prepare\n");
 }
 
 void 
@@ -382,8 +385,6 @@ menu_fill (GnoCamControl* control, gchar* path, CameraWidget* window, CameraWidg
 	gint			value_int;
 	BonoboUIComponent*	component = bonobo_control_get_ui_component (BONOBO_CONTROL (control));
 
-printf ("BEGIN: menu_fill\n");
-	
 	for (i = 0; i < gp_widget_child_count (widget); i++) {
 		child = gp_widget_child (widget, i);
 		switch (gp_widget_type (child)) {
@@ -501,8 +502,6 @@ printf ("BEGIN: menu_fill\n");
 			break;
 		}
 	}
-
-printf ("END: menu_fill\n");
 }
 
 

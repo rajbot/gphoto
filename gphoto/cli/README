@@ -1,0 +1,11 @@
+photo 0.0.1 (CLI for gPhoto libraries)
+--------------------------------------
+
+This is my skeleton for photo, an imlib/X independent
+command line interface that gradually will be able to
+call gPhoto libraries, use libjpeg for file i/o, and 
+be able to run in console/screen mode without X.
+
+-- Ole Aamot (oka@ifi.uio.no)
+
+

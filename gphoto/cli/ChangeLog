@@ -1,0 +1,4 @@
+1999-09-03  Ole Kristian Aamot  <oka@sverthshoegg.ifi.uio.no>
+
+	* Skeleton that uses long options.  Doesn't call libraries yet.
+	

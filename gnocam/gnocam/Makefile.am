@@ -42,7 +42,7 @@ $(CORBA_GENERATED): $(idls)
 GnoCam.h: $(idls)
 
 BUILT_SOURCES=$(CORBA_GENERATED)
-CLEANFILES += $(BUILT_SOURCES)
+CLEANFILES=$(BUILT_SOURCES)
 
 oafdir = $(datadir)/oaf
 oaf_in_files = GNOME_GnoCam.oaf.in

@@ -16,6 +16,9 @@
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <sys/errno.h>
+#ifdef sun
+	#include <errno.h>
+#endif
 
 #include "mesalib.h"
 

@@ -60,7 +60,7 @@
 #include<sys/ioctl.h>
 #include<setjmp.h>
 #include<sys/time.h>
-
+#include<signal.h>
 #include "../src/gphoto.h"
 #include "../src/util.h"
 

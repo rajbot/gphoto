@@ -701,8 +701,8 @@ gnocam_applet_new (PanelApplet *applet)
 
 	/* Setup widget. */
 	switch (panel_applet_get_orient (applet)) {
-	case PANEL_APPLET_ORIENT_UP:
-	case PANEL_APPLET_ORIENT_DOWN:
+	case PANEL_APPLET_ORIENT_LEFT:
+	case PANEL_APPLET_ORIENT_RIGHT:
 		w = gtk_vbox_new (FALSE, 0);
 		break;
 	default:

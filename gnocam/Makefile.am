@@ -1,4 +1,4 @@
-SUBDIRS = m4 art libgnocam tests applet capplet intl po
+SUBDIRS = m4 art libgnocam tests applet gnome-vfs-module capplet intl po
 
 EXTRA_DIST = \
  AUTHORS\

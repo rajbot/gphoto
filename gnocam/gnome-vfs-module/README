@@ -1,19 +1,8 @@
-
-This module isn't fully implemented (yet).
-
 You should be able to access a file with something 
-like "camera://my_camera/directory/filename.jpg", 
-where 'My Camera' is the name of the camera you
-specified in the preferences dialog of GnoCam.
+like 
 
-Currently, you are able to get previews with 
-something like "camera://previews@my_camera/".
+camera:<manufacturer>:<model>:<port>:/directory/<interface>/filename.jpg
 
-By the way: The module hangs when accessing gconf
-all the time. Therefore the initialization mess.
-But like that, I only access gconf one time and
-never again. Which means you have to restart
-nautilus (= unload the module, load it again) in
-order to be able to access new settings.
+Have fun!
 
-
+Lutz Müller <lutz@users.sourceforge.net>

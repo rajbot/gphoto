@@ -40,6 +40,8 @@ module C {
 
 	interface Dir : Bonobo::Unknown {
 
+		attribute string name;
+
 		IDList get_files () raises (Error);
 		ID add_file (in File file);
 		File get_file (in ID id) raises (BadID, Error);

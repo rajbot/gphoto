@@ -1,21 +1,26 @@
+modulesdir = $(libdir)/gnome-vfs-2.0/modules
+modules_LTLIBRARIES=libcamera.la
 
-modulesdir = $(libdir)/vfs/modules
+CORBA_GENERATED = GNOME_C-common.c GNOME_C-stubs.c GNOME_C.h
+$(CORBA_GENERATED): $(top_srcdir)/idl/GNOME_C.idl
+	$(ORBIT_IDL) --noskels \
+		-I`$(PKG_CONFIG) --variable=idldir libbonobo-2.0` \
+		-I`$(PKG_CONFIG) --variable=idldir bonobo-activation-2.0` \
+		$(top_srcdir)/idl/GNOME_C.idl
 
-modules_LTLIBRARIES=libvfs-camera.la
+libcamera_la_SOURCES =			\
+	$(CORBA_GENERATED)		\
+	camera-method.c			\
+	camera-dir.h camera-dir.c	\
+	camera-file.h camera-file.c	\
+	camera-utils.h camera-utils.c
 
-libvfs_camera_la_SOURCES = camera-method.c
+INCLUDES = -DG_LOG_DOMAIN=\"libcamera\" $(VFS_CFLAGS)
+libcamera_la_LIBADD = $(VFS_LIBS)
+libcamera_la_LDFLAGS = -export_dynamic -avoid-version
 
-INCLUDES =\
- -DG_LOG_DOMAIN=\"libvfs-camera\"\
- $(GCONF_CFLAGS)\
- $(VFS_CFLAGS)\
- $(GPHOTO_CFLAGS)
-
-libvfs_camera_la_LIBADD = $(VFS_LIBS) $(GCONF_LIBS) $(GPHOTO_LIBS)
-
-libvfs_camera_la_LDFLAGS = -export_dynamic -avoid-version
-
-modulesconfdir = $(sysconfdir)/vfs/modules
+modulesconfdir = $(sysconfdir)/gnome-vfs-2.0/modules
 modulesconf_DATA=camera-methods.conf
 
 EXTRA_DIST=camera-methods.conf
+CLEANFILES=$(CORBA_GENERATED)

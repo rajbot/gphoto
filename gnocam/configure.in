@@ -99,9 +99,9 @@ AC_SUBST(BONOBO_CFLAGS)
 AC_SUBST(BONOBO_LIBS)
 
 dnl ---------------------------------------------------------------------------
-dnl gnome-vfs
+dnl gnome-vfs-module
 dnl ---------------------------------------------------------------------------
-PKG_CHECK_MODULES(VFS, gnome-vfs-module-2.0)
+PKG_CHECK_MODULES(VFS, gnome-vfs-module-2.0 bonobo-activation-2.0 libbonobo-2.0 ORBit-2.0)
 AC_SUBST(VFS_CFLAGS)
 AC_SUBST(VFS_LIBS)
 
@@ -141,6 +141,7 @@ Makefile
 art/Makefile
 idl/Makefile
 applet/Makefile
+gnome-vfs-module/Makefile
 capplet/Makefile
 libgnocam/Makefile
 tests/Makefile

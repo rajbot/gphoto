@@ -14,6 +14,7 @@
 #include <gtk/gtktreeviewcolumn.h>
 #include <gtk/gtktreeview.h>
 #include <gtk/gtktreeselection.h>
+#include <gtk/gtktogglebutton.h>
 
 #include <glade/glade.h>
 
@@ -28,6 +29,7 @@
 struct _GnocamChooserPriv
 {
 	GList *l;
+	GtkToggleButton *toggle_connect_auto;
 
 	GtkListStore *manufs, *models, *ports;
 	GtkTreeSelection *s_manufs, *s_models, *s_ports;
@@ -403,6 +405,12 @@ gnocam_chooser_get_port (GnocamChooser *c)
 	return gnocam_chooser_get_common (c, c->priv->s_ports);
 }
 
+static void
+on_connect_auto_toggled (GtkToggleButton *toggle, GnocamChooser *c)
+{
+	g_signal_emit (c, signals[CHANGED], 0);
+}
+
 GnocamChooser *
 gnocam_chooser_new (void)
 {
@@ -482,6 +490,12 @@ gnocam_chooser_new (void)
 	g_signal_connect (c->priv->s_ports, "changed",
 			  G_CALLBACK (on_port_selection_changed), c);
 
+	/* Connect automatically */
+	w = glade_xml_get_widget (xml, "checkbutton_connect_auto");
+	c->priv->toggle_connect_auto = GTK_TOGGLE_BUTTON (w);
+	g_signal_connect (w, "toggled",
+			  G_CALLBACK (on_connect_auto_toggled), c);
+
 	/* Find available cameras on the system. */
 	gnocam_chooser_setup (c);
 
@@ -507,6 +521,5 @@ gboolean
 gnocam_chooser_get_connect_auto (GnocamChooser *c)
 {
 	g_return_val_if_fail (GNOCAM_IS_CHOOSER (c), FALSE);
-	g_warning ("Fixme!");
-	return FALSE;
+	return gtk_toggle_button_get_active (c->priv->toggle_connect_auto);
 }

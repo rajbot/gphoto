@@ -1,3 +1,7 @@
+2001-08-15  Lutz Müller <urc8@rz.uni-karlsruhe.de>
+	
+	* bonobo-moniker/Makefile.am: Get "make distcheck" working again.
+
 2001-08-09  Lutz Müller <urc8@rz.uni-karlsruhe.de>
 
 	* gnocam/gnocam-main.c: (impl_GNOME_GnoCam_getCameraList): New

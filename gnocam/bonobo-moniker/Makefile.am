@@ -34,6 +34,6 @@ $(CORBA_GENERATED): $(top_srcdir)/idl/GnoCam.idl
 
 BUILT_SOURCES = $(CORBA_GENERATED)
 CLEANFILES += $(BUILT_SOURCES) $(OAF_FILES)
-EXTRA_DIST = Bonobo_Moniker_camera.oaf.in.in
+EXTRA_DIST = Bonobo_Moniker_camera.oaf.in
 
 

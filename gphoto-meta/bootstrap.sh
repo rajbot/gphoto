@@ -31,10 +31,11 @@ EOF
 	    exit 1
 	    ;;
     esac
-    if ! shift
+    if test $# = 0
     then
 	break
     fi
+    shift
 done
 set | grep '^parm_'
 
@@ -62,7 +63,7 @@ function installautotools() {
     do
 	local tarball
 	tarball="${downloads}/$(basename "$URL")"
-	if [ -f "$tarball" ]
+	if test -f "$tarball"
 	then
 	    echo "##### $tool already downloaded. Skipping."
 	else
@@ -113,7 +114,7 @@ function checktools() {
     local action tool restofline
     local autoinstall=false
 
-    if [ -d "$toolroot" ]
+    if test -d "$toolroot"
     then
 	echo "##### Going to use/build our own tools from/to ${toolroot}"
 	echo "    # If you don't want to use these tools, remove the"
@@ -133,7 +134,7 @@ function checktools() {
 	    echo "    # $tool found."
 	else
 	    echo "    # $tool not found."
-	    if [ "$action" = "fatal" ] || ( [ "$action" = "autocnd" ] && [ "$autoinstall" = "true" ] )
+	    if test "$action" = "fatal" || ( test "$action" = "autocnd" && test "$autoinstall" = "true" )
 	    then
 		echo "    # $tool is absolutely required, so we're aborting."
 		exit 2

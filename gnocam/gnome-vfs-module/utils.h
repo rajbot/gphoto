@@ -3,7 +3,9 @@
 /********************/
 
 typedef struct {
+	Camera*			camera;
         CameraFile*		file;
+	gchar*			folder;
 	GnomeVFSOpenMode	mode;
         glong			position;
 } file_handle_t;

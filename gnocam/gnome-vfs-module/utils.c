@@ -77,8 +77,8 @@ GnomeVFSMethodHandle*
 file_handle_new (GnomeVFSURI* uri, GnomeVFSOpenMode mode, GConfClient* client, GMutex* client_mutex, GnomeVFSResult* result)
 {
         const gchar*            filename;
-        gchar*                  dirname;
-        Camera*                 camera;
+        gchar*                  dirname = NULL;
+        Camera*                 camera = NULL;
         CameraFile*             file = NULL;
 	CameraList		list;
         file_handle_t*          file_handle;
@@ -98,24 +98,28 @@ file_handle_new (GnomeVFSURI* uri, GnomeVFSOpenMode mode, GConfClient* client, G
 	
 		/* Check if we've got the file. */
 		if (gp_camera_file_list (camera, &list, gnome_vfs_uri_extract_dirname (uri)) != GP_OK) {
+			gp_camera_unref (camera);
 			*result = GNOME_VFS_ERROR_GENERIC;
 			return (NULL);
 		}
 		for (i = 0; i < gp_list_count (&list); i++) if (!strcmp (filename, gp_list_entry (&list, i)->name)) break;
 		if (i == gp_list_count (&list)) {
+			gp_camera_unref (camera);
 			*result = GNOME_VFS_ERROR_NOT_FOUND;
 			return (NULL);
 		}
 	
 	        /* Get the file. */
 		dirname = gnome_vfs_uri_extract_dirname (uri);
-		g_print ("  getting file '%s' from directory '%s'...\n", filename, dirname);
 		file = gp_file_new ();
 		if (gp_camera_file_get (camera, file, dirname, (gchar*) filename) != GP_OK) {
+			gp_camera_unref (camera);
 			*result = GNOME_VFS_ERROR_GENERIC;
 			return (NULL);
 		}
 		gp_file_ref (file);
+		gp_camera_unref (camera);
+		camera = NULL;
 
 	} else if (mode == GNOME_VFS_OPEN_WRITE) {
 
@@ -132,6 +136,8 @@ file_handle_new (GnomeVFSURI* uri, GnomeVFSOpenMode mode, GConfClient* client, G
 	file_handle = g_new (file_handle_t, 1);
 	file_handle->mode = mode;
 	file_handle->file = file;
+	file_handle->camera = camera;
+	file_handle->folder = dirname;
 	file_handle->position = 0;
 	
 	return ((GnomeVFSMethodHandle*) file_handle);
@@ -142,10 +148,12 @@ file_handle_free (GnomeVFSMethodHandle* handle)
 {
 	file_handle_t* 	file_handle;
 	
-	g_return_val_if_fail (handle, GNOME_VFS_ERROR_INTERNAL);
+	if (!handle) return (GNOME_VFS_ERROR_BAD_PARAMETERS);
 
 	file_handle = (file_handle_t*) handle;
 	gp_file_unref (file_handle->file);
+	if (file_handle->camera) gp_camera_unref (file_handle->camera);
+	if (file_handle->folder) g_free (file_handle->folder);
 	g_free (file_handle);
 	return (GNOME_VFS_OK);
 }
@@ -209,7 +217,7 @@ directory_handle_free (GnomeVFSMethodHandle* handle)
 	directory_handle_t* 	directory_handle;
 	gint			i;
 	
-	g_return_val_if_fail (handle, GNOME_VFS_ERROR_INTERNAL);
+	if (!handle) return (GNOME_VFS_ERROR_INTERNAL);
 
 	directory_handle = (directory_handle_t*) handle;
 	for (i = 0; i < g_slist_length (directory_handle->folders); i++) g_free (g_slist_nth_data (directory_handle->folders, i));

@@ -1,4 +1,4 @@
-SUBDIRS = intl macros src po doc gnome-vfs-module bonobo-storage-module
+SUBDIRS = intl macros src po gnome-vfs-module bonobo-storage-module
 
 EXTRA_DIST =\
  README\

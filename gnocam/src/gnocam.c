@@ -61,16 +61,6 @@ on_about_activate (BonoboUIComponent* component, gpointer user_data, const gchar
 	g_return_if_fail (glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "about"));
 }
 
-void
-on_gnocam_manual_activate (BonoboUIComponent* component, gpointer user_data, const gchar* path)
-{
-	gchar*	tmp;
-
-	tmp = g_strdup_printf ("ghelp:%s/%s", GNOCAM_HELPDIR, (gchar*) user_data);
-	gnome_url_show (tmp);
-	g_free (tmp);
-}
-
 void 
 on_save_previews_activate (GtkWidget* widget, gpointer user_data)
 {
@@ -122,7 +112,6 @@ int main (int argc, char *argv[])
 		BONOBO_UI_UNSAFE_VERB ("Exit", gtk_main_quit),
 		BONOBO_UI_UNSAFE_VERB ("Preferences", preferences),
 		BONOBO_UI_UNSAFE_VERB ("About", on_about_activate),
-		BONOBO_UI_UNSAFE_VERB_DATA ("Manual", on_gnocam_manual_activate, "index.html"),
 		BONOBO_UI_UNSAFE_VERB ("SavePreviews", on_save_previews_activate),
 		BONOBO_UI_UNSAFE_VERB ("SavePreviewsAs", on_save_previews_as_activate),
 		BONOBO_UI_UNSAFE_VERB ("SaveFiles", on_save_files_activate),

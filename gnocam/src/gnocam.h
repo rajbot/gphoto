@@ -18,7 +18,6 @@ typedef enum {
 /* Prototypes */
 /**************/
 
-void on_gnocam_manual_activate   (BonoboUIComponent* component, gpointer user_data, const gchar* path);
 void on_about_activate           (BonoboUIComponent* component, gpointer user_data, const gchar* path);
 
 

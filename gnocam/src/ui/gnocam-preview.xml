@@ -16,8 +16,6 @@
       <menuitem name="Preferences" verb="" _label="_Preferences" pixtype="stock" pixname="Preferences"/>
     </submenu>
     <submenu name="Help" _label="_Help">
-      <menuitem name="Manual" _label="_Manual" pixtype="stock" pixname="Book Red"/>
-      <separator/>
       <menuitem name="About" _label="_About" pixtype="stock" pixname="About"/>
     </submenu>
   </menu>

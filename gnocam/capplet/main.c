@@ -1,14 +1,10 @@
-#include <config.h>
-
-#include <libintl.h>
+#include "config.h"
+#include "gnocam-capplet.h"
+#include "i18n.h"
 
 #include <gconf/gconf-client.h>
-
 #include <gtk/gtkmain.h>
-
 #include <libgnomeui/gnome-ui-init.h>
-
-#include "gnocam-capplet.h"
 
 int
 main (int argc, char** argv)
@@ -17,9 +13,9 @@ main (int argc, char** argv)
 	GConfClient *client;
 	
 	/* Internationalization */
-	bindtextdomain (GETTEXT_PACKAGE, GNOME_LOCALEDIR);
-	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-	textdomain (GETTEXT_PACKAGE);
+	bindtextdomain (PACKAGE, GNOME_LOCALEDIR);
+	bind_textdomain_codeset (PACKAGE, "UTF-8");
+	textdomain (PACKAGE);
 
 	gnome_program_init ("camera-capplet", VERSION, LIBGNOMEUI_MODULE, argc,
 			    argv, NULL);

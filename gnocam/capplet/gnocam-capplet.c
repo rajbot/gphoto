@@ -1,5 +1,6 @@
-#include <config.h>
+#include "config.h"
 #include "gnocam-capplet.h"
+#include "i18n.h"
 
 #include <string.h>
 
@@ -9,14 +10,6 @@
 #include <gtk/gtktreeview.h>
 #include <gtk/gtkliststore.h>
 #include <gtk/gtkcellrenderertext.h>
-
-#ifdef ENABLE_NLS
-#  include <libintl.h>
-#  undef _
-#  define _(String) gettext (String)
-#else
-#  define _(String) (String)
-#endif
 
 enum
 {

@@ -1,9 +1,7 @@
-SUBDIRS = intl  m4 po art gnocam applet tests
+SUBDIRS = art gnocam applet tests po
 
 EXTRA_DIST = \
  AUTHORS\
  README\
  THANKS\
  TODO
-
-ACLOCAL_AMFLAGS = -I m4

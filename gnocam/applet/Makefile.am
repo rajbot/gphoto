@@ -1,6 +1,5 @@
-
 INCLUDES =					\
- -I$(top_srcdir)				\
+ -I$(top_srcdir)/gnocam				\
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"			\
  -DIMAGEDIR=\"$(datadir)/pixmaps/$(PACKAGE)/\"	\
  -DUIDIR="\"$(datadir)/$(PACKAGE)/ui/\""	\

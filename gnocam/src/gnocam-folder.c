@@ -495,7 +495,7 @@ on_preview_changed (GConfClient *client, guint cnxn_id, GConfEntry* entry, gpoin
 	if (folder->priv->camera->abilities->file_operations & GP_FOLDER_OPERATION_PUT_FILE) mode |= Bonobo_Storage_WRITE;
 
 	CORBA_exception_init (&ev);
-	storage_new = Bonobo_Storage_openStorage (folder->priv->storage, folder->priv->path + 1, mode, &ev);
+	storage_new = Bonobo_Storage_openStorage (folder->priv->storage, "", mode, &ev);
 	if (BONOBO_EX (&ev)) {
 		g_warning (_("Could not open storage for folder %s: %s!"), folder->priv->path, bonobo_exception_get_text (&ev));
 		CORBA_exception_free (&ev);
@@ -578,7 +578,7 @@ value_at (ETableModel* model, gint col, gint row, gpointer user_data)
 	CameraFileInfo*	info;
 
 	folder = GNOCAM_FOLDER (user_data);
-	g_return_val_if_fail (folder->priv->list, NULL);
+	if (!folder->priv->list) return (NULL);
 
 	/* Search our record in the list */
 	for (i = 0; i < row + 1; i++) if (folder->priv->list->_buffer [i].type == Bonobo_STORAGE_TYPE_DIRECTORY) row++;

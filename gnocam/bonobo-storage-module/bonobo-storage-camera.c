@@ -237,7 +237,7 @@ camera_open_storage (BonoboStorage* s, const CORBA_char* name, Bonobo_Storage_Op
 	storage = BONOBO_STORAGE_CAMERA (s);
 
 	if (!strcmp (storage->priv->path, "/")) path_new = g_strconcat ("/", name, NULL);
-	else path_new = g_strconcat (storage->priv->path, G_DIR_SEPARATOR, name, NULL);
+	else path_new = g_strdup_printf ("%s/%s", storage->priv->path, name);
 
 	/* Create the storage. */
 	new = bonobo_storage_camera_new (storage->priv->camera, path_new, mode, ev);

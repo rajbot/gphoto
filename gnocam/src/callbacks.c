@@ -1,5 +1,6 @@
 #include <config.h>
 #include <gnome.h>
+#include <gconf/gconf-client.h>
 #include <glade/glade.h>
 #include <gdk-pixbuf/gdk-pixbuf-loader.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -25,7 +26,6 @@ void on_save_preview_as_activate (GtkMenuItem *menuitem, gpointer user_data);
 void on_save_files_activate (GtkMenuItem *menuitem, gpointer user_data);
 void on_save_file_as_activate (GtkMenuItem *menuitem, gpointer user_data);
 void on_delete_activate (GtkMenuItem *menuitem, gpointer user_data);
-
 void on_exit_activate (GtkMenuItem *menuitem, gpointer user_data);
 void on_preferences_activate (GtkMenuItem *menuitem, gpointer user_data);
 void on_about_activate (GtkMenuItem *menuitem, gpointer user_data);
@@ -154,16 +154,21 @@ on_delete_activate (GtkMenuItem *menuitem, gpointer user_data)
 }
 
 void
-on_exit_activate (GtkMenuItem *menuitem, gpointer user_data)
+on_exit_activate (GtkMenuItem* menuitem, gpointer user_data)
 {
-	GladeXML *xml;
+	GladeXML* 	xml;
+	GtkObject*	object;
+	GConfClient*	client;
+	guint		notify_id_cameras;
 	
-	xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml");
-        g_assert (xml != NULL);
+	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml")) != NULL);
+	g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml, "app"))) != NULL);
+	g_assert ((client = gtk_object_get_data (object, "client")) != NULL);
+	g_assert ((notify_id_cameras = GPOINTER_TO_UINT (gtk_object_get_data (object, "notify_id_cameras"))) != 0);
 
-	/* Set the preferences. */
-	preferences_set (xml);
+	gconf_client_notify_remove (client, notify_id_cameras);
 
+	/* Exit the main loop. */
 	gtk_main_quit ();
 }
 

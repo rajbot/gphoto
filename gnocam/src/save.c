@@ -1,6 +1,7 @@
 #include <config.h>
 #include <gnome.h>
 #include <libgnomevfs/gnome-vfs.h>
+#include <gconf/gconf-client.h>
 #include <glade/glade.h>
 #include <gphoto2.h>
 #include "save.h"
@@ -39,19 +40,22 @@ save (GladeXML *xml, gboolean file, gboolean temp)
         CameraFile 	*camera_file = NULL;
         GtkCList 	*clist;
         GnomeApp 	*app;
-        gchar 		*path, *file_name, *full_file_name;
-        guint 		 i, row;
-        gint 		 return_status = GP_OK;
-	GnomeVFSResult 	 result;
-	GnomeVFSHandle 	*handle;
-	GnomeVFSURI 	*uri;
-	GnomeVFSFileSize file_size;
+        gchar*			path;
+	gchar*			file_name;
+	gchar*			full_file_name;
+        guint		 	i, row;
+        gint 		 	return_status = GP_OK;
+	GnomeVFSResult 	 	result;
+	GnomeVFSHandle*		handle;
+	GnomeVFSURI*		uri;
+	GnomeVFSFileSize 	file_size;
+	GConfClient*		client;
+	GConfValue*		value;
 
         g_assert (xml != NULL);
-        clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"));
-        g_assert (clist != NULL);
-        app = GNOME_APP (glade_xml_get_widget (xml, "app"));
-        g_assert (app != NULL);
+        g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
+        g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
+	g_assert ((client = gtk_object_get_data (GTK_OBJECT (app), "client")) != NULL);
 
         /* Check which files have been selected. */
         selection = g_list_first (clist->selection);
@@ -61,8 +65,7 @@ save (GladeXML *xml, gboolean file, gboolean temp)
 
                         /* Retrieve some data we need. */
                         row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
-                        camera = gtk_clist_get_row_data (clist, row);
-                        g_assert (camera != NULL);
+                        g_assert ((camera = gtk_clist_get_row_data (clist, row)) != NULL);
                         gtk_clist_get_text (clist, row, 1, &path);
                         g_assert (path != NULL);
                         gtk_clist_get_text (clist, row, 2, &file_name);
@@ -75,13 +78,19 @@ save (GladeXML *xml, gboolean file, gboolean temp)
                                 return_status = gp_camera_file_get_preview (camera, camera_file, path, file_name);
                         if (return_status == GP_ERROR) gnome_app_error (app, _("Could not get file from camera!"));
 			else {
-				
-				/* Let the back-end save the file... */
+
+				/* Let gnome-vfs save the file. */
 				if (temp) {
-					full_file_name = g_strdup_printf ("/tmp/%s", file_name);
+					full_file_name = g_strdup_printf ("file:/tmp/%s", file_name);
 				} else { 
-					//FIXME: Quick hack. Should be done better...
-					full_file_name = g_strdup_printf ("%s%s", (gchar *) gtk_object_get_data (GTK_OBJECT (app), "prefix"), file_name);
+					value = gconf_client_get (client, "/apps/" PACKAGE "/prefix", NULL);
+					if (value) {
+						g_assert (value->type == GCONF_VALUE_STRING);
+						full_file_name = g_strdup_printf ("%s/%s", gconf_value_get_string (value), file_name);
+					} else {
+						gnome_app_error (app, _("You should specify a prefix first!"));
+						return;
+					}
 				}
 				uri = gnome_vfs_uri_new (full_file_name);
 				g_free (full_file_name);

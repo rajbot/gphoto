@@ -61,8 +61,12 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 {
 	static GConfClient *client = NULL;
         gint 		    i, result;
-	gchar*		    name;
+	gchar		   *name;
+	gchar		   *model = NULL;
+	gchar		   *port = NULL;
+	gchar		   *tmp;
 	static GSList	   *list = NULL;
+	static GHashTable  *hash_table = NULL;
 
 	g_return_val_if_fail (camera, GP_ERROR_BAD_PARAMETERS);
 	g_return_val_if_fail (name_or_url [0] != '/', GP_ERROR_BAD_PARAMETERS);
@@ -70,10 +74,9 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 
 	CAM_EXT_DEBUG (("ENTER"));
 
-	/* Create a new camera */
-	CAM_EXT_DEBUG (("  Creating new camera..."));
-	if ((result = gp_camera_new (camera)) != GP_OK)
-		return (result);
+	/* Create the hash table if necessary */
+	if (!hash_table)
+		hash_table = g_hash_table_new (g_str_hash, g_str_equal);
 
 	/* Make sure GConf is initialized. */
 	if (!gconf_is_initialized ()) {
@@ -102,51 +105,88 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 		name = g_strdup (name_or_url);
 	}
 
-	/* Get the list of configured cameras if necessary */
-	if (!list) {
-		CAM_EXT_DEBUG (("  Getting list of configured cameras..."));
-		list = gconf_client_get_list (client, 
-					      "/apps/" PACKAGE "/cameras",
-					      GCONF_VALUE_STRING, NULL);
-	}
+	/* Get the list of configured cameras */
+	CAM_EXT_DEBUG (("  Getting list of configured cameras..."));
+	list = gconf_client_get_list (client, 
+				      "/apps/" PACKAGE "/cameras",
+				      GCONF_VALUE_STRING, NULL);
 	
-        /* Does GConf know about the camera? */
+        /* What model is associated to the name? */
 	for (i = 0; i < g_slist_length (list); i += 3) {
 		if (!strcmp (g_slist_nth_data (list, i), name)) {
-			strcpy ((*camera)->model, 
-				g_slist_nth_data (list, i + 1));
-			strcpy ((*camera)->port->name, 
-				g_slist_nth_data (list, i + 2));
-			(*camera)->port->speed = 0;
+			model = g_strdup (g_slist_nth_data (list, i + 1));
+			port = g_strdup (g_slist_nth_data (list, i + 2));
 			break;
 		}
 	}
 	g_free (name);
 
-	if (i == g_slist_length (list)) {
-		g_warning ("GConf is unable to find a camera for '%s'!", 
-			   name_or_url);
-		gp_camera_unref (*camera);
-		*camera = NULL;
-		return (GP_ERROR);
-	}
-
 	/* Free the list */
-//The list is static for now until we figure out why gconf hangs...
+//FIXME: Don't free the list?
 //	for (i = 0; i < g_slist_length (list); i++) 
 //	    	g_free (g_slist_nth_data (list, i));
 //	g_slist_free (list);
 
-	/* Connect to the camera */
-	CAM_EXT_DEBUG (("  Initializing camera..."));
-	if ((result = gp_camera_init (*camera)) != GP_OK) {
-		gp_camera_unref (*camera);
-		*camera = NULL;
-		CAM_EXT_DEBUG (("gp_camera_init() failed"));
+	/* If we don't have a model at this point, exit. */
+	if (!model) {
+		g_warning ("GConf is unable to find a camera for '%s'!", 
+			   name_or_url);
+		return (GP_ERROR);
+	}
+	g_return_val_if_fail (model, GP_ERROR);
+	g_return_val_if_fail (port, GP_ERROR);
+
+	/* Do we already have this camera? */
+	CAM_EXT_DEBUG (("Looking for model '%s' on port '%s'...", model, port));
+	tmp = g_strconcat (model, port, NULL);
+	*camera = g_hash_table_lookup (hash_table, tmp);
+	g_free (tmp);
+	if (*camera) {
+
+	    	/* Camera found! Ref it so it doesn't get lost... */
+	    	CAM_EXT_DEBUG (("Found camera!"));
+	    	gp_camera_ref (*camera);
+
+	} else {
+
+		/* Create a new camera */
+	        CAM_EXT_DEBUG (("Creating new camera..."));
+		if ((result = gp_camera_new (camera)) != GP_OK) {
+			g_free (model);
+			g_free (port);
+			return (result);
+		}
+	    	strcpy ((*camera)->model, model);
+		strcpy ((*camera)->port->name, port);
+		(*camera)->port->speed = 0;
+
+		/* Connect to the camera */
+		CAM_EXT_DEBUG (("Initializing camera..."));
+		if ((result = gp_camera_init (*camera)) != GP_OK) {
+		    	g_free (model);
+			g_free (port);
+		    	gp_camera_unref (*camera);
+			*camera = NULL;
+			CAM_EXT_DEBUG (("gp_camera_init() failed"));
+			return (result);
+		}
+
+		/* We need to reference the camera once because we 	*/
+		/* won't get informed when gphoto2 frees the camera.	*/
+		/* Hence, we keep our own reference - and the camera 	*/
+		/* will never be freed. We wouldn't have to do this if	*/
+		/* gphoto2 used GObjects...				*/
+		gp_camera_ref (*camera);
+		g_hash_table_insert (hash_table, 
+				     g_strconcat (model, port, NULL), 
+				     *camera);
 	}
 
+	g_free (model);
+	g_free (port);
+
 	CAM_EXT_DEBUG (("EXIT"));
-	return (result);
+	return (GP_OK);
 }
 
 GnomeVFSResult

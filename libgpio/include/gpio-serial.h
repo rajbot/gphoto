@@ -35,7 +35,7 @@
 #endif
 
 /* Windows */
-#ifdef WIN
+#ifdef WIN32
 #define GPIO_SERIAL_PREFIX "COM%i:"
 #define GPIO_SERIAL_RANGE_LOW	0
 #define GPIO_SERIAL_RANGE_HIGH	32
@@ -51,8 +51,7 @@
 
 /* Default */
 #ifndef GPIO_SERIAL_PREFIX
-#warning GPIO_SERIAL_PREFIX not defined. Enumeration will fail
-#define GPIO_SERIAL_PREFIX 	NULL
+#define GPIO_SERIAL_PREFIX 	"/dev/cua%i"
 #define GPIO_SERIAL_RANGE_LOW	0
 #define GPIO_SERIAL_RANGE_HIGH	0
 #endif

@@ -27,15 +27,15 @@ int gpio_library_list_load(char *filename, int loaded[], gpio_device_info *list,
 
 	void *lh;
 	int type, x;
-	gpio_ptr_list lib_list;
 	gpio_ptr_type lib_type;
+	gpio_ptr_list lib_list;
 	int old_count = *count;
 
 	if ((lh = GP_DLOPEN(filename))==NULL)
 		return (GPIO_ERROR);
 
-	lib_type = GP_DLSYM(lh, "gpio_library_type");
-	lib_list = GP_DLSYM(lh, "gpio_library_list");
+	lib_type = (gpio_ptr_type)GP_DLSYM(lh, "gpio_library_type");
+	lib_list = (gpio_ptr_list)GP_DLSYM(lh, "gpio_library_list");
 
 	if ((!list) || (!lib_type)) {
 		gpio_debug_printf("%s ", GP_DLERROR());

@@ -44,7 +44,13 @@ getsources() {
 	then
 	    releaseparm=""
 	else
-	    releaseparm="-r${releasetag}"
+	    case "$releasetag" in
+		-*)
+		    releaseparm="$releasetag"
+		    ;;
+		*)
+		    releaseparm="-r${releasetag}"
+	    esac
 	fi
 	if [ -d "${cvsorig}/${module}" ]
 	then
@@ -60,43 +66,22 @@ getsources() {
 		if [ -s "$stdout" ]
 		then
 		    echo "##### Module ${module} was updated."
-		    cmd touch "${cvsorig}/${module}.stamp"
+		    cmd touch "${cvsorig}/.stamp.${module}"
 		else
 		    echo "##### Module ${module} was already current."
 		fi
+		rm -f "$stdout"
 	    else
 		echo "#     Not updating ${module} - run $this with --update if you want that."
 	    fi
 	else
 	    echo "##### Checking out ${module} release ${releasetag} from ${CVSROOT}"
-	    cmd cvs -z3 -d "${CVSROOT}" ${releaseparm} checkout "${module}"
-	    cmd touch "${cvsorig}/${module}.stamp"
+	    cmd cvs -z3 -d "${CVSROOT}" checkout ${releaseparm} "${module}"
+	    cmd touch "${cvsorig}/.stamp.${module}.stamp"
 	fi
     done < "${cvsmodulelist}"
 }
 
-########################################################################
-# preparedist - copy all stuff from ${cvsorig}/MODULE to ${cvssrc}/MODULE
-#
-# Thus, modifications to the source tree by autogen.sh doesn't mess up 
-# our original CVS checkout.
-
-preparedist() {
-    cmd mkdir -p "${cvssrc}"
-    while read CVSROOT module restofline
-    do
-	if [ "${cvsorig}/${module}.stamp" -nt "${cvssrc}/${module}" ]
-	then
-	    cmd rm -rf "${cvssrc}/${module}"
-	fi
-	if [ ! -e "${cvssrc}/${module}" ]
-	then
-	    # FIXME: relies on GNU cp
-	    cmd cp -a "${cvsorig}/${module}" "${cvssrc}/"
-	    cmd touch "${cvssrc}/${module}/"
-	fi
-    done < "${cvsmodulelist}"
-}
 
 ########################################################################
 # builddist - build distribution tarball for all MODULEs
@@ -105,13 +90,14 @@ builddist() {
     export PKG_CONFIG_PATH="${distroot}/lib/pkgconfig:${PKG_CONFIG_PATH}"
     export LD_LIBRARY_PATH="${distroot}/lib:${LD_LIBRARY_PATH}"
     export PATH="${distroot}/bin:${PATH}"
+    cmd mkdir -p "${cvssrc}"
     cmd mkdir -p "${distdir}"
     while read CVSROOT module releasetag distopts configopts
     do
 	redist="true"
-	for file in "${distdir}/${module}-"[0-9]*.tar.{gz,bz2}
+	for file in "${distdir}/${module}-"[0-9]*.tar.{bz2,gz}
 	do 
-	    if [ ! "${file}" -ot "${cvssrc}/${module}" ]
+	    if [ -f "$file" ] && [ ! "${file}" -ot "${cvsorig}/.stamp.${module}" ]
 	    then
 		redist="false"
 		break
@@ -123,11 +109,14 @@ builddist() {
 	    echo "#     Not rebuilding dist tarball for ${module}."
 	else
 	    echo "########################################################################"
-	    echo "##### Creating distribution of ${module} now:"
+	    echo "##### Creating new distribution tarball of ${module} now:"
 	    echo "#        releasetag:  $releasetag"
 	    echo "#        distopts:    $distopts"
 	    echo "#        configopts:  $configopts"
 	    echo "########################################################################"
+	    cmd rm -rf "${cvssrc}/${module}"
+	    # FIXME: relies on GNU cp
+	    cmd cp -a "${cvsorig}/${module}" "${cvssrc}/"
 	    cmd cd "${cvssrc}/${module}"
 	    echo "#### Press enter when asked to. And complain to the gettextize guys,"
 	    echo "#    not to me. Or run this with \"echo $0 | at now\"."
@@ -166,7 +155,6 @@ builddist() {
 		    done
 		fi
 	    fi
-	    cmd touch "${cvssrc}/${module}/"
 	    for file in "${distdir}/${module}-"[0-9]*.tar.{gz,bz2}
 	    do
 		[ -f "$file" ] && cmd touch "$file"
@@ -213,7 +201,6 @@ init
 
 getsources
 
-preparedist
 builddist
 
 makefiles

@@ -91,7 +91,7 @@ AC_SUBST(GPHOTO_LIBS)
 dnl ---------------------------------------------------------------------------
 dnl For gnocam, we need a couple of libraries.
 dnl ---------------------------------------------------------------------------
-PKG_CHECK_MODULES(GNOCAM, libbonobo-2.0 libgphoto2)
+PKG_CHECK_MODULES(GNOCAM, libbonobo-2.0 libgphoto2 libgnomeui-2.0)
 AC_SUBST(GNOCAM_CFLAGS)
 AC_SUBST(GNOCAM_LIBS)
 

@@ -210,6 +210,56 @@ gnocam_main_get_camera (GnoCamMain *gm, const gchar *model, const gchar *port,
 	return gc;
 }
 
+typedef struct _IdleData IdleData;
+struct _IdleData {
+	GnoCamMain *gm;
+	Bonobo_Listener listener;
+	gchar *model;
+	gchar *port;
+};
+
+static void
+idle_data_destroy (gpointer data)
+{
+	IdleData *d = data;
+
+	bonobo_object_unref (d->gm);
+	g_free (d->model);
+	g_free (d->port);
+	g_free (d);
+}
+
+static gboolean
+get_camera_idle (gpointer data)
+{
+	IdleData *d = data;
+	GnoCamCamera *gc;
+	CORBA_Environment ev;
+	CORBA_any any;
+
+	CORBA_exception_init (&ev);
+
+	gc = gnocam_main_get_camera (d->gm, d->model, d->port, &ev);
+	if (BONOBO_EX (&ev)) {
+		GNOME_GnoCam_ErrorCode e = GNOME_GnoCam_ERROR;
+		any._type = TC_GNOME_GnoCam_ErrorCode;
+		any._value = &e;
+	} else {
+		GNOME_Camera c = CORBA_Object_duplicate (BONOBO_OBJREF (gc),
+							 &ev);
+		any._type = TC_GNOME_Camera;
+		any._value = &c;
+	}
+
+	g_message ("Notifying...");
+	Bonobo_Listener_event (d->listener, "result", &any, &ev);
+	g_message ("Notified.");
+
+	CORBA_exception_free (&ev);
+	
+	return (FALSE);
+};
+
 static GNOME_Camera
 impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant,
 			     CORBA_Environment *ev)
@@ -224,21 +274,22 @@ impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant,
 	return (CORBA_Object_duplicate (BONOBO_OBJREF (gc), ev));
 }
 
-static GNOME_Camera
+static void
 impl_GNOME_GnoCam_getCameraByModel (
 		PortableServer_Servant servant,
-		const CORBA_char *model, CORBA_Environment *ev)
+		const Bonobo_Listener listener, const CORBA_char *model,
+		CORBA_Environment *ev)
 {
-	GnoCamMain *gm;
-	GnoCamCamera *gc = NULL;
+	IdleData *d;
 
-	gm = GNOCAM_MAIN (bonobo_object_from_servant (servant));
+	d = g_new0 (IdleData, 1);
+	d->model = g_strdup (model);
+	d->gm = GNOCAM_MAIN (bonobo_object_from_servant (servant));
+	bonobo_object_ref (d->gm);
+	d->listener = CORBA_Object_duplicate (listener, NULL);
 
-	gc = gnocam_main_get_camera (gm, model, NULL, ev);
-	if (BONOBO_EX (ev))
-		return (CORBA_OBJECT_NIL);
-
-	return (CORBA_Object_duplicate (BONOBO_OBJREF (gc), ev));
+	g_message ("Adding idle function...");
+	g_idle_add_full (0, get_camera_idle, d, idle_data_destroy);
 }
 
 static GNOME_Camera
@@ -295,11 +346,12 @@ gnocam_main_class_init (gpointer g_class, gpointer class_data)
 	epv = &gnocam_class->epv;
 
 	/* Sync interface */
-	epv->getModelList            = impl_GNOME_GnoCam_getModelList;
-	epv->getPortList             = impl_GNOME_GnoCam_getPortList;
+	epv->getModelList           = impl_GNOME_GnoCam_getModelList;
+	epv->getPortList            = impl_GNOME_GnoCam_getPortList;
 	epv->getCamera              = impl_GNOME_GnoCam_getCamera;
-	epv->getCameraByModel       = impl_GNOME_GnoCam_getCameraByModel;
 	epv->getCameraByModelAndPort= impl_GNOME_GnoCam_getCameraByModelAndPort;
+
+	epv->getCameraByModel  = impl_GNOME_GnoCam_getCameraByModel;
 }
 
 static void

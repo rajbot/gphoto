@@ -99,21 +99,72 @@ impl_GNOME_Camera_capturePreview (PortableServer_Servant servant,
 }
 #endif
 
-static CORBA_char *
+typedef struct _IdleData IdleData;
+struct _IdleData {
+	GnoCamCamera *gc;
+
+	Bonobo_Listener listener;
+};
+
+static void
+idle_data_destroy (gpointer user_data)
+{
+	IdleData *d = user_data;
+
+	bonobo_object_unref (d->gc);
+
+	g_free (d);
+}
+
+static gboolean
+capture_image_idle (gpointer user_data)
+{
+	CameraFilePath path;
+	IdleData *d = user_data;
+	CORBA_Environment ev;
+	CORBA_any any;
+	gchar *p = NULL;
+
+	CORBA_exception_init (&ev);
+	memset (&path, 0, sizeof (CameraFilePath));
+	CR (gp_camera_capture (d->gc->camera, GP_CAPTURE_IMAGE,
+			       &path, NULL), &ev);
+	if (BONOBO_EX (&ev)) {
+		GNOME_Camera_ErrorCode e = GNOME_Camera_ERROR;
+		any._type = TC_GNOME_Camera_ErrorCode;
+		any._value = &e;
+	} else {
+		p = g_build_path ("/", path.folder, path.name);
+		any._type = TC_CORBA_string;
+		any._value = &p;
+	}
+
+	g_message ("Notifying...");
+	Bonobo_Listener_event (d->listener, "result", &any, &ev);
+	g_message ("Notified.");
+
+	if (p)
+		g_free (p);
+
+	CORBA_exception_free (&ev);
+
+	return (FALSE);
+}
+
+static void
 impl_GNOME_Camera_captureImage (PortableServer_Servant servant,
+				const Bonobo_Listener listener,
 				CORBA_Environment *ev)
 {
-	GnoCamCamera *c;
-	CameraFilePath path;
+	IdleData *d;
 
-	c = GNOCAM_CAMERA (bonobo_object_from_servant (servant));
+	d = g_new0 (IdleData, 1);
+	d->gc = GNOCAM_CAMERA (bonobo_object_from_servant (servant));
+	bonobo_object_ref (d->gc);
+	d->listener = CORBA_Object_duplicate (listener, NULL);
 
-	memset (&path, 0, sizeof (CameraFilePath));
-	CR (gp_camera_capture (c->camera, GP_CAPTURE_IMAGE, &path, NULL), ev);
-	if (BONOBO_EX (ev))
-		return NULL;
-
-	return g_build_path ("/", path.folder, path.name);
+	g_message ("Adding idle function...");
+	g_idle_add_full (0, capture_image_idle, d, idle_data_destroy);
 }
 
 static void
@@ -145,7 +196,7 @@ gnocam_camera_class_init (GnoCamCameraClass *klass)
 	object_class->finalize = gnocam_camera_finalize;
 
 	epv = &klass->epv;
-	epv->captureImage      = impl_GNOME_Camera_captureImage;
+	epv->captureImage = impl_GNOME_Camera_captureImage;
 }
 
 static void

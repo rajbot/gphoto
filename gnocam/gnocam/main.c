@@ -25,6 +25,8 @@
 #include <bonobo/bonobo-main.h>
 #include <bonobo/bonobo-generic-factory.h>
 
+#include <libgnomeui/gnome-ui-init.h>
+
 #include "gnocam-main.h"
 
 static BonoboObject *
@@ -54,7 +56,8 @@ main (int argc, char **argv)
 	bind_textdomain_codeset (PACKAGE, "UTF-8");
 	textdomain (PACKAGE);
 
-	BONOBO_FACTORY_INIT ("gnocam", VERSION, &argc, argv);
+	gnome_program_init ("gnocam", VERSION, LIBGNOMEUI_MODULE, argc,
+			    argv, NULL);
 
 	return bonobo_generic_factory_main ("OAFIID:GNOME_GnoCam_Factory",
 					    gnocam_factory, NULL);

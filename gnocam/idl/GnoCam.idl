@@ -11,9 +11,13 @@ module GNOME {
 		exception NotSupported {};
 		exception IOError {};
 
-		/* Sync interface */
-		string captureImage ()
-			raises (NotSupported, IOError);
+		enum ErrorCode {
+			ERROR
+		};
+		
+		/* Async interface */
+		oneway void captureImage (
+				in Bonobo::Listener listener);
 	};
 
 	interface GnoCam : Bonobo::Unknown {
@@ -29,11 +33,18 @@ module GNOME {
 		/* Sync interface */
 		Camera getCamera ()
 			raises (NotFound);
-		Camera getCameraByModel (in string model)
-			raises (NotFound);
 		Camera getCameraByModelAndPort (in string model,
 					        in string port)
 			raises (NotFound);
+
+		enum ErrorCode {
+			ERROR
+		};
+
+		/* Async interface */
+		oneway void getCameraByModel (
+				in Bonobo::Listener listener,
+				in string model);
 	};
 };
 

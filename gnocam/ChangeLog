@@ -1,3 +1,7 @@
+2002-11-25  Lutz Müller <lutz@users.sourceforge.net>
+
+	* idl/GnoCam.h: Make some functions async.
+
 2002-11-20  Lutz Müller <lutz@users.sourceforge.net>
 
 	* applet/*: You can now capture images.

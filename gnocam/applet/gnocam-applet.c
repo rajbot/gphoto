@@ -109,10 +109,32 @@ gnocam_applet_update (GnoCamApplet *a)
 }
 
 static void
+listener_cb (BonoboListener *listener, const char *event_name,
+	     const CORBA_any *any, CORBA_Environment *ev, gpointer user_data)
+{
+	GnoCamApplet *a = GNOCAM_APPLET (user_data);
+
+	g_message ("Got event '%s'.", event_name);
+
+	if (CORBA_TypeCode_equal (any->_type, TC_GNOME_GnoCam_ErrorCode, ev)) {
+		g_message ("Error!");
+	} else if (CORBA_TypeCode_equal (any->_type, TC_GNOME_Camera, ev)) {
+		a->priv->camera = any->_value;
+	} else {
+		g_message ("Unknown type.");
+	}
+
+	gnocam_applet_update (a);
+
+	bonobo_object_unref (listener);
+}
+
+static void
 gnocam_applet_connect (GnoCamApplet *a)
 {
 	CORBA_Environment ev;
 	Bonobo_Unknown o;
+	BonoboListener *l;
 
 	g_return_if_fail (GNOCAM_IS_APPLET (a));
 
@@ -130,15 +152,9 @@ gnocam_applet_connect (GnoCamApplet *a)
 	/* Terminate any existing connection. */
 	gnocam_applet_disconnect (a);
 
-	if (a->priv->prefs.camera_automatic)
-		a->priv->camera = GNOME_GnoCam_getCamera (o, &ev);
-	else if (!a->priv->prefs.port || !strcmp (a->priv->prefs.port, ""))
-		a->priv->camera = GNOME_GnoCam_getCameraByModel (o, 
-			a->priv->prefs.model ? a->priv->prefs.model : "", &ev);
-	else
-		a->priv->camera = GNOME_GnoCam_getCameraByModelAndPort (
-			o, a->priv->prefs.model ? a->priv->prefs.model : "",
-			   a->priv->prefs.port, &ev);
+	l = bonobo_listener_new (listener_cb, a);
+	GNOME_GnoCam_getCameraByModel (o, BONOBO_OBJREF (l),
+		a->priv->prefs.model ? a->priv->prefs.model : "", &ev);
 	bonobo_object_release_unref (o, NULL);
 	if (BONOBO_EX (&ev)) {
 		gnocam_applet_report_error (a, &ev);
@@ -147,8 +163,6 @@ gnocam_applet_connect (GnoCamApplet *a)
 	}
 
 	CORBA_exception_free (&ev);
-
-	gnocam_applet_update (a);
 }
 
 static void
@@ -312,11 +326,9 @@ static BonoboUIVerb verb_list[] = {
 };
 
 static void
-gnocam_applet_capture_cb (BonoboUIComponent *uic, GnoCamApplet *a,
-			  const char *verbname)
+capture_cb (BonoboListener *listener, const char *event_name,
+	    const CORBA_any *any, CORBA_Environment *ev, gpointer user_data)
 {
-	CORBA_Environment ev;
-	CORBA_char *path;
 	Bonobo_Storage st;
 	Bonobo_Stream s;
 	Bonobo_PersistStream p;
@@ -327,41 +339,40 @@ gnocam_applet_capture_cb (BonoboUIComponent *uic, GnoCamApplet *a,
 	GtkWidget *w, *i;
 	BonoboControlFrame *f;
 	BonoboUIComponent *cmp;
+	GnoCamApplet *a = GNOCAM_APPLET (user_data);
 
-	g_message ("Capturing image...");
+	g_message ("Got event '%s'.", event_name);
 
-	CORBA_exception_init (&ev);
-
-	path = GNOME_Camera_captureImage (a->priv->camera, &ev);
-	if (BONOBO_EX (&ev)) {
-		gnocam_applet_report_error (a, &ev);
-		CORBA_exception_free (&ev);
+	if (CORBA_TypeCode_equal (any->_type, TC_GNOME_Camera_ErrorCode, ev)) {
+		g_message ("Error!");
+		return;
+	}
+	if (!CORBA_TypeCode_equal (any->_type, TC_CORBA_string, ev)) {
+		g_message ("Unknown type!");
 		return;
 	}
 
 	st = Bonobo_Unknown_queryInterface (a->priv->camera,
-					    "IDL:Bonobo/Storage:1.0", &ev);
-	if (BONOBO_EX (&ev)) {
-		gnocam_applet_report_error (a, &ev);
-		CORBA_exception_free (&ev);
-		CORBA_free (path);
+					    "IDL:Bonobo/Storage:1.0", ev);
+	if (BONOBO_EX (ev)) {
+		gnocam_applet_report_error (a, ev);
+		CORBA_free (any->_value);
 		return;
 	}
 
-	s = Bonobo_Storage_openStream (st, path, Bonobo_Storage_READ, &ev);
+	s = Bonobo_Storage_openStream (st, any->_value,
+				       Bonobo_Storage_READ, ev);
 	bonobo_object_release_unref (st, NULL);
-	CORBA_free (path);
-	if (BONOBO_EX (&ev)) {
-		gnocam_applet_report_error (a, &ev);
-		CORBA_exception_free (&ev);
+	CORBA_free (any->_value);
+	if (BONOBO_EX (ev)) {
+		gnocam_applet_report_error (a, ev);
 		return;
 	}
 
-	info = Bonobo_Stream_getInfo (s, Bonobo_FIELD_CONTENT_TYPE, &ev);
-	if (BONOBO_EX (&ev)) {
-		gnocam_applet_report_error (a, &ev);
+	info = Bonobo_Stream_getInfo (s, Bonobo_FIELD_CONTENT_TYPE, ev);
+	if (BONOBO_EX (ev)) {
+		gnocam_applet_report_error (a, ev);
 		bonobo_object_release_unref (s, NULL);
-		CORBA_exception_free (&ev);
 	}
 
 	g_message ("Looking for an application that can display '%s'...",
@@ -371,53 +382,49 @@ gnocam_applet_capture_cb (BonoboUIComponent *uic, GnoCamApplet *a,
 		"                  'IDL:Bonobo/Control:1.0']) AND "
 		"bonobo:supported_mime_types.has('%s')",
 			     info->content_type);
-	o = bonobo_activation_activate (r, NULL, 0, NULL, &ev);
+	o = bonobo_activation_activate (r, NULL, 0, NULL, ev);
 	g_free (r);
-	if (BONOBO_EX (&ev)) {
+	if (BONOBO_EX (ev)) {
 		CORBA_free (info);
 		bonobo_object_release_unref (s, NULL);
-		gnocam_applet_report_error (a, &ev);
-		CORBA_exception_free (&ev);
+		gnocam_applet_report_error (a, ev);
 		return;
 	}
 
 	if (o == CORBA_OBJECT_NIL) {
 		g_warning ("No viewer available.");
 		bonobo_object_release_unref (s, NULL);
-		CORBA_exception_free (&ev);
+		CORBA_exception_free (ev);
 		return;
 	}
 
 	g_message ("Got object. Asking for PersistStream...");
 	p = Bonobo_Unknown_queryInterface (o,
-					"IDL:Bonobo/PersistStream:1.0", &ev);
-	if (BONOBO_EX (&ev)) {
+					"IDL:Bonobo/PersistStream:1.0", ev);
+	if (BONOBO_EX (ev)) {
 		CORBA_free (info);
 		bonobo_object_release_unref (s, NULL);
 		bonobo_object_release_unref (o, NULL);
-		gnocam_applet_report_error (a, &ev);
-		CORBA_exception_free (&ev);
+		gnocam_applet_report_error (a, ev);
 		return;
 	}
 
 	g_message ("Loading stream...");
-	Bonobo_PersistStream_load (p, s, info->content_type, &ev);
+	Bonobo_PersistStream_load (p, s, info->content_type, ev);
 	bonobo_object_release_unref (s, NULL);
 	bonobo_object_release_unref (p, NULL);
 	CORBA_free (info);
-	if (BONOBO_EX (&ev)) {
-		gnocam_applet_report_error (a, &ev);
+	if (BONOBO_EX (ev)) {
+		gnocam_applet_report_error (a, ev);
 		bonobo_object_release_unref (o, NULL);
-		CORBA_exception_free (&ev);
 		return;
 	}
 
 	g_message ("Asking for control...");
-	c = Bonobo_Unknown_queryInterface (o, "IDL:Bonobo/Control:1.0", &ev);
+	c = Bonobo_Unknown_queryInterface (o, "IDL:Bonobo/Control:1.0", ev);
 	bonobo_object_release_unref (o, NULL);
-	if (BONOBO_EX (&ev)) {
-		gnocam_applet_report_error (a, &ev);
-		CORBA_exception_free (&ev);
+	if (BONOBO_EX (ev)) {
+		gnocam_applet_report_error (a, ev);
 		return;
 	}
 
@@ -434,24 +441,42 @@ gnocam_applet_capture_cb (BonoboUIComponent *uic, GnoCamApplet *a,
 	f = bonobo_control_frame_new (BONOBO_OBJREF (
 		bonobo_window_get_ui_container (BONOBO_WINDOW (w))));
 	bonobo_control_frame_set_autoactivate (f, FALSE);
-	bonobo_control_frame_bind_to_control (f, c, &ev);
+	bonobo_control_frame_bind_to_control (f, c, ev);
 	bonobo_control_frame_control_activate (f);
 	bonobo_object_release_unref (c, NULL);
-	if (BONOBO_EX (&ev)) {
+	if (BONOBO_EX (ev)) {
 		gtk_widget_destroy (w);
 		bonobo_object_unref (f);
-		gnocam_applet_report_error (a, &ev);
-		CORBA_exception_free (&ev);
+		gnocam_applet_report_error (a, ev);
 		return;
 	}
-
-	CORBA_exception_free (&ev);
 
 	/* Show! */
 	i = bonobo_control_frame_get_widget (f);
 	gtk_widget_show (i);
 	bonobo_window_set_contents (BONOBO_WINDOW (w), i);
 	gtk_widget_show (w);
+}
+
+static void
+gnocam_applet_capture_cb (BonoboUIComponent *uic, GnoCamApplet *a,
+			  const char *verbname)
+{
+	CORBA_Environment ev;
+	BonoboListener *l;
+
+	CORBA_exception_init (&ev);
+
+	l = bonobo_listener_new (capture_cb, a);
+	g_message ("Capturing image...");
+	GNOME_Camera_captureImage (a->priv->camera, BONOBO_OBJREF (l), &ev);
+	if (BONOBO_EX (&ev)) {
+		gnocam_applet_report_error (a, &ev);
+		CORBA_exception_free (&ev);
+		return;
+	}
+
+	CORBA_exception_free (&ev);
 }
 
 static void

@@ -15,6 +15,18 @@
 #include <gphoto-extensions.h>
 #include "utils.h"
 
+#ifdef G_THREADS_ENABLED
+#define MUTEX_NEW()     g_mutex_new ()
+#define MUTEX_FREE(a)   g_mutex_free (a)
+#define MUTEX_LOCK(a)   if ((a) != NULL) g_mutex_lock (a)
+#define MUTEX_UNLOCK(a) if ((a) != NULL) g_mutex_unlock (a)
+#else
+#define MUTEX_NEW()     NULL
+#define MUTEX_FREE(a)
+#define MUTEX_LOCK(a)
+#define MUTEX_UNLOCK(a)
+#endif
+
 static GMutex*	client_mutex = NULL;
 
 /**************/
@@ -33,7 +45,7 @@ static GnomeVFSResult do_open (
 {
 	GnomeVFSResult	result;
 
-	g_mutex_lock (client_mutex);
+	MUTEX_LOCK(client_mutex);
 	CAM_VFS_DEBUG (("entering"));
 	
 	if ((mode == GNOME_VFS_OPEN_READ) || (mode == GNOME_VFS_OPEN_WRITE)) 
@@ -41,7 +53,7 @@ static GnomeVFSResult do_open (
 
 	else result = GNOME_VFS_ERROR_INVALID_OPEN_MODE;
 	
-	g_mutex_unlock (client_mutex);
+	MUTEX_UNLOCK(client_mutex);
 	return (result);
 }
 
@@ -67,7 +79,7 @@ static GnomeVFSResult do_close (
 	
 	g_return_val_if_fail (file_handle = (file_handle_t*) handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
 	g_return_val_if_fail ((file_handle->mode == GNOME_VFS_OPEN_WRITE) || (file_handle->mode == GNOME_VFS_OPEN_READ), GNOME_VFS_ERROR_BAD_PARAMETERS);
-	g_mutex_lock (client_mutex);
+	MUTEX_LOCK (client_mutex);
 	CAM_VFS_DEBUG (("entering"));
 	
 	if (file_handle->mode == GNOME_VFS_OPEN_WRITE) {
@@ -80,7 +92,7 @@ static GnomeVFSResult do_close (
 	} else result = GNOME_VFS_ERROR_BAD_PARAMETERS;
 
 	CAM_VFS_DEBUG (("exiting"));
-	g_mutex_unlock (client_mutex);
+	MUTEX_UNLOCK (client_mutex);
 	return (result);
 }
 
@@ -96,7 +108,7 @@ static GnomeVFSResult do_read (
 
 	g_return_val_if_fail (file_handle = (file_handle_t*) handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
 	g_return_val_if_fail (file_handle->mode == GNOME_VFS_OPEN_READ, GNOME_VFS_ERROR_BAD_PARAMETERS);
-	g_mutex_lock (client_mutex);
+	MUTEX_LOCK (client_mutex);
 	CAM_VFS_DEBUG (("entering"));
 
 	/* Do we have num_bytes left? */
@@ -105,7 +117,7 @@ static GnomeVFSResult do_read (
 	if (file_handle->position + num_bytes >= file_handle->file->size) {
 		if ((*bytes_read = file_handle->file->size - file_handle->position) <= 0) {
 			CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_EOF"));
-			g_mutex_unlock (client_mutex);
+			MUTEX_UNLOCK (client_mutex);
 			return (GNOME_VFS_ERROR_EOF);
 		}
 		memcpy (buffer, file_handle->file->data + file_handle->position, *bytes_read);
@@ -115,7 +127,7 @@ static GnomeVFSResult do_read (
 	
 	file_handle->position += *bytes_read;
 	CAM_VFS_DEBUG (("returning GNOME_VFS_OK"));
-	g_mutex_unlock (client_mutex);
+	MUTEX_UNLOCK (client_mutex);
 	return (GNOME_VFS_OK);
 }
 
@@ -131,18 +143,18 @@ static GnomeVFSResult do_write (
 	
 	g_return_val_if_fail (file_handle = (file_handle_t*) handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
 	g_return_val_if_fail (file_handle->mode == GNOME_VFS_OPEN_WRITE, GNOME_VFS_ERROR_BAD_PARAMETERS);
-	g_mutex_lock (client_mutex);
+	MUTEX_LOCK (client_mutex);
 	CAM_VFS_DEBUG (("entering"));
 	
 	*bytes_written = 0;
 	if (gp_file_append (file_handle->file, (gchar*) buffer, num_bytes) != GP_OK) {
 		CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_GENERIC"));
-		g_mutex_unlock (client_mutex);
+		MUTEX_UNLOCK (client_mutex);
 		return (GNOME_VFS_ERROR_GENERIC);
 	}
 	*bytes_written = num_bytes;
 	CAM_VFS_DEBUG (("returning GNOME_VFS_OK"));
-	g_mutex_unlock (client_mutex);
+	MUTEX_UNLOCK (client_mutex);
 	return (GNOME_VFS_OK);
 }
 
@@ -196,13 +208,13 @@ static GnomeVFSResult do_open_directory (
 {
 	GnomeVFSResult		result;
 
-	g_mutex_lock (client_mutex);
-	CAM_VFS_DEBUG (("entering"));
+	MUTEX_LOCK (client_mutex);
+	CAM_VFS_DEBUG (("entering uri->text=%s",uri->text));
 	
 	*handle = directory_handle_new (uri, options, context, &result);
 
 	CAM_VFS_DEBUG (("exiting"));
-	g_mutex_unlock (client_mutex);
+	MUTEX_UNLOCK (client_mutex);
 	return (result);
 }
 
@@ -214,13 +226,13 @@ static GnomeVFSResult do_close_directory (
 	GnomeVFSResult		result;
 
 
+	MUTEX_LOCK (client_mutex);
 	g_return_val_if_fail (handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
-	g_mutex_lock (client_mutex);
 	CAM_VFS_DEBUG (("entering"));
 	
 	result = directory_handle_free (handle);
 	CAM_VFS_DEBUG (("exiting"));
-	g_mutex_unlock (client_mutex);
+	MUTEX_UNLOCK (client_mutex);
 	return (result);
 }
 
@@ -235,7 +247,7 @@ static GnomeVFSResult do_read_directory (
 	g_return_val_if_fail (h, GNOME_VFS_ERROR_BAD_PARAMETERS);
 	handle = (directory_handle_t*) h;
 	
-	g_mutex_lock (client_mutex);
+	MUTEX_LOCK (client_mutex);
 	CAM_VFS_DEBUG (("ENTER"));
 
 	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_NONE;
@@ -275,7 +287,7 @@ static GnomeVFSResult do_read_directory (
 
 	} else {
 		handle->position = -1;
-		g_mutex_unlock (client_mutex);
+		MUTEX_UNLOCK (client_mutex);
 		CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_EOF"));
 		return (GNOME_VFS_ERROR_EOF);
 	}
@@ -284,7 +296,7 @@ static GnomeVFSResult do_read_directory (
 	handle->position++;
 	CAM_VFS_DEBUG ((" -> (%i) %s", handle->position - 1, info->name));
 	CAM_VFS_DEBUG (("returning GNOME_VFS_OK"));
-	g_mutex_unlock (client_mutex);
+	MUTEX_UNLOCK (client_mutex);
 	return (GNOME_VFS_OK);
 }
 
@@ -307,7 +319,7 @@ static GnomeVFSResult do_get_file_info (
 	gchar		*host;
 	gchar		*tmp;
 
-	g_mutex_lock (client_mutex);
+	MUTEX_LOCK (client_mutex);
 	CAM_VFS_DEBUG (("ENTER"));
 
 	tmp = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE);
@@ -338,7 +350,7 @@ static GnomeVFSResult do_get_file_info (
 	g_free (host);
 	if (result != GNOME_VFS_OK) {
 		CAM_VFS_DEBUG (("Could not connect to camera!"));
-		g_mutex_unlock (client_mutex);
+		MUTEX_UNLOCK (client_mutex);
                 return (result);
         }
 
@@ -351,18 +363,18 @@ static GnomeVFSResult do_get_file_info (
 	    	/* Get the list of files */
 	    	CAM_VFS_DEBUG (("  Getting list of files..."));
 		result = GNOME_VFS_RESULT (gp_camera_folder_list_files (
-			    			camera, dirname, &camera_list));
+	        			camera, dirname, &camera_list));
 		if (result != GNOME_VFS_OK) {
 			gp_camera_unref (camera);
 			CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_GENERIC"));
-			g_mutex_unlock (client_mutex);
+			MUTEX_UNLOCK (client_mutex);
 			return (result);
 		}
 
 		/* Is the file in there? */
 		for (i = 0; i < gp_list_count (&camera_list); i++) 
 			CAM_VFS_DEBUG (("camera_list[%d]->name=%s",
-				i,gp_list_entry (&camera_list, i)->name));
+			    i,gp_list_entry (&camera_list, i)->name));
 		for (i = 0; i < gp_list_count (&camera_list); i++)
 			if (!strcmp (filename, 
 				     gp_list_entry (&camera_list, i)->name))
@@ -381,7 +393,7 @@ static GnomeVFSResult do_get_file_info (
 		if (result != GNOME_VFS_OK) {
 			gp_camera_unref (camera);
 			CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_GENERIC"));
-			g_mutex_unlock (client_mutex);
+			MUTEX_UNLOCK (client_mutex);
 			return (result);
 		}
 
@@ -396,7 +408,7 @@ static GnomeVFSResult do_get_file_info (
 		if (i == gp_list_count (&camera_list)) {
 			gp_camera_unref (camera);
 			CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_NOT_FOUND"));
-			g_mutex_unlock (client_mutex);
+			MUTEX_UNLOCK (client_mutex);
 			return (GNOME_VFS_ERROR_NOT_FOUND);
 		}
 	}
@@ -407,7 +419,7 @@ static GnomeVFSResult do_get_file_info (
 						      filename, info, preview);
 		if (result != GNOME_VFS_OK) {
 		    	gp_camera_unref (camera);
-			g_mutex_unlock (client_mutex);
+			MUTEX_UNLOCK (client_mutex);
 		    	return (result);
 		}
 	} else {
@@ -425,7 +437,7 @@ static GnomeVFSResult do_get_file_info (
 	GNOME_VFS_FILE_INFO_SET_LOCAL (info, FALSE);
 
 	CAM_VFS_DEBUG (("returning GNOME_VFS_OK"));
-	g_mutex_unlock (client_mutex);
+	MUTEX_UNLOCK (client_mutex);
 	return (GNOME_VFS_OK);
 }
 
@@ -492,7 +504,7 @@ vfs_module_init (const gchar* method_name, const gchar* args)
         gtk_init (0, NULL);
         gp_init (GP_DEBUG_NONE);
         gp_frontend_register (NULL, NULL, NULL, NULL, NULL);
-	client_mutex = g_mutex_new();
+	client_mutex = MUTEX_NEW();
 
         return &method;
 }
@@ -501,7 +513,7 @@ void
 vfs_module_shutdown (GnomeVFSMethod* method)
 {
         gp_exit ();
-	g_mutex_free(client_mutex);
+	MUTEX_FREE(client_mutex);
 
         return;
 }

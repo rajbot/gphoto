@@ -8,12 +8,15 @@
 #include <kiconloader.h>
 #include <kfiledialog.h>
 #include <ktoolbarbutton.h>
+#include <klocale.h>
 #include <qpixmap.h>
 #include <qiconview.h>
 #include <qwidget.h>
 #include <qfiledialog.h>
 
 #include "MainWindow.h"
+#include "MainWindow.moc"
+
 #include "GPInterface.h"
 #include "SelectCameraDialog.h"
 
@@ -27,7 +30,7 @@ MainWindow::MainWindow() : KMainWindow()
      
     /* Initialize interface & gPhoto2 */
     GPInterface::initialize();
-
+    
     /* Set window size */
     setGeometry(GPInterface::getGeometry());
         
@@ -35,7 +38,7 @@ MainWindow::MainWindow() : KMainWindow()
     if (GPInterface::getCamera().isNull())
         selectCamera();
 
-    statusBar()->message("Camera not ready");
+    statusBar()->message(i18n("Camera not ready"));
 }
 
 
@@ -67,68 +70,72 @@ void MainWindow::initWidgets()
                       
     /* File menu */
     fileMenu = new KPopupMenu();
-    fileMenu->insertItem("&Save Selected Photos",this,SLOT(saveSelected()),
+    fileMenu->insertItem(i18n("&Save Selected Photos"),
+                         this, SLOT(saveSelected()),
                          CTRL + Key_S, SaveSelectedMenuID);
     fileMenu->setItemEnabled(SaveSelectedMenuID,false);
     fileMenu->insertSeparator();
-    fileMenu->insertItem("Set &Working Directory",this,SLOT(selectWorkDir()),
-                             CTRL + Key_W);
+    fileMenu->insertItem(i18n("Set &Working Directory"),
+                         this, SLOT(selectWorkDir()), CTRL + Key_W);
     fileMenu->insertSeparator();
-    fileMenu->insertItem("&Exit",this,SLOT(close()),
-                         CTRL + Key_X);
+    fileMenu->insertItem(i18n("&Exit"),
+                         this, SLOT(close()), CTRL + Key_X);
 
     /* Edit menu */
     editMenu = new KPopupMenu();
-    editMenu->insertItem("Select &All", this, SLOT(selectAll()), 
-                          SHIFT + Key_A);
-    editMenu->insertItem("&Invert Selection", this, SLOT(selectInverse()), 
-                          SHIFT + Key_I);
-    editMenu->insertItem("&Clear Selection", this, SLOT(selectNone()),
-                          SHIFT + Key_N);
+    editMenu->insertItem(i18n("Select &All"), this, SLOT(selectAll()), 
+                         SHIFT + Key_A);
+    editMenu->insertItem(i18n("&Invert Selection"), 
+                         this, SLOT(selectInverse()), SHIFT + Key_I);
+    editMenu->insertItem(i18n("&Clear Selection"), 
+                         this, SLOT(selectNone()), SHIFT + Key_N);
     
     /* Command menu */
     commandMenu = new KPopupMenu();
-    commandMenu->insertItem("Download Thumbnails", this, 
+    commandMenu->insertItem(i18n("Download Thumbnails"), this, 
                             SLOT(downloadThumbs()), CTRL + Key_T,
                             DownloadThumbsMenuID);
     commandMenu->setItemEnabled(DownloadThumbsMenuID,false);
     commandMenu->insertSeparator();
-    commandMenu->insertItem("Delete Selected", this, SLOT(deleteSelected()), 
-                           CTRL + Key_D, DeleteSelectedMenuID);
+    commandMenu->insertItem(i18n("Delete Selected"), 
+                            this, SLOT(deleteSelected()), 
+                            CTRL + Key_D, DeleteSelectedMenuID);
     commandMenu->setItemEnabled(DeleteSelectedMenuID,false);
     
     /* Camera menu */
     cameraMenu = new KPopupMenu();
-    cameraMenu->insertItem("Select Camera", this, SLOT(selectCamera()), 
+    cameraMenu->insertItem(i18n("Select Camera"), this, SLOT(selectCamera()), 
                            CTRL + Key_C);
     cameraMenu->insertSeparator();
-    cameraMenu->insertItem("&Configure", this, SLOT(configureCamera()));
-    cameraMenu->insertItem("&Information", this, SLOT(cameraInformation()));
-    cameraMenu->insertItem("&Manual", this, SLOT(cameraManual()));
-    cameraMenu->insertItem("&About the driver", this, SLOT(cameraAbout()));
+    cameraMenu->insertItem(i18n("&Configure"), this, SLOT(configureCamera()));
+    cameraMenu->insertItem(i18n("&Information"), this, 
+                           SLOT(cameraInformation()));
+    cameraMenu->insertItem(i18n("&Manual"), this, SLOT(cameraManual()));
+    cameraMenu->insertItem(i18n("&About the driver"), this, 
+                           SLOT(cameraAbout()));
     
     /* Help menu */
     help = helpMenu();
     
     /* Menu Bar */
-    menuBar()->insertItem("&File", fileMenu);
-    menuBar()->insertItem("&Edit", editMenu);
-    menuBar()->insertItem("&Command",commandMenu);
-    menuBar()->insertItem("C&amera",cameraMenu);
-    menuBar()->insertItem("&Help", help);
+    menuBar()->insertItem(i18n("&File"), fileMenu);
+    menuBar()->insertItem(i18n("&Edit"), editMenu);
+    menuBar()->insertItem(i18n("&Command"),commandMenu);
+    menuBar()->insertItem(i18n("C&amera"),cameraMenu);
+    menuBar()->insertItem(i18n("&Help"), help);
    
-    toolBar()->insertButton("", InitCameraID, SIGNAL(clicked()),
+    toolBar()->insertButton("connect_creating", InitCameraID, SIGNAL(clicked()),
                             this, SLOT(initCamera()), true,
-                            "Initialize Camera");
+                            i18n("Initialize Camera"));
     toolBar()->insertButton("queue", DownloadThumbsID, SIGNAL(clicked()),
                             this, SLOT(downloadThumbs()), false,
-                            "Download thumbnails");
+                            i18n("Download thumbnails"));
     toolBar()->insertButton("filesave", SaveSelectedID, SIGNAL(clicked()),
                             this, SLOT(saveSelected()), false, 
-                            "Save Selected Pictures"); 
+                            i18n("Save Selected Pictures")); 
     toolBar()->insertButton("edittrash", DeleteSelectedID, SIGNAL(clicked()),
                             this, SLOT(deleteSelected()), false,
-                            "Delete Selected Pictures");
+                            i18n("Delete Selected Pictures"));
 }
 
 void MainWindow::initCamera()
@@ -139,7 +146,7 @@ void MainWindow::initCamera()
     try {
         /* Initialize Camera */
         GPInterface::initCamera();
-        statusBar()->message("Camera ready");
+        statusBar()->message(i18n("Camera ready"));
 
         /* Enable downloading of thumbs */
         toolBar()->setItemEnabled(DownloadThumbsID,true);
@@ -156,7 +163,7 @@ void MainWindow::initCamera()
         /* Change window title */
         setPlainCaption("QtKam");
         KMessageBox::error(this, msg);
-        statusBar()->message("Camera not ready");
+        statusBar()->message(i18n("Camera not ready"));
     } 
 }
 

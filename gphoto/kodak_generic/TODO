@@ -31,10 +31,6 @@ Things to do for the DC240 Driver:
 
    Commands:
 
-      - ...get_preview() needs to be implemented.
-
-      - ...delete_picture() needs to be implemented.
-
       - ...get_status() could be changed to return more information.
 
       - ...configure() needs to be implemented.

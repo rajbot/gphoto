@@ -1,0 +1,255 @@
+KNC_TAKE_PICTURE
+----------------
+
+0x00: Byte 0 of command identifier
+0x91: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+0x02: Byte 0 of p ID
+0x00: Byte 1 of p ID
+
+0x00: Byte 0 of command identifier
+0x91: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+0xXX: Byte 3 of image ID (QM200 only)
+0xXX: Byte 4 of image ID (QM200 only)
+0xXX: Byte 0 of image ID
+0xXX: Byte 1 of image ID
+0xXX: Byte 0 of exif size
+0xXX: Byte 1 of exif size
+0xXX: Byte 0 of protect status
+	0x00: not protected
+	0x01: protected
+0x00: Byte 1 of protect status
+
+KNC_LOCALIZATION
+----------------
+
+0x00: Byte 0 of command identifier
+0x92: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+0x01: Byte 0 of localization type identifier
+	0x00: transmission of localization data
+	0x01: setting of TV output format
+	0x02: setting of date format
+0x00: Byte 1 of localization type identifier
+0xXX: Byte 0 of format
+	TV output	date			data
+	0x00: NTSC	0x00: month/day/year	0x00
+	0x01: PAL	0x01: day/month/year
+	0x02: None	0x02: year/month/day
+0x00: Byte 1 of format
+
+The following bytes only in case of transmission of localization data.
+
+0xXX: Byte 0 of number of bytes of packet
+0xXX: Byte 1 of number of bytes of packet
+0xXX: Byte 3 of memory address where to write the packet to
+0xXX: Byte 4 of memory address
+0xXX: Byte 0 of memory address
+0xXX: Byte 1 of memory address
+0xXX: Byte 0 of last packet identifier
+	0x00: packets to follow
+	0x01: no more packets to follow
+	0x00: Byte 1 of last packet identifier
+
+Then follows the packet (size see above).
+
+0x00: Byte 0 of command identifier
+0x92: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+
+KNC_CANCEL
+----------
+
+0x00: Byte 0 of command identifier
+0x9e: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+
+0x00: Byte 0 of command identifier
+0x9e: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+
+Following bytes only in case of success:
+
+0xXX: Byte 0 of cancelled command
+0xXX: Byte 1 of cancelled command
+
+KNC_GET_IMAGE_THUMB
+-------------------
+
+0x00: Byte 0 of command identifier
+0x88: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+0xXX: Byte 0 of p ID
+	0x02: Flash memory card
+0xXX: Byte 1 of p ID
+	0x00: Flash memory card
+0xXX: Byte 3 of image ID (QM200 only)
+0xXX: Byte 4 of image ID (QM200 only)
+0xXX: Byte 0 of image ID
+0xXX: Byte 1 of image ID
+
+Data will be received first, followed by the return value.
+
+0x00: Byte 0 of command identifier
+0x88: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+
+KNC_GET_IMAGE_JPEG
+------------------
+
+See KNC_GET_IMAGE_THUMB, byte 0 of command identifier is 0x10.
+
+KNC_GET_IMAGE_EXIF
+------------------
+
+See KNC_GET_IMAGE_THUMB, byte 0 of command identifier is 0x30.
+
+KNC_GET_PREVIEW
+---------------
+
+0x40: Byte 0 of command identifier
+0x88: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+0xXX: Byte 0 of preview mode
+	0x00: no thumbnail
+	0x01: thumbnail
+0x00: Byte 1 of preview mode
+
+Data will be received first, followed by the return value.
+
+0x40: Byte 0 of command identifier
+0x88: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+
+KNC_SET_IO_PREF
+---------------
+
+0x80: Byte 0 of command identifier
+0x90: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+0xXX: Byte 0 of bit rates
+0xXX: Byte 1 of bit rates
+0xXX: Byte 0 of bit flags
+0xXX: Byte 1 of bit flags
+
+0x80: Byte 0 of command identifier
+0x90: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+
+KNC_GET_IO_PREF
+---------------
+
+0x00: Byte 0 of command identifier
+0x90: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+
+0x40: Byte 0 of command identifier
+0x88: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+0xXX: Byte 0 of supported bit rates
+0xXX: Byte 1 of supported bit rates
+0xXX: Byte 0 of supported flags
+0xXX: Byte 1 of supported flags
+
+KNC_GET_IMAGE_INFO
+------------------
+
+Command to get some information about an image.
+
+0x20: Byte 0 of command identifier
+0x88: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+0xXX: Byte 0 of p ID
+		0x02: Flash memory card
+0xXX: Byte 1 of p ID
+		0x00: Flash memory card
+0xXX: Byte 3 of image number (QM200 only)
+0xXX: Byte 4 of image number (QM200 only)
+0xXX: Byte 0 of image number
+0xXX: Byte 1 of image number
+
+The data will be received first, followed by the return value.
+
+Return value:
+
+0x20: Byte 0 of command identifier
+0x88: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+
+Following bytes only in case of success:
+
+0xXX: Byte 3 of image ID (QM200 only)
+0xXX: Byte 4 of image ID (QM200 only)
+0xXX: Byte 0 of image ID
+0xXX: Byte 1 of image ID
+0xXX: Byte 0 of exif size
+0xXX: Byte 1 of exif size
+0xXX: Byte 0 of protect status
+             0x00: not protected
+	     0x01: protected
+0x00: Byte 1 of protect status
+
+
+KNC_GET_INFO
+------------
+
+Command to get some information on the camera.
+
+0x10: Byte 0 of command identifier
+0x90: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+(...)
+
+You can add pairs of additional bytes with no effect on the command.
+
+Return values:
+
+0x10: Byte 0 of command identifier
+0x90: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+
+Following bytes only in case of success:
+
+0xXX: Reserved
+0xXX: Reserved
+0xXX: Reserved
+0xXX: Reserved
+0xXX: Byte 0 of model
+0xXX: Byte 1 of model
+0xXX: Byte 2 of model
+0xXX: Byte 3 of model
+0xXX: Byte 0 of serial number
+(...)
+0xXX: Byte 9 of serial number
+0xXX: Hardware version (major)
+0xXX: Hardware version (minor)
+0xXX: Software version (major)
+0xXX: Software version (minor)
+0xXX: Testing software version (major)
+0xXX: Testing software version (minor)
+0xXX: Byte  0 of name
+(...)
+0xXX: Byte 21 of name
+0xXX: Byte  0 of manufacturer
+(...)
+0xXX: Byte 29 of manufacturer
+

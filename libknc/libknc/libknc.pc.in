@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+VERSION=@VERSION@
+
+Name = libkonica
+Description: Library for accessing some cameras manufactured by Konica.
+Requires:
+Version: @VERSION@
+Libs: -L${libdir} -lknc
+Cflags: -I$(includedir)

@@ -1,0 +1,93 @@
+AC_PREREQ(2.50)
+AC_INIT(libknc/knc.h)
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(libknc,1.0)
+AM_MAINTAINER_MODE
+
+dnl ---------------------------------------------------------------------------
+dnl Version
+dnl ---------------------------------------------------------------------------
+LIBKNC_AGE=0
+LIBKNC_REVISION=0
+LIBKNC_CURRENT=0
+AC_SUBST(LIBKNC_AGE)
+AC_SUBST(LIBKNC_REVISION)
+AC_SUBST(LIBKNC_CURRENT)
+LIBKNC_VERSION_INFO="`expr $LIBKNC_CURRENT + $LIBKNC_REVISION`:$LIBKNC_AGE:$LIBKNC_REVISION"
+AC_SUBST(LIBKNC_VERSION_INFO)
+
+dnl ---------------------------------------------------------------------------
+dnl We need some programs
+dnl ---------------------------------------------------------------------------
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_INSTALL
+AC_PROG_LIBTOOL
+
+dnl ---------------------------------------------------------------------------
+dnl Interantionalization
+dnl ---------------------------------------------------------------------------
+ALL_LINGUAS=""
+# EVIL HACKS
+BUILD_INCLUDED_LIBINTL=no
+AC_SUBST(BUILD_INCLUDED_LIBINTL)
+USE_INCLUDED_LIBINTL=no
+AC_SUBST(USE_INCLUDED_LIBINTL)
+AC_MSG_CHECKING([for po/Makevars requiring evil hack])
+GETTEXT_PACKAGE="${PACKAGE}-${LIBKNC_CURRENT}"
+AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",[The gettext domain we're using])
+AC_SUBST(GETTEXT_PACKAGE)
+if test -f po/Makevars.template
+then
+        sed -e "s/^DOMAIN.*/DOMAIN = ${GETTEXT_PACKAGE}/" < po/Makevars.template > po/Makevars
+	AC_MSG_RESULT([yes. done.])
+else
+	AC_MSG_RESULT([no])
+fi
+AM_GNU_GETTEXT([external])
+
+dnl ---------------------------------------------------------------------------
+dnl Turn on debugging and all warnings when using gcc
+dnl ---------------------------------------------------------------------------
+if test "$ac_cv_prog_gcc" = "yes"; then
+        CFLAGS="$CFLAGS -g -Wall -Wmissing-declarations -Wmissing-prototypes"
+	LDFLAGS="$LDFLAGS -g -Wall"
+fi
+
+dnl ---------------------------------------------------------------------------
+dnl Libraries we need for libknc
+dnl ---------------------------------------------------------------------------
+LIBKNC_CFLAGS=
+LIBKNC_LIBS=
+AC_SUBST(LIBKNC_CFLAGS)
+AC_SUBST(LIBKNC_LIBS)
+
+dnl ---------------------------------------------------------------------------
+dnl Libraries we need for the test program
+dnl ---------------------------------------------------------------------------
+have_knctest=false
+AC_PATH_PROG(GP_PORT_CONFIG,gphoto2-port-config)
+if ! test -z "${GP_PORT_CONFIG}"; then
+	LIBKNCTEST_CFLAGS=`${GP_PORT_CONFIG} --cflags`
+	LIBKNCTEST_LIBS="`${GP_PORT_CONFIG} --libs`"
+	have_knctest=true
+fi
+AM_CONDITIONAL(HAVE_KNCTEST, $have_knctest)
+AC_SUBST(LIBKNCTEST_CFLAGS)
+AC_SUBST(LIBKNCTEST_LIBS)
+
+AC_OUTPUT([po/Makefile.in m4/Makefile  intl/Makefile 
+Makefile
+libknc/Makefile
+libknc/libknc.pc
+tests/Makefile
+])
+
+echo "
+
+Configuration (libknc):
+
+	Source code location:      ${srcdir}
+	Version:                   ${VERSION}
+	Compiler:                  ${CC}
+"

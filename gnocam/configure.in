@@ -167,14 +167,14 @@ fi
 dnl ********
 dnl libglade
 dnl ********
-AC_MSG_CHECKING(for Glade libraries >= 0.11)
+AC_MSG_CHECKING(for Glade libraries >= 0.14)
 if gnome-config --libs libglade > /dev/null 2>&1; then
     vers=`gnome-config --modversion libglade | awk 'BEGIN { FS = "."; } { print $1 * 1000 + $2;}'`
-    if test "$vers" -ge 11; then
+    if test "$vers" -ge 14; then
 	AC_MSG_RESULT(found)
     else
 	AC_MSG_ERROR([
-*** You need a least libglade 0.11 for this version of ${PACKAGE}.
+*** You need a least libglade 0.14 for this version of ${PACKAGE}.
 *** Get the latest version from http://www.gnome.org.
 *** Mirrors can be found at http://www.gnome.org/mirrors.])
     fi

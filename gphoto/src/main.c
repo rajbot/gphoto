@@ -53,11 +53,11 @@ extern  GtkAccelGroup*  mainag;
 void crash(int sig)
 {
     char buddys[256];
-    sprintf(buddys,"bug-buddy --package=gphoto --package-ver=%s --pid=%d",VERSION, getppid());
+    sprintf(buddys,"bug-buddy --package=gphoto --package-ver=%s --pid=%d",VERSION, getpid());
     fprintf(stdout,"gPhoto %s (built %s) process %d has crashed\n"
 	    "due to fatal errors.  Please send us a bug report!\n"
-	    "See http://gphoto.org/gphoto/bugs.html for details.\n",
-	    VERSION, __DATE__, getppid());
+	    "See $INSTALLPREFIX/doc/gphoto-%s/BUGS or\nhttp://gphoto.org/gphoto/bugs.html for details.\n",
+	    VERSION, __DATE__, getpid(), VERSION);
     if (!system(buddys)) {
 	fprintf(stdout, "\nLaunching Gnome Bugbuddy...\n");
         fprintf(stdout,"%s\n",buddys);

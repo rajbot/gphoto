@@ -1,14 +1,54 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <termios.h>
-#include "defs.h"
-#include "transmission.h"
-#include "open.h"
-#include "error.h"
+#include "qm100.h"
 
-struct termios newt;
-struct termios oldt;
+char *qm100_getKeyword(char *key, char *dflt)
+{
+   char         fname[128];
+   FILE        *fp;
+   char        *sp=NULL;
+   static char  buf[256];
+   
+   sprintf(fname, "%s/.gphoto/konicarc", getenv("HOME"));
+   fp = fopen(fname, "r");
+   if (fp)
+      {
+      while ((sp = fgets(buf, sizeof(buf)-1, fp)) != NULL)
+         {
+         if (*sp == '#' || *sp == '*')
+            continue;
+         sp = strtok(buf, " \t\r\n");
+         if (!sp)       
+            continue;    /* skip blank lines */
+         if (strcasecmp(sp, key) != 0)
+            continue;
+         sp = strtok(NULL, " \t\r\n");
+         break;
+         }
+      fclose(fp);
+      }
+   if (!sp)
+      {
+      sprintf(buf, "QM100_%s", key);
+      sp = getenv(buf);
+      }
+   if (!sp)
+      sp = dflt;
+   return sp;
+}
+
+void qm100_setTrace(void)
+{
+   char *fname;
+   
+   fname = qm100_getKeyword("TRACE", "off");
+   if (!qm100_trace && fname &&
+       strcasecmp(fname, "off") != 0  &&
+       strcasecmp(fname, "none") != 0)
+      qm100_trace = fopen(fname, "w");
+
+   fname = qm100_getKeyword("TRACE_BYTES", "off");
+   if (qm100_trace && fname && strcasecmp(fname, "off") != 0)
+      qm100_showBytes = 1;
+}
 
 int qm100_open(const char *devname)
 {
@@ -17,31 +57,30 @@ int qm100_open(const char *devname)
   char cmd_init[QM100_INIT_LEN]=QM100_INIT;
 
   serialdev = open(devname, O_RDWR|O_NOCTTY);
-  if (serialdev < 0) qm100_error(serialdev, "Cannot open device");
+  if (serialdev < 0) 
+     qm100_error(serialdev, "Unable to open serial device", errno);
+  
+  if (tcgetattr(serialdev, &oldt) < 0) 
+     qm100_error(serialdev, "Unable to get serial device attributes", errno);
 
-  if (tcgetattr(serialdev, &oldt) < 0) qm100_error(serialdev, "tcgetattr");
   memcpy((char *)&newt,(char *)&oldt, sizeof(struct termios));
-
-  newt.c_cflag |= CS8;
+  newt.c_cflag |= CS8 | HUPCL;
   newt.c_iflag &= ~(IGNBRK|BRKINT|IGNPAR|PARMRK|INPCK|ISTRIP|INLCR);
   newt.c_iflag &= ~(IGNCR|ICRNL|IXON|IXOFF|IXANY|IMAXBEL);
+  
   newt.c_oflag &= ~(OPOST);
   newt.c_lflag &= ~(ISIG|ICANON);
   newt.c_cc[VMIN] = 1;
   newt.c_cc[VTIME] = 0;
-  
+
   cfsetospeed(&newt, B9600);
   cfsetispeed(&newt, B9600);
 
-  if (tcsetattr(serialdev, TCSANOW, &newt) < 0) qm100_error(serialdev, "Serial speed change problem");
-  packet = qm100_transmit(serialdev, cmd_init, sizeof(cmd_init));
-
+  if (tcsetattr(serialdev, TCSANOW, &newt) < 0)
+     qm100_error(serialdev, "Unable to set serial device attributes", errno);
+  qm100_transmit(serialdev, cmd_init, sizeof(cmd_init), &packet, "Open");
+  qm100_setSpeed(serialdev, qm100_transmitSpeed);
   return serialdev;
 }
-
-
-
-
-
 
 

@@ -1,3 +1,4 @@
+#include "qm100.h"
 #include "saveAllPics.h"
 
 void qm100_saveAllPics()

@@ -1,4 +1,4 @@
-/* Konica QM100 Camera Functions */
+/* Konica Q-M100 Camera Functions */
 
 #include <unistd.h>
 #include <stdio.h>
@@ -7,23 +7,29 @@
 #include <gdk_imlib.h>
 #include <gdk/gdk.h>
 
-#include "defs.h"
-#include "transmission.h"
-#include "open.h"
-#include "close.h"
-#include "formatCF.h"
-#include "erasePic.h"
-#include "savePic.h"
-#include "getPicInfo.h"
-#include "setSpeed.h"
-#include "takePic.h"
-#include "saveThumb.h"
+#include "qm100.h"
 #include "../src/gphoto.h"
 #include "konica_qm100.h"
+#if defined(FULL_CONFIG)
+#include "configDialog.h"
+#endif
+int konica_picCounter;
+void message_window(char *title, char *message, GtkJustification  jtype );
 
 int konica_qm100_initialize()
 {
-  return(1);
+   char *fname;
+
+   qm100_setTrace();
+   qm100_setTransmitSpeed();
+   konica_picCounter = 0;
+   qm100_recovery = 1;
+   return(1);
+}
+
+void konica_show_camera_error(void)
+{
+   message_window("Camera failure", qm100_errmsg, GTK_JUSTIFY_FILL);
 }
 
 int konica_qm100_number_of_pictures ()
@@ -32,27 +38,32 @@ int konica_qm100_number_of_pictures ()
   char cmd_status[QM100_STATUS_LEN]=QM100_STATUS;
   int serialdev;
   
+  if (setjmp(qm100_jmpbuf))
+     {
+     konica_show_camera_error();
+     return 0;
+     }
   serialdev = qm100_open(serial_port);
-  packet = qm100_transmit(serialdev, cmd_status, sizeof(cmd_status));
+  qm100_transmit(serialdev, cmd_status, sizeof(cmd_status), &packet, "Get Status");
   qm100_close(serialdev);
   return PICTURE_COUNT;
 }
 
-int konica_qm100_take_picture() {
+int konica_qm100_take_picture()
+{
   int serialdev;
   qm100_packet_block packet;
   char cmd_status[QM100_STATUS_LEN]=QM100_STATUS;
   
+  if (setjmp(qm100_jmpbuf))
+     {
+     konica_show_camera_error();
+     return 0;
+     }
   serialdev = qm100_open(serial_port);
-  qm100_setSpeed(serialdev, B115200);
-  
   qm100_takePic(serialdev);
-  qm100_setSpeed(serialdev, B9600);
-
-  packet = qm100_transmit(serialdev, cmd_status, sizeof(cmd_status));
-
+  qm100_transmit(serialdev, cmd_status, sizeof(cmd_status), &packet, "Get Status");
   qm100_close(serialdev);
-
   return PICTURE_COUNT;
 }
 
@@ -61,49 +72,53 @@ struct Image *konica_qm100_get_picture (int picNum, int thumbnail)
   int serialdev;
   int pid;
   char tempName[1024], rm[1024];
-
+  FILE *jpgfile;
+  int jpgfile_size;
   struct Image *im;
-  FILE *fp;
-  int imagesize;
-  char *imagedata;
-
   pid = getpid();
-
-  serialdev = qm100_open(serial_port);
-  qm100_setSpeed(serialdev, B115200);
-
-  sprintf(tempName, "%s/gphoto-konica-%i.jpg", gphotoDir, picNum);
-
-  picNum = qm100_getRealPicNum(serialdev, picNum);
-
-  if (thumbnail) {
-    qm100_saveThumb(serialdev, tempName, picNum);
-  } else {
-    qm100_savePic(serialdev, tempName, picNum);
-  }
   
-  qm100_setSpeed(serialdev, B9600);
-  qm100_close(serialdev); 
-	/* Updates    -Scott */
-	fp = fopen(tempName, "r");
-	fseek(fp, 0, SEEK_END);
-	imagesize = ftell(fp);
-	rewind(fp);
-	imagedata = (char *)malloc(sizeof(char)*imagesize);
-	fread(imagedata, (size_t)imagesize, (size_t)sizeof(char),fp);
-	fclose(fp);
-	im = (struct Image*)malloc(sizeof(struct Image));
-	im->image = imagedata;
-	im->image_size = imagesize;
-	im->image_info_size = 0;
-	strcpy(im->image_type, "jpg");
-  remove (tempName);
+  if (setjmp(qm100_jmpbuf))
+     {
+     konica_show_camera_error();
+     return NULL;
+     }
+  serialdev = qm100_open(serial_port);
+  konica_picCounter++;
+  sprintf(tempName, "%s/gphoto-konica-%i.jpg", gphotoDir, pid,
+          konica_picCounter);
+  picNum = qm100_getRealPicNum(serialdev, picNum);
+  if (thumbnail) 
+     qm100_saveThumb(serialdev, tempName, picNum, NULL);
+  else 
+     qm100_savePic(serialdev, tempName, picNum, NULL);
+  qm100_close(serialdev);
+
+  jpgfile = fopen(tempName, "r");
+  fseek(jpgfile, 0, SEEK_END);
+  jpgfile_size = ftell(jpgfile);
+  rewind(jpgfile);
+  im = (struct Image*)malloc(sizeof(struct Image));
+  im->image = (char *)malloc(sizeof(char)*jpgfile_size);
+  fread(im->image, (size_t)sizeof(char), (size_t)jpgfile_size, jpgfile);
+  fclose(jpgfile);
+  if (thumbnail)
+     strcpy(im->image_type, "tif");
+  else
+     strcpy(im->image_type, "jpg");
+  im->image_size = jpgfile_size;
+  im->image_info_size = 0;
+  remove(tempName);
   return (im);
 }
 
 int konica_qm100_delete_picture (int picNum)
 {
   int serialdev;
+  if (setjmp(qm100_jmpbuf))
+     {
+     konica_show_camera_error();
+     return 0;
+     }
   serialdev = qm100_open(serial_port);
   picNum = qm100_getRealPicNum(serialdev, picNum);
   qm100_erasePic(serialdev, picNum);
@@ -114,6 +129,11 @@ int konica_qm100_delete_picture (int picNum)
 int konica_qm100_formatCF()
 {
   int serialdev;
+  if (setjmp(qm100_jmpbuf))
+     {
+     konica_show_camera_error();
+     return 0;
+     }
   serialdev = qm100_open(serial_port);
   qm100_formatCF(serialdev);
   qm100_close(serialdev);
@@ -127,9 +147,11 @@ struct Image *konica_qm100_get_preview () {
 int konica_qm100_configure ()
 {
   GtkWidget *dialog;
+#if defined(FULL_CONFIG)
+  dialog = qm100_createConfigDlg();
+#else
   GtkWidget *button;
   GtkWidget *buttonbox;
-
   /* Set the Window Dialog up */
   dialog = gtk_window_new(GTK_WINDOW_DIALOG);
   gtk_window_set_title(GTK_WINDOW(dialog), "Camera Configuration");
@@ -161,31 +183,41 @@ int konica_qm100_configure ()
   /* Stick the buttonbox to the window and show it all */
   gtk_container_add ( GTK_CONTAINER(dialog), GTK_WIDGET(buttonbox));
   gtk_widget_show( buttonbox );
+#endif
   gtk_widget_show ( dialog );
   
   return(1);
 }
 
-char summary_string[500];
-
 char *konica_qm100_summary()
 {
+  char summary_string[500];
+  char *summary;
   char cmd_status[QM100_STATUS_LEN]=QM100_STATUS;
   int serialdev;
   qm100_packet_block packet;
   
   update_progress(0);
+  if (setjmp(qm100_jmpbuf))
+     return qm100_errmsg;
   serialdev = qm100_open(serial_port);
-  packet = qm100_transmit(serialdev, cmd_status, sizeof(cmd_status));
+  qm100_transmit(serialdev, cmd_status, sizeof(cmd_status), &packet, "Get Status");
   qm100_close(serialdev);
   update_progress(1);
-  sprintf(summary_string, "This camera is a Konica QM100 or Hewlett Packard C20/C30\nIt has taken %d pictures and currently contains %d picture(s)\nThe time according to the Camera is %d:%d:%d %d/%d/%d",COUNTER, PICTURE_COUNT, TIME_HOUR,TIME_MIN,TIME_SEC,TIME_DAY,TIME_MON,TIME_YEAR);
-  return (summary_string);
+
+  sprintf(summary_string, 
+          "This camera is a Konica QM100 or Hewlett Packard C20/C30\n"
+          "It has taken %u pictures and currently contains %d picture(s)\n"
+          "The time according to the Camera is %d:%d:%d %d/%d/%d",
+          COUNTER, PICTURE_COUNT, TIME_HOUR,TIME_MIN,TIME_SEC, TIME_DAY, TIME_MON, TIME_YEAR);
+  summary = (char *)malloc(sizeof(char)*strlen(summary_string)+32);
+  strcpy(summary, summary_string);
+  return (summary);
 }
 
 char *konica_qm100_description()
 {
-  return("Konica QM-100 Digital Camera gPhoto Plugin (C) 1999 Phill Hugo / Jesper Skov Works for QM100 / HP C20 / HP C30");
+  return("Konica Q-M100 Digital Camera gPhoto Plugin (C) 1999 Phill Hugo / Jesper Skov Works for Q-M100 / HP C20 / HP C30");
 }
 
 /* Declare the camera function pointers */

@@ -1,47 +1,36 @@
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include "qm100.h"
 
-#include "defs.h"
-#include "transmission.h"
-#include "saveThumb.h"
-
-int qm100_saveThumb(int serialdev, char *filename, int pic)
+void qm100_saveThumb(int serialdev, char *filename, int pic, void (*progress)(void))
 {
-  int jpgfile;
-  char success=1;
-  char cmd_getthumb[QM100_GETTHUMB_LEN]=QM100_GETTHUMB;
-  qm100_packet_block packet;  
+   int jpgfile;
+   
+   char success=1;
+   char cmd[QM100_GETTHUMB_LEN]=QM100_GETTHUMB;
+   qm100_packet_block packet;
+   
+   cmd[5] = (pic >> 8) & 0xff;
+   cmd[6] = (pic & 0xff);
 
-  cmd_getthumb[5] = (pic >> 8) & 0xff;
-  cmd_getthumb[6] = (pic & 0xff);
-
-  qm100_attention(serialdev);
-  qm100_sendPacket(serialdev, cmd_getthumb, sizeof(cmd_getthumb));
-  qm100_getAck(serialdev);
-  packet = qm100_getPacket(serialdev);
-
-  
-  if (packet.packet_len == 4)
-    {
+   qm100_transmit(serialdev, cmd, sizeof(cmd), &packet, "GetThumb");
+   if (packet.packet_len == 4)
+      {
       success = 0; /* No pic there! */
-    }
-  else
-    {
+      }
+   else
+      {
       jpgfile = open(filename, O_RDWR|O_CREAT|O_EXCL, 0700);
       write(jpgfile, packet.packet, packet.packet_len);
       
       while (packet.transmission_continues)
-      {
-	qm100_continueTransmission(serialdev);
-	packet = qm100_getPacket(serialdev);
-	write(jpgfile, packet.packet, packet.packet_len);
-      }
+         {
+         if (progress)
+            progress();
+         qm100_continueTransmission(serialdev, "GetThumb");
+         qm100_getPacket(serialdev, &packet);
+         write(jpgfile, packet.packet, packet.packet_len);
+         }
       close(jpgfile);     
-    }
-  qm100_endTransmit(serialdev);
-  return success;
+      }
+   qm100_endTransmit(serialdev, "GetThumb");
+   qm100_sendNullCmd(serialdev);
 }
-
-

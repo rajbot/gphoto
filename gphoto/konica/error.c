@@ -1,29 +1,22 @@
-#include <termios.h>
-#include <unistd.h>
-#include <stdio.h>
+#include "qm100.h"
 
-#ifdef _CLI_
- extern struct termios oldt;
-#else
- #include "../src/gphoto.h"
-#endif
-
-
-void qm100_error(int serialdev, char *error)
+void qm100_error(int serialdev, char *operation, int error)
 {
-#ifdef _CLI_
-  perror(error);
-#else
-  error_dialog(error);
-#endif
-
-#ifdef _CLI_
-  tcsetattr(serialdev, TCSANOW, &oldt);
-#endif
-
-  close(serialdev);
-  printf("\nClosed and done!\n");
-  exit(1);
+   if (error)
+      sprintf(qm100_errmsg, "%s: %s", operation, strerror(error));
+   else
+      strcpy(qm100_errmsg, operation);
+   if (serialdev > 0)
+      {
+      tcsetattr(serialdev, TCSANOW, &oldt);
+      close(serialdev);
+      }
+   if (qm100_trace)
+      fprintf(qm100_trace, "%s\n", qm100_errmsg);
+   if (qm100_recovery)
+      longjmp(qm100_jmpbuf, 1);
+   fprintf(stderr, "%s - terminating\n", qm100_errmsg);
+   exit(1);
 }
 
 

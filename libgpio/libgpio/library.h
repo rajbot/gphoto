@@ -4,6 +4,7 @@
 #define DLCLOSE(_handle)
 #define DLERROR()
 #else
+#include <dirent.h>
 #include <dlfcn.h>
 #define DLOPEN(_handle, _filename)		(_handle = dlopen(_filename, RTLD_LAZY))
 #define DLSYM(_pointer, _handle, _funcname)	(_pointer = dlsym(_handle, _funcname))

@@ -1,5 +1,4 @@
 #include <sys/types.h>
-#include <dirent.h>
 #include <stdio.h>
 
 #include "gpio.h"

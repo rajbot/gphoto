@@ -1,10 +1,4 @@
-SUBDIRS =			\
- 	art			\
-	gnocam			\
-	gnome-vfs-module	\
-	tests			\
-	intl			\
-	po
+SUBDIRS = art gnocam gnome-vfs-module po tests
 
 EXTRA_DIST =\
  AUTHORS\

@@ -1,3 +1,7 @@
+2001-10-14  Lutz Müller <urc8@rz.uni-karlsruhe.de>
+
+	* Remove references to bonobo-conf.
+
 2001-10-09  Lutz Müller <urc8@rz.uni-karlsruhe.de>
 
 	* Bump up version to 0.13

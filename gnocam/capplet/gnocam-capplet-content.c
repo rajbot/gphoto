@@ -6,21 +6,18 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <bonobo/bonobo-exception.h>
 #include <bonobo/bonobo-moniker-util.h>
-#include <bonobo-conf/bonobo-property-editor.h>
+#include <gconf/gconf-client.h>
 
 #include <gnocam-capplet-table-scrolled.h>
 
 #define PARENT_TYPE GTK_TYPE_VBOX
 static GtkVBoxClass *parent_class = NULL;
 
-struct _GnoCamCappletContentPrivate 
-{
+struct _GnoCamCappletContentPrivate {
 	GtkWidget *table;
-};
 
-/*****************/
-/* Our functions */
-/*****************/
+	GConfClient *client;
+};
 
 void
 gnocam_capplet_content_ok (GnoCamCappletContent *content)
@@ -50,20 +47,27 @@ gnocam_capplet_content_cancel (GnoCamCappletContent *content)
 			GNOCAM_CAPPLET_TABLE_SCROLLED (content->priv->table));
 }
 
-/*************/
-/* Gtk stuff */
-/*************/
-
 static void
 gnocam_capplet_content_destroy (GtkObject *object)
 {
-	GnoCamCappletContent *content;
+	GnoCamCappletContent *content = GNOCAM_CAPPLET_CONTENT (object);
 
-	content = GNOCAM_CAPPLET_CONTENT (object);
+	if (content->priv->client) {
+		gtk_object_unref (GTK_OBJECT (content->priv->client));
+		content->priv->client = NULL;
+	}
+
+	GTK_OBJECT_CLASS (parent_class)->destroy (object);
+}
+
+static void
+gnocam_capplet_content_finalize (GtkObject *object)
+{
+	GnoCamCappletContent *content = GNOCAM_CAPPLET_CONTENT (object);
 
 	g_free (content->priv);
 
-	GTK_OBJECT_CLASS (parent_class)->destroy (object);
+	GTK_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -72,7 +76,8 @@ gnocam_capplet_content_class_init (GnoCamCappletContentClass *klass)
 	GtkObjectClass *object_class;
 
 	object_class = GTK_OBJECT_CLASS (klass);
-	object_class->destroy = gnocam_capplet_content_destroy;
+	object_class->destroy  = gnocam_capplet_content_destroy;
+	object_class->finalize = gnocam_capplet_content_finalize;
 
 	parent_class = gtk_type_class (PARENT_TYPE);
 }
@@ -81,6 +86,15 @@ static void
 gnocam_capplet_content_init (GnoCamCappletContent* content)
 {
 	content->priv = g_new0 (GnoCamCappletContentPrivate, 1);
+	content->priv->client = gconf_client_get_default ();
+}
+
+static void
+on_autodetect_toggled (GtkToggleButton *toggle,
+		       GnoCamCappletContent *content)
+{
+	gconf_client_set_bool (content->priv->client,
+		"/apps/" PACKAGE "/autodetect", toggle->active, NULL);
 }
 
 GtkWidget*
@@ -90,9 +104,7 @@ gnocam_capplet_content_new (CappletWidget* capplet)
 	GdkPixmap *pixmap = NULL;
 	GdkBitmap *bitmap = NULL;
 	GnoCamCappletContent *new;
-	GtkWidget *widget, *label, *hbox;
-	CORBA_Environment ev;
-	Bonobo_PropertyBag pb;
+	GtkWidget *widget, *hbox, *check;
 
 	new = gtk_type_new (GNOCAM_TYPE_CAPPLET_CONTENT);
 	
@@ -119,25 +131,14 @@ gnocam_capplet_content_new (CappletWidget* capplet)
 	gtk_box_pack_end (GTK_BOX (new), hbox, FALSE, FALSE, 10);
 
 	/* The "Do not ask again" check button */
-	CORBA_exception_init (&ev);
-	pb = bonobo_get_object ("config:/apps/" PACKAGE,
-			        "Bonobo/PropertyBag", &ev);
-	if (BONOBO_EX (&ev)) {
-		g_warning ("Could not get property bag: %s",
-		bonobo_exception_get_text (&ev));
-	} else {
-		GtkObject *ed;
-
-		ed = bonobo_peditor_new (pb, "autodetect", TC_boolean, NULL);
-		bonobo_object_release_unref (pb, NULL);
-		widget = bonobo_peditor_get_widget (BONOBO_PEDITOR (ed));
-		gtk_widget_show (widget);
-		gtk_box_pack_start (GTK_BOX (hbox), widget, FALSE, FALSE, 0);
-		label = gtk_label_new (_("Always autodetect camera"));
-		gtk_widget_show (label);
-		gtk_container_add (GTK_CONTAINER (widget), label);
-	}
-	CORBA_exception_free (&ev);
+	check = gtk_check_button_new_with_label (_("Always autodetect camera"));
+	gtk_widget_show (check);
+	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check),
+		gconf_client_get_bool (new->priv->client,
+			"/apps/" PACKAGE "/autodetect", NULL));
+	gtk_container_add (GTK_CONTAINER (hbox), check);
+	gtk_signal_connect (GTK_OBJECT (check), "toggled",
+			    GTK_SIGNAL_FUNC (on_autodetect_toggled), new);
 
 	return (GTK_WIDGET (new));
 }

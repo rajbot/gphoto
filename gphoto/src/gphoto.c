@@ -29,8 +29,9 @@ void update_progress(float percentage) {
 		fflush(stdout);
 		return;
 	}
-	
-        gtk_progress_bar_update(GTK_PROGRESS_BAR(progress), percentage);
+
+	if (percentage >= 0)
+	        gtk_progress_bar_update(GTK_PROGRESS_BAR(progress), percentage);
         while (gtk_events_pending())
                 gtk_main_iteration();
 }

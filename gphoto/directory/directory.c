@@ -57,6 +57,7 @@ int dir_get_dir() {
 	dir = opendir(dir_directory);
 	file = readdir(dir);
 	while (file != NULL) {
+		update_progress(-1);
 		if ((strcmp(file->d_name, ".") != 0) &&
 		    (strcmp(file->d_name, "..") != 0)) {
 			sprintf(filename, "%s%s", dir_directory,

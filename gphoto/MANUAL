@@ -1,11 +1,18 @@
 $Id$
 
 $Log$
-Revision 1.1  1999/05/27 18:32:01  scottf
-Initial revision
+Revision 1.2  1999/06/18 18:17:25  scottf
+updated the manual_dialog to read from DOCDIC/MANUAL. it expects the
+beginning of the relevant manual text to begin with ten dashes
+"----------"
+
+Revision 1.1.1.1  1999/05/27 18:32:01  scottf
+gPhoto- digital camera utility
 
 Revision 1.2  1999/05/05 19:48:51  ole
 Initial revision
+
+----------
 
 gPhoto 0.1-DR User's Manual
 ---------------------------

@@ -662,132 +662,34 @@ Thanx much. :)
 void usersmanual_dialog() {
 
 	GtkWidget *dialog, *label, *scrwin, *button;
+	FILE *manual;
+	int manual_size;
+	char manual_filename[1024], error[1024];
+	char *manual_text;
+	char *manual_beginning;
 
 	dialog = gtk_dialog_new();
 	gtk_window_set_title(GTK_WINDOW(dialog), "User's Manual");
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
 	gtk_widget_set_usize(dialog, 460, 450);
 
-	label = gtk_label_new("
-gPhoto 0.3 User's Manual
-------------------------
+	sprintf(manual_filename, "%s/MANUAL", DOCDIR);
 
-gPhoto was designed to be as intuitive as possible. The toolbar provides
-shortcuts to many of the features listed below.
-
-
-Getting Thumbnails/Previews
----------------------------
-	In the \"Camera\" menu, select \"Get Index\"
-
-Downloading Images
-------------------
-	After getting the index, select the images you want to download
-	by clicking on them (border will turn red). Then, in the
-	\"Camera\" menu, select \"Get Selected Images\".
-
-Manipulating Images
--------------------
-	After downloading an image, view it by clicking on its tab.
-	Then, click the desired manipulation. Available are
-	rotate clockwise, rotate counter-clockwise, flip horizontal,
-	flip vertical, and resize.
-
-	* For intensive image manipulation, fire up the GIMP!
-
-Send to the GIMP
-----------------
-	Not currently supported. 
-
-Saving Images
--------------
-	Click on the tab of the image you want to save, and select
-	\"Save\" from the \"File\" menu. Select the directory you want
-	to save the image in, and type in a name for the image.
-	The extension will determine which format the image is saved
-	in.
-
-	Example: image.jpg
-
-	Supported: jpg gif png tif (and others...)
-	(whatever is supported by your installation of imlib)
-
-Batch Saving
-------------
-
-	[Outdated]
-
-	Select \"Batch Save\" from the \"File\" menu. Then, select the
-	directory that will store all the images and click \"OK\".
-
-	* Currently, gPhoto only supports saving ALL images and/or
-	  thumbnails.
-
-	* Pictures are all stored as JPEG images by default.
-
-Printing Images
----------------
-	Click on the tab of the image you want to print, and select
-	\"Print\" from the \"File\" menu.
-
-	You can specify options to send to \"lpr\" in the supplied box.
-
-	Note: it might take a minute for the image to print, depending
-	on how fast the image is spooled.
-
-Closing Downloaded Images
--------------------------
-	Click on the tab of the image you want to close, and select
-	\"Close\" from the \"File\" menu.
-
-Deleting Images from the Camera
--------------------------------
-	In the image index, select the images you wish to remove from
-	the camera by clicking on the thumnail (border will turn red).
-	Then, from the \"Camera\" menu, select \"Delete Selected Images\".
-	A confirmation will appear. Click \"yes\" or \"no\".
-
-Selecting the Serial Port
--------------------------
-	Select \"Select Port\" from the \"Camera\" menu.
-
-Configuring the Camera
-----------------------
-	Select \"Configure Camera\" from the \"Configure\" menu.
-
-Live preview plugin
--------------------
-        Select \"Live cam\" from the \"Plugins\" menu.
-	Click on \"Take picture\" to update preview.
-
-Command line mode
------------------
-
-	[Outdated. type \"gphoto -h\" for options]
-
-	The command-line mode must be specified at run time
-        with the \"-c\" parameter.
- 
- 	$ gphoto -c filename
- 	where \"filename\" is the path and image name (+ extension)
- 	to save a preview snapshot.
- 
- 	Example:
- 	$ gphoto -c /home/httpd/html/livepic.jpg
- 
- 	The command line mode is handy, if you want to set up a web
- 	camera, and use gphoto in a script, e.g. with Perl/PHP. :-)
- 					  
-Tips and Tricks
----------------
-	* Make sure your camera is connected and turned ON. :-)
-	* If something fails (getting index, configuring camera, ...)
-	  try again. There are some things that need to be done still
-	  to make sure the camera does what you want it to do.
- 	* Have fun, and give us feedback if your camera fail or succeed
-          to <gphoto-devel@lists.styx.net> and visit www.gphoto.org for
-          regular updates!
-");
+	if (manual = fopen(manual_filename, "r")) {
+		fseek(manual, 0, SEEK_END);
+		manual_size = ftell(manual);
+		rewind(manual);
+		manual_text = (char*)malloc(sizeof(char) * manual_size);
+		fread(manual_text, (size_t)sizeof(char),
+			(size_t)manual_size, manual);
+		manual_beginning = strstr(manual_text, "----------");
+		strcpy(manual_text, manual_beginning);
+		label = gtk_label_new(strdup(manual_text));
+		free(manual_text);}
+	   else {
+		sprintf(error, "Could not open:\n%s", manual_filename);
+		gtk_label_new(error);
+	}
 
 	gtk_widget_show(label);
 	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);

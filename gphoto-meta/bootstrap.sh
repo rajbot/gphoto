@@ -1,7 +1,17 @@
 #!/bin/bash
 
-. "$(dirname $0)/utils/common.sh"
-. "$(dirname $0)/utils/autodetect.sh"
+source "$(dirname $0)/utils/common.sh" || exit 7
+source "${metadir}/utils/autodetect.sh" || exit 7
+
+########################################################################
+# evaluate command line parameters
+
+if [ "$1" = "--update" ]
+then
+    parm_update="true"
+else
+    parm_update="false"
+fi
 
 ########################################################################
 # init - initialize stuff (CVS logins, etc)
@@ -22,27 +32,46 @@ init() {
 }
 
 ########################################################################
-# download - download software from CVS into ${cvsorig}/MODULE
+# getsources - get software sources from CVS into ${cvsorig}/MODULE
 
-download() {
+getsources() {
     echo "##### Getting software from CVS"
     cmd mkdir -p "${cvsorig}"
     cmd cd "${cvsorig}"
     while read CVSROOT module releasetag restofline
     do 
-	if [ -d "${cvsorig}/${module}" ]
-	then
-	    echo "##### Not fetching module ${module} from CVS - it is already here."
-	    continue
-	fi
-	echo "##### Checking out ${module} release ${releasetag} from ${CVSROOT}"
 	if [ 'HEAD' = $releasetag ]
 	then
 	    releaseparm=""
 	else
 	    releaseparm="-r${releasetag}"
 	fi
-	cmd cvs -z3 -d "${CVSROOT}" ${releaseparm} checkout "${module}"
+	if [ -d "${cvsorig}/${module}" ]
+	then
+	    echo "##### CVS module ${module} is already here."
+	    if [ "$parm_update" = "true" ]
+	    then
+		echo "#     Updating ${module}"
+		cmd cd "${cvsorig}/${module}"
+		# FIXME: Use other directory (do not modify timestamps if not required)
+		stdout="${tmpdir}/.tmp.${module}.stdout"
+		cmd rm -f "$stdout"
+		cmd cvs -z3 update -d -P > "$stdout"
+		if [ -s "$stdout" ]
+		then
+		    echo "##### Module ${module} was updated."
+		    cmd touch "${cvsorig}/${module}.stamp"
+		else
+		    echo "##### Module ${module} was already current."
+		fi
+	    else
+		echo "#     Not updating ${module} - run $this with --update if you want that."
+	    fi
+	else
+	    echo "##### Checking out ${module} release ${releasetag} from ${CVSROOT}"
+	    cmd cvs -z3 -d "${CVSROOT}" ${releaseparm} checkout "${module}"
+	    cmd touch "${cvsorig}/${module}.stamp"
+	fi
     done < "${cvsmodulelist}"
 }
 
@@ -53,56 +82,98 @@ download() {
 # our original CVS checkout.
 
 preparedist() {
-    [ -d "${cvssrc}" ] && return
-    cmd rm -rf "${cvssrc}"
     cmd mkdir -p "${cvssrc}"
-    # FIXME: relies on GNU cp
-    cmd cp -a "${cvsorig}/"* "${cvssrc}/"
+    while read CVSROOT module restofline
+    do
+	if [ "${cvsorig}/${module}.stamp" -nt "${cvssrc}/${module}" ]
+	then
+	    cmd rm -rf "${cvssrc}/${module}"
+	fi
+	if [ ! -e "${cvssrc}/${module}" ]
+	then
+	    # FIXME: relies on GNU cp
+	    cmd cp -a "${cvsorig}/${module}" "${cvssrc}/"
+	    cmd touch "${cvssrc}/${module}/"
+	fi
+    done < "${cvsmodulelist}"
 }
 
 ########################################################################
 # builddist - build distribution tarball for all MODULEs
 
 builddist() {
-    subdirs=""
     export PKG_CONFIG_PATH="${distroot}/lib/pkgconfig:${PKG_CONFIG_PATH}"
     export LD_LIBRARY_PATH="${distroot}/lib:${LD_LIBRARY_PATH}"
     export PATH="${distroot}/bin:${PATH}"
     cmd mkdir -p "${distdir}"
-    while read CVSROOT module releasetag autogenopts configopts restofline
+    while read CVSROOT module releasetag distopts configopts
     do
-	if ls "${distdir}/${module}-"[0-9]* >& /dev/null
+	redist="true"
+	for file in "${distdir}/${module}-"[0-9]*.tar.{gz,bz2}
+	do 
+	    if [ ! "${file}" -ot "${cvssrc}/${module}" ]
+	    then
+		redist="false"
+		break
+	    fi
+	done
+	if [ "$redist" != "true" ]
 	then
-	    echo "##### There is already a tarball for ${module} in ${distdir}"
-	    echo "##### -> not rebuilding"
+	    echo "##### Distribution tarball ${file} for ${module} is current."
+	    echo "#     Not rebuilding dist tarball for ${module}."
 	else
-	    echo "##### Creating fresh source tree..."
-	    cmd rm -rf "${cvssrc}/${module}"
-	    cmd cp -a "${cvsorig}/${module}" "${cvssrc}/"
 	    echo "########################################################################"
-	    echo "##### Creating distribution of ${module} now."
+	    echo "##### Creating distribution of ${module} now:"
+	    echo "#        releasetag:  $releasetag"
+	    echo "#        distopts:    $distopts"
+	    echo "#        configopts:  $configopts"
 	    echo "########################################################################"
 	    cmd cd "${cvssrc}/${module}"
 	    echo "#### Press enter when asked to. And complain to the gettextize guys,"
-	    echo "#    not to me."
-	    if [ '""' = "$autogenopts" ]
-	    then
-		autogenopts=
-	    fi
-	    cmd ./autogen.sh --prefix="${distroot}" ${autogenopts}
-	    if [ '""' = "$configopts" ]
-	    then
-		configopts=
-	    fi
-	    cmd ./configure --enable-maintainer-mode --prefix="${distroot}" ${configopts}
+	    echo "#    not to me. Or run this with \"echo $0 | at now\"."
+	    cmd ./autogen.sh --enable-maintainer-mode --prefix="${distroot}" ${configopts}
+	    cmd ./configure  --enable-maintainer-mode --prefix="${distroot}" ${configopts}
 	    cmd make dist
-	    cmd mv ${module}*.tar.gz "${distdir}/"
-	    mv ${module}*.tar.bz2 "${distdir}/"
-	    cmd make install
+
+	    cmd mv "${module}-"[0-9]*.tar.gz "${distdir}/"
+	    [ -s "${module}-"[0-9]*.tar.bz2 ] && cmd mv "${module}-"[0-9]*.tar.bz2 "${distdir}/"
+
+	    if [ "$distopts" = "install" ]
+	    then
+		cmd make install
+	    else
+		if ! make install
+		then
+		    for f in "${distdir}/${module}-"[0-9]*.tar.{bz2,gz}
+		    do
+			if [ -f "$f" ] && ! echo "$f" | egrep -q -- '-broken.tar.(bz2|gz)$'
+			then
+			    case "$f" in
+				*.tar.bz2)
+				    ext=".tar.bz2"
+				    ;;
+				*.tar.gz)
+				    ext=".tar.gz"
+				    ;;
+				*)
+				    echo "Unknown extension: $f"
+				    exit 1
+				    ;;
+			    esac
+			    newname="$(basename "$f" "$ext")-broken"
+			    cmd mv "$f" "${distdir}/${newname}${ext}"
+			fi
+		    done
+		fi
+	    fi
+	    cmd touch "${cvssrc}/${module}/"
+	    for file in "${distdir}/${module}-"[0-9]*.tar.{gz,bz2}
+	    do
+		[ -f "$file" ] && cmd touch "$file"
+	    done
 	fi
-	subdirs="${subdirs} ${module}"
     done < "${cvsmodulelist}"
-    (gphoto2 --version; gphoto2 --list-cameras) > "${distdir}/SUPPORTED-CAMERAS"
+    (TZ=UTC date;gphoto2 --version; gphoto2 --list-cameras) > "${distdir}/SUPPORTED-CAMERAS"
 }
 
 ########################################################################
@@ -140,7 +211,7 @@ EOF
 
 init
 
-download
+getsources
 
 preparedist
 builddist

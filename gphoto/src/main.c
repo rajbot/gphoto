@@ -153,7 +153,7 @@ int main (int argc, char *argv[]) {
 	gtk_window_set_title (GTK_WINDOW(mainWin), title);
 	gtk_signal_connect (GTK_OBJECT(mainWin), "delete_event",
 			    GTK_SIGNAL_FUNC(delete_event), NULL);
-	gtk_widget_set_usize(mainWin, 710, 480);
+	gtk_widget_set_usize(mainWin, 730, 480);
 	gtk_widget_realize(mainWin);
 
 	/* set up the menu --------------------------------------- */

@@ -1,3 +1,7 @@
+2001-07-30	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
+	* gnocam/gnocam-main.c: Close the dialog if Cancel has been clicked.
+
 2001-07-30 	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
 	* gnocam/bonobo-stream-camera.c: Don't use CameraFile everywhere, just

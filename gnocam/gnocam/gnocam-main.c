@@ -87,18 +87,24 @@ impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant,
 	if (!initialized) {
 		GnomeDialog *selector;
 		const gchar *name;
+		gint button;
 
 		selector = gnocam_camera_selector_new (
 						gnocam_main->priv->client);
-		switch (gnome_dialog_run (selector)) {
-		case 1:
-			/* Cancel */
-			CORBA_exception_set (ev, CORBA_USER_EXCEPTION,
-					     ex_GNOME_Cancelled, NULL);
-			gp_camera_unref (camera);
-			return (CORBA_OBJECT_NIL);
-		default:
-			break;
+		do {
+			button = gnome_dialog_run (selector);
+			if (button == 1) {
+				/* Cancel */
+				gnome_dialog_close (selector);
+				CORBA_exception_set (ev, CORBA_USER_EXCEPTION,
+						     ex_GNOME_Cancelled, NULL);
+				gp_camera_unref (camera);
+				return (CORBA_OBJECT_NIL);
+			} else if (button == 0) {
+				break;
+			} else {
+				g_warning ("Unhandled button: %i", button);
+			}
 		}
 		name = gnocam_camera_selector_get_name (
 					GNOCAM_CAMERA_SELECTOR (selector));

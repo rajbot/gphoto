@@ -861,9 +861,6 @@ vfs_module_init (const gchar *method_name, const gchar *args)
 		gconf_init (argc, argv, NULL);
 	client = gconf_client_get_default ();
 
-	/* Initialize gphoto */
-	gp_init (GP_DEBUG_HIGH);
-
         return (&method);
 }
 

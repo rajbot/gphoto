@@ -309,13 +309,8 @@ gnocam_main_class_init (GnoCamMainClass *klass)
 		g_assert (gconf_init (1, argv, &gerror));
 	}
 
-	/* Make sure GPhoto is initialized. */
-	if (!gp_is_initialized ()) {
-		g_message ("Initializing GPhoto...");
-		g_assert (gp_init (GP_DEBUG_NONE) == GP_OK);
-		gp_frontend_register (NULL, NULL, frontend_message,
-				      frontend_confirm, NULL);
-	}
+	gp_frontend_register (NULL, NULL, frontend_message,
+			      frontend_confirm, NULL);
 
 	parent_class = gtk_type_class (PARENT_TYPE);
 

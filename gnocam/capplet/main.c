@@ -103,16 +103,14 @@ int main (int argc, char** argv)
 		return (1);
 	}
 
-	/* Init GPhoto */
-	gp_init (GP_DEBUG_NONE);
-	
 	/* Create the capplet */
 	capplet = capplet_widget_new ();
 	gtk_widget_show (capplet);
 
 	/* Redirect messages */
-	g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_MESSAGE | G_LOG_LEVEL_INFO, log_handler, capplet);
-		
+	g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_WARNING |
+			   G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_MESSAGE |
+			   G_LOG_LEVEL_INFO, log_handler, capplet);
 
 	/* Create the capplet's contents */
 	content = gnocam_capplet_content_new (CAPPLET_WIDGET (capplet));
@@ -120,10 +118,14 @@ int main (int argc, char** argv)
 	gtk_container_add (GTK_CONTAINER (capplet), content);
 
 	/* Connect the signals */
-	gtk_signal_connect (GTK_OBJECT (capplet), "try", GTK_SIGNAL_FUNC (on_try), content); 
-	gtk_signal_connect (GTK_OBJECT (capplet), "revert", GTK_SIGNAL_FUNC (on_revert), content); 
-	gtk_signal_connect (GTK_OBJECT (capplet), "ok", GTK_SIGNAL_FUNC (on_ok), content); 
-	gtk_signal_connect (GTK_OBJECT (capplet), "cancel", GTK_SIGNAL_FUNC (on_cancel), content);
+	gtk_signal_connect (GTK_OBJECT (capplet), "try",
+			    GTK_SIGNAL_FUNC (on_try), content); 
+	gtk_signal_connect (GTK_OBJECT (capplet), "revert",
+			    GTK_SIGNAL_FUNC (on_revert), content); 
+	gtk_signal_connect (GTK_OBJECT (capplet), "ok",
+			    GTK_SIGNAL_FUNC (on_ok), content); 
+	gtk_signal_connect (GTK_OBJECT (capplet), "cancel",
+			    GTK_SIGNAL_FUNC (on_cancel), content);
 	
 	capplet_gtk_main ();
 

@@ -11,8 +11,7 @@ camera_capplet_SOURCES =\
  capplet.h capplet.c\
  capplet-callbacks.h capplet-callbacks.c\
  gphoto-extensions.h gphoto-extensions.c\
- preferences.h preferences.c\
- properties.h properties.c
+ preferences.h preferences.c
 
 LDFLAGS = @LDFLAGS@\
  `gnome-config --libs capplet`\

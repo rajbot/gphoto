@@ -3,6 +3,7 @@
 #endif
 #include <gnome.h>
 #include <gphoto2.h>
+#include "gphoto-extensions.h"
 
 
 Camera *
@@ -48,8 +49,13 @@ gp_camera_new_by_description (gchar *model, gchar *port, gchar *speed)
 		gnome_error_dialog (_("You have to indicate a model!"));
 		return (NULL);
 	}
-	if (gp_camera_new_by_name (&camera, model, &port_info) == GP_ERROR) {
+	if (gp_camera_new_by_name (&camera, model) == GP_ERROR) {
 		gnome_error_dialog (_("Could not set camera model!"));
+		return (NULL);
+	}
+
+	if (gp_camera_init (camera, &port_info) == GP_ERROR) {
+		gnome_error_dialog (_("Could not initialize camera!"));
 		return (NULL);
 	}
 	

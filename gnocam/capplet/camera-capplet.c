@@ -7,6 +7,43 @@
 #include "capplet.h"
 
 
+int 
+gp_frontend_status (Camera *camera, char *status)
+{
+        //FIXME: Yet to come...
+        return (0);
+}
+
+
+int 
+gp_frontend_progress (Camera *camera, CameraFile *file, float percentage)
+{
+        //FIXME: Yet to come...
+        return (0);
+}
+
+int
+gp_frontend_message (Camera *camera, char *message)
+{
+        //FIXME: Do that better...
+        gnome_error_dialog (message);
+        return (0);
+}
+
+int
+gp_frontend_confirm (Camera *camera, char *message)
+{
+        //FIXME: Yet to come...
+        return (0);
+}
+
+int
+gp_frontend_prompt (Camera *camera, CameraWidget *window)
+{
+        //FIXME: Yet to come...
+        return (0);
+}
+
 gint
 main (gint argc, char *argv[])
 {
@@ -20,9 +57,12 @@ main (gint argc, char *argv[])
 	textdomain (PACKAGE);
 
 	/* Init several libraries. */
-	gp_init (GP_DEBUG_HIGH);
+	gp_init (GP_DEBUG_NONE);
+	gp_frontend_register (gp_frontend_status, gp_frontend_progress, gp_frontend_message, gp_frontend_confirm, gp_frontend_prompt);
 	init_result = gnome_capplet_init ("camera-capplet", VERSION, argc, argv, NULL, 0, NULL);
 
+	/* ? */
+	//FIXME: Don't ask me what's happening here...
 	if (init_result < 0) {
 		g_warning (_("An initialization error occurred while starting 'camera-capplet'.\nAborting...\n"));
 		exit (1);
@@ -33,7 +73,6 @@ main (gint argc, char *argv[])
 		printf ("Got 4\n");
 		return (0);
 	} else {
-		printf ("Got %i\n", init_result);
 		client = gnome_master_client ();
 		flags = gnome_client_get_flags (client);
 		if (flags & GNOME_CLIENT_IS_CONNECTED) {

@@ -10,34 +10,6 @@
 static GtkWidget *capplet;
 
 
-int gp_interface_status (Camera *camera, char *status) 
-{
-	//FIXME: Yet to come...
-	return (0);
-}
-
-
-int gp_interface_progress (Camera *camera, CameraFile *file, float percentage)
-{
-	//FIXME: Yet to come...
-	return (0);
-}
-
-int gp_interface_message (Camera *camera, char *message)
-{
-	//FIXME: Do that better...
-	gnome_error_dialog (message);
-	return (0);
-}
-
-int gp_interface_confirm (Camera *camera, char *message)
-{
-	//FIXME: Yet to come...
-        return (0);
-}
-
-
-
 GtkWidget *
 camera_capplet_current (void)
 {

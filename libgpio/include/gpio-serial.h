@@ -5,8 +5,9 @@
 /* %i for numbers, %c for letters */
 /* also define the low and high values of the range to check for devices */
 
+
 /* Linux */
-#ifdef linux
+#ifdef __linux
 /* devfs is accounted for in the implementation */
 #define GPIO_SERIAL_PREFIX 	"/dev/ttyS%i"
 #define GPIO_SERIAL_RANGE_LOW	0

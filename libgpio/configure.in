@@ -66,8 +66,8 @@ dnl Compile in usb support
 AC_PATH_PROG(LIBUSB_CONFIG,libusb-config)
 if test -n "${LIBUSB_CONFIG}"; then
   IOLIB_SUBDIRS="$IOLIB_SUBDIRS usb"
-  IOLIB_LDFLAGS="$IOLIB_LDFLAGS -Lusb -lgpio_usb"
-  IOLIB_CFLAGS="$IOLIB_CFLAGS -DGPIO_USB"
+  IOLIB_LDFLAGS="$IOLIB_LDFLAGS `libusb-config --libs` -lgpio_usb"
+  IOLIB_CFLAGS="$IOLIB_CFLAGS -DGPIO_USB `libusb-config --cflags`"
 else
   AC_MSG_WARN([
 

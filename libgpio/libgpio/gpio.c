@@ -382,7 +382,7 @@ int gpio_usb_find_device (gpio_device * dev, int idvendor, int idproduct)
 		idvendor, idproduct, retval < 0? "error":"ok");
 	return (retval);
 }
-int gpio_usb_clear_halt (gpio_device * dev)
+int gpio_usb_clear_halt (gpio_device * dev, int ep)
 {
 	int retval;
 
@@ -392,7 +392,7 @@ int gpio_usb_clear_halt (gpio_device * dev)
                 return (GPIO_ERROR);
 	}
 
-        retval = dev->ops->clear_halt(dev);
+        retval = dev->ops->clear_halt(dev, ep);
 	gpio_debug_printf(GPIO_DEBUG_LOW, dev->debug_level,
 		"gpio_usb_clear_halt: clear_halt %s", retval < 0? "error":"ok");
 	return (retval);

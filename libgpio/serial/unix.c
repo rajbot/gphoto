@@ -27,7 +27,6 @@
    Boston, MA 02111-1307, USA.
  */
 
-//#include "config.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -115,7 +114,7 @@ int gpio_library_list (gpio_device_info *list, int *count) {
 
         char buf[1024], prefix[1024];
         int x, fd;
-#ifdef linux
+#ifdef __linux
         /* devfs */
         struct stat s;
 #endif
@@ -126,7 +125,7 @@ int gpio_library_list (gpio_device_info *list, int *count) {
         /* Copy in the serial port prefix */
         strcpy(prefix, GPIO_SERIAL_PREFIX);
 
-#ifdef linux
+#ifdef __linux
         /* devfs */
         if (stat("/dev/tts", &s)==0)
                 strcpy(prefix, "/dev/tts/%i");

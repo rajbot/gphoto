@@ -32,6 +32,7 @@
 #include <usb.h>
 #include "gpio.h"
 
+#define GPIO_USB_DEBUG
 
 int gpio_usb_list(gpio_device_info *list, int *count);
 int gpio_usb_init(gpio_device *dev);
@@ -45,10 +46,11 @@ int gpio_usb_get_pin(gpio_device * dev, int pin);
 int gpio_usb_set_pin(gpio_device * dev, int pin, int level);
 int gpio_usb_update(gpio_device * dev);
 
-int gpio_usb_clear_halt_lib(gpio_device * dev);
+int gpio_usb_clear_halt_lib(gpio_device * dev, int ep);
 int gpio_usb_msg_read_lib(gpio_device * dev, int value, char *bytes, int size);
 int gpio_usb_msg_write_lib(gpio_device * dev, int value, char *bytes, int size);
 int gpio_usb_find_device_lib(gpio_device *dev, int idvendor, int idproduct);
+
 /* Dynamic library functions
    --------------------------------------------------------------------- */
 
@@ -160,13 +162,22 @@ int gpio_usb_reset(gpio_device *dev)
 	return gpio_usb_open(dev);
 }
 
-int gpio_usb_clear_halt_lib(gpio_device * dev)
+int gpio_usb_clear_halt_lib(gpio_device * dev, int ep)
 {
-	if (usb_clear_halt(dev->device_handle, dev->settings.usb.inep)
-		|| usb_clear_halt(dev->device_handle, dev->settings.usb.outep))
-		return GPIO_ERROR;
-	else
-		return GPIO_OK;
+	int ret=0;
+
+	switch (ep) {
+		case GPIO_USB_IN_ENDPOINT :
+			ret=usb_clear_halt(dev->device_handle, dev->settings.usb.inep);
+			break;
+		case GPIO_USB_OUT_ENDPOINT :
+			ret=usb_clear_halt(dev->device_handle, dev->settings.usb.outep);
+			break;
+		default:
+			fprintf(stderr,"gpio_usb_clear_halt: bad EndPoint argument\n");
+			return GPIO_ERROR;
+	}
+	return (ret ? GPIO_ERROR : GPIO_OK);
 }
 
 int gpio_usb_write(gpio_device * dev, char *bytes, int size)

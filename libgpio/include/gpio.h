@@ -100,6 +100,13 @@ typedef union {
 
 } gpio_device_settings;
 
+#ifdef GPIO_USB
+enum {
+        GPIO_USB_IN_ENDPOINT,
+	GPIO_USB_OUT_ENDPOINT
+};
+#endif
+
 
 struct gpio_device;
 typedef struct gpio_device gpio_device;
@@ -120,7 +127,7 @@ struct gpio_operations {
 #ifdef GPIO_USB
 	/* for USB devices */
 	int (*find_device)(gpio_device * dev, int idvendor, int idproduct);
-	int (*clear_halt) (gpio_device * dev);
+	int (*clear_halt) (gpio_device * dev, int ep);
 	int (*msg_write)  (gpio_device * dev, int value, char *bytes, int size);
 	int (*msg_read)   (gpio_device * dev, int value, char *bytes, int size);
 #endif
@@ -297,7 +304,7 @@ gpio_device *gpio_new		(gpio_device_type type);
 #ifdef GPIO_USB
 	/* must port libusb to other platforms for this to drop-in */
 	int gpio_usb_find_device (gpio_device * dev, int idvendor, int idproduct);
-	int gpio_usb_clear_halt  (gpio_device * dev);
+	int gpio_usb_clear_halt  (gpio_device * dev, int ep);
 	int gpio_usb_msg_write   (gpio_device * dev, int value, char *bytes, int size);
 	int gpio_usb_msg_read    (gpio_device * dev, int value, char *bytes, int size);
 #endif

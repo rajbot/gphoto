@@ -4,7 +4,7 @@
 /* PARALLEL port prefix for enumeration */
 
 /* Linux */
-#ifdef linux
+#ifdef __linux
 #define GPIO_PARALLEL_PREFIX 		"/dev/lp%i"
 #define	GPIO_PARALLEL_RANGE_LOW		0
 #define	GPIO_PARALLEL_RANGE_HIGH	16

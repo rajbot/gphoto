@@ -85,7 +85,7 @@ int gpio_library_list(gpio_device_info *list, int *count) {
 
         char buf[1024], prefix[1024];
         int x, fd, use_int=0, use_char=0;
-#ifdef linux
+#ifdef __linux
 	/* devfs */	
 	struct stat s;
 #endif
@@ -96,7 +96,7 @@ int gpio_library_list(gpio_device_info *list, int *count) {
 
 	strcpy(prefix, GPIO_PARALLEL_PREFIX);
 
-#ifdef linux
+#ifdef __linux
 	/* devfs */	
 	if (stat("/dev/parports", &s) == 0)
 		strcpy(prefix, "/dev/parports/%i");

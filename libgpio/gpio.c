@@ -43,7 +43,9 @@ int gpio_init() {
 
 	gpio_serial_operations.list(device_list, &device_count);
 	gpio_parallel_operations.list(device_list, &device_count);
+#ifdef GPIO_SOCKET
 	gpio_socket_operations.list(device_list, &device_count);
+#endif
 #ifdef GPIO_USB
 	gpio_usb_operations.list(device_list, &device_count);
 #endif
@@ -95,10 +97,12 @@ gpio_device *gpio_new(gpio_device_type type)
 		sprintf(buf, GPIO_SERIAL_PREFIX, GPIO_SERIAL_RANGE_LOW);
 	        strcpy(settings.parallel.port, buf);
 		break;
+#ifdef GPIO_SOCKET
 	case GPIO_DEVICE_SOCKET:
 		dev->ops = &gpio_socket_operations;
 		gpio_set_timeout(dev, 50000);
 		break;
+#endif
 #ifdef GPIO_USB
 	case GPIO_DEVICE_USB:
 		dev->ops = &gpio_usb_operations;

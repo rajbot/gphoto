@@ -20,6 +20,7 @@ gphoto_LDADD = ../konica/libgphoto_konica_qm100.la \
 	../mustek/libgphoto_mustek_mdc800.la \
 	../ricoh/libgphoto_ricoh300z.la \
 	../sony/libgphoto_sony_dscf1.la \
+	../sony/dscf55/libgphoto_sony_dscf55.la \
 	../directory/libgphoto_dir.la \
 	@GTK_LIBS@ @GDK_IMLIB_LIBS@ -ljpeg
 

@@ -13,6 +13,7 @@ extern struct _Camera mustek_mdc800;
 extern struct _Camera ricoh_300z;
 extern struct _Camera olympus;
 extern struct _Camera sony_dscf1;
+extern struct _Camera sony_dscf55;
 extern struct _Camera dimage_v;
 extern struct _Camera directory;
 
@@ -105,5 +106,6 @@ struct Model cameras[] = {
 	{"Sanyo VPC-G250", &olympus},
 	{"Sanyo VPC-X350", &olympus},
 	{"Sony DSC-F1", &sony_dscf1},
+	{"Sony DSC-F55", &sony_dscf55},
 	{"", NULL}
 };

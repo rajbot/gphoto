@@ -1,7 +1,7 @@
 AC_INIT(src/gnocam.c)
 AC_PREREQ(2.12)
 
-AM_INIT_AUTOMAKE(GnoCam, 0.9)
+AM_INIT_AUTOMAKE(GnoCam, 0.10)
 AM_CONFIG_HEADER(config.h)
 
 AM_MAINTAINER_MODE
@@ -31,7 +31,7 @@ GNOME_X_CHECKS
 GNOME_XML_CHECK
 
 dnl Add the languages which your application supports here.
-ALL_LINGUAS="no"
+ALL_LINGUAS=""
 AM_GNOME_GETTEXT
 gnomelocaledir='${prefix}/${DATADIRNAME}/locale'
 AC_SUBST(gnomelocaledir)

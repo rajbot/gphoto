@@ -57,8 +57,8 @@ dnl ******
 dnl bonobo
 dnl ******
 AC_MSG_CHECKING(for bonobo>=0.37)
-if gnome-config --libs bonobox > /dev/null 2>&1; then
-    vers=`gnome-config --modversion bonobo | sed 's/bonobo-//' | awk 'BEGIN { FS = "."; } { printf "%d", ($1 * 100 + $2 * 10 + $3);}'`
+if gnome-config --libs bonobo > /dev/null 2>&1; then
+    vers=`gnome-config --modversion bonobo | sed -e 's/^bonobo-//' | awk -F. '{ printf "%d", $1 * 1000 + $2;}'`
         if test "$vers" -ge 37; then
             AC_MSG_RESULT(found)
 	    BONOBO_LIBS="`gnome-config --libs bonobo bonobox bonobox_print`"

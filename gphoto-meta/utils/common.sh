@@ -14,6 +14,7 @@ distdir="${metadir}/dist"
 distroot="${metadir}/dist-root"
 srcdir="${metadir}/src"
 instroot="${metadir}/inst-root"
+tmpdir="${metadir}/tmp"
 
 fail() {
     echo "${@}"
@@ -21,7 +22,7 @@ fail() {
 }
 
 cmd() {
-    echo "#> ${@}"
+    echo "#> ${@}" >&2
     if [ "$1" = "cd" ]
     then
 	"${@}"
@@ -36,3 +37,5 @@ cmd() {
 }
 
 cmd cd "${metadir}"
+cmd mkdir -p "${tmpdir}"
+cmd cd "${tmpdir}"

@@ -110,5 +110,6 @@ void command_line (int argc, char *argv[]) {
 		}
 		i++;
 	}
+	fflush(stdout);
 	_exit(0);
 }

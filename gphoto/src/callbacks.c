@@ -1020,13 +1020,13 @@ fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
 
 	okDownload = 1;
 	activate_stop_button();
-	for (i=1; i<=num_pictures_taken, okDownload; i++) {
-/*		if (!okDownload) {
+	for (i=1; i<=num_pictures_taken; i++) {
+		if (!okDownload) {
 			deactivate_stop_button();
-			updat
+			update_progress(0);
+			update_status("Download cancelled.");
 			return;
 		}
-*/
 		node->next = malloc (sizeof(struct ImageInfo));
 		node = node->next; node->next = NULL;
 

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <sys/resource.h>
 
 #define BROWSER "netscape"
 
@@ -310,12 +311,50 @@ METHODDEF(void) decom_term (j_decompress_ptr cinfo) {
 }
 */
 
+void execute_program (char *program, char *arg) {
+
+	pid_t pid;
+	pid = fork();
+
+	if (pid < 0) {
+		printf("Fork failed. Exiting. \n");
+		_exit(-1);
+	}
+
+	if (pid == 0) {
+		/* child */
+/*
+		static pid_t pid = 0;
+		pid_t p;
+		int fd, i;
+		struct rlimit *rlim;
+
+		rlim = g_malloc(sizeof(struct rlimit));
+		getrlimit(RLIMIT_NOFILE, rlim);
+		for(i = fd = 0; i <= rlim->rlim_cur; i++) {
+			if ((i != 2) && ((close(i) == 0))) {
+				fd++;
+			}
+		}
+		g_free(rlim);
+		fprintf(stderr, "Closed %d files.\n", fd);
+*/
+		char *args[3];
+
+		args[0]=program;
+		args[1]=arg;
+		args[2]=NULL;
+		execvp(args[0], args);
+		fprintf(stderr, "Could not run: %s %s\n", program, arg);
+		_exit(-1);
+	}
+}
+
 void url_send_browser (char *url) {
-	char *buf;
-	buf = malloc(256);
-	snprintf(buf, 256, "%s -remote 'openURL(%s)'", BROWSER, url);
-	popen(buf, "r");
-	free (buf);
+
+	char cl[1024];
+
+	execute_program(BROWSER, url);
 }
 
 void browse_gallery() {

@@ -144,7 +144,6 @@ camera_list_contents (BonoboStorage *storage, const CORBA_char *path, Bonobo_Sto
 {
 	BonoboStorageCamera *s = BONOBO_STORAGE_CAMERA (storage);
 	Bonobo_Storage_DirectoryList *list = NULL;
-	Bonobo_StorageInfo *info;
 	CameraList folder_list, file_list;
 	gint i;
 
@@ -155,31 +154,33 @@ camera_list_contents (BonoboStorage *storage, const CORBA_char *path, Bonobo_Sto
 	}
 
 	/* Get folder list. */
-	CHECK_RESULT (gp_camera_folder_list (s->camera, &folder_list, (gchar*) gnome_vfs_uri_get_path (s->uri)), ev);
+	CHECK_RESULT (gp_camera_folder_list (s->camera, &folder_list, "/"), ev);
 	if (BONOBO_EX (ev)) return NULL;
 
 	/* Get file list. */
-	CHECK_RESULT (gp_camera_file_list (s->camera, &file_list, (gchar*) gnome_vfs_uri_get_path (s->uri)), ev);
+	CHECK_RESULT (gp_camera_file_list (s->camera, &file_list, "/"), ev);
 	if (BONOBO_EX (ev)) return NULL;
 
 	/* Set up the list. */
 	list = Bonobo_Storage_DirectoryList__alloc ();
 	list->_length = gp_list_count (&folder_list) + gp_list_count (&file_list);
-	info = CORBA_sequence_Bonobo_StorageInfo_allocbuf (list->_length);
-	list->_buffer = info;
+	list->_buffer = CORBA_sequence_Bonobo_StorageInfo_allocbuf (list->_length);
 	CORBA_sequence_set_release (list, TRUE);
 
 	/* Directories. */
 	for (i = 0; i < gp_list_count (&folder_list); i++) {
-		info [i].name = CORBA_string_dup (gp_list_entry (&folder_list, i)->name);
-		info [i].type = Bonobo_STORAGE_TYPE_DIRECTORY;
-//		info [i].content_type = CORBA_string_dup ("x-directory/normal");
+		list->_buffer [i].name = CORBA_string_dup (gp_list_entry (&folder_list, i)->name);
+		list->_buffer [i].type = Bonobo_STORAGE_TYPE_DIRECTORY;
+		list->_buffer [i].size = 0;
+		list->_buffer [i].content_type = CORBA_string_dup ("x-directory/normal");
 	}
 
 	/* Files. */
 	for (i = 0; i < gp_list_count (&file_list); i++) {
-		info [i + gp_list_count (&folder_list)].name = CORBA_string_dup (gp_list_entry (&file_list, i)->name);
-		info [i + gp_list_count (&folder_list)].type = Bonobo_STORAGE_TYPE_REGULAR;
+		list->_buffer [i + gp_list_count (&folder_list)].name = CORBA_string_dup (gp_list_entry (&file_list, i)->name);
+		list->_buffer [i + gp_list_count (&folder_list)].type = Bonobo_STORAGE_TYPE_REGULAR;
+		list->_buffer [i + gp_list_count (&folder_list)].size = 0;
+		list->_buffer [i + gp_list_count (&folder_list)].content_type = NULL;
 	}
 
 	return list;
@@ -197,7 +198,6 @@ static BonoboStorage *
 bonobo_storage_camera_open (const char *path, gint flags, gint mode, CORBA_Environment *ev)
 {
         BonoboStorageCamera *storage;
-        Bonobo_Storage corba_storage;
 	gchar* tmp;
 	CameraList list;
 
@@ -209,8 +209,6 @@ bonobo_storage_camera_open (const char *path, gint flags, gint mode, CORBA_Envir
 							
 	/* Create the storage. */
         storage = gtk_type_new (bonobo_storage_camera_get_type ());
-        corba_storage = bonobo_storage_corba_object_create (BONOBO_OBJECT (storage));
-	g_return_val_if_fail (corba_storage != CORBA_OBJECT_NIL, NULL);
 
 	/* Connect to the camera. */
 	storage->uri = gnome_vfs_uri_new (path);
@@ -230,7 +228,7 @@ bonobo_storage_camera_open (const char *path, gint flags, gint mode, CORBA_Envir
 		return NULL;
 	}
 	
-        return bonobo_storage_construct (BONOBO_STORAGE (storage), corba_storage);
+        return (BONOBO_STORAGE (storage));
 }
 
 static BonoboStorage *
@@ -239,7 +237,6 @@ camera_open_storage (BonoboStorage *storage, const CORBA_char *path, Bonobo_Stor
 	CameraList list;
 	BonoboStorageCamera *s = BONOBO_STORAGE_CAMERA (storage);
 	BonoboStorageCamera *storage_new;
-	Bonobo_Storage corba_storage;
 	gint i;
 	
 	/* Reject some unsupported open modes. */
@@ -262,13 +259,11 @@ camera_open_storage (BonoboStorage *storage, const CORBA_char *path, Bonobo_Stor
 
 	/* Create the storage. */
 	storage_new = gtk_type_new (bonobo_storage_camera_get_type ());
-	corba_storage = bonobo_storage_corba_object_create (BONOBO_OBJECT (storage_new));
-	g_return_val_if_fail (corba_storage != CORBA_OBJECT_NIL, NULL);
 	storage_new->camera = s->camera;
 	gp_camera_ref (s->camera);
 	storage_new->uri = gnome_vfs_uri_append_path (gnome_vfs_uri_dup (s->uri), path);
 
-	return bonobo_storage_construct (BONOBO_STORAGE (storage_new), corba_storage);
+	return (BONOBO_STORAGE (storage_new));
 }
 
 static void
@@ -288,8 +283,6 @@ bonobo_storage_camera_destroy (GtkObject *object)
 	/* Unref camera and URI. */
 	gp_camera_unref (storage->camera);
 	gnome_vfs_uri_unref (storage->uri);
-
-	GTK_OBJECT_CLASS (bonobo_storage_camera_parent_class)->destroy (object);
 }
 
 static void
@@ -317,28 +310,13 @@ bonobo_storage_camera_class_init (BonoboStorageCameraClass *class)
 	if (!gnome_vfs_initialized ()) gnome_vfs_init ();
 }
 
-GtkType
-bonobo_storage_camera_get_type (void)
+static void 
+bonobo_storage_camera_init (GtkObject *object)
 {
-	static GtkType type = 0;
-
-	if (!type){
-		GtkTypeInfo info = {
-			"IDL:GNOME/StorageCamera:1.0",
-			sizeof (BonoboStorageCamera),
-			sizeof (BonoboStorageCameraClass),
-			(GtkClassInitFunc) bonobo_storage_camera_class_init,
-			(GtkObjectInitFunc) NULL,
-			NULL, /* reserved 1 */
-			NULL, /* reserved 2 */
-			(GtkClassInitFunc) NULL
-		};
-
-		type = gtk_type_unique (bonobo_storage_get_type (), &info);
-	}
-
-	return type;
+	/* nothing to do */
 }
+
+BONOBO_X_TYPE_FUNC (BonoboStorageCamera, bonobo_storage_get_type (), bonobo_storage_camera); 
 
 gint 
 init_storage_plugin (StoragePlugin *plugin)

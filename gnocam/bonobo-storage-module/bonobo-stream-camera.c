@@ -289,10 +289,14 @@ bonobo_stream_camera_open (const char *path, gint flags, gint mode, CORBA_Enviro
 	g_print ("Getting file...\n");
 	stream->file = gp_file_new ();
 	dirname = gnome_vfs_uri_extract_dirname (stream->uri);
+#if 0
 	if (mode & Bonobo_Storage_COMPRESSED)
+#endif
 		CHECK_RESULT (gp_camera_file_get_preview (stream->camera, stream->file, dirname, (gchar*) gnome_vfs_uri_get_basename (stream->uri)), ev);
+#if 0
 	else
 		CHECK_RESULT (gp_camera_file_get (stream->camera, stream->file, dirname, (gchar*) gnome_vfs_uri_get_basename (stream->uri)), ev);
+#endif
 	if (BONOBO_EX (ev)) {
 		g_warning ("Could not get file!");
 		g_free (dirname);

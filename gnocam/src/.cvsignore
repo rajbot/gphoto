@@ -3,5 +3,6 @@ Makefile.in
 gnocam
 *.o
 .deps
+.libs
 libglade-i18n.c
 

@@ -296,7 +296,7 @@ save_all_selected (GtkTree* tree, gboolean preview, gboolean save_as, gboolean t
 void
 save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 {
-	gchar*		path = NULL;
+	gchar*		folder;
 	gchar*		filename;
 	gchar*		filename_user;
 	gchar*		message;
@@ -310,7 +310,7 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 	g_return_if_fail (!(save_as && temporary));
 	g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (item), "uri"));
 	g_return_if_fail (filename = (gchar*) gnome_vfs_uri_get_basename (uri));
-	g_return_if_fail (path = (gchar*) gnome_vfs_uri_get_path (uri));
+	g_return_if_fail (folder = gnome_vfs_uri_extract_dirname (uri));
 	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
         g_return_if_fail (value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL));
         g_return_if_fail (value->type == GCONF_VALUE_STRING);
@@ -323,86 +323,65 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 
 	/* Get the file/preview from gphoto backend. */
 	file = gp_file_new ();
-	if (preview) result = gp_camera_file_get_preview (camera, file, path, filename);
-	else result = gp_camera_file_get (camera, file, path, filename);
+	if (preview) result = gp_camera_file_get_preview (camera, file, folder, filename);
+	else result = gp_camera_file_get (camera, file, folder, filename);
 	if (result != GP_OK) {
 		if (preview) message = g_strdup_printf (
 			_("Could not get preview of file '%s/%s' from camera!\n(%s)"), 
-			path, 
+			folder, 
 			filename, 
 			gp_camera_result_as_string (camera, result));
 		else message = g_strdup_printf (
 			_("Could not get file '%s/%s' from camera!\n(%s)"), 
-			path, 
+			folder, 
 			filename, 
 			gp_camera_result_as_string (camera, result));
 		gnome_error_dialog_parented (message, main_window);
 		g_free (message);
+		g_free (folder);
 		gp_file_free (file);
-		file = NULL;
+		gnome_vfs_uri_unref (uri);
+		gp_frontend_progress (camera, NULL, 0.0);
+		return;
 	} 
 
 	/* Save the file. */
-	if (file) {
-		if (save_as) camera_file_save_as (file);
-		else camera_file_save (file, uri);
-		gp_file_unref (file);
-	}
+	if (save_as) camera_file_save_as (file);
+	else camera_file_save (file, uri);
+	gp_file_unref (file);
 
 	/* Clean up. */
+	g_free (folder);
 	gnome_vfs_uri_unref (uri);
 	gp_frontend_progress (camera, NULL, 0.0);
 }
 
 void
-delete_all_selected (GtkTree* tree)
+delete (GtkTreeItem* item) 
 {
-	gint		i;
-	GtkTreeItem*	item;
+	CORBA_Environment	ev;
+	gchar*			path;
+	gchar* 			tmp;
+	BonoboStorage*		storage;
 
-        g_return_if_fail (tree);
+	g_return_if_fail (storage = gtk_object_get_data (GTK_OBJECT (item), "storage"));
 
-        /* Look into folders first. */
-        for (i = 0; i < g_list_length (tree->children); i++) {
-                item = GTK_TREE_ITEM (g_list_nth_data (tree->children, i));
+	/* Init exception. */
+	CORBA_exception_init (&ev);
 
-                /* Is this item a folder? */
-		if (item->subtree) delete_all_selected (GTK_TREE (item->subtree));
-        }
+	/* Delete the file. */
+	path = gnome_vfs_uri_to_string (gtk_object_get_data (GTK_OBJECT (item), "uri"), GNOME_VFS_URI_HIDE_NONE);
+	Bonobo_Storage_erase (bonobo_storage_corba_object_create (BONOBO_OBJECT (storage)), path, &ev);
+	if (BONOBO_EX (&ev)) {
+	        tmp = g_strdup_printf (_("Could not erase '%s'!\n(%s)"), path, bonobo_exception_get_text (&ev));
+	        gnome_error_dialog_parented (tmp, main_window);
+	        g_free (tmp);
+	} else camera_tree_item_remove (item);
 
-        /* Files. */
-        for (i = 0; i < g_list_length (tree->selection); i++) {
-                item = GTK_TREE_ITEM (g_list_nth_data (tree->selection, i));
-                if (!item->subtree) delete (item);
-	}
+	/* Clean up. */
+	g_free (path);
+	CORBA_exception_free (&ev);
 }
-
-void
-delete (GtkTreeItem* item)
-{
-	GnomeVFSURI*	uri;
-	gchar*		message;
-	Camera*		camera;
-	gint		result;
-	gchar*		filename;
-	gchar*		path;
-
-	g_return_if_fail (item);
-	g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (item), "uri"));
-	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
-	g_return_if_fail (path = (gchar*) gnome_vfs_uri_get_path (uri));
-	g_return_if_fail (filename = (gchar*) gnome_vfs_uri_get_basename (uri));
-
-	if ((result = gp_camera_file_delete (camera, path, filename)) == GP_OK) camera_tree_item_remove (item);
-	else {
-		if (strcmp ("/", path) == 0) message = g_strdup_printf (_("Could not delete '/%s'!\n(%s)"), filename, gp_camera_result_as_string (camera, result));
-		else message = g_strdup_printf (_("Could not delete '%s/%s'!\n(%s)"), path, filename, gp_camera_result_as_string (camera, result));
-		gnome_error_dialog_parented (message, main_window);
-		g_free (message);
-	}
-}
-
-
 
 
 

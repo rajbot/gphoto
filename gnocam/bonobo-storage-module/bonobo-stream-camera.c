@@ -20,7 +20,6 @@
 
 #define CHECK_RESULT(result,ev)         G_STMT_START{                                                                           \
         if (result <= 0) {                                                                                                      \
-		printf ("GP_*: %i\n", result);											\
                 switch (result) {                                                                                               \
                 case GP_OK:                                                                                                     \
                         break;                                                                                                  \
@@ -58,6 +57,7 @@ camera_get_info (BonoboStream *stream, const Bonobo_StorageInfoFields mask, CORB
 static void
 camera_set_info (BonoboStream *stream, const Bonobo_StorageInfo *info, const Bonobo_StorageInfoFields mask, CORBA_Environment *ev)
 {
+	printf ("camera_set_info\n");
 	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
 }
 
@@ -67,6 +67,8 @@ camera_write (BonoboStream *stream, const Bonobo_Stream_iobuf *buffer, CORBA_Env
 	BonoboStreamCamera *s = BONOBO_STREAM_CAMERA (stream);
 	CameraFile *file;
 	gchar *folder;
+
+	printf ("camera_write\n");
 
 	g_return_if_fail (file = gp_file_new ());
 	CHECK_RESULT (gp_file_append (file, buffer->_buffer, buffer->_length), ev);
@@ -91,6 +93,8 @@ camera_read (BonoboStream *stream, CORBA_long count, Bonobo_Stream_iobuf **buffe
 	CORBA_octet *data;
 	long length;
 	
+	printf ("camera_read\n");
+	
 	/* Create the buffer. */
 	*buffer = Bonobo_Stream_iobuf__alloc ();
 	CORBA_sequence_set_release (*buffer, TRUE);
@@ -112,6 +116,8 @@ camera_seek (BonoboStream *stream, CORBA_long offset, Bonobo_Stream_SeekType whe
 {
 	BonoboStreamCamera *s = BONOBO_STREAM_CAMERA (stream);
 
+	printf ("camera_seek\n");
+
 	switch (whence) {
 	case Bonobo_Stream_SEEK_CUR:
 		s->position += (long) offset;
@@ -132,24 +138,28 @@ camera_seek (BonoboStream *stream, CORBA_long offset, Bonobo_Stream_SeekType whe
 static void
 camera_truncate (BonoboStream *stream, const CORBA_long new_size, CORBA_Environment *ev)
 {
+	printf ("camera_truncate\n");
 	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
 }
 
 static void
 camera_copy_to (BonoboStream *stream, const CORBA_char *dest, const CORBA_long bytes, CORBA_long *read_bytes, CORBA_long *written_bytes, CORBA_Environment *ev)
 {
+	printf ("camera_copy_to\n");
 	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
 }
 
 static void
 camera_commit (BonoboStream *stream, CORBA_Environment *ev)
 {
+	printf ("camera_commit\n");
 	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
 }
 
 static void
 camera_revert (BonoboStream *stream, CORBA_Environment *ev)
 {
+	printf ("camera_revert\n");
 	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
 }
 	
@@ -157,6 +167,8 @@ static void
 bonobo_stream_camera_destroy (GtkObject *object)
 {
 	BonoboStreamCamera *stream = BONOBO_STREAM_CAMERA (object);
+
+	printf ("bonobo_stream_camera_destroy\n");
 
 	/* Free uri. */
 	if (stream->uri) gnome_vfs_uri_unref (stream->uri);

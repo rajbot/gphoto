@@ -100,18 +100,20 @@ void
 preview_refresh (GtkWidget* preview)
 {
 	gint			result;
-	gchar*			message;
+	gchar*			tmp;
 	Camera*			camera;
         CameraFile*             file;
         CameraFile*             old_file;
         CameraCaptureInfo       info;
 	CORBA_Environment	ev;
-	CORBA_Object		interface;
-	BonoboStream*		stream;
-	BonoboObjectClient*	client;
+	Bonobo_UIContainer	corba_container;
+	Bonobo_Control		control;
+	GtkWidget*		widget;
+	GnomeVFSURI*		uri;
 
-	g_assert (preview);
-	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (preview), "camera")));
+	g_return_if_fail (preview);
+	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (preview), "camera"));
+	g_return_if_fail (corba_container = gtk_object_get_data (GTK_OBJECT (preview), "container"));
 
         /* Prepare the image. */
         file = gp_file_new ();
@@ -122,31 +124,41 @@ preview_refresh (GtkWidget* preview)
         if ((result = gp_camera_capture (camera, file, &info)) == GP_OK) {
 		if ((old_file = gtk_object_get_data (GTK_OBJECT (preview), "file"))) gp_file_free (old_file);
 		gtk_object_set_data (GTK_OBJECT (preview), "file", file);
-		if ((client = gtk_object_get_data (GTK_OBJECT (preview), "client"))) {
-			CORBA_exception_init (&ev);
-			interface = bonobo_object_client_query_interface (client, "IDL:Bonobo/PersistStream:1.0", &ev);
-			if (ev._major != CORBA_NO_EXCEPTION) {
-				message = g_strdup_printf (_("Could not connect to the image viewer! (%s)"), bonobo_exception_get_text (&ev));
-				gnome_error_dialog_parented (message, main_window);
-				g_free (message);
-			} else {
-				g_assert ((stream = bonobo_stream_mem_create (file->data, file->size, FALSE, TRUE)));
-				Bonobo_PersistStream_load (interface, (Bonobo_Stream) bonobo_object_corba_objref (BONOBO_OBJECT (stream)), file->type, &ev);
-				if (ev._major != CORBA_NO_EXCEPTION) {
-					message = g_strdup_printf (_("Could not display the file! (%s)"), bonobo_exception_get_text (&ev));
-					gnome_error_dialog_parented (message, main_window);
-					g_free (message);
-				}
-				bonobo_object_unref (BONOBO_OBJECT (stream));
-				Bonobo_Unknown_unref (interface, &ev);
-				CORBA_Object_release (interface, &ev);
-			}
+		
+		/* Init exception. */
+		CORBA_exception_init (&ev);
+
+		/* Destroy old viewers. */
+		widget = bonobo_window_get_contents (BONOBO_WINDOW (preview));
+		if (widget) gtk_widget_destroy (widget);
+
+//FIXME: Moniker can not yet resolve "camera:".
+
+		/* Get a control. */
+		tmp = g_strdup_printf ("file:%s/%s", g_get_tmp_dir (), file->name);
+		uri = gnome_vfs_uri_new (tmp);
+		camera_file_save (file, uri);
+		gnome_vfs_uri_unref (uri);
+		control = bonobo_get_object (tmp, "IDL:Bonobo/Control:1.0", &ev);
+		g_free (tmp);
+		if (BONOBO_EX (&ev)) {
+			tmp = g_strdup_printf (_("Could not get any widget for\ndisplaying the preview!\n(%s)"), bonobo_exception_get_text (&ev));
+			gnome_error_dialog_parented (tmp, main_window);
+			g_free (tmp);
 			CORBA_exception_free (&ev);
+			return;
 		}
+		widget = bonobo_widget_new_control_from_objref (control, corba_container);
+		gtk_widget_show (widget);
+		bonobo_window_set_contents (BONOBO_WINDOW (preview), widget);
+		
+		/* Free exception. */
+		CORBA_exception_free (&ev);
+
         } else {
-                message = g_strdup_printf (_("Could not get preview from camera!\n(%s)"), gp_camera_result_as_string (camera, result));
-		gnome_error_dialog_parented (message, main_window);
-		g_free (message);
+                tmp = g_strdup_printf (_("Could not get preview from camera!\n(%s)"), gp_camera_result_as_string (camera, result));
+		gnome_error_dialog_parented (tmp, main_window);
+		g_free (tmp);
                 gp_file_unref (file);
         }
 }
@@ -192,9 +204,9 @@ GtkWidget*
 preview_new (Camera* camera)
 {
 	GtkWidget*		window;
-	GtkWidget*		widget;
 	BonoboUIComponent*	component;
 	BonoboUIContainer*	container;
+	Bonobo_UIContainer	corba_container;
 	BonoboUIVerb		verb [] = {
 		BONOBO_UI_UNSAFE_VERB ("Refresh", on_preview_refresh_activate), 
 		BONOBO_UI_UNSAFE_VERB ("Save", on_preview_save_activate),
@@ -208,28 +220,23 @@ preview_new (Camera* camera)
 		BONOBO_UI_UNSAFE_VERB ("Manual", on_manual_activate),
 		BONOBO_UI_UNSAFE_VERB ("About", on_about_activate),
 		BONOBO_UI_VERB_END};
-	GConfValue*		value;
 
-        g_assert (camera);
+        g_return_val_if_fail (camera, NULL);
 
 	/* Create the interface. */
 	window = bonobo_window_new ("Preview", "Preview");
 	container = bonobo_ui_container_new ();
+	corba_container = bonobo_object_corba_objref (BONOBO_OBJECT (container));
 	bonobo_ui_container_set_win (container, BONOBO_WINDOW (window));
 	component = bonobo_ui_component_new ("Preview");
-	bonobo_ui_component_set_container (component, bonobo_object_corba_objref (BONOBO_OBJECT (container)));
+	bonobo_ui_component_set_container (component, corba_container);
 	bonobo_ui_component_add_verb_list_with_data (component, verb, window);
 	bonobo_ui_util_set_ui (component, "", "gnocam-preview.xml", "Preview");
-	if ((value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/viewer_id", NULL))) {
-		if ((widget = bonobo_widget_new_control ((gchar*) gconf_value_get_string (value), bonobo_object_corba_objref (BONOBO_OBJECT (container))))) {
-			bonobo_window_set_contents (BONOBO_WINDOW (window), widget);
-			gtk_object_set_data (GTK_OBJECT (window), "client", bonobo_widget_get_server (BONOBO_WIDGET (widget)));
-		} else gnome_error_dialog_parented (_("Could not start the image viewer!"), main_window);
-	} else gnome_warning_dialog_parented (_("No image viewer has been specified. Please select one in the preferences dialog."), main_window);
 	gtk_widget_show_all (window);
 
         /* Store some data. */
         gtk_object_set_data (GTK_OBJECT (window), "camera", camera);
+	gtk_object_set_data (GTK_OBJECT (window), "container", corba_container);
 
 	/* Ref the camera. */
 	gp_camera_ref (camera);

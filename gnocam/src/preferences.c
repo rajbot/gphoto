@@ -452,7 +452,7 @@ dialog_preferences_cameras_update (GladeXML* xml_preferences, GSList* list_camer
         for (i = 0; i < g_slist_length (list_cameras); i++) {
                 value = g_slist_nth_data (list_cameras, i);
                 g_assert (value->type = GCONF_VALUE_STRING);
-                camera_description = (gchar*) gconf_value_get_string (value);
+                camera_description = g_strdup (gconf_value_get_string (value));
 		count = 0;
                 for (j = 0; camera_description[j] != '\0'; j++) {
 			if (camera_description[j] == '\n') {
@@ -472,6 +472,7 @@ dialog_preferences_cameras_update (GladeXML* xml_preferences, GSList* list_camer
 	        text[3] = g_strdup (&camera_description[++j]);
                 gtk_clist_append (clist, text);
 		gtk_clist_set_row_data (clist, clist->rows - 1, camera_id);
+		g_free (camera_description);
 		for (j = 0; j < 4; j++) g_free (text[j]);
         }
 }
@@ -564,15 +565,14 @@ dialog_preferences_apply (GladeXML *xml_preferences)
 	if (!(revert_change_set = gtk_object_get_data (object, "revert_change_set"))) {
 
 		/* Create the revert changeset on the first apply. */
-//FIXME: Revert does not work with revert_change_set. The camera list gets totally mixed up. I have no idea why...
-//		revert_change_set = gconf_client_change_set_from_current (
-//			client, 
-//			NULL, 
-//			"/apps/" PACKAGE "/cameras",
-//			"/apps/" PACKAGE "/prefix",
-//			"/apps/" PACKAGE "/debug_level",
-//			NULL);
-//		gtk_object_set_data (object, "revert_change_set", revert_change_set);
+		revert_change_set = gconf_client_change_set_from_current (
+			client, 
+			NULL, 
+			"/apps/" PACKAGE "/cameras",
+			"/apps/" PACKAGE "/prefix",
+			"/apps/" PACKAGE "/debug_level",
+			NULL);
+		gtk_object_set_data (object, "revert_change_set", revert_change_set);
 	}
 
 	gconf_client_commit_change_set (client, change_set, TRUE, NULL);

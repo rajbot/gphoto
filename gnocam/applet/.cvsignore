@@ -1,7 +1,7 @@
 Makefile.in
 Makefile
 *.o
-gnocam-capplet
+gnocam-applet
 .libs
 .deps
 GnoCam*

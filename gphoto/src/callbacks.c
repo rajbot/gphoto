@@ -828,15 +828,14 @@ void insert_thumbnail(struct ImageInfo *node) {
 
   if (other==NULL) return;  // didn't find node in the list of thumbs
 
+  /* If the thumbnail is already there, then just load the image*/
+  if ((node->image!=NULL) && (node->imlibimage!=NULL)) {
+	appendpic(i, 0, TRUE, NULL);
+	return;
+  }
+
   sprintf(status, "Getting thumbnail %i...", i);
   update_status(status);
-
-  /* Kill any previously loaded images, maybe this should just return*/
-  if (node->image!=NULL)
-    gtk_widget_destroy(node->image);
-  if (node->imlibimage!=NULL)
-    gdk_imlib_kill_image(node->imlibimage);
-
 
   if ((im = (*Camera->get_picture)(i, 1))==0) {
 	sprintf(error, "Could not retrieve #%i", i);
@@ -956,7 +955,7 @@ fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
 		node->label=gtk_label_new(node->info);
 		gtk_widget_show(node->label);
 
-		gtk_widget_set_rc_style(node->button);
+		/* gtk_widget_set_rc_style(node->button);*/
 		style = gtk_style_copy(
 		  gtk_widget_get_style(node->button));
 		style->bg[GTK_STATE_ACTIVE].green=0;
@@ -1102,90 +1101,100 @@ void closepic () {
 	}
 }
 
-void savepic (GtkWidget *widget, GtkFileSelection *fwin) {
+void save_opened_image (int i, char *filename) {
 
-	int i, x=0;
-	char *fname;
+	int x=0;
 
 	struct ImageInfo *node = &Images;
-
-	gtk_widget_hide(GTK_WIDGET(fwin));
-	i = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
 	while (x < i) {
 		node = node->next;
 		x++;
 	}
-
-	if (i != 0) {
-		fname = gtk_file_selection_get_filename(
-				GTK_FILE_SELECTION(fwin));
-		if (gdk_imlib_save_image(node->imlibimage, fname, NULL) == 0) {
-			error_dialog(
-			"Could not save image. Please make
-			sure that you typed the image
-			extension and that permissions for
-			the directory are correct.");
-			return;
-		}
-		update_status("Image Saved.");
+	if (gdk_imlib_save_image(node->imlibimage,filename, NULL) == 0) {
+		error_dialog(
+		"Could not save image. Please make
+		sure that you typed the image
+		extension and that permissions for
+		the directory are correct.");
+		return;
 	}
 }
 
-void openpic (GtkWidget *widget, GtkFileSelection *fwin) {
+void save_dialog_update(GtkWidget *button, GtkWidget *label) {
 
-	char *fname, dir[1024];
-
-	gtk_widget_hide(GTK_WIDGET(fwin));
-	fname = gtk_file_selection_get_filename(GTK_FILE_SELECTION(fwin));
-	appendpic(0, 0, FALSE, fname);
+	if (GTK_TOGGLE_BUTTON(button)->active)
+		gtk_label_set_text(GTK_LABEL(label), 
+		"Save all opened images (enter the filename prefix below)");
+	   else
+		gtk_label_set_text(GTK_LABEL(label),"Save all opened images");
 }
-	
 
-/* save picture being viewed as jpeg */
-void filedialog (gchar *a) {
+void save_dialog (GtkWidget *widget, gpointer data) {
 
-	int currentPic;
+	GtkWidget *filew, *saveall_checkbutton;
+	int currentPic, x=0;
+	char filename[1024];
+
+	sprintf(filename, "%s/*.*", filesel_cwd);
+
+	filew = gtk_file_selection_new ("Save Image(s)...");
+	gtk_window_set_position (GTK_WINDOW (filew),GTK_WIN_POS_CENTER);
+        gtk_file_selection_set_filename(GTK_FILE_SELECTION(filew), 
+		filename);
+	saveall_checkbutton = gtk_check_button_new_with_label(
+		"Save all opened images");
+	gtk_widget_show(saveall_checkbutton);
+	gtk_signal_connect(GTK_OBJECT(saveall_checkbutton),
+		"clicked", GTK_SIGNAL_FUNC(save_dialog_update),
+		GTK_BIN(saveall_checkbutton)->child);
+	gtk_box_pack_start_defaults(
+		GTK_BOX(GTK_FILE_SELECTION(filew)->main_vbox),
+		saveall_checkbutton);
+
+	if (wait_for_hide(filew, GTK_FILE_SELECTION(filew)->ok_button,
+	    GTK_FILE_SELECTION(filew)->cancel_button) == 0)
+		return;
+
+	currentPic = gtk_notebook_current_page(GTK_NOTEBOOK(notebook));
+	if ((currentPic == 0) && 
+	   (!GTK_TOGGLE_BUTTON(saveall_checkbutton)->active)) {
+		update_status("Saving the index is not yet supported");
+		return;
+	}
+	if (!GTK_TOGGLE_BUTTON(saveall_checkbutton)->active) {
+		save_opened_image(currentPic, 
+			gtk_file_selection_get_filename(
+			GTK_FILE_SELECTION(filew)));
+		return;
+	}
+
+	x=1;
+	while (gtk_notebook_get_nth_page(GTK_NOTEBOOK(notebook),x)!=NULL){
+		sprintf(filename, "%s-%i.jpg",
+			gtk_file_selection_get_filename(
+			GTK_FILE_SELECTION(filew)), x);
+		save_opened_image(x, filename);
+		x++;
+	}
+	gtk_widget_destroy(filew);
+}
+
+void open_dialog (GtkWidget *widget, gpointer data) {
+
 	GtkWidget *filew;
 
-	switch (a[0]) {
-	   	case 's':
-			filew = gtk_file_selection_new ("Save Image...");
-			gtk_window_set_position (GTK_WINDOW (filew),
-				 GTK_WIN_POS_CENTER);
-			gtk_file_selection_set_filename(GTK_FILE_SELECTION
-				(filew), filesel_cwd);
-			gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION
-			    (filew)->ok_button), "clicked",
-			    (GtkSignalFunc) savepic,
-			    filew);
-			currentPic = gtk_notebook_current_page
-					(GTK_NOTEBOOK(notebook));
-			if (currentPic != 0)
-	        		gtk_widget_show(filew);
-			   else
-				update_status("Saving the index is not yet supported.");
-			break;
+	filew = gtk_file_selection_new ("Open Image...");
+	gtk_window_set_position (GTK_WINDOW (filew),
+		GTK_WIN_POS_CENTER);
+	gtk_file_selection_set_filename(GTK_FILE_SELECTION
+		(filew), filesel_cwd);
+	if (wait_for_hide(filew, GTK_FILE_SELECTION(filew)->ok_button,
+	    GTK_FILE_SELECTION(filew)->cancel_button) == 0)
+		return;
 
-		case 'o':
-			filew = gtk_file_selection_new ("Open Image...");
-			gtk_window_set_position (GTK_WINDOW (filew),
-				GTK_WIN_POS_CENTER);
-			gtk_file_selection_set_filename(GTK_FILE_SELECTION
-				(filew), filesel_cwd);
-			gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION
-			    (filew)->ok_button), "clicked",
-			    (GtkSignalFunc) openpic,
-			    filew);
-			gtk_widget_show(filew);
-			break;
-		default :
-			break;
-	}		
-        gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION
-			    (filew)->cancel_button), "clicked",
-			    (GtkSignalFunc) gtk_widget_hide,
-                            GTK_OBJECT (filew));
-	gtk_file_selection_set_filename(GTK_FILE_SELECTION(filew),"*.*");
+	appendpic(0, 0, FALSE, gtk_file_selection_get_filename(
+		GTK_FILE_SELECTION(filew)));	
+	gtk_widget_destroy(filew);
 }
 
 void print_pic () {
@@ -1492,7 +1501,6 @@ void manip_pic (gchar *Option) {
 	currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
 	if (currentPic == 0) {
 	  update_status("Can't manipulate the index.");
-/*  	  error_dialog("Can't manipulate the index."); */
 	  return;
 	}
 	while (i < currentPic) {

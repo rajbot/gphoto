@@ -41,10 +41,10 @@ void menu_select (gpointer data, guint action, GtkWidget *widget) {
 
 	switch (action) {
 		case 1: /* Open pic */
-			filedialog("o");
+			open_dialog(widget, data);
 			break;
 		case 2: /* Save pic */
-			filedialog("s");
+			save_dialog(widget, data);
 			break;
 		case 3: /* Print pic */
 			print_pic();
@@ -172,7 +172,7 @@ GtkItemFactoryEntry menu_items[] = {
 	{"/_File",						NULL, 0,		0,	"<Branch>"},
 	{"/File/_Open...",				"<control>o", menu_select,	1},
 	{"/File/Open _Directory...",				NULL, menu_select,	32},
-	{"/File/_Save Image...",			"<control>s", menu_select,	2},
+	{"/File/_Save Opened Image(s)...", 		"<control>s", menu_select, 2},
 	{"/File/sep1",						NULL, 0,		0,	"<Separator>"},
 	{"/File/_Print",				"<control>p", menu_select,	3},
 	{"/File/sep2",						NULL, 0,		0,	"<Separator>"},

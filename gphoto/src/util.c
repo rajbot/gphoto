@@ -345,8 +345,7 @@ void execute_program (char *program, char *arg) {
 		args[1]=arg;
 		args[2]=NULL;
 		execvp(args[0], args);
-		fprintf(stderr, "Could not run: %s %s\n", program, arg);
-		_exit(-1);
+		_exit(0);
 	}
 }
 

@@ -31,9 +31,6 @@ void halt_download();
 void getpics (char *type);
 void remove_image(int i);
 void closepic ();
-void savepic (GtkWidget *widget, GtkFileSelection *fwin);
-void openpic (GtkWidget *widget, GtkFileSelection *fwin);
-void filedialog (gchar *a);
 void print_pic ();
 void select_all();
 void select_inverse();
@@ -53,3 +50,7 @@ void save_both (gpointer data, guint action, GtkWidget *widget);
 void open_both (gpointer data, guint action, GtkWidget *widget);
 
 void post_process_change (GtkWidget *widget, GtkWidget *window);
+
+void save_dialog (GtkWidget *widget, gpointer data);
+void open_dialog (GtkWidget *widget, gpointer data);
+

@@ -20,6 +20,9 @@
 #include <config.h>
 #include "gnocam-camera.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 #include <gphoto2.h>
 
 #include <bonobo/bonobo-event-source.h>
@@ -94,130 +97,22 @@ impl_GNOME_Camera_capturePreview (PortableServer_Servant servant,
 }
 #endif
 
-#if 0
-static void
-on_dialog_destroy (GtkObject *object, gpointer data)
-{
-	bonobo_object_idle_unref (BONOBO_OBJECT (data));
-}
-#endif
-
-#if 0
-static gboolean
-on_capture_close (GnomeDialog *dialog, gpointer data)
-{
-	GnoCamCamera *c;
-
-	g_return_val_if_fail (GNOCAM_IS_CAMERA (data), FALSE);
-	c = GNOCAM_CAMERA (data);
-
-	g_message ("on_capture_close");
-
-	bonobo_object_unref (BONOBO_OBJECT (c));
-
-	return (FALSE);
-}
-#endif
-
-#if 0
-static gboolean 
-do_capture (gpointer data)
-{
-	GnoCamCamera *c;
-	CORBA_Environment ev;
-	BonoboArg *arg;
-	gchar *txt;
-	CameraFilePath path;
-
-	g_return_val_if_fail (GNOCAM_IS_CAMERA (data), FALSE);
-	c = GNOCAM_CAMERA (data);
-
-	CORBA_exception_init (&ev);
-
-	CR (gp_camera_capture (c->camera,
-				GP_OPERATION_CAPTURE_IMAGE, &path), &ev);
-	if (BONOBO_EX (&ev)) {
-		txt = g_strdup_printf (_("Could not capture image: %s"),
-				       bonobo_exception_get_text (&ev));
-		gnome_error_dialog (txt);
-		g_free (txt);
-	} else {
-		arg = bonobo_arg_new (BONOBO_ARG_STRING);
-		txt = g_concat_dir_and_file (path.folder, path.name);
-		g_message ("The picture is in '%s'.", txt);
-		BONOBO_ARG_SET_STRING (arg, txt);
-		bonobo_event_source_notify_listeners_full (
-					c->priv->event_source,
-					"GNOME/Camera", "CaptureImage",
-					"Action", arg, NULL);
-		bonobo_arg_release (arg);
-	}
-	
-	CORBA_exception_free (&ev);
-
-	bonobo_object_unref (BONOBO_OBJECT (c));
-
-	return (FALSE);
-}
-#endif
-
-#if 0
-static void
-on_capture_clicked (GnomeDialog *dialog, gint button_number, gpointer data)
-{
-	GnoCamCamera *c;
-	BonoboArg *arg;
-
-	g_return_if_fail (GNOCAM_IS_CAMERA (data));
-	c = GNOCAM_CAMERA (data);
-
-	g_message ("on_capture_clicked");
-
-	switch (button_number) {
-	case 1: /* Cancel */
-		arg = bonobo_arg_new (BONOBO_ARG_STRING);
-		BONOBO_ARG_SET_STRING (arg, "");
-		bonobo_event_source_notify_listeners_full (
-						c->priv->event_source, 
-						"GNOME/Camera",
-						"CaptureImage",
-						"Cancel", arg, NULL);
-		bonobo_arg_release (arg);
-		break;
-	case 0: /* Ok */
-		bonobo_object_ref (BONOBO_OBJECT (c));
-		gtk_idle_add (do_capture, c);
-		break;
-	default:
-		g_warning ("Unhandled button: %i", button_number);
-		break;
-	}
-}
-#endif
-
-#if 0
-static void
+static CORBA_char *
 impl_GNOME_Camera_captureImage (PortableServer_Servant servant,
 				CORBA_Environment *ev)
 {
 	GnoCamCamera *c;
-	GnomeDialog *capture;
+	CameraFilePath path;
 
 	c = GNOCAM_CAMERA (bonobo_object_from_servant (servant));
 
-	g_message ("Creating GnoCamCapture...");
-	capture = gnocam_capture_new (c->camera, ev);
+	memset (&path, 0, sizeof (CameraFilePath));
+	CR (gp_camera_capture (c->camera, GP_CAPTURE_IMAGE, &path, NULL), ev);
 	if (BONOBO_EX (ev))
-		return;
+		return NULL;
 
-	gtk_widget_show (GTK_WIDGET (capture));
-	gtk_signal_connect (GTK_OBJECT (capture), "clicked",
-			    GTK_SIGNAL_FUNC (on_capture_clicked), c);
-	bonobo_object_ref (BONOBO_OBJECT (c));
-	gtk_signal_connect (GTK_OBJECT (capture), "close",
-			    GTK_SIGNAL_FUNC (on_capture_close), c);
+	return g_build_path ("/", path.folder, path.name);
 }
-#endif
 
 static void
 gnocam_camera_finalize (GObject *object)
@@ -249,6 +144,7 @@ gnocam_camera_class_init (GnoCamCameraClass *klass)
 
 	epv = &klass->epv;
 	epv->getInfo           = impl_GNOME_Camera_getInfo;
+	epv->captureImage      = impl_GNOME_Camera_captureImage;
 }
 
 static void

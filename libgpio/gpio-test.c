@@ -14,7 +14,7 @@ int main(int argc, char **argv)
 	gpio_device_settings settings;
 	char buf[32];
 
-	dev = gpio_new(GPIO_DEVICE_SERIAL);
+	dev = gpio_new(0);
 	/* create a new serial device */
 	gpio_set_timeout(dev, 500);
 
@@ -43,5 +43,6 @@ int main(int argc, char **argv)
 	gpio_close(dev);	/* close the device */
 
 	gpio_free(dev);
+
 	return 0;
 }

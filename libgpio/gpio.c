@@ -34,16 +34,6 @@ gpio_device_list device_list[256];
    ----------------------------------------------------------------
  */
 
-int gpio_init(void)
-{
-#ifdef GPIO_USB
-	usb_init();
-	usb_find_busses();
-	usb_find_devices();
-#endif
-	return (GPIO_OK);
-}
-
 gpio_device *gpio_new(int device_number)
 	/* Create a new IO device */
 {
@@ -128,6 +118,7 @@ int gpio_close(gpio_device * dev)
 int gpio_free(gpio_device * dev)
 	/* Frees a device struct */
 {
+	int retval = dev->ops->exit(dev);	
 	free(dev);
 
 	return GPIO_OK;

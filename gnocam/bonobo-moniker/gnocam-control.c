@@ -10,6 +10,7 @@
 #include <bonobo/bonobo-moniker-extender.h>
 #include <gphoto-extensions.h>
 
+#include "e-clipped-label.h"
 #include "e-title-bar.h"
 #include "e-shell-folder-title-bar.h"
 #include "utils.h"
@@ -22,42 +23,154 @@ static BonoboControlClass* gnocam_control_parent_class = NULL;
 
 struct _GnoCamControlPrivate
 {
-	Bonobo_Storage		storage;
-        Camera*                 camera;
+	Bonobo_Storage			storage;
+        Camera*                 	camera;
 
-        CameraWidget*           configuration;
+        CameraWidget*           	configuration;
+	
+	guint				hpaned_position;
 
-	guint			hpaned_position;
-
-	GtkWidget*		title_bar;
-	GtkWidget*		hpaned;
-	GtkWidget*		storage_view_vbox;
-	GtkWidget*		storage_view_title_bar;
+	GtkWidget*			title_bar;
+	GtkWidget*			hpaned;
+	GtkWidget*			notebook;
+	GtkWidget*			storage_view_vbox;
+	GtkWidget*			storage_view_title_bar;
+	GtkWidget*			storage_view;
+	GnoCamControlStorageViewMode	storage_view_mode;
 };
+
+/**************/
+/* Prototypes */
+/**************/
+
+static void 	on_title_bar_toggled 				(EShellFolderTitleBar* title_bar, gboolean state, void* data);
+
+static void 	on_storage_view_vbox_map 			(GtkWidget* widget, void* data);
+static int 	on_storage_view_vbox_button_release_event 	(GtkWidget* widget, GdkEventButton* button_event, void* data);
+
+static void 	disconnect_popup_signals 	(GnoCamControl* control);
+static void 	popdown_transient_folder_bar 	(GnoCamControl* control);
 
 /*************/
 /* Callbacks */
 /*************/
 
 static void
-on_title_bar_toggled (GnoCamControl* control, gboolean state, void* data)
-{
-	if (!state) {
-		return;
-	}
-
-	gtk_widget_show (control->priv->storage_view_vbox);
-	e_paned_set_position (E_PANED (control->priv->hpaned), control->priv->hpaned_position);
-}
-
-static void
-on_storage_view_button_clicked (ETitleBar* title_bar, void* data)
+on_title_bar_toggled (EShellFolderTitleBar* title_bar, gboolean state, void* data)
 {
 	GnoCamControl*	control;
 
 	control = GNOCAM_CONTROL (data);
+
+	if (!state) return;
+
+	if (control->priv->storage_view_mode != GNOCAM_CONTROL_STORAGE_VIEW_MODE_TRANSIENT) {
+
+		control->priv->storage_view_mode = GNOCAM_CONTROL_STORAGE_VIEW_MODE_TRANSIENT;
+
+		/* We need to show the storage view box and do a pointer grab to catch the
+	           mouse clicks.  But until the box is shown, we cannot grab.  So we connect to
+	           the "map" signal; `on_storage_view_vbox_map()' will do the grab.  */
 	
+		gtk_signal_connect (GTK_OBJECT (control->priv->storage_view_vbox), "map", GTK_SIGNAL_FUNC (on_storage_view_vbox_map), control);
+		gtk_widget_show (control->priv->storage_view_vbox);
+		e_paned_set_position (E_PANED (control->priv->hpaned), control->priv->hpaned_position);
+	}
+}
+
+static void
+on_popup_storage_view_title_bar_button_clicked (ETitleBar* title_bar, void* data)
+{
+	GnoCamControl*	control;
+
+	control = GNOCAM_CONTROL (data);
+
+        gdk_pointer_ungrab (GDK_CURRENT_TIME);
+        gtk_grab_remove (control->priv->storage_view_vbox);
+
+        disconnect_popup_signals (control);
+
+        gnocam_control_set_storage_view_mode (control, GNOCAM_CONTROL_STORAGE_VIEW_MODE_STICKY);
+        e_shell_folder_title_bar_set_toggle_state (E_SHELL_FOLDER_TITLE_BAR (control->priv->title_bar), FALSE);
+}
+
+static void
+on_storage_view_title_bar_button_clicked (ETitleBar* title_bar, void* data)
+{
+	GnoCamControl*	control;
+
+	control = GNOCAM_CONTROL (data);
+
 	gnocam_control_set_storage_view_mode (control, GNOCAM_CONTROL_STORAGE_VIEW_MODE_HIDDEN);
+}
+
+static void
+on_storage_view_vbox_map (GtkWidget* widget, void* data)
+{
+	GnoCamControl* control;
+
+	control = GNOCAM_CONTROL (data);
+
+        if (gdk_pointer_grab (widget->window, TRUE,
+                              (GDK_BUTTON_PRESS_MASK
+                               | GDK_BUTTON_RELEASE_MASK
+                               | GDK_ENTER_NOTIFY_MASK
+                               | GDK_LEAVE_NOTIFY_MASK
+                               | GDK_POINTER_MOTION_MASK),
+                              NULL, NULL, GDK_CURRENT_TIME) != 0) {
+                g_warning ("gnocam-control.c:on_storage_view_vbox_map() -- pointer grab failed.");
+                gnocam_control_set_storage_view_mode (control, GNOCAM_CONTROL_STORAGE_VIEW_MODE_STICKY);
+                return;
+        }
+
+        gtk_grab_add (widget);
+        gtk_signal_connect (GTK_OBJECT (widget), "button_release_event", 
+		GTK_SIGNAL_FUNC (on_storage_view_vbox_button_release_event), control);
+        gtk_signal_connect (GTK_OBJECT (control->priv->storage_view), "button_release_event", 
+		GTK_SIGNAL_FUNC (on_storage_view_vbox_button_release_event), control);
+        gtk_signal_connect (GTK_OBJECT (control->priv->storage_view_title_bar), "button_clicked", 
+		GTK_SIGNAL_FUNC (on_popup_storage_view_title_bar_button_clicked), control);
+}
+
+static int
+on_storage_view_vbox_button_release_event (GtkWidget* widget, GdkEventButton* button_event, void* data)
+{
+	GnoCamControl* control;
+
+	control = GNOCAM_CONTROL (data);
+
+        if (button_event->window == E_PANED (control->priv->hpaned)->handle)
+                return (FALSE);
+
+        popdown_transient_folder_bar (control);
+
+        return (TRUE);
+}
+
+/**********************/
+/* Internal functions */
+/**********************/
+
+static void
+disconnect_popup_signals (GnoCamControl* control)
+{
+        gtk_signal_disconnect_by_func (GTK_OBJECT (control->priv->storage_view_vbox), GTK_SIGNAL_FUNC (on_storage_view_vbox_button_release_event), control);
+	gtk_signal_disconnect_by_func (GTK_OBJECT (control->priv->storage_view_vbox), GTK_SIGNAL_FUNC (on_storage_view_vbox_map), control);
+        gtk_signal_disconnect_by_func (GTK_OBJECT (control->priv->storage_view), GTK_SIGNAL_FUNC (on_storage_view_vbox_button_release_event), control);
+        gtk_signal_disconnect_by_func (GTK_OBJECT (control->priv->storage_view_title_bar), GTK_SIGNAL_FUNC (on_popup_storage_view_title_bar_button_clicked), control);
+}
+
+static void
+popdown_transient_folder_bar (GnoCamControl* control)
+{
+        gdk_pointer_ungrab (GDK_CURRENT_TIME);
+        gtk_grab_remove (control->priv->storage_view_vbox);
+
+        gnocam_control_set_storage_view_mode (control, GNOCAM_CONTROL_STORAGE_VIEW_MODE_HIDDEN);
+
+        disconnect_popup_signals (control);
+
+        e_shell_folder_title_bar_set_toggle_state (E_SHELL_FOLDER_TITLE_BAR (control->priv->title_bar), FALSE);
 }
 
 /*****************/
@@ -73,6 +186,8 @@ gnocam_control_get_camera (GnoCamControl* control)
 void
 gnocam_control_set_storage_view_mode (GnoCamControl* control, GnoCamControlStorageViewMode mode)
 {
+	if (control->priv->storage_view_mode == mode) return;
+
 	if (mode == GNOCAM_CONTROL_STORAGE_VIEW_MODE_STICKY) {
 		if (!GTK_WIDGET_VISIBLE (control->priv->storage_view_vbox)) {
 			gtk_widget_show (control->priv->storage_view_vbox);
@@ -86,10 +201,10 @@ gnocam_control_set_storage_view_mode (GnoCamControl* control, GnoCamControlStora
         	        control->priv->hpaned_position =  E_PANED (control->priv->hpaned)->child1_size;
                 	e_paned_set_position (E_PANED (control->priv->hpaned), 0);
 		}
-		
                 e_title_bar_set_button_mode (E_TITLE_BAR (control->priv->storage_view_title_bar), E_TITLE_BAR_BUTTON_MODE_PIN);
                 e_shell_folder_title_bar_set_clickable (E_SHELL_FOLDER_TITLE_BAR (control->priv->title_bar), TRUE);
 	}
+	control->priv->storage_view_mode = mode;
 }
 
 /************************/
@@ -136,7 +251,7 @@ gnocam_control_new (BonoboMoniker* moniker, CORBA_Environment* ev)
 	Bonobo_Storage	storage;
 	GtkWidget*	vbox;
 	GtkWidget*	scroll_frame;
-	GtkWidget*	storage_view;
+	GtkWidget*	label;
 
 	name = (gchar*) bonobo_moniker_get_name (moniker);
 
@@ -180,24 +295,34 @@ gnocam_control_new (BonoboMoniker* moniker, CORBA_Environment* ev)
 	gtk_box_pack_start (GTK_BOX (vbox), new->priv->hpaned, TRUE, TRUE, 2); 
 	new->priv->hpaned_position = E_PANED (new->priv->hpaned)->child1_size;
 
+	/* Create the notebook */
+	gtk_widget_show (new->priv->notebook = gtk_notebook_new ());
+	gtk_notebook_set_show_border (GTK_NOTEBOOK (new->priv->notebook), FALSE);
+        gtk_notebook_set_show_tabs (GTK_NOTEBOOK (new->priv->notebook), FALSE);
+	e_paned_pack2 (E_PANED (new->priv->hpaned), new->priv->notebook, TRUE, FALSE);
+
+	/* Create label for empty page */
+	gtk_widget_show (label = e_clipped_label_new (_("(No folder/file displayed)")));
+	gtk_notebook_append_page (GTK_NOTEBOOK (new->priv->notebook), label, NULL);
+
 	/* Create another vbox for the storage view */
 	gtk_widget_show (new->priv->storage_view_vbox = gtk_vbox_new (FALSE, 0));
 	e_paned_pack1 (E_PANED (new->priv->hpaned), new->priv->storage_view_vbox, FALSE, FALSE);
 	
 	/* Create the title for the storage view */
 	gtk_widget_show (new->priv->storage_view_title_bar = e_title_bar_new (_("Folders")));
-	gtk_box_pack_start (GTK_BOX (vbox), new->priv->storage_view_title_bar, FALSE, FALSE, 0);
-	gtk_signal_connect (GTK_OBJECT (new->priv->storage_view_title_bar), "button_clicked", GTK_SIGNAL_FUNC (on_storage_view_button_clicked), new);
+	gtk_box_pack_start (GTK_BOX (new->priv->storage_view_vbox), new->priv->storage_view_title_bar, FALSE, FALSE, 0);
+	gtk_signal_connect (GTK_OBJECT (new->priv->storage_view_title_bar), "button_clicked", GTK_SIGNAL_FUNC (on_storage_view_title_bar_button_clicked), new);
 
 	/* Create the scroll frame */
 	gtk_widget_show (scroll_frame = e_scroll_frame_new (NULL, NULL));
 	e_scroll_frame_set_policy (E_SCROLL_FRAME (scroll_frame), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	e_scroll_frame_set_shadow_type (E_SCROLL_FRAME (scroll_frame), GTK_SHADOW_IN);
-	gtk_box_pack_start (GTK_BOX (vbox), scroll_frame, TRUE, TRUE, 0);
+	gtk_box_pack_start (GTK_BOX (new->priv->storage_view_vbox), scroll_frame, TRUE, TRUE, 0);
 
-	/* Create the folder tree */
-	gtk_widget_show (storage_view = gnocam_storage_view_new ());
-	gtk_container_add (GTK_CONTAINER (scroll_frame), storage_view);
+	/* Create the storage view */
+	gtk_widget_show (new->priv->storage_view = gnocam_storage_view_new (storage));
+	gtk_container_add (GTK_CONTAINER (scroll_frame), new->priv->storage_view);
 
 	/* Select the selected file/folder */
 	name = (gchar*) bonobo_moniker_get_name (moniker);
@@ -206,7 +331,7 @@ gnocam_control_new (BonoboMoniker* moniker, CORBA_Environment* ev)
 	gnocam_storage_view_set (name);
 
 	/* Set default settings */
-	gnocam_control_set_storage_view_mode (new, GNOCAM_CONTROL_STORAGE_VIEW_MODE_STICKY);
+	new->priv->storage_view_mode = GNOCAM_CONTROL_STORAGE_VIEW_MODE_STICKY;
 
 	return (new);
 }
@@ -227,10 +352,17 @@ destroy (GtkObject* object)
 static void
 init (GnoCamControl* control)
 {
-	GnoCamControlPrivate*	priv;
-
-	priv = g_new (GnoCamControlPrivate, 1);
-	control->priv = priv;
+	control->priv = g_new (GnoCamControlPrivate, 1);
+        control->priv->camera = NULL;
+        control->priv->configuration = NULL;
+        control->priv->hpaned_position = 0;
+        control->priv->title_bar = NULL;
+        control->priv->hpaned = NULL;
+	control->priv->notebook = NULL;
+        control->priv->storage_view_vbox = NULL;
+        control->priv->storage_view_title_bar = NULL;
+        control->priv->storage_view = NULL;
+        control->priv->storage_view_mode = GNOCAM_CONTROL_STORAGE_VIEW_MODE_HIDDEN;
 }
 
 static void

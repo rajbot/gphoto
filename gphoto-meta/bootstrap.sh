@@ -14,10 +14,10 @@ else
 fi
 
 ########################################################################
-# init - initialize stuff (CVS logins, etc)
+# cvslogin - initialize stuff (CVS logins, etc)
 
-init() {
-    while read CVSROOT restofline
+cvslogin() {
+    while read module release CVSROOT restofline
     do 
 	CVSROOT="$(echo "${CVSROOT}" | sed 's|:/|:2401/|')"
 	if grep -q "${CVSROOT}" $HOME/.cvspass
@@ -38,7 +38,7 @@ getsources() {
     echo "##### Getting software from CVS"
     cmd mkdir -p "${cvsorig}"
     cmd cd "${cvsorig}"
-    while read CVSROOT module releasetag restofline
+    while read module releasetag CVSROOT restofline
     do 
 	if [ 'HEAD' = $releasetag ]
 	then
@@ -65,6 +65,7 @@ getsources() {
 		cmd cvs -z3 update -d -P > "$stdout"
 		if [ -s "$stdout" ]
 		then
+		    # FIXME: Handle conflicts, etc.
 		    echo "##### Module ${module} was updated."
 		    cmd touch "${cvsorig}/.stamp.${module}"
 		else
@@ -77,7 +78,7 @@ getsources() {
 	else
 	    echo "##### Checking out ${module} release ${releasetag} from ${CVSROOT}"
 	    cmd cvs -z3 -d "${CVSROOT}" checkout ${releaseparm} "${module}"
-	    cmd touch "${cvsorig}/.stamp.${module}.stamp"
+	    cmd touch "${cvsorig}/.stamp.${module}"
 	fi
     done < "${cvsmodulelist}"
 }
@@ -92,7 +93,7 @@ builddist() {
     export PATH="${distroot}/bin:${PATH}"
     cmd mkdir -p "${cvssrc}"
     cmd mkdir -p "${distdir}"
-    while read CVSROOT module releasetag distopts configopts
+    while read module releasetag CVSROOT distopts configopts
     do
 	redist="true"
 	for file in "${distdir}/${module}-"[0-9]*.tar.{bz2,gz}
@@ -118,6 +119,23 @@ builddist() {
 	    # FIXME: relies on GNU cp
 	    cmd cp -a "${cvsorig}/${module}" "${cvssrc}/"
 	    cmd cd "${cvssrc}/${module}"
+	    docroot="${distroot}/share/doc/gphoto2-manual-"[0-9]*
+	    if [ -d "$docroot" ]
+	    then
+		echo "#### Installing documentation for ${module}..."
+		case "${module}" in
+		    gtkam)	   
+			cmd cp -f "${docroot}/man/gtkam.1" doc/gtkam.1
+			;;
+		    gphoto2)	   
+			cmd cp -f "${docroot}/man/gphoto2.1" doc/gphoto2.1
+			;;
+		    libgphoto2)	   
+			cmd cp -f "${docroot}/man/gphoto2.3" doc/gphoto2.3
+			cmd cp -f "${docroot}/man/gphoto2_port.3" doc/gphoto2_port.3
+			;;
+		esac
+	    fi
 	    echo "#### Press enter when asked to. And complain to the gettextize guys,"
 	    echo "#    not to me. Or run this with \"echo $0 | at now\"."
 	    cmd ./autogen.sh --enable-maintainer-mode --prefix="${distroot}" ${configopts}
@@ -165,12 +183,12 @@ builddist() {
 }
 
 ########################################################################
-# create Makefile.am files
+# makefiles - create Makefile.am files
 
 makefiles() {
     cmd cd "${distdir}"
     files=""
-    while read CVSROOT module restofline
+    while read module restofline
     do
 	# add bz2 to dist if available, otherwise gz
 	for tarball in "${distdir}/${module}-"[0-9]*.tar.{bz2,gz}
@@ -197,10 +215,7 @@ EOF
 ########################################################################
 # main program
 
-init
-
+cvslogin
 getsources
-
 builddist
-
 makefiles

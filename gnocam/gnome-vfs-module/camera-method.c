@@ -157,6 +157,7 @@ unref_camera (Camera *camera)
 	GSList *sl;
 #endif
 
+	gp_camera_exit (camera);
 	gp_camera_unref (camera);
 
 #if 0

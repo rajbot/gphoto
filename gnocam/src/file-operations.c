@@ -274,7 +274,6 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 	Camera*		camera;
 	GConfValue*	value;
 	gint		return_status;
-	gboolean	b;
 
 	g_assert (item != NULL);
 	g_assert (!(save_as && temporary));
@@ -288,7 +287,6 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 	else filename_user = g_strdup_printf ("%s/%s", gconf_value_get_string (value), filename);
 
 	/* Check if we already have the file. */
-	b = TRUE;
 	if (preview) file = gtk_object_get_data (GTK_OBJECT (item), "preview");
 	else file = gtk_object_get_data (GTK_OBJECT (item), "file");
 	if (!file) {
@@ -300,13 +298,16 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 		if (return_status != GP_OK) {
 			if (preview) dialog_information (_("Could not get preview of file '%s/%s' from camera!"), path, filename);
 			else dialog_information (_("Could not get file '%s/%s' from camera!"), path, filename);
-			b = FALSE;
+			gp_file_free (file);
+			file = NULL;
 		} else {
 			if (preview) gtk_object_set_data (GTK_OBJECT (item), "preview", file);
 			else gtk_object_set_data (GTK_OBJECT (item), "file", file);
 		}
 	}
-	if (b) {
+
+	/* Save the file. */
+	if (file) {
 		if (save_as) camera_file_save_as (file);
 		else camera_file_save (file, filename_user);
 	}
@@ -349,17 +350,6 @@ delete_all_selected (GtkTree* tree)
 		}
 	}
 }
-
-//FIXME: Ask the user before deletion?
-//        if (g_list_length (selection) > 1)
-//                message = g_strdup_printf (_("Do you really want to delete the %i selected files?"), g_list_length (selection));
-//        else
-//                message = g_strdup_printf (_("Do you really want to delete the selected file?"));
-//        gnome_dialog_run_and_close (GNOME_DIALOG (gnome_app_question_modal (app, message, on_reply, xml)));
-//        reply = GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (app), "reply"));
-//	if (reply == GNOME_YES) {
-//                        while (selection != NULL) {
-
 
 void
 delete (GtkTreeItem* item)

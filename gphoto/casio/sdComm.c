@@ -32,7 +32,7 @@
 
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
-#else HAVE_TERMIOS_H
+#else /* HAVE_TERMIOS_H */
 #    ifdef HAVE_TERMIO_H
 #    include <termio.h>
 #    else HAVE_TERMIO_H
@@ -445,7 +445,7 @@ sdcSetBaudRate(sdcInfo info, int baud_rate) {
     return(setBaudRateFinish(info));
 }
 
-#else HAVE_TERMIOS_H
+#else /* HAVE_TERMIOS_H */
 #    ifdef HAVE_TERMIO_H
 sdcStatus
 sdcSetBaudRate(sdcInfo info, int baud_rate) {

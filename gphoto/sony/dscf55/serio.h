@@ -58,4 +58,4 @@ typedef struct _tagPacket
 */
 int ConfigDSCF55Speed();
 
-#endif SERIO_H__
+#endif /* SERIO_H__ */

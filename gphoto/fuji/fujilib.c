@@ -1159,14 +1159,14 @@ char *fuji_summary() {
 
 char *fuji_description() {
 	return(
-"Generic Fuji
-Matthew G. Martin
-Based on fujiplay by
-Thierry Bousch<bousch@topo.math.u-psud.fr>
-
-Known to work with Fuji DS-7 and DX-5,7,10 and MX-500,600,700,2700
-, Apple QuickTake 200,Samsung Kenox SSC-350N cameras, 
-but may support other Fuji cams as well.");
+"Generic Fuji\n"
+"Matthew G. Martin\n"
+"Based on fujiplay by\n"
+"Thierry Bousch<bousch@topo.math.u-psud.fr>\n"
+"\n"
+"Known to work with Fuji DS-7 and DX-5,7,10 and MX-500,600,700,2700,\n"
+"Apple QuickTake 200,Samsung Kenox SSC-350N cameras,\n"
+"but may support other Fuji cams as well.\n");
 }
 
 struct _Camera fuji = {fuji_initialize,

@@ -166,11 +166,11 @@ int dsc_f1_delete_image (int picNum) {
 
 char *dsc_f1_description () {
     return(
-    	"Sony DSC-F1 Digital Camera Support\n
-	M. Adam Kendall <joker@penguinpub.com>\n\n
-	Based on the chotplay CLI interface from\n
-	Ken-ichi Hayashi\n\n
-	This lib may not work. YMMV\n");
+    	"Sony DSC-F1 Digital Camera Support\n"
+	"M. Adam Kendall <joker@penguinpub.com>\n\n"
+	"Based on the chotplay CLI interface from\n"
+	"Ken-ichi Hayashi\n\n"
+	"This lib may not work. YMMV\n");
 }
 
 char *dsc_f1_summary () {

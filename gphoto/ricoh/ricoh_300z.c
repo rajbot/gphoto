@@ -914,13 +914,13 @@ char *ricoh_300z_summary() {
 char *ricoh_300z_description() {
 
 	return(
-"Ricoh 300Z
-Clifford Wright <cliff@snipe444.org>
-
-*The Ricoh 300Z does not support thumbnail
-previewing, so the thumbnails that appear
-are place holders until the actual images
-are downloaded.");
+"Ricoh 300Z\n"
+"Clifford Wright <cliff@snipe444.org>\n"
+"\n"
+"*The Ricoh 300Z does not support thumbnail\n"
+"2previewing, so the thumbnails that appear\n"
+"are place holders until the actual images\n"
+"are downloaded.\n");
 }
 
 struct JPEG_error_mgr

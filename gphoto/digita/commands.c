@@ -85,8 +85,8 @@ int digita_get_file_list(struct digita_device *dev)
 	buflen = (taken * sizeof(struct file_item)) + sizeof(cmd) + 4;
 	buffer = malloc(buflen);
 	if (!buffer) {
-		fprintf(stderr, "digita_get_file_list: error allocating %d
-bytes\n", buflen);
+		fprintf(stderr, "digita_get_file_list: error allocating %d ",
+"bytes\n", buflen);
 		return -1;
 	}
 

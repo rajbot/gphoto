@@ -357,16 +357,16 @@ dc20_info->model, dc20_info->pic_taken, dc20_info->pic_left);
 char *kodak_dc2x_description() {
 
 	return(
-"Kodak DC25 and DC20 support 
-by Del Simmons <del@freespeech.com>. 
-This code is working on my DC25 but 
-I know it will have some problems with 
-the DC20. If you have a DC20, please 
-give it a shot and let me know all 
-the places it fails. If compiling for
-the DC20, please try removng the -DDC25
-flag from the Makefile in the kodak 
-directory. Thanks!");
+"Kodak DC25 and DC20 support\n"
+"by Del Simmons <del@freespeech.com>.\n"
+"This code is working on my DC25 but\n"
+"I know it will have some problems with\n"
+"the DC20. If you have a DC20, please\n"
+"give it a shot and let me know all\n"
+"the places it fails. If compiling for\n"
+"2the DC20, please try removng the -DDC25\n"
+"flag from the Makefile in the kodak\n"
+"directory. Thanks!\n");
 }
 
 /* Declare the camera function pointers */

@@ -257,13 +257,13 @@ void save_image (char *filename, struct Image *im) {
 	{
 #ifdef sun
 		snprintf(errormsg,1024,
-"The image couldn't be saved to %s because of the following error:
- %s",filename,strerror(errno));
+"The image couldn't be saved to %s because of the following error: ",
+"%s",filename,strerror(errno));
 
 #else
 		snprintf(errormsg,1024,
-"The image couldn't be saved to %s because of the following error: 
- %s",filename,sys_errlist[errno]);
+"The image couldn't be saved to %s because of the following error: ",
+"%s",filename,sys_errlist[errno]);
 #endif
 		error_dialog(errormsg);
 	}

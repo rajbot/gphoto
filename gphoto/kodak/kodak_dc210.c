@@ -795,9 +795,9 @@ char *kodak_dc210_description()
 {
 
   return(
-"Kodak DC210 support
-by Brian Hirt <bhirt@mobygames.com> 
-http://www.mobygames.com");
+"Kodak DC210 support\n"
+"by Brian Hirt <bhirt@mobygames.com>\n"
+"http://www.mobygames.com\n");
 
 }
 

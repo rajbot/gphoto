@@ -206,13 +206,13 @@ char *dir_summary() {
 static char *dir_description() {
 
 	return(
-"Browse Directory\nScott Fritzinger <scottf@unr.edu>
-Allows the user to \"open\" a directory of
-images and all gPhoto functions will work
-on those images (HTML Gallery, etc...)\n
-This will not work in command-line mode,
-due to the high amount of input needed
-to set it up.");
+"Browse Directory\nScott Fritzinger <scottf@unr.edu>\n"
+"Allows the user to \"open\" a directory of\n"
+"images and all gPhoto functions will work\n"
+"on those images (HTML Gallery, etc...)\n"
+"This will not work in command-line mode,\n"
+"due to the high amount of input needed\n"
+"to set it up.\n");
 
 }
 

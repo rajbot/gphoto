@@ -733,11 +733,11 @@ char *oly_summary() {
 char *oly_description() {
 
 	return(
-"Olympus/PhotoPC Digital Camera Support
-Scott Fritzinger <scottf@unr.edu>
-using the photoPC library by
-Eugene Crosser <crosser@average.org>
-http://www.average.org/digicam");
+"Olympus/PhotoPC Digital Camera Support\n"
+"Scott Fritzinger <scottf@unr.edu>\n"
+"using the photoPC library by\n"
+"Eugene Crosser <crosser@average.org>\n"
+"http://www.average.org/digicam\n");
 }
 
 /* Declare the camera function pointers */

@@ -371,8 +371,8 @@ char *barbie_summary(void) {
 	firm = barbie_read_firmware();
 
 	sprintf(barbie_summary_text, 
-"Number of pictures: %i
-Firmware Version: %s", num,firm);
+"Number of pictures: %i\n",
+"Firmware Version: %s\n", num,firm);
 
 	free(firm);
 
@@ -381,16 +381,16 @@ Firmware Version: %s", num,firm);
 
 char *barbie_description(void) {
 	return (
-"Barbie/HotWheels/WWF
-Scott Fritzinger <scottf@unr.edu>
-Andreas Meyer <ahm@spies.com>
-Pete Zaitcev <zaitcev@metabyte.com>
-
-Reverse engineering of image data by:
-Jeff Laing <jeffl@SPATIALinfo.com>
-
-Implemented using documents found on
-the web. Permission given by Vision.");
+"Barbie/HotWheels/WWF\n"
+"Scott Fritzinger <scottf@unr.edu>\n"
+"Andreas Meyer <ahm@spies.com>\n"
+"Pete Zaitcev <zaitcev@metabyte.com>\n"
+"\n"
+"Reverse engineering of image data by:\n"
+"Jeff Laing <jeffl@SPATIALinfo.com>\n"
+"\n"
+"Implemented using documents found on\n"
+"the web. Permission given by Vision.\n");
 }
 
 #ifndef BUILD_PROGRAM

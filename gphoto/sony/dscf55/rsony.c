@@ -423,27 +423,25 @@ char *sony_dscf55_summary()
 */
 char *sony_dscf55_description()
 {
-	return "Sony DSC F55/505 gPhoto Library 
-Mark Davies <mdavies@dial.pipex.com> 
-Sony DSC F55 and DSC F505 cameras. 
-Still image support. 
-* Mpegs are downloadable in standalone 
-  version only. 
-";
+	return "Sony DSC F55/505 gPhoto Library\n"
+"Mark Davies <mdavies@dial.pipex.com>\n"
+"Sony DSC F55 and DSC F505 cameras.\n"
+"Still image support.\n"
+"* Mpegs are downloadable in standalone\n"
+"  version only.\n";
 }
 
 
 char *sony_msac_sr1_description()
 {
-        return "Sony DSC F55/505 gPhoto Library
-Mark Davies <mdavies@dial.pipex.com>
-Sony MSAC-SR1 and Memory Stick used
-by DCR-PC100.
-Still image support. Patches by
-Bernd Seemann <bernd@seebaer.ruhr.de>
-* Mpegs are downloadable in
-standalone version only.
-";
+        return "Sony DSC F55/505 gPhoto Library\n"
+"Mark Davies <mdavies@dial.pipex.com>\n"
+"Sony MSAC-SR1 and Memory Stick used\n"
+"by DCR-PC100.\n"
+"Still image support. Patches by\n"
+"Bernd Seemann <bernd@seebaer.ruhr.de>\n"
+"* Mpegs are downloadable in\n"
+"standalone version only.";
 }
 #endif  // STAND_ALONE
 

@@ -8,9 +8,12 @@
 	----------------------------------------------------------------
 
 	$Log$
+	Revision 1.3  1999/05/28 17:08:14  ole
+	Updated URLs, CVS info, and various details.
+
 	Revision 1.2  1999/05/28 13:29:49  phillh
 	*** empty log message ***
-
+	
 	Revision 1.1.1.1  1999/05/27 18:32:01  scottf
 	gPhoto- digital camera utility
 	
@@ -35,9 +38,9 @@
 1.9.	What is the current version of gPhoto?
 
 2.0.	Installation
-2.1.	Where do I download the latest gPhoto developer archive from?
-2.2.	How do I unarchive and compile the gPhoto source archive?
-2.3.	How do I install the gPhoto binary onto my system?
+2.1.    Where do I download the latest gPhoto developer archive from?
+2.2.    How do I build and install gPhoto from CVS source?
+2.3.    How do I (un)install or upgrade gPhoto using binary packages?
 2.4.	I get "Could not open camera".  How do I configure the serial port?
 2.5.    I get "gphoto: error in loading shared libraries"
 2.6.    I get "ld: cannot open -lgdk_imlib: No such file or directory".
@@ -81,8 +84,7 @@
 	gPhoto aims to be the ultimate and universal free GNU application to 
 	get, organize, and publish pictures from any digital still camera.
 
-	gPhoto is now in CVS, and this has speeded up library development!
-	See 2.1 in the FAQ and http://www.gphoto.org/?cvs for details.
+	See http://www.gphoto.org/todo.php3 for current development focus.
 
 1.2.	How can digital photography help me? 
 
@@ -125,8 +127,8 @@
 
 	Kodak and Minolta both provide specifications openly for their cameras
 	meaning drivers for them can be written openly. Konica has recently
-	started work on a GPL aplication for BSD/Linux which Phill will
-	incorporate into gPhoto extending the current Konica driver.
+	started work on a GPL application for *BSD and GNU/Linux which Phill
+	will incorporate into gPhoto extending the current Konica driver.
 	It is always a great help for potential camera customers to pressure
 	companies into support our work BEFORE you give them your money.
 	Many companies simply don't have time to look at the issues involved
@@ -138,15 +140,20 @@
 	slightly before sending it. 100 copies of one letter is not as
 	persuasive as 25 different ones.
 
+	Please forward the feedback to gphoto-devel@gphoto.org, also if you 
+	get a negative response.
+
 	OK, on with the show... In general, less expensive cameras are usually
 	much better suited for "general" purpose work.  This is not to say
-	these cameras are not for professionals.  It is simply to say that they 	are better suited to the jobs where you need to get a high quality
-	snapshot, but don't need extremely high resolution prints.  A good
-	example is using a camera for web pages photos, or for doing family
-	prints (5x7).  For web pages, the 1024x768 size is a manageable size
-	which can be resampled to useable sizes (ie. 320x240, etc.) 1280x1024
-	would be overkill here.  Also, the 1024x768 has proven to be more than
-	adequate to print photo quality 5x7 prints using a color printer.  
+	these cameras are not for professionals.  It is simply to say that 
+	they are better suited to the jobs where you need to get a high 
+	quality snapshot, but don't need extremely high resolution prints.  
+	A good example is using a camera for web pages photos, or for doing 
+	family prints (5x7).  For web pages, the 1024x768 size is a manageable 
+	size which can be resampled to useable sizes (ie. 320x240, etc.) 
+	1280x1024 would be overkill here.  Also, the 1024x768 has proven to 
+	be more than adequate to print photo quality 5x7 prints using a color 
+	printer.
 
 	Additionally, some cameras have a higher ISO equivalency (ISO 180), 
 	which means they take better low light photos.  
@@ -175,17 +182,14 @@
 	cameras.  The cropped images also are effectively made with a longer 
 	focal length than if they were not cropped. 
 
-	Eventually, make sure that you buy some camera model that gPhoto 
-	supports, allthough we've planned support for more cameras.  :-)
-
 	List of supported models: http://www.gphoto.org/cameras.php3
 	
 1.5.	What hardware and operating systems will gPhoto compile and run on?
 	
-	The preferred OS and HW platform of the gPhoto developers is GNU/Linux.
-	Most of the gPhoto developers run either RedHat 5.x/6.0, or Debian 2.x.
+	The preferred platform of the gPhoto developers is i586-pc-linux-gnu.
+	The gPhoto developers run Slackware 4.x, RedHat 5.x/6.0 & Debian 2.x.
 	We've had reports that gPhoto compiles and runs on the SuSE, FreeBSD,
-	NetBSD, and Sun's proprietary, non-free operating system Solaris.
+	NetBSD and also Sun's proprietary, non-free operating system Solaris.
 
 1.6.	What libraries and system files does gPhoto require?
 
@@ -213,10 +217,10 @@
 	
 1.9.	What is the current version of gPhoto?
 
-        The current developer version in CVS.  See http://www.gphoto.org/
+        A developer version in CVS.  See http://www.gphoto.org/download.php3
 
 	There's an official gPhoto page at the Free Software Foundation's
-	web site: http://www.gnu.org/software/gphoto/gphoto.html
+	GNU project web site: http://www.gnu.org/software/gphoto/gphoto.html
 
 	There is also three gPhoto mailinglist, gphoto (general/announce),
 	gphoto-devel (discussion), gphoto-kodak (kodak library discussion)
@@ -225,7 +229,7 @@
 	http://lists.styx.net/mailman/listinfo/gphoto-devel/
 	http://lists.styx.net/mailman/listinfo/gphoto-kodak/
 
-	Check out the development news at http://www.gphoto.org/?news
+	Check out the development news at http://www.gphoto.org/news.php3
 
 	--------------------------------------------------------------
 
@@ -233,74 +237,38 @@
 
 2.1.	Where do I download the latest gPhoto developer archive from?
 
-        gPhoto is now in CVS.  See http://www.gphoto.org/?cvs for more
-	details on CVS, and how to get developer access to the CVS
-	server.
+        gPhoto is in GNOME CVS.
 
-        Users may want to just grab CVS source code as tar-ball from
+	See http://www.gphoto.org/download.php3 for download methods.
 
-	        http://www.gphoto.org/pub/snap/
+2.2.	How do I build and install gPhoto from CVS source?
 
-	or checkout the latest gPhoto sources using anonymous CVS.
+	See the INSTALL file for build instructions.
 
-	In the latter case, you should follow these simple steps:
+2.3.    How do I (un)install or upgrade gPhoto using binary packages?
 
-	First you need to setup the CVS environmental variables.  You
-	might want to put this in your login script.
-
-	export CVSROOT=':pserver:anon@www.freespeech.com:/home/del/cvssrc'
-
-	Then use CVS as normal like this:
-
-	$ cvs login
-	The password for the 'anon' user is simply 'gphoto'.
-
-	$ cvs -z3 checkout GPhoto
-	Please use the -z3 option to minimize network bandwidth (-z9 eats
-	too much CPU time - please don't use it).
-
-	Now you will want to go through and build and install gPhoto:
-
-	$ cd GPhoto/src
-	$ make && make install
-     
-	After you have checked the code out, you can use:
-
-	$ cvs -z3 update GPhoto
-
-	to update your personal copy of gPhoto to the latest version 
-	from the CVS server and rebuild.
-
-2.2.	How do I unarchive and compile the gPhoto CVS source tar-ball?
-
-	Type
-
-	$ tar zxfv gphoto-1999xxxx.tgz
-	$ cd GPhoto/
-	$ make
-	$ src/gphoto
-
-2.3.	How do I install the gPhoto binary onto my system?
+	a. RedHat Package Manager (RPM):
    
-	In the gphoto-cvs directory:
+	   Install/upgrade:	[/root]# rpm -Uvh gphoto-${version}.rpm
+	         Uninstall:	[/root]# rpm -e gphoto-${version}.rpm
 
-	$ make install
+		See the RPM documentation for further details.
 
-	This installs the binary, gPhoto libraries, and the default theme.
-	
+	Please contact gphoto-devel@gphoto.org if you want--or have built-- 
+	a binary package file of gPhoto for a new distribution or platform.
+
 2.4.	I get "Could not open camera".  How do I configure the serial port?
 
 	To those of you who get "Could not open camera", and your camera is 
-	reported to work on the list, see http://www.gphoto.org/cameras.html
-        please try this, before you report it as a bug:
+	reported to work on the list, see http://www.gphoto.org/cameras.php3
+        please try this before you report it to gphoto-devel@gphoto.org as a 
+	library bug:
 
 	Under GNU/Linux each serial port may have TWO names:
 
 		/dev/cua0
 		/dev/ttyS0
-
 	and
-
 		/dev/cua1
 		/dev/ttyS1
 
@@ -308,7 +276,7 @@
 	so you are probably connecting your camera to cua1 or ttyS1.
 	/dev/<serial_device> is the correct serial port (ttyS0 or ttyS1).
 
-	[/root]# ls -l /dev/<serial_device>
+		[/root]# ls -l /dev/<serial_device>
 
 	Make sure your camera is connected to the correct port and turned on.
 
@@ -342,16 +310,16 @@
 
 	Make sure that you've got required/unique versions of libraries.
 
-	[/root]# ldconfig -v |grep imlib
-	[/root]# ldconfig -v |grep gtk
-	[/root]# ldconfig -v |grep imlib
+		[/root]# ldconfig -v |grep imlib
+		[/root]# ldconfig -v |grep gtk
+		[/root]# ldconfig -v |grep imlib
 
 2.6.    I get "ld: cannot open -lgdk_imlib: No such file or directory".
 
 	Make sure that imlib is installed.
 
-	[/root]# ldconfig -v |grep imlib
-	        libgdk_imlib.so.1 => libgdk_imlib.so.1.8.1
+		[/root]# ldconfig -v |grep imlib
+		        libgdk_imlib.so.1 => libgdk_imlib.so.1.8.1
 
 	See http://www.labs.redhat.com/imlib/
 
@@ -431,7 +399,7 @@
         After building the gPhoto binary, type "gphoto -h" for 
         command-line options.  Here's the low-down:
 
-	GNU Photo v.0.$
+	GNU Photo v.0.3
 	Usage: gphoto [-h] [-n] [-s # filename] [-t # filename]
 	              [-d #] [-l filename]
 	        -n                      display the # of pictures
@@ -476,7 +444,7 @@
 
 4.1.	Who has developed gPhoto?
 
-	Read the AUTHORS file - or try "Help - Authors" in the gPhoto menu.
+	Read the AUTHORS file or try "Help - Authors" in the gPhoto menu.
 
 4.2.	How do I write a gPhoto-supported plugin or new model interfaces?
 
@@ -488,8 +456,14 @@
 
 	We would like to see more people contributing to the development.
 
-	Send mail to (gphoto-devel@gphoto.org) if you want to help to
-	implement plugins, add cam support or submit optimized lines!
+	Please send mail to camera manufacturers, see the CONTACTS file,
+	and encourage them to release free specs to software developers.
+
+	You could use the template LETTER file distributed with gPhoto.
+
+	Please send mail to gphoto-devel@gphoto.org, if you get negative
+	feedback, so we can warn people from buying cameras manufactured
+	by less consumer-friendly companies.
 
 4.3.	How do I organize a HTML gallery theme?
 
@@ -585,17 +559,15 @@
 4.4.	What are the future plans for GNU Photo?
 
 	gPhoto is being actively developed, and version 1.0 will have
-	many new features, and hopefully also support for more popular 
-	camera models.
+	many new features and support for more popular camera models.
 
 4.5.	Does gPhoto aim to be GNOME compliant?
 
 	Yes, but we will include a plain GTK+ version in the main archive.
-	ATM, gPhoto is not GNOME compliant, so it's not an issue, yet.
-	
-	Miguel de Icaza has welcomed gPhoto into GNOME cvs repository,
-	so if you want to make it GNOME compliant, please mail the gphoto
-	developers' list <gphoto-devel@gphoto.org> and make contributions.
+	ATM, gPhoto is not GNOME compliant, so it's not a real issue, yet.
+
+	If you want to make it GNOME compliant, please mail the gphoto
+	developers' list <gphoto-devel@gphoto.org> first.
 	
 4.6.	gPhoto is great! You could earn real money! But why is it *free*?
 
@@ -617,14 +589,14 @@
 	Also thanks to Linus Torvalds for starting work on his Linux Kernel 
 	and making it available for all to use on standard cheap PC hardware. 
 
+	Thanks a lot to Carsten "Raster" Haitzler for his work on the 
+	imlib library, that gPhoto uses for many image operations.
+
 	Also thanks goes to the entire Kernel devel team, and the rest of the 
 	free software community, and to those people who volunteerly work on
-	useful GNOME applications, the GIMP and it's tool kit, GTK+.
+	other useful GNOME applications, the GIMP and it's tool kit, GTK+.
 
 	http://www.gnu.org/
 	http://www.kernel.org/
 	http://www.gimp.org/
 	http://www.gtk.org/
-
-	Thanks a lot to Carsten "Raster" Haitzler for his work on the 
-	imlib library, that gPhoto uses for many image operations.

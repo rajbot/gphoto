@@ -91,23 +91,68 @@ init (GnoCamControlFile* file)
 }
 
 GnoCamControlFile*
-gnocam_control_file_new (Camera* camera, BonoboMoniker* moniker, const Bonobo_ResolveOptions* options, Bonobo_Stream stream, CORBA_Environment* ev)
+gnocam_control_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, CORBA_Environment* ev)
 {
 	GtkWidget*		widget;
 	GnoCamControlFile*	new;
+	Bonobo_Unknown		object;
 	Bonobo_Unknown		subcontrol;
-	gchar*			name;
+	Bonobo_Persist		persist;
+	Bonobo_Stream		stream;
+	Bonobo_StorageInfo*	info;
+	gchar*			oaf_requirements;
+	gchar*			mime_type;
+	OAF_ActivationID 	ret_id;
 
-        /* Create the viewer */
-        subcontrol = bonobo_moniker_use_extender ("OAFIID:Bonobo_MonikerExtender_stream", moniker, options, "IDL:Bonobo/Control:1.0", ev);
-        if (BONOBO_EX (ev)) return (NULL);
+	/* Open the stream */
+	stream = Bonobo_Storage_openStream (storage, path, Bonobo_Storage_READ, ev);
+	if (BONOBO_EX (ev)) return (NULL);
+	g_return_val_if_fail (stream, NULL);
+
+	/* Get information about the stream */
+	info = Bonobo_Stream_getInfo (stream, Bonobo_FIELD_CONTENT_TYPE, ev);
+	if (BONOBO_EX (ev)) return (NULL);
+	g_return_val_if_fail (info, NULL);
+	mime_type = g_strdup (info->content_type);
+	CORBA_free (info);
 	
-	/* Extract the dirname */
-	for (name = (gchar*) bonobo_moniker_get_name (moniker) + 2; *name != 0; name++) if (*name == '/') break;
+	oaf_requirements = g_strdup_printf (
+		"bonobo:supported_mime_types.has ('%s') AND"
+		"repo_ids.has ('IDL:Bonobo/Control:1.0') AND"
+		"repo_ids.has ('IDL:Bonobo/PersistStream:1.0')", mime_type);
 	
+	/* Activate the object */
+	object = oaf_activate (oaf_requirements, NULL, 0, &ret_id, ev);
+	g_free (oaf_requirements);
+	if (BONOBO_EX (ev)) {
+		g_free (mime_type);
+		return (NULL);
+	}
+	g_return_val_if_fail (object, NULL);
+
+	/* Get the persist stream interface */
+	 persist = Bonobo_Unknown_queryInterface (object, "IDL:Bonobo/PersistStream:1.0", ev);
+	 if (BONOBO_EX (ev)) {
+		g_free (mime_type);
+		return (NULL);
+	}
+	g_return_val_if_fail (persist, NULL);
+
+	/* Load the persist stream */
+	Bonobo_PersistStream_load (persist, stream, (const Bonobo_Persist_ContentType) mime_type, ev);
+	g_free (mime_type);
+	if (BONOBO_EX (ev)) return (NULL);
+
+	/* Release */
+	bonobo_object_release_unref (persist, ev);
+	bonobo_object_release_unref (stream, ev);
+
+	subcontrol = bonobo_moniker_util_qi_return (object, "IDL:Bonobo/Control:1.0", ev);
+	if (BONOBO_EX (ev)) return (NULL);
+
 	new = gtk_type_new (gnocam_control_file_get_type ());
-	new->priv->filename = g_strdup (g_basename (name));
-	new->priv->dirname = g_dirname (name);
+	new->priv->filename = g_strdup (g_basename (path));
+	new->priv->dirname = g_dirname (path);
 	new->priv->camera = camera;
 	gp_camera_ref (camera);
 	

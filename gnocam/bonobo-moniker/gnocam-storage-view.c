@@ -54,8 +54,13 @@ struct _GnoCamStorageViewPrivate {
 	ETreePath*	root_node;
 };
 
+typedef struct {
+	gchar*		path;
+	gboolean 	directory;
+} NodeData;
+
 enum {
-        FOLDER_SELECTED,
+        DIRECTORY_SELECTED,
         FILE_SELECTED,
         DND_ACTION,
         LAST_SIGNAL
@@ -201,6 +206,61 @@ treepath_compare (ETreeModel* model, ETreePath* node1, ETreePath* node2)
         return strcasecmp (path1, path2);
 }
 
+/*******************/
+/* E-Table methods */
+/*******************/
+
+static void
+cursor_change (ETable* etable, int row)
+{
+	GnoCamStorageView*	storage_view;
+	ETreePath*		node;
+	NodeData*		data;
+
+	storage_view = GNOCAM_STORAGE_VIEW (etable);
+	node = e_tree_model_node_at_row (storage_view->priv->etree, row);
+
+	data = (NodeData*) e_tree_model_node_get_data (storage_view->priv->etree, node);
+
+	if (data->directory) 
+		gtk_signal_emit (GTK_OBJECT (storage_view), signals [DIRECTORY_SELECTED], data->path);
+	else 
+		gtk_signal_emit (GTK_OBJECT (storage_view), signals [FILE_SELECTED], data->path);
+}
+
+static void
+table_drag_begin (ETable* etable, int row, int col, GdkDragContext* context)
+{
+	g_warning ("Implement!");
+}
+
+static void
+table_drag_data_get (ETable* etable, int drag_row, int drag_col, GdkDragContext* context, GtkSelectionData* selection_data, unsigned int info, guint32 time)
+{
+	g_warning ("Implement!");
+}
+
+static gboolean
+table_drag_motion (ETable* table, int row, int col, GdkDragContext* context, int x, int y, unsigned int time)
+{
+	g_warning ("Implement!");
+	return (TRUE);
+}
+
+static gboolean
+table_drag_drop (ETable* etable, int row, int col, GdkDragContext* context, int x, int y, unsigned int time)
+{
+	g_warning ("Implement!");
+	return (FALSE);
+}
+
+static void
+table_drag_data_received (ETable* etable, int row, int col, GdkDragContext* context, int x, int y, 
+	GtkSelectionData* selection_data, unsigned int info, unsigned int time)
+{
+	g_warning ("Implement!");
+}
+
 /********************/
 /* Helper functions */
 /********************/
@@ -225,10 +285,16 @@ insert_folders_and_files (GnoCamStorageView* storage_view, ETreePath* parent, co
 	for (i = 0; i < list->_length; i++) {
 		ETreePath*	node;
 		gchar*		tmp;
+		NodeData*	data;
 		
 		tmp = g_strconcat ("/", list->_buffer [i].name, NULL);
 		node = e_tree_model_node_insert_id (storage_view->priv->etree, parent, -1, tmp, tmp);
 		g_free (tmp);
+
+		data = g_new (NodeData, 1);
+		data->path = g_strconcat (path, list->_buffer [i].name, NULL);
+		data->directory = (list->_buffer [i].type == Bonobo_STORAGE_TYPE_DIRECTORY);
+		e_tree_model_node_set_data (storage_view->priv->etree, node, (gpointer) data);
 		
 		e_tree_model_node_set_expanded (storage_view->priv->etree, parent, TRUE);
 		e_tree_model_node_set_compare_function (storage_view->priv->etree, node, treepath_compare);
@@ -257,6 +323,7 @@ destroy (GtkObject* object)
 
 	storage_view = GNOCAM_STORAGE_VIEW (object);
 	g_free (storage_view->priv);
+	//FIXME: Free NodeData in all nodes!
 
 	(* GTK_OBJECT_CLASS (parent_class)->destroy) (object);
 }
@@ -265,16 +332,25 @@ static void
 class_init (GnoCamStorageViewClass* klass)
 {
 	GtkObjectClass*	object_class;
+	ETableClass*	etable_class;
 
 	parent_class = gtk_type_class (e_table_get_type ());
 
 	object_class = GTK_OBJECT_CLASS (klass);
 	object_class->destroy = destroy;
 
-	signals[FOLDER_SELECTED] = gtk_signal_new ("folder_selected",
+	etable_class = E_TABLE_CLASS (klass);
+	etable_class->cursor_change 		= cursor_change;
+	etable_class->table_drag_begin		= table_drag_begin;
+	etable_class->table_drag_data_get	= table_drag_data_get;
+	etable_class->table_drag_motion		= table_drag_motion;
+	etable_class->table_drag_drop		= table_drag_drop;
+	etable_class->table_drag_data_received	= table_drag_data_received;
+
+	signals[DIRECTORY_SELECTED] = gtk_signal_new ("directory_selected",
 	                                GTK_RUN_FIRST,
         	                        object_class->type,
-                	                GTK_SIGNAL_OFFSET (GnoCamStorageViewClass, folder_selected),
+                	                GTK_SIGNAL_OFFSET (GnoCamStorageViewClass, directory_selected),
                         	        gtk_marshal_NONE__STRING,
 	                                GTK_TYPE_NONE, 1,
         	                        GTK_TYPE_STRING);

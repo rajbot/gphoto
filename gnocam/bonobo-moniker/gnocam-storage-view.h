@@ -26,7 +26,7 @@ struct _GnoCamStorageView {
 struct _GnoCamStorageViewClass {
 	ETableClass			parent;
 
-	void (* folder_selected)	(GnoCamStorageView* storage_view, const gchar* path);
+	void (* directory_selected)	(GnoCamStorageView* storage_view, const gchar* path);
 	void (* file_selected)		(GnoCamStorageView* storage_view, const gchar* path);
 
 	void (* dnd_action) 		(GnoCamStorageView* storage_view, GdkDragContext* context, 

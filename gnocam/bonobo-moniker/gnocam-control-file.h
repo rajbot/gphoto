@@ -28,8 +28,7 @@ struct _GnoCamControlFileClass {
 
 
 GtkType    		gnocam_control_file_get_type	(void);
-GnoCamControlFile*	gnocam_control_file_new		(Camera* camera, BonoboMoniker* moniker, const Bonobo_ResolveOptions* options, 
-							Bonobo_Stream stream, CORBA_Environment* ev);
+GnoCamControlFile*	gnocam_control_file_new		(Camera* camera, Bonobo_Storage storage, const gchar* path, CORBA_Environment* ev);
 
 END_GNOME_DECLS
 

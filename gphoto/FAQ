@@ -52,7 +52,8 @@ d. What libraries and system files does gPhoto require?
 
 f. What is the current version of gPhoto?
 
-   The developer version is in GNOME CVS. See download.php3.
+   The developer version is in GNOME CVS. 
+   See http://www.gphoto.org/download.php3 for current info.
 
 g. How do I build and install gPhoto from CVS source?
 
@@ -64,8 +65,9 @@ g. How do I build and install gPhoto from CVS source?
 h. I get ``Could not open camera''. How do I configure the serial port?
 
    To those of you who get ``Could not open camera'', and your camera is
-   reported to work on the list (see cameras.php3), please try this
-   before you report it to <gphoto-devel@gphoto.org> as a library bug:
+   reported to work on the list (see http://www.gphoto.org/cameras.php3),
+   please try this before you report it to <gphoto-devel@gphoto.org> as a
+   library bug:
 
    Under Linux each serial port may have TWO names:
 
@@ -153,7 +155,7 @@ k. How do I use the gPhoto command line interface? How can I use it?
 
 l. Who has developed gPhoto?
 
-   See team.php3.
+   See http://www.gphoto.org/team.php3
 
 m. How do I write a gPhoto-supported plugin or new model interfaces?
 
@@ -180,7 +182,7 @@ n. How do I organize a HTML gallery theme?
    theme, and specify the output directory. It's possible to create your
    own special code, customized to your own heart's desire.
 
-   See themes.php3.
+   See http://www.gphoto.org/themes.php3 for details.
 
 o. What are the future plans for GNU Photo?
 

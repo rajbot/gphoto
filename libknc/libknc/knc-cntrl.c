@@ -176,7 +176,7 @@ knc_cntrl_read_packet (KncCntrl *c, unsigned char *rb, unsigned int *rbs,
 	KncCntrlRes r = KNC_CNTRL_RES_OK;
 
 	while (1) {
-		r = knc_cntrl_read (c, &b, 1, 2000, NULL); if (r) break;
+		r = knc_cntrl_read (c, &b, 1, 5000, NULL); if (r) break;
 		if (b != ENQ) {
 			knc_cntrl_log (c, "Received unexpected byte "
 				       "(0x%02x)!", b);

@@ -1,7 +1,93 @@
 #include <config.h>
 #include "GNOME_C.h"
 
-#include <libbonobo.h>
+#include <bonobo/bonobo-exception.h>
+#include <bonobo/bonobo-moniker-util.h>
+#include <bonobo/bonobo-ui-main.h>
+#include <bonobo/bonobo-object.h>
+#include <bonobo/bonobo-window.h>
+#include <bonobo/bonobo-widget.h>
+
+#include <gtk/gtkvbox.h>
+#include <gtk/gtkmain.h>
+#include <gtk/gtkhseparator.h>
+
+static void
+do_ui_checks (GNOME_C_Camera c, CORBA_Environment *ev)
+{
+	GtkWidget *win, *p, *vbox, *s;
+	Bonobo_Control prefs;
+	Bonobo_UIContainer uic;
+	Bonobo_Control capture;
+	Bonobo_Control preview;
+
+	prefs = GNOME_C_Camera__get_prefs (c, ev);
+	if (BONOBO_EX (ev)) {
+		g_warning ("Could not get preferences: %s",
+			   bonobo_exception_get_text (ev));
+	}
+	
+	win = bonobo_window_new ("Test", "Test");
+	uic = BONOBO_OBJREF (bonobo_window_get_ui_container (
+						BONOBO_WINDOW (win)));
+	gtk_widget_show (vbox = gtk_vbox_new (FALSE, 0));
+	bonobo_window_set_contents (BONOBO_WINDOW (win), vbox);
+
+	/* Preferences */
+	prefs = GNOME_C_Camera__get_prefs (c, ev);
+	if (BONOBO_EX (ev)) {
+		g_warning ("Could not get preferences: %s",
+			   bonobo_exception_get_text (ev)); 
+	} else {
+		p = bonobo_widget_new_control_from_objref (prefs, uic);
+		gtk_widget_show (p);
+		gtk_box_pack_start (GTK_BOX (vbox), p, FALSE, FALSE, 0);
+		bonobo_object_release_unref (prefs, NULL);
+	}
+
+	gtk_widget_show (s = gtk_hseparator_new ());
+	gtk_box_pack_start (GTK_BOX (vbox), s, FALSE, FALSE, 0);
+
+	/* Capturing */
+	capture = GNOME_C_Camera__get_capture (c, ev);
+	if (BONOBO_EX (ev)) {
+		g_warning ("Could not get capture: %s",
+			   bonobo_exception_get_text (ev));
+	} else {
+		p = bonobo_widget_new_control_from_objref (capture, uic);
+		gtk_widget_show (p);
+		gtk_box_pack_start (GTK_BOX (vbox), p, FALSE, FALSE, 0);
+		bonobo_object_release_unref (capture, NULL);
+	}
+
+	gtk_widget_show (s = gtk_hseparator_new ());
+	gtk_box_pack_start (GTK_BOX (vbox), s, FALSE, FALSE, 0);
+
+	/* Preview */
+	preview = GNOME_C_Camera__get_preview (c, ev);
+	if (BONOBO_EX (ev)) {
+		g_warning ("Could not get preview: %s",
+			   bonobo_exception_get_text (ev));
+		return;
+	} else {
+		GNOME_C_Preview_start (preview, ev);
+		if (BONOBO_EX (ev)) {
+			bonobo_object_release_unref (preview, NULL);
+			g_warning ("Could not start capturing previews: %s",
+				   bonobo_exception_get_text (ev));
+			return;
+		}
+		p = bonobo_widget_new_control_from_objref (preview, uic);
+		gtk_widget_show (p);
+		gtk_box_pack_start (GTK_BOX (vbox), p, FALSE, FALSE, 0);
+		bonobo_object_release_unref (preview, NULL);
+	}
+
+	gtk_widget_show (win);
+	g_signal_connect (win, "destroy", gtk_main_quit, NULL);
+
+	bonobo_ui_main ();
+}
 
 int
 main (int argc, char **argv)
@@ -16,7 +102,7 @@ main (int argc, char **argv)
 	GNOME_C_Dir d;
 	GNOME_C_File f;
 
-	if (!bonobo_init (&argc, argv))
+	if (!bonobo_ui_init (PACKAGE, VERSION, &argc, argv))
 		g_error ("Failed to initialize Bonobo.");
 	bonobo_activate ();
 
@@ -72,6 +158,14 @@ main (int argc, char **argv)
 	}
 	g_message ("Now connected to model '%s'.", s);
 	CORBA_free (s);
+
+	do_ui_checks (c, &ev);
+	if (BONOBO_EX (&ev)) {
+		g_warning ("UI checks failed: %s",
+			   bonobo_exception_get_text (&ev));
+		CORBA_exception_free (&ev);
+		return 1;
+	}
 
 	d = GNOME_C_Camera__get_dir (c, &ev);
 	bonobo_object_release_unref (c, NULL);

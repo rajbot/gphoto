@@ -18,7 +18,7 @@ static struct {
 	{KNC_GET_IMAGE_EXIF, N_("Get image as JPEG including "
 				"EXIF information"), 1},
 	{KNC_GET_PREVIEW, N_("Capture a preview"), 1},
-	{KNC_GET_IO_PREF, N_("Get io-capabilities"), 0},
+	{KNC_GET_IO_PREF, N_("Get io-capabilities"), 1},
 	{KNC_GET_INFO, N_("Get information"), 0},
 	{KNC_GET_STATUS, N_("Get status"), 0},
 	{KNC_GET_DATE_AND_TIME, N_("Get date and time"), 0},

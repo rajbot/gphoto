@@ -247,6 +247,9 @@ knc_c_prefs_set_resolution (KncCPrefs *p, KncResolution resolution)
 		w = glade_xml_get_widget (p->priv->xml,
 					  "radiobutton_resolution_low");
 		break;
+	default:
+		g_warning ("Unknown resolution %i!", resolution);
+		return;
 	}
 	gtk_radio_button_set_all_inconsistent (GTK_RADIO_BUTTON (w), FALSE);
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (w), TRUE);
@@ -309,7 +312,7 @@ knc_c_prefs_set_flash (KncCPrefs *p, KncFlash f)
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (w), TRUE);
 	w = glade_xml_get_widget (p->priv->xml, "checkbutton_red_eye");
 	gtk_toggle_button_set_inconsistent (GTK_TOGGLE_BUTTON (w), FALSE);
-	gtk_widget_set_sensitive (w, TRUE);
+	gtk_widget_set_sensitive (w, f != KNC_FLASH_OFF);
 	switch (f) {
 	case KNC_FLASH_ON_RED_EYE:
 	case KNC_FLASH_AUTO_RED_EYE:

@@ -2,6 +2,8 @@
 #include "knc-c-camera.h"
 #include "knc-c-dir.h"
 #include "knc-c-prefs.h"
+#include "knc-c-preview.h"
+#include "knc-c-capture.h"
 
 #include <libknc/knc-cntrl.h>
 #include <libknc/knc.h>
@@ -64,16 +66,18 @@ static Bonobo_Control
 impl_get_preview (PortableServer_Servant servant, CORBA_Environment *ev)
 {
 	KncCCamera *c = KNC_C_CAMERA (bonobo_object (servant));
+	KncCPreview *p = knc_c_preview_new (c->priv->c);
 
-	c = NULL;
-
-	return CORBA_OBJECT_NIL;
+	return BONOBO_OBJREF (p);
 }
 
 static Bonobo_Control
 impl_get_capture (PortableServer_Servant servant, CORBA_Environment *ev)
 {
-	return CORBA_OBJECT_NIL;
+	KncCCamera *c = KNC_C_CAMERA (bonobo_object (servant));
+	KncCCapture *d = knc_c_capture_new (c->priv->c);
+
+	return BONOBO_OBJREF (d);
 }
 
 static void

@@ -19,13 +19,16 @@ libexec_PROGRAMS = knc
 endif
 
 knc_SOURCES = $(CORBA_GENERATED)	\
-	knc.c				\
-	knc-c-camera.h	knc-c-camera.c	\
-	knc-c-dir.h	knc-c-dir.c	\
-	knc-c-file.h	knc-c-file.c	\
-	knc-c-if.h	knc-c-if.c	\
-	knc-c-prefs.h	knc-c-prefs.c	\
-	knc-c-mngr.h	knc-c-mngr.c
+	knc.c						\
+	knc-c-camera.h		knc-c-camera.c		\
+	knc-c-capture.h		knc-c-capture.c		\
+	knc-c-dir.h		knc-c-dir.c		\
+	knc-c-file.h		knc-c-file.c		\
+	knc-c-if.h		knc-c-if.c		\
+	knc-c-prefs.h		knc-c-prefs.c		\
+	knc-c-preview.h		knc-c-preview.c		\
+	knc-c-preview-widget.h	knc-c-preview-widget.c	\
+	knc-c-mngr.h		knc-c-mngr.c
 knc_LDADD = ../libknc/libknc.la $(CORBA_LIBS)
 
 GNOME_C_Knc.server.in: GNOME_C_Knc.server.in.in

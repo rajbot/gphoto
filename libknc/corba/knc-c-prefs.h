@@ -25,7 +25,7 @@ struct _KncCPrefsClass {
 	BonoboControlClass parent_class;
 };
 
-GType    knc_c_prefs_get_type (void);
+GType      knc_c_prefs_get_type (void);
 KncCPrefs *knc_c_prefs_new      (KncCntrl *);
 
 G_END_DECLS

@@ -5,5 +5,4 @@ SUBDIRS = konica casio philips fuji photopc kodak ricoh sony \
 
 doc_DATA = AUTHORS COPYING CREDITS ChangeLog FAQ MANUAL NEWS README THEMES TODO
 
-EXTRA_DIST = AUTHORS COPYING CREDITS ChangeLog FAQ MANUAL NEWS README THEMES \
-	INSTALL PROGRAMMERS TODO gphoto.spec configure
+EXTRA_DIST = $(doc_DATA) INSTALL PROGRAMMERS gphoto.spec configure

@@ -1,4 +1,4 @@
-/* GnoCam.idl
+/* gnocam-util.c
  *
  * Copyright (C) 2002 Lutz Müller <lutz@users.sourceforge.net>
  *
@@ -17,45 +17,30 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef __GNOCAM_IDL__
-#define __GNOCAM_IDL__
+#include <config.h>
+#include "gnocam-util.h"
 
-#include <Bonobo.idl>
+#include <string.h>
 
-module GNOME {
+gchar *
+gnocam_build_path (const gchar *path, const gchar *path_to_append)
+{
+	if (!path) {
+		if (!path_to_append)
+			return NULL;
+		else
+			return (g_strdup (path_to_append));
+	}
 
-	module GnoCam {
 
-		exception Cancelled {};
+	if (!path_to_append)
+		return (g_strdup (path));
 
-		interface Camera : Bonobo::Unknown {
-			/* The Camera can be accessed through BonoboStorage */
+	if (*path_to_append == '/')
+		return (g_strdup (path_to_append));
 
-			exception NotSupported {};
-			exception IOError {};
+        if (path[strlen (path) - 1] == '/')
+		return (g_strdup_printf ("%s%s", path, path_to_append));
 
-			Bonobo::Stream capturePreview ();
-
-			string getInfo ()
-				raises (NotSupported, IOError);
-
-			void captureImage ()
-				raises (NotSupported, IOError);
-		};
-
-		interface Factory : Bonobo::Unknown {
-			typedef sequence<string> CameraList;
-
-			exception NotFound {};
-	
-			CameraList getCameraList ();
-
-			Camera getCamera ()
-				raises (NotFound, Cancelled);
-			Camera getCameraByName (in string name)
-				raises (NotFound);
-		};
-	};
-};
-
-#endif /* __GNOCAM_IDL__ */
+	return (g_strdup_printf ("%s/%s", path, path_to_append));
+}

@@ -1,24 +1,34 @@
-#include <gphoto2.h>
+/* gnocam-camera.c
+ *
+ * Copyright (C) 2002 Lutz Müller <lutz@users.sourceforge.net>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, 
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details. 
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+#include <config.h>
 #include "gnocam-camera.h"
 
-#include <gtk/gtksignal.h>
-#include <gtk/gtkmain.h>
-#include <bonobo/Bonobo.h>
-#include <bonobo/bonobo-storage.h>
-#include <bonobo/bonobo-stream-memory.h>
-#include <bonobo/bonobo-exception.h>
+#include <gphoto2.h>
+
 #include <bonobo/bonobo-event-source.h>
-#include <libgnome/gnome-util.h>
-#include <libgnome/gnome-i18n.h>
-#include <libgnomeui/gnome-dialog.h>
-#include <libgnomeui/gnome-dialog-util.h>
+#include <bonobo/bonobo-exception.h>
 
-#include "gnocam-capture.h"
 #include "bonobo-storage-camera.h"
-#include "GnoCam.h"
 
-#define PARENT_TYPE BONOBO_X_OBJECT_TYPE
-static BonoboXObjectClass *parent_class;
+#define PARENT_TYPE BONOBO_TYPE_OBJECT
+static BonoboObjectClass *parent_class;
 
 struct _GnoCamCameraPrivate
 {
@@ -27,18 +37,18 @@ struct _GnoCamCameraPrivate
 	BonoboEventSource *event_source;
 };
 
-#define CHECK_RESULT(result,ev) G_STMT_START{\
+#define CR(result,ev) G_STMT_START{\
 	gint r = result;\
 	if (r < 0) {\
 		switch (r) {\
 		case GP_ERROR_NOT_SUPPORTED:\
 			CORBA_exception_set (ev, CORBA_USER_EXCEPTION,\
-					ex_GNOME_Camera_NotSupported, NULL);\
+				ex_GNOME_GnoCam_Camera_NotSupported, NULL);\
 			break;\
 		case GP_ERROR_IO:\
 		default:\
 			CORBA_exception_set (ev, CORBA_USER_EXCEPTION,\
-					ex_GNOME_Camera_IOError, NULL);\
+				ex_GNOME_GnoCam_Camera_IOError, NULL);\
 			break;\
 		}\
 	}\
@@ -52,13 +62,14 @@ impl_GNOME_Camera_getInfo (PortableServer_Servant servant,
 	CameraText text;
 
 	c = GNOCAM_CAMERA (bonobo_object_from_servant (servant));
-	CHECK_RESULT (gp_camera_get_manual (c->priv->camera, &text), ev);
+	CR (gp_camera_get_manual (c->priv->camera, &text, NULL), ev);
 	if (BONOBO_EX (ev))
 		return (NULL);
 
 	return (g_strdup (text.text));
 }
 
+#if 0
 static Bonobo_Stream
 impl_GNOME_Camera_capturePreview (PortableServer_Servant servant, 
 				  CORBA_Environment *ev)
@@ -70,8 +81,8 @@ impl_GNOME_Camera_capturePreview (PortableServer_Servant servant,
 	g_message ("impl_GNOME_Camera_capturePreview");
 
 	c = GNOCAM_CAMERA (bonobo_object_from_servant (servant));
-	CHECK_RESULT (gp_file_new (&file), ev);
-	CHECK_RESULT (gp_camera_capture_preview (c->priv->camera, file), ev);
+	CR (gp_file_new (&file), ev);
+	CR (gp_camera_capture_preview (c->priv->camera, file), ev);
 	if (BONOBO_EX (ev)) {
 		gp_file_unref (file);
 		g_message ("Returning...");
@@ -83,13 +94,17 @@ impl_GNOME_Camera_capturePreview (PortableServer_Servant servant,
 
 	return (CORBA_Object_duplicate (BONOBO_OBJREF (stream), ev));
 }
+#endif
 
+#if 0
 static void
 on_dialog_destroy (GtkObject *object, gpointer data)
 {
 	bonobo_object_idle_unref (BONOBO_OBJECT (data));
 }
+#endif
 
+#if 0
 static gboolean
 on_capture_close (GnomeDialog *dialog, gpointer data)
 {
@@ -104,7 +119,9 @@ on_capture_close (GnomeDialog *dialog, gpointer data)
 
 	return (FALSE);
 }
+#endif
 
+#if 0
 static gboolean 
 do_capture (gpointer data)
 {
@@ -119,7 +136,7 @@ do_capture (gpointer data)
 
 	CORBA_exception_init (&ev);
 
-	CHECK_RESULT (gp_camera_capture (c->priv->camera,
+	CR (gp_camera_capture (c->priv->camera,
 				GP_OPERATION_CAPTURE_IMAGE, &path), &ev);
 	if (BONOBO_EX (&ev)) {
 		txt = g_strdup_printf (_("Could not capture image: %s"),
@@ -144,7 +161,9 @@ do_capture (gpointer data)
 
 	return (FALSE);
 }
+#endif
 
+#if 0
 static void
 on_capture_clicked (GnomeDialog *dialog, gint button_number, gpointer data)
 {
@@ -176,7 +195,9 @@ on_capture_clicked (GnomeDialog *dialog, gint button_number, gpointer data)
 		break;
 	}
 }
+#endif
 
+#if 0
 static void
 impl_GNOME_Camera_captureImage (PortableServer_Servant servant,
 				CORBA_Environment *ev)
@@ -198,48 +219,37 @@ impl_GNOME_Camera_captureImage (PortableServer_Servant servant,
 	gtk_signal_connect (GTK_OBJECT (capture), "close",
 			    GTK_SIGNAL_FUNC (on_capture_close), c);
 }
+#endif
 
 static void
-gnocam_camera_destroy (GtkObject *object)
+gnocam_camera_finalize (GObject *object)
 {
-	GnoCamCamera *gnocam_camera;
+	GnoCamCamera *gc = GNOCAM_CAMERA (object);
 
-	gnocam_camera = GNOCAM_CAMERA (object);
+	if (gc->priv) {
+		if (gc->priv->camera) {
+			gp_camera_unref (gc->priv->camera);
+			gc->priv->camera = NULL;
+		}
+		g_free (gc->priv);
+		gc->priv = NULL;
+	}
 
-	g_message ("Destroying GnoCamCamera...");
-
-	gp_camera_unref (gnocam_camera->priv->camera);
-	gnocam_camera->priv->camera = NULL;
-
-	GTK_OBJECT_CLASS (parent_class)->destroy (object);
-}
-
-static void
-gnocam_camera_finalize (GtkObject *object)
-{
-	GnoCamCamera *gnocam_camera;
-
-	gnocam_camera = GNOCAM_CAMERA (object);
-
-	g_free (gnocam_camera->priv);
-
-	GTK_OBJECT_CLASS (parent_class)->finalize (object);
+	G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
 gnocam_camera_class_init (GnoCamCameraClass *klass)
 {
-	GtkObjectClass *object_class = GTK_OBJECT_CLASS (klass);
-	POA_GNOME_Camera__epv *epv;
+	GObjectClass *object_class;
+	POA_GNOME_GnoCam_Camera__epv *epv;
 
-	parent_class = gtk_type_class (PARENT_TYPE);
+	parent_class = g_type_class_peek_parent (klass);
 
-	object_class->destroy = gnocam_camera_destroy;
+	object_class = G_OBJECT_CLASS (klass);
 	object_class->finalize = gnocam_camera_finalize;
 
 	epv = &klass->epv;
-	epv->capturePreview    = impl_GNOME_Camera_capturePreview;
-	epv->captureImage      = impl_GNOME_Camera_captureImage;
 	epv->getInfo           = impl_GNOME_Camera_getInfo;
 }
 
@@ -249,13 +259,14 @@ gnocam_camera_init (GnoCamCamera *gnocam_camera)
 	gnocam_camera->priv = g_new0 (GnoCamCameraPrivate, 1);
 }
 
-BONOBO_X_TYPE_FUNC_FULL (GnoCamCamera, GNOME_Camera, PARENT_TYPE, gnocam_camera);
+BONOBO_TYPE_FUNC_FULL (GnoCamCamera, GNOME_GnoCam_Camera, BONOBO_TYPE_OBJECT,
+		       gnocam_camera);
 
 GnoCamCamera *
 gnocam_camera_new (Camera *camera, CORBA_Environment *ev)
 {
 	GnoCamCamera *gc;
-	BonoboStorage *storage;
+	BonoboStorageCamera *storage;
 
 	bonobo_return_val_if_fail (camera, NULL, ev);
 
@@ -266,7 +277,7 @@ gnocam_camera_new (Camera *camera, CORBA_Environment *ev)
 	if (BONOBO_EX (ev))
 		return (NULL);
 
-	gc = gtk_type_new (GNOCAM_TYPE_CAMERA);
+	gc = g_object_new (GNOCAM_TYPE_CAMERA, NULL);
 
 	gc->priv->camera = camera;
 	gp_camera_ref (camera);

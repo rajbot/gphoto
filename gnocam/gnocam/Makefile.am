@@ -1,54 +1,41 @@
 INCLUDES =\
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
- -DIMAGEDIR=\"$(prefix)/share/pixmaps\"\
- -I$(top_srcdir)/libgnocam\
- $(GPHOTO_CFLAGS)\
- $(GCONF_CFLAGS)\
- $(EXTRA_GNOME_CFLAGS)
+ -DBONOBO_DISABLE_DEPRECATED\
+ -DLOCALEDIR=\""$(prefix)/$(DATADIRNAME)/locale"\"\
+ -DGTK_DISABLE_DEPRECATED\
+ $(GNOCAM_CFLAGS)
 
 bin_PROGRAMS=gnocam
 
-CORBA_GENERATED =\
- GnoCam.h\
- GnoCam-common.c\
- GnoCam-stubs.c\
- GnoCam-skels.c
+CORBA_SOURCES = GnoCam.h GnoCam-common.c GnoCam-stubs.c	GnoCam-skels.c
 
-gnocam_SOURCES =\
- $(CORBA_GENERATED)\
- bonobo-storage-camera.c bonobo-storage-camera.h\
- bonobo-stream-camera.c bonobo-stream-camera.h\
- main.c\
- gnocam-capture.c gnocam-capture.h\
- gnocam-main.c gnocam-main.h\
- gnocam-camera.c gnocam-camera.h\
- gnocam-camera-selector.c gnocam-camera-selector.h\
- gnocam-util.h
+gnocam_SOURCES =					\
+ $(CORBA_SOURCES)					\
+ bonobo-storage-camera.c bonobo-storage-camera.h	\
+ bonobo-stream-camera.c bonobo-stream-camera.h		\
+ main.c							\
+ gnocam-camera.c gnocam-camera.h			\
+ gnocam-main.c gnocam-main.h				\
+ gnocam-util.c gnocam-util.h
 
-gnocam_LDADD =\
- $(top_builddir)/libgnocam/libgnocam.a\
- $(CAPPLET_LIBS)\
- $(GPHOTO_LIBS)\
- $(GCONF_LIBS)\
- $(EXTRA_GNOME_LIBS)
+gnocam_LDADD = $(GNOCAM_LIBS)
 
 idls = $(top_srcdir)/idl/GnoCam.idl
-idl_flags = `$(GNOME_CONFIG) --cflags idl` -D__GNOCAM_COMPILATION
+idl_flags =\
+ -I$(BONOBO_IDLDIR) -I$(BONOBO_ACT_IDLDIR) -I$(top_srcdir)/idl\
+ -D__GNOCAM_COMPILATION
 
-$(CORBA_GENERATED): $(idls)
-	$(ORBIT_IDL) $(top_srcdir)/idl/GnoCam.idl -I$(top_srcdir)/idl $(idl_flags)
+$(CORBA_SOURCES): $(idls)
+	$(ORBIT_IDL)   $(top_srcdir)/idl/GnoCam.idl $(idl_flags)
 
 GnoCam.h: $(idls)
 
-BUILT_SOURCES=$(CORBA_GENERATED)
-CLEANFILES=$(BUILT_SOURCES)
+serverdir = $(libdir)/bonobo/servers
+server_in_files = GNOME_GnoCam.server.in
+server_DATA = $(server_in_files:.server.in=.server)
 
-oafdir = $(datadir)/oaf
-oaf_in_files = GNOME_GnoCam.oaf.in
-oaf_DATA = $(oaf_in_files:.oaf.in=.oaf)
-@XML_I18N_MERGE_OAF_RULE@
-
-EXTRA_DIST= GNOME_GnoCam.oaf.in GNOME_GnoCam.oaf
+BUILT_SOURCES=$(CORBA_SOURCES)
+CLEANFILES += $(BUILT_SOURCES) $(server_DATA)
 
 dist-hook:
 	cd $(distdir); rm -f $(BUILT_SOURCES)

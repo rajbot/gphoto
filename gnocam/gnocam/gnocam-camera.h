@@ -3,36 +3,38 @@
 #define _GNOCAM_CAMERA_H_
 
 #include <gphoto2.h>
-#include "GnoCam.h"
-#include <bonobo/bonobo-xobject.h>
 
-BEGIN_GNOME_DECLS
+#include <GnoCam.h>
 
-#define GNOCAM_TYPE_CAMERA		(gnocam_camera_get_type ())
-#define GNOCAM_CAMERA(o)             	(GTK_CHECK_CAST ((o), GNOCAM_TYPE_CAMERA, GnoCamCamera))
-#define GNOCAM_CAMERA_CLASS(k)		(GTK_CHECK_CLASS_CAST((k), GNOCAM_TYPE_CAMERA, GnoCamCameraClass))
-#define GNOCAM_IS_CAMERA(o)		(GTK_CHECK_TYPE ((o), GNOCAM_TYPE_CAMERA))
-#define GNOCAM_IS_CAMERA_CLASS(k)	(GTK_CHECK_CLASS_TYPE ((k), GNOCAM_TYPE_CAMERA))
+#include <bonobo/bonobo-object.h>
+
+G_BEGIN_DECLS
+
+#define GNOCAM_TYPE_CAMERA	  (gnocam_camera_get_type ())
+#define GNOCAM_CAMERA(o)          (G_TYPE_CHECK_INSTANCE_CAST((o),GNOCAM_TYPE_CAMERA,GnoCamCamera))
+#define GNOCAM_CAMERA_CLASS(k)	  (G_TYPE_CHECK_CLASS_CAST((k),GNOCAM_TYPE_CAMERA,GnoCamCameraClass))
+#define GNOCAM_IS_CAMERA(o)	  (G_TYPE_CHECK_INSTANCE_TYPE((o),GNOCAM_TYPE_CAMERA))
+#define GNOCAM_IS_CAMERA_CLASS(k) (G_TYPE_CHECK_CLASS_TYPE((k),GNOCAM_TYPE_CAMERA))
 
 typedef struct _GnoCamCamera		GnoCamCamera;
 typedef struct _GnoCamCameraPrivate	GnoCamCameraPrivate;
 typedef struct _GnoCamCameraClass    	GnoCamCameraClass;
 
 struct _GnoCamCamera {
-	BonoboXObject base;
+	BonoboObject parent;
 
 	GnoCamCameraPrivate *priv;
 };
 
 struct _GnoCamCameraClass {
-	BonoboXObjectClass parent_class;
+	BonoboObjectClass parent_class;
 
-	POA_GNOME_Camera__epv epv;
+	POA_GNOME_GnoCam_Camera__epv epv;
 };
 
-GtkType       gnocam_camera_get_type (void);
-GnoCamCamera* gnocam_camera_new	     (Camera *camera, CORBA_Environment *ev);
+GType         gnocam_camera_get_type (void);
+GnoCamCamera *gnocam_camera_new	     (Camera *camera, CORBA_Environment *ev);
 
-END_GNOME_DECLS
+G_END_DECLS
 
 #endif /* _GNOCAM__CAMERA_H_ */

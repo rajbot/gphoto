@@ -1,7 +1,7 @@
 AC_INIT(gnocam/main.c)
-AC_PREREQ(2.12)
+AC_PREREQ(2.50)
 
-AM_INIT_AUTOMAKE(GnoCam, 0.13)
+AM_INIT_AUTOMAKE(GnoCam, 0.14)
 AM_CONFIG_HEADER(config.h)
 
 AC_ISC_POSIX
@@ -9,207 +9,93 @@ AC_PROG_CC
 AC_STDC_HEADERS
 
 AM_MAINTAINER_MODE
-AM_ACLOCAL_INCLUDE(macros)
-AM_PROG_XML_I18N_TOOLS
 
-dnl ******************
-dnl Initialize libtool
-dnl ******************
-AM_DISABLE_STATIC
+CFLAGS="$CFLAGS -Wall -Wchar-subscripts -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wpointer-arith -Werror"
+LDFLAGS="$LDFLAGS -g -Wall"
+AC_SUBST(CFLAGS)
+AC_SUBST(LDFLAGS)
+
+dnl ---------------------------------------------------------------------------
+dnl libtool:
+dnl ---------------------------------------------------------------------------
 AM_PROG_LIBTOOL
 
-dnl The following is a hack to get GnoCam to build on gettext-0.10.35 
-dnl systems - BUILD_INCLUDED_LIBINTL is set only in gettext-0.10.37 which is
-dnl the gettext version provided with gphoto2.
-BUILD_INCLUDED_LIBINTL=no
-AC_SUBST(BUILD_INCLUDED_LIBINTL)
+dnl ---------------------------------------------------------------------------
+dnl Internationalization: We need gettext and intltool
+dnl ---------------------------------------------------------------------------
+ALL_LINGUAS="no"
+AM_GNU_GETTEXT
+dnl AC_PROG_INTLTOOL
 
-GNOME_INIT
-AM_PATH_GTK(1.2.7)
-GNOME_COMPILE_WARNINGS
-GNOME_X_CHECKS
+dnl ---------------------------------------------------------------------------
+dnl gtk+
+dnl ---------------------------------------------------------------------------
+PKG_CHECK_MODULES(GTK, gtk+-2.0)
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
 
-dnl Add the languages which your application supports here.
-ALL_LINGUAS=""
-AM_GNOME_GETTEXT
-gnomelocaledir='${prefix}/${DATADIRNAME}/locale'
-AC_SUBST(gnomelocaledir)
-
-dnl **********
-dnl gnome-libs
-dnl **********
-AC_MSG_CHECKING(for gnome-libs >= 1.0.55)
-if gnome-config --version > /dev/null 2>&1; then
-    vers=`gnome-config --version | awk 'BEGIN { FS = "."; } { printf "%d", ($1 * 1000 + $2) * 1000 + $3;}'`
-    if test "$vers" -ge 55; then
-	AC_MSG_RESULT(found)
-    else
-	AC_MSG_ERROR([
-*** You need at least gnome-libs 1.0.55 for this version of ${PACKAGE}.])
-    fi
-else
-    AC_MSG_ERROR([
-*** Did not find gnome-libs installed.])
-fi
-
-PKG_CHECK_MODULES(GCONF, gconfgtk >= 1.0.3)
+dnl ---------------------------------------------------------------------------
+dnl gconf
+dnl ---------------------------------------------------------------------------
+PKG_CHECK_MODULES(GCONF, gconf-2.0)
 AC_SUBST(GCONF_CFLAGS)
 AC_SUBST(GCONF_LIBS)
 
-dnl ******
-dnl GnoCam
-dnl ******
-try_gnocam=false
-have_gnocam=false
-gnocam_msg=no
-AC_ARG_WITH(gnocam, [ --with-gnocam   Compile GnoCam.],
-	if test x$withval = xyes; then
-		try_gnocam=true
-	fi
-)
-if $try_gnocam; then
-	AC_MSG_CHECKING(for bonobo)
-	if gnome-config --libs bonobo > /dev/null 2>&1; then
-		AC_MSG_RESULT(found)
-		have_gnocam=true
-		gnocam_msg=yes
-	else
-		AC_MSG_RESULT(not found)
-	fi
-fi
-AM_CONDITIONAL(HAVE_GNOCAM, $have_gnocam)
+dnl ---------------------------------------------------------------------------
+dnl bonobo
+dnl ---------------------------------------------------------------------------
+PKG_CHECK_MODULES(BONOBO, libbonobo-2.0)
+AC_SUBST(BONOBO_CFLAGS)
+AC_SUBST(BONOBO_LIBS)
+BONOBO_IDLDIR="`$PKG_CONFIG --variable=idldir libbonobo-2.0`"
+AC_SUBST(BONOBO_IDLDIR)
+BONOBO_ACT_IDLDIR="`$PKG_CONFIG --variable=idldir bonobo-activation-2.0`"
+AC_SUBST(BONOBO_ACT_IDLDIR)
+ORBIT_IDL="`$PKG_CONFIG --variable=orbit_idl ORBit-2.0`"
+AC_SUBST(ORBIT_IDL)
 
-dnl ****************
-dnl GNOME vfs-module
-dnl ****************
-try_vfs_module=true
-have_vfs_module=false
-vfs_module_msg=no
-AC_ARG_WITH(vfs-module, [ --without-vfs-module   Don't compile vfs-module.],
-	if test x$withval = xno; then
-		try_vfs_module=false
-	fi
-)
-if $try_vfs_module; then
-	AC_MSG_CHECKING(for vfs)
-	if gnome-config --libs vfs > /dev/null 2>&1; then
-		AC_MSG_RESULT(found)
-		VFS_LIBS="`gnome-config --libs gnome vfs` `gphoto2-config --libs`"
-		VFS_CFLAGS="`gnome-config --cflags gnome vfs` `gphoto2-config --cflags`"
-		AC_SUBST(VFS_LIBS)
-		AC_SUBST(VFS_CFLAGS)
-		vfs_module_msg=yes
-		have_vfs_module=true
-	else
-		AC_MSG_RESULT(not found)
-	fi
-fi
-AM_CONDITIONAL(HAVE_VFS_MODULE, $have_vfs_module)
+dnl ---------------------------------------------------------------------------
+dnl gnome-vfs
+dnl ---------------------------------------------------------------------------
+PKG_CHECK_MODULES(VFS, gnome-vfs-module-2.0)
+AC_SUBST(VFS_CFLAGS)
+AC_SUBST(VFS_LIBS)
 
-dnl ******************************
-dnl Capplet
-dnl ******************************
-try_capplet=true
-have_capplet=false
-capplet_msg=no
-AC_ARG_WITH(capplet, [ --without-capplet   Don't compile capplet.],
-	if test x$withval = xno; then
-		try_capplet=false
-	fi
-)
-if $try_capplet; then
-	AC_MSG_CHECKING(for capplet libraries)
-	if gnome-config --libs capplet > /dev/null 2>&1; then
-		AC_MSG_RESULT(found)
-		CAPPLET_LIBS="$GCONF_LIBS `gnome-config --libs capplet gal gnomeui gdk_pixbuf bonobo oaf`"
-		CAPPLET_CFLAGS="$GCONF_CFLAGS `gnome-config --cflags capplet gal gnomeui gdk_pixbuf bonobo oaf`"
-		AC_SUBST(CAPPLET_LIBS)
-		AC_SUBST(CAPPLET_CFLAGS)
-		have_capplet=true
-		capplet_msg=yes
-	else
-		AC_MSG_RESULT(not found)
-	fi
-fi
-AM_CONDITIONAL(HAVE_CAPPLET, $have_capplet)
-
-dnl ******************************
-dnl Applet
-dnl ******************************
-try_applet=false
-have_applet=false
-applet_msg=no
-AC_ARG_WITH(applet, [ --with-applet       Compile applet.],
-	if test x$withval = xyes; then
-		try_applet=true
-	fi
-)
-if $try_applet; then
-	AC_MSG_CHECKING(for applet libraries)
-	if gnome-config --libs applets > /dev/null 2>&1; then
-		AC_MSG_RESULT(found)
-		APPLET_LIBS="`gnome-config --libs applets bonobo gdk_pixbuf oaf`"
-		APPLET_CFLAGS="`gnome-config --cflags applets bonobo gdk_pixbuf oaf`"
-		AC_SUBST(APPLET_LIBS)
-		AC_SUBST(APPLET_CFLAGS)
-		applet_msg=yes
-		have_applet=true
-	else
-		AC_MSG_RESULT(not found)
-	fi
-fi
-AM_CONDITIONAL(HAVE_APPLET, $have_applet)
-
-EXTRA_GNOME_CFLAGS="`gnome-config --cflags oaf bonobo bonobox bonobox_print print gal gnome gnomeui oaf bonobo_conf`"
-EXTRA_GNOME_LIBS="`gnome-config --libs oaf bonobo bonobox bonobox_print print gal gnome gnomeui oaf bonobo_conf`"
-AC_SUBST(EXTRA_GNOME_CFLAGS)
-AC_SUBST(EXTRA_GNOME_LIBS)
-
-dnl *********************************************
-dnl Keep the code clean - make all warnings fatal
-dnl *********************************************
-CFLAGS="$CFLAGS -Wall -Wchar-subscripts -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wpointer-arith -Werror"
-AC_SUBST(CFLAGS)
-
-dnl **********
+dnl ---------------------------------------------------------------------------
 dnl libgphoto2
-dnl **********
+dnl ---------------------------------------------------------------------------
 PKG_CHECK_MODULES(GPHOTO, libgphoto2)
 AC_SUBST(GPHOTO_CFLAGS)
 AC_SUBST(GPHOTO_LIBS)
 
-dnl *********
+dnl ---------------------------------------------------------------------------
+dnl For gnocam, we need a couple of libraries.
+dnl ---------------------------------------------------------------------------
+PKG_CHECK_MODULES(GNOCAM, libbonobo-2.0 glib-2.0 libgphoto2)
+AC_SUBST(GNOCAM_CFLAGS)
+AC_SUBST(GNOCAM_LIBS)
+
+dnl ---------------------------------------------------------------------------
 dnl Makefiles
-dnl *********
+dnl ---------------------------------------------------------------------------
 AC_OUTPUT([
 Makefile
 art/Makefile
-applet/Makefile
 intl/Makefile
-macros/Makefile
 po/Makefile.in
 idl/Makefile
-libgnocam/Makefile
 gnocam/Makefile
-capplet/Makefile
-bonobo-moniker/Makefile
 gnome-vfs-module/Makefile
 tests/Makefile
 ])
 
-dnl *********************
-dnl Give some feedback...
-dnl *********************
-
+dnl ---------------------------------------------------------------------------
+dnl Feedback
+dnl ---------------------------------------------------------------------------
 echo "
 
 Configuration
 
 	Source code location: ${srcdir}
 	Compiler:             ${CC}
-
-	Capplet:              $capplet_msg
-	Applet:               $applet_msg
-	VFS module:           $vfs_module_msg
-	GnoCam:               $gnocam_msg
 "

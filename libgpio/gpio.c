@@ -1,4 +1,3 @@
-
 /* -*- Mode: C; indent-tabs-mode: t; c-basic-offset: 8; tab-width: 8 -*- */
 /* gpio.c - Core IO library functions
 
@@ -26,21 +25,22 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include "gpio.h"
 
 gpio_device_info device_list[256];
-int		 device_count;
+static int	 device_count;
 
 /*
    Core IO library functions
    ----------------------------------------------------------------
  */
 
-int gpio_init() {
-
+int gpio_init(void)
+{
 	/* Enumerate all the available devices */
-	device_count=0;
+	device_count = 0;
 
 	gpio_serial_operations.list(device_list, &device_count);
 	gpio_parallel_operations.list(device_list, &device_count);
@@ -54,19 +54,19 @@ int gpio_init() {
 	gpio_ieee1394_operations.list(device_list, &device_count);
 #endif
 
-	return (GPIO_OK);
-
+	return GPIO_OK;
 }
 
-int gpio_get_device_count() {
-
-	return (device_count);
+int gpio_get_device_count(void)
+{
+	return device_count;
 }
-int gpio_get_device_info(int device_number, gpio_device_info *info) {
 
+int gpio_get_device_info(int device_number, gpio_device_info *info)
+{
 	memcpy(info, &device_list[device_number], sizeof(device_list[device_number]));
 
-	return (GPIO_OK);
+	return GPIO_OK;
 }
 
 gpio_device *gpio_new(gpio_device_type type)
@@ -77,6 +77,11 @@ gpio_device *gpio_new(gpio_device_type type)
 	char buf[1024];
 
 	dev = (gpio_device *) malloc(sizeof(gpio_device));
+	if (!dev) {
+		fprintf(stderr, "unable to allocate memory for gpio device\n");
+		return NULL;
+	}
+
 	dev->type = type;
 	dev->device_fd = 0;
 
@@ -124,8 +129,8 @@ gpio_device *gpio_new(gpio_device_type type)
 	return (dev);
 }
 
-gpio_device *gpio_new_by_number (int device_number) {
-
+gpio_device *gpio_new_by_number(int device_number)
+{
 	gpio_device *dev;
 
 	if (device_number >= device_count)
@@ -135,35 +140,35 @@ gpio_device *gpio_new_by_number (int device_number) {
 
 	/* apply the enumerated device settings */
 	switch (dev->type) {
-		case GPIO_DEVICE_SERIAL:
-		        strcpy(dev->settings.serial.port, device_list[device_number].path);
-			break;
+	case GPIO_DEVICE_SERIAL:
+	        strcpy(dev->settings.serial.port, device_list[device_number].path);
+		break;
 
-		case GPIO_DEVICE_PARALLEL:
-		        strcpy(dev->settings.parallel.port, device_list[device_number].path);
-			break;
-		case GPIO_DEVICE_NETWORK:
-			/* uhhh. don't do anything */
-			break;
+	case GPIO_DEVICE_PARALLEL:
+	        strcpy(dev->settings.parallel.port, device_list[device_number].path);
+		break;
+
+	case GPIO_DEVICE_NETWORK:
+		/* uhhh. don't do anything */
+		break;
 #ifdef GPIO_USB
-		case GPIO_DEVICE_USB:
-			/* set endpoints? or what? */
-			break;
+	case GPIO_DEVICE_USB:
+		/* set endpoints? or what? */
+		break;
 #endif
 #ifdef GPIO_IEEE1394
-		case GPIO_DEVICE_IEEE1394:
-			break;
+	case GPIO_DEVICE_IEEE1394:
+		break;
 #endif
-		default:
-			// ERROR!
-			break;
+	default:
+		// ERROR!
+		break;
 	}
 	return (dev);
-
 }
 
-gpio_device *gpio_new_by_path (char *path) {
-
+gpio_device *gpio_new_by_path(char *path)
+{
 	int x=0;
 
 	while (x<device_count) {
@@ -175,7 +180,7 @@ gpio_device *gpio_new_by_path (char *path) {
 	return (NULL);
 }
 
-int gpio_open(gpio_device * dev)
+int gpio_open(gpio_device *dev)
 	/* Open a device for reading/writing */
 {
 	int retval = 0;
@@ -194,7 +199,7 @@ int gpio_open(gpio_device * dev)
 	return GPIO_ERROR;
 }
 
-int gpio_close(gpio_device * dev)
+int gpio_close(gpio_device *dev)
 	/* Close the device to prevent reading/writing */
 {
 	int retval = 0;
@@ -210,22 +215,23 @@ int gpio_close(gpio_device * dev)
 	return retval;
 }
 
-int gpio_free(gpio_device * dev)
+int gpio_free(gpio_device *dev)
 	/* Frees a device struct */
 {
 	int retval = dev->ops->exit(dev);	
+
 	free(dev);
 
 	return GPIO_OK;
 }
 
-int gpio_write(gpio_device * dev, char *bytes, int size)
+int gpio_write(gpio_device *dev, char *bytes, int size)
 	/* Called to write "bytes" to the IO device */
 {
 	return dev->ops->write(dev, bytes, size);
 }
 
-int gpio_read(gpio_device * dev, char *bytes, int size)
+int gpio_read(gpio_device *dev, char *bytes, int size)
 	/* Reads data from the device into the "bytes" buffer.
 	   "bytes" should be large enough to hold all the data.
 	 */
@@ -233,29 +239,31 @@ int gpio_read(gpio_device * dev, char *bytes, int size)
 	return dev->ops->read(dev, bytes, size);
 }
 
-int gpio_get_pin(gpio_device * dev, int pin)
+int gpio_get_pin(gpio_device *dev, int pin)
 {
 	/* Give the status of pin from dev */
 	return dev->ops->get_pin(dev, pin);
 }
-int gpio_set_pin(gpio_device * dev, int pin, int level)
+
+int gpio_set_pin(gpio_device *dev, int pin, int level)
 {
 	/* Set the status of pin from dev to level */
 	return dev->ops->set_pin(dev, pin, level);
 }
-int gpio_set_timeout(gpio_device * dev, int millisec_timeout)
+
+int gpio_set_timeout(gpio_device *dev, int millisec_timeout)
 {
 	dev->timeout = millisec_timeout;
 	return GPIO_OK;
 }
 
-int gpio_get_timeout(gpio_device * dev, int *millisec_timeout)
+int gpio_get_timeout(gpio_device *dev, int *millisec_timeout)
 {
 	*millisec_timeout = dev->timeout;
 	return GPIO_OK;
 }
 
-int gpio_set_settings(gpio_device * dev, gpio_device_settings settings)
+int gpio_set_settings(gpio_device *dev, gpio_device_settings settings)
 {
 	/* need to memcpy() settings to dev->settings */
 	memcpy(&dev->settings_pending, &settings, sizeof(dev->settings_pending));
@@ -264,8 +272,9 @@ int gpio_set_settings(gpio_device * dev, gpio_device_settings settings)
 }
 
 
-int gpio_get_settings(gpio_device * dev, gpio_device_settings * settings)
+int gpio_get_settings(gpio_device *dev, gpio_device_settings * settings)
 {
 	memcpy(settings, &dev->settings, sizeof(gpio_device_settings));
 	return GPIO_OK;
 }
+

@@ -34,7 +34,11 @@
 
 #undef GPIO_USB_DEBUG
 
-int gpio_usb_list(gpio_device_info *list, int *count) {
+int gpio_usb_list(gpio_device_info *list, int *count)
+{
+	usb_init();
+	usb_find_busses();
+	usb_find_devices();
 
 	list[*count].type = GPIO_DEVICE_USB;
 	strcpy(list[*count].name, "Universal Serial Bus");
@@ -42,22 +46,18 @@ int gpio_usb_list(gpio_device_info *list, int *count) {
 	list[*count].argument_needed = 0;
 	*count += 1;
 
-	return (GPIO_OK);
+	return GPIO_OK;
 }
 
 int gpio_usb_init(gpio_device *dev)
 {
-	usb_init();
-        usb_find_busses();
-        usb_find_devices();
 }
 
 int gpio_usb_exit(gpio_device *dev)
 {
-
 }
 
-int gpio_usb_open(gpio_device * dev)
+int gpio_usb_open(gpio_device *dev)
 {
 	int ret;
 
@@ -74,12 +74,14 @@ int gpio_usb_open(gpio_device * dev)
 			dev->settings.usb.config, strerror(errno));
 		return GPIO_ERROR;
 	}
+
 	ret = usb_claim_interface(dev->device_handle, dev->settings.usb.interface);
 	if (ret < 0) {
 		fprintf(stderr, "gpio_usb_open: could not claim intf %d: %s\n",
 			dev->settings.usb.interface, strerror(errno));
 		return GPIO_ERROR;
 	}
+
 	ret = usb_set_altinterface(dev->device_handle, dev->settings.usb.altsetting);
 	if (ret < 0) {
 		fprintf(stderr, "gpio_usb_open: could not set intf %d/%d: %s\n",
@@ -87,12 +89,12 @@ int gpio_usb_open(gpio_device * dev)
 			dev->settings.usb.altsetting, strerror(errno));
 		return GPIO_ERROR;
 	}
+
 	return GPIO_OK;
 }
 
-int gpio_usb_close(gpio_device * dev)
+int gpio_usb_close(gpio_device *dev)
 {
-
 	int ret;
 
 #ifdef GPIO_USB_DEBUG
@@ -107,17 +109,16 @@ int gpio_usb_close(gpio_device * dev)
 	return GPIO_OK;
 }
 
-int gpio_usb_reset(gpio_device * dev)
+int gpio_usb_reset(gpio_device *dev)
 {
 	gpio_usb_close(dev);
 	return gpio_usb_open(dev);
-
 }
 
-int gpio_usb_clear_halt (gpio_device * dev)
+int gpio_usb_clear_halt(gpio_device * dev)
 {
-	if (usb_clear_halt (dev->device_handle, dev->settings.usb.inep)
-		|| usb_clear_halt (dev->device_handle, dev->settings.usb.outep))
+	if (usb_clear_halt(dev->device_handle, dev->settings.usb.inep)
+		|| usb_clear_halt(dev->device_handle, dev->settings.usb.outep))
 		return GPIO_ERROR;
 	else
 		return GPIO_OK;
@@ -126,38 +127,47 @@ int gpio_usb_clear_halt (gpio_device * dev)
 int gpio_usb_write(gpio_device * dev, char *bytes, int size)
 {
 	int i;
+
 #ifdef GPIO_USB_DEBUG
-	printf ("gpio_usb_write(): ");
-	for (i=0;i<size;i++)
-	  printf ("%02x ",(unsigned char)bytes[i]);
+	printf("gpio_usb_write(): ");
+	for (i = 0; i < size; i++)
+	  printf("%02x ",(unsigned char)bytes[i]);
 	printf("\n");
 #endif
 	return usb_bulk_write(dev->device_handle, dev->settings.usb.outep,
 			      bytes, size, dev->timeout);
 }
+
 int gpio_usb_read(gpio_device * dev, char *bytes, int size)
 {
-	int n;
-	int i;
-	n=usb_bulk_read(dev->device_handle, dev->settings.usb.inep,
+	int i, ret;
+
+	ret = usb_bulk_read(dev->device_handle, dev->settings.usb.inep,
 			     bytes, size, dev->timeout);
+	if (ret < 0)
+		return GPIO_ERROR;
+
 #ifdef GPIO_USB_DEBUG
-	printf ("gpio_usb_read(timeout=%d): ",dev->timeout);
-	for (i=0;i<n;i++)
-	  printf ("%02x ",(unsigned char)(bytes[i]));
+	printf("gpio_usb_read(timeout=%d): ", dev->timeout);
+	for (i = 0; i < ret; i++)
+	  printf("%02x ",(unsigned char)(bytes[i]));
 	printf("\n");
 #endif
-	return n;
+	return ret;
 }
 
 int gpio_usb_msg_write(gpio_device * dev, int value, char *bytes, int size)
 {
-	return usb_control_msg(dev->device_handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE, size > 1 ? 0x04 : 0x0c, value, 0, bytes, size, dev->timeout);
+	return usb_control_msg(dev->device_handle,
+		USB_TYPE_VENDOR | USB_RECIP_DEVICE,
+		size > 1 ? 0x04 : 0x0c, value, 0, bytes, size, dev->timeout);
 }
 
 int gpio_usb_msg_read(gpio_device * dev, int value, char *bytes, int size)
 {
-	return usb_control_msg(dev->device_handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | 0x80, size > 1 ? 0x04 : 0x0c, value, 0, bytes, size, dev->timeout);
+	return usb_control_msg(dev->device_handle,
+		USB_TYPE_VENDOR | USB_RECIP_DEVICE | 0x80,
+		size > 1 ? 0x04 : 0x0c, value, 0, bytes, size, dev->timeout);
 }
 
 /*
@@ -181,6 +191,7 @@ int gpio_usb_set_pin(gpio_device * dev, int pin, int level)
 int gpio_usb_update(gpio_device * dev)
 {
 	memcpy(&dev->settings, &dev->settings_pending, sizeof(dev->settings));
+
 	return GPIO_OK;
 }
 
@@ -205,7 +216,6 @@ int gpio_usb_find_device(int idvendor, int idproduct, struct usb_device **device
 
 	for (bus = usb_busses; bus; bus = bus->next) {
 		for (dev = bus->devices; dev; dev = dev->next) {
-
 			if ((dev->descriptor.idVendor == idvendor) &&
 			    (dev->descriptor.idProduct == idproduct)) {
 				*device = dev;

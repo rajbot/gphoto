@@ -68,7 +68,7 @@ int 		gpio_serial_close(gpio_device *dev);
 int 		gpio_serial_read(gpio_device *dev, char *bytes, int size);
 int 		gpio_serial_write(gpio_device *dev, char *bytes, int size);
 
-int			gpio_serial_get_pin(gpio_device *dev, int pin);
+int		gpio_serial_get_pin(gpio_device *dev, int pin);
 int     	gpio_serial_set_pin(gpio_device *dev, int pin, int level); 
 
 int 		gpio_serial_update (gpio_device *dev);

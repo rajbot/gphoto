@@ -35,6 +35,9 @@ gboolean on_clist_files_button_press_event (GtkWidget *widget, GdkEventButton *e
 
 void on_tree_cameras_selection_changed (GtkWidget *tree);
 gboolean on_tree_cameras_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data);
+void on_tree_cameras_popup_capture_image_activate (GtkMenuItem *menu_item, gpointer user_data);
+void on_tree_cameras_popup_capture_video_activate (GtkMenuItem *menu_item, gpointer user_data);
+void on_duration_reply (gchar *string, gpointer user_data);
 
 /*****************************************/
 /* Lots of lines only for save / delete. */
@@ -281,7 +284,7 @@ on_tree_cameras_selection_changed (GtkWidget *tree)
 	CameraList camera_list;
 	CameraListEntry *camera_list_entry;
 	CameraFile *camera_file;
-	guint count, i, j, row;
+	gint count, i, j, row;
 	GtkCList *clist;
 	GdkPixbuf *pixbuf;
 	GdkPixbufLoader *loader;
@@ -290,22 +293,40 @@ on_tree_cameras_selection_changed (GtkWidget *tree)
 	GladeXML *xml;
 	GnomeApp *app;
 	gchar *text_dummy[2] = {NULL, NULL};
-	gchar *path;
+	gchar *path, *file_name;
+	gboolean found;
 	
+	g_assert (tree != NULL);
 	xml = gtk_object_get_data (GTK_OBJECT (tree), "xml");
 	g_assert (xml != NULL);
 	app = GNOME_APP (glade_xml_get_widget (xml, "app"));
 	g_assert (app != NULL);
 	clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"));
 	g_assert (clist != NULL);
-
-	/* Clear the file list. */
-	gtk_clist_clear (clist);
+	selection = g_list_first (GTK_TREE_SELECTION (tree));
 	gtk_clist_set_row_height (clist, 70); //FIXME: Move that to an appropriate position.
 
-	/* Check which folders are selected. */	
-	selection = g_list_first (GTK_TREE_SELECTION (tree));
-	row = 0;
+	/* Look for each file in the file list if we still are to display it. */
+	/* Ok, we only check if the folder is still selected, not if the file */
+	/* is still in there... FIXME?                                        */
+	for (row = clist->rows - 1; row >= 0; row--) {
+		found = FALSE;
+		for (i = 0; i < g_list_length (selection); i++) {
+			item = GTK_WIDGET (g_list_nth_data (selection, i));
+	
+			/* Is camera the same? */
+			if (gtk_object_get_data (GTK_OBJECT (item), "camera") != gtk_clist_get_row_data (clist, row)) continue;
+
+			/* Is the path the same? */
+			gtk_clist_get_text (clist, row, 1, &path);
+			if (strcmp (gtk_object_get_data (GTK_OBJECT (item), "path"), path) != 0) continue;
+
+			found = TRUE;
+		}
+		if (!found) gtk_clist_remove (clist, row);	
+	}
+
+	/* Look for each selected folder if we have displayed all files. */
 	for (i = 0; i < g_list_length (selection); i++) {
 		item = GTK_WIDGET (g_list_nth_data (selection, i));
 		camera = gtk_object_get_data (GTK_OBJECT (item), "camera");
@@ -317,43 +338,65 @@ on_tree_cameras_selection_changed (GtkWidget *tree)
 		if (gp_camera_file_list (camera, &camera_list, path) == GP_OK) {
 			count = gp_list_count (&camera_list);
 			for (j = 0; j < count; j++) {
-
-				/* Add entry to list. */
-				gtk_clist_append (clist, text_dummy);
-				gtk_clist_set_text (clist, row, 1, path);
-				gtk_clist_set_row_data (clist, row, camera);
-
-				/* Get the file. */
 				camera_list_entry = gp_list_entry (&camera_list, j);
-				camera_file = gp_file_new ();
-				if (gp_camera_file_get_preview (camera, camera_file, path, camera_list_entry->name) == GP_OK) {
 
-					/* Process the image. */
-					loader = gdk_pixbuf_loader_new ();
-					g_assert (loader != NULL);
-					if (gdk_pixbuf_loader_write (loader, camera_file->data, camera_file->size)) {
-						gdk_pixbuf_loader_close (loader);
-						pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
-						gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 127);
-						gdk_pixbuf_unref (pixbuf);
-	
-						/* Add pixbuf to the entry. */
-						gtk_clist_set_pixmap (clist, row, 0, pixmap, bitmap);
-					} else {
-						gnome_app_error (app, _("Could not load image!"));
-						gtk_clist_set_text (clist, row, 0, "?");
-					}
-					gtk_clist_set_text (clist, row, 2, camera_list_entry->name);
+				/* Do we have this file already in the list? */
+				found = FALSE;
+				for (row = 0; row < clist->rows; row++) {
 
-				} else {
-					gnome_app_error (app, _("Could not get preview from the camera!"));
-					gtk_clist_set_text (clist, row, 0, "?");
-					gtk_clist_set_text (clist, row, 2, "?");
+					/* Is the path the same? */
+					gtk_clist_get_text (clist, row, 1, &path);
+					if (strcmp (gtk_object_get_data (GTK_OBJECT (item), "path"), path) != 0) continue;
+
+					/* Is the camera the same? */
+					if (gtk_object_get_data (GTK_OBJECT (item), "camera") != gtk_clist_get_row_data (clist, row)) continue;
+
+					/* Is the file name the same? */
+					gtk_clist_get_text (clist, row, 2, &file_name);
+					if (strcmp (file_name, camera_list_entry->name) != 0) continue;
+
+					found = TRUE;
 				}
+				if (!found) {
+					path = gtk_object_get_data (GTK_OBJECT (item), "path");
+					g_assert (path != NULL);
 
-				/* We got the file. Clean up. */
-				gp_frontend_progress (camera, NULL, 0.0);
-				row++;
+					/* Add entry to list. */
+					gtk_clist_append (clist, text_dummy);
+					gtk_clist_set_text (clist, clist->rows - 1, 1, path);
+					gtk_clist_set_row_data (clist, clist->rows - 1, camera);
+	
+					/* Get the file. */
+					camera_file = gp_file_new ();
+					if (gp_camera_file_get_preview (camera, camera_file, path, camera_list_entry->name) == GP_OK) {
+	
+						/* Process the image. */
+						loader = gdk_pixbuf_loader_new ();
+						g_assert (loader != NULL);
+						if (gdk_pixbuf_loader_write (loader, camera_file->data, camera_file->size)) {
+							gdk_pixbuf_loader_close (loader);
+							pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
+							gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 127);
+							gdk_pixbuf_unref (pixbuf);
+		
+							/* Add pixbuf to the entry. */
+							gtk_clist_set_pixmap (clist, clist->rows - 1, 0, pixmap, bitmap);
+						} else {
+							gnome_app_error (app, _("Could not load image!"));
+							gtk_clist_set_text (clist, clist->rows - 1, 0, "?");
+						}
+						gtk_clist_set_text (clist, clist->rows - 1, 2, camera_list_entry->name);
+	
+					} else {
+						gnome_app_error (app, _("Could not get preview from the camera!"));
+						gtk_clist_set_text (clist, clist->rows - 1, 0, "?");
+						gtk_clist_set_text (clist, clist->rows - 1, 2, "?");
+					}
+		
+					/* We got the file. Clean up. */
+					gp_frontend_progress (camera, NULL, 0.0);
+					gp_file_free (camera_file);
+				}
 			}
 		} else {
 			gnome_app_error (app, _("Could not get the file list from the camera!"));

@@ -30,8 +30,6 @@ int main (int argc, char *argv[])
 	gchar*			prefix = NULL;
 	gchar*			home = NULL;
 	gchar*			message = NULL;
-	gint			i;
-	GtkTree*		tree;
 
 	/* Init threads. */
 	if (!(g_thread_supported ())) g_thread_init (NULL);
@@ -110,8 +108,6 @@ int main (int argc, char *argv[])
 	gdk_threads_leave ();
 
 	/* Clean up. */
-	g_assert ((tree = GTK_TREE (glade_xml_get_widget (xml, "tree_cameras"))) != NULL);
-	for (i = g_list_length (tree->children) - 1; i >= 0; i--) camera_tree_item_remove (g_list_nth_data (tree->children, i));
 	gp_exit ();
 	gconf_client_notify_remove (client, notify_id_cameras);
 	gconf_client_notify_remove (client, notify_id_magnification);

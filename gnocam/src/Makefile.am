@@ -25,6 +25,8 @@ bin_PROGRAMS = gnocam
 
 gnocam_SOURCES =\
  callbacks.h callbacks.c\
+ callbacks-gallery.c\
+ callbacks-preview.c\
  cameras.h cameras.c\
  file-operations.h file-operations.c\
  frontend.h frontend.c\

@@ -17,3 +17,5 @@ void update_pixmap (GtkPixmap* pixmap, CameraFile* file);
 
 void camera_tree_update_pixmaps (GtkTree* tree);
 
+void app_clean_up (void);
+

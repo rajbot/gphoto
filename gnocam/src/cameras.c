@@ -489,3 +489,25 @@ camera_tree_update_pixmaps (GtkTree* tree)
         }
 } 
 
+void
+app_clean_up (void)
+{
+	GtkTree*		tree;
+	Camera*			camera;
+	frontend_data_t*	frontend_data;
+	gint			i;
+
+        g_assert ((tree = GTK_TREE (glade_xml_get_widget (xml, "tree_cameras"))) != NULL);
+
+        for (i = g_list_length (tree->children) - 1; i >= 0; i--) {
+
+		/* Any preview window open? */
+                g_assert ((camera = gtk_object_get_data (GTK_OBJECT (g_list_nth_data (tree->children, i)), "camera")) != NULL);
+                g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
+                if (frontend_data->xml_preview) gtk_widget_destroy (glade_xml_get_widget (frontend_data->xml_preview, "app_preview"));
+
+		/* Remove the tree item. */
+		camera_tree_item_remove (g_list_nth_data (tree->children, i));
+	}
+}
+

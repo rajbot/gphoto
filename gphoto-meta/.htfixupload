@@ -41,6 +41,7 @@ chmod 0705 .
 cd .. || exit 2
 
 rm -f SUPPORTED-CAMERAS latest-bz2 latest-gz
+ln -s "$(basename "$base")"/* .
 ln -s "$(basename "$base")"/bz2 latest-bz2
 ln -s "$(basename "$base")"/gz latest-gz
 

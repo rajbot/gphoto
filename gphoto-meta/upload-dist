@@ -8,7 +8,7 @@ cd "$base" || exit 1
 echo "Running upload..."
 rsync -avz --delete-excluded dist-files/*.tar.bz2 "${sshost}:n-dimensional.de/snapshots/${date}/bz2/"
 rsync -avz --delete-excluded dist-files/SUPPORTED-CAMERAS "${sshost}:n-dimensional.de/snapshots/${date}/"
-rsync -avz --delete-excluded .htfixupload "${sshost}:n-dimensional.de/snapshots/${date}/"
+rsync -avz --delete-excluded .htfixupload gphoto-meta-[0-9]*.tar.* "${sshost}:n-dimensional.de/snapshots/${date}/"
 rsync -avz --delete-excluded .htaccess "${sshost}:n-dimensional.de/snapshots/"
 echo "Fixing stuff..."
 ssh "${sshost}" "n-dimensional.de/snapshots/${date}/.htfixupload"

@@ -99,10 +99,6 @@ void mail_image_call() {
 	error_dialog("Mail image needs to be implemented!");
 }
 
-void web_browse_call() {
-	error_dialog("Web browsing needs to be implemented!");
-}
-
 void takepicture_call() {
 
 	char status[256];

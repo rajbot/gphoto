@@ -360,8 +360,8 @@ function builddist {
 			gunzip -c "$f" | bzip2 -c > "$b"
 		    fi
 		done
-		# move .tar.bz2 source tarball to distribution files, 
-		cmd mv "${module}-"[0-9]*.tar.bz2 "${distdir}/"
+		# move .tar.bz2 source tarball to distribution files, if possible 
+		mv "${module}-"[0-9]*.tar.bz2 "${distdir}/"
 	    fi
 
 	    if [ "$distopts" = "install" ]

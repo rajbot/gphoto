@@ -1,6 +1,10 @@
 #ifndef _GPIO_H_
 #define _GPIO_H_
 
+#include "gpio-serial.h"
+
+#include "gpio-parallel.h"
+
 #if @GPIO_USB@
 #define GPIO_USB
 #endif
@@ -8,9 +12,6 @@
 #if @GPIO_IEEE1394@
 #define GPIO_IEEE1394
 #endif
-
-#include "gpio-serial.h"
-#include "gpio-parallel.h"
 
 #ifdef GPIO_USB
 #include <usb.h>

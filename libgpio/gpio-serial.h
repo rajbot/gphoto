@@ -1,6 +1,8 @@
 #ifndef _GPIO_SERIAL_H_
 #define _GPIO_SERIAL_H_
 
+#define GPIO_SERIAL
+
 /* Serial port prefix for enumeration */
 /* %i for numbers, %c for letters */
 
@@ -49,7 +51,6 @@ typedef struct {
 extern struct gpio_operations gpio_serial_operations;   
 
 #endif /* _GPIO_SERIAL_H_ */
-
 
 
 

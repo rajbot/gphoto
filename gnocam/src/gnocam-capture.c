@@ -366,7 +366,7 @@ gnocam_capture_destroy (GtkObject* object)
 	gtk_object_unref (GTK_OBJECT (capture->priv->client));
         g_free (capture->priv);
 
-//	GTK_OBJECT_CLASS (parent_class)->destroy (object);
+	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void

@@ -1,0 +1,11 @@
+<Root>
+  <commands>
+    <cmd name="FileExit" _label="_Quit" _tip="Quit the program"
+         pixtype="stock" pixname="gtk-quit" accel="*Control*q"/>
+  </commands>
+  <menu>
+    <submenu name="File" _label="_File">
+      <menuitem name="FileExit" verb=""/>
+    </submenu>
+  </menu>
+</Root>

@@ -230,8 +230,8 @@ gnocam_prefs_new (gboolean camera_automatic, gboolean connect_automatic,
 {
 	GnoCamPrefs *p;
 	Bonobo_Unknown o;
-	GNOME_GnoCam_Factory_PortList *port_list;
-	GNOME_GnoCam_Factory_ModelList *model_list;
+	GNOME_GnoCam_PortList *port_list;
+	GNOME_GnoCam_ModelList *model_list;
 	GList *l;
 	guint i;
 
@@ -242,13 +242,13 @@ gnocam_prefs_new (gboolean camera_automatic, gboolean connect_automatic,
 	if (BONOBO_EX (ev) || (o == CORBA_OBJECT_NIL))
 		return NULL;
 
-	port_list = GNOME_GnoCam_Factory_getPortList (o, ev);
+	port_list = GNOME_GnoCam_getPortList (o, ev);
 	if (BONOBO_EX (ev)) {
 		bonobo_object_release_unref (o, NULL);
 		return NULL;
 	}
 
-	model_list = GNOME_GnoCam_Factory_getModelList (o, ev);
+	model_list = GNOME_GnoCam_getModelList (o, ev);
 	if (BONOBO_EX (ev)) {
 		CORBA_free (port_list);
 		bonobo_object_release_unref (o, NULL);

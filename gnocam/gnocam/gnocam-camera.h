@@ -31,7 +31,7 @@ struct _GnoCamCamera {
 struct _GnoCamCameraClass {
 	BonoboObjectClass parent_class;
 
-	POA_GNOME_GnoCam_Camera__epv epv;
+	POA_GNOME_Camera__epv epv;
 };
 
 GType         gnocam_camera_get_type (void);

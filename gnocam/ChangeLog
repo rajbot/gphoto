@@ -1,3 +1,7 @@
+2002-11-20  Lutz Müller <lutz@users.sourceforge.net>
+
+	* applet/*: You can now capture images.
+
 2002-11-19  Lutz Müller <lutz@users.sourceforge.net>
 
 	* tests/gnocam-test.c: Get that working again.

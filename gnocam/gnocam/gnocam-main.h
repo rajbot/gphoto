@@ -47,7 +47,7 @@ struct _GnoCamMain {
 struct _GnoCamMainClass {
 	BonoboObjectClass parent_class;
 
-	POA_GNOME_GnoCam_Factory__epv epv;
+	POA_GNOME_GnoCam__epv epv;
 };
 
 GType       gnocam_main_get_type (void);

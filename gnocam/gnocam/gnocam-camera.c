@@ -44,17 +44,18 @@ struct _GnoCamCameraPrivate
 		switch (r) {\
 		case GP_ERROR_NOT_SUPPORTED:\
 			CORBA_exception_set (ev, CORBA_USER_EXCEPTION,\
-				ex_GNOME_GnoCam_Camera_NotSupported, NULL);\
+				ex_GNOME_Camera_NotSupported, NULL);\
 			break;\
 		case GP_ERROR_IO:\
 		default:\
 			CORBA_exception_set (ev, CORBA_USER_EXCEPTION,\
-				ex_GNOME_GnoCam_Camera_IOError, NULL);\
+				ex_GNOME_Camera_IOError, NULL);\
 			break;\
 		}\
 	}\
 }G_STMT_END
 
+#if 0
 static CORBA_char *
 impl_GNOME_Camera_getInfo (PortableServer_Servant servant, 
 		           CORBA_Environment *ev)
@@ -69,6 +70,7 @@ impl_GNOME_Camera_getInfo (PortableServer_Servant servant,
 
 	return (g_strdup (text.text));
 }
+#endif
 
 #if 0
 static Bonobo_Stream
@@ -135,7 +137,7 @@ static void
 gnocam_camera_class_init (GnoCamCameraClass *klass)
 {
 	GObjectClass *object_class;
-	POA_GNOME_GnoCam_Camera__epv *epv;
+	POA_GNOME_Camera__epv *epv;
 
 	parent_class = g_type_class_peek_parent (klass);
 
@@ -143,7 +145,6 @@ gnocam_camera_class_init (GnoCamCameraClass *klass)
 	object_class->finalize = gnocam_camera_finalize;
 
 	epv = &klass->epv;
-	epv->getInfo           = impl_GNOME_Camera_getInfo;
 	epv->captureImage      = impl_GNOME_Camera_captureImage;
 }
 
@@ -153,7 +154,7 @@ gnocam_camera_init (GnoCamCamera *gnocam_camera)
 	gnocam_camera->priv = g_new0 (GnoCamCameraPrivate, 1);
 }
 
-BONOBO_TYPE_FUNC_FULL (GnoCamCamera, GNOME_GnoCam_Camera, BONOBO_TYPE_OBJECT,
+BONOBO_TYPE_FUNC_FULL (GnoCamCamera, GNOME_Camera, BONOBO_TYPE_OBJECT,
 		       gnocam_camera);
 
 GnoCamCamera *

@@ -42,7 +42,7 @@ $(server_in_files): $(server_in_files:.server.in=.server.in.in)
 	sed -e "s|\@LIBEXECDIR\@|$(libexecdir)|; s|\@PREFIX\@|$(prefix)|;" $< > $@
 
 uidir   = $(datadir)/$(PACKAGE)/ui
-ui_DATA = GNOME_GnoCamApplet.xml
+ui_DATA = GNOME_GnoCamApplet.xml gnocam-viewer-ui.xml
 
 schemadir   = @GCONF_SCHEMA_FILE_DIR@
 schema_DATA = gnocam-applet.schemas

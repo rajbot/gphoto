@@ -32,21 +32,21 @@ G_BEGIN_DECLS
                 switch (r) {						      \
                 case GP_ERROR_IO:                                             \
                         CORBA_exception_set (ev, CORBA_USER_EXCEPTION,        \
-					 ex_GNOME_GnoCam_IOError, NULL);      \
+					 ex_Bonobo_Storage_IOError, NULL);      \
                         break;                                                \
                 case GP_ERROR_DIRECTORY_NOT_FOUND:                            \
                 case GP_ERROR_FILE_NOT_FOUND:                                 \
                 case GP_ERROR_MODEL_NOT_FOUND:                                \
                         CORBA_exception_set (ev, CORBA_USER_EXCEPTION,        \
-					 ex_GNOME_GnoCam_NotFound, NULL);     \
+					 ex_Bonobo_Storage_IOError, NULL);     \
                         break;                                                \
                 case GP_ERROR_NOT_SUPPORTED:                                  \
                         CORBA_exception_set (ev, CORBA_USER_EXCEPTION,        \
-				         ex_GNOME_GnoCam_NotSupported, NULL); \
+				         ex_Bonobo_Storage_IOError, NULL); \
                         break;                                                \
                 default:                                                      \
                         CORBA_exception_set (ev, CORBA_USER_EXCEPTION,        \
-					ex_GNOME_GnoCam_IOError, NULL);	      \
+					ex_Bonobo_Storage_IOError, NULL);	      \
                         break;                                                \
                 }                                                             \
         }                               }G_STMT_END

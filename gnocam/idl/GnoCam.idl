@@ -24,45 +24,35 @@
 
 module GNOME {
 
-	module GnoCam {
+	interface Camera : Bonobo::Unknown {
+		/* The Camera can be accessed through BonoboStorage */
 
 		exception NotSupported {};
 		exception IOError {};
+
+		/* Sync interface */
+		string captureImage ()
+			raises (NotSupported, IOError);
+	};
+
+	interface GnoCam : Bonobo::Unknown {
+
+		typedef sequence<string> ModelList;
+		typedef sequence<string> PortList;
+
 		exception NotFound {};
-
-		interface Camera : Bonobo::Unknown {
-			/* The Camera can be accessed through BonoboStorage */
-
-			exception NotSupported {};
-			exception IOError {};
-
-			Bonobo::Stream capturePreview ();
-
-			string getInfo ()
-				raises (NotSupported, IOError);
-
-			string captureImage ()
-				raises (NotSupported, IOError);
-		};
-
-		interface Factory : Bonobo::Unknown {
-
-			typedef sequence<string> ModelList;
-			typedef sequence<string> PortList;
-
-			exception NotFound {};
 	
-			ModelList getModelList ();
-			PortList  getPortList  ();
+		ModelList getModelList ();
+		PortList  getPortList  ();
 
-			Camera getCamera ()
-				raises (NotFound);
-			Camera getCameraByModel (in string model)
-				raises (NotFound);
-			Camera getCameraByModelAndPort (in string model,
-						        in string port)
-				raises (NotFound);
-		};
+		/* Sync interface */
+		Camera getCamera ()
+			raises (NotFound);
+		Camera getCameraByModel (in string model)
+			raises (NotFound);
+		Camera getCameraByModelAndPort (in string model,
+					        in string port)
+			raises (NotFound);
 	};
 };
 

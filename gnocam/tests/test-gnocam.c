@@ -5,6 +5,7 @@
 #include <bonobo/bonobo-exception.h>
 #include <bonobo/bonobo-object.h>
 #include <bonobo/bonobo-main.h>
+#include <bonobo/bonobo-listener.h>
 
 #include "GnoCam.h"
 
@@ -15,9 +16,10 @@ main (int argc, char *argv[])
 {
 	CORBA_Object gnocam;
 	CORBA_Environment ev;
-	GNOME_GnoCam_Camera camera;
-	GNOME_GnoCam_Factory_ModelList *model_list;
+	GNOME_Camera camera;
+	GNOME_GnoCam_ModelList *model_list;
 	int i;
+	BonoboListener *l;
 
 	bonobo_init (&argc, argv);
 
@@ -29,7 +31,7 @@ main (int argc, char *argv[])
 	CHECK (&ev);
 
 	g_message ("Getting list of models...");
-	model_list = GNOME_GnoCam_Factory_getModelList (gnocam, &ev);
+	model_list = GNOME_GnoCam_getModelList (gnocam, &ev);
 	CHECK (&ev);
 
 	g_message ("... done. Got the following model(s):");
@@ -38,12 +40,12 @@ main (int argc, char *argv[])
 	CORBA_free (model_list);
 
 	g_message ("Getting camera 'Directory Browse'...");
-	camera = GNOME_GnoCam_Factory_getCameraByModel (gnocam,
+	camera = GNOME_GnoCam_getCameraByModel (gnocam,
 					"Directory Browse", &ev);
-	bonobo_object_release_unref (gnocam, NULL);
 	CHECK (&ev);
-
 	bonobo_object_release_unref (camera, NULL);
+
+	bonobo_object_release_unref (gnocam, NULL);
 
 	CORBA_exception_free (&ev);
 

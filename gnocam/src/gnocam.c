@@ -62,7 +62,7 @@ int main (int argc, char *argv[])
 	gconf_client_add_dir (client, "/apps/" PACKAGE, GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
 
 	/* Init GPhoto2 */
-	if ((result = gp_init (GP_DEBUG_NONE)) != GP_OK) g_error (_("Could not initialize gphoto! (%s)"), gp_result_as_string (result));
+	if ((result = gp_init (GP_DEBUG_HIGH)) != GP_OK) g_error (_("Could not initialize gphoto! (%s)"), gp_result_as_string (result));
 
 	/* Create app */
 	widget = gnocam_main_new (client);

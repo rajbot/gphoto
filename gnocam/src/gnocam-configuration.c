@@ -176,6 +176,7 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		adjustment = gtk_adjustment_new (value_float, min, max, increment, 0, 0);
 		gtk_signal_connect (adjustment, "value_changed", GTK_SIGNAL_FUNC (on_adjustment_value_changed), widget);
 		gtk_widget = gtk_hscale_new (GTK_ADJUSTMENT (adjustment));
+		gtk_scale_set_digits (GTK_SCALE (gtk_widget), 0);
 		gtk_range_set_update_policy (GTK_RANGE (gtk_widget), GTK_UPDATE_DISCONTINUOUS);
 		break;
 	
@@ -185,7 +186,7 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		if ((result = gp_widget_value_get (widget, &value_char)) != GP_OK)
 			g_warning (_("Could not get value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
 
-		if (gp_widget_choice_count (widget) < 4) gtk_widget = gtk_hbox_new (FALSE, 5);
+		if (gp_widget_choice_count (widget) < 6) gtk_widget = gtk_hbox_new (FALSE, 5);
 		else gtk_widget = gtk_vbox_new (FALSE, 5);
 		for (i = 0; i < gp_widget_choice_count (widget); i++) {
 			button = gtk_radio_button_new_with_label (group, gp_widget_choice (widget, i));

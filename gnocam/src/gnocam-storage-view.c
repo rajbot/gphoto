@@ -218,7 +218,7 @@ on_folder_updated (GnoCamCamera* camera, const gchar* path, gpointer user_data)
 	storage_view = GNOCAM_STORAGE_VIEW (user_data);
 
 	node = g_hash_table_lookup (storage_view->priv->hash_table, path);
-	g_return_if_fail (node);
+	if (!node) return;
 
 	expanded = e_tree_model_node_is_expanded (storage_view->priv->model, node);
 	e_tree_model_node_set_expanded (storage_view->priv->model, node, FALSE);

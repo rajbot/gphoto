@@ -534,13 +534,6 @@ fi
 sed -e "s/\\\${compression}/${compression}/g" < build-tool-list > build-tool-list.boot
 buildtoollist="build-tool-list.boot"
 
-if gmake --version< /dev/null > /dev/null 2>&1
-then
-	MAKE=gmake
-else
-	MAKE=make
-fi
-
 # remove autogen-generated files - mkinstalldirs irritates configuring
 # our packages
 rm -f mkinstalldirs missing ltmain.sh install-sh depcomp configure Makefile

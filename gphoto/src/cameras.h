@@ -1,6 +1,7 @@
 extern struct _Camera konica_qm100;
 extern struct _Camera canon;
 extern struct _Camera casio_qv;
+extern struct _Camera coolpix600;
 extern struct _Camera philips;
 extern struct _Camera fuji;
 extern struct _Camera kodak_dc2x;
@@ -55,7 +56,7 @@ struct Model cameras[] = {
 	{"Minolta Dimage V", &dimage_v},
 	{"Nikon CoolPix 100", &olympus},
 	{"Nikon CoolPix 300", &olympus},
-	{"Nikon CoolPix 600", &olympus},
+	{"Nikon CoolPix 600", &coolpix600},
 	{"Nikon CoolPix 900", &olympus},
 	{"Nikon CoolPix 900S", &olympus},
 	{"Nikon CoolPix 950", &olympus},

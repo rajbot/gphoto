@@ -9,6 +9,7 @@ CFLAGS = -I$(srcdir)/icons @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@
 gphoto_LDADD = ../konica/libgphoto_konica_qm100.la \
 	../canon/libgphoto_canon.la \
 	../casio/libgphoto_casio_qv.la \
+	../nikon/libgphoto_coolpix600.la \
 	../philips/libgphoto_philips.la \
 	../fuji/libgphoto_fuji.la \
 	../photopc/libgphoto_photopc.la \

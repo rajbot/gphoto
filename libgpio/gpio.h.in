@@ -5,6 +5,8 @@
 
 #include "gpio-parallel.h"
 
+#include "gpio-socket.h"
+
 #if @GPIO_USB@
 #define GPIO_USB
 #endif
@@ -45,6 +47,7 @@
 typedef enum {
 	GPIO_DEVICE_SERIAL,
 	GPIO_DEVICE_PARALLEL,	/* <- Not supported yet */
+	GPIO_DEVICE_SOCKET,
 #ifdef GPIO_USB
 	GPIO_DEVICE_USB,
 #endif
@@ -67,6 +70,7 @@ typedef struct {
 typedef union {
 	gpio_serial_settings	serial;
 	gpio_parallel_settings	parallel;
+	gpio_socket_settings	socket;
 #ifdef GPIO_USB
 	gpio_usb_settings 	usb;
 #endif

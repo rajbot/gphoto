@@ -36,7 +36,7 @@ extern struct ImageInfo Images;
 extern struct _Camera *Camera;
 
 extern char	  camera_model[];
-extern char	  serial_port[20];
+extern char	  serial_port[];
 extern int	  post_process;
 extern char	  post_process_script[];
 extern GtkWidget *post_process_pixmap;
@@ -554,11 +554,11 @@ void port_dialog() {
 		strcpy(serial_port, tempstring);
 	}
 	if (GTK_WIDGET_STATE(port2) == GTK_STATE_ACTIVE) {
-		sprintf(tempstring, "%s1", serial_port_prefix);
+		sprintf(tempstring, "%s2", serial_port_prefix);
 		strcpy(serial_port, tempstring);
 	}
 	if (GTK_WIDGET_STATE(port3) == GTK_STATE_ACTIVE) {
-		sprintf(tempstring, "%s1", serial_port_prefix);
+		sprintf(tempstring, "%s3", serial_port_prefix);
 		strcpy(serial_port, tempstring);
 	}
 	if (GTK_WIDGET_STATE(other) == GTK_STATE_ACTIVE) {
@@ -608,9 +608,6 @@ void save_config() {
 	fprintf(conf, "%s\n", camera_model);
 	fprintf(conf, "%s\n", post_process_script);
 
-	printf("serial: %s\n", serial_port);
-	printf("camera: %s\n", camera_model);
-	printf("post:   %s\n", post_process_script);
 	fclose(conf);
 }
 

@@ -10,7 +10,6 @@
 #include "gnocam.h"
 #include "cameras.h"
 #include "frontend.h"
-#include "notification.h"
 #include "preferences.h"
 #include "file-operations.h"
 
@@ -31,8 +30,9 @@ EPaned*			main_paned	= NULL;
 /* Prototypes. */
 /***************/
 
-void on_view_mode_activate		(GtkWidget* widget, gpointer user_data);
+void on_camera_setup_changed (GConfClient* client, guint notify_id, GConfEntry* entry, gpointer user_data);
 
+void on_view_mode_activate		(GtkWidget* widget, gpointer user_data);
 void on_save_previews_activate 		(GtkWidget* widget, gpointer user_data);
 void on_save_previews_as_activate 	(GtkWidget* widget, gpointer user_data);
 void on_save_files_activate		(GtkWidget* widget, gpointer user_data);
@@ -44,21 +44,15 @@ void on_gnocam_delete_activate		(GtkWidget* widget, gpointer user_data);
 /**************/
 
 void
+on_camera_setup_changed (GConfClient* client, guint notify_id, GConfEntry* entry, gpointer user_data)
+{
+        main_tree_update (entry->value);
+}
+
+void
 on_view_mode_activate (GtkWidget* widget, gpointer user_data)
 {
 	view_mode = GPOINTER_TO_INT (user_data);
-}
-
-void
-on_exit_activate (GtkWidget* widget, gpointer user_data)
-{
-        gtk_main_quit ();
-}
-
-void
-on_preferences_activate (GtkWidget* widget, gpointer user_data)
-{
-        preferences ();
 }
 
 void
@@ -131,11 +125,10 @@ int main (int argc, char *argv[])
 	GtkWidget*		menu;
 	GtkWidget*		menu_item;
 	GtkWidget*		scrolledwindow;
-	gint			i;
 	BonoboUIContainer*      container;
 	BonoboUIVerb		verb [] = {
-		BONOBO_UI_UNSAFE_VERB ("Exit", on_exit_activate),
-		BONOBO_UI_UNSAFE_VERB ("Preferences", on_preferences_activate),
+		BONOBO_UI_UNSAFE_VERB ("Exit", gtk_main_quit),
+		BONOBO_UI_UNSAFE_VERB ("Preferences", preferences),
 		BONOBO_UI_UNSAFE_VERB ("About", on_about_activate),
 		BONOBO_UI_UNSAFE_VERB ("Manual", on_gnocam_manual_activate),
 		BONOBO_UI_UNSAFE_VERB ("SavePreviews", on_save_previews_activate),
@@ -188,11 +181,9 @@ int main (int argc, char *argv[])
 	bonobo_window_set_contents (BONOBO_WINDOW (main_window), GTK_WIDGET (main_paned));
 
 	/* Create the component. */
-        container = bonobo_ui_container_new ();
-	corba_container = bonobo_object_corba_objref (BONOBO_OBJECT (container));
+	corba_container = bonobo_object_corba_objref (BONOBO_OBJECT (container = bonobo_ui_container_new ()));
         bonobo_ui_container_set_win (container, BONOBO_WINDOW (main_window));
-        main_component = bonobo_ui_component_new (PACKAGE);
-        bonobo_ui_component_set_container (main_component, corba_container);
+        bonobo_ui_component_set_container (main_component = bonobo_ui_component_new (PACKAGE), corba_container);
         bonobo_ui_component_add_verb_list (main_component, verb);
         bonobo_ui_util_set_ui (main_component, NULL, "gnocam-main.xml", PACKAGE);
 
@@ -240,7 +231,6 @@ int main (int argc, char *argv[])
 	bonobo_main ();
 
 	/* Clean up the main window. */
-        for (i = g_list_length (main_tree->children) - 1; i >= 0; i--) camera_tree_item_remove (g_list_nth_data (main_tree->children, i));
 	bonobo_object_unref (BONOBO_OBJECT (main_component));
 	bonobo_object_unref (BONOBO_OBJECT (container));
 	gtk_widget_destroy (GTK_WIDGET (main_window));

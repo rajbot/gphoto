@@ -79,6 +79,7 @@ download (GtkTreeItem* folder, GnomeVFSURI* uri, gboolean preview)
         GtkObject*              object;
         GladeXML*               xml_fileselection;
         gchar*                  tmp;
+	gchar*			name;
         CORBA_Environment       ev;
         CORBA_Environment       dummy;
 	Bonobo_Storage		corba_storage;
@@ -88,7 +89,6 @@ download (GtkTreeItem* folder, GnomeVFSURI* uri, gboolean preview)
         gint                    mode;
         
         g_return_if_fail (folder);
-	if (!(corba_storage = gtk_object_get_data (GTK_OBJECT (folder), "corba_storage"))) camera_tree_item_storage_create (folder);
 	g_return_if_fail (corba_storage = gtk_object_get_data (GTK_OBJECT (folder), "corba_storage"));
         
         if (uri) {
@@ -118,7 +118,9 @@ download (GtkTreeItem* folder, GnomeVFSURI* uri, gboolean preview)
 
                 /* Display error message (if any). */
                 if (BONOBO_EX (&ev)) {
-                        tmp = g_strdup_printf (_("Could not download the file '%s'!\n(%s)"), gnome_vfs_uri_get_basename (uri), bonobo_exception_get_text (&ev));
+			name = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_basename (uri));
+                        tmp = g_strdup_printf (_("Could not download the file '%s'!\n(%s)"), name, bonobo_exception_get_text (&ev));
+			g_free (name);
                         gnome_error_dialog_parented (tmp, main_window);
                         g_free (tmp);
                 }
@@ -161,7 +163,6 @@ upload (GtkTreeItem* folder, GnomeVFSURI* uri)
 	Bonobo_Stream_iobuf*	buffer;
 
 	g_return_if_fail (folder);
-	if (!(corba_storage = gtk_object_get_data (GTK_OBJECT (folder), "corba_storage"))) camera_tree_item_storage_create (folder);
 	g_return_if_fail (corba_storage = gtk_object_get_data (GTK_OBJECT (folder), "corba_storage"));
 
 	if (uri) {
@@ -333,23 +334,23 @@ delete (GtkTreeItem* item)
 	GnomeVFSURI*		uri;
 
 	g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (item), "uri"));
-	if (!(corba_storage = gtk_object_get_data (GTK_OBJECT (item), "corba_storage"))) camera_tree_item_storage_create (item);
 	g_return_if_fail (corba_storage = gtk_object_get_data (GTK_OBJECT (item), "corba_storage"));
 		
 	/* Init exception. */
 	CORBA_exception_init (&ev);
 
 	/* Delete the file. */
-	file = (gchar*) gnome_vfs_uri_get_basename (uri);
+	file = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_basename (uri));
 	Bonobo_Storage_erase (corba_storage, file, &ev);
 	if (BONOBO_EX (&ev)) {
 	        tmp = g_strdup_printf (_("Could not erase '%s'!\n(%s)"), file, bonobo_exception_get_text (&ev));
 	        gnome_error_dialog_parented (tmp, main_window);
 	        g_free (tmp);
-	} else camera_tree_item_remove (item);
+	} else gtk_container_remove (GTK_CONTAINER (GTK_WIDGET (item)->parent), GTK_WIDGET (item));
 
 	/* Clean up. */
 	CORBA_exception_free (&ev);
+	g_free (file);
 }
 
 

@@ -13,6 +13,7 @@
 #include "file-operations.h"
 #include "cameras.h"
 #include "utils.h"
+#include "preferences.h"
 
 /**********************/
 /* External Variables */
@@ -191,8 +192,8 @@ preview_new (Camera* camera)
 		BONOBO_UI_UNSAFE_VERB ("CaptureImage", on_preview_capture_image_activate),
 		BONOBO_UI_UNSAFE_VERB ("CaptureVideo", on_preview_capture_video_activate),
 		BONOBO_UI_UNSAFE_VERB ("Close", on_preview_close_activate),
-		BONOBO_UI_UNSAFE_VERB ("Exit", on_exit_activate),
-		BONOBO_UI_UNSAFE_VERB ("Preferences", on_preferences_activate),
+		BONOBO_UI_UNSAFE_VERB ("Exit", gtk_main_quit),
+		BONOBO_UI_UNSAFE_VERB ("Preferences", preferences),
 		BONOBO_UI_UNSAFE_VERB ("Manual", on_gnocam_manual_activate),
 		BONOBO_UI_UNSAFE_VERB ("About", on_about_activate),
 		BONOBO_UI_VERB_END};

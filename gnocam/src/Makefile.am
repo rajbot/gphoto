@@ -29,7 +29,6 @@ gnocam_SOURCES =\
  frontend.h frontend.c\
  gnocam.h gnocam.c\
  gphoto-extensions.h gphoto-extensions.c\
- notification.h notification.c\
  preferences.h preferences.c\
  preview.h preview.c\
  utils.h utils.c

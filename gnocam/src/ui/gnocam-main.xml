@@ -1,11 +1,13 @@
 <Root>
   <menu>
     <submenu name="File" _label="_File">
-      <menuitem name="Exit" verb="" _label="E_xit" pixtype="stock" pixname="Quit"/>
+      <placeholder name="FileOperations"/>
+      <menuitem name="Exit" verb="" _label="E_xit" delimit="top" pixtype="stock" pixname="Quit"/>
     </submenu>
-    <submenu name="Edit" _label="_Edit"/>
-    <placeholder name="View"/>
+    <placeholder name="Folder"/>
     <placeholder name="Camera"/>
+    <placeholder name="Edit"/>
+    <placeholder name="View"/>
     <submenu name="Settings" _label="_Settings">
       <menuitem name="Preferences" verb="" _label="_Preferences" pixtype="stock" pixname="Preferences"/>
     </submenu>

@@ -252,6 +252,27 @@ treepath_compare (ETreeModel* etree, ETreePath* node1, ETreePath* node2)
 /* E-Table methods */
 /*******************/
 
+static gint
+right_click (ETable* etable, int row, int column, GdkEvent* event)
+{
+	GnoCamStorageView*	storage_view;
+	ETreePath*		node;
+	NodeData*		data;
+	
+	storage_view = GNOCAM_STORAGE_VIEW (etable);
+	node = e_tree_model_node_at_row (storage_view->priv->etree, row);
+
+	data = (NodeData*) e_tree_model_node_get_data (storage_view->priv->etree, node);
+
+	if (data->directory) {
+		g_warning ("Popup folder menu");
+	} else {
+		g_warning ("Popup file menu");
+	}
+
+	return (0);
+}
+
 static void
 cursor_change (ETable* etable, int row)
 {
@@ -371,7 +392,7 @@ insert_folders_and_files (GnoCamStorageView* storage_view, ETreePath* parent, co
 /*******************/
 
 static void
-destroy (GtkObject* object)
+gnocam_storage_view_destroy (GtkObject* object)
 {
 	GnoCamStorageView*	storage_view;
 
@@ -383,7 +404,7 @@ destroy (GtkObject* object)
 }
 
 static void
-class_init (GnoCamStorageViewClass* klass)
+gnocam_storage_view_class_init (GnoCamStorageViewClass* klass)
 {
 	GtkObjectClass*	object_class;
 	ETableClass*	etable_class;
@@ -391,9 +412,10 @@ class_init (GnoCamStorageViewClass* klass)
 	parent_class = gtk_type_class (e_table_get_type ());
 
 	object_class = GTK_OBJECT_CLASS (klass);
-	object_class->destroy = destroy;
+	object_class->destroy = gnocam_storage_view_destroy;
 
 	etable_class = E_TABLE_CLASS (klass);
+	etable_class->right_click		= right_click;
 	etable_class->cursor_change 		= cursor_change;
 	etable_class->table_drag_begin		= table_drag_begin;
 	etable_class->table_drag_data_get	= table_drag_data_get;
@@ -434,7 +456,7 @@ class_init (GnoCamStorageViewClass* klass)
 }
 
 static void
-init (GnoCamStorageView* storage_view)
+gnocam_storage_view_init (GnoCamStorageView* storage_view)
 {
 	storage_view->priv = g_new (GnoCamStorageViewPrivate, 1);
 	storage_view->priv->etree = NULL;
@@ -491,5 +513,5 @@ gnocam_storage_view_new (Bonobo_Storage storage)
 	return (GTK_WIDGET (new));
 }
 
-E_MAKE_TYPE (gnocam_storage_view, "GnoCamStorageView", GnoCamStorageView, class_init, init, PARENT_TYPE)
+E_MAKE_TYPE (gnocam_storage_view, "GnoCamStorageView", GnoCamStorageView, gnocam_storage_view_class_init, gnocam_storage_view_init, PARENT_TYPE)
 

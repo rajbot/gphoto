@@ -20,6 +20,34 @@ struct _GnoCamFolderPrivate
 	gchar*			path;
 };
 
+#define GNOCAM_FOLDER_UI	 				\
+"<placeholder name=\"Folder\">"					\
+"  <submenu name=\"Folder\" _label=\"Folder\">"			\
+"    <placeholder name=\"Upload\"/>"				\
+"    <placeholder name=\"Configuration\"/>"			\
+"  </submenu>"							\
+"</placeholder>"
+
+#define GNOCAM_FOLDER_UI_UPLOAD 				\
+"<placeholder name=\"Upload\">"					\
+"  <menuitem name=\"Upload\" _label=\"Upload\" verb=\"\"/>"	\
+"</placeholder/>"
+
+
+/*************/
+/* Callbacks */
+/*************/
+
+static void
+on_upload_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
+{
+	GnoCamFolder*	folder;
+
+	folder = GNOCAM_FOLDER (user_data);
+	
+	g_warning ("Implement upload!");
+}
+
 /*****************/
 /* Our functions */
 /*****************/
@@ -36,15 +64,18 @@ gnocam_folder_set_ui_container (GnoCamFolder* folder, Bonobo_UIContainer contain
         gint            result;
         CameraWidget*   widget = NULL;
 
-	g_warning ("BEGIN: gnocam_folder_set_ui_container");
-
         bonobo_ui_component_set_container (folder->priv->component, container);
+	bonobo_ui_component_set_translate (folder->priv->component, "/menu", GNOCAM_FOLDER_UI, NULL);
 
-        /* Create the menu */
+	/* Upload? */
+	if (folder->priv->camera->abilities->file_put) {
+		bonobo_ui_component_set_translate (folder->priv->component, "/menu/Folder/Folder", GNOCAM_FOLDER_UI_UPLOAD, NULL);
+		bonobo_ui_component_add_verb (folder->priv->component, "Upload", on_upload_clicked, folder);
+	}
+	
+	/* Folder configuration? */
         result = gp_camera_folder_config_get (folder->priv->camera, &widget, folder->priv->path);
-        if (result == GP_OK) menu_setup (folder->priv->component, folder->priv->camera, widget, _("Folder Configuration"), folder->priv->path, NULL);
-
-	g_warning ("END: gnocam_folder_set_ui_container");
+        if (result == GP_OK) menu_setup (folder->priv->component, folder->priv->camera, widget, "/menu/Folder/Folder", folder->priv->path, NULL);
 }
 
 void

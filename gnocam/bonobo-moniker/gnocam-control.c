@@ -75,13 +75,16 @@ struct _GnoCamControlPrivate
 /****************/
 
 #define GNOCAM_CONTROL_UI 						\
-"<submenu name=\"Camera\" _label=\"Camera\">"				\
-"  <menuitem name=\"Manual\" _label=\"Manual\" verb=\"\"/>"		\
-"  <placeholder name=\"separator\"/>"					\
-"  <placeholder name=\"CapturePreview\"/>" 				\
-"  <placeholder name=\"CaptureImage\"/>"				\
-"  <placeholder name=\"CaptureVideo\"/>"				\
-"</submenu>"
+"<placeholder name=\"Camera\">"						\
+"  <submenu name=\"Camera\" _label=\"Camera\">"				\
+"    <menuitem name=\"Manual\" _label=\"Manual\" verb=\"\"/>"		\
+"    <placeholder name=\"separator\"/>"					\
+"    <placeholder name=\"CapturePreview\"/>" 				\
+"    <placeholder name=\"CaptureImage\"/>"				\
+"    <placeholder name=\"CaptureVideo\"/>"				\
+"    <placeholder name=\"Configuration\"/>"				\
+"  </submenu>"								\
+"</placeholder>"
 
 #define CAPTURE_IMAGE	"<menuitem name=\"CaptureImage\" _label=\"Capture Image\" verb=\"\"/>"
 #define CAPTURE_PREVIEW	"<menuitem name=\"CapturePreview\" _label=\"Capture Preview\" verb=\"\"/>"
@@ -208,8 +211,6 @@ on_directory_selected (GnoCamStorageView* storage_view, const gchar* path, void*
 	GnoCamFolder*		folder;
 	Bonobo_UIContainer      container;
 	gint			notebook_page;
-
-	g_warning ("BEGIN: on_directory_selected");
 
 	control = GNOCAM_CONTROL (data);
 
@@ -372,17 +373,6 @@ gp_frontend_confirm (Camera* camera, char* message)
 }
 
 static void
-hash_table_forall_destroy_control (void* name, void* value, void* data)
-{
-        BonoboWidget* bonobo_widget;
-
-        bonobo_widget = BONOBO_WIDGET (value);
-        gtk_widget_destroy (GTK_WIDGET (bonobo_widget));
-
-        g_free (name);
-}
-
-static void
 disconnect_popup_signals (GnoCamControl* control)
 {
         gtk_signal_disconnect_by_func (GTK_OBJECT (control->priv->storage_view_vbox), GTK_SIGNAL_FUNC (on_storage_view_vbox_button_release_event), control);
@@ -459,7 +449,7 @@ activate (BonoboControl* object, gboolean state)
 		bonobo_object_release_unref (container, NULL);
 
 		/* Manual */
-		bonobo_ui_component_set_translate (component, "/menu/Camera", GNOCAM_CONTROL_UI, NULL);
+		bonobo_ui_component_set_translate (component, "/menu", GNOCAM_CONTROL_UI, NULL);
 		bonobo_ui_component_add_verb (component, "Manual", on_manual_clicked, control);
 
                 /* Camera Configuration? */
@@ -468,7 +458,7 @@ activate (BonoboControl* object, gboolean state)
                         gint            result;
 
                         result = gp_camera_config_get (control->priv->camera, &widget);
-                        if (result == GP_OK) menu_setup (component, control->priv->camera, widget, "Camera Configuration", NULL, NULL);
+                        if (result == GP_OK) menu_setup (component, control->priv->camera, widget, "/menu/Camera/Camera", NULL, NULL);
        	        }
 
                	/* Capture? */
@@ -609,7 +599,6 @@ destroy (GtkObject* object)
 	if (control->priv->configuration) gp_widget_unref (control->priv->configuration);
 	if (control->priv->camera) gp_camera_unref (control->priv->camera);
 
-//	g_hash_table_foreach (control->priv->hash_table, hash_table_forall_destroy_control, NULL);
 	g_hash_table_destroy (control->priv->hash_table);
 
 	g_free (control->priv);

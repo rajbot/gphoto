@@ -20,6 +20,40 @@ struct _GnoCamFilePrivate
 	gchar*			filename;
 };
 
+#define GNOCAM_FILE_UI 						\
+"<placeholder name=\"FileOperations\">"				\
+"  <placeholder name=\"Delete\" delimit=\"top\"/>"		\
+"  <placeholder name=\"Configuration\"/>"			\
+"</placeholder>"
+
+#define GNOCAM_FILE_UI_DELETE 										\
+"<placeholder name=\"Delete\">"										\
+"  <menuitem name=\"delete\" _label=\"Delete\" verb=\"\" pixtype=\"stock\" pixname=\"Delete\"/>"	\
+"</placeholder>"
+
+/*************/
+/* Callbacks */
+/*************/
+
+static void
+on_delete_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
+{
+	GnoCamFile*	file;
+	gint		result;
+
+	file = GNOCAM_FILE (user_data);
+
+	result = gp_camera_file_delete (file->priv->camera, file->priv->dirname, file->priv->filename);
+
+	if (result != GP_OK) {
+		g_warning ("Could not delete file '%s' in folder '%s'! (%s)", file->priv->filename, file->priv->dirname, 
+			gp_camera_result_as_string (file->priv->camera, result));
+		return;
+	}
+	
+	g_warning ("Implement: Delete the file from the storage view!");
+}
+
 /*****************/
 /* Our functions */
 /*****************/
@@ -37,10 +71,18 @@ gnocam_file_set_ui_container (GnoCamFile* file, Bonobo_UIContainer container)
 	CameraWidget*	widget = NULL;
 	
 	bonobo_ui_component_set_container (file->priv->component, container);
+	bonobo_ui_component_set_translate (file->priv->component, "/menu/File/FileOperations", GNOCAM_FILE_UI, NULL);
 
-	/* Create the menu */
+	/* Delete? */
+	if (file->priv->camera->abilities->file_delete) {
+		bonobo_ui_component_set_translate (file->priv->component, "/menu/File/FileOperations", GNOCAM_FILE_UI_DELETE, NULL);
+		bonobo_ui_component_add_verb (file->priv->component, "delete", on_delete_clicked, file);
+	}
+
+	/* File Configuration? */
 	result = gp_camera_file_config_get (file->priv->camera, &widget, file->priv->dirname, file->priv->filename);
-	if (result == GP_OK) menu_setup (file->priv->component, file->priv->camera, widget, _("File Configuration"), file->priv->dirname, file->priv->filename);
+	if (result == GP_OK) menu_setup (file->priv->component, file->priv->camera, widget, "/menu/File/FileOperations", 
+		file->priv->dirname, file->priv->filename);
 }
 
 void

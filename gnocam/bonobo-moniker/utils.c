@@ -24,14 +24,24 @@ typedef struct {
 static void on_button_clicked 		(BonoboUIComponent *uic, gpointer user_data, const char *cname);
 static void on_togglebutton_clicked	(BonoboUIComponent* uic, const char* path, Bonobo_UIComponent_EventType type, const char* state, gpointer user_data);
 
-void on_entry_changed			(GtkObject* object, gpointer user_data);
-void on_radio_button_activate 		(GtkObject* object, gpointer user_data);
-void on_adjustment_value_changed 	(GtkObject* object, gpointer user_data);
-void on_togglebutton_toggled 		(GtkObject* object, gpointer user_data);
-void on_date_changed 			(GtkObject* object, gpointer user_data);
+void menu_prepare       (CameraWidget* widget, xmlNodePtr popup, xmlNsPtr ns);
+void menu_fill          (BonoboUIComponent* component, Camera* camera, const gchar* path, CameraWidget* window, CameraWidget* widget, gchar* folder, gchar* file);
 
-void menu_prepare       (CameraWidget* widget, xmlNodePtr popup, xmlNodePtr command, xmlNsPtr ns);
-void menu_fill          (BonoboUIComponent* component, Camera* camera, gchar* path, CameraWidget* window, CameraWidget* widget, gchar* folder, gchar* file);
+/********************/
+/* Helper functions */
+/********************/
+
+static void
+set_config (WidgetData* data)
+{
+	gint	result;
+
+        if (data->file) result = gp_camera_file_config_set (data->camera, gp_widget_root (data->widget), data->folder, data->file);
+        else if (data->folder) result = gp_camera_folder_config_set (data->camera, gp_widget_root (data->widget), data->folder);
+        else result = gp_camera_config_set (data->camera, gp_widget_root (data->widget));
+        if (result != GP_OK)
+                g_warning (_("Could not set configuration of '%s'!\n(%s)"), gp_widget_label (data->widget), gp_camera_result_as_string (data->camera, result));
+}
 
 /*************/
 /* Callbacks */
@@ -52,76 +62,53 @@ on_button_clicked (BonoboUIComponent *uic, gpointer user_data, const char *cname
 		g_warning (_("Could not execute command '%s'! (%s)"), gp_widget_label (data->widget), gp_camera_result_as_string (data->camera, result));
 }
 
-void
+static void
 on_entry_changed (GtkObject* object, gpointer user_data)
 {
-	Camera*		camera;
-	CameraWidget*	window;
-	CameraWidget*	widget;
+	WidgetData*	data = (WidgetData*) gtk_object_get_data (object, "data");
 	gchar*		value_string;
 	gchar*		value_string_new;
-	gint		result;
 
-	g_return_if_fail (object);
-	g_return_if_fail (window = gtk_object_get_data (object, "window"));
-	g_return_if_fail (widget = gtk_object_get_data (object, "widget"));
-	g_return_if_fail (camera = gtk_object_get_data (object, "camera"));
+	g_return_if_fail (data);
 
-	gp_widget_value_get (widget, &value_string);
+	g_return_if_fail (gp_widget_value_get (data->widget, &value_string) == GP_OK);
 	value_string_new = gtk_entry_get_text (GTK_ENTRY (object));
 	if (!value_string || (value_string && (strcmp (value_string, value_string_new) != 0))) {
-		g_return_if_fail (gp_widget_value_set (widget, value_string_new) == GP_OK);
-		if ((result = gp_camera_config_set (camera, window)) != GP_OK)
-			g_warning (_("Could not set configuration!\n(%s)"), gp_camera_result_as_string (camera, result));
+		g_return_if_fail (gp_widget_value_set (data->widget, value_string_new) == GP_OK);
+		set_config (data);
 	}
 }
 
-void
+static void
 on_radio_button_activate (GtkObject* object, gpointer user_data)
 {
-	Camera*		camera;
-	CameraWidget*	window;
-	CameraWidget*	widget;
+	WidgetData*	data = (WidgetData*) gtk_object_get_data (object, "data");
 	gchar*		value_string;
 	gchar*		value_string_new;
-	gint		result;
 
-	g_return_if_fail (object);
-	g_return_if_fail (window = gtk_object_get_data (object, "window"));
-	g_return_if_fail (widget = gtk_object_get_data (object, "widget"));
-	g_return_if_fail (camera = gtk_object_get_data (object, "camera"));
+	g_return_if_fail (data);
 
-	gp_widget_value_get (widget, &value_string);
-	value_string_new = gp_widget_choice (widget, GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (object), "choice")));
+	g_return_if_fail (gp_widget_value_get (data->widget, &value_string) == GP_OK);
+	value_string_new = gp_widget_choice (data->widget, GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (object), "choice")));
 	if (!value_string || (value_string && (strcmp (value_string_new, value_string) != 0))) {
-		g_return_if_fail (gp_widget_value_set (widget, value_string_new) == GP_OK);
-		if ((result = gp_camera_config_set (camera, window)) != GP_OK) 
-			g_warning (_("Could not set configuration!\n(%s)"), gp_camera_result_as_string (camera, result));
+		g_return_if_fail (gp_widget_value_set (data->widget, value_string_new) == GP_OK);
+		set_config (data);
 	}
 }
 
-void
+static void
 on_adjustment_value_changed (GtkObject* object, gpointer user_data)
 {
-	Camera*		camera;
-	CameraWidget*	window;
-	CameraWidget*	widget;
+	WidgetData*	data = (WidgetData*) gtk_object_get_data (object, "data");
 	gfloat		f, f_new;
-	gint		result;
 
-	g_return_if_fail (object);
-	g_return_if_fail (window = gtk_object_get_data (object, "window"));
-	g_return_if_fail (widget = gtk_object_get_data (object, "widget"));
-	g_return_if_fail (camera = gtk_object_get_data (object, "camera"));
+	g_return_if_fail (data);
 
-	g_warning (_("on_adjustment_value_changed"));
-
-	gp_widget_value_get (widget, &f);
+	g_return_if_fail (gp_widget_value_get (data->widget, &f) == GP_OK);
 	f_new = GTK_ADJUSTMENT (object)->value;
 	if (f != f_new) {
-		g_return_if_fail (gp_widget_value_set (widget, &f_new) == GP_OK);
-		if ((result = gp_camera_config_set (camera, window)) != GP_OK)
-			g_warning (_("Could not set camera configuration!\n(%s)"), gp_camera_result_as_string (camera, result));
+		g_return_if_fail (gp_widget_value_set (data->widget, &f_new) == GP_OK);
+		set_config (data);
 	}
 }
 
@@ -130,39 +117,26 @@ on_togglebutton_clicked (BonoboUIComponent* component, const char* path, Bonobo_
 {
 	WidgetData*     data = (WidgetData*) user_data;
 	gint		i = atoi (state);
-	gint		result;
 	
 	g_return_if_fail (data);
 
-	g_warning ("on_togglebutton_clicked (%s)", state);
 	g_return_if_fail (gp_widget_value_set (data->widget, &i) == GP_OK);
-	if (data->file) result = gp_camera_file_config_set (data->camera, gp_widget_root (data->widget), data->folder, data->file);
-	else if (data->folder) result = gp_camera_folder_config_set (data->camera, gp_widget_root (data->widget), data->folder);
-	else result = gp_camera_config_set (data->camera, gp_widget_root (data->widget));
-	if (result != GP_OK) 
-		g_warning (_("Could not set configuration of '%s'! (%s)"), gp_widget_label (data->widget), gp_camera_result_as_string (data->camera, result));
+	set_config (data);
 }
 
-void
+static void
 on_date_changed (GtkObject* object, gpointer user_data)
 {
-	Camera*		camera;
-	CameraWidget*	widget;
-	CameraWidget*	window;
+	WidgetData*	data = (WidgetData*) gtk_object_get_data (GTK_OBJECT (object), "data");
 	gint		i, i_new;
-	gint		result;
 	
-	g_return_if_fail (object);
-	g_return_if_fail (window = gtk_object_get_data (object, "window"));
-	g_return_if_fail (widget = gtk_object_get_data (object, "widget"));
-	g_return_if_fail (camera = gtk_object_get_data (object, "camera"));
+	g_return_if_fail (data);
 
-	gp_widget_value_get (widget, &i);
+	g_return_if_fail (gp_widget_value_get (data->widget, &i) == GP_OK);
 	i_new = (int) gnome_date_edit_get_date (GNOME_DATE_EDIT (object));
 	if (i != i_new) {
-		g_return_if_fail (gp_widget_value_set (widget, &i_new) == GP_OK);
-		if ((result = gp_camera_config_set (camera, window)) != GP_OK) 
-			g_warning (_("Could not set configuration!\n(%s)"), gp_camera_result_as_string (camera, result));
+		g_return_if_fail (gp_widget_value_set (data->widget, &i_new) == GP_OK);
+		set_config (data);
 	}
 }
 
@@ -171,41 +145,40 @@ on_date_changed (GtkObject* object, gpointer user_data)
 /*************/
 
 void
-menu_setup (BonoboUIComponent* component, Camera* camera, CameraWidget* widget, gchar* name, gchar* folder, gchar* file)
+menu_setup (BonoboUIComponent* component, Camera* camera, CameraWidget* widget, const gchar* path, gchar* folder, gchar* file)
 {
         gchar*          tmp = NULL;
         xmlDocPtr       doc = xmlNewDoc ("1.0");
         xmlNsPtr        ns = xmlNewGlobalNs (doc, "xxx", "xxx"); 
         xmlNodePtr      node, child;
-        xmlNodePtr      commands = xmlNewNode (ns, "commands");
         gint            i;
 
-        /* Set up the basic structure. */
-        xmlDocSetRootElement (doc, node = xmlNewNode (ns, "Root"));
-        xmlAddChild (node, commands);
-        xmlAddChild (node, child = xmlNewNode (ns, "menu"));
-        xmlAddChild (child, node = xmlNewNode (ns, "submenu"));
-        xmlSetProp (node, "name", "Edit");
-	xmlSetProp (node, "_label", "_Edit");
-        xmlAddChild (node, child = xmlNewNode (ns, "submenu"));
-        xmlSetProp (child, "name", name);
-        xmlSetProp (child, "_label", name);
-        menu_prepare (widget, child, commands, ns);
+	node = xmlNewNode (ns, "placeholder");
+	xmlSetProp (node, "name", "Configuration");
+        xmlDocSetRootElement (doc, node);
+
+	child = xmlNewNode (ns, "submenu");
+	xmlSetProp (child, "name", "Configuration");
+	xmlSetProp (child, "_label", "Configuration");
+	xmlAddChild (node, child);
+	
+        menu_prepare (widget, child, ns);
 
         /* Send it to the component. */
         xmlDocDumpMemory (doc, (xmlChar**) &tmp, &i);
+	printf ("DUMP:\n\n%s\n\n\n", tmp);
         xmlFreeDoc (doc);
-        bonobo_ui_component_set_translate (component, "/", tmp, NULL);
+        bonobo_ui_component_set_translate (component, path, tmp, NULL);
         g_free (tmp);
 
 	/* Finish. */
-	tmp = g_strconcat ("/menu/Edit/", name, NULL);
+	tmp = g_strconcat (path, "/Configuration/Configuration", NULL);
 	menu_fill (component, camera, tmp, widget, widget, folder, file);
 	g_free (tmp);
 }
 
 void 
-menu_prepare (CameraWidget* widget, xmlNodePtr menu, xmlNodePtr command, xmlNsPtr ns)
+menu_prepare (CameraWidget* widget, xmlNodePtr menu, xmlNsPtr ns)
 {
 	CameraWidget*		child;
 	gint 			i, value_int;
@@ -224,7 +197,7 @@ menu_prepare (CameraWidget* widget, xmlNodePtr menu, xmlNodePtr command, xmlNsPt
 			xmlSetProp (node, "name", id);
 			xmlSetProp (node, "_label", gp_widget_label (child));
 			xmlSetProp (node, "_tip", gp_widget_label (child));
-			menu_prepare (child, node, command, ns);
+			menu_prepare (child, node, ns);
 			break;
 		case GP_WIDGET_TEXT:
 		case GP_WIDGET_MENU:
@@ -264,7 +237,7 @@ menu_prepare (CameraWidget* widget, xmlNodePtr menu, xmlNodePtr command, xmlNsPt
 }
 
 void 
-menu_fill (BonoboUIComponent* component, Camera* camera, gchar* path, CameraWidget* window, CameraWidget* widget, gchar* folder, gchar* file)
+menu_fill (BonoboUIComponent* component, Camera* camera, const gchar* path, CameraWidget* window, CameraWidget* widget, gchar* folder, gchar* file)
 {
 	GtkWidget*		hbox;
 	GtkWidget*		gtkwidget;
@@ -301,8 +274,12 @@ menu_fill (BonoboUIComponent* component, Camera* camera, gchar* path, CameraWidg
 			for (j = 0; j < gp_widget_choice_count (child); j++) {
 				gtk_widget_show (menu_item = gtk_menu_item_new_with_label (gp_widget_choice (child, j)));
 				gtk_menu_append (GTK_MENU (menu), menu_item);
-				gtk_object_set_data (GTK_OBJECT (menu_item), "window", window);
-				gtk_object_set_data (GTK_OBJECT (menu_item), "widget", child);
+				data = g_new0 (WidgetData, 1);
+	                        data->camera = camera;
+	                        data->widget = child;
+	                        data->folder = g_strdup (folder);
+	                        data->file = g_strdup (file);
+	                        gtk_object_set_data (GTK_OBJECT (menu_item), "data", data);
 				gtk_object_set_data (GTK_OBJECT (menu_item), "choice", GINT_TO_POINTER (j));
 				if (value_string && (strcmp (value_string, gp_widget_choice (child, j)) == 0)) 
 					gtk_option_menu_set_history (GTK_OPTION_MENU (gtkwidget), j);
@@ -330,9 +307,12 @@ menu_fill (BonoboUIComponent* component, Camera* camera, gchar* path, CameraWidg
 			gtk_widget_show (gtkwidget = gtk_label_new (gp_widget_label (child)));
 			gtk_box_pack_start (GTK_BOX (hbox), gtkwidget, FALSE, FALSE, 0);
 			adjustment = gtk_adjustment_new (value_float, min, max, increment, 0, 0);
-			gtk_object_set_data (adjustment, "camera", camera);
-			gtk_object_set_data (adjustment, "window", window);
-			gtk_object_set_data (adjustment, "widget", child);
+			data = g_new0 (WidgetData, 1);
+                        data->camera = camera;
+                        data->widget = child;
+                        data->folder = g_strdup (folder);
+                        data->file = g_strdup (file);
+                        gtk_object_set_data (GTK_OBJECT (adjustment), "data", data);
 			gtk_signal_connect (adjustment, "value_changed", GTK_SIGNAL_FUNC (on_adjustment_value_changed), NULL);
 			gtk_widget_show (gtkwidget = gtk_hscale_new (GTK_ADJUSTMENT (adjustment)));
 			gtk_range_set_update_policy (GTK_RANGE (gtkwidget), GTK_UPDATE_DISCONTINUOUS);
@@ -347,9 +327,12 @@ menu_fill (BonoboUIComponent* component, Camera* camera, gchar* path, CameraWidg
 			gtk_widget_show (gtkwidget = gtk_label_new (gp_widget_label (child)));
 			gtk_box_pack_start (GTK_BOX (hbox), gtkwidget, FALSE, FALSE, 0);
 			gtk_widget_show (gtkwidget = gnome_date_edit_new ((time_t) value_int, TRUE, TRUE));
-			gtk_object_set_data (GTK_OBJECT (gtkwidget), "camera", camera);
-			gtk_object_set_data (GTK_OBJECT (gtkwidget), "window", window);
-			gtk_object_set_data (GTK_OBJECT (gtkwidget), "widget", child);
+			data = g_new0 (WidgetData, 1);
+                        data->camera = camera;
+                        data->widget = child;
+                        data->folder = g_strdup (folder);
+                        data->file = g_strdup (file);
+                        gtk_object_set_data (GTK_OBJECT (gtkwidget), "data", data);
 			gtk_signal_connect (GTK_OBJECT (gtkwidget), "date_changed", GTK_SIGNAL_FUNC (on_date_changed), NULL);
 			gtk_signal_connect (GTK_OBJECT (gtkwidget), "time_changed", GTK_SIGNAL_FUNC (on_date_changed), NULL);
 			gtk_box_pack_end (GTK_BOX (hbox), gtkwidget, TRUE, TRUE, 0);
@@ -364,9 +347,12 @@ menu_fill (BonoboUIComponent* component, Camera* camera, gchar* path, CameraWidg
 			gtk_box_pack_start (GTK_BOX (hbox), gtkwidget, FALSE, FALSE, 0);
 			gtk_widget_show (gtkwidget = gtk_entry_new ());
 			if (value_string) gtk_entry_set_text (GTK_ENTRY (gtkwidget), value_string);
-			gtk_object_set_data (GTK_OBJECT (gtkwidget), "camera", camera);
-			gtk_object_set_data (GTK_OBJECT (gtkwidget), "window", window);
-			gtk_object_set_data (GTK_OBJECT (gtkwidget), "widget", child);
+			data = g_new0 (WidgetData, 1);
+			data->camera = camera;
+			data->widget = child;
+			data->folder = g_strdup (folder);
+			data->file = g_strdup (file);
+			gtk_object_set_data (GTK_OBJECT (gtkwidget), "data", data);
 			gtk_signal_connect (GTK_OBJECT (gtkwidget), "changed", GTK_SIGNAL_FUNC (on_entry_changed), NULL);
 			gtk_box_pack_end (GTK_BOX (hbox), gtkwidget, TRUE, TRUE, 0);
 			tmp = g_strdup_printf ("%s/%i", path, gp_widget_id (child));

@@ -214,6 +214,12 @@ on_node_expanded (ETreeModel* model, ETreePath* parent, gboolean* allow_expanded
 	/* Did we already populate this part of the tree? */
 	if (!value->placeholder) return;
 
+	/* Remove placeholder */
+	if (value->placeholder) {
+		e_tree_model_node_remove (model, value->placeholder);
+		value->placeholder = NULL;
+	}
+
 	/* Get the list of contents */
 	CORBA_exception_init (&ev);
 	if (!strcmp (value->path, "/"))
@@ -228,12 +234,6 @@ on_node_expanded (ETreeModel* model, ETreePath* parent, gboolean* allow_expanded
 	}
 	CORBA_exception_free (&ev);
 	*allow_expanded = TRUE;
-
-	/* Remove placeholder */
-	if (value->placeholder) {
-		e_tree_model_node_remove (model, value->placeholder);
-		value->placeholder = NULL;
-	}
 
 	for (i = 0; i < list->_length; i++) {
                 ETreePath*      node;

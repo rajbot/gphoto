@@ -106,7 +106,7 @@ static void	on_cancel_button_clicked	(GtkButton* button, gpointer user_data);
 static gint
 set_container (gpointer user_data)
 {
-	GnoCamFolder*		folder;
+	GnoCamFolder*	folder;
 
 	folder = GNOCAM_FOLDER (user_data);
 
@@ -115,6 +115,20 @@ set_container (gpointer user_data)
 	if (bonobo_ui_component_get_container (folder->priv->component) == BONOBO_OBJREF (folder->priv->container)) return (FALSE);
 
 	bonobo_ui_component_set_container (folder->priv->component, BONOBO_OBJREF (folder->priv->container));
+
+	return (FALSE);
+}
+
+static gint
+unset_container (gpointer user_data)
+{
+	GnoCamFolder*	folder;
+
+	folder = GNOCAM_FOLDER (user_data);
+
+	if (!folder->priv->component) return (TRUE);
+
+	bonobo_ui_component_unset_container (folder->priv->component);
 
 	return (FALSE);
 }
@@ -168,8 +182,9 @@ table_selected_row_foreach_save_as (int model_row, gpointer closure)
 	folder = GNOCAM_FOLDER (closure);
          
         filesel = GTK_FILE_SELECTION (gtk_file_selection_new (_("Save As")));
+	gtk_window_set_transient_for (GTK_WINDOW (filesel), folder->priv->window);
         gtk_widget_show (GTK_WIDGET (filesel));
-        gtk_signal_connect (GTK_OBJECT (filesel->ok_button), "clicked", GTK_SIGNAL_FUNC (on_save_as_ok_button_clicked), NULL);
+        gtk_signal_connect (GTK_OBJECT (filesel->ok_button), "clicked", GTK_SIGNAL_FUNC (on_save_as_ok_button_clicked), folder);
         gtk_signal_connect (GTK_OBJECT (filesel->cancel_button), "clicked", GTK_SIGNAL_FUNC (on_cancel_button_clicked), NULL);
 
 	name = (gchar*) e_table_model_value_at (E_TABLE (folder)->model, 0, model_row);
@@ -315,8 +330,9 @@ on_upload_ok_button_clicked (GtkButton* ok_button, gpointer user_data)
         GnoCamFolder*   folder;
         gchar*          source;
 
+	folder = GNOCAM_FOLDER (user_data);
+
         filesel = gtk_widget_get_ancestor (GTK_WIDGET (ok_button), GTK_TYPE_FILE_SELECTION);
-        folder = GNOCAM_FOLDER (gtk_object_get_data (GTK_OBJECT (filesel), "folder"));
         source = gtk_file_selection_get_filename (GTK_FILE_SELECTION (filesel));
 
         upload_file (folder, source);
@@ -333,9 +349,10 @@ on_upload_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 	folder = GNOCAM_FOLDER (user_data);
 	
 	filesel = GTK_FILE_SELECTION (gtk_file_selection_new (_("Upload")));
+	gtk_window_set_transient_for (GTK_WINDOW (filesel), folder->priv->window);
 	gtk_widget_show (GTK_WIDGET (filesel));
 	gtk_signal_connect (GTK_OBJECT (filesel->ok_button), "clicked", GTK_SIGNAL_FUNC (on_upload_ok_button_clicked), folder);
-	gtk_signal_connect (GTK_OBJECT (filesel->cancel_button), "clicked", GTK_SIGNAL_FUNC (on_cancel_button_clicked), folder);
+	gtk_signal_connect (GTK_OBJECT (filesel->cancel_button), "clicked", GTK_SIGNAL_FUNC (on_cancel_button_clicked), NULL);
 }
 
 static void
@@ -367,8 +384,9 @@ on_save_as_ok_button_clicked (GtkButton* ok_button, gpointer user_data)
 	gchar*		name;
 	gchar*		dest;
 
+	folder = GNOCAM_FOLDER (user_data);
+
 	filesel = gtk_widget_get_ancestor (GTK_WIDGET (ok_button), GTK_TYPE_FILE_SELECTION);
-	folder = GNOCAM_FOLDER (gtk_object_get_data (GTK_OBJECT (filesel), "folder"));
 	name = gtk_object_get_data (GTK_OBJECT (filesel), "name");
 	dest = gtk_file_selection_get_filename (GTK_FILE_SELECTION (filesel));
 	
@@ -392,15 +410,13 @@ on_save_as_clicked (BonoboUIComponent* component, gpointer user_data, const gcha
 void
 gnocam_folder_show_menu (GnoCamFolder* folder)
 {
-	g_return_if_fail (folder);
-
 	gtk_idle_add (set_container, folder);
 }
 
 void
 gnocam_folder_hide_menu (GnoCamFolder* folder)
 {
-	bonobo_ui_component_unset_container (folder->priv->component);
+	gtk_idle_add (unset_container, folder);
 }
 
 /***********/

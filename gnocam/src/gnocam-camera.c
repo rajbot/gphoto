@@ -754,11 +754,6 @@ gnocam_camera_new (const gchar* url, BonoboUIContainer* container, GtkWindow* wi
         /* Create the menu */
 	create_menu (new);
 
-	/* Select the selected file/folder */
-	name = (gchar*) url + 9;
-	for (; *name != 0; name++) if (*name == '/') break;
-	gtk_signal_emit_by_name (GTK_OBJECT (new->priv->storage_view), "directory_selected", name);
-
 	/* Set default settings */
 	position = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/hpaned_position_camera", NULL);
 	if (position) e_paned_set_position (E_PANED (new->priv->hpaned), position);

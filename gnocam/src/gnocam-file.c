@@ -73,17 +73,32 @@ static void	on_config_clicked	(BonoboUIComponent* component, gpointer user_data,
 static gint
 set_container (gpointer user_data)
 {
-	GnoCamFile*     	file;
+	GnoCamFile*    	file;
 
-	g_return_val_if_fail (GNOCAM_IS_FILE (user_data), FALSE);
 	file = GNOCAM_FILE (user_data);
 
 	if (!file->priv->component) return (TRUE);
 
+	if (file->priv->control) Bonobo_Control_activate (file->priv->control, TRUE, NULL);
+
 	if (bonobo_ui_component_get_container (file->priv->component) == BONOBO_OBJREF (file->priv->container)) return (FALSE);
 
 	bonobo_ui_component_set_container (file->priv->component, BONOBO_OBJREF (file->priv->container));
-        if (file->priv->control) Bonobo_Control_activate (file->priv->control, TRUE, NULL);
+
+	return (FALSE);
+}
+
+static gint
+unset_container (gpointer user_data)
+{
+	GnoCamFile*	file;
+
+	file = GNOCAM_FILE (user_data);
+
+	if (!file->priv->component) return (TRUE);
+
+	bonobo_ui_component_unset_container (file->priv->component);
+        if (file->priv->control) Bonobo_Control_activate (file->priv->control, FALSE, NULL);
 
 	return (FALSE);
 }
@@ -292,8 +307,7 @@ on_config_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 void
 gnocam_file_hide_menu (GnoCamFile* file)
 {
-	bonobo_ui_component_unset_container (file->priv->component);
-	if (file->priv->control) Bonobo_Control_activate (file->priv->control, FALSE, NULL);
+	gtk_idle_add (unset_container, file);
 }
 
 void

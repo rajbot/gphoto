@@ -384,7 +384,7 @@ gnocam_configuration_destroy (GtkObject* object)
 	g_free (configuration->priv);
 	configuration->priv = NULL;
 
-//	GTK_OBJECT_CLASS (parent_class)->destroy (object);
+	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void

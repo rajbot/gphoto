@@ -207,6 +207,8 @@ kdc240_read_packet_control
       return STATE_ABORT;
    }
 
+   checksum_errors = 0;
+
    return STATE_NEXT;
 }
 
@@ -509,8 +511,6 @@ kdc240_complex_command
 
       cc_struct->loop_top = STATE_1;
 
-      checksum_errors = 0;
-
       state_machine_program(machine, &program);
       while (state_machine_run(machine))
       {
@@ -538,8 +538,6 @@ kdc240_complex_command
       STATE_MACHINE_PROGRAM program = { 7, lines };
 
       cc_struct->loop_top = STATE_3;
-
-      checksum_errors = 0;
 
       state_machine_program(machine, &program);
       while (state_machine_run(machine))

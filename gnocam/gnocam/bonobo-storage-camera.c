@@ -7,17 +7,14 @@
  *   Lutz Müller <urc8@rz.uni-karlsruhe.de>
  */
 
-#ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
 
 #include "bonobo-storage-camera.h"
 
 #include <bonobo/bonobo-exception.h>
 
-#include <libgnocam/gphoto-extensions.h>
-
 #include "bonobo-stream-camera.h"
+#include "gnocam-util.h"
 
 #define PARENT_TYPE BONOBO_STORAGE_TYPE
 static BonoboStorageClass* bonobo_storage_camera_parent_class = NULL;
@@ -173,7 +170,8 @@ camera_rename (BonoboStorage* s, const CORBA_char* name_old, const CORBA_char* n
 }
 
 static BonoboStream *
-camera_open_stream (BonoboStorage* s, const CORBA_char* filename, Bonobo_Storage_OpenMode mode, CORBA_Environment* ev)
+camera_open_stream (BonoboStorage *s, const CORBA_char *filename,
+		    Bonobo_Storage_OpenMode mode, CORBA_Environment *ev)
 {
 	BonoboStorageCamera *storage;
 	BonoboStream        *new;
@@ -198,18 +196,27 @@ camera_list_contents (BonoboStorage *s, const CORBA_char *name,
 	Bonobo_Storage_DirectoryList *list = NULL;
 	CameraList folder_list, file_list;
 	gint i;
+	gchar *full_path;
 
 	storage = BONOBO_STORAGE_CAMERA (s);
 
+	if (!name)
+		full_path = g_strdup (storage->priv->path);
+	else
+		full_path = g_strconcat (storage->priv->path, name, NULL);
+
 	/* Get folder list. */
 	CHECK_RESULT (gp_camera_folder_list_folders (storage->priv->camera, 
-					storage->priv->path, &folder_list), ev);
-	if (BONOBO_EX (ev)) 
+						full_path, &folder_list), ev);
+	if (BONOBO_EX (ev)) {
+		g_free (full_path);
 		return (NULL);
+	}
 
 	/* Get file list. */
 	CHECK_RESULT (gp_camera_folder_list_files (storage->priv->camera, 
-					storage->priv->path, &file_list), ev);
+						full_path, &file_list), ev);
+	g_free (full_path);
 	if (BONOBO_EX (ev)) 
 		return (NULL);
 

@@ -18,7 +18,8 @@ gnocam_SOURCES =\
  bonobo-stream-camera.c bonobo-stream-camera.h\
  main.c\
  gnocam-main.c gnocam-main.h\
- gnocam-camera.c gnocam-camera.h
+ gnocam-camera.c gnocam-camera.h\
+ gnocam-util.h
 
 gnocam_LDADD =\
  $(GPHOTO_LIBS)\

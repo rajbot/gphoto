@@ -8,7 +8,7 @@
 #include <bonobo/bonobo-exception.h>
 #include <gal/util/e-util.h>
 
-#include <libgnocam/gphoto-extensions.h>
+#include "gnocam-util.h"
 
 #define PARENT_TYPE BONOBO_STREAM_TYPE
 static BonoboStreamClass *bonobo_stream_camera_parent_class;
@@ -241,9 +241,6 @@ bonobo_stream_camera_new (Camera            *camera,
 						dirname, filename, file), ev);
 		}
 		if (BONOBO_EX (ev)) {
-			if (getenv ("DEBUG_GNOCAM"))
-				g_warning ("Could not get file: %s",
-					   bonobo_exception_get_text (ev));
 			gp_file_unref (file);
 			return (NULL);
 		}

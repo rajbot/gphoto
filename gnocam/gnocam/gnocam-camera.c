@@ -3,9 +3,9 @@
 
 #include <bonobo/Bonobo.h>
 #include <bonobo/bonobo-storage.h>
+#include <bonobo/bonobo-exception.h>
 
 #include "bonobo-storage-camera.h"
-#include "libgnocam/gphoto-extensions.h"
 
 #define PARENT_TYPE BONOBO_X_OBJECT_TYPE
 static BonoboObjectClass *parent_class;

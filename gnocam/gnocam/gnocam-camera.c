@@ -118,16 +118,11 @@ static gboolean
 on_capture_close (GnomeDialog *dialog, gpointer data)
 {
 	GnoCamCamera *c;
-	BonoboArg *arg;
 
+	g_return_val_if_fail (GNOCAM_IS_CAMERA (data), FALSE);
 	c = GNOCAM_CAMERA (data);
 
-	arg = bonobo_arg_new (BONOBO_ARG_STRING);
-	BONOBO_ARG_SET_STRING (arg, "");
-	bonobo_event_source_notify_listeners_full (
-			c->priv->event_source,
-			"GNOME/Camera", "CaptureImage", "Cancel", arg, NULL);
-	bonobo_arg_release (arg);
+	bonobo_object_unref (BONOBO_OBJECT (c));
 
 	return (FALSE);
 }
@@ -141,6 +136,7 @@ on_capture_clicked (GnomeDialog *dialog, gint button_number, gpointer data)
 	CORBA_Environment ev;
 	gchar *txt;
 
+	g_return_if_fail (GNOCAM_IS_CAMERA (data));
 	c = GNOCAM_CAMERA (data);
 
 	switch (button_number) {
@@ -200,6 +196,7 @@ impl_GNOME_Camera_captureImage (PortableServer_Servant servant,
 	gtk_widget_show (GTK_WIDGET (capture));
 	gtk_signal_connect (GTK_OBJECT (capture), "clicked",
 			    GTK_SIGNAL_FUNC (on_capture_clicked), c);
+	bonobo_object_ref (BONOBO_OBJECT (c));
 	gtk_signal_connect (GTK_OBJECT (capture), "close",
 			    GTK_SIGNAL_FUNC (on_capture_close), c);
 }
@@ -211,7 +208,10 @@ gnocam_camera_destroy (GtkObject *object)
 
 	gnocam_camera = GNOCAM_CAMERA (object);
 
+	g_message ("Destroying GnoCamCamera...");
+
 	gp_camera_unref (gnocam_camera->priv->camera);
+	gnocam_camera->priv->camera = NULL;
 
 	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
@@ -222,6 +222,8 @@ gnocam_camera_finalize (GtkObject *object)
 	GnoCamCamera *gnocam_camera;
 
 	gnocam_camera = GNOCAM_CAMERA (object);
+
+	g_free (gnocam_camera->priv);
 
 	GTK_OBJECT_CLASS (parent_class)->finalize (object);
 }

@@ -1,12 +1,12 @@
 /*
-  Fuji Camera library for the gphoto project, 1998 Matthew G. Martin
+ * $Id$
+ 
+ Fuji Camera library for the gphoto project, 1999 Matthew G. Martin
   This routine works for DS-7 .  Don't know about any others.
 
   Reworked from the "fujiplay" package:
       * A program to control Fujifilm digital cameras, like
       * the DS-7 and MX-700, and their clones.
-      *
-      * $Id$
       *
       * Written by Thierry Bousch <bousch@topo.math.u-psud.fr>
       * and released in the public domain.

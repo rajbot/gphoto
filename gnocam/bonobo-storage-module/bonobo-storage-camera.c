@@ -65,7 +65,6 @@ camera_open_stream (BonoboStorage *storage, const CORBA_char *filename, Bonobo_S
 	BonoboStreamCamera *stream;
 	CameraFile* file = NULL;
 	CameraList list;
-	CameraAbilities abilities;
 	gint i;
 
 	/* Reject some unsupported open modes. */
@@ -75,13 +74,9 @@ camera_open_stream (BonoboStorage *storage, const CORBA_char *filename, Bonobo_S
 	}
 
 	/* Does the camera support upload? */
-	if (mode & (Bonobo_Storage_WRITE | Bonobo_Storage_CREATE)) {
-		CHECK_RESULT (gp_camera_abilities_by_name (s->camera->model, &abilities), ev);
-		if (BONOBO_EX (ev)) return NULL;
-		if (!abilities.file_put) {
-			CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
-			return NULL;
-		}
+	if ((mode & (Bonobo_Storage_WRITE | Bonobo_Storage_CREATE)) && (!s->camera->abilities->file_put)) {
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
+		return NULL;
 	}
 
 	/* Does the requested file exist? */
@@ -205,7 +200,6 @@ bonobo_storage_camera_open (const char *path, gint flags, gint mode, CORBA_Envir
         Bonobo_Storage corba_storage;
 	gchar* tmp;
 	CameraList list;
-	CameraAbilities abilities;
 
         /* Reject some unsupported open modes. */
 	if (mode & (Bonobo_Storage_COMPRESSED | Bonobo_Storage_TRANSACTED)) {
@@ -226,16 +220,6 @@ bonobo_storage_camera_open (const char *path, gint flags, gint mode, CORBA_Envir
 		bonobo_object_unref (BONOBO_OBJECT (storage));
 		return NULL;
 	}
-
-        /* Does the camera support upload? */
-        if (mode & (Bonobo_Storage_WRITE | Bonobo_Storage_CREATE)) { 
-                CHECK_RESULT (gp_camera_abilities_by_name (storage->camera->model, &abilities), ev);
-                if (BONOBO_EX (ev)) return NULL;
-                if (!abilities.file_put) {
-                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
-                        return NULL;
-                }
-        }
 
 	/* Does the folder exist? */
 	tmp = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_path (storage->uri));
@@ -259,7 +243,7 @@ camera_open_storage (BonoboStorage *storage, const CORBA_char *path, Bonobo_Stor
 	gint i;
 	
 	/* Reject some unsupported open modes. */
-	if (mode & (Bonobo_Storage_COMPRESSED | Bonobo_Storage_TRANSACTED | Bonobo_Storage_WRITE | Bonobo_Storage_CREATE)) {
+	if (mode & (Bonobo_Storage_COMPRESSED | Bonobo_Storage_TRANSACTED)) {
 		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
 		return NULL;
 	}

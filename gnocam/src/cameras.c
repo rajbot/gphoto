@@ -157,12 +157,12 @@ on_tree_item_button_press_event (GtkWidget *widget, GdkEventButton *event, gpoin
 {
 	GtkMenu*	menu;
 
-	g_return_val_if_fail (menu = gtk_object_get_data (GTK_OBJECT (widget), "menu"), FALSE);
-
         /* Did the user right-click? */
         if (event->button != 3) return (FALSE);
 
-        gtk_menu_popup (menu, NULL, NULL, NULL, NULL, 3, 0);
+	/* If needed, create the popup. */
+	if (!(menu = gtk_object_get_data (GTK_OBJECT (widget), "menu"))) camera_tree_item_popup_create (GTK_TREE_ITEM (widget));
+        gtk_menu_popup (gtk_object_get_data (GTK_OBJECT (widget), "menu"), NULL, NULL, NULL, NULL, 3, 0);
         return (TRUE);
 }
 
@@ -377,8 +377,6 @@ camera_tree_item_remove (GtkTreeItem* item)
 void
 camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
 {
-	CameraWidget*		window_camera = NULL;
-	CameraWidget*		window_folder = NULL;
 	GtkWidget*		item;
 	GtkWidget*		widget;
 	gboolean		root;
@@ -386,13 +384,8 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
 	gchar*			tmp;
 	GtkTargetEntry 		target_table[] = {{"text/uri-list", 0, 0}};
 	CORBA_Environment	ev;
-	BonoboUIComponent*	component;
 	BonoboStorage*		storage = NULL;
 	Bonobo_Storage		corba_storage = CORBA_OBJECT_NIL;
-	xmlDocPtr		doc;
-	xmlNodePtr		node, node_child, command;
-	xmlNsPtr		ns;
-	gint			result, i;
 
 	g_return_if_fail (tree);
 	g_return_if_fail (uri);
@@ -426,7 +419,7 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
 		g_free (tmp);
 	}
 	if (BONOBO_EX (&ev)) {
-		path = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_basename (uri));
+		path = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_path (uri));
 		tmp = g_strdup_printf (_("Could not get storage for folder '%s'!\n(%s)"), path, bonobo_exception_get_text (&ev));
 		g_free (path);
 		gnome_error_dialog_parented (tmp, main_window);
@@ -471,157 +464,21 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
         gtk_widget_ref (widget);
         gtk_tree_item_set_subtree (GTK_TREE_ITEM (item), widget);
 
-	/* Create the component. */
-	component = bonobo_ui_component_new_default ();
-	bonobo_ui_component_set_container (component, corba_container);
-	gtk_object_set_data (GTK_OBJECT (item), "component", component);
-	gtk_object_set_data (GTK_OBJECT (component), "camera", camera);
-	gp_camera_ref (camera);
-
-        /* Prepare the popup. */
-        CORBA_exception_init (&ev);
-        doc = xmlNewDoc ("1.0");
-        ns = xmlNewGlobalNs (doc, "xxx", "xxx");
-        xmlDocSetRootElement (doc, node = xmlNewNode (ns, "Root"));
-	xmlAddChild (node, command = xmlNewNode (ns, "commands"));
-	xmlAddChild (node, node_child = xmlNewNode (ns, "popups"));
-        xmlAddChild (node_child, node = xmlNewNode (ns, "popup"));
-	tmp = g_strdup_printf ("%i", counter);
-        xmlSetProp (node, "name", tmp);
-	g_free (tmp);
-
-	if (root) {
-
-		/* Camera configuration? */
-		if ((result = gp_camera_config_get (camera, &window_camera)) == GP_OK) {
-	                xmlAddChild (node, node_child = xmlNewNode (ns, "submenu"));
-	                xmlSetProp (node_child, "name", "Camera Configuration");
-	                xmlSetProp (node_child, "_label", "Camera Configuration");
-	                gp_widget_to_xml (component, window_camera, window_camera, node_child, command, ns);
-	        }
-
-		/* Manual. */
-		xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-                xmlSetProp (node_child, "name", "Manual");
-                xmlSetProp (node_child, "_label", "Manual");
-                xmlSetProp (node_child, "_tip", "Manual");
-                xmlSetProp (node_child, "verb", "on_manual_activate");
-                bonobo_ui_component_add_verb (component, "on_manual_activate", on_manual_activate, item);
-                xmlAddChild (node, xmlNewNode (ns, "separator"));
-	}
-
-        /* Folder configuration? */
-        if ((result = gp_camera_folder_config_get (camera, &window_folder, "/")) == GP_OK) {
-                xmlAddChild (node, node_child = xmlNewNode (ns, "submenu"));
-                xmlSetProp (node_child, "name", "Folder Configuration");
-                xmlSetProp (node_child, "_label", "Folder Configuration");
-                gp_widget_to_xml (component, window_folder, window_folder, node_child, command, ns);
-		xmlAddChild (node, xmlNewNode (ns, "separator"));
-        }
-
-        /* Upload? */
-        if (camera->abilities->file_put) {
-                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-                xmlSetProp (node_child, "name", "Upload");
-                xmlSetProp (node_child, "_label", "Upload");
-                xmlSetProp (node_child, "_tip", "Upload a file");
-                xmlSetProp (node_child, "verb", "on_upload_activate");
-                bonobo_ui_component_add_verb (component, "on_upload_activate", on_upload_activate, item);
-                xmlAddChild (node, xmlNewNode (ns, "separator"));
-        }
-
-	/* Capturing? */
-        if (root && camera->abilities->capture) {
-                xmlAddChild (node, xmlNewNode (ns, "separator"));
-                if (camera->abilities->capture & GP_CAPTURE_PREVIEW) {
-                        xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-                        xmlSetProp (node_child, "name", "Capture Preview");
-                        xmlSetProp (node_child, "_label", "Capture Preview");
-                        xmlSetProp (node_child, "_tip", "Capture a preview");
-                        xmlSetProp (node_child, "verb", "on_capture_preview_activate");
-                        bonobo_ui_component_add_verb (component, "on_capture_preview_activate", on_capture_preview_activate, item);
-                }
-                if (camera->abilities->capture & GP_CAPTURE_IMAGE) {
-                        xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-                        xmlSetProp (node_child, "name", "Capture Image");
-                        xmlSetProp (node_child, "_label", "Capture Image");
-                        xmlSetProp (node_child, "_tip", "Capture an image");
-                        xmlSetProp (node_child, "verb", "on_capture_image_activate");
-                        bonobo_ui_component_add_verb (component, "on_capture_image_activate", on_capture_image_activate, item);
-                }
-                if (camera->abilities->capture & GP_CAPTURE_VIDEO) {
-                        xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-                        xmlSetProp (node_child, "name", "Capture Video");
-                        xmlSetProp (node_child, "_label", "Capture Image");
-                        xmlSetProp (node_child, "_tip", "Capture a video");
-                        xmlSetProp (node_child, "verb", "on_capture_video_activate");
-                        bonobo_ui_component_add_verb (component, "on_capture_video_activate", on_capture_video_activate, item);
-                }
-                xmlAddChild (node, xmlNewNode (ns, "separator"));
-        }
-
-        /* Refresh. */
-        xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-        xmlSetProp (node_child, "name", "Refresh");
-        xmlSetProp (node_child, "verb", "on_refresh_activate");
-        xmlSetProp (node_child, "_label", "Refresh");
-        xmlSetProp (node_child, "_tip", "Refresh folder");
-        bonobo_ui_component_add_verb (component, "on_refresh_activate", on_refresh_activate, item);
-
-        /* Finish the popup. */
-        tmp = NULL;
-        xmlDocDumpMemory (doc, (xmlChar**) &tmp, &i);
-        xmlFreeDoc (doc);
-        bonobo_ui_component_set_translate (component, "/", tmp, &ev);
-        g_free (tmp);
-        if (!BONOBO_EX (&ev)) {
-		gtk_widget_show (widget = gtk_menu_new ());
-		tmp = g_strdup_printf ("/popups/%i", counter);
-                bonobo_window_add_popup (BONOBO_WINDOW (main_window), GTK_MENU (widget), tmp);
-		g_free (tmp);
-		if (window_camera) ui_set_values_from_widget (component, window_camera);
-		if (window_folder) ui_set_values_from_widget (component, window_folder);
-		counter++;
-        }
-
-        /* Report errors (if any). */
-        if (BONOBO_EX (&ev)) {
-                tmp = g_strdup_printf (_("Could not create popup for folder '%s'!\n(%s)"), gnome_vfs_uri_get_basename (uri), bonobo_exception_get_text (&ev));
-                gnome_error_dialog_parented (tmp, main_window);
-                g_free (tmp);
-        }
-
-	/* Free exception. */
-	CORBA_exception_free (&ev);
-
         /* Store some data. */
         gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
         gtk_object_set_data (GTK_OBJECT (item), "uri", uri);
         gtk_object_set_data (GTK_OBJECT (item), "corba_storage", corba_storage);
         gtk_object_set_data (GTK_OBJECT (item), "checked", GINT_TO_POINTER (1));
-        gtk_object_set_data (GTK_OBJECT (item), "component", component);
-	gtk_object_set_data (GTK_OBJECT (item), "menu", widget);
-	gtk_object_set_data (GTK_OBJECT (item), "window_camera", window_camera);
-	gtk_object_set_data (GTK_OBJECT (item), "window_folder", window_folder);
-	gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
 }
 
 void
 camera_tree_file_add (GtkTree* tree, GnomeVFSURI* uri)
 {
 	Camera*			camera;
-	CameraWidget*		window = NULL;
 	GtkWidget*		item;
-	GtkWidget*		menu = NULL;
 	GtkTargetEntry  	target_table[] = {{"text/uri-list", 0, 0}};
-	BonoboUIComponent*	component;
 	Bonobo_Storage		corba_storage;
 	CORBA_Environment	ev;
-	xmlDocPtr		doc;
-	xmlNsPtr		ns;
-	xmlNodePtr		node, node_child, command;
-	gint			result, i;
-	gchar*			tmp;
 
 	g_return_if_fail (tree);
 	g_return_if_fail (uri);
@@ -631,11 +488,10 @@ camera_tree_file_add (GtkTree* tree, GnomeVFSURI* uri)
 	/* Ref the camera. */
 	gp_camera_ref (camera);
 
-	/* Init exception. */
-	CORBA_exception_init (&ev);
-
 	/* Ref the storage. */
+	CORBA_exception_init (&ev);
 	Bonobo_Storage_ref (corba_storage, &ev);
+	CORBA_exception_free (&ev);
 	
 	/* Add the file to the tree. */
         item = gtk_tree_item_new_with_label (gnome_vfs_uri_get_basename (uri));
@@ -651,107 +507,11 @@ camera_tree_file_add (GtkTree* tree, GnomeVFSURI* uri)
         gtk_signal_connect (GTK_OBJECT (item), "button_press_event", GTK_SIGNAL_FUNC (on_tree_item_button_press_event), NULL);
 	gtk_signal_connect (GTK_OBJECT (item), "drag_data_get", GTK_SIGNAL_FUNC (on_camera_tree_file_drag_data_get), NULL);
 
-	/* Create the component. */
-        component = bonobo_ui_component_new_default ();
-        bonobo_ui_component_set_container (component, corba_container);
-	gtk_object_set_data (GTK_OBJECT (item), "component", component);
-	gtk_object_set_data (GTK_OBJECT (component), "camera", camera);
-	gp_camera_ref (camera);
-
-        /* Prepare the popup. */
-        doc = xmlNewDoc ("1.0");
-        ns = xmlNewGlobalNs (doc, "xxx", "xxx");
-	xmlDocSetRootElement (doc, node = xmlNewNode (ns, "Root"));
-	xmlAddChild (node, command = xmlNewNode (ns, "commands"));
-        xmlAddChild (node, node_child = xmlNewNode (ns, "popups"));
-        xmlAddChild (node_child, node = xmlNewNode (ns, "popup"));
-	tmp = g_strdup_printf ("%i", counter);
-        xmlSetProp (node, "name", tmp);
-	g_free (tmp);
-
-        /* File configuration? */
-        tmp = gnome_vfs_uri_extract_dirname (uri);
-        if ((result = gp_camera_file_config_get (camera, &window, tmp, (gchar*) gnome_vfs_uri_get_basename (uri))) == GP_OK) {
-                xmlAddChild (node, node_child = xmlNewNode (ns, "submenu"));
-                xmlSetProp (node_child, "name", "File Configuration");
-                xmlSetProp (node_child, "_label", "File Configuration");
-                gp_widget_to_xml (component, window, window, node_child, command, ns);
-                xmlAddChild (node, xmlNewNode (ns, "separator"));
-        }
-        g_free (tmp);
-
-        /* Save preview? */
-        if (camera->abilities->file_preview) {
-                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-                xmlSetProp (node_child, "name", "Save Preview");
-                xmlSetProp (node_child, "_label", "Save Preview");
-                xmlSetProp (node_child, "_tip", "Save preview");
-                xmlSetProp (node_child, "verb", "on_save_preview_activate");
-                bonobo_ui_component_add_verb (component, "on_save_preview_activate", on_save_preview_activate, item);
-                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-                xmlSetProp (node_child, "name", "Save Preview As");
-                xmlSetProp (node_child, "_label", "Save Preview As");
-                xmlSetProp (node_child, "_tip", "Save preview as");
-                xmlSetProp (node_child, "verb", "on_save_preview_as_activate");
-                bonobo_ui_component_add_verb (component, "on_save_preview_as_activate", on_save_preview_as_activate, item);
-                xmlAddChild (node, xmlNewNode (ns, "separator"));
-        }
-
-        /* Delete? */
-        if (camera->abilities->file_delete) {
-                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-                xmlSetProp (node_child, "name", "Delete");
-                xmlSetProp (node_child, "_label", "Delete");
-                xmlSetProp (node_child, "_tip", "Delete a file");
-                xmlSetProp (node_child, "verb", "on_delete_activate");
-                bonobo_ui_component_add_verb (component, "on_delete_activate", on_delete_activate, item);
-                xmlAddChild (node, xmlNewNode (ns, "separator"));
-        }
-
-        /* Save file. */
-        xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-        xmlSetProp (node_child, "name", "Save File");
-        xmlSetProp (node_child, "verb", "on_save_file_activate");
-        xmlSetProp (node_child, "_label", "Save File");
-        xmlSetProp (node_child, "_tip", "Save file");
-        bonobo_ui_component_add_verb (component, "on_save_file_activate", on_save_file_activate, item);
-        xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-        xmlSetProp (node_child, "name", "Save File As");
-        xmlSetProp (node_child, "verb", "on_save_file_as_activate");
-        xmlSetProp (node_child, "_label", "Save File As");
-        xmlSetProp (node_child, "_tip", "Save file as");
-        bonobo_ui_component_add_verb (component, "on_save_file_as_activate", on_save_file_as_activate, item);
-
-        /* Finish the popup. */
-        tmp = NULL;
-        xmlDocDumpMemory (doc, (xmlChar**) &tmp, &i);
-        xmlFreeDoc (doc);
-        bonobo_ui_component_set_translate (component, "/", tmp, &ev);
-        g_free (tmp);
-        if (!BONOBO_EX (&ev)) {
-		gtk_widget_show (menu = gtk_menu_new ());
-		tmp = g_strdup_printf ("/popups/%i", counter);
-                bonobo_window_add_popup (BONOBO_WINDOW (main_window), GTK_MENU (menu), tmp);
-		g_free (tmp);
-		counter++;
-        }
-
-        /* Report errors (if any). */
-        if (BONOBO_EX (&ev)) {
-                tmp = g_strdup_printf (_("Could not create popup for file '%s'!\n(%s)"), gnome_vfs_uri_get_basename (uri), bonobo_exception_get_text (&ev));
-                gnome_error_dialog_parented (tmp, main_window);
-                g_free (tmp);
-        }
-
-        /* Free exception. */
-	CORBA_exception_free (&ev);
-
         /* Store some data. */
         gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
         gtk_object_set_data (GTK_OBJECT (item), "uri", uri);
         gtk_object_set_data (GTK_OBJECT (item), "corba_storage", corba_storage);
-	gtk_object_set_data (GTK_OBJECT (item), "menu", menu);
-	gtk_object_set_data (GTK_OBJECT (item), "window_file", window);
+	gtk_object_set_data (GTK_OBJECT (item), "file", GINT_TO_POINTER (1));
 }
 
 void
@@ -847,6 +607,215 @@ main_tree_update (GConfValue* value)
                 item = GTK_TREE_ITEM (g_list_nth_data (main_tree->children, j));
                 if (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (item), "checked")) == 0) camera_tree_item_remove (item);
         }
+}
+
+void
+camera_tree_item_popup_create (GtkTreeItem* item)
+{
+	Camera*			camera;
+	CameraWidget*		window = NULL;
+	CameraWidget*		window_folder = NULL;
+        CORBA_Environment       ev;
+        xmlDocPtr               doc;
+        xmlNsPtr                ns;
+        xmlNodePtr              node, node_child, command;
+	gchar*			tmp;
+	gint			result, i;
+	GnomeVFSURI*		uri;
+	BonoboUIComponent*	component;
+	GtkWidget*		menu = NULL;
+
+	g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (item), "uri"));
+	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
+
+        /* Create the component. */
+        component = bonobo_ui_component_new_default ();
+        bonobo_ui_component_set_container (component, corba_container);
+        gtk_object_set_data (GTK_OBJECT (item), "component", component);
+        gtk_object_set_data (GTK_OBJECT (component), "camera", camera);
+        gp_camera_ref (camera);
+
+        /* Prepare the popup. */
+        doc = xmlNewDoc ("1.0");
+        ns = xmlNewGlobalNs (doc, "xxx", "xxx");
+        xmlDocSetRootElement (doc, node = xmlNewNode (ns, "Root"));
+        xmlAddChild (node, command = xmlNewNode (ns, "commands"));
+        xmlAddChild (node, node_child = xmlNewNode (ns, "popups"));
+        xmlAddChild (node_child, node = xmlNewNode (ns, "popup"));
+        tmp = g_strdup_printf ("%i", counter);
+        xmlSetProp (node, "name", tmp);
+        g_free (tmp);
+
+	/* Folder or file? */
+	if (gtk_object_get_data (GTK_OBJECT (item), "file")) {
+
+	        /* File configuration? */
+	        tmp = gnome_vfs_uri_extract_dirname (uri);
+	        if ((result = gp_camera_file_config_get (camera, &window, tmp, (gchar*) gnome_vfs_uri_get_basename (uri))) == GP_OK) {
+	                xmlAddChild (node, node_child = xmlNewNode (ns, "submenu"));
+	                xmlSetProp (node_child, "name", "File Configuration");
+	                xmlSetProp (node_child, "_label", "File Configuration");
+	                gp_widget_to_xml (component, window, window, node_child, command, ns);
+	                xmlAddChild (node, xmlNewNode (ns, "separator"));
+	        }
+	        g_free (tmp);
+	
+	        /* Save preview? */
+	        if (camera->abilities->file_preview) {
+	                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
+	                xmlSetProp (node_child, "name", "Save Preview");
+	                xmlSetProp (node_child, "_label", "Save Preview");
+	                xmlSetProp (node_child, "_tip", "Save preview");
+	                xmlSetProp (node_child, "verb", "on_save_preview_activate");
+	                bonobo_ui_component_add_verb (component, "on_save_preview_activate", on_save_preview_activate, item);
+	                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
+	                xmlSetProp (node_child, "name", "Save Preview As");
+	                xmlSetProp (node_child, "_label", "Save Preview As");
+	                xmlSetProp (node_child, "_tip", "Save preview as");
+	                xmlSetProp (node_child, "verb", "on_save_preview_as_activate");
+	                bonobo_ui_component_add_verb (component, "on_save_preview_as_activate", on_save_preview_as_activate, item);
+	                xmlAddChild (node, xmlNewNode (ns, "separator"));
+	        }
+	
+	        /* Save file. */
+	        xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
+	        xmlSetProp (node_child, "name", "Save File");
+	        xmlSetProp (node_child, "verb", "on_save_file_activate");
+	        xmlSetProp (node_child, "_label", "Save File");
+	        xmlSetProp (node_child, "_tip", "Save file");
+	        bonobo_ui_component_add_verb (component, "on_save_file_activate", on_save_file_activate, item);
+	        xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
+	        xmlSetProp (node_child, "name", "Save File As");
+	        xmlSetProp (node_child, "verb", "on_save_file_as_activate");
+	        xmlSetProp (node_child, "_label", "Save File As");
+	        xmlSetProp (node_child, "_tip", "Save file as");
+	        bonobo_ui_component_add_verb (component, "on_save_file_as_activate", on_save_file_as_activate, item);
+	
+	        /* Delete? */
+	        if (camera->abilities->file_delete) {
+			xmlAddChild (node, xmlNewNode (ns, "separator"));
+	                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
+	                xmlSetProp (node_child, "name", "Delete");
+	                xmlSetProp (node_child, "_label", "Delete");
+	                xmlSetProp (node_child, "_tip", "Delete a file");
+	                xmlSetProp (node_child, "verb", "on_delete_activate");
+	                bonobo_ui_component_add_verb (component, "on_delete_activate", on_delete_activate, item);
+	        }
+	} else {
+
+		/* Root? */
+		if (strcmp (gnome_vfs_uri_get_path (uri), "/") == 0) {
+
+	                /* Camera configuration? */
+	                if ((result = gp_camera_config_get (camera, &window)) == GP_OK) {
+	                        xmlAddChild (node, node_child = xmlNewNode (ns, "submenu"));
+	                        xmlSetProp (node_child, "name", "Camera Configuration");
+	                        xmlSetProp (node_child, "_label", "Camera Configuration");
+	                        gp_widget_to_xml (component, window, window, node_child, command, ns);
+	                }
+	
+	                /* Manual. */
+	                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
+	                xmlSetProp (node_child, "name", "Manual");
+	                xmlSetProp (node_child, "_label", "Manual");
+	                xmlSetProp (node_child, "_tip", "Manual");
+	                xmlSetProp (node_child, "verb", "on_manual_activate");
+	                bonobo_ui_component_add_verb (component, "on_manual_activate", on_manual_activate, item);
+	                xmlAddChild (node, xmlNewNode (ns, "separator"));
+
+        	        /* Capturing? */
+	                if (camera->abilities->capture) {
+	                        if (camera->abilities->capture & GP_CAPTURE_PREVIEW) {
+	                                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
+	                                xmlSetProp (node_child, "name", "Capture Preview");
+	                                xmlSetProp (node_child, "_label", "Capture Preview");
+	                                xmlSetProp (node_child, "_tip", "Capture a preview");
+	                                xmlSetProp (node_child, "verb", "on_capture_preview_activate");
+	                                bonobo_ui_component_add_verb (component, "on_capture_preview_activate", on_capture_preview_activate, item);
+	                        }
+	                        if (camera->abilities->capture & GP_CAPTURE_IMAGE) {
+	                                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
+	                                xmlSetProp (node_child, "name", "Capture Image");
+	                                xmlSetProp (node_child, "_label", "Capture Image");
+	                                xmlSetProp (node_child, "_tip", "Capture an image");
+	                                xmlSetProp (node_child, "verb", "on_capture_image_activate");
+	                                bonobo_ui_component_add_verb (component, "on_capture_image_activate", on_capture_image_activate, item);
+	                        }
+	                        if (camera->abilities->capture & GP_CAPTURE_VIDEO) {
+	                                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
+	                                xmlSetProp (node_child, "name", "Capture Video");
+	                                xmlSetProp (node_child, "_label", "Capture Image");
+	                                xmlSetProp (node_child, "_tip", "Capture a video");
+	                                xmlSetProp (node_child, "verb", "on_capture_video_activate");
+	                                bonobo_ui_component_add_verb (component, "on_capture_video_activate", on_capture_video_activate, item);
+	                        }
+	                        xmlAddChild (node, xmlNewNode (ns, "separator"));
+	                }
+		}
+
+	        /* Folder configuration? */
+	        if ((result = gp_camera_folder_config_get (camera, &window_folder, "/")) == GP_OK) {
+	                xmlAddChild (node, node_child = xmlNewNode (ns, "submenu"));
+	                xmlSetProp (node_child, "name", "Folder Configuration");
+	                xmlSetProp (node_child, "_label", "Folder Configuration");
+	                gp_widget_to_xml (component, window_folder, window_folder, node_child, command, ns);
+        	        xmlAddChild (node, xmlNewNode (ns, "separator"));
+	        }
+	
+	        /* Upload? */
+	        if (camera->abilities->file_put) {
+	                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
+	                xmlSetProp (node_child, "name", "Upload");
+	                xmlSetProp (node_child, "_label", "Upload");
+	                xmlSetProp (node_child, "_tip", "Upload a file");
+	                xmlSetProp (node_child, "verb", "on_upload_activate");
+	                bonobo_ui_component_add_verb (component, "on_upload_activate", on_upload_activate, item);
+	                xmlAddChild (node, xmlNewNode (ns, "separator"));
+	        }
+	
+	        /* Refresh. */
+	        xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
+	        xmlSetProp (node_child, "name", "Refresh");
+	        xmlSetProp (node_child, "verb", "on_refresh_activate");
+	        xmlSetProp (node_child, "_label", "Refresh");
+	        xmlSetProp (node_child, "_tip", "Refresh folder");
+	        bonobo_ui_component_add_verb (component, "on_refresh_activate", on_refresh_activate, item);
+	}
+	
+        /* Finish the popup. */
+	CORBA_exception_init (&ev);
+        tmp = NULL;
+        xmlDocDumpMemory (doc, (xmlChar**) &tmp, &i);
+        xmlFreeDoc (doc);
+        bonobo_ui_component_set_translate (component, "/", tmp, &ev);
+        g_free (tmp);
+        if (!BONOBO_EX (&ev)) {
+                gtk_widget_show (menu = gtk_menu_new ());
+                tmp = g_strdup_printf ("/popups/%i", counter);
+                bonobo_window_add_popup (BONOBO_WINDOW (main_window), GTK_MENU (menu), tmp);
+                g_free (tmp);
+                if (window) ui_set_values_from_widget (component, window, window);
+                if (window_folder) ui_set_values_from_widget (component, window_folder, window_folder);
+                counter++;
+        }
+
+        /* Report errors (if any). */
+        if (BONOBO_EX (&ev)) {
+                tmp = g_strdup_printf (_("Could not create popup for '%s'!\n(%s)"), gnome_vfs_uri_get_path (uri), bonobo_exception_get_text (&ev));
+                gnome_error_dialog_parented (tmp, main_window);
+                g_free (tmp);
+        }
+
+        /* Free exception. */
+        CORBA_exception_free (&ev);
+
+        /* Store some data. */
+        gtk_object_set_data (GTK_OBJECT (item), "menu", menu);
+	gtk_object_set_data (GTK_OBJECT (item), "window_folder", window_folder);
+	gtk_object_set_data (GTK_OBJECT (item), "window", window);
+
+	/* To make sure the _user_ toggled... */
+	gtk_object_set_data (GTK_OBJECT (component), "done", GINT_TO_POINTER (1));
 }
 
 

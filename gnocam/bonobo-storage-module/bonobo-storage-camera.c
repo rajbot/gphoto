@@ -30,6 +30,24 @@ struct _BonoboStorageCameraPrivate {
 };
 
 static Bonobo_StorageInfo *
+create_info_for_folder (const CORBA_char *name, 
+			const Bonobo_StorageInfoFields mask)
+{
+	Bonobo_StorageInfo *info;
+
+	info = Bonobo_StorageInfo__alloc (); 
+	info->name = CORBA_string_dup (name); 
+	if (mask & Bonobo_FIELD_SIZE) 
+		info->size = 0; 
+	if (mask & Bonobo_FIELD_TYPE) 
+		info->type = Bonobo_STORAGE_TYPE_DIRECTORY; 
+	if (mask & Bonobo_FIELD_CONTENT_TYPE) 
+		info->content_type = CORBA_string_dup ("x-directory/normal");
+
+	return (info);
+}
+
+static Bonobo_StorageInfo *
 camera_get_info (BonoboStorage *s, const CORBA_char *name, 
 		 const Bonobo_StorageInfoFields mask, CORBA_Environment *ev)
 {
@@ -48,6 +66,10 @@ camera_get_info (BonoboStorage *s, const CORBA_char *name,
 				     ex_Bonobo_Storage_NotSupported, NULL);
                 return (NULL);
         }
+
+	/* Check if this is ourselves (".") */
+	if (!strcmp (name, "."))
+		return (create_info_for_folder (name, mask));
 
 	/* Check if this is a file */
 	CHECK_RESULT (gp_camera_folder_list_files (storage->priv->camera, 
@@ -112,19 +134,8 @@ camera_get_info (BonoboStorage *s, const CORBA_char *name,
         for (i = 0; i < gp_list_count (&list); i++) 
 		if (!strcmp (gp_list_entry (&list, i)->name, name)) 
 			break;
-        if (i != gp_list_count (&list)) {
-                info = Bonobo_StorageInfo__alloc ();
-                info->name = CORBA_string_dup (name);
-                if (mask & Bonobo_FIELD_SIZE)
-			info->size = 0;
-                if (mask & Bonobo_FIELD_TYPE)
-			info->type = Bonobo_STORAGE_TYPE_DIRECTORY;
-                if (mask & Bonobo_FIELD_CONTENT_TYPE)
-			info->content_type = CORBA_string_dup (
-							"x-directory/normal");
-
-                return (info);
-        }
+        if (i != gp_list_count (&list))
+		return (create_info_for_folder (name, mask));
 
 	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, 
 					ex_Bonobo_Storage_NotFound, NULL);
@@ -249,15 +260,18 @@ camera_list_contents (BonoboStorage *s, const CORBA_char *name,
 	return (list);
 }
 
-static BonoboStorage*
-bonobo_storage_camera_open (const gchar* path, gint flags, gint mode, CORBA_Environment* ev)
+static BonoboStorage *
+bonobo_storage_camera_open (const gchar *path, gint flags, gint mode, 
+		            CORBA_Environment *ev)
 {
-        BonoboStorageCamera*	new;
-	Camera*			camera = NULL;
+        BonoboStorageCamera *new;
+	Camera *camera = NULL;
+	gchar *tmp_path;
 
 	/* Create the camera. */
 	CHECK_RESULT (gp_camera_new_from_gconf (&camera, path), ev);
-	if (BONOBO_EX (ev)) return (NULL);
+	if (BONOBO_EX (ev)) 
+		return (NULL);
 	g_return_val_if_fail (camera, NULL);
 
 	/* Get the real path (i.e. without "camera://camera_name") */
@@ -265,20 +279,26 @@ bonobo_storage_camera_open (const gchar* path, gint flags, gint mode, CORBA_Envi
 	for (path += 2; *path != 0; path++) if (*path == '/') break;
 	
 	/* Create the storage. */
-        new = bonobo_storage_camera_new (camera, path, flags, ev);
+	if (*path == 0)
+		tmp_path = g_strdup ("/");
+	else
+		tmp_path = g_strdup (path);
+        new = bonobo_storage_camera_new (camera, tmp_path, flags, ev);
+	g_free (tmp_path);
 	gp_camera_unref (camera);
-	if (BONOBO_EX (ev)) return (NULL);
-	g_return_val_if_fail (new, NULL);
+	if (BONOBO_EX (ev)) 
+		return (NULL);
 
         return (BONOBO_STORAGE (new));
 }
 
-static BonoboStorage*
-camera_open_storage (BonoboStorage* s, const CORBA_char* name, Bonobo_Storage_OpenMode mode, CORBA_Environment* ev)
+static BonoboStorage *
+camera_open_storage (BonoboStorage *s, const CORBA_char *name, 
+		     Bonobo_Storage_OpenMode mode, CORBA_Environment *ev)
 {
-	BonoboStorageCamera*	storage;
-	BonoboStorageCamera*	new;
-	gchar*			path_new;
+	BonoboStorageCamera *storage;
+	BonoboStorageCamera *new;
+	gchar *path_new;
 
 	storage = BONOBO_STORAGE_CAMERA (s);
 
@@ -294,59 +314,75 @@ camera_open_storage (BonoboStorage* s, const CORBA_char* name, Bonobo_Storage_Op
 	return (BONOBO_STORAGE (new));
 }
 
-BonoboStorageCamera*
-bonobo_storage_camera_new (Camera* camera, const gchar* path, Bonobo_Storage_OpenMode mode, CORBA_Environment* ev)
+BonoboStorageCamera *
+bonobo_storage_camera_new (Camera *camera, const gchar *path, 
+		           Bonobo_Storage_OpenMode mode, CORBA_Environment *ev)
 {
-	BonoboStorageCamera*	new;
+	BonoboStorageCamera *new;
+	gchar *dirname;
+	gint i;
+	CameraList list;
 	
 	g_return_val_if_fail (camera, NULL);
 	g_return_val_if_fail (path, NULL);
+	g_return_val_if_fail (*path, NULL);
 
 	/* Reject unsupported open modes. */
 	if (mode & Bonobo_Storage_TRANSACTED) {
-		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, 
+				     ex_Bonobo_Storage_NotSupported, NULL);
 		return (NULL);
 	}
-	if ((mode & Bonobo_Storage_COMPRESSED) && !(camera->abilities->file_operations & GP_FILE_OPERATION_PREVIEW)) {
-		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
+	if ((mode & Bonobo_Storage_COMPRESSED) && 
+	    !(camera->abilities->file_operations & GP_FILE_OPERATION_PREVIEW)) {
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, 
+			             ex_Bonobo_Storage_NotSupported, NULL);
 		return (NULL);
 	}
 
-	/* Does the folder exist? */
-	if (mode & Bonobo_Storage_FAILIFEXIST) {
-		CameraList	list;
-		gint		i;
-		gchar*		path_suffix;
-
-		path_suffix = g_dirname (path);
-		CHECK_RESULT (gp_camera_folder_list_files (camera, path_suffix, &list), ev);
-		if (BONOBO_EX (ev)) {
-			g_free (path_suffix);
+	/* Make sure the requested storage isn't a file */
+	dirname = g_dirname (path);
+	CHECK_RESULT (gp_camera_folder_list_files (camera, dirname, &list), ev);
+	g_free (dirname);
+	if (BONOBO_EX (ev))
+		return (NULL);
+	for (i = 0; i < gp_list_count (&list); i++)
+		if (strcmp ((gp_list_entry (&list, i))->name, 
+			    g_basename (path)) == 0) {
+			CORBA_exception_set (ev, CORBA_USER_EXCEPTION,
+					     ex_Bonobo_Storage_NotStorage, 
+					     NULL); 
 			return (NULL);
 		}
-		for (i = 0; i < gp_list_count (&list); i++) {
-			if (strcmp ((gp_list_entry (&list, i))->name, g_basename (path)) == 0) {
-				CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NameExists, NULL);
-				g_free (path_suffix);
+
+	/* Make sure the requested folder exists */
+	CHECK_RESULT (gp_camera_folder_list_files (camera, path, &list), ev);
+	if (BONOBO_EX (ev))
+		return (NULL);
+
+	/* Does a folder with this name already exist? */
+	if (mode & Bonobo_Storage_FAILIFEXIST) {
+		dirname = g_dirname (path);
+		CHECK_RESULT (gp_camera_folder_list_folders (camera, 
+					            dirname, &list), ev);
+		g_free (dirname);
+		if (BONOBO_EX (ev)) {
+			return (NULL);
+		}
+		for (i = 0; i < gp_list_count (&list); i++)
+			if (strcmp ((gp_list_entry (&list, i))->name, 
+						    g_basename (path)) == 0) {
+				CORBA_exception_set (ev, CORBA_USER_EXCEPTION, 
+					ex_Bonobo_Storage_NameExists, NULL);
 				return (NULL);
 			}
-		}
-		CHECK_RESULT (gp_camera_folder_list_folders (camera, path_suffix, &list), ev);
-		g_free (path_suffix);
-		if (BONOBO_EX (ev)) return (NULL);
-		for (i = 0; i < gp_list_count (&list); i++) {
-			if (strcmp ((gp_list_entry (&list, i))->name, g_basename (path)) == 0) {
-				CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NameExists, NULL);
-				return (NULL);
-			}
-		}
 	}
+	
         /* Create the storage. */
 	new = gtk_type_new (BONOBO_STORAGE_CAMERA_TYPE);
 	new->priv->camera = camera;
 	gp_camera_ref (camera);
-	if (*path == 0) new->priv->path = g_strdup ("/");
-	else new->priv->path = g_strdup (path);
+	new->priv->path = g_strdup (path);
 	new->priv->mode = mode;
 
 	return (new);

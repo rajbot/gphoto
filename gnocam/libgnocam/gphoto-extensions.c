@@ -110,6 +110,7 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 	name = g_strndup (name_or_url, i);
 
 	/* Get the list of configured cameras */
+	CAM_EXT_DEBUG (("  I am going to search for '%s'...", name));
 	CAM_EXT_DEBUG (("  Getting list of configured cameras..."));
 	g_static_mutex_lock (&client_mutex);
 	list = gconf_client_get_list (client, 

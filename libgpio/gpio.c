@@ -196,7 +196,7 @@ int gpio_close(gpio_device * dev)
 
 	if (!dev)
 		return GPIO_ERROR;
-	if (dev->device_fd == 0)
+	if (dev->type == GPIO_DEVICE_SERIAL && dev->device_fd == 0)
 		return GPIO_OK;
 
 	retval = dev->ops->close(dev);

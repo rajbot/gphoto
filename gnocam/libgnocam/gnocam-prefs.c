@@ -1,14 +1,16 @@
 #include <config.h>
 #include "gnocam-prefs.h"
 
+#include <gtk/gtktreeview.h>
+
 #include <bonobo/bonobo-object.h>
 
 struct _GnocamPrefsPriv {
 	GNOME_C_Bag bag;
 };
 
-#define PARENT_TYPE GTK_TYPE_NOTEBOOK
-static GtkNotebookClass *parent_class;
+#define PARENT_TYPE GTK_TYPE_HPANED
+static GtkHPanedClass *parent_class;
 
 static void
 gnocam_prefs_finalize (GObject *o)
@@ -60,8 +62,12 @@ GnocamPrefs *
 gnocam_prefs_new (GNOME_C_Bag bag)
 {
 	GnocamPrefs *p = g_object_new (GNOCAM_TYPE_PREFS, NULL);
+	GtkWidget *w;
 
 	p->priv->bag = bonobo_object_dup_ref (bag, NULL);
+	w = gtk_tree_view_new ();
+	gtk_widget_show (w);
+	gtk_paned_pack1 (GTK_PANED (p), w, TRUE, FALSE);
 
 	return p;
 }

@@ -1,7 +1,7 @@
 #ifndef __GNOCAM_PREFS_H__
 #define __GNOCAM_PREFS_H__
 
-#include <gtk/gtknotebook.h>
+#include <gtk/gtkhpaned.h>
 #include <libgnocam/GNOME_C.h>
 
 G_BEGIN_DECLS
@@ -15,13 +15,13 @@ typedef struct _GnocamPrefsPriv  GnocamPrefsPriv;
 typedef struct _GnocamPrefsClass GnocamPrefsClass;
 
 struct _GnocamPrefs {
-	GtkNotebook parent;
+	GtkHPaned parent;
 
 	GnocamPrefsPriv *priv;
 };
 
 struct _GnocamPrefsClass {
-	GtkNotebookClass parent_class;
+	GtkHPanedClass parent_class;
 };
 
 GType        gnocam_prefs_get_type (void) G_GNUC_CONST;

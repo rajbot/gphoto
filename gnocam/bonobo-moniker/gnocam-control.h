@@ -27,7 +27,9 @@ typedef struct _GnoCamControlClass    GnoCamControlClass;
 typedef struct _GnoCamControlPrivate  GnoCamControlPrivate;
 
 struct _GnoCamControl {
-	BonoboControl control;
+	BonoboControl 	control;
+
+	Camera* 	camera;
 
 	GnoCamControlPrivate *priv;
 };

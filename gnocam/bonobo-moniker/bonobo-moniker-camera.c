@@ -8,6 +8,7 @@
  */
 #include <config.h>
 #include <bonobo.h>
+#include <gphoto2.h>
 
 #include "gnocam-control.h"
 #include "bonobo-moniker-camera.h"
@@ -49,6 +50,8 @@ camera_resolve (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options, co
 static BonoboObject *
 bonobo_moniker_camera_factory (BonoboGenericFactory *this, void* data)
 {
+	g_return_val_if_fail (gp_init (GP_DEBUG_NONE) == GP_OK, NULL);
+	
 	return BONOBO_OBJECT (bonobo_moniker_simple_new ("camera:", camera_resolve));
 }
 

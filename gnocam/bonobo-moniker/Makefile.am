@@ -15,9 +15,10 @@ oaf_DATA = $(OAF_FILES:.oaf.in=.oaf)
 @XML_I18N_MERGE_OAF_RULE@
 
 CFLAGS = @CFLAGS@\
+ `gphoto2-port-config --cflags`\
  `gphoto2-config --cflags`\
  `gconf-config --cflags`\
- `gnome-config --cflags bonobo bonobox`\
+ `gnome-config --cflags bonobo bonobox xml vfs`\
  `xml-config --cflags`
     
 bin_PROGRAMS = \
@@ -25,8 +26,11 @@ bin_PROGRAMS = \
 
 bonobo_moniker_camera_SOURCES =\
  bonobo-moniker-camera.h bonobo-moniker-camera.c\
- gnocam-control.h gnocam-control.c
+ gnocam-control.h gnocam-control.c\
+ utils.h utils.c
 
 bonobo_moniker_camera_LDADD=\
+ $(GPHOTO2_LIBS)\
+ $(VFS_LIBS)\
  $(BONOBO_LIBS)
 

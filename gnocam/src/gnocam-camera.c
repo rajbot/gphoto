@@ -119,9 +119,14 @@ static void 	on_popup_storage_view_title_bar_button_clicked 	(ETitleBar* title_b
 /* Internal functions */
 /**********************/
 
-static void
-create_menu (GnoCamCamera* camera)
+static gint
+create_menu (gpointer user_data)
 {
+	GnoCamCamera*	camera;
+
+	g_return_val_if_fail (user_data, FALSE);
+	camera = GNOCAM_CAMERA (user_data);
+	
 	/* Create the component */
         camera->priv->component = bonobo_ui_component_new (PACKAGE "Camera");
         bonobo_ui_component_set_container (camera->priv->component, BONOBO_OBJREF (camera->priv->container));
@@ -170,6 +175,8 @@ create_menu (GnoCamCamera* camera)
         }
 
         bonobo_ui_component_thaw (camera->priv->component, NULL);
+
+	return (FALSE);
 }
 
 static int
@@ -282,7 +289,7 @@ on_widget_changed (GnoCamFile* file, gpointer user_data)
 	gtk_notebook_set_page (GTK_NOTEBOOK (camera->priv->notebook), current_page);
 
 	/* Could well be that the menu changed, too */
-	gnocam_file_show_menu (file, camera->priv->container);
+	gnocam_file_show_menu (file);
 }
 
 static void
@@ -395,7 +402,7 @@ on_file_selected (GnoCamStorageView* storage_view, const gchar* path, void* data
 	
 	hide_current_menu (camera);
 	camera->priv->subobject = BONOBO_X_OBJECT (file);
-	gnocam_file_show_menu (file, camera->priv->container);
+	gnocam_file_show_menu (file);
 
 	e_shell_folder_title_bar_set_title (E_SHELL_FOLDER_TITLE_BAR (camera->priv->title_bar), path);
 	if ((pixbuf = util_pixbuf_file ()))
@@ -440,7 +447,7 @@ on_directory_selected (GnoCamStorageView* storage_view, const gchar* path, void*
 
 	hide_current_menu (camera);
 	camera->priv->subobject = BONOBO_X_OBJECT (folder);
-	gnocam_folder_show_menu (folder, camera->priv->container);
+	gnocam_folder_show_menu (folder);
 	
 	e_shell_folder_title_bar_set_title (E_SHELL_FOLDER_TITLE_BAR (camera->priv->title_bar), path);
 	if ((pixbuf = util_pixbuf_folder ()))
@@ -668,21 +675,12 @@ gnocam_camera_new (const gchar* url, BonoboUIContainer* container, GtkWindow* pa
 	gtk_signal_connect (GTK_OBJECT (new->priv->storage_view), "file_selected", GTK_SIGNAL_FUNC (on_file_selected), new);
 
         /* Create the menu */
-	create_menu (new);
+	gtk_idle_add (create_menu, new);
 
 	/* Select the selected file/folder */
 	name = (gchar*) url + 9;
 	for (; *name != 0; name++) if (*name == '/') break;
 	gtk_signal_emit_by_name (GTK_OBJECT (new->priv->storage_view), "directory_selected", name);
-//The menu doesn't get added. This seems to be because it is added during a signal execution. The code below proves all...
-//	{
-//		GnoCamFolder*	folder = gnocam_folder_new (new->priv->camera, new->priv->storage, name, new->priv->container, new->priv->client);
-//		gint		page;
-//		gtk_widget_show (label = gnocam_folder_get_widget (folder));
-//		gtk_notebook_append_page (GTK_NOTEBOOK (new->priv->notebook), label, NULL);
-//		page = gtk_notebook_page_num (GTK_NOTEBOOK (new->priv->notebook), label);
-//	        gtk_notebook_set_page (GTK_NOTEBOOK (new->priv->notebook), page);
-//	}
 
 	/* Set default settings */
 	position = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/hpaned_position_camera", NULL);

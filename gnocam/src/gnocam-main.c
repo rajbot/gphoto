@@ -54,6 +54,41 @@ struct _GnoCamMainPrivate {
 "  </status>"															\
 "</Root>"
 
+/**************/
+/* Prototypes */
+/**************/
+
+static void 	on_preferences_activate 	(BonoboUIComponent* component, gpointer user_data, const gchar* path);
+static void	on_about_activate		(BonoboUIComponent* component, gpointer user_data, const gchar* path);
+
+/**********************/
+/* Internal functions */
+/**********************/
+
+static gint
+create_menu (gpointer user_data)
+{
+	GnoCamMain*	m;
+        BonoboUIVerb            verb [] = {
+                BONOBO_UI_UNSAFE_VERB ("Exit", gtk_main_quit),
+                BONOBO_UI_VERB ("Preferences", on_preferences_activate),
+                BONOBO_UI_VERB ("About", on_about_activate),
+                BONOBO_UI_VERB_END};
+
+	g_return_val_if_fail (user_data, FALSE);
+	m = GNOCAM_MAIN (user_data);
+
+        m->priv->component = bonobo_ui_component_new (PACKAGE "main");
+        bonobo_ui_component_set_container (m->priv->component, BONOBO_OBJREF (m->priv->container));
+        bonobo_ui_component_freeze (m->priv->component, NULL);
+        bonobo_ui_engine_config_set_path (bonobo_window_get_ui_engine (BONOBO_WINDOW (m)), "/" PACKAGE "/UIConf/main");
+        bonobo_ui_component_set_translate (m->priv->component, "/", GNOCAM_MAIN_UI, NULL);
+        bonobo_ui_component_add_verb_list_with_data (m->priv->component, verb, m);
+        bonobo_ui_component_thaw (m->priv->component, NULL);
+
+	return (FALSE);
+}
+
 /*************/
 /* Callbacks */
 /*************/
@@ -177,11 +212,6 @@ gnocam_main_new (GConfClient* client)
 {
 	GtkWidget*		widget;
 	GnoCamMain*		new;
-	BonoboUIVerb            verb [] = {
-		BONOBO_UI_UNSAFE_VERB ("Exit", gtk_main_quit),
-		BONOBO_UI_VERB ("Preferences", on_preferences_activate),
-		BONOBO_UI_VERB ("About", on_about_activate),
-		BONOBO_UI_VERB_END};
 	gint			position, w, h;
 
 	new = gtk_type_new (GNOCAM_TYPE_MAIN);
@@ -210,13 +240,7 @@ gnocam_main_new (GConfClient* client)
 //	bonobo_object_unref (BONOBO_OBJECT (new->priv->container));
 
 	/* Create the menu */
-	new->priv->component = bonobo_ui_component_new (PACKAGE "main");
-	bonobo_ui_component_set_container (new->priv->component, BONOBO_OBJREF (new->priv->container));
-	bonobo_ui_component_freeze (new->priv->component, NULL);
-	bonobo_ui_engine_config_set_path (bonobo_window_get_ui_engine (BONOBO_WINDOW (new)), "/" PACKAGE "/UIConf/main");
-	bonobo_ui_component_set_translate (new->priv->component, "/", GNOCAM_MAIN_UI, NULL);
-	bonobo_ui_component_add_verb_list_with_data (new->priv->component, verb, new);
-	bonobo_ui_component_thaw (new->priv->component, NULL);
+	gtk_idle_add (create_menu, new);
 
 	/* Set the default settings */
 	w = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/width_main", NULL);

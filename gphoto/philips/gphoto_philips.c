@@ -159,12 +159,13 @@ struct Image *philips_get_picture (int picNum, int thumbnail) {
 		philips_getpictsize ( picNum, &Size );
         image->image = (char *)malloc ( Size );
 		image->image_size = Size;
+		image->image_info_size = 0;
 		strcpy ( image->image_type, "jpg" );
 	    philips_getpict ( picNum, (char *)image->image );
 		}
 
 	philips_close_camera();
-	return ( image);
+	return ( image );
 }
 
 

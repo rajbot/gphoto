@@ -52,6 +52,10 @@ else
 *** Did not find gnome-libs installed.])
 fi
 
+PKG_CHECK_MODULES(GCONF, gconfgtk >= 1.0.3)
+AC_SUBST(GCONF_CFLAGS)
+AC_SUBST(GCONF_LIBS)
+
 dnl ******
 dnl GnoCam
 dnl ******
@@ -117,8 +121,8 @@ if $try_capplet; then
 	AC_MSG_CHECKING(for capplet libraries)
 	if gnome-config --libs capplet > /dev/null 2>&1; then
 		AC_MSG_RESULT(found)
-		CAPPLET_LIBS="`gnome-config --libs capplet`"
-		CAPPLET_CFLAGS="`gnome-config --cflags capplet`"
+		CAPPLET_LIBS="`gnome-config --libs capplet gal gnomeui gdk_pixbuf bonobo_conf`" $(GCONF_LIBS)
+		CAPPLET_CFLAGS="`gnome-config --cflags capplet gal gnomeui gdk_pixbuf bonobo_conf`" $(GCONF_CFLAGS)
 		AC_SUBST(CAPPLET_LIBS)
 		AC_SUBST(CAPPLET_CFLAGS)
 		have_capplet=true
@@ -155,13 +159,6 @@ if $try_applet; then
 	fi
 fi
 AM_CONDITIONAL(APPLET, $have_applet)
-
-dnl ******************************
-dnl GConf
-dnl ******************************
-PKG_CHECK_MODULES(GCONF, gconfgtk >= 1.0.3)
-AC_SUBST(GCONF_CFLAGS)
-AC_SUBST(GCONF_LIBS)
 
 EXTRA_GNOME_CFLAGS="`gnome-config --cflags bonobo bonobox bonobox_print print gal gnome gnomeui oaf bonobo_conf`"
 EXTRA_GNOME_LIBS="`gnome-config --libs bonobo bonobox bonobox_print print gal gnome gnomeui oaf bonobo_conf`"

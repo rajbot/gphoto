@@ -1,4 +1,4 @@
-# Makefile.in generated automatically by automake 1.4a from Makefile.am
+# Makefile.in generated automatically by automake 1.4 from Makefile.am
 
 # Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
@@ -46,10 +46,9 @@ AUTOMAKE = @AUTOMAKE@
 AUTOHEADER = @AUTOHEADER@
 
 INSTALL = @INSTALL@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
-INSTALL_STRIP_FLAG =
 transform = @program_transform_name@
 
 NORMAL_INSTALL = :
@@ -66,6 +65,7 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 DLLTOOL = @DLLTOOL@
 GPIO_CFLAGS = @GPIO_CFLAGS@
+GPIO_IEEE1394 = @GPIO_IEEE1394@
 GPIO_INCLUDEDIR = @GPIO_INCLUDEDIR@
 GPIO_LIBDIR = @GPIO_LIBDIR@
 GPIO_LIBS = @GPIO_LIBS@
@@ -82,9 +82,9 @@ LN_S = @LN_S@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 NM = @NM@
+OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
-USE_SYMBOL_UNDERSCORE = @USE_SYMBOL_UNDERSCORE@
 VERSION = @VERSION@
 
 INCLUDES = -I@srcdir@ $(VERSION_FLAGS)
@@ -92,27 +92,36 @@ VERSION_FLAGS = -DLIBGPIO_VERSION=\"@LIBGPIO_VERSION@\" -DHAVE_TERMIOS_H
 
 bin_SCRIPTS = gpio-config
 noinst_PROGRAMS = gpio_test
-@GPIO_USB_TRUE@USB_SUPPORT = gpio-usb.c
-@GPIO_USB_FALSE@USB_SUPPORT = 
+@GPIO_USB_TRUE@USB_HEADER = gpio-usb.h
+@GPIO_USB_FALSE@USB_HEADER = 
+@GPIO_USB_TRUE@USB_SOURCE = gpio-usb.c
+@GPIO_USB_FALSE@USB_SOURCE = 
+@GPIO_IEEE1394_TRUE@IEEE1394_HEADER = gpio-ieee1394.h
+@GPIO_IEEE1394_FALSE@IEEE1394_HEADER = 
+@GPIO_IEEE1394_TRUE@IEEE1394_SOURCE = gpio-ieee1394.c
+@GPIO_IEEE1394_FALSE@IEEE1394_SOURCE = 
 
 lib_LTLIBRARIES = libgpio.la
 libgpio_la_LDFLAGS = -version-info @LIBGPIO_VERSION_INFO@ -DHAVE_TERMIOS_H 
-libgpio_la_SOURCES = gpio.c gpio.h gpio-serial.c gpio-serial.h $(USB_SUPPORT)
+libgpio_la_SOURCES = gpio.c gpio.h 			gpio-serial.c gpio-serial.h 			gpio-parallel.h gpio-parallel.c 			$(IEEE1394_HEADER) $(IEEE1394_SOURCE) 			$(USB_HEADER) $(USB_SOURCE)
+
 
 gpio_test_SOURCES = gpio-test.c
 gpio_test_LDADD = libgpio.la
 
 gpioincdir = $(includedir)/gpio
-gpioinc_HEADERS = gpio.h
+gpioinc_HEADERS = gpio.h gpio-serial.h gpio-parallel.h $(IEEE1394_HEADER) $(USB_HEADER) 
 
 # DEPS = $(top_builddir)/libgpio.la
 # LDADDS = $(top_builddir)/libgpio.la
 
-EXTRA_DIST =  	AUTHORS 	ChangeLog 	COPYING.LIB 	NEWS 	README 	libgpio.spec 	gpio-config.in 	gpioConf.sh.in 	TODO
-
-
 confexecdir = $(libdir)
 confexec_DATA = gpioConf.sh
+
+CLEANFILES = gpioConf.sh
+
+EXTRA_DIST =  	AUTHORS 	ChangeLog 	COPYING.LIB 	NEWS 	README 	libgpio.spec 	gpio-config.in 	gpioConf.sh.in 	TODO
+
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
@@ -125,8 +134,17 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 libgpio_la_LIBADD = 
-@GPIO_USB_FALSE@libgpio_la_OBJECTS =  gpio.lo gpio-serial.lo
-@GPIO_USB_TRUE@libgpio_la_OBJECTS =  gpio.lo gpio-serial.lo gpio-usb.lo
+@GPIO_IEEE1394_TRUE@@GPIO_USB_FALSE@libgpio_la_OBJECTS =  gpio.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_USB_FALSE@gpio-serial.lo gpio-parallel.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_USB_FALSE@gpio-ieee1394.lo
+@GPIO_IEEE1394_FALSE@@GPIO_USB_TRUE@libgpio_la_OBJECTS =  gpio.lo \
+@GPIO_IEEE1394_FALSE@@GPIO_USB_TRUE@gpio-serial.lo gpio-parallel.lo \
+@GPIO_IEEE1394_FALSE@@GPIO_USB_TRUE@gpio-usb.lo
+@GPIO_IEEE1394_FALSE@@GPIO_USB_FALSE@libgpio_la_OBJECTS =  gpio.lo \
+@GPIO_IEEE1394_FALSE@@GPIO_USB_FALSE@gpio-serial.lo gpio-parallel.lo
+@GPIO_IEEE1394_TRUE@@GPIO_USB_TRUE@libgpio_la_OBJECTS =  gpio.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_USB_TRUE@gpio-serial.lo gpio-parallel.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_USB_TRUE@gpio-ieee1394.lo gpio-usb.lo
 PROGRAMS =  $(noinst_PROGRAMS)
 
 gpio_test_OBJECTS =  gpio-test.o
@@ -142,19 +160,18 @@ DATA =  $(confexec_DATA)
 
 HEADERS =  $(gpioinc_HEADERS)
 
-DIST_COMMON =  README ./stamp-h.in AUTHORS COPYING COPYING.LIB ChangeLog \
-INSTALL Makefile.am Makefile.in NEWS TODO acconfig.h aclocal.m4 \
-config.guess config.h.in config.sub configure configure.in \
-gpio-config.in gpio.h.in install-sh libgpio.spec.in ltconfig ltmain.sh \
-missing mkinstalldirs
+DIST_COMMON =  ./stamp-h.in AUTHORS COPYING COPYING.LIB ChangeLog \
+INSTALL Makefile.am Makefile.in NEWS acconfig.h aclocal.m4 config.guess \
+config.h.in config.sub configure configure.in gpio-config.in gpio.h.in \
+install-sh libgpio.spec.in ltconfig ltmain.sh missing mkinstalldirs
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = gtar
+TAR = tar
 GZIP_ENV = --best
-DEP_FILES =  .deps/gpio-serial.P .deps/gpio-test.P .deps/gpio-usb.P \
-.deps/gpio.P
+DEP_FILES =  .deps/gpio-ieee1394.P .deps/gpio-parallel.P \
+.deps/gpio-serial.P .deps/gpio-test.P .deps/gpio-usb.P .deps/gpio.P
 SOURCES = $(libgpio_la_SOURCES) $(gpio_test_SOURCES)
 OBJECTS = $(libgpio_la_OBJECTS) $(gpio_test_OBJECTS)
 
@@ -478,7 +495,7 @@ all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(SCRIPTS) $(DATA) \
 		$(HEADERS) config.h
 all-redirect: all-am
 install-strip:
-	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
+	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs:
 	$(mkinstalldirs)  $(DESTDIR)$(libdir) $(DESTDIR)$(bindir) \
 		$(DESTDIR)$(confexecdir) $(DESTDIR)$(gpioincdir)
@@ -487,6 +504,7 @@ installdirs:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-rm -f Makefile $(CONFIG_CLEAN_FILES)

@@ -5,9 +5,22 @@
 #define GPIO_USB
 #endif
 
+#if @GPIO_IEEE1394@
+#define GPIO_IEEE1394
+#endif
+
+#include "gpio-serial.h"
+#include "gpio-parallel.h"
+
 #ifdef GPIO_USB
 #include <usb.h>
+#include "gpio-usb.h"
 #endif
+
+#ifdef GPIO_IEEE1394
+#include "gpio-ieee1394.h"
+#endif
+
 
 #ifndef TRUE
 #define TRUE (0==0)
@@ -30,49 +43,45 @@
 /* Specify the types of devices */
 typedef enum {
 	GPIO_DEVICE_SERIAL,
-	GPIO_DEVICE_USB,
 	GPIO_DEVICE_PARALLEL,	/* <- Not supported yet */
-	GPIO_DEVICE_1394, 	/* <- Wishful thinking */
+#ifdef GPIO_USB
+	GPIO_DEVICE_USB,
+#endif
+#ifdef GPIO_IEEE1394
+	GPIO_DEVICE_1394, 	/* <- Not supported yet */
+#endif
 } gpio_device_type;
 
-/* Device specific settings
+
+
+/* Device struct
    -------------------------------------------------------------- */
-
-/* Serial port specific settings */
 typedef struct {
-	char port[128];
-	int  speed;
-	int  bits;
-	int  parity;
-	int  stopbits;
-} gpio_serial_settings;
-
-#ifdef GPIO_USB
-/* USB port specific settings */
-typedef struct {
-	struct usb_device *udev;
-	int  inep;
-	int  outep;
-	int  config;
-	int  interface;
-	int  altsetting;
-} gpio_usb_settings;
-#endif
+	gpio_device_type type;
+	char name[64];
+	char path[64];
+} gpio_device_list;
 
 /* Put the settings together in a union */
 typedef union {
 	gpio_serial_settings	serial;
+	gpio_parallel_settings	parallel;
 #ifdef GPIO_USB
 	gpio_usb_settings 	usb;
 #endif
+#ifdef GPIO_IEEE1394
+	gpio_ieee1394_settings 	ieee1394;
+#endif
+
 } gpio_device_settings;
 
-/* Device struct
-   -------------------------------------------------------------- */
+
 struct gpio_device;
 typedef struct gpio_device gpio_device;
 struct gpio_operations {
+	int (*list)	(gpio_device_list *);
 	int (*init)	(gpio_device *);
+	int (*exit)	(gpio_device *);
 	int (*open)	(gpio_device *);
 	int (*close)	(gpio_device *);
 	int (*read)	(gpio_device *, char *, int);
@@ -99,11 +108,32 @@ struct gpio_device {
 	int timeout; /* in milli seconds */
 };
 
-
 /* gpio Core functions
    -------------------------------------------------------------- */
 
-gpio_device *gpio_new		(gpio_device_type type);
+
+int	     gpio_init		();
+		/* Initialize the gpio library. Call first!
+			return values:
+				  successful: GPIO_OK
+				unsuccessful: GPIO_ERROR
+		*/
+
+int	     gpio_exit		();
+		/* Finalize the gpio library. Call last!
+			return values:
+				  successful: GPIO_OK
+				unsuccessful: GPIO_ERROR
+		*/
+
+gpio_device_list *gpio_get_device_list ();
+		/* Get a list of available devices
+			return values:
+				  successful: valid gpio_device_list struct
+				unsuccessful: GPIO_ERROR
+		*/
+
+gpio_device *gpio_new		(int device_number);
 		/* Create a new device of type "type"
 			return values:
 				  successful: valid gpio_device struct
@@ -183,12 +213,4 @@ gpio_device *gpio_new		(gpio_device_type type);
 		not implemented for USB (useful?)
 		*/
 
-/* External device-specific structs
-   -------------------------------------------------------------- */
-extern struct gpio_operations gpio_serial_operations;
-#ifdef GPIO_USB
-extern struct gpio_operations gpio_usb_operations;
 #endif
-
-#endif
-

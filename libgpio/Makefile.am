@@ -7,20 +7,34 @@ bin_SCRIPTS = gpio-config
 noinst_PROGRAMS = gpio_test
 
 if GPIO_USB
-USB_SUPPORT = gpio-usb.c
+USB_HEADER = gpio-usb.h
+USB_SOURCE = gpio-usb.c
 else
-USB_SUPPORT =
+USB_HEADER =
+USB_SOURCE =
+endif
+
+if GPIO_IEEE1394
+IEEE1394_HEADER = gpio-ieee1394.h
+IEEE1394_SOURCE = gpio-ieee1394.c
+else
+IEEE1394_HEADER =
+IEEE1394_SOURCE =
 endif
 
 lib_LTLIBRARIES = libgpio.la
 libgpio_la_LDFLAGS = -version-info @LIBGPIO_VERSION_INFO@ -DHAVE_TERMIOS_H 
-libgpio_la_SOURCES = gpio.c gpio.h gpio-serial.c gpio-serial.h $(USB_SUPPORT)
+libgpio_la_SOURCES = 	gpio.c gpio.h \
+			gpio-serial.c gpio-serial.h \
+			gpio-parallel.h gpio-parallel.c \
+			$(IEEE1394_HEADER) $(IEEE1394_SOURCE) \
+			$(USB_HEADER) $(USB_SOURCE)
 
 gpio_test_SOURCES = gpio-test.c
 gpio_test_LDADD = libgpio.la
 
 gpioincdir = $(includedir)/gpio
-gpioinc_HEADERS = gpio.h gpio-serial.h
+gpioinc_HEADERS = gpio.h gpio-serial.h gpio-parallel.h $(IEEE1394_HEADER) $(USB_HEADER) 
 
 # DEPS = $(top_builddir)/libgpio.la
 # LDADDS = $(top_builddir)/libgpio.la

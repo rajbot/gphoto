@@ -27,43 +27,61 @@
 
 #include "gpio.h"
 
+gpio_device_list device_list[256];
+
 /*
    Core IO library functions
    ----------------------------------------------------------------
  */
 
-void gpio_init(void)
+int gpio_init(void)
 {
 #ifdef GPIO_USB
 	usb_init();
 	usb_find_busses();
 	usb_find_devices();
 #endif
+	return (GPIO_OK);
 }
 
-gpio_device *gpio_new(gpio_device_type type)
+gpio_device *gpio_new(int device_number)
 	/* Create a new IO device */
 {
 	gpio_device *dev;
+	gpio_device_settings settings;
 
 	dev = (gpio_device *) malloc(sizeof(gpio_device));
-	dev->type = type;
+	dev->type = device_list[device_number].type;
 	dev->device_fd = 0;
 
-	switch (type) {
+	switch (dev->type) {
 	case GPIO_DEVICE_SERIAL:
 		dev->ops = &gpio_serial_operations;
-		dev->timeout = 10 * 1000;
+	        strcpy(settings.serial.port, device_list[device_number].path);
+		/* set some defaults */
+        	settings.serial.speed = 9600;
+        	settings.serial.bits = 8;
+        	settings.serial.parity = 0;
+        	settings.serial.stopbits = 1;
+		gpio_set_settings(dev, settings);
+		gpio_set_timeout(dev, 5000);
+		break;
+	case GPIO_DEVICE_PARALLEL:
+		dev->ops = &gpio_parallel_operations;
+	        strcpy(settings.parallel.port, device_list[device_number].path);
 		break;
 #ifdef GPIO_USB
 	case GPIO_DEVICE_USB:
 		dev->ops = &gpio_usb_operations;
-		dev->timeout = 5 * 1000;
+		gpio_set_timeout(dev, 5000);
 		break;
 #endif
+#ifdef GPIO_IEEE1394
 	case GPIO_DEVICE_1394:
 		break;
-	case GPIO_DEVICE_PARALLEL:
+#endif
+	default:
+		// ERROR!
 		break;
 	}
 

@@ -31,9 +31,18 @@
 
 #include "gpio.h"
 
-int gpio_usb_init(gpio_device * dev)
+int gpio_usb_list(gpio_device_list *list) {
+
+}
+
+int gpio_usb_init(gpio_device *dev)
 {
 	usb_init();
+}
+
+int gpio_usb_exit(gpio_device *dev)
+{
+
 }
 
 int gpio_usb_open(gpio_device * dev)
@@ -133,7 +142,9 @@ int gpio_usb_update(gpio_device * dev)
 
 struct gpio_operations gpio_usb_operations =
 {
+	gpio_usb_list,
 	gpio_usb_init,
+	gpio_usb_exit,
 	gpio_usb_open,
 	gpio_usb_close,
 	gpio_usb_read,

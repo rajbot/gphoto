@@ -128,6 +128,7 @@ gnocam_capplet_get_iter (GnocamCapplet *c, GtkTreeIter *iter,
 	b = gtk_tree_model_get_iter_first (m, iter);
 	while (b) {
 		gtk_tree_model_get_value (m, iter, COL_ID, &v);
+		g_assert (g_value_get_string (&v));
 		if (!strcmp (id, g_value_get_string (&v))) {
 			g_value_unset (&v); return TRUE;
 		}
@@ -189,7 +190,7 @@ notify_func (GConfClient *client, guint cnxn_id, GConfEntry *entry,
 	     gpointer user_data)
 {
 	GnocamCapplet *c = GNOCAM_CAPPLET (user_data);
-	gchar *name, *k, *id, *t;
+	gchar *name, *id, *t;
 	GtkTreeIter iter;
 	const gchar *s;
 	GnocamChooser *ch;
@@ -204,17 +205,18 @@ notify_func (GConfClient *client, guint cnxn_id, GConfEntry *entry,
 		ch = g_hash_table_lookup (c->priv->h, s);
 		if (ch) gtk_object_destroy (GTK_OBJECT (ch));
 	} else {
-		k = g_strdup (entry->key);
-		k[strlen (k) - strlen (g_basename (k)) - 1] = '\0';
-		id = g_strdup (g_basename (k));
-		g_free (k);
-		if (!gnocam_capplet_get_iter (c, &iter, id)) 
+		id = g_strdup (entry->key);
+		id[strlen (id) - strlen (g_basename (id)) - 1] = '\0';
+		if (!gnocam_capplet_get_iter (c, &iter, id)) {
 			gtk_list_store_append (c->priv->s, &iter);
+			gtk_list_store_set (c->priv->s, &iter, COL_ID, id,
+					    COL_IS_EDITABLE, TRUE, -1);
+		}
 		if (!strcmp (s, "name")) {
 			name = gconf_client_get_string (c->priv->c,
 					entry->key, NULL);
 			gtk_list_store_set (c->priv->s, &iter,
-				COL_NAME, name, COL_IS_EDITABLE, TRUE, -1);
+					    COL_NAME, name, -1);
 			g_free (name); g_free (id);
 			gtk_tree_view_columns_autosize (c->priv->tv);
 			return;
@@ -237,32 +239,32 @@ static void
 gnocam_capplet_delete (GnocamCapplet *c, GtkTreeIter *iter)
 {
 	GValue v = {0, };
-	gchar *ek, *k, *key;
+	gchar *key, *id;
 	GtkObject *o;
 	
 	g_return_if_fail (GNOCAM_IS_CAPPLET (c));
 
 	gtk_tree_model_get_value (GTK_TREE_MODEL (c->priv->s), iter,
-				  COL_NAME, &v);
+				  COL_ID, &v);
 	gtk_list_store_remove (c->priv->s, iter);
-	o = g_hash_table_lookup (c->priv->h, g_value_get_string (&v));
+	g_assert (g_value_get_string (&v));
+	id = g_strdup (g_value_get_string (&v));
+	g_value_unset (&v);
+	o = g_hash_table_lookup (c->priv->h, id);
 	if (o) {
-		g_hash_table_remove (c->priv->h, g_value_get_string (&v));
+		g_hash_table_remove (c->priv->h, id);
 		gtk_object_destroy (o);
 	}
-	ek = gconf_escape_key (g_value_get_string (&v),
-			       strlen (g_value_get_string (&v)));
-	g_value_unset (&v);
-	k = g_strdup_printf ("/desktop/gnome/cameras/%s", ek);
-	g_free (ek);
-	key = g_strdup_printf ("%s/manufacturer", k);
+	key = g_strdup_printf ("%s/name", id);
 	gconf_client_unset (c->priv->c, key, NULL); g_free (key);
-	key = g_strdup_printf ("%s/model", k);
+	key = g_strdup_printf ("%s/manufacturer", id);
 	gconf_client_unset (c->priv->c, key, NULL); g_free (key);
-	key = g_strdup_printf ("%s/port", k);
+	key = g_strdup_printf ("%s/model", id);
 	gconf_client_unset (c->priv->c, key, NULL); g_free (key);
-	gconf_client_unset (c->priv->c, k, NULL);
-	g_free (k);
+	key = g_strdup_printf ("%s/port", id);
+	gconf_client_unset (c->priv->c, key, NULL); g_free (key);
+	gconf_client_unset (c->priv->c, id, NULL);
+	g_free (id);
 	gconf_client_suggest_sync (c->priv->c, NULL);
 }
 
@@ -315,44 +317,37 @@ gnocam_capplet_edit (GnocamCapplet *c, GtkTreeIter *iter)
 	GValue v = {0, };
 	GtkWidget *d;
 	GnocamChooser *ch;
-	gchar *k, *key;
+	gchar *key, *id;
 
 	g_return_if_fail (GNOCAM_IS_CAPPLET (c));
 
 	gtk_tree_model_get_value (GTK_TREE_MODEL (c->priv->s), iter,
-				  COL_NAME, &v);
-	d = g_hash_table_lookup (c->priv->h, g_value_get_string (&v));
-	if (d) {
-		gtk_window_present (GTK_WINDOW (d));
-		g_value_unset (&v);
-		return;
-	}
+				  COL_ID, &v);
+	g_assert (g_value_get_string (&v));
+	id = g_strdup (g_value_get_string (&v));
+	g_value_unset (&v);
+	d = g_hash_table_lookup (c->priv->h, id);
+	if (d) {gtk_window_present (GTK_WINDOW (d)); g_free (id); return;}
 
 	gtk_widget_show (GTK_WIDGET (ch = gnocam_chooser_new ()));
 	g_signal_connect (ch, "changed", G_CALLBACK (on_changed), c);
 	g_signal_connect (ch, "destroy", G_CALLBACK (on_destroy), c);
-	g_object_set_data_full (G_OBJECT (ch), "name",
-		g_strdup (g_value_get_string (&v)), (GDestroyNotify) g_free);
-	g_hash_table_insert (c->priv->h,
-		g_strdup (g_value_get_string (&v)), ch);
-	key = gconf_escape_key (g_value_get_string (&v),
-				strlen (g_value_get_string (&v)));
+	g_object_set_data_full (G_OBJECT (ch), "id", id,
+				(GDestroyNotify) g_free);
+	g_hash_table_insert (c->priv->h, g_strdup (id), ch);
 	g_value_unset (&v);
-	k = g_strdup_printf ("/desktop/gnome/cameras/%s", key);
-	g_free (key);
-	key = g_strdup_printf ("%s/manufacturer", k);
+	key = g_strdup_printf ("%s/manufacturer", id);
 	gnocam_chooser_set_manufacturer (ch,
 		gconf_client_get_string (c->priv->c, key, NULL));
 	g_free (key);
-	key = g_strdup_printf ("%s/model", k);
+	key = g_strdup_printf ("%s/model", id);
 	gnocam_chooser_set_model (ch,
 		 gconf_client_get_string (c->priv->c, key, NULL));
 	g_free (key);
-	key = g_strdup_printf ("%s/port", k);
+	key = g_strdup_printf ("%s/port", id);
 	gnocam_chooser_set_port (ch,
 		 gconf_client_get_string (c->priv->c, key, NULL));
 	g_free (key);
-	g_free (k);
 }
 
 static void
@@ -381,8 +376,7 @@ on_name_edited (GtkCellRendererText *cell, const gchar *path,
 
 	gtk_tree_model_get_value (GTK_TREE_MODEL (c->priv->s), &iter,
 				  COL_ID, &v);
-	k = g_strdup_printf ("/desktop/gnome/cameras/%s/name",
-			     g_value_get_string (&v));
+	k = g_strdup_printf ("%s/name", g_value_get_string (&v));
 	g_value_unset (&v);
 	gconf_client_set_string (c->priv->c, k, new_name, NULL);
 	g_free (k);
@@ -482,7 +476,7 @@ gnocam_capplet_load (GnocamCapplet *c)
 		name = gconf_client_get_string (c->priv->c, k, NULL);
 		g_free (k);
 		gtk_list_store_set (c->priv->s, &iter, COL_NAME, name,
-			COL_ID, g_basename (g_slist_nth_data (l, i)),
+			COL_ID, g_slist_nth_data (l, i),
 			COL_IS_EDITABLE, TRUE, -1);
 		g_free (name);
 		if (!i) gtk_tree_selection_select_iter (

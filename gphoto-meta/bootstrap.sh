@@ -483,11 +483,12 @@ function makefiles {
 		    esac
 		    echo "ext=$ext"
 		    # add bz2 to dist if available, otherwise gz
-		    for tarball in "${distdir}/${module}-"[a-z]*.tar${ext}
+		    for tarball in "${distdir}/${module}-html-"*.tar${ext} "${distdir}/${module}-html.tar${ext}
 		    do
 			if [ -s "${tarball}" ]
 			then
 			    files="${files} $(basename ${tarball})"
+			    break
 			fi
 		    done
 		fi

@@ -7,6 +7,7 @@ AddDescription "Manual (XHTML files + gfx)" gphoto2-manual-xhtml*.tar.*
 AddDescription "Manual (man pages)" gphoto2-manual-man*.tar.*
 AddDescription "Manual (TXT file)" gphoto2-manual-txt.tar.*
 AddDescription "Manual (XML sources)" gphoto2-manual-*.tar.*
+AddDescription "meta package - contains everything" gphoto2-meta-*.tar.*
 AddDescription "gphoto2 command line interface" gphoto2-*.tar.*
 AddDescription "libgphoto2 drivers and library" libgphoto2-*.tar.*
 AddDescription "GTK EXIF viewer" gexif-*.tar.*
@@ -15,4 +16,6 @@ AddDescription "USB interface library" libusb-*.tar.*
 AddDescription "GTK libgphoto2 frontend" gtkam-*.tar.*
 AddDescription "Latest CVS snapshot tarballs in gzip format" latest-gz
 AddDescription "Latest CVS snapshot tarballs in bzip2 format" latest-bz2
+AddDescription "CVS snapshot tarballs in bzip2 format" bz2
+AddDescription "CVS snapshot tarballs in gzip format" gz
 AddDescription "List of supported cameras" SUPPORTED-CAMERAS

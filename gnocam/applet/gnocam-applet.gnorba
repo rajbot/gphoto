@@ -1,5 +1,5 @@
-[gnocam_applet]
+[gnocam-applet]
 type=exe
 repo_id=IDL:GNOME/Applet:1.0
-description=GnoCam Applet
+description=gnocam-applet
 location_info=gnocam-applet

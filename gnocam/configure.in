@@ -101,8 +101,8 @@ dnl *********
 AC_MSG_CHECKING(for vfs)
 if gnome-config --libs vfs > /dev/null 2>&1; then
     AC_MSG_RESULT(found)
-    VFS_LIBS="`gnome-config --libs vfs`"
-    VFS_CFLAGS="`gnome-config --cflags vfs`"
+    VFS_LIBS="`gnome-config --libs vfs` `gphoto2-config --libs`"
+    VFS_CFLAGS="`gnome-config --cflags vfs` `gphoto2-config --cflags`"
     AC_SUBST(VFS_LIBS)
     AC_SUBST(VFS_CFLAGS)
 else

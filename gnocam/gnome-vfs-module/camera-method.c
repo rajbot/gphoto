@@ -1,79 +1,162 @@
+#include <config.h>
+#include <gphoto2.h>
 #include <libgnome/gnome-defs.h>
-
 #include <libgnomevfs/gnome-vfs-context.h>
 #include <libgnomevfs/gnome-vfs-handle.h>
 #include <libgnomevfs/gnome-vfs-method.h>
-
-#include <bonobo/bonobo-main.h>
-#include <bonobo/bonobo-exception.h>
-#include <bonobo/bonobo-stream.h>
-#include <bonobo/bonobo-moniker-util.h>
-
-#include <liboaf/oaf-mainloop.h>
-
-#include <gtk/gtkmain.h>
-
+#include <gconf/gconf-client.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-#define CAM_VFS_DEBUG(x) G_STMT_START {\
-	printf ("%s:%d ", __FILE__,__LINE__);\
-	printf ("%s() ", __FUNCTION__);\
-	printf x;\
-	fputc ('\n', stdout);\
-	fflush (stdout);\
-}G_STMT_END
+#include <glib.h>
 
 static GnomeVFSResult
-GNOME_VFS_RESULT (CORBA_Environment *ev)
+GNOME_VFS_RESULT (int result)
 {
-	GnomeVFSResult result;
-	const gchar *id;
-	
-	id = CORBA_exception_id (ev);
-	
-	/* Bonobo */
-	if (!strcmp (id, ex_Bonobo_IOError))
-		result = GNOME_VFS_ERROR_IO;
-	else if (!strcmp (id, ex_Bonobo_NotSupported)) 
-		result = GNOME_VFS_ERROR_NOT_SUPPORTED; 
-	else if (!strcmp (id, ex_Bonobo_BadArg)) 
-		result = GNOME_VFS_ERROR_BAD_PARAMETERS;
+	if (result >= 0)
+		return (GNOME_VFS_OK);
 
-	/* Bonobo/Storage */
-	else if (!strcmp (id, ex_Bonobo_Storage_NotFound))
-		result = GNOME_VFS_ERROR_NOT_FOUND;
-	else if (!strcmp (id, ex_Bonobo_Storage_NameExists))
-		result = GNOME_VFS_ERROR_FILE_EXISTS;
-	else if (!strcmp (id, ex_Bonobo_Storage_IOError))
-		result = GNOME_VFS_ERROR_IO;
-	else if (!strcmp (id, ex_Bonobo_Storage_NoPermission))
-		result = GNOME_VFS_ERROR_ACCESS_DENIED;
-	else if (!strcmp (id, ex_Bonobo_Storage_NotSupported))
-		result = GNOME_VFS_ERROR_NOT_SUPPORTED;
-	else if (!strcmp (id, ex_Bonobo_Storage_NotStream))
-		result = GNOME_VFS_ERROR_NOT_FOUND;
-	else if (!strcmp (id, ex_Bonobo_Storage_NotStorage))
-		result = GNOME_VFS_ERROR_NOT_A_DIRECTORY;
-	else if (!strcmp (id, ex_Bonobo_Storage_NotEmpty))
-		result = GNOME_VFS_ERROR_DIRECTORY_NOT_EMPTY;
-
-	/* Bonobo/Stream */
-	else if (!strcmp (id, ex_Bonobo_Stream_NoPermission))
-		result = GNOME_VFS_ERROR_ACCESS_DENIED;
-	else if (!strcmp (id, ex_Bonobo_Stream_IOError))
-		result = GNOME_VFS_ERROR_IO;
-
-	/* Default */
-	else
-		result = GNOME_VFS_ERROR_GENERIC;
-
-	return (result);
+	switch (result) {
+	case GP_ERROR_BAD_PARAMETERS:
+		return GNOME_VFS_ERROR_BAD_PARAMETERS;
+	case GP_ERROR_IO:
+		return GNOME_VFS_ERROR_IO;
+	case GP_ERROR_CORRUPTED_DATA:
+		return GNOME_VFS_ERROR_CORRUPTED_DATA;
+	case GP_ERROR_FILE_EXISTS:
+		return GNOME_VFS_ERROR_FILE_EXISTS;
+	case GP_ERROR_NO_MEMORY:
+		return GNOME_VFS_ERROR_NO_MEMORY;
+	case GP_ERROR_MODEL_NOT_FOUND:
+	case GP_ERROR_NO_CAMERA_FOUND:
+		return GNOME_VFS_ERROR_HOST_NOT_FOUND;
+	case GP_ERROR_NOT_SUPPORTED:
+		return GNOME_VFS_ERROR_NOT_SUPPORTED;
+	case GP_ERROR_FILE_NOT_FOUND:
+	case GP_ERROR_DIRECTORY_NOT_FOUND:
+		return GNOME_VFS_ERROR_NOT_FOUND;
+	case GP_ERROR_DIRECTORY_EXISTS:
+		return GNOME_VFS_ERROR_FILE_EXISTS;
+	default:
+		return GNOME_VFS_ERROR_GENERIC;
+	}
 }
 
 typedef struct {
-	Bonobo_Stream stream; 
+	gchar  *name;
+	Camera *camera;
+} CamerasEntry;
+
+static GSList *cameras = NULL;
+static GConfClient *client = NULL;
+
+static GMutex *client_mutex;
+static GMutex *cameras_mutex;
+
+static GnomeVFSResult
+get_camera (GnomeVFSURI *uri, Camera **camera)
+{
+	CamerasEntry *entry;
+	const gchar *host;
+	GSList *list, *sl;
+	guint i;
+	GnomeVFSResult result;
+
+	g_return_val_if_fail (uri, GNOME_VFS_ERROR_BAD_PARAMETERS);
+	g_return_val_if_fail (camera, GNOME_VFS_ERROR_BAD_PARAMETERS);
+
+	*camera = NULL;
+
+	host = gnome_vfs_uri_get_host_name (uri);
+
+	/* Could be that this camera is currently active */
+	g_mutex_lock (cameras_mutex);
+	for (sl = cameras; sl; sl = sl->next) {
+		entry = sl->data;
+		if (!strcmp (entry->name, host)) {
+			*camera = entry->camera;
+			gp_camera_ref (entry->camera);
+			g_mutex_unlock (cameras_mutex);
+			return (GNOME_VFS_OK);
+		}
+	}
+
+	/* Ok, this camera isn't active. */
+	gp_camera_new (camera);
+	g_mutex_lock (client_mutex);
+	list = gconf_client_get_list (client, "/apps/" PACKAGE "/cameras",
+				      GCONF_VALUE_STRING, NULL);
+printf ("Our database has %i entries.\n", g_slist_length (list));
+	if (!host) {
+		if (!gconf_client_get_bool (client,
+					   "/apps/" PACKAGE "/autodetect",
+					   NULL) &&
+		    (g_slist_length (list) == 3)) {
+			strcpy ((*camera)->model, g_slist_nth_data (list, 1));
+			strcpy ((*camera)->port->name,
+				g_slist_nth_data (list, 2));
+		}
+	} else 
+		for (i = 0; i < g_slist_length (list); i += 3)
+			if (!strcmp (g_slist_nth_data (list, i), host)) {
+				strcpy ((*camera)->model,
+					g_slist_nth_data (list, i + 1));
+				strcpy ((*camera)->port->name,
+					g_slist_nth_data (list, i + 2));
+printf ("Found %s in database!\n", host);
+			}
+	g_mutex_unlock (client_mutex);
+
+	result = GNOME_VFS_RESULT (gp_camera_init (*camera));
+	if (result != GNOME_VFS_OK) {
+		gp_camera_unref (*camera);
+		g_mutex_unlock (cameras_mutex);
+printf ("Could not initialize camera!\n");
+		return (result);
+	}
+
+	/* Cache the result */
+	entry = g_new0 (CamerasEntry, 1);
+	entry->camera = *camera;
+	entry->name = g_strdup (host);
+	gp_camera_ref (*camera);
+	cameras = g_slist_append (cameras, entry);
+
+	g_mutex_unlock (cameras_mutex);
+
+	return (GNOME_VFS_OK);
+}
+
+static void
+unref_camera (Camera *camera)
+{
+	CamerasEntry *entry;
+	GSList *sl;
+
+	g_mutex_lock (cameras_mutex);
+	gp_camera_unref (camera);
+
+	/* We don't want to keep USB cameras in cache */
+	if (camera->port->type & GP_PORT_USB)
+		for (sl = cameras; sl; sl = sl->next) {
+			entry = sl->data;
+			if ((camera == entry->camera) &&
+			    (camera->ref_count == 1)) {
+				cameras = g_slist_remove_link (cameras, sl);
+				gp_camera_unref (entry->camera);
+				g_free (entry);
+			}
+		}
+	g_mutex_unlock (cameras_mutex);
+}
+
+typedef struct {
+	Camera *camera;
+	GMutex *camera_mutex;
+	CameraFile *file;
 	guint pos;
+	gchar *dirname;
+	gboolean create;
+	gboolean preview;
 } FileHandle;
 
 static GnomeVFSResult do_open (
@@ -83,37 +166,41 @@ static GnomeVFSResult do_open (
 	GnomeVFSOpenMode       mode, 
 	GnomeVFSContext       *context)
 {
+	Camera *camera;
+	CameraFile *file;
 	GnomeVFSResult result;
-	Bonobo_Stream stream;
-	CORBA_Environment ev;
 	FileHandle *file_handle;
-	gchar *moniker;
+	const gchar *filename;
+	gchar *dirname;
 
-	CAM_VFS_DEBUG (("ENTER"));
-	
-	CORBA_exception_init (&ev);
+	result = get_camera (uri, &camera);
+	if (result != GNOME_VFS_OK)
+		return (result);
 
-	/* Get the stream */ 
-	CAM_VFS_DEBUG (("Getting stream...")); 
-	moniker = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE); 
-	stream = bonobo_get_object (moniker, "IDL:Bonobo/Stream:1.0", &ev); 
-	g_free (moniker); 
-	if (BONOBO_EX (&ev)) {
-		g_warning ("Got exception: %s",
-			   bonobo_exception_get_text (&ev));
-		result = GNOME_VFS_RESULT (&ev);
-		CORBA_exception_free (&ev); 
+	dirname = gnome_vfs_uri_extract_dirname (uri);
+	filename = gnome_vfs_uri_get_basename (uri);
+	file = gp_file_new ();
+	g_mutex_lock (cameras_mutex);
+	result = GNOME_VFS_RESULT (gp_camera_file_get_file (camera, dirname,
+							    filename, file));
+	g_mutex_unlock (cameras_mutex);
+	if (result != GNOME_VFS_OK) {
+		gp_file_unref (file);
+		unref_camera (camera);
+		g_free (dirname);
 		return (result);
 	}
-	CORBA_exception_free (&ev);
 
 	/* Construct handle */
 	file_handle = g_new0 (FileHandle, 1);
-	file_handle->stream = stream;
-	file_handle->pos = 0;
+	g_mutex_lock (cameras_mutex);
+	file_handle->camera = camera;
+	g_mutex_unlock (cameras_mutex);
+	file_handle->file = file;
+	file_handle->dirname = dirname;
+	file_handle->create = FALSE;
+	file_handle->preview = (gnome_vfs_uri_get_user_name (uri) != NULL);
 	*handle = (GnomeVFSMethodHandle *) file_handle;
-
-	CAM_VFS_DEBUG (("EXIT"));
 
 	return (GNOME_VFS_OK);
 }
@@ -127,7 +214,32 @@ static GnomeVFSResult do_create (
         guint                  perm,
         GnomeVFSContext       *context)
 {
-	return (do_open (method, handle, uri, mode, context));
+	Camera *camera;
+	FileHandle *file_handle;
+	GnomeVFSResult result;
+
+	result = get_camera (uri, &camera);
+	if (result != GNOME_VFS_OK)
+		return (result);
+
+	if (!(camera->abilities->folder_operations &
+					GP_FOLDER_OPERATION_PUT_FILE)) {
+		unref_camera (camera);
+		return (GNOME_VFS_ERROR_NOT_SUPPORTED);
+	}
+
+	/* Construct the file handle */
+	file_handle = g_new0 (FileHandle, 1);
+	g_mutex_lock (cameras_mutex);
+	file_handle->camera = camera;
+	g_mutex_unlock (cameras_mutex);
+	file_handle->file = gp_file_new ();
+	file_handle->create = TRUE;
+	file_handle->dirname = gnome_vfs_uri_extract_dirname (uri);
+	file_handle->preview = (gnome_vfs_uri_get_user_name (uri) != NULL);
+	*handle = (GnomeVFSMethodHandle *) file_handle;
+
+	return (GNOME_VFS_OK);
 }
 
 static GnomeVFSResult do_close (
@@ -135,17 +247,22 @@ static GnomeVFSResult do_close (
         GnomeVFSMethodHandle*           handle,
         GnomeVFSContext*                context)
 {
-	FileHandle *file_handle;
+	FileHandle *fh = (FileHandle *) handle;
+	GnomeVFSResult result = GNOME_VFS_OK;
 
-	CAM_VFS_DEBUG (("ENTER"));
-	
-	file_handle = (FileHandle *) handle;
-	bonobo_object_release_unref (file_handle->stream, NULL);
-	g_free (file_handle);
+	if (fh->create) {
+		g_mutex_lock (fh->camera_mutex);
+		result = GNOME_VFS_RESULT (gp_camera_folder_put_file (
+				fh->camera, fh->dirname, fh->file));
+		g_mutex_unlock (fh->camera_mutex);
+	}
 
-	CAM_VFS_DEBUG (("EXIT"));
-	
-	return (GNOME_VFS_OK);
+	unref_camera (fh->camera);
+	gp_file_unref (fh->file);
+	g_free (fh->dirname);
+	g_free (fh);
+
+	return (result);
 }
 
 static GnomeVFSResult do_read (
@@ -156,39 +273,18 @@ static GnomeVFSResult do_read (
         GnomeVFSFileSize*               bytes_read,
         GnomeVFSContext*                context)
 {
-	GnomeVFSResult result;
 	FileHandle *file_handle;
-	CORBA_Environment ev;
-	Bonobo_Stream_iobuf *iobuf;
 
 	file_handle = (FileHandle *) handle;
-	
-	g_message ("Reading %i bytes...", (int) num_bytes);
-	CORBA_exception_init (&ev);
-	Bonobo_Stream_read (file_handle->stream, num_bytes, &iobuf, &ev);
-	if (BONOBO_EX (&ev)) {
-		g_warning ("Got exception: %s", 
-			   bonobo_exception_get_text (&ev));
-		result = GNOME_VFS_RESULT (&ev);
-		CORBA_exception_free (&ev);
-		return (result);
-	}
-	CORBA_exception_free (&ev);
-	g_message ("... done. I received %i bytes.", (int) iobuf->_length);
 
-	/* Report an error if we are at the end of the file */
-	if (!iobuf->_length) {
-		CORBA_free (iobuf);
+	*bytes_read = MIN (file_handle->file->size - file_handle->pos,
+			  num_bytes);
+	if (!*bytes_read)
 		return (GNOME_VFS_ERROR_EOF);
-	}
 
-	memcpy (buffer, iobuf->_buffer, iobuf->_length);
-	*bytes_read = iobuf->_length;
-
-	file_handle->pos += iobuf->_length;
+	memcpy (buffer, file_handle->file->data + file_handle->pos,*bytes_read);
+	file_handle->pos += *bytes_read;
 	
-	CORBA_free (iobuf);
-
 	return (GNOME_VFS_OK);
 }
 
@@ -201,18 +297,15 @@ static GnomeVFSResult do_write (
 	GnomeVFSContext      *context)
 {
 	FileHandle *file_handle;
-
-	CAM_VFS_DEBUG (("ENTER"));
+	GnomeVFSResult result;
 
 	file_handle = (FileHandle *) handle;
 
-	g_warning ("Implement do_write!");
-
+	result = GNOME_VFS_RESULT (gp_file_append (file_handle->file,
+						   (char*) buffer, num_bytes));
 	*bytes_written = num_bytes;
 
-	CAM_VFS_DEBUG (("EXIT"));
-	
-	return (GNOME_VFS_OK);
+	return (result);
 }
 
 static GnomeVFSResult do_seek (
@@ -222,50 +315,22 @@ static GnomeVFSResult do_seek (
         GnomeVFSFileOffset              offset,
         GnomeVFSContext*                context)
 {
-	GnomeVFSResult result;
 	FileHandle *file_handle;
-	Bonobo_Stream_SeekType whence = 0;
-	CORBA_Environment ev;
-
-	CAM_VFS_DEBUG (("ENTER"));
 
 	file_handle = (FileHandle *) handle;
 
 	switch (position) {
 	case GNOME_VFS_SEEK_START:
-		whence = Bonobo_Stream_SEEK_SET;
+		file_handle->pos = MIN (file_handle->file->size, offset);
 		break;
 	case GNOME_VFS_SEEK_CURRENT:
-		whence = Bonobo_Stream_SEEK_CUR;
+		file_handle->pos = MIN (file_handle->pos + offset,
+					file_handle->file->size);
 		break;
 	case GNOME_VFS_SEEK_END:
-		whence = Bonobo_Stream_SEEK_END;
+		file_handle->pos = MAX (file_handle->file->size - 1 - offset,0);
 		break;
 	}
-
-	CORBA_exception_init (&ev);
-	Bonobo_Stream_seek (file_handle->stream, offset, whence, &ev);
-	if (BONOBO_EX (&ev)) {
-		result = GNOME_VFS_RESULT (&ev);
-		CORBA_exception_free (&ev);
-		return (result);
-	}
-	CORBA_exception_free (&ev);
-
-	switch (position) {
-	case GNOME_VFS_SEEK_START:
-		file_handle->pos = offset;
-		break;
-	case GNOME_VFS_SEEK_CURRENT:
-		file_handle->pos += offset;
-		break;
-	case GNOME_VFS_SEEK_END:
-		//FIXME!
-		g_assert_not_reached ();
-		break;
-	}
-
-	CAM_VFS_DEBUG (("EXIT"));
 
 	return (GNOME_VFS_OK);
 }
@@ -273,23 +338,20 @@ static GnomeVFSResult do_seek (
 static GnomeVFSResult do_tell (
 	GnomeVFSMethod*		method,
 	GnomeVFSMethodHandle*	handle,
-	GnomeVFSFileOffset*	offset_return)
+	GnomeVFSFileOffset*	offset)
 {
 	FileHandle *file_handle;
 
-	CAM_VFS_DEBUG (("ENTER"));
-
 	file_handle = (FileHandle *) handle;
 
-	*offset_return = file_handle->pos;
+	*offset = file_handle->pos;
 
-	CAM_VFS_DEBUG (("EXIT"));
-	
 	return GNOME_VFS_OK;
 }
 
 typedef struct {
-	Bonobo_Storage_DirectoryList *list;
+	CameraList *dirs;
+	CameraList *files;
 	guint pos;
 } DirectoryHandle;
 
@@ -301,53 +363,54 @@ static GnomeVFSResult do_open_directory (
         const GnomeVFSDirectoryFilter *filter,
         GnomeVFSContext               *context)
 {
+	Camera *camera;
 	GnomeVFSResult result;
-	Bonobo_Storage storage;
-	Bonobo_Storage_DirectoryList *list;
 	DirectoryHandle *directory_handle;
-	CORBA_Environment ev;
-	gchar *moniker;
+	const gchar *path;
+	CameraList *files;
+	CameraList *dirs;
 
-	CAM_VFS_DEBUG (("ENTER"));
+printf ("do_open_directory\n");
 
-	CORBA_exception_init (&ev);
-	
-	/* Get the storage */
-	moniker = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE);
-	CAM_VFS_DEBUG (("Getting storage for %s...", moniker));
-	storage = bonobo_get_object (moniker, "IDL:Bonobo/Storage:1.0", &ev);
-	CAM_VFS_DEBUG (("... done."));
-	g_free (moniker);
-	if (BONOBO_EX (&ev)) {
-		result = GNOME_VFS_RESULT (&ev);
-		CORBA_exception_free (&ev);
+	result = get_camera (uri, &camera);
+	if (result != GNOME_VFS_OK)
+		return (result);
+
+	path = gnome_vfs_uri_get_path (uri);
+	if (!*path)
+		path = "/";
+
+	/* Get the list of files */
+	files = gp_list_new ();
+	g_mutex_lock (cameras_mutex);
+	result = GNOME_VFS_RESULT (gp_camera_folder_list_files (camera, path,
+								files));
+	g_mutex_unlock (cameras_mutex);
+	if (result != GNOME_VFS_OK) {
+		gp_list_free (files);
+		unref_camera (camera);
 		return (result);
 	}
 
-	/* Get the directory list */
-	CAM_VFS_DEBUG (("Getting contents..."));
-	list = Bonobo_Storage_listContents (storage, "", 
-					    Bonobo_FIELD_CONTENT_TYPE | 
-					    Bonobo_FIELD_SIZE | 
-					    Bonobo_FIELD_TYPE, &ev);
-	CAM_VFS_DEBUG (("... done."));
-	bonobo_object_release_unref (storage, NULL);
-	if (BONOBO_EX (&ev)) {
-		result = GNOME_VFS_RESULT (&ev);
-		CORBA_exception_free (&ev);
+	/* Get the list of directories */
+	dirs = gp_list_new ();
+	g_mutex_lock (cameras_mutex);
+	result = GNOME_VFS_RESULT (gp_camera_folder_list_folders (camera, path,
+								  dirs));
+	g_mutex_unlock (cameras_mutex);
+	unref_camera (camera);
+	if (result != GNOME_VFS_OK) {
+		gp_list_free (files);
+		gp_list_free (dirs);
 		return (result);
 	}
-	
-	CORBA_exception_free (&ev);
 
 	/* Construct the handle */
-	CAM_VFS_DEBUG (("Constructing handle..."));
 	directory_handle = g_new0 (DirectoryHandle, 1);
-	directory_handle->list = list;
+	directory_handle->files = files;
+	directory_handle->dirs = dirs;
 	directory_handle->pos = 0;
 	*handle = (GnomeVFSMethodHandle *) directory_handle;
-
-	CAM_VFS_DEBUG (("EXIT"));
 
 	return (GNOME_VFS_OK);
 }
@@ -359,13 +422,11 @@ static GnomeVFSResult do_close_directory (
 {
 	DirectoryHandle *directory_handle;
 
-	CAM_VFS_DEBUG (("ENTER"));
-	
 	/* Free the handle */
 	directory_handle = (DirectoryHandle *) handle;
-	CORBA_free (directory_handle->list);
-
-	CAM_VFS_DEBUG (("EXIT"));
+	gp_list_free (directory_handle->files);
+	gp_list_free (directory_handle->dirs);
+	g_free (directory_handle);
 
 	return (GNOME_VFS_OK);
 }
@@ -376,125 +437,72 @@ static GnomeVFSResult do_read_directory (
 	GnomeVFSFileInfo*		info,
 	GnomeVFSContext*                context)
 {
+	CameraListEntry *entry;
 	DirectoryHandle *dh;
 
-	CAM_VFS_DEBUG (("ENTER"));
-
 	dh = (DirectoryHandle *) handle;
-	if (dh->list->_length <= dh->pos) {
-		CAM_VFS_DEBUG (("EXIT (GNOME_VFS_ERROR_EOF)"));
+
+	if (dh->pos >= dh->dirs->count + dh->files->count)
 		return (GNOME_VFS_ERROR_EOF);
-	}
-	
+
 	GNOME_VFS_FILE_INFO_SET_LOCAL (info, FALSE);
 
 	/* Tell gnome-vfs which fields will be valid */
 	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_NONE |
-			     GNOME_VFS_FILE_INFO_FIELDS_TYPE |
-			     GNOME_VFS_FILE_INFO_FIELDS_SIZE |
-			     GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+			     GNOME_VFS_FILE_INFO_FIELDS_TYPE;
 
 	/* Fill the fields */
-	info->name      = g_strdup (dh->list->_buffer [dh->pos].name);
-	info->mime_type = g_strdup (dh->list->_buffer [dh->pos].content_type);
-	info->size      = dh->list->_buffer [dh->pos].size;
-
-	/* Directory or folder? */
-	if (dh->list->_buffer [dh->pos].type == Bonobo_STORAGE_TYPE_REGULAR)
-		info->type = GNOME_VFS_FILE_TYPE_REGULAR;
-	else 
+	if (dh->pos < dh->dirs->count) {
+		entry = gp_list_entry (dh->dirs, dh->pos);
 		info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
+	} else {
+		entry = gp_list_entry (dh->files, dh->pos - dh->dirs->count);
+		info->type = GNOME_VFS_FILE_TYPE_REGULAR;
+	}
+	info->name = g_strdup (entry->name);
 
 	dh->pos++;
-
-	CAM_VFS_DEBUG (("EXIT"));
 
 	return (GNOME_VFS_OK);
 }
 
 static void
-get_info_from_storage_info (Bonobo_StorageInfo *storage_info, 
-			    GnomeVFSFileInfo *info)
+get_info_from_camera_info (CameraFileInfo *cfi, gboolean preview,
+			   GnomeVFSFileInfo *info)
 {
-	GNOME_VFS_FILE_INFO_SET_LOCAL (info, FALSE);
-	
-	/* Tell gnome-vfs which fields will be valid */ 
-	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_TYPE | 
-			     GNOME_VFS_FILE_INFO_FIELDS_SIZE | 
-			     GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE; 
-	
-	/* Fill the fields */ 
-	info->name = g_strdup (storage_info->name); 
-	info->mime_type = g_strdup (storage_info->content_type); 
-	info->size = storage_info->size; 
-	
-	if (storage_info->type == Bonobo_STORAGE_TYPE_REGULAR) 
-		info->type = GNOME_VFS_FILE_TYPE_REGULAR; 
-	else 
-		info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
-}
+	CameraFileInfoStruct cfis;
 
-static void
-get_info_from_storage (Bonobo_Storage storage, const gchar *name, 
-		       GnomeVFSFileInfo *info, CORBA_Environment *ev)
-{
-	Bonobo_StorageInfo *storage_info;
+	info->name = g_strdup (cfi->file.name);
+	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_TYPE;
+	info->type = GNOME_VFS_FILE_TYPE_REGULAR;
 
-	storage_info = Bonobo_Storage_getInfo (storage, name, 
-					       Bonobo_FIELD_CONTENT_TYPE | 
-					       Bonobo_FIELD_SIZE | 
-					       Bonobo_FIELD_TYPE, ev);
-	
-	if (BONOBO_EX (ev))
-		return;
+	if (preview)
+		cfis = cfi->preview;
+	else
+		cfis = cfi->file;
 
-	get_info_from_storage_info (storage_info, info);
+	if (cfis.fields & GP_FILE_INFO_SIZE) {
+		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_SIZE;
+		info->size = cfis.size;
+	}
 
-        CORBA_free (storage_info);
-}
+	if (cfis.fields & GP_FILE_INFO_TYPE) {
+		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+		info->mime_type = g_strdup (cfis.type);
+	}
 
-static void
-get_info_from_stream (Bonobo_Stream stream, GnomeVFSFileInfo *info, 
-		      CORBA_Environment *ev)
-{
-	Bonobo_StorageInfo *storage_info;
-
-	storage_info = Bonobo_Stream_getInfo (stream, 
-			                      Bonobo_FIELD_CONTENT_TYPE | 
-					      Bonobo_FIELD_SIZE | 
-					      Bonobo_FIELD_TYPE, ev);
-	if (BONOBO_EX (ev))
-		return;
-
-	get_info_from_storage_info (storage_info, info);
-
-	CORBA_free (storage_info);
-}
-
-static gchar *
-get_basename (GnomeVFSURI *uri)
-{
-	gchar *text_uri;
-	gchar *basename;
-	GnomeVFSURI *tmp_uri;
-
-	/* The problem: Trailing slashes. If there is a slash at the end 
-	 * (for example in "file://home/lutz/",
-	 * gnome_vfs_uri_basename will just return NULL, but 
-	 * gnome_vfs_uri_get_parent will return "file://home". Then, bad 
-	 * things will happen. Therefore, remove the trailing slash and 
-	 * rejoice. */
-	text_uri = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE);
-	if (text_uri [strlen (text_uri) - 1] == '/')
-		text_uri [strlen (text_uri) - 1] = '\0';
-
-	tmp_uri = gnome_vfs_uri_new (text_uri);
-	g_free (text_uri);
-
-	basename = g_strdup (gnome_vfs_uri_get_basename (tmp_uri));
-	gnome_vfs_uri_unref (tmp_uri);
-
-	return (basename);
+	if (cfis.fields & GP_FILE_INFO_PERMISSIONS) {
+		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_PERMISSIONS;
+		info->permissions = 0;
+		if (cfis.permissions & GP_FILE_PERM_READ)
+			info->permissions |= GNOME_VFS_PERM_USER_READ |
+					     GNOME_VFS_PERM_GROUP_READ |
+					     GNOME_VFS_PERM_OTHER_READ;
+		if (cfis.permissions & GP_FILE_PERM_DELETE)
+			info->permissions |= GNOME_VFS_PERM_USER_WRITE |
+					     GNOME_VFS_PERM_GROUP_WRITE |
+					     GNOME_VFS_PERM_OTHER_WRITE;
+	}
 }
 
 static GnomeVFSResult do_get_file_info (
@@ -505,62 +513,85 @@ static GnomeVFSResult do_get_file_info (
         GnomeVFSContext*                context)
 {
 	GnomeVFSResult result;
-	gchar *moniker;
-	gchar *basename;
-	CORBA_Environment ev;
-	Bonobo_Storage storage;
-	GnomeVFSURI *tmp_uri;
+	GnomeVFSURI *parent;
+	Camera *camera;
+	CameraFileInfo camera_info;
+	CameraList list;
+	const gchar *path, *basename;
+	guint i;
 
-	CAM_VFS_DEBUG (("ENTER"));
+printf ("do_get_file_info (%s)\n", gnome_vfs_uri_get_path (uri));
 
-	CORBA_exception_init (&ev);
-
-	if (gnome_vfs_uri_has_parent (uri)) {
-		basename = get_basename (uri);
-		tmp_uri = gnome_vfs_uri_get_parent (uri);
-		moniker = gnome_vfs_uri_to_string (tmp_uri, 
-						   GNOME_VFS_URI_HIDE_NONE);
-		gnome_vfs_uri_unref (tmp_uri);
-	} else {
-		basename = g_strdup (".");
-		moniker = gnome_vfs_uri_to_string (uri, 
-						   GNOME_VFS_URI_HIDE_NONE);
+	/* Is this root? */
+	if (!gnome_vfs_uri_has_parent (uri)) {
+		info->name = g_strdup ("/");
+		info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_TYPE |
+				     GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+		info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
+		info->mime_type = g_strdup ("x-directory/normal");
+		return (GNOME_VFS_OK);
 	}
 
-	CAM_VFS_DEBUG (("Trying to get storage for %s...", moniker)); 
-	usleep (300);
-	storage = bonobo_get_object (moniker, "IDL:Bonobo/Storage:1.0", &ev); 
-	CAM_VFS_DEBUG (("... done.")); 
-	g_free (moniker);
-	if (BONOBO_EX (&ev)) {
-		g_warning ("Got exception: %s",
-			   bonobo_exception_get_text (&ev));
-		g_free (basename);
-		result = GNOME_VFS_RESULT (&ev);
-		CORBA_exception_free (&ev);
+	result = get_camera (uri, &camera);
+	if (result != GNOME_VFS_OK)
+		return (result);
+
+	basename = gnome_vfs_uri_get_basename (uri);
+	parent = gnome_vfs_uri_get_parent (uri);
+	path = gnome_vfs_uri_get_path (parent);
+
+	g_mutex_lock (cameras_mutex);
+	result = GNOME_VFS_RESULT (gp_camera_folder_list_folders (camera, path,
+								  &list));
+	g_mutex_unlock (cameras_mutex);
+	if (result != GNOME_VFS_OK) {
+		gnome_vfs_uri_unref (parent);
+		unref_camera (camera);
 		return (result);
 	}
 
-	CAM_VFS_DEBUG (("Getting info for %s from storage...", basename));
-	get_info_from_storage (storage, basename, info, &ev);
-	CAM_VFS_DEBUG (("... done."));
-	bonobo_object_release_unref (storage, NULL);
-	g_free (basename);
-	if (BONOBO_EX (&ev)) {
-		result = GNOME_VFS_RESULT (&ev);
-		CORBA_exception_free (&ev);
+	for (i = 0; i < list.count; i++)
+		if (!strcmp (gp_list_entry (&list, i)->name, basename)) {
+			info->name = g_strdup (basename);
+			info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_TYPE |
+					GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+			info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
+			info->mime_type = g_strdup ("x-directory/normal");
+			gnome_vfs_uri_unref (parent);
+			unref_camera (camera);
+printf ("Found it!\n");
+			return (GNOME_VFS_OK);
+		}
+	
+	g_mutex_lock (cameras_mutex);
+	result = GNOME_VFS_RESULT (gp_camera_folder_list_files (camera, path,
+								&list));
+	g_mutex_unlock (cameras_mutex);
+	if (result != GNOME_VFS_OK) {
+		gnome_vfs_uri_unref (parent);
+		unref_camera (camera);
 		return (result);
 	}
 
-	CORBA_exception_free (&ev);
+	for (i = 0; i < list.count; i++)
+		if (!strcmp (gp_list_entry (&list, i)->name, basename)) {
+			g_mutex_lock (cameras_mutex);
+			result = GNOME_VFS_RESULT (gp_camera_file_get_info (
+					camera, path, basename, &camera_info));
+			g_mutex_unlock (cameras_mutex);
+			unref_camera (camera);
+			if (result != GNOME_VFS_OK)
+				return (result);
+			get_info_from_camera_info (&camera_info, FALSE, info);
+			gnome_vfs_uri_unref (parent);
+printf ("Found it!\n");
+			return (GNOME_VFS_OK);
+		}
 
-	CAM_VFS_DEBUG (("mime-type: %s", info->mime_type));
-	CAM_VFS_DEBUG (("size: %i", (int) info->size));
-	CAM_VFS_DEBUG (("type: %i", info->type));
+	gnome_vfs_uri_unref (parent);
+	unref_camera (camera);
 	
-	CAM_VFS_DEBUG (("EXIT"));
-	
-	return (GNOME_VFS_OK);
+	return (GNOME_VFS_ERROR_NOT_FOUND);
 }
 
 static GnomeVFSResult do_get_file_info_from_handle (
@@ -570,27 +601,23 @@ static GnomeVFSResult do_get_file_info_from_handle (
         GnomeVFSFileInfoOptions         options,
         GnomeVFSContext*                context)
 {
+	CameraFileInfo camera_info;
 	GnomeVFSResult result;
-	CORBA_Environment ev;
-	FileHandle *file_handle;
+	FileHandle *fh;
 
-	CAM_VFS_DEBUG (("ENTER"));
+	fh = (FileHandle *) handle;
 
-	CORBA_exception_init (&ev);
-
-	file_handle = (FileHandle *) handle;
-
-	get_info_from_stream (file_handle->stream, info, &ev);
-	if (BONOBO_EX (&ev)) {
-		result = GNOME_VFS_RESULT (&ev);
-		CORBA_exception_free (&ev);
+	g_mutex_lock (cameras_mutex);
+	result = GNOME_VFS_RESULT (gp_camera_file_get_info (fh->camera,
+							    fh->dirname,
+							    fh->file->name,
+							    &camera_info));
+	g_mutex_unlock (cameras_mutex);
+	if (result != GNOME_VFS_OK)
 		return (result);
-	}
 
-	CORBA_exception_free (&ev);
-	
-	CAM_VFS_DEBUG (("EXIT"));
-	
+	get_info_from_camera_info (&camera_info, fh->preview, info);
+
 	return (GNOME_VFS_OK);
 }
 
@@ -645,31 +672,20 @@ GnomeVFSMethod *vfs_module_init (const gchar *method_name, const gchar *args);
 GnomeVFSMethod *
 vfs_module_init (const gchar *method_name, const gchar *args)
 {
-	CORBA_ORB orb;
-	
-	CAM_VFS_DEBUG (("ENTER"));
+	char *argv[] = {"dummy"};
+	int argc = 1;
 
-	/* Initialize GTK */
-	if (!gtk_init_check (0, NULL))
-		g_error ("Cannot init GTK");
+	if (!gconf_is_initialized ())
+		gconf_init (argc, argv, NULL);
+	client = gconf_client_get_default ();
 
-	/* Initialize ORBit */
-	if (oaf_is_initialized ())
-		orb = oaf_orb_get ();
-	else
-		orb = oaf_init (0, NULL);
-	if (!orb)
-		g_error ("Cannot init oaf");
+	if (g_thread_supported ()) {
+		cameras_mutex = g_mutex_new ();
+		client_mutex = g_mutex_new ();
+	}
 
-	/* Initialize bonobo */
-	if (!bonobo_init (orb, NULL, NULL))
-		g_error ("Cannot init Bonobo!");
-
-	/* Activate the Bonobo POA manager */
-	if (!bonobo_activate ())
-		g_error ("Cannot activate Bonobo POA manager!");
-
-	CAM_VFS_DEBUG (("EXIT"));
+	/* Initialize gphoto */
+	gp_init (GP_DEBUG_NONE);
 
         return (&method);
 }
@@ -679,7 +695,28 @@ void vfs_module_shutdown (GnomeVFSMethod *method);
 void
 vfs_module_shutdown (GnomeVFSMethod *method)
 {
-        return;
+	CamerasEntry *entry;
+	GSList *sl;
+
+	/* Unref all cameras */
+	g_mutex_free (cameras_mutex);
+	cameras_mutex = NULL;
+	for (sl = cameras; sl; sl = sl->next) {
+		entry = sl->data;
+		gp_camera_unref (entry->camera);
+		g_free (entry->name);
+	}
+	g_slist_free (cameras);
+	cameras = NULL;
+
+	/* Exit gphoto */
+	gp_exit ();
+
+	/* Unref client */
+	g_mutex_free (client_mutex);
+	client_mutex = NULL;
+	gtk_object_unref (GTK_OBJECT (client));
+	client = NULL;
 }
 
 

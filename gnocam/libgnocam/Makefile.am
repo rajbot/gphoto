@@ -15,7 +15,6 @@ $(CORBA_GENERATED): $(top_srcdir)/idl/GNOME_C.idl
 noinst_LTLIBRARIES = libgnocam.la
 libgnocam_la_SOURCES = 				\
 	$(CORBA_GENERATED) 			\
-	gnocam-chooser.c gnocam-chooser.h	\
 	gnocam-util.c gnocam-util.h
 
 libgnocam_la_LDFLAGS = $(LIBGNOCAM_LIBS)

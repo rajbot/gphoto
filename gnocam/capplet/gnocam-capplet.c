@@ -1,5 +1,6 @@
 #include "config.h"
 #include "gnocam-capplet.h"
+#include "gnocam-chooser.h"
 
 #include <gnocam/i18n.h>
 
@@ -19,7 +20,7 @@
 
 #include <gdk/gdkkeysyms.h>
 
-#include <libgnocam/gnocam-chooser.h>
+#include <libgnome/gnome-help.h>
 
 enum
 {
@@ -142,6 +143,19 @@ static void
 on_close_clicked (GtkButton *button, GnocamCapplet *capplet)
 {
 	gtk_widget_destroy (GTK_WIDGET (capplet));
+}
+
+static void
+on_help_clicked (GtkButton *button, GnocamCapplet *capplet)
+{
+	GError *e = NULL;
+
+	gnome_help_display ("gnocam-capplet.xml",
+			    "gnocam-capplet-intro", &e);
+	if (e) {
+		g_warning ("%s", e->message);
+		g_error_free (e);
+	}
 }
 
 static void
@@ -570,11 +584,17 @@ gnocam_capplet_new (GConfClient *client)
 	gtk_tree_view_append_column (GTK_TREE_VIEW (w), col);
 	g_signal_connect (r, "edited", G_CALLBACK (on_name_edited), c);
 
-	/* Add the close-button. */
+	/* Add the close button */
 	gtk_widget_show (b = gtk_button_new_from_stock (GTK_STOCK_CLOSE));
 	gtk_box_pack_end (GTK_BOX (GTK_DIALOG (c)->action_area), b,
 			  FALSE, FALSE, 0);
 	g_signal_connect (b, "clicked", G_CALLBACK (on_close_clicked), c);
+
+	/* Add the help button */
+	gtk_widget_show (b = gtk_button_new_from_stock (GTK_STOCK_HELP));
+	gtk_box_pack_end (GTK_BOX (GTK_DIALOG (c)->action_area), b,
+			  FALSE, FALSE, 0);
+	g_signal_connect (b, "clicked", G_CALLBACK (on_help_clicked), c);
 
 	/* Load the current settings. */
 	gnocam_capplet_load (c);

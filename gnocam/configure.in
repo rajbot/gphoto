@@ -55,7 +55,7 @@ AC_SUBST(GTK_LIBS)
 dnl ---------------------------------------------------------------------------
 dnl libgnocam
 dnl ---------------------------------------------------------------------------
-PKG_CHECK_MODULES(LIBGNOCAM, libglade-2.0 gtk+-2.0 bonobo-activation-2.0 libbonobo-2.0 ORBit-2.0)
+PKG_CHECK_MODULES(LIBGNOCAM, libglade-2.0 gtk+-2.0 bonobo-activation-2.0 libbonobo-2.0 libbonoboui-2.0 ORBit-2.0)
 GNOCAM_GLADE_DIR='$(datadir)/'${GETTEXT_PACKAGE}'/interfaces'
 GNOME_C_IDL="/usr/share/idl/GNOME_C.idl"
 ORBIT_IDL="`$PKG_CONFIG --variable=orbit_idl ORBit-2.0`"
@@ -122,7 +122,7 @@ AC_SUBST(GNOCAM_LIBS)
 dnl ---------------------------------------------------------------------------
 dnl For the capplet, we need some libraries.
 dnl ---------------------------------------------------------------------------
-PKG_CHECK_MODULES(GNOCAM_CAPPLET, libgnomeui-2.0 libbonobo-2.0)
+PKG_CHECK_MODULES(GNOCAM_CAPPLET, libgnomeui-2.0 libbonobo-2.0 bonobo-activation-2.0 libbonoboui-2.0 ORBit-2.0 libglade-2.0)
 AC_SUBST(GNOCAM_CAPPLET_CFLAGS)
 AC_SUBST(GNOCAM_CAPPLET_LIBS)
 
@@ -143,6 +143,8 @@ idl/Makefile
 applet/Makefile
 gnome-vfs-module/Makefile
 capplet/Makefile
+capplet/help/Makefile
+capplet/help/C/Makefile
 libgnocam/Makefile
 tests/Makefile
 ])

@@ -1,8 +1,8 @@
 #ifndef GNOME_CAMERA_IDL
 #define GNOME_CAMERA_IDL
 
-#include <bonobo-activation-2.0/Bonobo_Unknown.idl>
-#include <bonobo-2.0/Bonobo_Control.idl>
+#include <Bonobo_Unknown.idl>
+#include <Bonobo_Control.idl>
 
 module GNOME {
 module C {

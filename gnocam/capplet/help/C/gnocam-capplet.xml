@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+  <!ENTITY legal SYSTEM "legal.xml">
+  <!ENTITY appversion "1.0">
+  <!ENTITY manrevision "1.0">
+  <!ENTITY date "February 2003">
+  <!ENTITY app "gnocam-capplet">
+]>
+
+<article id="index" lang="en">
+  <articleinfo>
+    <title>&app; Manual V&manrevision;</title>
+    <copyright>
+      <year>2003</year>
+      <holder>Lutz M&uuml;ller</holder>
+    </copyright>
+    <publisher>
+      <publishername>gphoto</publishername>
+    </publisher>
+    &legal;
+    <authorgroup>
+      <author>
+        <firstname>Lutz</firstname>
+        <surname>M&uuml;ller</surname>
+      </author>
+    </authorgroup>
+    <releaseinfo>
+      This manual describes version &appversion; of &app;
+    </releaseinfo>
+    <legalnotice>
+      <title>Feedback</title>
+      <para>
+        To report a bug or make a suggestion regarding the &app; application
+        or this manual, follow the directions on
+        <ulink url="http://gphoto.sourceforge.net>
+          http://gphoto.sourceforge.net
+        </ulink>
+      </para>
+    </legalnotice>
+  </articleinfo>
+  <indexterm><primary>gnocam-capplet</primary></indexterm>
+  <sect1 id="gnocam-capplet-intro">
+    <title>Introduction</title>
+    <para>
+      The <application>&app;</application> application provides access
+      to those settings in GNOME that enable you to use your digital 
+      camera from within GNOME applications.
+    </para>
+  </sect1>
+</article>

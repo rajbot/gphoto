@@ -1,5 +1,6 @@
 #include <config.h>
 #include <gphoto2.h>
+#include <gtk/gtkmain.h>
 #include <libgnome/gnome-defs.h>
 #include <libgnomevfs/gnome-vfs-context.h>
 #include <libgnomevfs/gnome-vfs-handle.h>
@@ -391,6 +392,7 @@ printf ("do_open_directory\n");
 		path = "/";
 
 	/* Get the list of files */
+printf ("Getting list of files...\n");
 	result = GNOME_VFS_RESULT (gp_list_new (&files));
 	if (result != GNOME_VFS_OK) {
 		unref_camera (camera);
@@ -407,6 +409,7 @@ printf ("do_open_directory\n");
 	}
 
 	/* Get the list of directories */
+printf ("Getting list of directories...\n");
 	result = GNOME_VFS_RESULT (gp_list_new (&dirs));
 	if (result != GNOME_VFS_OK) {
 		gp_list_free (files);
@@ -464,10 +467,18 @@ static GnomeVFSResult do_read_directory (
 	CameraFileInfo camera_info;
 	GnomeVFSResult result;
 	const char *name = NULL;
+	int dirs_count, files_count;
 
 	dh = (DirectoryHandle *) handle;
 
-	if (dh->pos >= dh->dirs->count + dh->files->count)
+	dirs_count = gp_list_count (dh->dirs);
+	if (dirs_count < 0)
+		return (GNOME_VFS_RESULT (dirs_count));
+	files_count = gp_list_count (dh->files);
+	if (files_count < 0)
+		return (GNOME_VFS_RESULT (files_count));
+
+	if (dh->pos >= dirs_count + files_count)
 		return (GNOME_VFS_ERROR_EOF);
 
 	GNOME_VFS_FILE_INFO_SET_LOCAL (info, FALSE);
@@ -477,14 +488,13 @@ static GnomeVFSResult do_read_directory (
 			     GNOME_VFS_FILE_INFO_FIELDS_TYPE;
 
 	/* Fill the fields */
-	if (dh->pos < dh->dirs->count) {
+	if (dh->pos < dirs_count) {
 		gp_list_get_name (dh->dirs, dh->pos, &name);
 		info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
 		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
 		info->mime_type = g_strdup ("x-directory/normal");
 	} else {
-		gp_list_get_name (dh->files, dh->pos - gp_list_count (dh->dirs),
-				  &name);
+		gp_list_get_name (dh->files, dh->pos - dirs_count, &name);
 		info->type = GNOME_VFS_FILE_TYPE_REGULAR;
 		g_mutex_lock (cameras_mutex);
 		result = GNOME_VFS_RESULT (gp_camera_file_get_info (
@@ -553,6 +563,7 @@ static GnomeVFSResult do_get_file_info (
 	CameraList *list;
 	const gchar *path, *basename, *name;
 	guint i;
+	int count;
 
 printf ("do_get_file_info (%s)\n", gnome_vfs_uri_get_path (uri));
 
@@ -570,10 +581,15 @@ printf ("do_get_file_info (%s)\n", gnome_vfs_uri_get_path (uri));
 	if (result != GNOME_VFS_OK)
 		return (result);
 
+	result = GNOME_VFS_RESULT (gp_list_new (&list));
+	if (result != GNOME_VFS_OK) {
+		unref_camera (camera);
+		return (result);
+	}
+
 	basename = gnome_vfs_uri_get_basename (uri);
 	parent = gnome_vfs_uri_get_parent (uri);
 	path = gnome_vfs_uri_get_path (parent);
-	gp_list_new (&list);
 
 	g_mutex_lock (cameras_mutex);
 	result = GNOME_VFS_RESULT (gp_camera_folder_list_folders (camera, path,
@@ -586,8 +602,22 @@ printf ("do_get_file_info (%s)\n", gnome_vfs_uri_get_path (uri));
 		return (result);
 	}
 
-	for (i = 0; i < gp_list_count (list); i++) {
-		gp_list_get_name (list, i, &name);
+	count = gp_list_count (list);
+	if (count < 0) {
+		gnome_vfs_uri_unref (parent);
+		unref_camera (camera);
+		gp_list_free (list);
+		return (GNOME_VFS_RESULT (count));
+	}
+
+	for (i = 0; i < count; i++) {
+		result = GNOME_VFS_RESULT (gp_list_get_name (list, i, &name));
+		if (result != GNOME_VFS_OK) {
+			gnome_vfs_uri_unref (parent);
+			unref_camera (camera);
+			gp_list_free (list);
+			return (result);
+		}
 		if (!strcmp (name, basename)) {
 			info->name = g_strdup (basename);
 			info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_TYPE |
@@ -612,8 +642,22 @@ printf ("do_get_file_info (%s)\n", gnome_vfs_uri_get_path (uri));
 		return (result);
 	}
 
-	for (i = 0; i < gp_list_count (list); i++) {
-		gp_list_get_name (list, i, &name);
+	count = gp_list_count (list);
+	if (count < 0) {
+		gnome_vfs_uri_unref (parent);
+		unref_camera (camera);
+		gp_list_free (list);
+		return (GNOME_VFS_RESULT (count));
+	} 
+
+	for (i = 0; i < count; i++) {
+		result = GNOME_VFS_RESULT (gp_list_get_name (list, i, &name));
+		if (result != GNOME_VFS_OK) {
+			gnome_vfs_uri_unref (parent);
+			unref_camera (camera);
+			gp_list_free (list);
+			return (result);
+		}
 		if (!strcmp (name, basename)) {
 			g_mutex_lock (cameras_mutex);
 			result = GNOME_VFS_RESULT (gp_camera_file_get_info (
@@ -716,6 +760,12 @@ vfs_module_init (const gchar *method_name, const gchar *args)
 {
 	char *argv[] = {"dummy"};
 	int argc = 1;
+	gchar **gtk_argv;
+
+	gtk_argv = g_new0 (char*, 1);
+	*gtk_argv = g_strdup ("dummy");
+	gtk_init_check (&argc, &gtk_argv);
+	g_free (gtk_argv);
 
 	if (!gconf_is_initialized ())
 		gconf_init (argc, argv, NULL);

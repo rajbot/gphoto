@@ -288,11 +288,11 @@ char* return_buf;
       break;
     }
     sprintf(tmp_buf, "Total Pictures: %02d\n", pic_num);
-    strcat(status_buf, tmp_buf, sizeof(tmp_buf));
+    strncat(status_buf, tmp_buf, sizeof(tmp_buf));
     sprintf(tmp_buf, "Date: %02d/%02d/%02d\n", month, date, year);
-    strcat(status_buf, tmp_buf, sizeof(tmp_buf));
+    strncat(status_buf, tmp_buf, sizeof(tmp_buf));
     sprintf(tmp_buf, "Time: %02d:%02d\n",hour, minutes);
-    strcat(status_buf, tmp_buf, sizeof(tmp_buf));
+    strncat(status_buf, tmp_buf, sizeof(tmp_buf));
   }
   /* return (buf[2]);	ok*/
     strcpy(return_buf, status_buf);

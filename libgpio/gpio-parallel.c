@@ -35,35 +35,35 @@
 
 /* Parallel prototypes
    --------------------------------------------------------------------- */
-int 		gpio_parallel_list(gpio_device_info *list, int *count);
+int             gpio_parallel_list(gpio_device_info *list, int *count);
 
-int 		gpio_parallel_init(gpio_device *dev);
-int 		gpio_parallel_exit(gpio_device *dev);
+int             gpio_parallel_init(gpio_device *dev);
+int             gpio_parallel_exit(gpio_device *dev);
 
-int 		gpio_parallel_open(gpio_device *dev);
-int 		gpio_parallel_close(gpio_device *dev);
+int             gpio_parallel_open(gpio_device *dev);
+int             gpio_parallel_close(gpio_device *dev);
 
-int 		gpio_parallel_read(gpio_device *dev, char *bytes, int size);
-int 		gpio_parallel_write(gpio_device *dev, char *bytes, int size);
+int             gpio_parallel_read(gpio_device *dev, char *bytes, int size);
+int             gpio_parallel_write(gpio_device *dev, char *bytes, int size);
 
-int		gpio_parallel_get_pin(gpio_device *dev, int pin);
-int		gpio_parallel_set_pin(gpio_device *dev, int pin, int level);
+int             gpio_parallel_get_pin(gpio_device *dev, int pin);
+int             gpio_parallel_set_pin(gpio_device *dev, int pin, int level);
 
-int 		gpio_parallel_update (gpio_device *dev);
+int             gpio_parallel_update (gpio_device *dev);
 
-int 		gpio_parallel_set_baudrate(gpio_device *dev);
+int             gpio_parallel_set_baudrate(gpio_device *dev);
 
 struct gpio_operations gpio_parallel_operations =
 {
-	gpio_parallel_list,
+        gpio_parallel_list,
         gpio_parallel_init,
-	gpio_parallel_exit,
+        gpio_parallel_exit,
         gpio_parallel_open,
         gpio_parallel_close,
         gpio_parallel_read,
         gpio_parallel_write,
         gpio_parallel_get_pin,
-	gpio_parallel_set_pin,
+        gpio_parallel_set_pin,
         gpio_parallel_update
 };
 
@@ -74,6 +74,9 @@ int gpio_parallel_list(gpio_device_info *list, int *count) {
 
         char buf[1024];
         int x, fd, use_int=0, use_char=0;
+#ifdef OS2
+        int rc,fh,option;
+#endif
 
         for (x=GPIO_PARALLEL_RANGE_LOW; x<=GPIO_PARALLEL_RANGE_HIGH; x++) {
                 sprintf(buf, GPIO_PARALLEL_PREFIX, x);
@@ -90,7 +93,7 @@ int gpio_parallel_list(gpio_device_info *list, int *count) {
                         strcpy(list[*count].path, buf);
                         sprintf(buf, "Parallel Port %i", x);
                         strcpy(list[*count].name, buf);
-			list[*count].argument_needed = 0;
+                        list[*count].argument_needed = 0;
                         *count += 1;
                 }
                 #ifdef OS2

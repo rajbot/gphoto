@@ -13,9 +13,8 @@ all: ..\lib\libgpio.a
 ..\obj\gpio-parallel.o: gpio-parallel.c
   $(CC) -o $@ $** $(CCFLAGS)
 
-..\obj\gpio-socket.o: gpio-socket.c
+..\obj\gpio-network.o: gpio-network.c
   $(CC) -o $@ $** $(CCFLAGS)
 
-..\lib\libgpio.a: ..\obj\gpio.o ..\obj\gpio-serial.o ..\obj\gpio-parallel.o ..\obj\gpio-socket.o
+..\lib\libgpio.a: ..\obj\gpio.o ..\obj\gpio-serial.o ..\obj\gpio-parallel.o ..\obj\gpio-network.o
   $(MKLIB) $@ $**
-

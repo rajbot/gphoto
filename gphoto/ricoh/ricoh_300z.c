@@ -409,9 +409,11 @@ struct Image *ricoh_300z_get_preview () {
 	struct Image *im;
 	char filename[1024];	
 
+	extern command_line_mode;
+
 	GdkImlibImage *imlibimage;
 
-	if(not_first_time || status_bar == NULL) {
+	if(not_first_time || command_line_mode) {
 	    picnum = ricoh_300z_take_picture();
 	    return ricoh_300z_get_picture (picnum, 0);
 	} else {

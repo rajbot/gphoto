@@ -2,7 +2,7 @@
 #include <gnome.h>
 #include <libgnomevfs/gnome-vfs.h>
 #include <glade/glade.h>
-#include <gconf/gconf.h>
+#include <gconf/gconf-client.h>
 #include <gphoto2.h>
 #include "preferences.h"
 #include "gnocam.h"
@@ -50,6 +50,7 @@ int main (int argc, char *argv[])
 		{"text/uri-list", 0, 0}
 	};
 	GError *gerror = NULL;
+	GConfClient *client = NULL;
 
 	/* Init GNOME. */
 	gnome_init (PACKAGE, VERSION, argc, argv);
@@ -75,6 +76,8 @@ int main (int argc, char *argv[])
 		gnome_error_dialog (g_strdup_printf (_("Could not initialize gconf!\n\n%s"), gerror->message));
 		return (1);
 	}
+	client = gconf_client_get_default ();
+	gconf_client_add_dir (client, "/apps/GnoCam", GCONF_CLIENT_PRELOAD_NONE, NULL);
 
 	/* Load the interface. */
 	xml = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "app");
@@ -87,6 +90,7 @@ int main (int argc, char *argv[])
 	glade_xml_signal_autoconnect (xml);
 
 	/* Store some data. */
+	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "app")), "client", client);
 	// Menu items:
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "save_previews")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "save_preview_as")), "xml", xml);
@@ -120,5 +124,6 @@ int main (int argc, char *argv[])
 
 	/* Clean up. */
 	gp_exit ();
+	gtk_object_unref (GTK_OBJECT (client));
 	return (0);
 }

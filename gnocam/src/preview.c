@@ -131,12 +131,10 @@ preview_refresh (GtkWidget* preview)
 			tmp = g_strdup_printf (_("Could not get any widget for\ndisplaying the preview!\n(%s)"), bonobo_exception_get_text (&ev));
 			gnome_error_dialog_parented (tmp, main_window);
 			g_free (tmp);
-			CORBA_exception_free (&ev);
-			return;
+		} else {
+			gtk_widget_show (widget = bonobo_widget_new_control_from_objref (control, corba_container));
+			bonobo_window_set_contents (BONOBO_WINDOW (preview), widget);
 		}
-		widget = bonobo_widget_new_control_from_objref (control, corba_container);
-		gtk_widget_show (widget);
-		bonobo_window_set_contents (BONOBO_WINDOW (preview), widget);
 		
 		/* Free exception. */
 		CORBA_exception_free (&ev);
@@ -166,6 +164,7 @@ preview_save (GtkWidget* preview)
 		uri = gnome_vfs_uri_new (filename);
 		g_free (filename);
 		camera_file_save (file, uri);
+		gnome_vfs_uri_unref (uri);
         }
 }
 
@@ -209,24 +208,27 @@ preview_new (Camera* camera)
 	corba_container = bonobo_object_corba_objref (BONOBO_OBJECT (container));
 	bonobo_ui_container_set_win (container, BONOBO_WINDOW (window));
 	component = bonobo_ui_component_new ("Preview");
-	gtk_object_set_data (GTK_OBJECT (component), "camera", camera);
 	bonobo_ui_component_set_container (component, corba_container);
 	bonobo_ui_component_add_verb_list_with_data (component, verb, window);
 	bonobo_ui_util_set_ui (component, "", "gnocam-preview.xml", "Preview");
 	gtk_widget_show_all (window);
 
         /* Store some data. */
-        gtk_object_set_data_full (GTK_OBJECT (window), "camera", camera, (GtkDestroyNotify) gp_camera_unref);
 	gtk_object_set_data (GTK_OBJECT (window), "container", corba_container);
 
-	/* Ref the camera. */
+	/* Ref the camera for the preview. */
 	gp_camera_ref (camera);
+	gtk_object_set_data_full (GTK_OBJECT (window), "camera", camera, (GtkDestroyNotify) gp_camera_unref);
+
+	/* Ref the camera for the component. */
+	gp_camera_ref (camera);
+	gtk_object_set_data_full (GTK_OBJECT (component), "camera", camera, (GtkDestroyNotify) gp_camera_unref);
 
         /* Get a preview. */
         preview_refresh (window);
 
 	/* Create the "camera properties" menu item. */
-	if (gp_camera_config_get (camera, &window_camera) == GP_OK) {
+	if (camera->abilities->config && (gp_camera_config_get (camera, &window_camera) == GP_OK)) {
 		doc = xmlNewDoc ("1.0");
 		ns = xmlNewGlobalNs (doc, "xxx", "xxx");
 		xmlDocSetRootElement (doc, node = xmlNewNode (ns, "Root"));

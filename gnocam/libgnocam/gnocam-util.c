@@ -66,5 +66,7 @@ gnocam_util_get_camera (const gchar *manuf, const gchar *model,
         }
         CORBA_free (l);
 
+	CORBA_exception_set (ev, CORBA_SYSTEM_EXCEPTION,
+			     ex_CORBA_UNKNOWN, NULL);
 	return CORBA_OBJECT_NIL;
 }

@@ -1,0 +1,907 @@
+# Ukrainian translation of gPhoto.
+# Copyright (C) 2000 Free Software Foundation, Inc.
+# Yuri Syrota <rasta@renome.rovno.ua>, 2000.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gphoto\n"
+"POT-Creation-Date: 2000-06-27 19:26+0300\n"
+"PO-Revision-Date: 2000-06-27 16:33+0200\n"
+"Last-Translator: Yuri Syrota <rasta@renome.rovno.ua>\n"
+"Language-Team: Ukrainian <ru@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=koi8-u\n"
+"Content-Transfer-Encoding: 8-bit\n"
+
+#: src/callbacks.c:114
+msgid "No configuration options."
+msgstr "Нема╓ параметр╕в конф╕гурац╕╖."
+
+#: src/callbacks.c:118
+msgid "Mail image needs to be implemented!"
+msgstr "Поштове зображення мусить бути реал╕зовано!"
+
+#: src/callbacks.c:126
+msgid "Taking picture..."
+msgstr "Отримання зображення..."
+
+#: src/callbacks.c:131
+msgid "Could not take a picture."
+msgstr "Не вдалось отримати зображення."
+
+#: src/callbacks.c:136
+#, c-format
+msgid "New picture is #%03i"
+msgstr "Нове зображення #%03i"
+
+#: src/callbacks.c:150
+msgid "Deleting ALL pictures."
+msgstr "Стирання ВС╤Х зображень."
+
+#: src/callbacks.c:158
+#, c-format
+msgid "Deleting %i...\n"
+msgstr "Стира╓ться %i...\n"
+
+#: src/callbacks.c:162
+msgid "Deleted all images."
+msgstr "Стерто вс╕ зображення."
+
+#: src/callbacks.c:175
+msgid "Deleting selected pictures..."
+msgstr "Стирання вибраних зображень..."
+
+#: src/callbacks.c:196 src/callbacks.c:1729 src/live.c:40 src/live.c:124
+msgid "Done."
+msgstr "Виконано."
+
+#: src/callbacks.c:218
+msgid "Nothing selected to be deleted."
+msgstr "Н╕чого не вибрано для стирання."
+
+#: src/callbacks.c:226
+msgid "Are you sure you want to DELETE the selected images?"
+msgstr "Ви впевнен╕, що хочете СТЕРТИ вибран╕ зображення?"
+
+#: src/callbacks.c:228
+msgid "Are you sure you want to DELETE all the images from memory?"
+msgstr "Ви впевнен╕, що хочете СТЕРТИ вс╕ зображення з пам'ят╕?"
+
+#: src/callbacks.c:235 src/util.c:136
+msgid "Yes"
+msgstr "Так"
+
+#: src/callbacks.c:250 src/util.c:141
+msgid "No"
+msgstr "Н╕"
+
+#: src/callbacks.c:287
+#, c-format
+msgid "Could not save #%i"
+msgstr "Не вдалось зберегти #%i"
+
+#: src/callbacks.c:337
+msgid "Filename prefix:"
+msgstr "Преф╕кс назви файлу:"
+
+#: src/callbacks.c:369
+#, c-format
+msgid "Saving Image #%03i..."
+msgstr "Збереження зображення #%03i..."
+
+#: src/callbacks.c:375
+#, c-format
+msgid "Saving Thumbnail #%03i..."
+msgstr "Збереження м╕н╕атюри #%03i..."
+
+#: src/callbacks.c:377
+#, c-format
+msgid "%s-thumbnail-%03i"
+msgstr "%s-м╕н╕атюри-%03i"
+
+#: src/callbacks.c:384
+#, c-format
+msgid "Done. Images saved in %s"
+msgstr "Виконано. Зображення збережен╕ в %s"
+
+#: src/callbacks.c:416 src/callbacks.c:951 src/gallery.c:535 src/gallery.c:566
+#, c-format
+msgid "Could not retrieve #%i"
+msgstr "Не вдалось в╕дновити #%i"
+
+#: src/callbacks.c:424
+#, c-format
+msgid "%s/gphoto-image-%03i.jpg"
+msgstr "%s/gphoto-image-%03i.jpg"
+
+#: src/callbacks.c:539
+msgid "Select model/port..."
+msgstr "Вибрать модель/порт..."
+
+#: src/callbacks.c:554
+msgid "Camera Model:"
+msgstr "Модель камери:"
+
+#: src/callbacks.c:587
+msgid ""
+"\n"
+"gPhoto user(s) that reported this model:\n"
+msgstr ""
+"\n"
+"Користувач gPhoto, що пов╕домив про цю модель:\n"
+
+#: src/callbacks.c:613
+msgid "Port:"
+msgstr "Порт:"
+
+#. gtk_box_pack_start(GTK_BOX(vbox), betalabel, FALSE, FALSE, 0);
+#. gtk_box_pack_start(GTK_BOX(vbox), tester, FALSE, FALSE, 0);
+#: src/callbacks.c:683
+msgid "Save"
+msgstr "Зберегти"
+
+#: src/callbacks.c:688 src/callbacks.c:1389 src/callbacks.c:1605
+#: src/callbacks.c:1791 src/gallery.c:427
+msgid "Cancel"
+msgstr "В╕дм╕на"
+
+#: src/callbacks.c:725
+#, c-format
+msgid "Error: failed to open %s"
+msgstr "Помилка: не вдалось в╕дкрити %s"
+
+#: src/callbacks.c:727
+msgid "Missing Serial Device Permissions"
+msgstr "В╕дсутн╕ права на посл╕довний порт"
+
+#: src/callbacks.c:728
+msgid "Please check the permissions (see the manual)."
+msgstr "Будь ласка, перев╕рте права (подив╕ться в кер╕вництво)."
+
+#: src/callbacks.c:731
+#, c-format
+msgid "Opened %s."
+msgstr "В╕дкрито %s."
+
+#: src/callbacks.c:784
+msgid "Could not open $HOME/.gphoto/gphotorc for writing."
+msgstr "Не вдалося в╕дкрити $HOME/.gphoto/gphotorc для запису."
+
+#: src/callbacks.c:786
+msgid "Could not open $HOME/.gphoto/gphotorc for writing.\n"
+msgstr "Не вдалося в╕дкрити $HOME/.gphoto/gphotorc для запису.\n"
+
+#: src/callbacks.c:792
+#, c-format
+msgid ""
+"Version Information-------------------Current Version: %sNew features all "
+"over the place. Please seethe ChangeLog for more information.As always, "
+"report bugs gphoto-devel@gphoto.orgThanx much."
+msgstr ""
+"╤нформац╕я про верс╕ю-------------------Поточна верс╕я: %sНов╕ можливост╕! "
+"Дивиться докладн╕ше в ChangeLog. Пов╕домляйте про помилки на адресу "
+"gphoto-devel@gphoto.org. Дяку╓мо."
+
+#: src/callbacks.c:818
+msgid "User's Manual"
+msgstr "Кер╕вництво користувача"
+
+#: src/callbacks.c:836
+#, c-format
+msgid ""
+"Could not open:\n"
+"%s"
+msgstr ""
+"Не вдалося в╕дкрити:\n"
+"%s"
+
+#: src/callbacks.c:852 src/callbacks.c:1786 src/util.c:60 src/util.c:101
+msgid "OK"
+msgstr "Гаразд"
+
+#: src/callbacks.c:872
+msgid ""
+"This program is free software; you can redistribute it and/or modifyit under "
+"the terms of the GNU General Public License as published bythe Free Software "
+"Foundation; either version 2 of the License, or(at your option) any later "
+"version.This program is distributed in the hope that it will be useful,but "
+"WITHOUT ANY WARRANTY; without even the implied warranty ofMERCHANTABILITY or "
+"FITNESS FOR A PARTICULAR PURPOSE.  See theGNU General Public License for "
+"more details.You should have received a copy of the GNU General Public "
+"Licensealong with this program; if not, write to the Free "
+"SoftwareFoundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.See "
+"http://www.gnu.org for more details on the GNU project."
+msgstr ""
+"Це в╕льна програма, ви можете розповсюджувати ╕/або модиф╕кувати ╖╖ на "
+"умовах GNU General Public License, опубл╕ковано╖ Free Software Foundation "
+"верс╕╖ 2 чи п╕зн╕шо╖ (з вашого огляду). Ця програма розповсюджу╓ться в "
+"розрахунку на те, що вона буде потр╕бною, аде БЕЗ БУДЬ-ЯКИХ ╫АРАНТ╤Й, в том "
+"числ╕ без типово╖ гарант╕╖ КОМЕРЦ╤ЙНО╥ Ц╤ННОСТ╤ чи ПОТР╤БНОСТ╤ ДЛЯ БУДЬ-ЯКИХ "
+"Ц╤ЛЕЙ. Див╕ться GNU General Public License для подробиць. Ви мали отримати "
+"коп╕ю GNU General Public License разом з ц╕╓ю програмою. Якщо це не так, "
+"напиш╕ть в Free Software Foundation Inc. за адресою: 675 Mass Ave, "
+"Cambridge, MA 02139, USA. В╕дв╕дайте http://www.gnu.org, щоб взнати "
+"детальн╕ше про пороект GNU."
+
+#: src/callbacks.c:895
+#, c-format
+msgid "%s is not yet implemented"
+msgstr "%s ще не реал╕зовано"
+
+#: src/callbacks.c:947
+#, c-format
+msgid "Getting thumbnail %i..."
+msgstr "Отримання м╕н╕атюри %i..."
+
+#: src/callbacks.c:957
+#, c-format
+msgid "Picture #%i\n"
+msgstr "Зображення #%i\n"
+
+#: src/callbacks.c:1036
+msgid "Getting Index..."
+msgstr "Отримання покажчика..."
+
+#: src/callbacks.c:1050
+#, c-format
+msgid "num_pictures_taken is %d\n"
+msgstr "num_pictures_taken - %d\n"
+
+#: src/callbacks.c:1052
+msgid "Could not get the number of pictures"
+msgstr "Не вдалось отримати к╕лькост╕ зображень"
+
+#: src/callbacks.c:1062
+msgid "Download cancelled."
+msgstr "Прийом в╕дм╕нено."
+
+#: src/callbacks.c:1121
+msgid "Done getting index."
+msgstr "Покажчик отримано."
+
+#: src/callbacks.c:1157
+msgid "Nothing selected for download."
+msgstr "Н╕чего не вибрано для прийому."
+
+#: src/callbacks.c:1171
+#, c-format
+msgid "Getting Image #%03i..."
+msgstr "Отримання зображення #%03i..."
+
+#: src/callbacks.c:1178
+#, c-format
+msgid "Getting Thumbnail #%03i..."
+msgstr "Отримання м╕н╕атюри #%03i..."
+
+#: src/callbacks.c:1188
+msgid "Done downloading."
+msgstr "Прийом завершено."
+
+#: src/callbacks.c:1190
+msgid "Download halted."
+msgstr "Прийом зупинено."
+
+#: src/callbacks.c:1266
+msgid "Save all opened images"
+msgstr "Зберегти вс╕ в╕дкрит╕ зображення"
+
+#: src/callbacks.c:1278
+msgid "Save Image(s)..."
+msgstr "Зберегти зображення..."
+
+#: src/callbacks.c:1300
+msgid "Saving the index is not yet supported"
+msgstr "Збереження покажчика ще не п╕дтриму╓ться"
+
+#: src/callbacks.c:1325
+msgid "Open Image..."
+msgstr "В╕дкрити зображення..."
+
+#: src/callbacks.c:1349
+msgid "Can't print the index yet."
+msgstr "Ще неможливо надрукувати покажчик."
+
+#: src/callbacks.c:1354
+msgid "Print Image..."
+msgstr "Друк зображення..."
+
+#: src/callbacks.c:1361
+msgid "Print Command:"
+msgstr "Команда друку:"
+
+#: src/callbacks.c:1383
+msgid "Print"
+msgstr "Друкувати"
+
+#: src/callbacks.c:1409
+msgid "Now spooling..."
+msgstr "В╕дправлення в чергу..."
+
+#: src/callbacks.c:1414
+msgid "Spooling done. Printing may take a minute."
+msgstr "Завдання в╕дправлено. Друк може продовжуватись дек╕лька хвилин."
+
+#: src/callbacks.c:1458
+msgid "Can't modify the index colors."
+msgstr "Неможливо модиф╕кувати кольори покажчика."
+
+#: src/callbacks.c:1534
+msgid "Can't scale the index."
+msgstr "Неможливо масштабувати покажчик."
+
+#: src/callbacks.c:1544
+msgid "Resize Image..."
+msgstr "Зм╕нити розм╕р зображення..."
+
+#: src/callbacks.c:1552
+msgid "Width:"
+msgstr "Ширина:"
+
+#: src/callbacks.c:1575
+msgid "Height:"
+msgstr "Висота:"
+
+#: src/callbacks.c:1600 src/toolbar.c:125 src/toolbar.c:127
+msgid "Resize"
+msgstr "Зм╕нити розм╕р"
+
+#: src/callbacks.c:1647
+msgid "Can't manipulate the index."
+msgstr "Невозможно ман╕пулювати покажчиком."
+
+#: src/callbacks.c:1700
+msgid "Can't scale the index!"
+msgstr "Неможливо масштабувати покажчик!"
+
+#. Scales image size by 50%
+#: src/callbacks.c:1733
+msgid "Scaling image by 50%..."
+msgstr "Масштаб зображення 50%..."
+
+#. Scales image size by 200%
+#: src/callbacks.c:1738
+msgid "Scaling image by 200%..."
+msgstr "Масштаб зображення 200%..."
+
+#: src/callbacks.c:1784
+msgid "Post-Processing Options"
+msgstr "Параметри подальшо╖ обробки"
+
+#: src/callbacks.c:1796
+msgid "Enable post-processing"
+msgstr "Дозволити подальшу обробку"
+
+#: src/callbacks.c:1803
+msgid "Post-processing command-line:"
+msgstr "Команда для подальшо╖ обробки:"
+
+#: src/callbacks.c:1869
+msgid "http://www.gphoto.org/help.php3"
+msgstr "http://www.gphoto.org/help.php3"
+
+#: src/callbacks.c:1873
+msgid "http://www.gphoto.org/"
+msgstr "http://www.gphoto.org/"
+
+#: src/callbacks.c:1877
+msgid "http://www.gphoto.org/feedback.php3"
+msgstr "http://www.gphoto.org/feedback.php3"
+
+#: src/callbacks.c:1881
+msgid "http://www.gphoto.org/news.php3"
+msgstr "http://www.gphoto.org/news.php3"
+
+#: src/callbacks.c:1885
+msgid "http://www.gphoto.org/download.php3"
+msgstr "http://www.gphoto.org/download.php3"
+
+#: src/callbacks.c:1889
+msgid "http://www.gphoto.org/cameras.php3"
+msgstr "http://www.gphoto.org/cameras.php3"
+
+#: src/callbacks.c:1893
+msgid "http://www.gphoto.org/supporting.php3"
+msgstr "http://www.gphoto.org/supporting.php3"
+
+#: src/callbacks.c:1897
+msgid "http://www.gphoto.org/lists.php3"
+msgstr "http://www.gphoto.org/lists.php3"
+
+#: src/callbacks.c:1901
+msgid "http://www.gphoto.org/team.php3"
+msgstr "http://www.gphoto.org/team.php3"
+
+#: src/callbacks.c:1905
+msgid "http://www.gphoto.org/themes.php3"
+msgstr "http://www.gphoto.org/themes.php3"
+
+#: src/callbacks.c:1909
+msgid "http://www.gphoto.org/links.php3"
+msgstr "http://www.gphoto.org/links.php3"
+
+#: src/callbacks.c:1913
+msgid "http://www.gphoto.org/todo.php3"
+msgstr "http://www.gphoto.org/todo.php3"
+
+#: src/commandline.c:15
+#, c-format
+msgid ""
+"%s summary:\n"
+"%s"
+msgstr ""
+"Зведення %s:\n"
+"%s"
+
+#: src/commandline.c:23 src/main.c:129
+#, c-format
+msgid "gPhoto %s (%s) - the GNU digital camera application\n"
+msgstr "gPhoto %s (%s) - програма GNU для роботи з цифровою камерою\n"
+
+#: src/commandline.c:26 src/main.c:132
+msgid ""
+"Copyright (C) 1998-2000 Scott Fritzinger <scottf@unr.edu>\n"
+"\n"
+msgstr ""
+"Авторське право (C) 1998-2000 Scott Fritzinger <scottf@unr.edu>\n"
+"\n"
+
+#: src/commandline.c:28 src/main.c:134
+msgid "Usage: gphoto [-h] [-c] [-n] [-s # filename] [-t # filename]\n"
+msgstr ""
+"Використання: gphoto [-h] [-c] [-n] [-s # назва_файлу] [-t # назва_файлу]\n"
+
+#: src/commandline.c:29 src/main.c:135
+msgid "              [-d #] [-p filename] [-l filename]\n"
+msgstr "              [-d #] [-p назва_файлу] [-l назва_файлу]\n"
+
+#: src/commandline.c:30
+msgid "\t-h                    display this help screen\n"
+msgstr "\t-h                    показати цей дов╕дковий екран\n"
+
+#: src/commandline.c:31
+msgid "\t-c                    display camera summary\n"
+msgstr "\t-c                    показати зведення камери\n"
+
+#: src/commandline.c:32
+msgid "\t-n                    display the # of pictures\n"
+msgstr "\t-n                    показати к╕льк╕сть зображень\n"
+
+#: src/commandline.c:33
+msgid "\t-s # filename         save image # as filename\n"
+msgstr ""
+"\t-s # назва_файлу      зберегти зображення з вказаним номером у файл╕ з "
+"вказаною назвою\n"
+
+#: src/commandline.c:35
+msgid "\t-t # filename         save thumbnail # as filename\n"
+msgstr ""
+"\t-t # назва_файлу      зберегти м╕н╕атюру з вказаним номером у файл╕ з "
+"вказаною назвою\n"
+
+#: src/commandline.c:37
+msgid "\t-d #                  delete image # from camera\n"
+msgstr "\t-d #                  видалити вказаний номер зображення з камери\n"
+
+#: src/commandline.c:39
+msgid "\t-p filename           take picture and save as filename\n"
+msgstr ""
+"\t-p назва_файлу               отримати зображення ╕ зберегти його з "
+"вказаною назвою\n"
+
+#: src/commandline.c:41
+msgid ""
+"\t-l filename           save live preview as filename\n"
+"\n"
+msgstr ""
+"\t-l назва_файлу         зберегти live preview з вказаною назвою\n"
+"\n"
+
+#: src/commandline.c:43
+msgid "gPhoto is free GNU software; you can redistribute it and/or\n"
+msgstr ""
+"gPhoto - в╕льне програмне забезпечення GNU; ви можете разповсюджувати\n"
+
+#: src/commandline.c:45
+msgid "modify it under the terms of the GNU General Public License \n"
+msgstr "╕/або зм╕нювати його на умовах GNU General Public License \n"
+
+#: src/commandline.c:47
+msgid "as published by the Free Software Foundation; either version \n"
+msgstr "опубл╕ковано╖ Фондом В╕льного програмного забезпечення; л╕ценз╕╖\n"
+
+#: src/commandline.c:49
+msgid "2 of the License, or any later version.  Visit gphoto/COPYING\n"
+msgstr "верс╕╖ 2 чи б╕льш п╕зньо╖. Див╕ться gphoto/COPYING\n"
+
+#: src/commandline.c:51
+msgid ""
+"in the source distribution to read the GNU GPL license terms.\n"
+"\n"
+msgstr ""
+"в поставц╕ для ознайомлення з умовами л╕ценз╕╖ GNU GPL.\n"
+"\n"
+
+#: src/commandline.c:53
+msgid "Report bugs and camera success to gphoto-devel@gphoto.org.\n"
+msgstr "Пов╕домляйте про помилки за адресою gphoto-devel@gphoto.org.\n"
+
+#: src/commandline.c:55
+msgid "See http://www.gphoto.org for the latest news and updates.\n"
+msgstr "Останн╕ новини та поновлення шукайте на http://www.gphoto.org\n"
+
+#: src/commandline.c:73
+#, c-format
+msgid "%i\n"
+msgstr "%i\n"
+
+#: src/commandline.c:78 src/commandline.c:103 src/commandline.c:132
+msgid "ERROR: could not get image.\n"
+msgstr "ПОМИЛКА: не вдалось отримати зображення.\n"
+
+#: src/commandline.c:85 src/commandline.c:110 src/commandline.c:139
+#: src/commandline.c:195
+msgid "ERROR: could not save image.\n"
+msgstr "ПОМИЛКА: не вдалось зберегти зображення.\n"
+
+#: src/commandline.c:87
+msgid "ERROR: 'filename' not specified.\n"
+msgstr "ПОМИЛКА: не вказано назви файлу.\n"
+
+#: src/commandline.c:115 src/commandline.c:144
+msgid "ERROR: '#' and 'filename' not specified.\n"
+msgstr "ПОМИЛКА: не вказан╕ \"#\" та назви файлу'\n"
+
+#: src/commandline.c:154
+msgid "ERROR: Could not delete image.\n"
+msgstr "ПОМИЛКА: не вдалось стерти зображення.\n"
+
+#: src/commandline.c:162
+msgid "ERROR: '#' not specified.\n"
+msgstr "ПОМИЛКА: не вказано \"#\".\n"
+
+#: src/commandline.c:169
+msgid "ERROR: filename not specified.\n"
+msgstr "ПОМИЛКА: не вказано назви файлу.\n"
+
+#: src/commandline.c:172
+msgid "Taking picture...\n"
+msgstr "Отримання зображення...\n"
+
+#: src/commandline.c:178
+msgid "ERROR: could not take the picture.\n"
+msgstr "ПОМИЛКА: не вдалось отримати зображення.\n"
+
+#: src/commandline.c:182
+#, c-format
+msgid "Saving the new image (# %i) as %s: "
+msgstr "Збереження нового зображення (# %i) як %s: "
+
+#: src/commandline.c:187
+msgid ""
+"\n"
+"ERROR: could not get image.\n"
+msgstr ""
+"\n"
+"ПОМИЛКА: не вдалось отримати зображення.\n"
+
+#: src/developer_dialog.c:136
+#, c-format
+msgid "gPhoto release %s was brought to you by"
+msgstr "gPhoto верс╕╖ %s було створено для вас"
+
+#: src/developer_dialog.c:199
+msgid "Web Page"
+msgstr "Web-стор╕нка"
+
+#: src/developer_dialog.c:206
+msgid "Previous"
+msgstr "Назад"
+
+#: src/developer_dialog.c:214
+msgid "Next"
+msgstr "Дал╕"
+
+#: src/developer_dialog.c:222 src/img_edit.c:1436 src/live.c:100
+msgid "Close"
+msgstr "Закрити"
+
+#: src/developer_dialog.c:291
+msgid ""
+"The gPhoto AUTHORS file appears to be missing!\n"
+"\t      There should be a file called "
+msgstr "Файл gPhoto AUTHORS зда╓ться з╕псовано!"
+
+#: src/gallery.c:212
+msgid "Select an Output Directory..."
+msgstr "Виб╕р каталогу виводу..."
+
+#: src/gallery.c:310
+msgid "Gallery Name:"
+msgstr "Назва галере╖:"
+
+#: src/gallery.c:323
+msgid "Theme:"
+msgstr "Тема:"
+
+#: src/gallery.c:382
+msgid "Output Directory:"
+msgstr "Каталог виводу:"
+
+#: src/gallery.c:393
+msgid "Change..."
+msgstr "Зм╕нити..."
+
+#. i made this
+#. * it should make extra buttons for shtml, table borders, and
+#. * image borders
+#.
+#: src/gallery.c:403
+msgid "Export file as *.shtml?"
+msgstr "Експортувати файл как *.shtml?"
+
+#: src/gallery.c:407
+msgid "Set table border width to zero for thumbnails?"
+msgstr "Встановити для м╕н╕атюри ширину рамки таблиц╕ в нуль?"
+
+#: src/gallery.c:411
+msgid "Set image border width to zero? (so you don't see the link colors...)"
+msgstr ""
+"Встановити ширину рамки зображення в нуль? (так що ви не побачите пов'язаних "
+"кольор╕в...)"
+
+#: src/gallery.c:421
+msgid "Create"
+msgstr "Створити"
+
+#: src/gallery.c:444
+msgid "You must select a theme!"
+msgstr "Необх╕дно вибрати тему!"
+
+#. Get the current thumbnail
+#: src/gallery.c:532
+#, c-format
+msgid "Getting Thumbnail #%i..."
+msgstr "Отримання м╕н╕атюри #%i..."
+
+#: src/gallery.c:538 src/gallery.c:568
+msgid "Not Available"
+msgstr "Не доступно"
+
+#: src/gallery.c:541
+#, c-format
+msgid "<a href=\"picture-%03i.html\">Click Me<\\/a>"
+msgstr "<a href=\"picture-%03i.html\">Натисни<\\/a>"
+
+#: src/gallery.c:548
+#, c-format
+msgid "thumbnail-%03i.%s"
+msgstr "thumbnail-%03i.%s"
+
+#. Get the current image
+#: src/gallery.c:562
+#, c-format
+msgid "Getting Image #%i..."
+msgstr "Отримання зображення #%i..."
+
+#: src/gallery.c:572
+#, c-format
+msgid "<img alt=\"%03i\" src=\"picture-%03i.%s\">"
+msgstr "<img alt=\"%03i\" src=\"picture-%03i.%s\">"
+
+#: src/gallery.c:574
+#, c-format
+msgid "picture-%03i.%s"
+msgstr "picture-%03i.%s"
+
+#: src/gallery.c:590 src/gallery.c:595
+#, c-format
+msgid "picture-%03i.html"
+msgstr "picture-%03i.html"
+
+#: src/gallery.c:607
+#, c-format
+msgid "%spicture-%03i.html"
+msgstr "%spicture-%03i.html"
+
+#: src/gallery.c:630
+#, c-format
+msgid "Loaded file:%s%s in %s"
+msgstr "Завантажено файл:%s%s в %s"
+
+#: src/gallery.c:633
+#, c-format
+msgid "Gallery saved in: %s"
+msgstr "Галерею збережено в: %s"
+
+#: src/img_edit.c:1125
+msgid "Color Adjustment"
+msgstr "П╕дб╕р кольору"
+
+#: src/img_edit.c:1126
+msgid "gPhoto - Color Adjustment"
+msgstr "gPhoto - П╕дб╕р кольору"
+
+#: src/img_edit.c:1141
+msgid "Colour Settings"
+msgstr "Налаштування кольор╕в"
+
+#: src/img_edit.c:1247
+msgid "Gray Controls"
+msgstr "Р╕вень с╕рого"
+
+#: src/img_edit.c:1287
+msgid "Red Controls"
+msgstr "Р╕вень червоного"
+
+#: src/img_edit.c:1327
+msgid "Green Controls"
+msgstr "Р╕вень зеленого"
+
+#: src/img_edit.c:1367
+msgid "Blue Controls"
+msgstr "Р╕вень синього"
+
+#: src/img_edit.c:1408
+msgid "Colour Modifications:"
+msgstr "Модиф╕кац╕╖ кольор╕в:"
+
+#: src/img_edit.c:1415
+msgid "Apply"
+msgstr "Застосувати"
+
+#: src/img_edit.c:1419
+msgid "Keep"
+msgstr "Лишити"
+
+#: src/img_edit.c:1423
+msgid "Reset"
+msgstr "Скасувати"
+
+#: src/img_edit.c:1424 src/img_edit.c:1425
+msgid "Reset all the color changes to normal values"
+msgstr "Скасувати вс╕ зм╕ни кольору на звичан╕ значення"
+
+#: src/img_edit.c:1427
+msgid "Always Apply"
+msgstr "Завжди застосовувати"
+
+#: src/live.c:28 src/live.c:68
+msgid "Getting live image..."
+msgstr "Отримання живого зображення..."
+
+#: src/live.c:30 src/live.c:109
+msgid "Could not get preview"
+msgstr "Не вдалось отримати перегляд"
+
+#: src/live.c:70
+msgid "Live Camera!"
+msgstr "Жива камера!"
+
+#: src/live.c:77
+msgid "Update Picture"
+msgstr "Поновити малюнок"
+
+#: src/live.c:84
+msgid "Take Picture"
+msgstr "Отримати малюнок"
+
+#: src/main.c:62
+msgid ""
+"\n"
+"Launching Gnome Bugbuddy...\n"
+msgstr ""
+"\n"
+"Запуск Gnome Bugbuddy...\n"
+
+#: src/main.c:152
+#, c-format
+msgid "gPhoto %s - the GNU digital camera application"
+msgstr "gPhoto %s - програма GNU для роботи з цифровою камерою"
+
+#: src/main.c:190
+msgid "Image Index"
+msgstr "Покажчик зображень"
+
+#: src/toolbar.c:90
+msgid "Open Image"
+msgstr "В╕дкрити зображення"
+
+#: src/toolbar.c:92
+msgid "Save Opened Image(s)"
+msgstr "Зберегти в╕дкрит╕ зображення"
+
+#: src/toolbar.c:94
+msgid "Print Image"
+msgstr "Надрукувати зображення"
+
+#: src/toolbar.c:96
+msgid "Close Image"
+msgstr "Закрити зображення"
+
+#: src/toolbar.c:99
+msgid "Previous page"
+msgstr "Попередня стор╕нка"
+
+#: src/toolbar.c:101
+msgid "Next page"
+msgstr "Наступна стор╕нка"
+
+#: src/toolbar.c:104
+msgid "Download Thumbnail Index"
+msgstr "Прийняти покажчик м╕н╕атюр"
+
+#: src/toolbar.c:106
+msgid "Download Empty Index"
+msgstr "Прийняти порожн╕й покажчик"
+
+#: src/toolbar.c:108
+msgid "Download Selected Images"
+msgstr "Прийняти вибран╕ зображення"
+
+#: src/toolbar.c:110
+msgid "Delete Selected Images"
+msgstr "Стерти вибран╕ зображення"
+
+#: src/toolbar.c:113
+msgid "Halt Download"
+msgstr "Зупинити прийом"
+
+#: src/toolbar.c:117
+msgid "Rotate Clockwise"
+msgstr "Повернуть за годинниковою"
+
+#: src/toolbar.c:119
+msgid "Rotate Counter-Clockwise"
+msgstr "Повернути проти годинниково╖"
+
+#: src/toolbar.c:121
+msgid "Flip Horizontal"
+msgstr "В╕дзеркалити горизонтально"
+
+#: src/toolbar.c:123
+msgid "Flip Vertical"
+msgstr "В╕дзеркалити вертикально"
+
+#: src/toolbar.c:128 src/toolbar.c:130
+msgid "Colors"
+msgstr "Кольори"
+
+#.
+#. browse_button = add_to_toolbar(mainWin, N_("HTML Gallery"), web_browse_xpm,
+#. GTK_SIGNAL_FUNC(gallery_main), NULL, box, 1);
+#. add_to_toolbar(mainWin, N_("Live Camera!"), take_picture_xpm,
+#. GTK_SIGNAL_FUNC(live_main), NULL, box, 1);
+#. add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1);
+#.
+#: src/toolbar.c:141
+msgid "Camera Configuration"
+msgstr "Конф╕гурац╕я камери"
+
+#: src/toolbar.c:144
+msgid "Help"
+msgstr "Дов╕дка"
+
+#: src/toolbar.c:146
+msgid "Exit gPhoto"
+msgstr "Вийти з gPhoto"
+
+#: src/util.c:56
+msgid "gPhoto Message"
+msgstr "Пов╕домлення gPhoto"
+
+#: src/util.c:127
+msgid "Confirm"
+msgstr "П╕дтвердити"
+
+#: src/util.c:166
+#, c-format
+msgid "File %s exists. Overwrite?"
+msgstr "Файл %s ╕сну╓. Переписати?"
+
+#: src/util.c:349
+msgid "load_image_mem: could not load image\n"
+msgstr "load_image_mem: не вдалось завантажити зображення\n"
+
+#: src/util.c:472
+msgid "Fork failed. Exiting. \n"
+msgstr "Не вдалось запустити процес-нащадок. Вих╕д.\n"

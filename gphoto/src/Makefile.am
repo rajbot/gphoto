@@ -1,5 +1,7 @@
 ## Process this file with automake to create a GNU Makefile
 
+SUBDIRS = icons
+
 bin_PROGRAMS = gphoto
 
 CFLAGS = -g -Iicons @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@ -DDOCDIR="\"$(docdir)\""

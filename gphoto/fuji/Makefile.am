@@ -6,3 +6,6 @@ libgphoto_fuji_la_SOURCES = fujilib.c fuji_exif.c exif.c exifdump.c \
 	exif.h exif_tags.h gphoto_fuji.h
 
 libgphoto_fuji_la_LDFLAGS = -version-info 0:0:0
+
+EXTRA_DIST = blank.xpm
+

@@ -67,7 +67,7 @@ AC_SUBST(gallerydir)
 
 AC_OUTPUT(konica/Makefile casio/Makefile philips/Makefile fuji/Makefile \
 	photopc/Makefile kodak/Makefile ricoh/Makefile \
-	sony/Makefile directory/Makefile src/Makefile \
+	sony/Makefile directory/Makefile src/Makefile src/icons/Makefile \
 	gallery/Makefile gallery/Default/Makefile gallery/RedNGray/Makefile \
 	man/Makefile Makefile)
 

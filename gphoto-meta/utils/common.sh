@@ -14,6 +14,9 @@ distdir="${metadir}/dist"
 distroot="${metadir}/dist-root"
 srcdir="${metadir}/src"
 instroot="${metadir}/inst-root"
+downloads="${metadir}/downloads"
+toolroot="${metadir}/tool-root"
+toolsrc="${metadir}/tool-src"
 tmpdir="${metadir}/tmp"
 
 fail() {

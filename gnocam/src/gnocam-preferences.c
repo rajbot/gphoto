@@ -333,20 +333,6 @@ gnocam_preferences_new (GtkWindow* parent)
 	gtk_container_add (GTK_CONTAINER (vbuttonbox), button);
 	gtk_signal_connect (GTK_OBJECT (button), "clicked", GTK_SIGNAL_FUNC (on_delete_clicked), new);
 
-	/* Create the page for GPhoto2 settings */
-	gtk_widget_show (vbox = gtk_vbox_new (FALSE, 0));
-	gtk_widget_show (label = gtk_label_new (_("GPhoto2")));
-	gtk_notebook_append_page (GTK_NOTEBOOK (notebook), vbox, label);
-	gtk_widget_show (frame = gtk_frame_new (_("Debug Level")));
-	gtk_container_set_border_width (GTK_CONTAINER (frame), 10);
-	gtk_container_add (GTK_CONTAINER (vbox), frame);
-	gtk_widget_show (vbox = gtk_vbox_new (FALSE, 0));
-	gtk_container_set_border_width (GTK_CONTAINER (vbox), 10);
-	gtk_container_add (GTK_CONTAINER (frame), vbox);
-	gtk_widget_show (widget = bonobo_widget_new_control ("config:/apps/" PACKAGE "/debug_level", NULL));
-	bonobo_control_frame_control_activate (bonobo_widget_get_control_frame (BONOBO_WIDGET (widget)));
-	gtk_container_add (GTK_CONTAINER (vbox), widget);
-
 	/* Create the page for GnoCam settings */
 	gtk_widget_show (vbox = gtk_vbox_new (FALSE, 0));
 	gtk_widget_show (label = gtk_label_new (PACKAGE));

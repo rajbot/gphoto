@@ -143,8 +143,12 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		
 	case GP_WIDGET_BUTTON:
 	
-		gtk_widget = gtk_button_new_with_label (gp_widget_label (widget));
-		gtk_signal_connect (GTK_OBJECT (gtk_widget), "clicked", GTK_SIGNAL_FUNC (on_button_clicked), widget);
+		gtk_widget = gtk_vbox_new (FALSE, 10);
+		gtk_container_set_border_width (GTK_CONTAINER (gtk_widget), 10);
+		button = gtk_button_new_with_label (gp_widget_label (widget));
+		gtk_widget_show (button);
+		gtk_signal_connect (GTK_OBJECT (button), "clicked", GTK_SIGNAL_FUNC (on_button_clicked), widget);
+		gtk_container_add (GTK_CONTAINER (gtk_widget), button);
 		break;
 		
 	case GP_WIDGET_DATE:

@@ -761,6 +761,7 @@ gnocam_camera_new (const gchar* url, Bonobo_UIContainer container, GtkWidget* wi
 	/* Set default settings */
 	position = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/hpaned_position_camera", NULL);
 	if (position) e_paned_set_position (E_PANED (new->priv->hpaned), position);
+	else gconf_client_set_int (new->priv->client, "/apps/" PACKAGE "/hpaned_position_camera", 100, NULL);
 	new->priv->storage_view_mode = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/storage_view_mode", NULL);
 	gnocam_camera_set_storage_view_mode (new, new->priv->storage_view_mode);
 

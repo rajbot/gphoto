@@ -429,7 +429,8 @@ gnocam_capture_new (Camera* camera, CameraCaptureType type, GConfClient* client)
 	/* Set the default settings */
         w = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/width_capture", NULL);
         h = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/height_capture", NULL);
-        if (w + h > 0) gtk_window_set_default_size (GTK_WINDOW (new), w, h);
+	if (w + h == 0) gtk_window_set_default_size (GTK_WINDOW (new), 500, 500);
+	else gtk_window_set_default_size (GTK_WINDOW (new), w, h);
 
 	return (new);
 }

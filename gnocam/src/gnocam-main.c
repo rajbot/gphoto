@@ -285,6 +285,11 @@ gnocam_main_new (GConfClient* client)
 	gtk_signal_connect (GTK_OBJECT (new->priv->hpaned), "size_request", GTK_SIGNAL_FUNC (on_size_request), new);
         bonobo_window_set_contents (BONOBO_WINDOW (new), new->priv->hpaned);
 
+        /* Create the shortcut bar. */
+        gtk_widget_show (new->priv->shortcut_bar = gnocam_shortcut_bar_new ());
+        e_paned_add1 (E_PANED (new->priv->hpaned), new->priv->shortcut_bar);
+        gtk_signal_connect (GTK_OBJECT (new->priv->shortcut_bar), "item_selected", (GtkSignalFunc) on_shortcut_bar_item_selected, new);
+
 	/* Create the notebook */
 	gtk_widget_show (new->priv->notebook = gtk_notebook_new ());
         gtk_notebook_set_show_border (GTK_NOTEBOOK (new->priv->notebook), FALSE);
@@ -295,11 +300,6 @@ gnocam_main_new (GConfClient* client)
         gtk_widget_show (label = e_clipped_label_new (_("(No camera selected)")));
         gtk_notebook_append_page (GTK_NOTEBOOK (new->priv->notebook), label, NULL);
 
-        /* Create the shortcut bar. */
-	gtk_widget_show (new->priv->shortcut_bar = gnocam_shortcut_bar_new ());
-        e_paned_add1 (E_PANED (new->priv->hpaned), new->priv->shortcut_bar);
-        gtk_signal_connect (GTK_OBJECT (new->priv->shortcut_bar), "item_selected", (GtkSignalFunc) on_shortcut_bar_item_selected, new);
-	
 	/* Create the container */
 	container = bonobo_ui_container_new ();
 	bonobo_ui_container_set_win (container, BONOBO_WINDOW (new));
@@ -311,9 +311,11 @@ gnocam_main_new (GConfClient* client)
 	/* Set the default settings */
 	w = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/width_main", NULL);
 	h = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/height_main", NULL);
-	if (w + h > 0) gtk_window_set_default_size (GTK_WINDOW (new), w, h);
+	if (w + h == 0) gtk_window_set_default_size (GTK_WINDOW (new), 500, 500);
+	else gtk_window_set_default_size (GTK_WINDOW (new), w, h);
 	position = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/hpaned_position_main", NULL);
 	if (position) e_paned_set_position (E_PANED (new->priv->hpaned), position);
+	else e_paned_set_position (E_PANED (new->priv->hpaned), 100);
 
 	return (GTK_WIDGET (new));
 }

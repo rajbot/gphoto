@@ -2,6 +2,7 @@
 #include <gnome.h>
 #include <glade/glade.h>
 #include <gphoto2.h>
+#include <libxml/parser.h>
 #include "properties.h"
 #include "gnocam.h"
 #include "gphoto-extensions.h"
@@ -78,7 +79,7 @@ gint on_properties_close (GnomeDialog *dialog, gpointer user_data)
 	g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
 
 	/* Clean up. */
-	gp_widget_free (gtk_object_get_data (GTK_OBJECT (dialog), "camera_widget"));
+	gp_widget_unref (gtk_object_get_data (GTK_OBJECT (dialog), "window"));
 	gp_camera_unref (camera);
 	frontend_data->xml_properties = NULL;
 
@@ -96,79 +97,74 @@ values_set (GladeXML* xml_properties, CameraWidget *camera_widget)
 	GtkWidget*	preference_widget;
 	GtkWidget*	choice_widget;
 	guint 		k;
-	gint 		i;
-	gchar*		value_new;
-	time_t		time;
-	struct tm*	t;
+	gint 		i, i_new;
+	gfloat		f, f_new;
+	gchar*		c;
+	gchar*		c_new;
 
 	g_assert (xml_properties != NULL);
 	g_assert (camera_widget != NULL);
 	g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_properties, "properties"))) != NULL);
-	
+
+	c = g_new (gchar, 256);
         switch (gp_widget_type (camera_widget)) {
         case GP_WIDGET_TEXT:
+		gp_widget_value_get (camera_widget, c);
                 if ((preference_widget = gtk_object_get_data (object, gp_widget_label (camera_widget))) == NULL) break;
-		value_new = gtk_entry_get_text (GTK_ENTRY (preference_widget));
-		if (strcmp (gp_widget_value_get (camera_widget), value_new) != 0) 
-	                gp_widget_value_set (camera_widget, value_new);
+		c_new = gtk_entry_get_text (GTK_ENTRY (preference_widget));
+		if (strcmp (c, c_new) != 0) 
+	                gp_widget_value_set (camera_widget, c_new);
                 break;
         case GP_WIDGET_RANGE:
+		gp_widget_value_get (camera_widget, &f);
                 if ((preference_widget = gtk_object_get_data (object, gp_widget_label (camera_widget))) == NULL) break;
-		value_new = g_strdup_printf ("%f", gtk_range_get_adjustment (GTK_RANGE (preference_widget))->value);
-		if (strcmp (gp_widget_value_get (camera_widget), value_new) != 0)
-	                gp_widget_value_set (camera_widget, value_new);
-		g_free (value_new);
-                break;
+		f_new = gtk_range_get_adjustment (GTK_RANGE (preference_widget))->value;
+		if (f != f_new) gp_widget_value_set (camera_widget, &f_new);
+		break;
         case GP_WIDGET_TOGGLE:
+		gp_widget_value_get (camera_widget, &i);
                 if ((preference_widget = gtk_object_get_data (object, gp_widget_label (camera_widget))) == NULL) break;
-		value_new = g_strdup_printf ("%i", gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (preference_widget)));
-		if (strcmp (gp_widget_value_get (camera_widget), value_new) != 0)
-	                gp_widget_value_set (camera_widget, value_new);
-		g_free (value_new);
+		if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (preference_widget))) i_new = 1;
+		else i_new = 0;
+		if (i != i_new) gp_widget_value_set (camera_widget, &i_new);
                 break;
         case GP_WIDGET_RADIO:
+		gp_widget_value_get (camera_widget, c);
 		if ((preference_widget = gtk_object_get_data (object, gp_widget_label (camera_widget))) == NULL) break;
                 for (k = 0; k < gp_widget_choice_count (camera_widget); k++) {
                         if ((choice_widget = gtk_object_get_data (GTK_OBJECT (preference_widget), gp_widget_choice (camera_widget, k))) == NULL) break;
                         if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (choice_widget))) {
-				value_new = gp_widget_choice (camera_widget, k);
-				if (strcmp (value_new, gp_widget_value_get (camera_widget)) != 0) {
-	                                gp_widget_value_set (camera_widget, value_new);
+				c_new = gp_widget_choice (camera_widget, k);
+				if (strcmp (c_new, c) != 0) {
+	                                gp_widget_value_set (camera_widget, c_new);
 				}
 			}
                 }
                 break;
         case GP_WIDGET_MENU:
+		gp_widget_value_get (camera_widget, c);
                 if ((preference_widget = gtk_object_get_data (object, gp_widget_label (camera_widget))) == NULL) break;
-		value_new = gtk_entry_get_text (GTK_ENTRY (GTK_COMBO (preference_widget)->entry));
-		if (strcmp (gp_widget_value_get (camera_widget), value_new) != 0)
-	                gp_widget_value_set (camera_widget, value_new);
+		c_new = gtk_entry_get_text (GTK_ENTRY (GTK_COMBO (preference_widget)->entry));
+		if (strcmp (c, c_new) != 0) gp_widget_value_set (camera_widget, c_new);
                 break;
         case GP_WIDGET_BUTTON:
-		/* Nothing to do here. */
 		break;
 	case GP_WIDGET_DATE:
+		gp_widget_value_get (camera_widget, &i);
 		if ((preference_widget = gtk_object_get_data (object, gp_widget_label (camera_widget))) == NULL) break;
-		time = gnome_date_edit_get_date (GNOME_DATE_EDIT (preference_widget));
-		t = localtime (&time);
-		value_new = g_strdup_printf ("%i/%i/%i %i:%i:%i", t->tm_year + 1900, t->tm_mon, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
-		if (strcmp (gp_widget_value_get (camera_widget), value_new) != 0)
-			gp_widget_value_set (camera_widget, value_new);
-		g_free (value_new);
+		i_new = (int) gnome_date_edit_get_date (GNOME_DATE_EDIT (preference_widget));
+		if (i_new != i) gp_widget_value_set (camera_widget, &i_new);
 		break;
 	case GP_WIDGET_WINDOW:
-	        for (i = 0; i < gp_widget_child_count (camera_widget); i++) {
-			values_set (xml_properties, gp_widget_child (camera_widget, i));
-		}
+	        for (i = 0; i < gp_widget_child_count (camera_widget); i++) values_set (xml_properties, gp_widget_child (camera_widget, i));
 		break;
 	case GP_WIDGET_SECTION:
-		for (i = 0; i < gp_widget_child_count (camera_widget); i++) {
-                        values_set (xml_properties, gp_widget_child (camera_widget, i));
-                }
+		for (i = 0; i < gp_widget_child_count (camera_widget); i++) values_set (xml_properties, gp_widget_child (camera_widget, i));
                 break;
         default:
                 g_assert_not_reached ();
         }
+	g_free (c);
 }
 
 void 
@@ -186,9 +182,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 	guint 		j, k;
 	gfloat 			min, max, increment;
 	GnomePropertyBox*	propertybox;
-	time_t			t;
-	struct tm		tm_struct;
-	gchar*			value;
+	void*			value = NULL;
 
 	g_assert (vbox != NULL);
 	g_assert (camera_widget != NULL);
@@ -200,11 +194,12 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 	gtk_box_pack_start (GTK_BOX (vbox), frame, FALSE, FALSE, 0);
 
 	/* Create the widget. */
+	gp_widget_value_get (camera_widget, value);
 	switch (gp_widget_type (camera_widget)) {
 	case GP_WIDGET_TEXT:
 		widget = gtk_entry_new ();
 		gtk_widget_show (widget);
-		gtk_entry_set_text (GTK_ENTRY (widget), gp_widget_value_get (camera_widget));
+		gtk_entry_set_text (GTK_ENTRY (widget), (gchar*) value);
 		gtk_container_add (GTK_CONTAINER (frame), widget);
 
 		/* Connect the signals. */
@@ -217,7 +212,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 		break;
 	case GP_WIDGET_RANGE:
 		gp_widget_range_get (camera_widget, &min, &max, &increment);
-		adjustment = GTK_ADJUSTMENT (gtk_adjustment_new (atof (gp_widget_value_get (camera_widget)), min, max, increment, 0, 0));
+		adjustment = GTK_ADJUSTMENT (gtk_adjustment_new (*((gfloat*) value), min, max, increment, 0, 0));
 		hscale = gtk_hscale_new (adjustment);
 		gtk_widget_show (hscale);
 		gtk_range_set_update_policy (GTK_RANGE (hscale), GTK_UPDATE_DISCONTINUOUS);
@@ -234,7 +229,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 	case GP_WIDGET_TOGGLE:
 		button = gtk_check_button_new_with_label (gp_widget_label (camera_widget));
 		gtk_widget_show (button);
-		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button), atoi (gp_widget_value_get (camera_widget)) != 0);
+		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button), ((*((gint*) value)) == 1));
 		gtk_container_add (GTK_CONTAINER (frame), button);
 
 		/* Connect the signals. */
@@ -255,7 +250,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 			button = gtk_radio_button_new_with_label (list, gp_widget_choice (camera_widget, k));
 			gtk_widget_show (button);
 			list = gtk_radio_button_group (GTK_RADIO_BUTTON (button));
-			if (strcmp (gp_widget_value_get (camera_widget), gp_widget_choice (camera_widget, k)) == 0)
+			if (strcmp ((gchar*) value, gp_widget_choice (camera_widget, k)) == 0)
        				gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button), TRUE);
                         gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 
@@ -277,7 +272,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 		}
 		gtk_combo_set_popdown_strings (GTK_COMBO (combo), combo_items);
 		g_list_free (combo_items);
-		gtk_entry_set_text (GTK_ENTRY (GTK_COMBO (combo)->entry), gp_widget_value_get (camera_widget));
+		gtk_entry_set_text (GTK_ENTRY (GTK_COMBO (combo)->entry), (gchar*) value);
 		gtk_container_add (GTK_CONTAINER (frame), combo);
 
 		/* Connect the signals. */
@@ -300,19 +295,6 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 		gtk_widget_show (hbox);
 		gtk_container_add (GTK_CONTAINER (frame), hbox);
 
-		/* Get the time out of the widget. */
-                value = g_strdup (gp_widget_value_get (camera_widget));
-//FIXME: Convert value to time_t. Value has the format "year/month/day hour/minute/second"
-//How do I do that?
-		tm_struct.tm_year = 2000 - 1900;
-		tm_struct.tm_mon = 1;
-		tm_struct.tm_mday = 1;
-		tm_struct.tm_hour = 0;
-		tm_struct.tm_min = 0;
-		tm_struct.tm_sec = 0;
-		t = mktime (&tm_struct);
-                g_free (value);
-
 		/* Create the clock. */
 //FIXME: Can I set the date and time of a gtk-clock?
 //		widget = gtk_clock_new (GTK_CLOCK_INCREASING);
@@ -323,7 +305,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 
 		/* Create the widget to edit the date. */
 		widget = gnome_date_edit_new ((time_t) 0, TRUE, TRUE);
-		gnome_date_edit_set_time (GNOME_DATE_EDIT (widget), t);
+		gnome_date_edit_set_time (GNOME_DATE_EDIT (widget), *((time_t*) value));
 		gtk_widget_show (widget);
 		gtk_container_add (GTK_CONTAINER (hbox), widget);
 
@@ -377,7 +359,6 @@ camera_properties (GladeXML* xml, Camera* camera, CameraWidget* window)
 	GnomePropertyBox*	propertybox;
 	GtkWidget*		vbox_for_orphans = NULL;
 	CameraWidget*		camera_widget;
-	CameraWidget*		camera_widget_child;
 	gint 			i;
 	gboolean 		orphans = FALSE;
 	GnomeApp*		app;
@@ -388,33 +369,33 @@ camera_properties (GladeXML* xml, Camera* camera, CameraWidget* window)
 	g_assert (gp_widget_type (window) == GP_WIDGET_WINDOW);
 	g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
 	g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
-	g_assert ((camera_widget = gp_widget_clone (window)) != NULL);
+	gp_widget_ref (window);
 
 	/* Create the propertybox */
-	xml_properties = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "properties");
+	g_assert ((xml_properties = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "properties")) != NULL);
 	frontend_data->xml_properties = xml_properties;
 	propertybox = GNOME_PROPERTY_BOX (glade_xml_get_widget (xml_properties, "properties"));
 	gtk_window_set_title (GTK_WINDOW (propertybox), frontend_data->name);
 
 	/* Store some data for later use. */
 	gtk_object_set_data (GTK_OBJECT (propertybox), "done", g_strdup ("no"));
-	gtk_object_set_data (GTK_OBJECT (propertybox), "camera_widget", camera_widget);
+	gtk_object_set_data (GTK_OBJECT (propertybox), "window", window);
 	gtk_object_set_data (GTK_OBJECT (propertybox), "camera", camera);
 
 	/* Populate the propertybox. */
-	for (i = 0; i < gp_widget_child_count (camera_widget); i++) {
-		camera_widget_child = gp_widget_child (camera_widget, i);
-		if (gp_widget_type (camera_widget_child) == GP_WIDGET_SECTION) {
+	for (i = 0; i < gp_widget_child_count (window); i++) {
+		camera_widget = gp_widget_child (window, i);
+		if (gp_widget_type (camera_widget) == GP_WIDGET_SECTION) {
 
 			/* Set up the page for this section. */
-			page_new (propertybox, camera_widget_child);
+			page_new (propertybox, camera_widget);
 		} else {
 			if (!orphans) {
 			
 				/* Set up a section for orphan widgets. */
 				vbox_for_orphans = page_new (propertybox, NULL);
 			}
-			page_entry_new (vbox_for_orphans, camera_widget_child);
+			page_entry_new (vbox_for_orphans, camera_widget);
 		}
 	}
 

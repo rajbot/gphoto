@@ -1,1 +1,9 @@
-libgpfs/gp-if.c
+libgpfs/gpfs-bag.c
+libgpfs/gpfs.c
+libgpfs/gpfs-err.c
+libgpfs/gpfs-err-type.c
+libgpfs/gpfs-if.c
+libgpfs/gpfs-obj.c
+libgpfs/gpfs-prop.c
+libgpfs/gpfs-val-type.c
+tests/test-fs.c

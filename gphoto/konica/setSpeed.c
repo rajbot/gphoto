@@ -17,10 +17,18 @@ void qm100_setSpeed(int serialdev, int speed)
 
   newt.c_cflag |= CS8;
   newt.c_iflag &= ~(IGNBRK|BRKINT|IGNPAR|PARMRK|INPCK|ISTRIP|INLCR);
+  #ifdef __FreeBSD__ /* by fujisawa@konica.co.jp */
+  newt.c_iflag &= ~(IGNCR|ICRNL|IXON|IXOFF|      IXANY|IMAXBEL);
+  #else
   newt.c_iflag &= ~(IGNCR|ICRNL|IXON|IXOFF|IUCLC|IXANY|IMAXBEL);
+  #endif
   newt.c_oflag &= ~(OPOST);
   newt.c_lflag &= ~(ISIG|ICANON);
+  #ifdef __FreeBSD__
+  /**/
+  #else
   newt.c_cflag &= ~(XCASE);
+  #endif
   newt.c_cc[VMIN] = 255;
   newt.c_cc[VTIME] = 5;
 

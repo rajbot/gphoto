@@ -929,6 +929,7 @@ struct JPEG_error_mgr
    sigjmp_buf          setjmp_buffer;
 };
 
+#if 0 /* fujisawa */
 GdkImlibImage *
 gdk_imlib_load_image_mem(char *image, int size)
 {
@@ -1028,6 +1029,8 @@ gdk_imlib_load_image_mem(char *image, int size)
     free(data);
     return imlibimage;
 }
+#endif
+
 METHODDEF(void)
 decom_init (j_decompress_ptr cinfo)
 {

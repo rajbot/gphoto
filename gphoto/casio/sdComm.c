@@ -119,7 +119,11 @@ sdcOpen(sdcInfo info) {
 	return(SDC_SUCCESS); /* Not technically a failure */
     }
 
+    #ifdef __FreeBSD__ /* by fujisawa */
+    info->fd = open(info->devName, O_RDWR );
+    #else
     info->fd = open(info->devName, O_RDWR | O_SYNC /* | O_NDELAY */);
+    #endif
     if (info->fd < 0) {
 	print_error(CANT_OPEN_DEVICE, info->devName);
 

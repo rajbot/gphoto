@@ -70,7 +70,9 @@ int main (int argc, char *argv[]) {
 	char title[256];
 
 	gtk_init(&argc, &argv);
+	#if 1 /* by fujisawa */
 	gdk_imlib_init();
+	#endif
 	gtk_widget_push_visual(gdk_imlib_get_visual());
 	gtk_widget_push_colormap(gdk_imlib_get_colormap());
 

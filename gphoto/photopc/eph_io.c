@@ -14,9 +14,12 @@
 
 /*
 	$Log$
-	Revision 1.1  1999/05/27 18:32:05  scottf
-	Initial revision
+	Revision 1.2  1999/10/02 23:41:37  ole
+	FreeBSD (and Konica/Q-M200) patch by gphoto@fujisawa.gr.jp (Toshiki Fujisawa)
 
+	Revision 1.1.1.1  1999/05/27 18:32:05  scottf
+	gPhoto- digital camera utility
+	
 	Revision 1.2  1999/04/30 07:14:14  scottf
 	minor changes to remove compilation warnings. prepping for release.
 	
@@ -86,6 +89,10 @@ typedef unsigned INT16 uint16;
 #define ERRNO GetLastError()
 #else
 #define ERRNO errno
+#endif
+
+#ifdef __FreeBSD__ /* by fujisawa */
+#undef HAVE_NANOSLEEP
 #endif
 
 #ifdef HAVE_NANOSLEEP

@@ -70,6 +70,7 @@ gallerydir='${pkgdatadir}/gallery'
 AC_SUBST(gallerydir)
 
 AC_OUTPUT(canon/Makefile casio/Makefile fuji/Makefile kodak/Makefile \
+	konica_qmxxx/Makefile \
 	konica/Makefile philips/Makefile photopc/Makefile ricoh/Makefile \
 	mustek/Makefile nikon/Makefile kodak_generic/Makefile sony/Makefile \
 	directory/Makefile src/Makefile src/icons/Makefile gallery/Makefile \

@@ -19,6 +19,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef __FreeBSD__
+#include <sys/types.h>
+#endif
 #include <netinet/in.h>
 
 #include "kodak_generic.h"

@@ -11,7 +11,10 @@
 #include <errno.h>
 #include <sys/dir.h>
 #include <dirent.h>
+#ifdef __FreeBSD__
+#else
 #include <sys/resource.h>
+#endif
 #ifdef linux
 #include <sched.h>
 #endif

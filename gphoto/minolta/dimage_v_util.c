@@ -6,7 +6,11 @@ int dimage_v_open(char* dimage_v_device)
 	int fd=-1, errorlen=0;
 	char *errormsg, *buffer;
 
+    #ifdef __FreeBSD__
+    fd = open(dimage_v_device, O_RDWR|O_NOCTTY);
+    #else
     fd = open(dimage_v_device, O_RDWR|O_NOCTTY|O_SYNC);
+    #endif
     if (fd < 0)
 	{
 		errormsg=strerror(errno);

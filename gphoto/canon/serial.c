@@ -62,7 +62,11 @@ int canon_serial_init(const char *devname)
 
     D(printf("canon_init_serial(): devname %s\n", devname));
 
+    #ifdef __FreeBSD__
+    fd = open(devname, O_RDWR | O_NOCTTY | O_NONBLOCK);
+    #else
     fd = open(devname, O_RDWR | O_NOCTTY | O_SYNC | O_NONBLOCK);
+    #endif 
     if (fd < 0)
     {
 	perror(devname);
@@ -80,8 +84,13 @@ int canon_serial_init(const char *devname)
     newtio.c_cflag = (newtio.c_cflag & ~CSIZE) | CS8;
 
     /* Set into raw, no echo mode */
+    #ifdef __FreeBSD__
+    newtio.c_iflag &= ~(IGNBRK | IGNCR | INLCR | ICRNL | 
+			IXANY | IXON | IXOFF | INPCK | ISTRIP);
+    #else
     newtio.c_iflag &= ~(IGNBRK | IGNCR | INLCR | ICRNL | IUCLC |
 			IXANY | IXON | IXOFF | INPCK | ISTRIP);
+    #endif
     newtio.c_iflag |= (BRKINT | IGNPAR);
     newtio.c_oflag &= ~OPOST;
     newtio.c_lflag = ~(ICANON | ISIG | ECHO | ECHONL | ECHOE | ECHOK);

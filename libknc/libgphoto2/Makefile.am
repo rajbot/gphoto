@@ -1,6 +1,6 @@
-libdir = $(GP_PATH)
+camlibdir = $(GP_PATH)
 if HAVE_GP
-lib_LTLIBRARIES = libgphoto2_konica.la
+camlib_LTLIBRARIES = libgphoto2_konica.la
 endif
 
 INCLUDES = -I$(top_srcdir) $(GP_CFLAGS)

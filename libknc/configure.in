@@ -70,8 +70,8 @@ dnl ---------------------------------------------------------------------------
 dnl Libraries we need for the test program
 dnl ---------------------------------------------------------------------------
 have_knctest=true
-LIBKNCTEST_CFLAGS="`${GP_PORT_CONFIG} --cflags`"
-LIBKNCTEST_LIBS="`${GP_PORT_CONFIG} --libs`"
+LIBKNCTEST_CFLAGS="`$GP_PORT_CONFIG --cflags`"
+LIBKNCTEST_LIBS="`$GP_PORT_CONFIG --libs`"
 AM_CONDITIONAL(HAVE_KNCTEST, $have_knctest)
 AC_SUBST(LIBKNCTEST_CFLAGS)
 AC_SUBST(LIBKNCTEST_LIBS)
@@ -89,9 +89,9 @@ AC_ARG_WITH(gp, [  --without-libgphto2   Don't compile the libgphoto2 plugin],[
 	fi])
 if $try_gp; then
 	PKG_CHECK_MODULES(GP, libgphoto2, [
-		GP_PATH="`${$PKG_CONFIG} --variable=driverdir libgphoto2`"
 		have_gp=true
-		gp_msg="yes"])
+		GP_PATH="`$PKG_CONFIG --variable=driverdir libgphoto2`"
+		gp_msg="yes (${GP_PATH})"])
 fi
 AM_CONDITIONAL(HAVE_GP, $have_gp)
 AC_SUBST(GP_PATH)
@@ -113,14 +113,14 @@ if $try_corba; then
 	PKG_CHECK_MODULES(CORBA, libbonobo-2.0 ORBit-2.0, [
 		GNOME_C_IDL="/usr/share/idl/GNOME_C.idl"
 		if test -f "${GNOME_C_IDL}"; then
-		    ORBIT_IDL="`${PKG_CONFIG} --variable=orbit_idl ORBit-2.0`"
+		    ORBIT_IDL="`$PKG_CONFIG --variable=orbit_idl ORBit-2.0`"
 		    have_corba=true
 		    corba_msg="yes (using ${GNOME_C_IDL})"
 		fi
 	])
 fi
-CORBA_CFLAGS="${CORBA_CFLAGS} `${GP_PORT_CONFIG} --cflags`"
-CORBA_LIBS="${CORBA_LIBS} `${GP_PORT_CONFIG} --libs`"
+CORBA_CFLAGS="${CORBA_CFLAGS} `$GP_PORT_CONFIG --cflags`"
+CORBA_LIBS="${CORBA_LIBS} `$GP_PORT_CONFIG --libs`"
 AM_CONDITIONAL(HAVE_CORBA, $have_corba)
 AC_SUBST(GNOME_C_IDL)
 AC_SUBST(ORBIT_IDL)

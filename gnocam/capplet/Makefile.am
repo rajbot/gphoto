@@ -12,16 +12,6 @@ camera_capplet_SOURCES =\
  capplet-callbacks.h capplet-callbacks.c\
  preferences.h preferences.c
 
-LDFLAGS = @LDFLAGS@\
- `gnome-config --libs capplet`\
- `gpio-config --libs`
-
-CFLAGS = @CFLAGS@\
- `gnome-config --cflags capplet`\
- `gphoto2-config --cflags`\
- `gphoto2-port-config --cflags`\
- `gpio-config --cflags`
-
 camera_capplet_LDADD =\
  $(GNOME_LIBDIR)\
  $(GNOMEUI_LIBS)\

@@ -3,3 +3,5 @@ Makefile
 *.lo
 *.la
 Gphoto*
+.deps
+.libs

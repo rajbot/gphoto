@@ -31,15 +31,23 @@
 #include "post_processing_on.xpm"
 #include "post_processing_off.xpm"
 
+char filesel_cwd[1024];
+
 extern struct ImageInfo Thumbnails;
 extern struct ImageInfo Images;
 extern struct _Camera *Camera;
+extern struct Model cameras[];
+extern GtkWidget *library_name;
+extern GtkWidget *notebook;
 
 extern char	  camera_model[];
 extern char	  serial_port[];
+
 extern int	  post_process;
 extern char	  post_process_script[];
 extern GtkWidget *post_process_pixmap;
+extern GtkWidget *index_vp;
+extern GtkWidget *index_table;
 
 /* Search the image_info tags for "name", return its value (string) */
 char* find_tag(struct Image *im, char* name) {
@@ -71,7 +79,6 @@ void set_camera (char *model) {
 		}
 		i++;
 	}
-	error_dialog("Could not initialize the library.");
 }
 
 void configure_call() {
@@ -329,10 +336,10 @@ void appendpic (int picNum, int thumbnail, int fromCamera, char *fileName) {
 		if (post_process) {
 			sprintf(imagename, "%s/gphoto-image-%i.jpg",
 				gphotoDir, picNum);
-			sprintf(process, post_process_script, imagename);
 			gdk_imlib_save_image(node->imlibimage,
 				imagename, NULL);
 			gdk_imlib_kill_image(node->imlibimage);
+			sprintf(process, post_process_script, imagename);
 			system(process);
 			node->imlibimage = gdk_imlib_load_image(imagename);
 			remove(imagename);
@@ -562,17 +569,21 @@ int  load_config() {
 
         sprintf(fname, "%s/gphotorc", gphotoDir);
         conf = fopen(fname, "r");
-        if (!conf)
+        if (!conf) {
+		/* reset to defaults, and save */
+		sprintf(serial_port, "/dev/ttyS0");
+		sprintf(camera_model, "Browse Directory");
+		sprintf(post_process_script, "");
+		save_config();
                 return (0);
-           else {
-                fgets(fname, 100, conf);
-                strncpy(serial_port, fname, strlen(fname)-1);
-                fgets(fname, 100, conf);
-                strncpy(camera_model, fname, strlen(fname)-1);
-                fgets(fname, 100, conf);
-                strncpy(post_process_script, fname, strlen(fname)-1);
-                fclose(conf);
-        }
+	}
+	fgets(fname, 100, conf);
+	strncpy(serial_port, fname, strlen(fname)-1);
+	fgets(fname, 100, conf);
+	strncpy(camera_model, fname, strlen(fname)-1);
+	fgets(fname, 100, conf);
+	strncpy(post_process_script, fname, strlen(fname)-1);
+	fclose(conf);
 
 	if (strcmp(camera_model, post_process_script) == 0)
 		sprintf(post_process_script, "");
@@ -584,7 +595,6 @@ void save_config() {
 
 	char gphotorc[1024];
 	FILE *conf;
-
 
 	sprintf(gphotorc, "%s/gphotorc", gphotoDir);
 	conf = fopen(gphotorc, "w");
@@ -1338,15 +1348,54 @@ void color_dialog() {
 	gtk_widget_show(GTK_WIDGET(img_edit_new(node)));
 }
 
+GtkWidget *resize_dialog_width, *resize_dialog_height,
+	  *resize_dialog_constrain;
+char	  resize_dialog_w[10], resize_dialog_h[10];
+
+void resize_dialog_update(GtkWidget *entry) {
+
+	char newentry[12];
+	int oldw, neww, oldh, newh, newvalue;
+	
+	if (!GTK_TOGGLE_BUTTON(resize_dialog_constrain)->active)
+		return;
+
+	oldw = atoi(resize_dialog_w);
+	oldh = atoi(resize_dialog_h);
+	neww = atoi(gtk_entry_get_text(GTK_ENTRY(resize_dialog_width)));
+	newh = atoi(gtk_entry_get_text(GTK_ENTRY(resize_dialog_height)));
+
+	if (entry == resize_dialog_width) {
+		/* update height */
+		newvalue = neww*oldh/oldw;
+		if (newvalue == 0)
+			newvalue = 1;
+		sprintf(newentry, "%i", newvalue);
+		gtk_entry_set_text(GTK_ENTRY(resize_dialog_height),
+			newentry);
+		return;
+	}
+
+	if (entry == resize_dialog_height) {
+		/* update width */
+		newvalue = newh*oldw/oldh;
+		if (newvalue == 0)
+			newvalue = 1;
+		sprintf(newentry, "%i", newvalue);
+		gtk_entry_set_text(GTK_ENTRY(resize_dialog_width),
+			newentry);
+		return;
+	}
+}
+
 void resize_dialog() {
 
 	int i=0, w, h, currentPic;
 	char size[10];
 	char *dimension;
 
-	GtkWidget *dialog, *rbutton, *button, *toggle;
+	GtkWidget *dialog, *rbutton, *button;
 	GtkWidget *label, *hbox;
-	GtkWidget *wentry, *hentry;
 
 	GdkImlibImage *scaledImage;
 	GdkPixmap *pixmap;
@@ -1367,6 +1416,7 @@ void resize_dialog() {
 	dialog = gtk_dialog_new();
 	gtk_window_set_title(GTK_WINDOW(dialog), "Resize Image...");
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
+
 	hbox = gtk_hbox_new(FALSE, 5);
 	gtk_widget_show(hbox);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
@@ -1377,12 +1427,17 @@ void resize_dialog() {
 	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
 	gtk_box_pack_start_defaults(GTK_BOX(hbox), label);
 
-	wentry = gtk_entry_new();
-	gtk_widget_show(wentry);
-	gtk_entry_set_max_length(GTK_ENTRY(wentry), 10);
-	sprintf(size, "%i", node->imlibimage->rgb_width);
-	gtk_entry_set_text(GTK_ENTRY(wentry), size);
-	gtk_box_pack_end_defaults(GTK_BOX(hbox),wentry);
+	resize_dialog_width = gtk_entry_new();
+	gtk_widget_show(resize_dialog_width);
+	sprintf(resize_dialog_w, "%i", node->imlibimage->rgb_width);
+	gtk_entry_set_max_length(GTK_ENTRY(resize_dialog_width), 10);
+	gtk_entry_set_text(GTK_ENTRY(resize_dialog_width),
+		resize_dialog_w);
+	gtk_signal_connect_object(GTK_OBJECT(resize_dialog_width),
+		"changed", GTK_SIGNAL_FUNC(resize_dialog_update),	
+		GTK_OBJECT(resize_dialog_width));
+	gtk_box_pack_start_defaults(GTK_BOX(hbox),resize_dialog_width);
+
 
 	hbox = gtk_hbox_new(FALSE, 5);
 	gtk_widget_show(hbox);
@@ -1394,48 +1449,43 @@ void resize_dialog() {
 	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
 	gtk_box_pack_start_defaults(GTK_BOX(hbox), label);
 
-	hentry = gtk_entry_new();
-	gtk_widget_show(hentry);
-	sprintf(size, "%i", node->imlibimage->rgb_height);
-	gtk_entry_set_text(GTK_ENTRY(hentry), size);
-	gtk_entry_set_max_length(GTK_ENTRY(hentry), 10);
-	gtk_box_pack_end_defaults(GTK_BOX(hbox), hentry);
+	resize_dialog_height = gtk_entry_new();
+	gtk_widget_show(resize_dialog_height);
+	sprintf(resize_dialog_h, "%i", node->imlibimage->rgb_height);
+	gtk_entry_set_max_length(GTK_ENTRY(resize_dialog_height), 10);
+	gtk_entry_set_text(GTK_ENTRY(resize_dialog_height), 
+		resize_dialog_h);
+	gtk_signal_connect_object(GTK_OBJECT(resize_dialog_width),
+		"changed", GTK_SIGNAL_FUNC(resize_dialog_update),	
+		GTK_OBJECT(resize_dialog_width));
+	gtk_box_pack_start_defaults(GTK_BOX(hbox), resize_dialog_height);
 
-	toggle = gtk_toggle_button_new();
-	gtk_widget_show(toggle);
-	gtk_widget_hide(toggle);
-	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
-                           toggle, TRUE, TRUE, 0);
+	resize_dialog_constrain = gtk_check_button_new_with_label(
+		"Constrain Proportions");
+	gtk_widget_show(resize_dialog_constrain);
+	gtk_toggle_button_set_active(
+		GTK_TOGGLE_BUTTON(resize_dialog_constrain), TRUE);
+	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+                                    resize_dialog_constrain);
 
 	rbutton = gtk_button_new_with_label("Resize");
 	gtk_widget_show(rbutton);
-        GTK_WIDGET_SET_FLAGS (rbutton, GTK_CAN_DEFAULT);  
-	gtk_signal_connect_object (GTK_OBJECT(rbutton), "clicked", 
-			   GTK_SIGNAL_FUNC(ok_click),
-			   GTK_OBJECT(dialog));
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
 					rbutton);
 
 	button = gtk_button_new_with_label("Cancel");
 	gtk_widget_show(button);
-	gtk_signal_connect_object(GTK_OBJECT(button), "clicked", 
-			   GTK_SIGNAL_FUNC(gtk_widget_hide),
-			   GTK_OBJECT(dialog));
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
 					button);
-
-	gtk_object_set_data(GTK_OBJECT(dialog), "button", "CANCEL");
-	gtk_widget_show(dialog);
-	gtk_widget_grab_default(rbutton);
 
 	/* Wait for the user to close the window */
 	if (wait_for_hide(dialog, rbutton, button) == 0)
 		return;
 	/* ------------------------------------- */
 
-        dimension = gtk_entry_get_text(GTK_ENTRY(wentry));
+        dimension = gtk_entry_get_text(GTK_ENTRY(resize_dialog_width));
         w = atoi(dimension);
-        dimension = gtk_entry_get_text(GTK_ENTRY(hentry));
+        dimension = gtk_entry_get_text(GTK_ENTRY(resize_dialog_height));
         h = atoi(dimension);
 
         scaledImage = gdk_imlib_clone_scaled_image(node->imlibimage,w,h);

@@ -8,8 +8,6 @@
 #ifndef _util_h
 #define _util_h
 #endif
-extern GtkWidget *status_bar;
-extern GtkWidget *progress;
 
 void error_dialog(char *Error);
         /*

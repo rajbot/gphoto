@@ -1,5 +1,3 @@
-char filesel_cwd[1024];
-
 gint delete_event (GtkWidget *widget, GdkEvent *event, gpointer data);
 
 gint thumb_click (GtkWidget *widget, GdkEventButton *event, gpointer callback_data);

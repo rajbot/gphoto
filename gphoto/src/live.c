@@ -9,6 +9,8 @@
 	Live Camera! 
 */
 
+extern struct _Camera *Camera;
+
 void live_snapshot(GtkWidget *dialog) {
 
 	int w, h;

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
+extern struct _Camera *Camera;
 
 char command_prefix[256];
 
@@ -37,7 +37,6 @@ void command_usage () {
 	printf("\t-l filename		save live preview as filename\n");
 	printf("\t-h 			display this help screen\n");
 	_exit(0);
-
 }
 
 void command_line (int argc, char *argv[]) {
@@ -92,5 +91,5 @@ void command_line (int argc, char *argv[]) {
 		}
 		i++;
 	}
-	exit(0);
+	_exit(0);
 }

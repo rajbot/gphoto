@@ -1,6 +1,9 @@
 #include "gphoto.h"
 #include "main.h"
 
+extern GtkWidget *status_bar;
+extern GtkWidget *progress;
+
 void update_status(char *newStatus) {
 
         /*

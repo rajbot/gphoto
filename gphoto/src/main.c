@@ -22,6 +22,33 @@
 #include "splash.xpm"           /* Splash screen  */
 #include "post_processing_off.xpm"
 
+extern  struct Model cameras[];
+extern  char 	  filesel_cwd[];
+extern  GtkAccelGroup*  mainag;
+extern  int 	  command_line_mode;
+extern  char      *gphotoDir;		/* gPhoto directory		*/
+extern  char	  serial_port[20];	/* Serial port			*/
+
+        char	  camera_model[100];	/* Currently selected cam model */
+	GtkWidget *status_bar;		/* Main window status bar	*/
+	GtkWidget *library_name;	/* Main window library bar	*/
+	GtkWidget *notebook;            /* Main window Notebook		*/
+	GtkWidget *index_table;         /* Index table			*/
+	GtkWidget *index_vp;            /* Viewport for above           */
+	GtkWidget *index_window;	/* Index Scrolled Window        */
+	GtkWidget *progress;		/* Progress bar			*/
+
+	int	   post_process;	/* TRUE/FALSE to post-process   */
+	char	   post_process_script[1024]; /* Full path/filename	*/
+	GtkWidget *post_process_pixmap; /* Post process pixmap		*/
+
+	GtkAccelGroup*  mainag;
+
+	struct _Camera  *Camera;
+	struct ImageInfo Images;
+	struct ImageInfo Thumbnails;
+
+
 int main (int argc, char *argv[]) {
 
 	int has_rc=0;
@@ -213,8 +240,9 @@ int main (int argc, char *argv[]) {
 	/* If not command-line mode... --------------------------- */
 	gtk_widget_show(mainWin);
 	if (!has_rc) {
-	  port_dialog();
+		/* put anything here to do on the first run */
 	  developer_dialog_create();
+	  error_dialog("Could not load config file.\nResetting to defaults");
 	}
 	gtk_main();
 	return(0);

@@ -40,6 +40,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.6  1999/06/15 19:44:32  scottf
+ * various updates to headers and sources
+ * added constrain proportions to resize
+ *
  * Revision 1.5  1999/06/15 16:05:04  scottf
  * removed the #ifdef's for gtk < 1.2
  * windows show in middle of screen now instead of random places :)
@@ -79,11 +83,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>  
+#include <sys/dir.h>
 
+extern GtkWidget *index_window;
 extern struct ImageInfo Thumbnails;
 extern struct ImageInfo Images;
-
-#include <sys/dir.h>
+extern struct _Camera *Camera;
+extern char filesel_cwd[];
 
 /* initialize some tags */
 char gallery_name[256];

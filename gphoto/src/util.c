@@ -161,8 +161,7 @@ GdkImlibImage *gdk_imlib_load_image_mem(char *image, int size) {
 	fwrite (image, (size_t)sizeof(char), (size_t)size, fp);
 	fclose(fp);
 	imlibimage = gdk_imlib_load_image(c);
-	sprintf(rm, "rm %s", c);
-	system(rm);
+	remove(c);
 
 	return (imlibimage);
 

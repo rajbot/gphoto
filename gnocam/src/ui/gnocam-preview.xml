@@ -1,31 +1,31 @@
 <Root>
   <menu>
     <submenu name="File" _label="_File">
-      <menuitem name="Refresh" verb="Refresh" _label="Refresh" pixtype="stock" pixname="Revert"/>
-      <menuitem name="Save" verb="Save" _label="Save" pixtype="stock" pixname="Save"/>
-      <menuitem name="SaveAs" verb="SaveAs" _label="Save As"/>
+      <menuitem name="Refresh" verb="" _label="Refresh" pixtype="stock" pixname="Revert"/>
+      <menuitem name="Save" verb="" _label="Save" pixtype="stock" pixname="Save"/>
+      <menuitem name="SaveAs" verb="" _label="Save As" pixtype="stock" pixname="Save As"/>
       <separator/>
-      <menuitem name="CaptureImage" verb="CaptureImage" _label="Capture Image"/>
-      <menuitem name="CaptureVideo" verb="CaptureVideo" _label="Capture Video"/>
+      <menuitem name="CaptureImage" verb="" _label="Capture Image"/>
+      <menuitem name="CaptureVideo" verb="" _label="Capture Video"/>
       <separator/>
-      <menuitem name="Close" verb="Close" _label="_Close" pixtype="stock" pixname="Close"/>
-      <menuitem name="Exit" verb="Exit" _label="E_xit" pixtype="stock" pixname="Exit"/>
+      <menuitem name="Close" verb="" _label="_Close" pixtype="stock" pixname="Close"/>
+      <menuitem name="Exit" verb="" _label="E_xit" pixtype="stock" pixname="Quit"/>
     </submenu>
-    <submenu name="Edit" verb="Edit" _label="_Edit">
-      <menuitem name="Properties" verb="Properties" _label="Camera Properties" pixtype="stock" pixname="Properties"/>
+    <submenu name="Edit" verb="" _label="_Edit">
+      <menuitem name="Properties" verb="" _label="Camera Properties" pixtype="stock" pixname="Properties"/>
     </submenu>
     <submenu name="Settings" _label="_Settings">
-      <menuitem name="Preferences" verb="Preferences" _label="_Preferences" pixtype="stock" pixname="Preferences"/>
+      <menuitem name="Preferences" verb="" _label="_Preferences" pixtype="stock" pixname="Preferences"/>
     </submenu>
     <submenu name="Help" _label="_Help">
-      <menuitem name="Manual" _label="_Manual"/>
+      <menuitem name="Manual" _label="_Manual" pixtype="stock" pixname="Book Red"/>
       <separator/>
-      <menuitem name="About" _label="_About"/>
+      <menuitem name="About" _label="_About" pixtype="stock" pixname="About"/>
     </submenu>
   </menu>
   <dockitem name="Toolbar">
-    <toolitem name="Refresh" verb="Refresh" _label="Refresh" pixtype="stock" pixname="Revert"/>
-    <toolitem name="Save" verb="Save" _label="Save" pixtype="stock" pixname="Save"/>
-    <toolitem name="SaveAs" verb="SaveAs" _label="Save As"/>
+    <toolitem name="Refresh" verb="" _label="Refresh" pixtype="stock" pixname="Revert"/>
+    <toolitem name="Save" verb="" _label="Save" pixtype="stock" pixname="Save"/>
+    <toolitem name="SaveAs" verb="" _label="Save As" pixtype="stock" pixname="Save As"/>
   </dockitem>
 </Root>

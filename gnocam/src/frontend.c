@@ -7,21 +7,30 @@
 #include "properties.h"
 #include "information.h"
 
+/**********************/
+/* External Variables */
+/**********************/
+
+extern GladeXML*	xml_main;
+
 /*************/
 /* Functions */
 /*************/
 
 int gp_frontend_status (Camera *camera, char *status) 
 {
-	//FIXME: Put this into the statusbar.
-	dialog_information (_("Status: %s"), status);
+	GtkStatusbar*	statusbar;
+
+	g_assert ((statusbar = (GTK_STATUSBAR (glade_xml_get_widget (xml_main, "main_statusbar")))));
+
+	gtk_statusbar_pop (statusbar, gtk_statusbar_get_context_id (statusbar, "gphoto2"));
+	gtk_statusbar_push (statusbar, gtk_statusbar_get_context_id (statusbar, "gphoto2"), status);
         return (GP_OK);
 }
 
 int gp_frontend_progress (Camera *camera, CameraFile *file, float percentage)
 {
-	//FIXME: Put this into the statusbar.
-	dialog_information (_("Progress: %f"), percentage);
+	gtk_progress_set_percentage (GTK_PROGRESS (glade_xml_get_widget (xml_main, "main_progressbar")), percentage);
         return (GP_OK);
 }
 

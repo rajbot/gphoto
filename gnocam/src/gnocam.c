@@ -32,6 +32,7 @@ BonoboObjectClient*	viewer_client = NULL;
 GtkTree*		main_tree = NULL;
 GnoCamViewMode		view_mode = GNOCAM_VIEW_MODE_PREVIEW;
 GList*			preview_list = NULL;
+GladeXML*		xml_main = NULL;
 
 /***************/
 /* Prototypes. */
@@ -125,14 +126,13 @@ on_delete_activate (GtkWidget* widget, gpointer user_data)
 
 int main (int argc, char *argv[]) 
 {
-	GladeXML*		xml_hpaned;
 	GError*			gerror = NULL;
 	GConfValue*		value = NULL;
 	guint 			notify_id_cameras;
 	gchar*			prefix = NULL;
 	gchar*			home = NULL;
 	GtkWidget*		window;
-	GtkWidget*		hpaned;
+	GtkWidget*		widget;
 	GtkWidget*      	viewer;
 	gint			i;
 	BonoboUIContainer*	container;
@@ -180,9 +180,9 @@ int main (int argc, char *argv[])
 
 	/* Create the window. We cannot do it with libglade as bonobo-support in libglade misses some features like toolbars and menus. */
 	window = bonobo_win_new (PACKAGE, PACKAGE);
-	g_assert ((xml_hpaned = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "hpaned")));
-	hpaned = glade_xml_get_widget (xml_hpaned, "hpaned");
-	bonobo_win_set_contents (BONOBO_WIN (window), hpaned);
+	g_assert ((xml_main = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "main_vbox")));
+	widget = glade_xml_get_widget (xml_main, "main_vbox");
+	bonobo_win_set_contents (BONOBO_WIN (window), widget);
 
 	/* Create the viewer. */
 	container = bonobo_ui_container_new ();
@@ -192,17 +192,17 @@ int main (int argc, char *argv[])
 	bonobo_ui_component_add_verb_list (component, verb);
 	bonobo_ui_util_set_ui (component, "", "gnocam-main.xml", PACKAGE);
 	viewer = bonobo_widget_new_control (EOG_IMAGE_VIEWER_ID, bonobo_object_corba_objref (BONOBO_OBJECT (container)));
-	gtk_paned_pack2 (GTK_PANED (hpaned), viewer, TRUE, TRUE);
+	gtk_paned_pack2 (GTK_PANED (glade_xml_get_widget (xml_main, "main_hpaned")), viewer, TRUE, TRUE);
 
 	/* Set the global variables. */
-	main_tree = GTK_TREE (glade_xml_get_widget (xml_hpaned, "main_tree"));
+	main_tree = GTK_TREE (glade_xml_get_widget (xml_main, "main_tree"));
 	viewer_client = bonobo_widget_get_server (BONOBO_WIDGET (viewer));
 
 	/* Display the interface. */
 	gtk_widget_show_all (window);
 
 	/* Connect the signals. */
-	glade_xml_signal_autoconnect (xml_hpaned);
+	glade_xml_signal_autoconnect (xml_main);
 
 	/* Do we already have a prefix in the database? */
 	if (!(value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL))) {

@@ -1,30 +1,30 @@
 <Root>
   <menu>
     <submenu name="File" _label="_File">
-      <menuitem name="NewGallery" verb="NewGallery" _label="New Gallery"/>
+      <menuitem name="NewGallery" verb="" _label="New Gallery" pixtype="stock" pixname="New"/>
       <separator/>
-      <menuitem name="SavePreviews" verb="SavePreviews" _label="Save Previews" pixtype="stock" pixname="Save"/>
-      <menuitem name="SavePreviewsAs" verb="SavePreviewsAs" _label="Save Previews As" pixtype="stock" pixname="SaveAs"/>
-      <menuitem name="SaveFiles" verb="SaveFiles" _label="Save Files" pixtype="stock" pixname="Save"/>
-      <menuitem name="SaveFilesAs" verb="SaveFilesAs" _label="Save Files As" pixtype="stock" pixname="SaveAs"/>
-      <menuitem name="Delete" verb="Delete" _label="_Delete" pixtype="stock" pixname="Trash"/>
+      <menuitem name="SavePreviews" verb="" _label="Save Previews" pixtype="stock" pixname="Save"/>
+      <menuitem name="SavePreviewsAs" verb="" _label="Save Previews As" pixtype="stock" pixname="Save As"/>
+      <menuitem name="SaveFiles" verb="" _label="Save Files" pixtype="stock" pixname="Save"/>
+      <menuitem name="SaveFilesAs" verb="" _label="Save Files As" pixtype="stock" pixname="Save As"/>
+      <menuitem name="Delete" verb="" _label="_Delete" pixtype="stock" pixname="Trash"/>
       <separator/>
-      <menuitem name="Exit" verb="Exit" _label="E_xit" pixtype="stock" pixname="Exit"/>
+      <menuitem name="Exit" verb="" _label="E_xit" pixtype="stock" pixname="Quit"/>
     </submenu>
     <submenu name="Settings" _label="_Settings">
-      <menuitem name="Preferences" verb="Preferences" _label="_Preferences" pixtype="stock" pixname="Preferences"/>
+      <menuitem name="Preferences" verb="" _label="_Preferences" pixtype="stock" pixname="Preferences"/>
     </submenu>
     <submenu name="Help" _label="_Help">
-      <menuitem name="Manual" verb="Manual" _label="_Manual"/>
+      <menuitem name="Manual" verb="" _label="_Manual" pixtype="stock" pixname="Book Red"/>
       <separator/>
-      <menuitem name="About" verb="About" _label="_About"/>
+      <menuitem name="About" verb="" _label="_About" pixtype="stock" pixname="About"/>
     </submenu>
   </menu>
   <dockitem name="Toolbar">
-    <toolitem name="SavePreviews" verb="SavePreviews" _label="Save Previews" pixtype="stock" pixname="Save"/>
-    <toolitem name="SavePreviewsAs" verb="SavePreviewsAs" _label="Save Previews As" pixtype="stock" pixname="SaveAs"/>
-    <toolitem name="SaveFiles" verb="SaveFiles" _label="Save Files" pixtype="stock" pixname="Save"/>
-    <toolitem name="SaveFilesAs" verb="SaveFilesAs" _label="Save Files As" pixtype="stock" pixname="SaveAs"/>
-    <toolitem name="Delete" verb="Delete" _label="_Delete" pixtype="stock" pixname="Trash"/>
+    <toolitem name="SavePreviews" verb="" _label="Save Previews" pixtype="stock" pixname="Save"/>
+    <toolitem name="SavePreviewsAs" verb="" _label="Save Previews As" pixtype="stock" pixname="Save As"/>
+    <toolitem name="SaveFiles" verb="" _label="Save Files" pixtype="stock" pixname="Save"/>
+    <toolitem name="SaveFilesAs" verb="" _label="Save Files As" pixtype="stock" pixname="Save As"/>
+    <toolitem name="Delete" verb="" _label="Delete" pixtype="stock" pixname="Trash"/>
   </dockitem>
 </Root>

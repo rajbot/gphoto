@@ -1,0 +1,23 @@
+				    libgpfs
+				    -------
+
+libgpfs is cool stuff. Believe me. Especially for digital cameras, where a 
+file is actually different files: A preview, a full size image, an associated
+audio file, raw data, etc. libgpfs has been written to handle that.
+
+In short: A filesystem (GPFs) contains files (GPFsFile) that can have 
+multiple interfaces (GPFsIf). Each interface has a name, provides some 
+pieces of information (i.e. that "size" is "1024"). Last but not least you
+can read data from that interface.
+
+So far so good. Now, you probably want to cache some data you get from the
+filesystem (i.e. the structure). For that, libgpfs provides caching
+functionality (GPFsCache). Use it if you like it, don't use it if you don't
+like it.
+
+The licence is LGPL, by the way.
+
+Cologne, 2002/12/10
+Lutz Müller <lutz@users.sourceforge.net>
+
+

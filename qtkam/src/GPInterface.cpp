@@ -10,7 +10,6 @@
 
 #include "GPInterface.h"
 
-
 /** 
  * Starts & initializes gphoto, and registers the interface
  * with gphoto.
@@ -159,7 +158,7 @@ QString GPInterface::getFolder()
     if (gp_setting_get("qtkam", "folder", buf) == GP_OK)
         return QString(buf);
     else
-        return QString();
+        return QString("/");
 }
 
 QString GPInterface::getTempFolder()
@@ -310,7 +309,8 @@ QPixmap GPInterface::downloadThumb(const char* name, const char* folder)
     /* Try downloading thumb */
     if (gp_camera_file_get(theCamera, folder, name,
                            GP_FILE_TYPE_PREVIEW, f) != GP_OK) 
-        throw QString("Couldn't get thumb");
+        throw QString("Couldn't get thumb ") + QString(name) +
+              QString(" in folder ") + QString(folder);
     
     /* Construct Pixmap */
     gp_file_get_data_and_size(f,&data,&size);
@@ -352,33 +352,31 @@ void GPInterface::deleteTempFolder()
  */
 int GPInterface::frontend_status(Camera * /*camera*/, char * /*message*/)
 {
-  printf("Frontend is calling\n");
+  printf("Frontend is calling status\n");
    return 0;
 }
 
-int GPInterface::frontend_progress(Camera * /*camera*/, CameraFile * /*file*/, 
-                                  float /*percentage*/)
+int GPInterface::frontend_progress(Camera*, CameraFile*, float percentage)
 {
-  printf("Frontend is calling\n");
-   return 0;
+    return 0;
 }
 
 int GPInterface::frontend_message(Camera * /*camera*/, char * /*message*/)
 {
-  printf("Frontend is calling\n");
+  printf("Frontend is calling message\n");
   
   return 0;
 }
 
 int GPInterface::frontend_confirm(Camera * /*camera*/, char * /*message*/)
 {
-  printf("Frontend is calling\n");
+  printf("Frontend is calling confirm\n");
    return 0;
 }
 
 int GPInterface::frontend_prompt (Camera * /*camera*/, CameraWidget * /*window*/)
 {
-  printf("Frontend is calling\n");
+  printf("Frontend is calling prompt\n");
   return 0;
 }
 

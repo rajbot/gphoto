@@ -241,7 +241,7 @@ kodak_description
 )
 {
    /* If the camera supports this operation, perform it. */
-   if (cams[current]->description != NULL)
+   if (cams[current] != NULL && cams[current]->description != NULL)
    {
       return cams[current]->description();
    }

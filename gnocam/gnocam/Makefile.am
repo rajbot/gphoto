@@ -23,7 +23,7 @@ gnocam_LDADD = $(GNOCAM_LIBS)
 idls = $(top_srcdir)/idl/GnoCam.idl
 idl_flags =\
  -I$(BONOBO_IDLDIR) -I$(BONOBO_ACT_IDLDIR) -I$(top_srcdir)/idl\
- -D__GnoCam_COMPILATION
+ -D__GNOME_GnoCam_COMPILATION
 
 $(CORBA_SOURCES): $(idls)
 	$(ORBIT_IDL)   $(top_srcdir)/idl/GnoCam.idl $(idl_flags)

@@ -1,0 +1,58 @@
+AC_PREREQ(2.50)
+AC_INIT(gphoto2-ftp/gphoto2-ftp.c)
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(gphoto2-ftp,1.0)
+AM_MAINTAINER_MODE
+
+AC_PROG_INSTALL
+AC_PROG_CC
+
+dnl ---------------------------------------------------------------------------
+dnl Check for libgphoto2
+dnl ---------------------------------------------------------------------------
+PKG_CHECK_MODULES(GP, libgphoto2 >= 2.1.1)
+AC_SUBST(GP_LIBS)
+AC_SUBST(GP_CFLAGS)
+
+dnl ---------------------------------------------------------------------------
+dnl pthread: The gphoto2 shell (--shell) keeps up a connection to the 
+dnl          camera. Some cameras need to be sent keep-alive-messages
+dnl          in order to prevent a shut-down. This is what we need
+dnl          pthread for.
+dnl ---------------------------------------------------------------------------
+pthread_msg=no
+try_pthread=true
+AC_ARG_WITH(pthread, [  --without-pthread         Don't use pthread],[
+        if test x$withval = xno; then
+                try_pthread=false
+        fi])
+if $try_pthread; then
+        AC_CHECK_HEADER([pthread.h],[
+                AC_CHECK_LIB(pthread,pthread_exit,[
+                    AC_DEFINE(HAVE_PTHREAD,1,[Define if we use pthread.h.])
+                    pthread_msg="yes (-lpthread)"
+                    PTHREAD_LIBS="-lpthread"],[
+                    AC_CHECK_LIB(c_r, pthread_create, [ 
+                        AC_DEFINE(HAVE_PTHREAD,1,[Define if we use pthread.h.])
+                        pthread_msg="yes (-pthread)"
+                        PTHREAD_LIBS="-pthread"])])])
+fi
+AC_SUBST(PTHREAD_LIBS)
+
+dnl ---------------------------------------------------------------------------
+dnl popt.h: Simplifies handling of command-line options enormously.
+dnl ---------------------------------------------------------------------------
+AC_CHECK_HEADER([popt.h],[
+        POPT_LIBS="-lpopt"],[
+        AC_MSG_ERROR([*** You need popt.h.])])
+AC_SUBST(POPT_LIBS)
+
+CFLAGS="$CFLAGS -g -Wall -Wmissing-declarations -Wmissing-prototypes"
+LDFLAGS="$LDFLAGS -g -Wall"
+AC_SUBST(CFLAGS)
+AC_SUBST(LDFLAGS)
+
+AC_OUTPUT([
+Makefile
+gphoto2-ftp/Makefile
+])

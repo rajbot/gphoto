@@ -1,0 +1,45 @@
+				  gphoto2-ftp
+				  -----------
+
+What is gphoto2-ftp?
+--------------------
+
+gphoto2-ftp is a ftp-server that makes accessible the files on your 
+digital camera available over FTP.
+
+What adjustments to the setup of my system are needed?
+------------------------------------------------------
+
+Here on my Debian/unstable system, I added "gphoto2-ftp 21/tcp" to 
+/etc/services and "gphoto2-ftp stream tcp nowait root /usr/sbin/tcpd 
+/path/to/gphoto2-ftp" to /etc/inetd.conf. It works.
+
+Root? Isn't this dangerous?
+---------------------------
+
+Probably yes. Suggest something better.
+
+Ok, I have installed it. Now what do I need to do?
+--------------------------------------------------
+
+lutz@lutz:~$ ftp localhost
+Connected to lutz.
+220 FTP server ready.
+Name (localhost:lutz): Directory Browse
+230 Connected to camera.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> cd /home/lutz
+250 Changed to directory '/home/lutz'.
+ftp> get gimp-menu.png
+local: gimp-menu.png remote: gimp-menu.png
+200 PORT command successful.
+226 Transfer complete.
+ftp> quit
+221 Goodbye.
+
+Why doesn't 'ls' work?
+----------------------
+
+Short question, short answer: It isn't implemented yet.
+

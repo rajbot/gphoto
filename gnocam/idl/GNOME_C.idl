@@ -1,0 +1,86 @@
+#ifndef GNOME_CAMERA_IDL
+#define GNOME_CAMERA_IDL
+
+#include <Bonobo.idl>
+
+module GNOME {
+module C {
+
+	exception BadID {};
+	exception Error {};
+
+	typedef unsigned long ID;
+	typedef sequence<unsigned long> IDList;
+
+	interface ReadCallback : Bonobo::Unknown {
+
+		exception Cancel {};
+
+		typedef sequence<octet> Data;
+
+		void read (in Data data) raises (Cancel);
+	};
+
+	interface If : Bonobo::Unknown {
+
+		string get_name ();
+		void   set_name (in string name);
+
+		void   read (in ReadCallback callback);
+		void   write ();
+	};
+
+	interface File : Bonobo::Unknown {
+
+		IDList get_ifs () raises (Error);
+		ID add_if (in If i);
+		If get_if (in ID id) raises (BadID);
+		void rm_if  (in ID id) raises (BadID);
+	};
+
+	interface Dir : Bonobo::Unknown {
+
+		IDList get_files () raises (Error);
+		ID add_file (in File file);
+		File get_file (in ID id) raises (BadID, Error);
+		void rm_file  (in ID id) raises (BadID, Error);
+
+		IDList get_dirs () raises (Error);
+		ID add_dir (in Dir dir);
+		Dir get_dir (in ID id) raises (BadID, Error);
+		void rm_dir  (in ID id) raises (BadID, Error);
+	};
+
+	interface Camera : Bonobo::Unknown {
+
+		readonly attribute string manufacturer;
+		readonly attribute string model;
+
+		/* Get the root directory */
+		Dir get_dir () raises (Error);
+	};
+
+	interface Mngr : Bonobo::Unknown {
+
+		/* Querying the supported devices */
+		struct Device {
+			string manufacturer;
+			string model;
+			IDList ports;
+		};
+		IDList get_devices ();
+		Device get_device (in ID id) raises (BadID);
+		string get_port_name (in ID id) raises (BadID);
+
+		/* Querying cameras we are already connected to. */
+		IDList get_cameras ();
+		Camera get_camera (in ID id_device) raises (BadID);
+
+		/* Connecting to cameras */
+		Camera connect_to_device_at_port (
+				in ID id_device, in ID id_port) raises (BadID);
+	};
+};
+};
+
+#endif

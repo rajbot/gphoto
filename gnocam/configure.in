@@ -18,8 +18,9 @@ AM_PROG_LIBTOOL
 dnl ---------------------------------------------------------------------------
 dnl Internationalization: We need gettext and intltool
 dnl ---------------------------------------------------------------------------
+GETTEXT_PACKAGE=gnocam
+AC_DEFINE(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [Gettext package])
 ALL_LINGUAS="no"
-AM_GNU_GETTEXT
 AM_GLIB_GNU_GETTEXT
 AC_PROG_INTLTOOL
 
@@ -47,6 +48,22 @@ fi
 PKG_CHECK_MODULES(GTK, gtk+-2.0)
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
+
+dnl ---------------------------------------------------------------------------
+dnl libgnocam
+dnl ---------------------------------------------------------------------------
+PKG_CHECK_MODULES(LIBGNOCAM, libglade-2.0 gtk+-2.0 bonobo-activation-2.0 libbonobo-2.0)
+GNOCAM_GLADE_DIR='$(datadir)/'${GETTEXT_PACKAGE}'/interfaces'
+AC_SUBST(GNOCAM_GLADE_DIR)
+AC_SUBST(LIBGNOCAM_CFLAGS)
+AC_SUBST(LIBGNOCAM_LIBS)
+
+dnl ---------------------------------------------------------------------------
+dnl tests
+dnl ---------------------------------------------------------------------------
+PKG_CHECK_MODULES(TEST, gtk+-2.0)
+AC_SUBST(TEST_CFLAGS)
+AC_SUBST(TEST_LIBS)
 
 dnl ---------------------------------------------------------------------------
 dnl panel
@@ -112,13 +129,13 @@ AC_SUBST(TEST_GNOCAM_LIBS)
 dnl ---------------------------------------------------------------------------
 dnl Makefiles
 dnl ---------------------------------------------------------------------------
-AC_OUTPUT([
+AC_OUTPUT([ intl/Makefile 
 Makefile
 art/Makefile
 idl/Makefile
 applet/Makefile
 capplet/Makefile
-gnocam/Makefile
+libgnocam/Makefile
 tests/Makefile
 ])
 

@@ -24,17 +24,13 @@ struct _GnoCamPrefsClass
 	GtkDialogClass parent_class;
 
 	/* Signals */
-	void (* camera_changed)  (GnoCamPrefs *, gboolean automatic);
-	void (* connect_changed) (GnoCamPrefs *, gboolean automatic);
-	void (* model_changed)   (GnoCamPrefs *, const gchar *model);
-	void (* port_changed)    (GnoCamPrefs *, const gchar *port);
+	void (* changed) (GnoCamPrefs *);
 };
 
 GType        gnocam_prefs_get_type (void);
-GnoCamPrefs *gnocam_prefs_new      (gboolean camera_automatic,
-				    gboolean connect_automatic,
-				    const gchar *model, const gchar *port,
-				    CORBA_Environment *ev);
+GnoCamPrefs *gnocam_prefs_new      (gboolean connect_automatic,
+		const gchar *manufacturer, const gchar *model,
+		const gchar *port, CORBA_Environment *ev);
 
 #endif /* __GNOCAM_APPLET_H__ */
 

@@ -9,7 +9,7 @@ INCLUDES =					\
 libexec_PROGRAMS = gnocam-applet
 gnocam_applet_LDADD = $(APPLET_LIBS)
 
-CORBA_GENERATED = GnoCam.h GnoCam-common.c GnoCam-stubs.c
+CORBA_GENERATED = GNOME_C.h GNOME_C-common.c GNOME_C-stubs.c
 
 gnocam_applet_SOURCES =					\
  $(CORBA_GENERATED)					\
@@ -18,11 +18,11 @@ gnocam_applet_SOURCES =					\
  gnocam-applet-marshal.c gnocam-applet-marshal.h	\
  main.c
 
-$(CORBA_GENERATED): $(top_srcdir)/idl/GnoCam.idl
+$(CORBA_GENERATED): $(top_srcdir)/idl/GNOME_C.idl
 	$(ORBIT_IDL) --noskels \
 		-I`$(PKG_CONFIG) --variable=idldir libbonobo-2.0` \
 		-I`$(PKG_CONFIG) --variable=idldir bonobo-activation-2.0` \
-		$(top_srcdir)/idl/GnoCam.idl
+		$(top_srcdir)/idl/GNOME_C.idl
 
 serverdir       = $(libdir)/bonobo/servers
 server_in_files = GNOME_GnoCamApplet.server.in

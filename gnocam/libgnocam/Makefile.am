@@ -1,12 +1,13 @@
-INCLUDES =\
- $(CAPPLET_CFLAGS)\
- $(GCONF_CFLAGS)\
- $(GPHOTO_CFLAGS)
+INCLUDES =						\
+	-I$(top_srcdir)					\
+	$(LIBGNOCAM_CFLAGS)				\
+	-DIMAGEDIR=\"$(prefix)/share/pixmaps\"		\
+	-DGNOCAM_GLADE_DIR=\"$(GNOCAM_GLADE_DIR)\"	\
+	-DGNOCAM_SRCDIR=\"$(top_srcdir)\"
 
-noinst_LIBRARIES = libgnocam.a
+noinst_LTLIBRARIES = libgnocam.la
+libgnocam_la_SOURCES = gnocam-chooser.c gnocam-chooser.h
+libgnocam_la_LDFLAGS = $(LIBGNOCAM_LIBS)
 
-libgnocam_a_SOURCES =\
- gnocam-capplet-table-scrolled.c gnocam-capplet-table-scrolled.h\
- gnocam-capplet-table.c gnocam-capplet-table.h\
- gnocam-capplet-model.c gnocam-capplet-model.h\
- gnocam-configuration.c gnocam-configuration.h
+Gladedir = $(GNOCAM_GLADE_DIR)
+Glade_DATA = gnocam.glade

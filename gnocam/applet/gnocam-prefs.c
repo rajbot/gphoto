@@ -1,8 +1,8 @@
 #include "config.h"
-#include "GnoCam.h"
 #include "gnocam-applet-marshal.h"
 #include "gnocam-prefs.h"
 #include "i18n.h"
+#include "GNOME_C.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -27,10 +27,7 @@
 static GtkDialogClass *parent_class;
 
 enum {
-	CAMERA_CHANGED,
-	CONNECT_CHANGED,
-	MODEL_CHANGED,
-	PORT_CHANGED,
+	CHANGED,
 	LAST_SIGNAL
 };
 
@@ -61,26 +58,11 @@ gnocam_prefs_class_init (gpointer g_class, gpointer class_data)
 	gobject_class = G_OBJECT_CLASS (g_class);
 	gobject_class->finalize = gnocam_prefs_finalize;
 
-	signals[CAMERA_CHANGED] = g_signal_new ("camera_changed",
+	signals[CHANGED] = g_signal_new ("changed",
 		G_TYPE_FROM_CLASS (g_class), G_SIGNAL_RUN_FIRST, 
-		G_STRUCT_OFFSET (GnoCamPrefsClass, camera_changed),
-		NULL, NULL, gnocam_applet_marshal_VOID__BOOLEAN,
-		G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
-	signals[CONNECT_CHANGED] = g_signal_new ("connect_changed", 
-		G_TYPE_FROM_CLASS (g_class), G_SIGNAL_RUN_FIRST,
-		G_STRUCT_OFFSET (GnoCamPrefsClass, connect_changed),
-		NULL, NULL, gnocam_applet_marshal_VOID__BOOLEAN,
-		G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
-	signals[MODEL_CHANGED] = g_signal_new ("model_changed",
-		G_TYPE_FROM_CLASS (g_class), G_SIGNAL_RUN_LAST,
-		G_STRUCT_OFFSET (GnoCamPrefsClass, model_changed),
-		NULL, NULL, gnocam_applet_marshal_VOID__STRING,
-		G_TYPE_NONE, 1, G_TYPE_STRING);
-	signals[PORT_CHANGED] = g_signal_new ("port_changed",
-		G_TYPE_FROM_CLASS (g_class), G_SIGNAL_RUN_LAST,
-		G_STRUCT_OFFSET (GnoCamPrefsClass, port_changed),
-		NULL, NULL, gnocam_applet_marshal_VOID__STRING,
-		G_TYPE_NONE, 1, G_TYPE_STRING);
+		G_STRUCT_OFFSET (GnoCamPrefsClass, changed),
+		NULL, NULL, gnocam_applet_marshal_VOID__VOID,
+		G_TYPE_NONE, 0);
 
 	parent_class = g_type_class_peek_parent (g_class);
 }
@@ -136,7 +118,7 @@ gnocam_prefs_init (GTypeInstance *instance, gpointer g_class)
 
 	p->priv = g_new0 (GnoCamPrefsPrivate, 1);
 
-	/* Set up the dialog */
+	/* Connect automatically */
 	gtk_container_set_border_width (
 			GTK_CONTAINER (GTK_DIALOG (p)->vbox), 5);
 
@@ -205,35 +187,20 @@ gnocam_prefs_get_type (void)
 }
 
 GnoCamPrefs *
-gnocam_prefs_new (gboolean camera_automatic, gboolean connect_automatic,
+gnocam_prefs_new (gboolean connect_automatic, const gchar *manufacturer, 
 		  const gchar *model, const gchar *port, CORBA_Environment *ev)
 {
 	GnoCamPrefs *p;
 	Bonobo_Unknown o;
-	GNOME_GnoCam_PortList *port_list;
-	GNOME_GnoCam_ModelList *model_list;
-	GList *l;
 	guint i;
+	Bonobo_ServerInfoList *l;
 
 	g_return_val_if_fail (ev != NULL, NULL);
 
-	o = bonobo_get_object ("OAFIID:GNOME_GnoCam",
-			       "Bonobo/Unknown", ev);
-	if (BONOBO_EX (ev) || (o == CORBA_OBJECT_NIL))
-		return NULL;
-
-	port_list = GNOME_GnoCam_getPortList (o, ev);
-	if (BONOBO_EX (ev)) {
-		bonobo_object_release_unref (o, NULL);
-		return NULL;
-	}
-
-	model_list = GNOME_GnoCam_getModelList (o, ev);
-	if (BONOBO_EX (ev)) {
-		CORBA_free (port_list);
-		bonobo_object_release_unref (o, NULL);
-		return NULL;
-	}
+	/* Query available servers. */
+	l = bonobo_activation_query ("repo_ids.has('IDL:GNOME/C/Mngr')", NULL,
+				     ev);
+	if (BONOBO_EX (ev)) return NULL;
 
 	p = g_object_new (GNOCAM_TYPE_PREFS, NULL);
 

@@ -19,7 +19,7 @@
 enum
 {
 	COL_NUMBER = 0,
-	COL_NAME,
+	COL_MANUFACTURER,
 	COL_MODEL,
 	COL_PORT,
 	COL_IS_EDITABLE,
@@ -175,8 +175,8 @@ notify_func (GConfClient *client, guint cnxn_id, GConfEntry *entry,
 	/* Which setting changed? */
 	s = strrchr (key, '/');
 	g_return_if_fail (s);
-	if (!strcmp (s + 1, "name"))
-		c = COL_NAME;
+	if (!strcmp (s + 1, "manufacturer"))
+		c = COL_MANUFACTURER;
 	else if (!strcmp (s + 1, "model"))
 		c = COL_MODEL;
 	else if (!strcmp (s + 1, "port"))
@@ -227,8 +227,8 @@ notify_func (GConfClient *client, guint cnxn_id, GConfEntry *entry,
 }
 
 static void
-on_name_edited (GtkCellRendererText *cell, const gchar *path,
-		const gchar *new_text, GnoCamCapplet *capplet)
+on_manufacturer_edited (GtkCellRendererText *cell, const gchar *path,
+			const gchar *new_text, GnoCamCapplet *capplet)
 {
 	GtkTreeIter iter;
 	guint n;
@@ -246,7 +246,7 @@ on_name_edited (GtkCellRendererText *cell, const gchar *path,
 	gtk_tree_model_get_value (capplet->priv->model, &iter, COL_NUMBER, &v);
 	n = g_value_get_uint (&v);
 	g_value_unset (&v);
-	k = g_strdup_printf ("/desktop/gnome/cameras/%i/name", n);
+	k = g_strdup_printf ("/desktop/gnome/cameras/%i/manufacturer", n);
 	s = gconf_client_get_string (capplet->priv->client, k, NULL);
 	if (s && !strcmp (s, new_text)) {
 		g_free (s);
@@ -389,7 +389,7 @@ gnocam_capplet_new (GConfClient *client)
 	GtkListStore *s;
 	GtkCellRenderer *c;
 	GtkTreeViewColumn *col;
-	gchar *k = NULL, *name, *model, *port;
+	gchar *k = NULL, *manufacturer, *model, *port;
 	guint n = 0;
 	GtkTreeIter iter;
 
@@ -438,8 +438,9 @@ gnocam_capplet_new (GConfClient *client)
 		k = g_strdup_printf ("/desktop/gnome/cameras/%i", n);
 		if (gconf_client_dir_exists (client, k, NULL)) {
 		    g_free (k);
-		    k = g_strdup_printf ("/desktop/gnome/cameras/%i/name", n);
-		    name = gconf_client_get_string (client, k, NULL);
+		    k = g_strdup_printf ("/desktop/gnome/cameras/"
+				         "%i/manufacturer", n);
+		    manufacturer = gconf_client_get_string (client, k, NULL);
 		    g_free (k);
 		    k = g_strdup_printf ("/desktop/gnome/cameras/%i/model", n);
 		    model = gconf_client_get_string (client, k, NULL);
@@ -451,9 +452,10 @@ gnocam_capplet_new (GConfClient *client)
 		    gtk_list_store_append (s, &iter);
 		    gtk_list_store_set (s, &iter, COL_IS_EDITABLE, TRUE,
 			COL_NUMBER, n, -1);
-		    if (name) {
-			    gtk_list_store_set (s, &iter, COL_NAME, name, -1);
-			    g_free (name);
+		    if (manufacturer) {
+			    gtk_list_store_set (s, &iter, COL_MANUFACTURER,
+					        manufacturer, -1);
+			    g_free (manufacturer);
 		    }
 		    if (model) {
 			    gtk_list_store_set (s, &iter, COL_MODEL, model, -1);
@@ -473,12 +475,13 @@ gnocam_capplet_new (GConfClient *client)
 	/* Create an empty line so that users can add their camera. */
 	gnocam_capplet_add_entry (capplet);
 
-	/* Add the column for the name */
+	/* Add the column for the manufacturer */
 	c = gtk_cell_renderer_text_new ();
-	col = gtk_tree_view_column_new_with_attributes (_("Name"), c,
-		"text", COL_NAME, "editable", COL_IS_EDITABLE, NULL);
+	col = gtk_tree_view_column_new_with_attributes (_("Manufacturer"), c,
+		"text", COL_MANUFACTURER, "editable", COL_IS_EDITABLE, NULL);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (w), col);
-	g_signal_connect (c, "edited", G_CALLBACK (on_name_edited), capplet);
+	g_signal_connect (c, "edited", G_CALLBACK (on_manufacturer_edited),
+			  capplet);
 
 	/* Add the column for the model */
 	c = gtk_cell_renderer_text_new ();

@@ -45,6 +45,7 @@ struct _GnoCamConfigurationPrivate {
 	GHashTable*	hash_table;
 
 	GtkWidget*	notebook;
+	GtkTooltips*	tooltips;
 };
 
 /**************/
@@ -88,6 +89,7 @@ create_page (GnoCamConfiguration* configuration, CameraWidget* widget)
 	GtkWidget*	vbox;
 	gint*		id;
 	const gchar*	l;
+	const gchar*	info;
 
 	id = g_new (gint, 1);
 	if (widget) gp_widget_get_id (widget, id);
@@ -95,8 +97,10 @@ create_page (GnoCamConfiguration* configuration, CameraWidget* widget)
 
 	/* Label */
 	if (widget) {
+		gp_widget_get_info (widget, &info);
 		gp_widget_get_label (widget, &l);
 		label = gtk_label_new (l);
+		gtk_tooltips_set_tip (configuration->priv->tooltips, label, info, NULL);
 	} else label = gtk_label_new (_("Others"));
 	gtk_widget_show (label);
 	
@@ -116,6 +120,7 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 {
 	CameraWidgetType	type;
 	const gchar*		label;
+	const gchar*		info;
 	gchar*			value_char = NULL;
 	gint			value_int = 0;
 	gfloat			value_float = 0.0;
@@ -132,6 +137,7 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 	GSList*			group = NULL;
 
 	gp_widget_get_label (widget, &label);
+	gp_widget_get_info (widget, &info);
 	gp_widget_get_type (widget, &type);
 
 	switch (type) {
@@ -159,6 +165,7 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		gtk_widget_show (button);
 		gtk_signal_connect (GTK_OBJECT (button), "clicked", GTK_SIGNAL_FUNC (on_button_clicked), widget);
 		gtk_container_add (GTK_CONTAINER (gtk_widget), button);
+		gtk_tooltips_set_tip (configuration->priv->tooltips, button, info, NULL);
 		break;
 		
 	case GP_WIDGET_DATE:
@@ -168,6 +175,7 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		gtk_widget = gnome_date_edit_new ((time_t) value_int, TRUE, TRUE);
 		gtk_signal_connect (GTK_OBJECT (gtk_widget), "date_changed", GTK_SIGNAL_FUNC (on_date_edit_changed), widget);
 		gtk_signal_connect (GTK_OBJECT (gtk_widget), "time_changed", GTK_SIGNAL_FUNC (on_date_edit_changed), widget);
+		gtk_tooltips_set_tip (configuration->priv->tooltips, gtk_widget, info, NULL);
 		break;
 		
 	case GP_WIDGET_TEXT:
@@ -177,6 +185,7 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		gtk_widget = gtk_entry_new ();
 		if (value_char) gtk_entry_set_text (GTK_ENTRY (gtk_widget), value_char);
 		gtk_signal_connect (GTK_OBJECT (gtk_widget), "changed", GTK_SIGNAL_FUNC (on_entry_changed), widget);
+		gtk_tooltips_set_tip (configuration->priv->tooltips, gtk_widget, info, NULL);
 		break;
 	
 	case GP_WIDGET_RANGE:
@@ -190,6 +199,7 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		gtk_widget = gtk_hscale_new (GTK_ADJUSTMENT (adjustment));
 		gtk_scale_set_digits (GTK_SCALE (gtk_widget), 0);
 		gtk_range_set_update_policy (GTK_RANGE (gtk_widget), GTK_UPDATE_DISCONTINUOUS);
+		gtk_tooltips_set_tip (configuration->priv->tooltips, gtk_widget, info, NULL);
 		break;
 	
 	case GP_WIDGET_MENU:
@@ -211,6 +221,7 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 			gtk_box_pack_start (GTK_BOX (gtk_widget), button, FALSE, FALSE, 0);
 			if (value_char && !strcmp (value_char, choice)) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button), TRUE);
 			gtk_signal_connect (GTK_OBJECT (button), "toggled", GTK_SIGNAL_FUNC (on_radio_button_toggled), widget);
+			gtk_tooltips_set_tip (configuration->priv->tooltips, button, info, NULL);
 		}
 		break;
 	
@@ -222,6 +233,7 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		gtk_widget = gtk_check_button_new_with_label (label);
 		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (gtk_widget), (value_int != 0));
 		gtk_signal_connect (GTK_OBJECT (gtk_widget), "toggled", GTK_SIGNAL_FUNC (on_toggle_button_toggled), widget);
+		gtk_tooltips_set_tip (configuration->priv->tooltips, gtk_widget, info, NULL);
 		break;
 	
 	default:
@@ -472,6 +484,10 @@ gnocam_configuration_new (Camera* camera, const gchar* dirname, const gchar* fil
 	gnome_dialog_constructv (GNOME_DIALOG (new), label, buttons);
 	gnome_dialog_set_parent (GNOME_DIALOG (new), window);
 	gnome_dialog_set_close (GNOME_DIALOG (new), FALSE);
+
+	/* Tooltips */
+	new->priv->tooltips = gtk_tooltips_new ();
+	gtk_tooltips_enable (new->priv->tooltips);
 
 	/* Keep filename and dirname */
 	if (filename) new->priv->filename = g_strdup (filename);

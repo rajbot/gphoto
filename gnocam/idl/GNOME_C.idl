@@ -68,8 +68,8 @@ module C {
 			string model;
 			IDList ports;
 		};
-		IDList get_devices ();
-		Device get_device (in ID id) raises (BadID);
+		typedef sequence<Device> DeviceList;
+		DeviceList get_devices ();
 		string get_port_name (in ID id) raises (BadID);
 
 		/* Querying cameras we are already connected to. */

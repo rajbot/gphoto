@@ -52,16 +52,20 @@ AC_SUBST(GTK_LIBS)
 dnl ---------------------------------------------------------------------------
 dnl libgnocam
 dnl ---------------------------------------------------------------------------
-PKG_CHECK_MODULES(LIBGNOCAM, libglade-2.0 gtk+-2.0 bonobo-activation-2.0 libbonobo-2.0)
+PKG_CHECK_MODULES(LIBGNOCAM, libglade-2.0 gtk+-2.0 bonobo-activation-2.0 libbonobo-2.0 ORBit-2.0)
 GNOCAM_GLADE_DIR='$(datadir)/'${GETTEXT_PACKAGE}'/interfaces'
+GNOME_C_IDL="/usr/share/idl/GNOME_C.idl"
+ORBIT_IDL="`$PKG_CONFIG --variable=orbit_idl ORBit-2.0`"
 AC_SUBST(GNOCAM_GLADE_DIR)
+AC_SUBST(GNOME_C_IDL)
+AC_SUBST(ORBIT_IDL)
 AC_SUBST(LIBGNOCAM_CFLAGS)
 AC_SUBST(LIBGNOCAM_LIBS)
 
 dnl ---------------------------------------------------------------------------
 dnl tests
 dnl ---------------------------------------------------------------------------
-PKG_CHECK_MODULES(TEST, gtk+-2.0)
+PKG_CHECK_MODULES(TEST, gtk+-2.0 libbonobo-2.0)
 AC_SUBST(TEST_CFLAGS)
 AC_SUBST(TEST_LIBS)
 

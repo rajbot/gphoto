@@ -2,6 +2,8 @@
 
 #include <gtk/gtkmain.h>
 
+#include <bonobo/bonobo-main.h>
+
 #include <libgnocam/gnocam-chooser.h>
 
 int
@@ -9,6 +11,7 @@ main (int argc, char **argv)
 {
 	GnocamChooser *c;
 
+	bonobo_init (&argc, argv);
 	gtk_init (&argc, &argv);
 
 	c = gnocam_chooser_new ();

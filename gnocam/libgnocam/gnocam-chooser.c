@@ -1,6 +1,8 @@
 #include <config.h>
 #include "gnocam-chooser.h"
 
+#include "GNOME_C.h"
+
 #include <gtk/gtkbox.h>
 #include <gtk/gtkbutton.h>
 #include <gtk/gtkcontainer.h>
@@ -74,9 +76,9 @@ gnocam_chooser_setup (GnocamChooser *c)
 {
 	Bonobo_ServerInfoList *l;
 	CORBA_Environment ev;
-	guint i;
 	GNOME_C_Mngr m;
-	Bonobo_ServerInfo info;
+	guint i;
+	GNOME_C_Mngr_DeviceList *dl;
 
 	g_return_if_fail (GNOCAM_IS_CHOOSER (c));
 
@@ -90,8 +92,15 @@ gnocam_chooser_setup (GnocamChooser *c)
 	}
 
 	for (i = 0; i < l->_length; i++) {
-		info = l->_buffer[i];
-		g_message ("IID: %s", iid);
+		m = bonobo_get_object (l->_buffer[i].iid, "IDL:GNOME/C/Mngr",
+				       &ev);
+		if (BONOB_EX (&ev))
+			continue;
+		dl = GNOME_C_Mngr_get_devices (m, &ev);
+		bonobo_object_release_unref (m, NULL);
+		if (BONOBO_EX (&ev))
+			continue;
+		CORBA_free (dl);
 	}
 	CORBA_free (l);
 	CORBA_exception_free (&ev);

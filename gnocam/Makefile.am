@@ -1,4 +1,4 @@
-SUBDIRS = intl macros src po
+SUBDIRS = intl macros src po doc
 
 EXTRA_DIST =\
  README\

@@ -77,7 +77,8 @@ if gnome-config --libs vfs > /dev/null 2>&1; then
 else
     AC_MSG_ERROR([
 *** You need gnome-vfs for this version of ${PACKAGE}. Get the latest 
-*** version from http://www.gnome.org.])
+*** version from http://www.gnome.org. Mirrors can be found at 
+*** http://www.gnome.org/mirrors.])
 fi
 
 dnl *********
@@ -91,12 +92,14 @@ if xml-config --version > /dev/null 2>&1; then
     else
 	AC_MSG_ERROR([
 *** You need at least libxml2-2.0.0 for this version of ${PACKAGE}.
-*** Get the latest version from http://www.gnome.org.])
+*** Get the latest version from http://www.gnome.org.
+*** Mirrors can be found at http://www.gnome.org/mirrors.])
     fi
 else
     AC_MSG_ERROR([
 *** You need libxml (gnome-xml) for this version of ${PACKAGE}.
-*** Get the latest version from http://www.gnome.org.])
+*** Get the latest version from http://www.gnome.org.
+*** Mirrors can be found at http://www.gnome.org/mirrors.])
 fi
 
 dnl *****
@@ -110,14 +113,36 @@ if gconf-config --version > /dev/null 2>&1; then
     else 
         AC_MSG_ERROR([
 *** You need at least gconf-0.10 for this version of ${PACKAGE}. 
-*** Get the latest version from http://www.gnome.org.])
+*** Get the latest version from http://www.gnome.org.
+*** Mirrors can be found at http://www.gnome.org/mirrors.])
     fi
 else
     AC_MSG_ERROR([
 *** You need gconf for this version of ${PACKAGE}. Get the latest
-*** version from http://www.gnome.org.])
+*** version from http://www.gnome.org. Mirrors can be found at
+*** http://www.gnome.org/mirrors.])
 fi
 
+dnl ***
+dnl oaf
+dnl ***
+AC_MSG_CHECKING(for oaf >= 0.5.1)
+if oaf-config --version > /dev/null 2>&1; then
+    vers=`oaf-config --version | awk 'BEGIN { FS = "."; } { printf "%d", ($1 * 1000 + $2) * 1000 + $3;}'`
+    if test "$vers" -ge 5001; then
+        AC_MSG_RESULT(found)
+    else 
+	AC_MSG_ERROR([
+*** You need at least oaf-0.5.1 for this version of ${PACKAGE}.
+*** Get the latest version from http://www.gnome.org.
+*** Mirrors can be found at http://www.gnome.org/mirrors.])
+    fi
+else
+    AC_MSG_ERROR([
+*** You need oaf for this versin of ${PACKAGE}. Get the latest
+*** version from http://www.gnome.org. Mirrors can be found at 
+*** http://www.gnome.org/mirrors.])
+fi
 
 dnl ********
 dnl libglade
@@ -130,12 +155,14 @@ if gnome-config --libs libglade > /dev/null 2>&1; then
     else
 	AC_MSG_ERROR([
 *** You need a least libglade 0.11 for this version of ${PACKAGE}.
-*** Get the latest version from http://www.gnome.org.])
+*** Get the latest version from http://www.gnome.org.
+*** Mirrors can be found at http://www.gnome.org/mirrors.])
     fi
 else
     AC_MSG_ERROR([
 *** You need libglade for this version of ${PACKAGE}.
-** Get the latest version from http://www.gnome.org.])
+*** Get the latest version from http://www.gnome.org.
+*** Mirrors can be found at http://www.gnome.org/mirrors.])
 fi
 
 dnl *******

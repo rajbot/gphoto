@@ -70,6 +70,15 @@ extern GtkWidget *open_fuji_config_dialog();
 #define B115200 EXTB
 #endif
 
+#define STX 0x2  /* Start of data */
+#define ETX 0x3  /* End of data */
+#define EOT 0x4  /* End of session */
+#define ENQ 0x5  /* Enquiry */
+#define ACK 0x6
+#define ESC 0x10
+#define ETB 0x17 /* End of transmission block */
+#define NAK 0x15
+
 struct pict_info {
 	char *name;
 	int number;
@@ -183,6 +192,7 @@ int put_byte (int c)
 	return put_bytes(1, buff);
 }
 
+/* See if camera is "there" */
 int attention (void)
 {
 	int i;
@@ -191,8 +201,8 @@ int attention (void)
 	while (get_byte() >= 0)
 		continue;
 	for (i = 0; i < 3; i++) {
-		put_byte(0x05);
-		if (get_byte() == 0x06)
+		put_byte(ENQ);
+		if (get_byte() == ACK)
 			return 0;
 	}
 	update_status("The camera does not respond.");
@@ -204,24 +214,24 @@ void send_packet (int len, unsigned char *data, int last)
 	unsigned char *p, *end, buff[3];
 	int check;
 
-	last = last ? 0x03 : 0x17;
+	last = last ? ETX : ETB;
 	check = last;
 	end = data + len;
 	for (p = data; p < end; p++)
 		check ^= *p;
 
 	/* Start of frame */
-	buff[0] = 0x10;
-	buff[1] = 0x02;
+	buff[0] = ESC;
+	buff[1] = STX;
 	put_bytes(2, buff);
 
 	/* Data */
 	for (p = data; p < end; p++)
-		if (*p == 0x10) {
+		if (*p == ESC) {
 			/* Escape the last character */
 			put_bytes(p-data+1, data);
 			data = p+1;
-			put_byte(0x10);
+			put_byte(ESC);
 		}
 	put_bytes(end-data, data);
 
@@ -236,7 +246,7 @@ int read_packet (void)
 	unsigned char *p = answer;
 	int c, check, incomplete;
 
-	if (get_byte() != 0x10 || get_byte() != 0x02) {
+	if (get_byte() != ESC || get_byte() != STX) {
 bad_frame:
 		/* drain input */
 		while (get_byte() >= 0)
@@ -247,11 +257,11 @@ bad_frame:
 	while(1) {
 		if ((c = get_byte()) < 0)
 			goto bad_frame;
-		if (c == 0x10) {
+		if (c == ESC) {
 			if ((c = get_byte()) < 0)
 				goto bad_frame;
-			if (c == 0x03 || c == 0x17) {
-				incomplete = (c == 0x17);
+			if (c == ETX || c == ETB ) {
+				incomplete = (c == ETB);
 				break;
 			}
 		}
@@ -278,6 +288,8 @@ int cmd (int len, unsigned char *data)
 	int i, c, timeout=50;
 	fuji_count=0;
 
+	if (fuji_debug) fprintf(stderr,"cmd %d\n",data[1]);
+
 	/* Some commands require large timeouts */
 	switch (data[1]) {
 	  case 0x27:	/* Take picture */
@@ -294,11 +306,14 @@ int cmd (int len, unsigned char *data)
 		send_packet(len, data, 1);
 		wait_for_input(timeout);
 		c = get_byte();
-		if (c == 0x06)
+
+		if (c == ACK )
 			goto rd_pkt;
-		if (c != 0x15){
-			if(attention()) return(-1);
-		};
+		if (c == NAK) return (-1); /* NAK=Unrecognized command */
+
+		/* Make sure camera is still alive */
+		if(attention()) return(-1);
+
 	}
 	update_status( "Cannot issue command, aborting.");
 	return(-1);
@@ -306,15 +321,15 @@ rd_pkt:
 	wait_for_input(timeout);
 
 	for (i = 0; i < 3; i++) {
-		if (i) put_byte(0x15);
+		if (i) put_byte(NAK);
 		c = read_packet();
 		if (c < 0)
 			continue;
 		if (c && interrupted) {
 			fprintf(stderr, "\nInterrupted!\n");
-			exit(1);
+			return -1;
 		}
-		put_byte(0x06);
+		put_byte(ACK);
 		if (fuji_buffer != NULL) {
 		  if ((fuji_count+answer_len-4)<fuji_maxbuf){
 		    memcpy(fuji_buffer+fuji_count,answer+4,answer_len-4);
@@ -335,7 +350,7 @@ rd_pkt:
 		return 0;
 	}		
 	fprintf(stderr, "Cannot receive answer, aborting.\n");
-	return(-1);
+	return -1;
 }
 
 int cmd0 (int c0, int c1)
@@ -481,11 +496,15 @@ void get_command_list (void)
 {
 	int i;
 
+	/* Set all commands as unsupported */
 	memset(has_cmd, 0, 256);
+
+	/* Attempt to fetch supported list */
 	if (cmd0 (0, 0x4c)) return ;
+
+	/* Note supported commands if list was returned */
 	for (i = 4; i < answer_len; i++)
 	  has_cmd[answer[i]] = 1;
-	/*		has_cmd[i] = 1;*/
 }
 
 int get_picture_info(int num,char *name){
@@ -556,7 +575,7 @@ void list_pictures (void)
 
 void close_connection (void)
 {
-	put_byte(0x04);
+	put_byte(EOT);
 	tcdrain(devfd);
 	usleep(50000);
 }
@@ -572,14 +591,16 @@ void reset_serial (void)
 
 int init_serial (const char *devname)
 {
+        /* Attempt to open the serial device*/
 	devfd = open(devname, O_RDWR|O_NOCTTY);
+
 	if (devfd < 0) {
 		perror("Cannot open device");
-		exit(1);
+		return -1;
 	}
 	if (tcgetattr(devfd, &oldt) < 0) {
 		perror("tcgetattr");
-		exit(1);
+	        return -1;
 	}
 	newt = oldt;
 	newt.c_iflag |= (PARMRK|INPCK);
@@ -592,9 +613,10 @@ int init_serial (const char *devname)
 	newt.c_cc[VTIME] = 1;
 	cfsetispeed(&newt, B9600);
 	cfsetispeed(&newt, B9600);
+
 	if (tcsetattr(devfd, TCSANOW, &newt) < 0) {
 		perror("tcsetattr");
-		exit(1);
+		return -1;
 	}
 	atexit(reset_serial);
        return(attention());
@@ -603,7 +625,7 @@ int init_serial (const char *devname)
 void set_max_speed (void)
 {
 	int speed;
-
+	/* This mess could be cleaned up... */
 #ifdef B115200
 	speed = B115200;
 	cmd1(1, 7, 8);
@@ -635,10 +657,10 @@ change_speed:
 int download_picture(int n,int thumb,struct Image *im)
 {
 	char name[100];
-	/*	int size;*/
 	struct stat st;
 	clock_t t1, t2;
 
+	/* Predict picture size */
 	if (!thumb) {
 	        fuji_size=get_picture_info(n,name);
 		if (fuji_debug) fprintf(stderr,"%3d   %12s  \n", n, name);
@@ -646,7 +668,7 @@ int download_picture(int n,int thumb,struct Image *im)
 	else fuji_size=10500;  /* Probly not same for all cams, better way ? */
 	
 	t1 = times(0);
-	if (cmd2(0, (thumb?0:0x02), n/*,fuji_buffer*/)==-1) goto die_gracefully;
+	if (cmd2(0, (thumb?0:0x02), n)==-1) goto die_gracefully;
 
 	if (fuji_debug) fprintf(stderr,
 		"Download %s:%4d actual bytes vs expected %4d bytes\n", 
@@ -767,12 +789,12 @@ int upload_pic (const char *picname)
 		}
 		if (!last && interrupted) {
 			fprintf(stderr, "Interrupted!\n");
-			exit(1);
+			return 0;
 		}
 again:
 		send_packet(4+len, buffer, last);
 		wait_for_input(1);
-		if (get_byte() == 0x15)
+		if (get_byte() == NAK)
 			goto again;
 	}
 	fclose(fd);
@@ -794,11 +816,13 @@ int fuji_init(){
 	set_max_speed();
 
 	if (!fuji_initialized){
+
+	  /* Allocate photo buffer */
 	  fuji_buffer=malloc(fuji_maxbuf);
 	  if (fuji_buffer==NULL) {
 	    fprintf(stderr,"Memory allocation error\n");
 	    return(-1);
-	  } else if (/*fuji_debug*/1) {
+	  } else if (fuji_debug) {
 	    fprintf(stderr,"Allocated %ld bytes to main buffer\n",fuji_maxbuf);
 	  };
 	  
@@ -810,7 +834,8 @@ int fuji_init(){
 	        strncat(idstring,dc_version_info(),100);
 	        update_status(idstring);
 
-	  /* load_fuji_options() */
+		/* load_fuji_options() */
+
 	        fuji_initialized=1;  
 	};
 
@@ -835,7 +860,7 @@ int fuji_configure(){
 
 struct Image *fuji_get_picture (int picture_number,int thumbnail){
   GdkImlibImage *imlibimage;
-  char rm[1024],tmpfname[1024];
+  char tmpfname[1024];
   unsigned char *buffer;
   struct Image *newimage;
   FILE *fd;
@@ -846,25 +871,19 @@ struct Image *fuji_get_picture (int picture_number,int thumbnail){
   if (fuji_debug) fprintf(stderr,"fuji_get_picture called for #%d %s\n",
 			  picture_number, thumbnail?"thumb":"photo");
 
-  if (fuji_init()) return(0);/*goto bugout*/;
+  if (fuji_init()) return(0);
 
+  /* setup gdk_image buffer */
   newimage=malloc(sizeof(struct Image));
   newimage->image=NULL;
 
-  if (thumbnail)
-    sprintf(tmpfname, "%s/gphoto-thumbnail-%i-%i.jpg",
-	    gphotoDir, getpid(),fuji_piccount);
-  else {
-    sprintf(tmpfname, "%s/gphoto-%i-%i.jpg", 
-	    gphotoDir, getpid(), fuji_piccount);
-  };
-  fuji_piccount++;
-
   if (download_picture(picture_number,thumbnail,newimage)) {
+    /* No Luck */
     free(newimage);
     return(0);
   };
 
+  /* Point to the actual downloaded data */
   buffer=newimage->image;
 
   /* Work on the tags...*/
@@ -882,15 +901,17 @@ struct Image *fuji_get_picture (int picture_number,int thumbnail){
     };
     newimage->image_info_size=exifdat.ifdtags[thumbnail?1:0]*2;
 
-    if (thumbnail) {/* This SHOULD be done by tag id */
+    if (thumbnail) {/* SHOULD be done by tag id rather than assuming order*/
       togphotostr(&exifdat,0,0,newimage->image_info,newimage->image_info+1);
       togphotostr(&exifdat,0,1,newimage->image_info+2,newimage->image_info+3);
       togphotostr(&exifdat,0,2,newimage->image_info+4,newimage->image_info+5);
       newimage->image_info_size+=6;
     };
-
+    
+    /* Grab all of the tags */
     exif_add_all(&exifdat,thumbnail?1:0,newimage->image_info+(thumbnail?6:0));
 
+    /* Spew a list of the tags, more than you will ever need */
     if (fuji_debug) {
             printf("====================EXIF TAGS================\n");
 	    for(i=0;i<newimage->image_info_size/2;i++)
@@ -908,7 +929,7 @@ struct Image *fuji_get_picture (int picture_number,int thumbnail){
 	
 	fprintf(stderr,"Thumbnail conversion error, saving data to \
 fuji-death-dump.dat\n\
-\tPlease mail this file to Matt.Martin@ieee.org along with a description \
+\tPlease mail this file to gphoto-devel@gphoto.org along with a description \
 of setup, camera model and any text output.\n");
 	if ((fp=fopen("fuji-death-dump.dat","w"))!=NULL){
 	  fwrite(buffer,1,newimage->image_size,fp);
@@ -935,13 +956,6 @@ of setup, camera model and any text output.\n");
   reset_serial(); /* Wish this wasn't necessary...*/
   return(newimage);
 
-  /*
-bugout:
-  imlibimage = gdk_imlib_create_image_from_xpm_data(blank_xpm);
-  newimage->image=(char *)blank_xpm;
-  reset_serial();
-  return(newimage);
-*/
 };
 
 int fuji_delete_image (int picture_number){
@@ -978,7 +992,6 @@ int fuji_initialize () {
 }
 
 struct Image *fuji_get_preview (){
-  char tmpfname[1024],rm[1024];
   FILE *fd;
 
   struct Image *newimage;
@@ -987,7 +1000,6 @@ struct Image *fuji_get_preview (){
 
   if (!has_cmd[0x62] || !has_cmd[0x64]) {
     update_status("Cannot preview (unsupported command)\n");
-    /*    newimage->image=(char *)blank_xpm;*/
     return ( 0 );
   }
 
@@ -1013,14 +1025,14 @@ char *fuji_summary() {
 
 char *fuji_description() {
 	return(
-"Fuji DS-7
+"Generic Fuji
 Matthew G. Martin
 Based on fujiplay by
 Thierry Bousch<bousch@topo.math.u-psud.fr>
 
-Known to work with Fuji DS-7, Apple QuickTake 200,
-Samsung Kenox SSC-350N cameras, but 
-may support other Fuji cams as well.");
+Known to work with Fuji DS-7 and DX-5,7,10 and MX-500,600,700,2700
+, Apple QuickTake 200,Samsung Kenox SSC-350N cameras, 
+but may support other Fuji cams as well.");
 }
 
 struct _Camera fuji = {fuji_initialize,

@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <glib.h>
+#include <string.h>
 
 static GnomeVFSResult
 GNOME_VFS_RESULT (int result)
@@ -50,8 +51,7 @@ typedef struct {
 static GSList *cameras = NULL;
 static GConfClient *client = NULL;
 
-static GMutex *client_mutex;
-static GMutex *cameras_mutex;
+G_LOCK_DEFINE_STATIC (cameras);
 
 static void get_info_from_camera_info (CameraFileInfo *cfi, gboolean preview,
 		                       GnomeVFSFileInfo *info);
@@ -73,24 +73,24 @@ get_camera (GnomeVFSURI *uri, Camera **camera)
 
 	host = gnome_vfs_uri_get_host_name (uri);
 
+printf ("Is '%s' cached?\n", host);
 	/* Could be that this camera is currently active */
-	g_mutex_lock (cameras_mutex);
 	for (sl = cameras; sl; sl = sl->next) {
 		entry = sl->data;
 		if (!strcmp (entry->name, host)) {
 			*camera = entry->camera;
 			gp_camera_ref (entry->camera);
-			g_mutex_unlock (cameras_mutex);
+			G_UNLOCK (cameras);
+printf ("Found cached camera!\n");
 			return (GNOME_VFS_OK);
 		}
 	}
 
+printf ("No. Camera isn't in cache.\n");
 	/* Ok, this camera isn't active. */
 	gp_camera_new (camera);
-	g_mutex_lock (client_mutex);
 	list = gconf_client_get_list (client, "/apps/" PACKAGE "/cameras",
 				      GCONF_VALUE_STRING, NULL);
-printf ("Our database has %i entries.\n", g_slist_length (list));
 	if (!host) {
 		if (!gconf_client_get_bool (client,
 					   "/apps/" PACKAGE "/autodetect",
@@ -109,12 +109,10 @@ printf ("Our database has %i entries.\n", g_slist_length (list));
 					g_slist_nth_data (list, i + 2));
 printf ("Found %s in database!\n", host);
 			}
-	g_mutex_unlock (client_mutex);
 
 	result = GNOME_VFS_RESULT (gp_camera_init (*camera));
 	if (result != GNOME_VFS_OK) {
 		gp_camera_unref (*camera);
-		g_mutex_unlock (cameras_mutex);
 printf ("Could not initialize camera!\n");
 		return (result);
 	}
@@ -126,8 +124,6 @@ printf ("Could not initialize camera!\n");
 	gp_camera_ref (*camera);
 	cameras = g_slist_append (cameras, entry);
 
-	g_mutex_unlock (cameras_mutex);
-
 	return (GNOME_VFS_OK);
 }
 
@@ -137,7 +133,7 @@ unref_camera (Camera *camera)
 	CamerasEntry *entry;
 	GSList *sl;
 
-	g_mutex_lock (cameras_mutex);
+printf ("Unrefing camera with ref_count = %i...\n", camera->ref_count);
 	gp_camera_unref (camera);
 
 	/* We don't want to keep USB cameras in cache */
@@ -150,14 +146,13 @@ unref_camera (Camera *camera)
 				gp_camera_unref (entry->camera);
 				g_free (entry);
 printf ("I just destroyed a camera.\n");
+				break;
 			}
 		}
-	g_mutex_unlock (cameras_mutex);
 }
 
 typedef struct {
 	Camera *camera;
-	GMutex *camera_mutex;
 	CameraFile *file;
 	guint pos;
 	gchar *dirname;
@@ -181,43 +176,47 @@ static GnomeVFSResult do_open (
 
 printf ("ENTER: do_open\n");
 
+	G_LOCK (cameras);
+
 	result = get_camera (uri, &camera);
-	if (result != GNOME_VFS_OK)
+	if (result != GNOME_VFS_OK) {
+		G_UNLOCK (cameras);
 		return (result);
+	}
 
 	result = GNOME_VFS_RESULT (gp_file_new (&file));
 	if (result != GNOME_VFS_OK) {
 		unref_camera (camera);
+		G_UNLOCK (cameras);
 		return (result);
 	}
 
 	dirname = gnome_vfs_uri_extract_dirname (uri);
 	filename = gnome_vfs_uri_get_basename (uri);
-	g_mutex_lock (cameras_mutex);
 	if (gnome_vfs_uri_get_user_name (uri) != NULL)
 		result = GNOME_VFS_RESULT (gp_camera_file_get_preview (camera,
 						dirname, filename, file));
 	else
 		result = GNOME_VFS_RESULT (gp_camera_file_get_file (camera,
 						dirname, filename, file));
-	g_mutex_unlock (cameras_mutex);
 	if (result != GNOME_VFS_OK) {
 		gp_file_unref (file);
 		unref_camera (camera);
 		g_free (dirname);
+		G_UNLOCK (cameras);
 		return (result);
 	}
 
 	/* Construct handle */
 	file_handle = g_new0 (FileHandle, 1);
-	g_mutex_lock (cameras_mutex);
 	file_handle->camera = camera;
-	g_mutex_unlock (cameras_mutex);
 	file_handle->file = file;
 	file_handle->dirname = dirname;
 	file_handle->create = FALSE;
 	file_handle->preview = (gnome_vfs_uri_get_user_name (uri) != NULL);
 	*handle = (GnomeVFSMethodHandle *) file_handle;
+
+	G_UNLOCK (cameras);
 printf ("EXIT: do_open\n");
 
 	return (GNOME_VFS_OK);
@@ -236,26 +235,31 @@ static GnomeVFSResult do_create (
 	FileHandle *file_handle;
 	GnomeVFSResult result;
 
+	G_LOCK (cameras);
+
 	result = get_camera (uri, &camera);
-	if (result != GNOME_VFS_OK)
+	if (result != GNOME_VFS_OK) {
+		G_UNLOCK (cameras);
 		return (result);
+	}
 
 	if (!(camera->abilities->folder_operations &
 					GP_FOLDER_OPERATION_PUT_FILE)) {
 		unref_camera (camera);
+		G_UNLOCK (cameras);
 		return (GNOME_VFS_ERROR_NOT_SUPPORTED);
 	}
 
 	/* Construct the file handle */
 	file_handle = g_new0 (FileHandle, 1);
-	g_mutex_lock (cameras_mutex);
 	file_handle->camera = camera;
-	g_mutex_unlock (cameras_mutex);
 	gp_file_new (&(file_handle->file));
 	file_handle->create = TRUE;
 	file_handle->dirname = gnome_vfs_uri_extract_dirname (uri);
 	file_handle->preview = (gnome_vfs_uri_get_user_name (uri) != NULL);
 	*handle = (GnomeVFSMethodHandle *) file_handle;
+
+	G_UNLOCK (cameras);
 
 	return (GNOME_VFS_OK);
 }
@@ -268,17 +272,18 @@ static GnomeVFSResult do_close (
 	FileHandle *fh = (FileHandle *) handle;
 	GnomeVFSResult result = GNOME_VFS_OK;
 
-	if (fh->create) {
-		g_mutex_lock (fh->camera_mutex);
+	G_LOCK (cameras);
+
+	if (fh->create)
 		result = GNOME_VFS_RESULT (gp_camera_folder_put_file (
 				fh->camera, fh->dirname, fh->file));
-		g_mutex_unlock (fh->camera_mutex);
-	}
 
 	unref_camera (fh->camera);
 	gp_file_unref (fh->file);
 	g_free (fh->dirname);
 	g_free (fh);
+
+	G_UNLOCK (cameras);
 
 	return (result);
 }
@@ -295,20 +300,25 @@ static GnomeVFSResult do_read (
 	const char *data;
 	long int size;
 	GnomeVFSResult result;
-printf ("ENTER: do_read\n");
 
+	G_LOCK (cameras);
 	result = gp_file_get_data_and_size (fh->file, &data, &size);
-	if (result != GNOME_VFS_OK)
+	if (result != GNOME_VFS_OK) {
+		G_UNLOCK (cameras);
 		return (result);
+	}
 
 	*bytes_read = MIN (size - fh->pos, num_bytes);
-	if (!*bytes_read)
+	if (!*bytes_read) {
+		G_UNLOCK (cameras);
 		return (GNOME_VFS_ERROR_EOF);
+	}
 
 	memcpy (buffer, data + fh->pos, *bytes_read);
 	fh->pos += *bytes_read;
-printf ("EXIT: do_read\n");
-	
+
+	G_UNLOCK (cameras);
+
 	return (GNOME_VFS_OK);
 }
 
@@ -323,11 +333,15 @@ static GnomeVFSResult do_write (
 	FileHandle *file_handle;
 	GnomeVFSResult result;
 
+	G_LOCK (cameras);
+
 	file_handle = (FileHandle *) handle;
 
 	result = GNOME_VFS_RESULT (gp_file_append (file_handle->file,
 						   (char*) buffer, num_bytes));
 	*bytes_written = num_bytes;
+
+	G_UNLOCK (cameras);
 
 	return (result);
 }
@@ -339,9 +353,9 @@ static GnomeVFSResult do_seek (
         GnomeVFSFileOffset              offset,
         GnomeVFSContext*                context)
 {
-	FileHandle *file_handle;
+	FileHandle *file_handle = (FileHandle *) handle;
 
-	file_handle = (FileHandle *) handle;
+	G_LOCK (cameras);
 
 	switch (position) {
 	case GNOME_VFS_SEEK_START:
@@ -356,6 +370,8 @@ static GnomeVFSResult do_seek (
 		break;
 	}
 
+	G_LOCK (cameras);
+
 	return (GNOME_VFS_OK);
 }
 
@@ -364,11 +380,13 @@ static GnomeVFSResult do_tell (
 	GnomeVFSMethodHandle*	handle,
 	GnomeVFSFileOffset*	offset)
 {
-	FileHandle *file_handle;
+	FileHandle *file_handle = (FileHandle *) handle;
 
-	file_handle = (FileHandle *) handle;
+	G_LOCK (cameras);
 
 	*offset = file_handle->pos;
+
+	G_UNLOCK (cameras);
 
 	return GNOME_VFS_OK;
 }
@@ -396,11 +414,15 @@ static GnomeVFSResult do_open_directory (
 	CameraList *files;
 	CameraList *dirs;
 
-printf ("do_open_directory\n");
+printf ("ENTER: do_open_directory\n");
+
+	G_LOCK (cameras);
 
 	result = get_camera (uri, &camera);
-	if (result != GNOME_VFS_OK)
+	if (result != GNOME_VFS_OK) {
+		G_UNLOCK (cameras);
 		return (result);
+	}
 
 	path = gnome_vfs_uri_get_path (uri);
 	if (!*path)
@@ -411,15 +433,15 @@ printf ("Getting list of files...\n");
 	result = GNOME_VFS_RESULT (gp_list_new (&files));
 	if (result != GNOME_VFS_OK) {
 		unref_camera (camera);
+		G_UNLOCK (cameras);
 		return (result);
 	}
-	g_mutex_lock (cameras_mutex);
 	result = GNOME_VFS_RESULT (gp_camera_folder_list_files (camera, path,
 								files));
-	g_mutex_unlock (cameras_mutex);
 	if (result != GNOME_VFS_OK) {
 		gp_list_free (files);
 		unref_camera (camera);
+		G_UNLOCK (cameras);
 		return (result);
 	}
 
@@ -429,16 +451,16 @@ printf ("Getting list of directories...\n");
 	if (result != GNOME_VFS_OK) {
 		gp_list_free (files);
 		unref_camera (camera);
+		G_UNLOCK (cameras);
 		return (result);
 	}
-	g_mutex_lock (cameras_mutex);
 	result = GNOME_VFS_RESULT (gp_camera_folder_list_folders (camera, path,
 								  dirs));
-	g_mutex_unlock (cameras_mutex);
 	if (result != GNOME_VFS_OK) {
 		unref_camera (camera);
 		gp_list_free (files);
 		gp_list_free (dirs);
+		G_UNLOCK (cameras);
 		return (result);
 	}
 
@@ -451,6 +473,8 @@ printf ("Getting list of directories...\n");
 	directory_handle->pos = 0;
 	*handle = (GnomeVFSMethodHandle *) directory_handle;
 
+	G_UNLOCK (cameras);
+
 	return (GNOME_VFS_OK);
 }
 
@@ -459,15 +483,18 @@ static GnomeVFSResult do_close_directory (
         GnomeVFSMethodHandle*           handle,
 	GnomeVFSContext*                context)
 {
-	DirectoryHandle *directory_handle;
+	DirectoryHandle *directory_handle = (DirectoryHandle *) handle;
+
+	G_LOCK (cameras);
 
 	/* Free the handle */
-	directory_handle = (DirectoryHandle *) handle;
 	unref_camera (directory_handle->camera);
 	gp_list_free (directory_handle->files);
 	gp_list_free (directory_handle->dirs);
 	g_free (directory_handle->dirname);
 	g_free (directory_handle);
+
+	G_UNLOCK (cameras);
 
 	return (GNOME_VFS_OK);
 }
@@ -478,23 +505,32 @@ static GnomeVFSResult do_read_directory (
 	GnomeVFSFileInfo*		info,
 	GnomeVFSContext*                context)
 {
-	DirectoryHandle *dh;
+	DirectoryHandle *dh = (DirectoryHandle *) handle;
 	CameraFileInfo camera_info;
 	GnomeVFSResult result;
 	const char *name = NULL;
 	int dirs_count, files_count;
 
-	dh = (DirectoryHandle *) handle;
+printf ("ENTER: do_read_directory\n");
+
+	G_LOCK (cameras);
 
 	dirs_count = gp_list_count (dh->dirs);
-	if (dirs_count < 0)
+	if (dirs_count < 0) {
+		G_UNLOCK (cameras);
 		return (GNOME_VFS_RESULT (dirs_count));
-	files_count = gp_list_count (dh->files);
-	if (files_count < 0)
-		return (GNOME_VFS_RESULT (files_count));
+	}
 
-	if (dh->pos >= dirs_count + files_count)
+	files_count = gp_list_count (dh->files);
+	if (files_count < 0) {
+		G_UNLOCK (cameras);
+		return (GNOME_VFS_RESULT (files_count));
+	}
+
+	if (dh->pos >= dirs_count + files_count) {
+		G_UNLOCK (cameras);
 		return (GNOME_VFS_ERROR_EOF);
+	}
 
 	GNOME_VFS_FILE_INFO_SET_LOCAL (info, FALSE);
 
@@ -511,16 +547,18 @@ static GnomeVFSResult do_read_directory (
 	} else {
 		gp_list_get_name (dh->files, dh->pos - dirs_count, &name);
 		info->type = GNOME_VFS_FILE_TYPE_REGULAR;
-		g_mutex_lock (cameras_mutex);
+printf ("Trying to get file info for '%s'...\n", name);
 		result = GNOME_VFS_RESULT (gp_camera_file_get_info (
 			dh->camera, dh->dirname, name, &camera_info));
-		g_mutex_unlock (cameras_mutex);
+printf ("... done.\n");
 		if (result == GNOME_VFS_OK)
 			get_info_from_camera_info (&camera_info, FALSE, info);
 	}
 	info->name = g_strdup (name);
 
 	dh->pos++;
+
+	G_UNLOCK (cameras);
 
 	return (GNOME_VFS_OK);
 }
@@ -580,7 +618,9 @@ static GnomeVFSResult do_get_file_info (
 	guint i;
 	int count;
 
-printf ("do_get_file_info (%s)\n", gnome_vfs_uri_get_path (uri));
+printf ("ENTER: do_get_file_info (%s)\n", gnome_vfs_uri_get_path (uri));
+
+	G_LOCK (cameras);
 
 	/* Is this root? */
 	if (!gnome_vfs_uri_has_parent (uri)) {
@@ -589,16 +629,21 @@ printf ("do_get_file_info (%s)\n", gnome_vfs_uri_get_path (uri));
 				     GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
 		info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
 		info->mime_type = g_strdup ("x-directory/normal");
+		G_UNLOCK (cameras);
 		return (GNOME_VFS_OK);
 	}
 
+printf ("Getting camera (do_get_file_info)...\n");
 	result = get_camera (uri, &camera);
-	if (result != GNOME_VFS_OK)
+	if (result != GNOME_VFS_OK) {
+		G_UNLOCK (cameras);
 		return (result);
+	}
 
 	result = GNOME_VFS_RESULT (gp_list_new (&list));
 	if (result != GNOME_VFS_OK) {
 		unref_camera (camera);
+		G_UNLOCK (cameras);
 		return (result);
 	}
 
@@ -606,14 +651,14 @@ printf ("do_get_file_info (%s)\n", gnome_vfs_uri_get_path (uri));
 	parent = gnome_vfs_uri_get_parent (uri);
 	path = gnome_vfs_uri_get_path (parent);
 
-	g_mutex_lock (cameras_mutex);
+printf ("Getting folder list...\n");
 	result = GNOME_VFS_RESULT (gp_camera_folder_list_folders (camera, path,
 								  list));
-	g_mutex_unlock (cameras_mutex);
 	if (result != GNOME_VFS_OK) {
 		gnome_vfs_uri_unref (parent);
 		unref_camera (camera);
 		gp_list_free (list);
+		G_UNLOCK (cameras);
 		return (result);
 	}
 
@@ -622,6 +667,7 @@ printf ("do_get_file_info (%s)\n", gnome_vfs_uri_get_path (uri));
 		gnome_vfs_uri_unref (parent);
 		unref_camera (camera);
 		gp_list_free (list);
+		G_UNLOCK (cameras);
 		return (GNOME_VFS_RESULT (count));
 	}
 
@@ -631,6 +677,7 @@ printf ("do_get_file_info (%s)\n", gnome_vfs_uri_get_path (uri));
 			gnome_vfs_uri_unref (parent);
 			unref_camera (camera);
 			gp_list_free (list);
+			G_UNLOCK (cameras);
 			return (result);
 		}
 		if (!strcmp (name, basename)) {
@@ -642,18 +689,20 @@ printf ("do_get_file_info (%s)\n", gnome_vfs_uri_get_path (uri));
 			gnome_vfs_uri_unref (parent);
 			unref_camera (camera);
 			gp_list_free (list);
+			G_UNLOCK (cameras);
+printf ("Found folder!\n");
 			return (GNOME_VFS_OK);
 		}
 	}
-	
-	g_mutex_lock (cameras_mutex);
+
+printf ("Getting file list...\n");
 	result = GNOME_VFS_RESULT (gp_camera_folder_list_files (camera, path,
 								list));
-	g_mutex_unlock (cameras_mutex);
 	if (result != GNOME_VFS_OK) {
 		gnome_vfs_uri_unref (parent);
 		unref_camera (camera);
 		gp_list_free (list);
+		G_UNLOCK (cameras);
 		return (result);
 	}
 
@@ -662,6 +711,7 @@ printf ("do_get_file_info (%s)\n", gnome_vfs_uri_get_path (uri));
 		gnome_vfs_uri_unref (parent);
 		unref_camera (camera);
 		gp_list_free (list);
+		G_UNLOCK (cameras);
 		return (GNOME_VFS_RESULT (count));
 	} 
 
@@ -671,19 +721,22 @@ printf ("do_get_file_info (%s)\n", gnome_vfs_uri_get_path (uri));
 			gnome_vfs_uri_unref (parent);
 			unref_camera (camera);
 			gp_list_free (list);
+			G_UNLOCK (cameras);
 			return (result);
 		}
 		if (!strcmp (name, basename)) {
-			g_mutex_lock (cameras_mutex);
 			result = GNOME_VFS_RESULT (gp_camera_file_get_info (
 					camera, path, basename, &camera_info));
-			g_mutex_unlock (cameras_mutex);
 			unref_camera (camera);
 			gp_list_free (list);
-			if (result != GNOME_VFS_OK)
+			if (result != GNOME_VFS_OK) {
+				G_UNLOCK (cameras);
 				return (result);
+			}
 			get_info_from_camera_info (&camera_info, FALSE, info);
 			gnome_vfs_uri_unref (parent);
+			G_UNLOCK (cameras);
+printf ("Found file!\n");
 			return (GNOME_VFS_OK);
 		}
 	}
@@ -691,6 +744,8 @@ printf ("do_get_file_info (%s)\n", gnome_vfs_uri_get_path (uri));
 	gnome_vfs_uri_unref (parent);
 	unref_camera (camera);
 	gp_list_free (list);
+
+	G_UNLOCK (cameras);
 
 	return (GNOME_VFS_ERROR_NOT_FOUND);
 }
@@ -704,20 +759,22 @@ static GnomeVFSResult do_get_file_info_from_handle (
 {
 	CameraFileInfo camera_info;
 	GnomeVFSResult result;
-	FileHandle *fh;
+	FileHandle *fh = (FileHandle *) handle;
 
-	fh = (FileHandle *) handle;
+	G_LOCK (cameras);
 
-	g_mutex_lock (cameras_mutex);
 	result = GNOME_VFS_RESULT (gp_camera_file_get_info (fh->camera,
 							    fh->dirname,
 							    fh->file->name,
 							    &camera_info));
-	g_mutex_unlock (cameras_mutex);
-	if (result != GNOME_VFS_OK)
+	if (result != GNOME_VFS_OK) {
+		G_UNLOCK (cameras);
 		return (result);
+	}
 
 	get_info_from_camera_info (&camera_info, fh->preview, info);
+
+	G_UNLOCK (cameras);
 
 	return (GNOME_VFS_OK);
 }
@@ -786,13 +843,8 @@ vfs_module_init (const gchar *method_name, const gchar *args)
 		gconf_init (argc, argv, NULL);
 	client = gconf_client_get_default ();
 
-	if (g_thread_supported ()) {
-		cameras_mutex = g_mutex_new ();
-		client_mutex = g_mutex_new ();
-	}
-
 	/* Initialize gphoto */
-	gp_init (GP_DEBUG_NONE);
+	gp_init (GP_DEBUG_HIGH);
 
         return (&method);
 }
@@ -806,8 +858,6 @@ vfs_module_shutdown (GnomeVFSMethod *method)
 	GSList *sl;
 
 	/* Unref all cameras */
-	g_mutex_free (cameras_mutex);
-	cameras_mutex = NULL;
 	for (sl = cameras; sl; sl = sl->next) {
 		entry = sl->data;
 		gp_camera_unref (entry->camera);
@@ -820,8 +870,6 @@ vfs_module_shutdown (GnomeVFSMethod *method)
 	gp_exit ();
 
 	/* Unref client */
-	g_mutex_free (client_mutex);
-	client_mutex = NULL;
 	gtk_object_unref (GTK_OBJECT (client));
 	client = NULL;
 }

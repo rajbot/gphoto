@@ -37,8 +37,8 @@ test_log (const char *format, va_list args, void *data)
 int
 main (int argc, char **argv)
 {
+	GPPort *p;
 	KncCntrl *c;
-	GpkncCntrl *gc;
 	KncCamRes r;
 	KncInfo ki;
 	KncImageInfo kii;
@@ -47,22 +47,22 @@ main (int argc, char **argv)
 	GPPortSettings s;
 
 	printf ("Connecting to camera...\n");
-	gc = gpknc_cntrl_new_from_path ("serial:/dev/ttyS0");
-	if (!gc) {
+	c = gpknc_cntrl_new_from_path ("serial:/dev/ttyS0");
+	if (!c) {
 		printf ("... failed.\n");
 		return 1;
 	}
-	c = (KncCntrl *) gc;
 	knc_cntrl_set_func_data (c, test_data, NULL);
 	knc_cntrl_set_func_log  (c, test_log , NULL);
 	printf ("... done.\n");
 
 	printf ("Setting speed to 115200...\n");
+	p = gpknc_cntrl_get_port (c);
 	br = KNC_BIT_RATE_115200; bf = KNC_BIT_FLAG_8_BITS;
 	CR (knc_set_io_pref (c, NULL, &br, &bf));
-	gp_port_get_settings (gc->port, &s);
+	gp_port_get_settings (p, &s);
 	s.serial.speed = 115200;
-	gp_port_set_settings (gc->port, s);
+	gp_port_set_settings (p, s);
 
 	printf ("Requesting information about the camera...\n");
 	CR (knc_get_info (c, &r, &ki));
@@ -89,7 +89,6 @@ main (int argc, char **argv)
 	printf ("Downloading preview of first image...\n");
 	CR (knc_get_image (c, NULL, kii.id, KNC_SOURCE_CARD, KNC_IMAGE_THUMB));
 	knc_cntrl_unref (c);
-	gp_port_free (p);
 
 	return 0;
 }

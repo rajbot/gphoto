@@ -43,7 +43,6 @@ gpknc_cntrl_new_from_path (const char *path)
 	GPPortInfoList *il;
 	GPPortInfo info;
 	int n;
-	GPPortSettings s;
 
 	gp_port_info_list_new (&il);
 	gp_port_info_list_load (il);
@@ -80,4 +79,14 @@ gpknc_cntrl_new_from_port (GPPort *p)
 		if (!c) return NULL;
 	}
 	return c;
+}
+
+GPPort *
+gpknc_cntrl_get_port (KncCntrl *c)
+{
+	GPPort *p;
+
+	knc_cntrl_get_func_free (c, NULL, (void **) &p);
+
+	return p;
 }

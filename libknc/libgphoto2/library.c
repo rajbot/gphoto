@@ -598,7 +598,8 @@ camera_init (Camera *camera, GPContext *context)
 	for (i = 0; i < 10; i++) {
 		s.serial.speed = speeds[i];
 		C (gp_port_set_settings (camera->port, s));
-		if ((camera->pl->c = knc_cntrl_new_from_port (p))) break;
+		if ((camera->pl->c = gpknc_cntrl_new_from_port (camera->port)))
+			break;
 	}
 	if (i == 10) {
 		gp_context_error (context, _("The camera could not be "

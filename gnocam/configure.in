@@ -81,7 +81,6 @@ dnl ---------------------------------------------------------------------------
 AC_OUTPUT([
 Makefile
 art/Makefile
-intl/Makefile
 po/Makefile.in
 idl/Makefile
 gnocam/Makefile

@@ -31,12 +31,15 @@ $(CORBA_SOURCES): $(idls)
 GnoCam.h: $(idls)
 
 serverdir = $(libdir)/bonobo/servers
-server_in_files = GNOME_GnoCam.server.in
-server_DATA = $(server_in_files:.server.in=.server)
+server_in_files = GNOME_GnoCam.server.in.in
+server_DATA = $(server_in_files:.server.in.in=.server)
+$(server_in_files:.server.in.in=.server.in): $(server_in_files)
+	sed -e "s|\@LIBEXECDIR\@|$(libexecdir)|" $< > $@
 @INTLTOOL_SERVER_RULE@
 
-BUILT_SOURCES=$(CORBA_SOURCES)
-CLEANFILES += $(BUILT_SOURCES) $(server_DATA)
+BUILT_SOURCES = $(CORBA_SOURCES)
+CLEANFILES   += $(BUILT_SOURCES) $(server_DATA)
+EXTRA_DIST    = $(server_in_files)
 
 dist-hook:
 	cd $(distdir); rm -f $(BUILT_SOURCES)

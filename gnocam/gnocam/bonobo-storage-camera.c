@@ -403,6 +403,8 @@ bonobo_storage_camera_destroy (GtkObject *object)
 {
 	BonoboStorageCamera *storage = BONOBO_STORAGE_CAMERA (object);
 
+	g_message ("Destroying BonoboStorageCamera...");
+
 	if (storage->priv->path) {
 		g_free (storage->priv->path);
 		storage->priv->path = NULL;

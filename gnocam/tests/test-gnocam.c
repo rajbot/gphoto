@@ -7,7 +7,7 @@
 
 #include "GnoCam.h"
 
-#define CHECK(ev) {if (BONOBO_EX (&ev)) g_error (bonobo_exception_get_text (&ev));}
+#define CHECK(ev) {if (BONOBO_EX (ev)) g_error (bonobo_exception_get_text (ev));}
 
 static Bonobo_EventSource_ListenerId id;
 static GNOME_Camera camera;
@@ -16,13 +16,49 @@ static void
 listener_cb (BonoboListener *listener, gchar *event_name, CORBA_any *any,
 	     CORBA_Environment *ev, gpointer data)
 {
+	GNOME_Camera camera;
+	Bonobo_Storage storage;
+	Bonobo_Stream stream;
+	Bonobo_StorageInfo *info;
+
 	g_message ("Got event: %s", event_name);
 
+	camera = data;
+
 	if (!strcmp (event_name, "GNOME/Camera:CaptureImage:Action")) {
-		g_message ("An image has been captured and is available "
-			   "at '%s'.", (gchar *) any->_value);
+		g_message ("Getting storage...");
+		storage = Bonobo_Unknown_queryInterface (camera,
+						"IDL:Bonobo/Storage:1.0", ev);
+		bonobo_object_release_unref (camera, NULL);
+		CHECK (ev);
+
+		g_message ("Getting stream for '%s'...",
+			   BONOBO_ARG_GET_STRING (any));
+		stream = Bonobo_Storage_openStream (storage,
+					BONOBO_ARG_GET_STRING (any),
+					Bonobo_Storage_READ |
+					Bonobo_Storage_COMPRESSED, ev);
+		bonobo_object_release_unref (storage, NULL);
+		CHECK (ev);
+		
+		g_message ("Getting info...");
+		info = Bonobo_Stream_getInfo (stream,
+					      Bonobo_FIELD_CONTENT_TYPE |
+					      Bonobo_FIELD_SIZE |
+					      Bonobo_FIELD_TYPE, ev);
+		g_message ("Unrefing stream...");
+		bonobo_object_release_unref (stream, NULL);
+		CHECK (ev);
+
+		g_message ("Information about the stream:");
+		g_message ("Name: %s", info->name);
+		g_message ("Type: %i", (gint) info->type);
+		g_message ("Content type: %s", (gchar *) info->content_type);
+		g_message ("Size: %i", (gint) info->size);
+		CORBA_free (info);
+
 	} else if (!strcmp (event_name, "GNOME/Camera:CaptureImage:Cancel")) {
-		g_message ("Capturing of image has been cancelled!");
+		bonobo_object_release_unref (camera, NULL);
 	}
 
 	gtk_main_quit ();
@@ -37,8 +73,8 @@ do_idle_tests (gpointer data)
 
 	g_message ("Adding listener...");
 	id = bonobo_event_source_client_add_listener (camera, listener_cb, 
-				"GNOME/Camera:CaptureImage", &ev, NULL);
-	CHECK (ev);
+				"GNOME/Camera:CaptureImage", &ev, data);
+	CHECK (&ev);
 
 	CORBA_exception_free (&ev);
 
@@ -64,33 +100,28 @@ main (int argc, char *argv[])
 
 	g_message ("Getting GnoCam...");
 	gnocam = oaf_activate_from_id ("OAFIID:GNOME_GnoCam", 0, NULL, &ev);
-	CHECK (ev);
+	CHECK (&ev);
 
 	g_message ("Getting default Camera...");
 	camera = GNOME_GnoCam_getCamera (gnocam, &ev);
 	bonobo_object_release_unref (gnocam, NULL);
-	CHECK (ev);
+	CHECK (&ev);
 
 	g_message ("Getting storage...");
 	storage = Bonobo_Unknown_queryInterface (camera,
 						 "IDL:Bonobo/Storage:1.0", &ev);
-	CHECK (ev)
+	CHECK (&ev)
 	bonobo_object_release_unref (storage, NULL);
 
-	gtk_idle_add (do_idle_tests, NULL);
+	gtk_idle_add (do_idle_tests, camera);
 
 	g_message ("Capturing image...");
 	GNOME_Camera_captureImage (camera, &ev);
-	CHECK (ev);
-
-	bonobo_main ();
-	
-	g_message ("Removing listener...");
-	bonobo_event_source_client_remove_listener (camera, id, &ev);
-	bonobo_object_release_unref (camera, NULL);
-	CHECK (ev);
+	CHECK (&ev);
 
 	CORBA_exception_free (&ev);
 
+	bonobo_main ();
+	
 	return (0);
 }

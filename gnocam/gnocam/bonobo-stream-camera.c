@@ -33,21 +33,67 @@ camera_get_info (BonoboStream			*s,
 {
 	BonoboStreamCamera *stream;
 	Bonobo_StorageInfo *info;
+	CameraFileInfoStruct fileinfostruct;
+	CameraFileInfo       fileinfo;
+
+	g_message ("Getting info for stream...");
 
 	stream = BONOBO_STREAM_CAMERA (s);
 
 	if (mask & ~(Bonobo_FIELD_CONTENT_TYPE | 
 		     Bonobo_FIELD_SIZE | Bonobo_FIELD_TYPE)) {
+		g_message ("... not supported!");
 		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, 
-				     ex_Bonobo_Storage_NotSupported, NULL); 
+				     ex_Bonobo_Stream_NotSupported, NULL); 
 		return CORBA_OBJECT_NIL; 
 	}
 
+	CHECK_RESULT (gp_camera_file_get_info (stream->priv->camera, 
+				stream->priv->dirname, stream->priv->filename,
+				&fileinfo), ev);
+	if (BONOBO_EX (ev))
+		return CORBA_OBJECT_NIL;
+		
+
 	info = Bonobo_StorageInfo__alloc ();
+
+	if (stream->priv->mode & Bonobo_Storage_COMPRESSED)
+		fileinfostruct = fileinfo.preview;
+	else
+		fileinfostruct = fileinfo.file;
+
+	/* Content type */
+	if (mask & Bonobo_FIELD_CONTENT_TYPE) {
+		if (fileinfostruct.fields & GP_FILE_INFO_TYPE)
+			info->content_type = CORBA_string_dup (
+					fileinfostruct.type);
+		else
+			info->content_type = CORBA_string_dup (
+					"application/octet-stream");
+	}
+
+	/* Size */
+	if (mask & Bonobo_FIELD_SIZE)
+		if (fileinfostruct.fields & GP_FILE_INFO_SIZE)
+			if (fileinfostruct.size != stream->priv->size)
+				g_warning ("Size information differs: I have "
+					   "%i bytes in memory, gphoto2 "
+					   "tells me that the file is %i "
+					   "bytes big. I am using my value.",
+					   (int) stream->priv->size,
+					   (int) info->size);
 	info->size = stream->priv->size;
+
+	/* Name and type */
 	info->type = Bonobo_STORAGE_TYPE_REGULAR;
 	info->name = CORBA_string_dup (stream->priv->filename);
-	info->content_type = CORBA_string_dup (stream->priv->type);
+
+	g_message ("    Information about the stream:");
+	g_message ("      Name: %s", info->name);
+	g_message ("      Type: %i", (gint) info->type);
+	g_message ("      Content type: %s", (gchar *) info->content_type);
+	g_message ("      Size: %i", (gint) info->size);
+	g_message ("... done.");
 
 	return (info);
 }
@@ -142,6 +188,8 @@ bonobo_stream_camera_destroy (GtkObject* object)
 	
 	stream = BONOBO_STREAM_CAMERA (object);
 
+	g_message ("Destroying BonoboStreamCamera...");
+
 	if (stream->priv->dirname) {
 		g_free (stream->priv->dirname);
 		stream->priv->dirname = NULL;
@@ -220,6 +268,8 @@ bonobo_stream_camera_new (Camera            *camera,
 	CameraList          list;
 	CameraFile         *file;
 	gint i;
+
+	g_message ("Creating new BonoboStreamCamera...");
 
         /* Reject some unsupported flags. */ 
 	if (flags & Bonobo_Storage_TRANSACTED) { 

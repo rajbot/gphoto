@@ -23,7 +23,6 @@ INCLUDES =\
 
 libvfs_camera_la_LIBADD =\
  ../libgnocam/libgnocam.la\
- $(INTLLIBS)\
  $(VFS_LIBS)\
  $(NULL)
 

@@ -16,6 +16,7 @@ bin_PROGRAMS = camera-capplet
 
 camera_capplet_SOURCES =\
  gnocam-capplet-content.c gnocam-capplet-content.h\
+ gnocam-capplet-model.c gnocam-capplet-model.h\
  main.c
 
 camera_capplet_LDADD =\

@@ -8,32 +8,26 @@
 
 #include <gal/util/e-util.h>
 #include <gal/e-table/e-table.h>
-#include <gal/e-table/e-table-simple.h>
+#include <gal/e-table/e-table-memory-callbacks.h>
 #include <gal/e-table/e-table-scrolled.h>
 #include <gal/e-table/e-cell-text.h>
 #include <gal/e-table/e-cell-popup.h>
 #include <gal/e-table/e-cell-combo.h>
 #include <gconf/gconf-client.h>
 
+#include <gnocam-capplet-model.h>
+
 #define PARENT_TYPE GTK_TYPE_VBOX
-static GtkVBoxClass* parent_class = NULL;
+static GtkVBoxClass *parent_class = NULL;
 
-struct _GnoCamCappletContentPrivate {
-
-	GConfClient*	client;
-	guint		cnxn;
-
-	CappletWidget*	capplet;
-
-	GSList*		list;
-	GSList*		backup;
-
-	ETableModel*	model;
-	GtkWidget*	table;
+struct _GnoCamCappletContentPrivate 
+{
+	ETableModel *model;
+	GtkWidget   *table;
 };
 
 #define E_TABLE_SPEC                                                                                                                                            \
-"<ETableSpecification click-to-add=\"true\" draw-grid=\"true\" _click-to-add-message=\"* Click here to add a camera *\">"					\
+"<ETableSpecification click-to-add=\"true\" vertical-draw-grid=\"true\" horizontal-draw-grid=\"true\" _click-to-add-message=\"* Click here to add a camera *\">"\
 "  <ETableColumn model_col=\"0\" _title=\"Name\"  expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"string\" compare=\"string\"/>"		\
 "  <ETableColumn model_col=\"1\" _title=\"Model\" expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"model\" compare=\"string\"/>"		\
 "  <ETableColumn model_col=\"2\" _title=\"Port\"  expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"port\" compare=\"string\"/>"			\
@@ -45,155 +39,24 @@ struct _GnoCamCappletContentPrivate {
 "  </ETableState>"                                                                                                                                              \
 "</ETableSpecification>"
 
-/******************/
-/* Internal stuff */
-/******************/
-
 static void
-notify_cameras (GConfClient* client, guint cnxn_id, GConfEntry* entry, gpointer user_data)
+delete (gint row, gpointer data)
 {
-	GnoCamCappletContent*	content;
-	gint			i;
+	GnoCamCappletContent *content;
 
-	content = GNOCAM_CAPPLET_CONTENT (user_data);
-
-	/* Free the current list */
-	for (i = 0; i < g_slist_length (content->priv->list); i++) g_free (g_slist_nth_data (content->priv->list, i));
-	g_slist_free (content->priv->list);
-
-	/* Get the new list */
-	content->priv->list = gconf_client_get_list (content->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, NULL);
-
-	e_table_model_changed (content->priv->model);
-	capplet_widget_state_changed (content->priv->capplet, TRUE);
-}
-
-static void
-table_selected_row_foreach_delete (int row, gpointer user_data)
-{
-	GnoCamCappletContent*	content;
-	GSList*			link;
-	gint			i;
-
-	content = GNOCAM_CAPPLET_CONTENT (user_data);
-
-	for (i = 0; i < 3; i++) {
-		link = g_slist_nth (content->priv->list, 3 * row);
-		content->priv->list = g_slist_remove_link (content->priv->list, link);
-		g_free (link->data);
-		g_slist_free_1 (link);
-	}
-
-	e_table_model_changed (content->priv->model);
-	capplet_widget_state_changed (content->priv->capplet, TRUE);
-}
-
-/*************/
-/* Callbacks */
-/*************/
-
-static void
-on_delete_clicked (GtkButton* button, gpointer user_data)
-{
-	GnoCamCappletContent*	content;
-
-	content = GNOCAM_CAPPLET_CONTENT (user_data);
-
-	e_table_selected_row_foreach (e_table_scrolled_get_table (E_TABLE_SCROLLED (content->priv->table)), table_selected_row_foreach_delete, content);
-}
-
-/***********/
-/* E-Table */
-/***********/
-
-static gint
-col_count (ETableModel* model, gpointer user_data)
-{
-        return (3);
-}
-
-static gint
-row_count (ETableModel* model, gpointer user_data)
-{
-	GnoCamCappletContent*	content;
-
-	content = GNOCAM_CAPPLET_CONTENT (user_data);
-
-	return (g_slist_length (content->priv->list) / 3);
-}
-
-static void*
-value_at (ETableModel* model, gint col, gint row, gpointer user_data)
-{
-	GnoCamCappletContent*	content;
-
-	content = GNOCAM_CAPPLET_CONTENT (user_data);
-
-	return (g_strdup (g_slist_nth_data (content->priv->list, 3 * row + col)));
-}
-
-static void
-set_value_at (ETableModel* model, gint col, gint row, const void* value, gpointer user_data)
-{
-	GnoCamCappletContent*	content;
-
-	content = GNOCAM_CAPPLET_CONTENT (user_data);
-
-	g_free (g_slist_nth_data (content->priv->list, 3 * row + col));
-	(g_slist_nth (content->priv->list, 3 * row + col))->data = g_strdup (value);
-
-	capplet_widget_state_changed (content->priv->capplet, TRUE);
-}
-
-static gboolean
-is_cell_editable (ETableModel* model, gint col, gint row, gpointer user_data)
-{
-        return (TRUE);
-}
-
-static void*
-duplicate_value (ETableModel* model, gint col, const void* value, gpointer user_data)
-{
-        return (g_strdup (value));
-}
-
-static void
-free_value (ETableModel* model, gint col, void* value, gpointer user_data)
-{
-	g_free (value);
-}
-
-static void*
-initialize_value (ETableModel* model, gint col, gpointer user_data)
-{
-        return (g_strdup (""));
-}
-
-static gboolean
-value_is_empty (ETableModel* model, gint col, const void* value, gpointer user_data)
-{
-	return !(value && *(gchar*)value);
-}
-
-static gchar*
-value_to_string (ETableModel* model, gint col, const void* value, gpointer user_data)
-{
-        return (g_strdup (value));
-}
-
-static void
-append_row (ETableModel* model, ETableModel* source, int row, gpointer user_data)
-{
-	GnoCamCappletContent*	content;
-	gint			col;
-
-	g_return_if_fail (user_data);
-	content = GNOCAM_CAPPLET_CONTENT (user_data);
-
-	for (col = 0; col < 3; col++) g_slist_append (content->priv->list, g_strdup (e_table_model_value_at (source, col, row)));
+	content = GNOCAM_CAPPLET_CONTENT (data);
 	
-	e_table_model_changed (model);
-	capplet_widget_state_changed (content->priv->capplet, TRUE);
+	gnocam_capplet_model_delete_row (GNOCAM_CAPPLET_MODEL (content->priv->model), row);
+}
+
+static void
+on_delete_clicked (GtkButton* button, gpointer data)
+{
+	GnoCamCappletContent *content;
+
+	content = GNOCAM_CAPPLET_CONTENT (data);
+
+	e_table_selected_row_foreach (E_TABLE (e_table_scrolled_get_table (E_TABLE_SCROLLED (content->priv->table))), delete, content);
 }
 
 /*****************/
@@ -201,36 +64,27 @@ append_row (ETableModel* model, ETableModel* source, int row, gpointer user_data
 /*****************/
 
 void
-gnocam_capplet_content_ok (GnoCamCappletContent* content)
+gnocam_capplet_content_ok (GnoCamCappletContent *content)
 {
-	gconf_client_set_list (content->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, content->priv->list, NULL);
+	gnocam_capplet_model_ok (GNOCAM_CAPPLET_MODEL (content->priv->model));
 }
 
 void
-gnocam_capplet_content_revert (GnoCamCappletContent* content)
+gnocam_capplet_content_revert (GnoCamCappletContent *content)
 {
-	gint	i;
-
-	/* Free the current list */
-	for (i = 0; i < g_slist_length (content->priv->list); i++) g_free (g_slist_nth_data (content->priv->list, i));
-	g_slist_free (content->priv->list);
-
-	gconf_client_set_list (content->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, content->priv->backup, NULL);
-	content->priv->list = gconf_client_get_list (content->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, NULL);
-
-	e_table_model_changed (content->priv->model);
+	gnocam_capplet_model_revert (GNOCAM_CAPPLET_MODEL (content->priv->model));
 }
 
 void
-gnocam_capplet_content_try (GnoCamCappletContent* content)
+gnocam_capplet_content_try (GnoCamCappletContent *content)
 {
-	gconf_client_set_list (content->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, content->priv->list, NULL);
+	gnocam_capplet_model_try (GNOCAM_CAPPLET_MODEL (content->priv->model));
 }
 
 void
-gnocam_capplet_content_cancel (GnoCamCappletContent* content)
+gnocam_capplet_content_cancel (GnoCamCappletContent *content)
 {
-	gconf_client_set_list (content->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, content->priv->backup, NULL);
+	gnocam_capplet_model_cancel (GNOCAM_CAPPLET_MODEL (content->priv->model));
 }
 
 /*************/
@@ -238,31 +92,21 @@ gnocam_capplet_content_cancel (GnoCamCappletContent* content)
 /*************/
 
 static void
-gnocam_capplet_content_destroy (GtkObject* object)
+gnocam_capplet_content_destroy (GtkObject *object)
 {
-	GnoCamCappletContent*	content;
-	gint			i;
+	GnoCamCappletContent *content;
 
 	content = GNOCAM_CAPPLET_CONTENT (object);
 
-	gtk_object_unref (GTK_OBJECT (content->priv->client));
-
-	for (i = 0; i < g_slist_length (content->priv->list); i++) g_free (g_slist_nth_data (content->priv->list, i));
-	g_slist_free (content->priv->list);
-
-	for (i = 0; i < g_slist_length (content->priv->backup); i++) g_free (g_slist_nth_data (content->priv->backup, i));
-	g_slist_free (content->priv->backup);
-	
 	g_free (content->priv);
-	content->priv = NULL;
 
 	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void
-gnocam_capplet_content_class_init (GnoCamCappletContentClass* klass)
+gnocam_capplet_content_class_init (GnoCamCappletContentClass *klass)
 {
-	GtkObjectClass*         object_class;
+	GtkObjectClass *object_class;
 
 	object_class = GTK_OBJECT_CLASS (klass);
 	object_class->destroy = gnocam_capplet_content_destroy;
@@ -298,13 +142,6 @@ gnocam_capplet_content_new (CappletWidget* capplet)
 
 	new = gtk_type_new (GNOCAM_TYPE_CAPPLET_CONTENT);
 	
-	new->priv->capplet = capplet;
-	new->priv->client = gconf_client_get_default ();
-	gconf_client_notify_add (new->priv->client, "/apps/" PACKAGE "/cameras", notify_cameras, new, NULL, NULL);
-	gconf_client_add_dir (new->priv->client, "/apps/" PACKAGE, GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
-	new->priv->list = gconf_client_get_list (new->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, NULL);
-	new->priv->backup = gconf_client_get_list (new->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, NULL);
-
 	/* Create a hbox */
 	hbox = gtk_hbox_new (FALSE, 10);
 	gtk_widget_show (hbox);
@@ -324,9 +161,7 @@ gnocam_capplet_content_new (CappletWidget* capplet)
 	gtk_box_pack_start (GTK_BOX (new), hbox, TRUE, TRUE, 10);
 
 	/* Create the model */
-	new->priv->model = e_table_simple_new (col_count, row_count, value_at, set_value_at, is_cell_editable, 
-		duplicate_value, free_value, initialize_value, value_is_empty, value_to_string, new);
-	E_TABLE_SIMPLE (new->priv->model)->append_row = append_row;
+	new->priv->model = gnocam_capplet_model_new (capplet);
 
 	/* Create the extras */
         extras = e_table_extras_new ();

@@ -77,6 +77,8 @@ char	*argv[];
 		printf ( "MEMO: [%s]\n", memo );
 
 
+	philips_set_mode ( 0 ); /* put camera in picture view mode */
+
 	philips_getnpicts ( &camera_picts );
 	for ( i = 1; i <= camera_picts; i++ ) {
 		philips_getpictname ( i, tmpstr );

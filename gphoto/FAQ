@@ -15,7 +15,7 @@ k. How do I use the gPhoto command line interface? How can I use it?
 l. Who has developed gPhoto?
 m. How do I write a gPhoto-supported plugin or new model interfaces?
 n. How do I organize a HTML gallery theme?
-o. What are the future plans for GNU Photo?
+o. What are the future plans for gPhoto?
 p. Does gPhoto aim to be GNOME compliant?
 q. Which digital camera should I buy? Which models do gPhoto support?
 r. How do I take a picture and get a good result?
@@ -133,7 +133,6 @@ k. How do I use the gPhoto command line interface? How can I use it?
    After building the gPhoto binary, type ``gphoto -h'' for command-line
    options. Here's the low-down:
 
-           GNU Photo v.0.3
            Usage: gphoto [-h] [-n] [-s # filename] [-t # filename]
                          [-d #] [-l filename]
                    -n                      display the # of pictures
@@ -184,7 +183,7 @@ n. How do I organize a HTML gallery theme?
 
    See http://www.gphoto.org/themes.php3 for details.
 
-o. What are the future plans for GNU Photo?
+o. What are the future plans for gPhoto?
 
    gPhoto is being actively developed, and version 1.0 will have many new
    features and support for more popular camera models.

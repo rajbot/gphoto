@@ -1,10 +1,3 @@
-From: Ole Aamot <oka@gnure.ping.uio.no>
-To: gphoto-devel@gphoto.org,gphoto-kodak@gphoto.org
-Subject: Hunting bugs for 0.4
---text follows this line--
-Before Scott can put out a stable release, some bugs should be
-fixed.  (When the 0.4 version is out, the focus moves to 0.5!)
-
 UNSOLVED BUGS
 =============
 See http://bugs.gnome.org/db/pa/lgphoto.html for a full list of
@@ -166,5 +159,3 @@ Please include in your report:
    try to make it informative.
 
 Happy hunting!
-
--- Ole

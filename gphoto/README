@@ -1,6 +1,6 @@
 $Id$
 
-This is the developer release of gPhoto, the GNU digital camera utility.
+This is the stable release of gPhoto, the GNU digital camera utility.
 
 DESCRIPTION
 	gPhoto is an universal, free GTK+ application that will allow
@@ -38,6 +38,7 @@ REQUIREMENTS:
 WHATS IN THE PACKAGE:
 	* GTK+ graphical application, by Scott Fritzinger <scottf@scs.unr.edu>
 	* Canon A50 library by Werner Almesberger <almesber@lrc.di.epfl.ch>
+	* Canon A5 library supp. by Ole W. Saastad <o.w.saastad@kjemi.uio.no>
 	* Casio QV library implemented by Gary Ross <gdr@hooked.net>
 	* Directory Browse library, by Scott Fritzinger <scottf@scs.unr.edu>
         * Fuji DS/DX library implemented by Matt Martin <matt.martin@ieee.org>
@@ -47,6 +48,8 @@ WHATS IN THE PACKAGE:
 	* Kodak DC-240/280 USB support by David Brownell <david-b@pacbell.net>
 	* Konica Q M-100 library implemented by Phill Hugo <phill@gphoto.org>
         * Konica library improvements by Ed Legowski <edlegowski@pobox.com>
+        * Konica library improvements by Ed Legowski <edlegowski@pobox.com>
+	* Konica Q-M200 library by Toshiki Fujisawa <fujisawa@konica.co.jp>
         * Minolta Dimage V library by Gus Hartmann <hartmann@cs.wisc.edu> 
 	* Mustek MDC 800 library by Pedro Caria <pmiguel@maquina.com>
 	* Nikon CP 600 library by M. McCormack <mccormac@aals27.alcatel.com.au>
@@ -55,6 +58,7 @@ WHATS IN THE PACKAGE:
 	* PhotoPC library for gPhoto by Scott Fritzinger <scottf@scs.unr.edu>
         * Ricoh 300 library implemented by Clifford Wright <cliff@snipe444.org>
 	* Sony DSC library written by M. Adam Kendall <joker@penguinpub.com>
+	* Sony DSC-F55E library written by Mark Davies <mdavies@dial.pipex.com>
 	* Command line interface, by Scott Fritzinger <scottf@scs.unr.edu>
         * Autoconf/automake/libtool scripts by Paul Jenner <psj@mustec.eu.org>
 
@@ -159,11 +163,8 @@ UNINSTALL:
 	In the gphoto-0.x.y/ directory, type 'make uninstall'
 
 BUGS/PROBLEMS:
-	* Will occasionally not perform operation if camera is
-	  in power-off mode and is turned on by gPhoto. Redo
-	  the operation.
-	* ???
-	
+	See http://bugs.gnome.org/db/pa/lgphoto.html and ``BUGS''.
+
 REPORT BUGS TO:
 	gphoto-devel@gphoto.org
 	gphoto-kodak@gphoto.org
@@ -171,19 +172,19 @@ REPORT BUGS TO:
 UPDATES:
 	http://www.gphoto.org/download.php3
 
-FAQS:
-	http://www.gphoto.org/help.php3
-
 VENDOR SUPPORT:
 	http://www.gphoto.org/supporting.php3
 
 SUPPORT LETTER TEMPLATE:
+	See ``LETTER''.
 	http://cvs.gnome.org/lxr/source/gphoto/LETTER
 
 DEVELOPMENT DOCUMENTATION:
+	See ``PROGRAMMERS''
 	http://cvs.gnome.org/lxr/source/gphoto/PROGRAMMERS
 
 GALLERY THEMES DOCUMENTATION:
+	See ``THEMES''
 	http://cvs.gnome.org/lxr/source/gphoto/THEMES
 
 COPYING:

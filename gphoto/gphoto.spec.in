@@ -38,7 +38,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 rm -rf $RPM_BUILD_ROOT
 
 %files
-%doc AUTHORS COPYING ChangeLog FAQ MANUAL NEWS README THANKS THEMES
+%doc AUTHORS COPYING FAQ MANUAL NEWS README THANKS THEMES
 %{prefix}/man/man1/gphoto.1
 %{prefix}/bin/*
 %{prefix}/share/gphoto/drivers/*

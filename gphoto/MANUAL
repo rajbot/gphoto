@@ -138,7 +138,7 @@ Directory Browsing
 ----------------------------------------------------------------
 
 It is now possible in gPhoto to browse entire directories of images. In
-the "File" menu, select "Open Directory...". You can then select the
+the "File" menu, select "Open -> Directory...". You can then select the
 directory to open within gPhoto. You will then see an index of the images
 in that directory.
 
@@ -160,8 +160,8 @@ Editing Images
 
 To edit an image, you need to first have the image opened in gPhoto.
 This can be done either by getting pictures from the camera and
-selecting "Open in window", or by opening images from the "Open" option in 
-the "File" menu 
+selecting "Open in window", or by opening images from the "Open" 
+option in the "File" menu 
 
 Under the "Edit" menu, you will see two different options to edit opened
 images.

@@ -38,6 +38,9 @@ const gchar *gnocam_applet_cam_get_model (GnocamAppletCam *);
 void         gnocam_applet_cam_set_port (GnocamAppletCam *, const gchar *);
 const gchar *gnocam_applet_cam_get_port (GnocamAppletCam *);
 
+void         gnocam_applet_cam_set_name (GnocamAppletCam *, const gchar *);
+const gchar *gnocam_applet_cam_get_name (GnocamAppletCam *);
+
 void     gnocam_applet_cam_set_connect_auto (GnocamAppletCam *, gboolean);
 gboolean gnocam_applet_cam_get_connect_auto (GnocamAppletCam *);
 

@@ -55,7 +55,7 @@ struct _GnocamAppletCamPriv
 	guint size;
 
 	/* Settings */
-	gchar *manuf, *model, *port;
+	gchar *manuf, *model, *port, *name;
 	gboolean connect_auto;
 };
 
@@ -67,6 +67,7 @@ gnocam_applet_cam_finalize (GObject *object)
 	g_free (c->priv->manuf);
 	g_free (c->priv->port);
 	g_free (c->priv->model);
+	g_free (c->priv->name);
 	g_object_unref (c->priv->factory);
 	g_object_unref (c->priv->p_connected);
 	g_object_unref (c->priv->p_disconnected);
@@ -146,6 +147,23 @@ gnocam_applet_cam_get_type (void)
 	}
 
 	return t;
+}
+
+void
+gnocam_applet_cam_set_name (GnocamAppletCam *c, const gchar *n)
+{
+	g_return_if_fail (GNOCAM_IS_APPLET_CAM (c));
+
+	g_free (c->priv->name);
+	c->priv->name = g_strdup (n);
+}
+
+const gchar *
+gnocam_applet_cam_get_name (GnocamAppletCam *c)
+{
+	g_return_val_if_fail (GNOCAM_IS_APPLET_CAM (c), NULL);
+
+	return c->priv->name;
 }
 
 static void

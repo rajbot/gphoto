@@ -1,9 +1,12 @@
 #include "config.h"
 #include "gnocam-capplet.h"
-#include "i18n.h"
+
+#include <gnocam/i18n.h>
 
 #include <gconf/gconf-client.h>
+
 #include <gtk/gtkmain.h>
+
 #include <libgnomeui/gnome-ui-init.h>
 
 int

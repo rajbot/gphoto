@@ -50,6 +50,13 @@ struct _GnocamAppletPrivate
 	GList *cameras;
 };
 
+static GnocamAppletCam *
+gnocam_applet_get_cam (GnocamApplet *a, const gchar *name)
+{
+	g_warning ("Fixme!");
+	return NULL;
+}
+
 static void
 gnocam_applet_update (GnocamApplet *a)
 {
@@ -117,8 +124,7 @@ static void
 gnocam_applet_load_preferences (GnocamApplet *a)
 {
 	GConfClient *client;
-	gchar *s, *name, *k, *key;
-	const gchar *b;
+	gchar *s, *k, *key;
 	guint i;
 	GnocamAppletCam *c;
 	GSList *l;
@@ -134,15 +140,16 @@ gnocam_applet_load_preferences (GnocamApplet *a)
 				panel_applet_get_size (a->priv->applet));
 		g_signal_connect (c, "changed", G_CALLBACK (on_changed), a);
 		a->priv->cameras = g_list_append (a->priv->cameras, c);
+		gtk_widget_show (GTK_WIDGET (c));
 		gtk_box_pack_start (a->priv->box, GTK_WIDGET (c),
 				    FALSE, FALSE, 0);
 
 		/* Load the preferences into the widget. */
 		key = g_slist_nth_data (l, i);
-		b = g_basename (key);
-		name = gconf_unescape_key (b, strlen (b));
-		g_object_set_data_full (G_OBJECT (c), "name", name, 
-			(GDestroyNotify) g_free);
+		k = g_strdup_printf ("%s/name", key);
+		s = gconf_client_get_string (client, k, NULL);
+		gnocam_applet_cam_set_name (c, s);
+		g_free (s); g_free (k);
 		k = g_strdup_printf ("%s/manufacturer", key);
 		s = gconf_client_get_string (client, k, NULL);
 		gnocam_applet_cam_set_manufacturer (c, s);
@@ -508,16 +515,46 @@ static const BonoboUIVerb gnocam_applet_menu_verbs[] = {
 	BONOBO_UI_VERB_END
 };
 
+static void
+notify_func (GConfClient *client, guint cnxn_id, GConfEntry *entry,
+	     gpointer user_data)
+{
+	GnocamApplet *a = GNOCAM_APPLET (user_data);
+	const gchar *s;
+	gchar *name;
+	GnocamAppletCam *c;
+
+	if (!strcmp (entry->key, "/desktop/gnome/cameras")) return;
+
+	g_message ("Key: '%s'", entry->key);
+	if (!entry->value) {
+		s = g_basename (gconf_entry_get_key (entry));
+		name = gconf_unescape_key (s, strlen (s));
+		c = gnocam_applet_get_cam (a, name);
+		if (!c) {g_free (name); return;}
+		g_warning ("Implement!");
+		g_free (name);
+	} else {
+		g_warning ("Fixme!");
+	}
+}
+
 GnocamApplet *
 gnocam_applet_new (PanelApplet *applet)
 {
 	GnocamApplet *a;
 	GtkWidget *w;
+	GConfClient *client;
 
 	g_return_val_if_fail (PANEL_IS_APPLET (applet), NULL);
 
 	a = g_object_new (GNOCAM_TYPE_APPLET, NULL);
 	a->priv->applet = applet;
+
+	client = gconf_client_get_default ();
+	gconf_client_notify_add (client, "/desktop/gnome/cameras", 
+				 notify_func, a, NULL, NULL);
+	g_object_unref (G_OBJECT (client));
 
 	/* Setup menu. */
 	panel_applet_setup_menu_from_file (applet, UIDIR,

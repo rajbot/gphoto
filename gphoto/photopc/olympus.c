@@ -102,8 +102,7 @@ static int descend(eph_iob *iob,int depth,char *root,int(*each)(eph_iob *iob,cha
 		      return rc;
 	      }
 	      if (xchdir(iob,root,have_folders)) {
-		      fprintf(stderr,"restore dir to \"%s\"
-failed\n",root);
+		      fprintf(stderr,"restore dir to \"%s\" failed\n",root);
 		      return -1;
 	      }
       }

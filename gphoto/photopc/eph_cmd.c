@@ -17,9 +17,12 @@ static char *rcsid="$Id$";
 
 /*
 	$Log$
+	Revision 1.4  2000/08/25 20:36:38  scottf
+	readded in percentage updates. no more freezing GUI
+
 	Revision 1.3  2000/08/24 05:04:27  scottf
 	adding language support
-
+	
 	Revision 1.2.2.1  2000/07/05 11:07:49  ole
 	Preliminary support for the Olympus C3030-Zoom USB by
 	Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr>.
@@ -298,6 +301,7 @@ eph_getvar(eph_iob *iob,int reg,char **buffer,off_t *bufsize)
 	char *ptr;
 	char *tmpbuf=NULL;
 	size_t tmpbufsize=0;
+	long picsize=1, picread=0;
 
 	if ((buffer == NULL) && (iob->storecb == NULL)) {
 		eph_error(iob,ERR_BADARGS,
@@ -319,10 +323,15 @@ eph_getvar(eph_iob *iob,int reg,char **buffer,off_t *bufsize)
 	buf[0]=CMD_GETVAR;
 	buf[1]=reg;
 
+	if (reg == 14)
+		eph_getint(iob, 12, &picsize);
+	if (reg == 15)
+		eph_getint(iob, 13, &picsize);
 writeagain:
 	if ((rc=eph_writecmd(iob,buf,2))) return rc;
 	index=0;
 readagain:
+update_progress((float)picread/(float)picsize);
 	if (buffer) { /* read to memory reallocating it */
 		if (((*bufsize) - index) < 2048) {
 			if (iob->debug)
@@ -363,6 +372,7 @@ readagain:
 		count=0;
 		if (pkt.seq == expect) {
 			index+=readsize;
+picread += readsize;
 			expect++;
 			(iob->runcb)(index);
 			if (buffer == NULL) {

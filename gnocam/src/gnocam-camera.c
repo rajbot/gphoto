@@ -149,14 +149,11 @@ create_menu (gpointer user_data)
 {
 	GnoCamCamera*	camera;
 
-	g_return_val_if_fail (GNOCAM_IS_CAMERA (user_data), FALSE);
 	camera = GNOCAM_CAMERA (user_data);
 
 	camera->priv->component = bonobo_ui_component_new (PACKAGE "Camera");
 	bonobo_ui_component_set_container (camera->priv->component, BONOBO_OBJREF (camera->priv->container));
 	
-	bonobo_ui_component_freeze (camera->priv->component, NULL);
-
 	/* Create the main menu */
         bonobo_ui_component_set_translate (camera->priv->component, "/menu", GNOCAM_CAMERA_UI, NULL);
         bonobo_ui_component_add_verb (camera->priv->component, "Manual", on_manual_clicked, camera);
@@ -191,8 +188,6 @@ create_menu (gpointer user_data)
 		bonobo_ui_component_set_translate (camera->priv->component, "/menu/Camera/Camera", GNOCAM_CAMERA_UI_CONFIGURATION, NULL);
 		bonobo_ui_component_add_verb (camera->priv->component, "Configuration", on_configuration_clicked, camera);
 	}
-
-        bonobo_ui_component_thaw (camera->priv->component, NULL);
 
 	return (FALSE);
 }

@@ -32,8 +32,8 @@ libmoniker_camera_la_LIBADD = $(EXTRA_GNOME_LIBS)
 $(CORBA_GENERATED): $(top_srcdir)/idl/GnoCam.idl
 	$(ORBIT_IDL) $(top_srcdir)/idl/GnoCam.idl `$(GNOME_CONFIG) --cflags idl`
 
-BUILT_SOURCES = $(CORBA_GENERATED)
-CLEANFILES += $(BUILT_SOURCES) $(OAF_FILES)
+BUILT_SOURCES=$(CORBA_GENERATED)
+CLEANFILES=$(BUILT_SOURCES) $(OAF_FILES)
 EXTRA_DIST = Bonobo_Moniker_camera.oaf.in
 
 

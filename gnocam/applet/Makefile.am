@@ -21,8 +21,8 @@ gnocam_applet_SOURCES =\
 $(CORBA_GENERATED): $(top_srcdir)/idl/GnoCam.idl
 	$(ORBIT_IDL) $(top_srcdir)/idl/GnoCam.idl `$(GNOME_CONFIG) --cflags idl`
 
-BUILT_SOURCES += $(CORBA_GENERATED)
-CLEANFILES += $(CORBA_GENERATED)
+BUILT_SOURCES=$(CORBA_GENERATED)
+CLEANFILES=$(CORBA_GENERATED)
 
 gnocam_applet_LDADD = $(APPLET_LIBS)
 

@@ -31,6 +31,6 @@ test_gnocam_LDADD =\
 $(CORBA_GENERATED): $(top_srcdir)/idl/GnoCam.idl
 	$(ORBIT_IDL) $(top_srcdir)/idl/GnoCam.idl `$(GNOME_CONFIG) --cflags idl`
 
-BUILT_SOURCES = $(CORBA_GENERATED)
-CLEANFILES += $(BUILT_SOURCES)
+BUILT_SOURCES=$(CORBA_GENERATED)
+CLEANFILES=$(BUILT_SOURCES)
 

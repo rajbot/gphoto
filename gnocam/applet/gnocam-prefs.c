@@ -131,27 +131,23 @@ on_connect_toggled (GtkToggleButton *button, GnoCamPrefs *p)
 }
 
 static void
-on_model_changed (GtkEditable *editable, GnoCamPrefs *p)
+on_model_changed (GtkEntry *entry, GnoCamPrefs *p)
 {
-	gchar *model;
-
 	g_return_if_fail (GNOCAM_IS_PREFS (p));
+	g_return_if_fail (GTK_IS_ENTRY (entry));
 
-	model = gtk_editable_get_chars (editable, -1, -1);
-	g_signal_emit (p, signals[MODEL_CHANGED], 0, model);
-	g_free (model);
+	g_signal_emit (p, signals[MODEL_CHANGED], 0,
+		       gtk_entry_get_text (entry));
 }
 
 static void
-on_port_changed (GtkEditable *editable, GnoCamPrefs *p)
+on_port_changed (GtkEntry *entry, GnoCamPrefs *p)
 {
-	gchar *port;
-
 	g_return_if_fail (GNOCAM_IS_PREFS (p));
+	g_return_if_fail (GTK_IS_ENTRY (entry));
 
-	port = gtk_editable_get_chars (editable, -1, -1);
-	g_signal_emit (p, signals[PORT_CHANGED], 0, port);
-	g_free (port);
+	g_signal_emit (p, signals[PORT_CHANGED], 0,
+		       gtk_entry_get_text (entry));
 }
 
 static void

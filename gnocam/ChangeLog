@@ -1,5 +1,9 @@
 2002-11-18  Lutz Müller <lutz@users.sourceforge.net>
 
+	* applets/gnocam-prefs.c: Fix segfault.
+
+2002-11-18  Lutz Müller <lutz@users.sourceforge.net>
+
 	* applets/*: The preferences dialog is working.
 
 2002-11-17  Lutz Müller <lutz@users.sourceforge.net>

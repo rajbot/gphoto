@@ -35,13 +35,25 @@ gPhoto 0.4
    - RPM spec files 					(DONE)
    - Updated Manual					(DONE)
    - Better error checking 				(99%)
+   - Image post processing				(DONE)
+   - Progress Bar / status display			(DONE)
 
 gPhoto 0.6
+   - GUI rewrite
    - Camera support for:
+     Kodak DC40/50/120
+   - Full-screen slideshow (1 or more images at a time)
+	with music support via external player (Plug-in)
+   - Thumbnail index picture
+   - xSlideshow output (Plug-in)
+   - Thumbnail index views (regular, list)
+   - HTML Gallery updates
+	(Use camera name, new tags, non-HTML support, 
+	output image size, lowres images, create gallery
+	in-place, internal tag parsing)
+   - Send image via Email
    - Asynchronous I/O
    - Common serial I/O library
-   - Progress Bar / status display			(DONE)
-   - Image post processing				(DONE)
    - HTML gallery updates/changes 			(75%)
    - Make gdk_imlib_load_image_mem really do in memory conversions
    - XML gallery

@@ -262,9 +262,11 @@ gnocam_preferences_destroy (GtkObject* object)
 
 	gconf_client_notify_remove (preferences->priv->client, preferences->priv->cnxn);
 	gtk_object_unref (GTK_OBJECT (preferences->priv->client));
+	
 	g_free (preferences->priv);
+	preferences->priv = NULL;
 
-	(*GTK_OBJECT_CLASS (parent_class)->destroy) (object);
+	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void

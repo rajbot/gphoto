@@ -1,150 +1,24 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <gphoto2.h>
 #include <gnome.h>
+#include <libgnome/gnome-defs.h>
+#include <libgnome/gnome-util.h>
 #include <libgnomevfs/gnome-vfs.h>
-#include <libgnomevfs/gnome-vfs-private-types.h>
+#include <libgnomevfs/gnome-vfs-context.h>
+#include <libgnomevfs/gnome-vfs-cancellation.h>
+#include <libgnomevfs/gnome-vfs-cancellable-ops.h>
+#include <libgnomevfs/gnome-vfs-handle.h>
+#include <libgnomevfs/gnome-vfs-method.h>
 
 #include <gphoto-extensions.h>
 
 #include "utils.h"
 
-/**************/
-/* Prototypes */
-/**************/
-
 GnomeVFSMethod* vfs_module_init (const gchar* method_name, const gchar* args);
 void 		vfs_module_shutdown (GnomeVFSMethod* method);
-
-static GnomeVFSResult do_open (
-	GnomeVFSMethod* 		method, 
-	GnomeVFSMethodHandle** 		handle, 
-	GnomeVFSURI* 			uri, 
-	GnomeVFSOpenMode 		mode, 
-	GnomeVFSContext* 		context);
-static GnomeVFSResult do_create	(
-	GnomeVFSMethod* 		method, 
-	GnomeVFSMethodHandle** 		handle, 
-	GnomeVFSURI* 			uri, 
-	GnomeVFSOpenMode 		mode, 
-	gboolean 			exclusive, 
-	guint 				perm, 
-	GnomeVFSContext* 		context);
-static GnomeVFSResult do_close (
-	GnomeVFSMethod* 		method,
-	GnomeVFSMethodHandle*		handle,
-	GnomeVFSContext*		context);
-static GnomeVFSResult do_read (
-	GnomeVFSMethod*			method,
-	GnomeVFSMethodHandle*		handle,
-	gpointer			buffer,
-	GnomeVFSFileSize		num_bytes,
-	GnomeVFSFileSize*		bytes_read,
-	GnomeVFSContext*		context);
-static GnomeVFSResult do_write (
-	GnomeVFSMethod*			method,
-	GnomeVFSMethodHandle*		handle,
-	gconstpointer			buffer,
-	GnomeVFSFileSize		num_bytes,
-	GnomeVFSFileSize*		bytes_written,
-	GnomeVFSContext*		context);
-static GnomeVFSResult do_seek (
-	GnomeVFSMethod*			method,
-	GnomeVFSMethodHandle*		handle,
-	GnomeVFSSeekPosition		whence,
-	GnomeVFSFileOffset		offset,
-	GnomeVFSContext*		context);
-static GnomeVFSResult do_tell (
-	GnomeVFSMethod*			method,
-	GnomeVFSMethodHandle*		method_handle,
-	GnomeVFSFileOffset*		offset_return);
-static GnomeVFSResult do_open_directory (
-	GnomeVFSMethod*			method,
-	GnomeVFSMethodHandle**		handle,
-	GnomeVFSURI*			uri,
-	GnomeVFSFileInfoOptions		options,
-	const GnomeVFSDirectoryFilter*	filter,
-	GnomeVFSContext*		context);
-static GnomeVFSResult do_close_directory (
-	GnomeVFSMethod*			method,
-	GnomeVFSMethodHandle*		handle,
-	GnomeVFSContext*		context);
-static GnomeVFSResult do_read_directory (
-	GnomeVFSMethod*			method,
-	GnomeVFSMethodHandle*		handle,
-	GnomeVFSFileInfo*		file_info,
-	GnomeVFSContext*		context);
-static GnomeVFSResult do_get_file_info (
-	GnomeVFSMethod*			method,
-	GnomeVFSURI*			uri,
-	GnomeVFSFileInfo*		file_info,
-	GnomeVFSFileInfoOptions		options,
-	GnomeVFSContext*		context);
-static GnomeVFSResult do_get_file_info_from_handle (
-	GnomeVFSMethod*			method,
-	GnomeVFSMethodHandle*		handle,
-	GnomeVFSFileInfo*		file_info,
-	GnomeVFSFileInfoOptions		options,
-	GnomeVFSContext*		context);
-static gboolean do_is_local (
-	GnomeVFSMethod*			method,
-	const GnomeVFSURI*		uri);
-static GnomeVFSResult do_check_same_fs (
-	GnomeVFSMethod*			method,
-	GnomeVFSURI*			a,
-	GnomeVFSURI*			b,
-	gboolean*			same_fs_return,
-	GnomeVFSContext*		context);
-
-/********************/
-/* Static Variables */
-/********************/
-
-static GnomeVFSMethod method = {
-	sizeof (GnomeVFSMethod),
-	do_open,
-	do_create,
-	do_close,
-	do_read,
-	do_write,
-	do_seek,
-	do_tell,
-	NULL, 				/* do_truncate_handle		*/
-	do_open_directory,
-	do_close_directory,
-	do_read_directory,
-	do_get_file_info,
-	do_get_file_info_from_handle,
-	do_is_local,
-	NULL, 				/* do_make_directory */
-	NULL, 				/* do_remove_directory		*/
-	NULL, 				/* do_move */
-	NULL, 				/* do_unlink			*/
-	do_check_same_fs,
-	NULL, 				/* do_set_file_info		*/
-	NULL, 				/* do_truncate			*/
-	NULL,				/* do_find_directory 		*/
-	NULL};				/* do_create_symbolic_link	*/
-
-/*************/
-/* Functions */
-/*************/
-
-GnomeVFSMethod*
-vfs_module_init (const gchar* method_name, const gchar* args)
-{
-	gtk_init (0, NULL);
-	gp_init (GP_DEBUG_NONE);
-	gp_frontend_register (NULL, NULL, NULL, NULL, NULL);
-	
-	return &method;
-}
-
-void
-vfs_module_shutdown (GnomeVFSMethod* method)
-{
-	gp_exit ();
-	
-	return;
-}
 
 static GnomeVFSResult do_open (
 	GnomeVFSMethod* 		method, 
@@ -450,5 +324,49 @@ static GnomeVFSResult do_check_same_fs (
 	return (GNOME_VFS_OK);
 }
 
+static GnomeVFSMethod method = {
+        sizeof (GnomeVFSMethod),
+        do_open,
+        do_create,
+        do_close,
+        do_read,
+        do_write,
+        do_seek,
+        do_tell,
+        NULL,                           /* do_truncate_handle           */
+        do_open_directory,
+        do_close_directory,
+        do_read_directory,
+        do_get_file_info,
+        do_get_file_info_from_handle,
+        do_is_local,
+        NULL,                           /* do_make_directory */
+        NULL,                           /* do_remove_directory          */
+        NULL,                           /* do_move */
+        NULL,                           /* do_unlink                    */
+        do_check_same_fs,
+        NULL,                           /* do_set_file_info             */
+        NULL,                           /* do_truncate                  */
+        NULL,                           /* do_find_directory            */
+        NULL				/* do_create_symbolic_link      */
+};
+
+GnomeVFSMethod*
+vfs_module_init (const gchar* method_name, const gchar* args)
+{
+        gtk_init (0, NULL);
+        gp_init (GP_DEBUG_NONE);
+        gp_frontend_register (NULL, NULL, NULL, NULL, NULL);
+
+        return &method;
+}
+
+void
+vfs_module_shutdown (GnomeVFSMethod* method)
+{
+        gp_exit ();
+
+        return;
+}
 
 

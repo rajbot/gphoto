@@ -2,19 +2,22 @@
 
 INCLUDES = \
  -I$(top_srcdir)/intl\
- $(GNOME_INCLUDEDIR)
+ -DGNOME_LOCALEDIR=\""$(datadir)/locale"\"\
+ $(CAPPLET_CFLAGS)\
+ $(GAL_CFLAGS)\
+ $(GNOME_INCLUDEDIR)\
+ $(GCONF_CFLAGS)
 
 bin_PROGRAMS = camera-capplet
 
 camera_capplet_SOURCES =\
- camera-capplet.c\
- capplet.h capplet.c\
- capplet-callbacks.h capplet-callbacks.c\
- preferences.h preferences.c
+ gnocam-capplet-content.c gnocam-capplet-content.h\
+ main.c
 
 camera_capplet_LDADD =\
- $(GNOME_LIBDIR)\
- $(GNOMEUI_LIBS)\
+ $(CAPPLET_LIBS)\
+ $(GAL_LIBS)\
+ $(GCONF_LIBS)\
  $(INTLLIBS)
 
 EXTRA_DIST = camera-capplet.desktop

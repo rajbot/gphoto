@@ -9,6 +9,7 @@ INCLUDES = \
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
  -DGNOMELOCALEDIR=\""$(datadir)/locale"\"\
  $(EXTRA_GNOME_CFLAGS)\
+ $(GAL_CFLAGS)\
  $(GCONF_CFLAGS)\
  $(EXTRA_WARNING_CFLAGS)\
  $(GPHOTO_CFLAGS)\
@@ -30,9 +31,6 @@ libstorage_camera_la_LDFLAGS =\
 
 libstorage_camera_la_LIBADD =\
  ../libgnocam/libgnocam.la\
- $(GNOME_LIBS)\
- $(GNOME_LIBDIR)\
+ $(GAL_LIBS)\
  $(GCONF_LIBS)\
- $(EXTRA_GNOME_LIBS)\
- $(GPHOTO_LIBS)\
- $(BONOBO_LIBS)
+ $(GPHOTO_LIBS)

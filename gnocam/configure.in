@@ -80,6 +80,10 @@ dnl ***
 AC_MSG_CHECKING(for GAL)
 if gnome-config --libs gal > /dev/null 2>&1; then
     AC_MSG_RESULT(found)
+    GAL_LIBS="`gnome-config --libs gal`"
+    GAL_CFLAGS="`gnome-config --cflags gal`"
+    AC_SUBST(GAL_LIBS)
+    AC_SUBST(GAL_CFLAGS)
 else
     AC_MSG_ERROR([
 *** You need gal for this version of ${PACKAGE}. Get the latest
@@ -127,6 +131,24 @@ else
     AC_MSG_ERROR([
 *** You need libxml (gnome-xml) for this version of ${PACKAGE}.
 *** Get the latest version from http://www.gnome.org.
+*** Mirrors can be found at http://www.gnome.org/mirrors.])
+fi
+
+dnl ******************************
+dnl Capplet
+dnl ******************************
+AC_MSG_CHECKING(for capplet libraries)
+if gnome-config --libs capplet > /dev/null 2>&1; then
+	AC_MSG_RESULT(found)
+	CAPPLET_LIBS="`gnome-config --libs capplet`"
+	CAPPLET_CFLAGS="`gnome-config --cflags capplet`"
+	AC_SUBST(CAPPLET_LIBS)
+	AC_SUBST(CAPPLET_CFLAGS)
+else
+	AC_MSG_ERROR([
+*** You need the capplet library installed for this version of
+*** ${PACKAGE}. Get a stable version of the GNOME control-center
+*** from http://www.gnome.org.
 *** Mirrors can be found at http://www.gnome.org/mirrors.])
 fi
 
@@ -215,8 +237,8 @@ GPHOTO_LIBS="`gphoto2-config --libs` `gphoto2-port-config --cflags`"
 AC_SUBST(GPHOTO_CFLAGS)
 AC_SUBST(GPHOTO_LIBS)
 
-EXTRA_GNOME_CFLAGS=`gnome-config --cflags libglade gal`
-EXTRA_GNOME_LIBS=`gnome-config --libs libglade gal`
+EXTRA_GNOME_CFLAGS=`gnome-config --cflags libglade`
+EXTRA_GNOME_LIBS=`gnome-config --libs libglade`
 AC_SUBST(EXTRA_GNOME_CFLAGS)
 AC_SUBST(EXTRA_GNOME_LIBS)
 
@@ -238,6 +260,7 @@ po/Makefile.in
 src/Makefile
 bonobo-moniker/Makefile
 bonobo-storage-module/Makefile
+capplet/Makefile
 gnome-vfs-module/Makefile
 libgnocam/Makefile
 ])

@@ -7,6 +7,7 @@ SUBDIRS =\
  libgnocam\
  bonobo-storage-module\
  bonobo-moniker\
+ capplet\
  gnome-vfs-module\
  src
 

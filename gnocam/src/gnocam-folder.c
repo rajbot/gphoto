@@ -502,9 +502,9 @@ value_to_string (ETableModel* model, gint col, const void* value, gpointer user_
 	return (NULL);
 }
 
-/****************************/
-/* Bonobo-X-Object specific */
-/****************************/
+/*************/
+/* Gtk stuff */
+/*************/
 
 static void
 gnocam_folder_destroy (GtkObject* object)

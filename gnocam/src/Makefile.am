@@ -11,6 +11,7 @@ INCLUDES = \
  $(GCONF_CFLAGS)\
  $(EXTRA_WARNING_CFLAGS)\
  $(EXTRA_GNOME_CFLAGS)\
+ $(GAL_CFLAGS)\
  $(GPHOTO_CFLAGS)\
  $(BONOBO_CFLAGS)
 
@@ -46,6 +47,7 @@ iconsdir = $(datadir)/images/$(PACKAGE)
 gnocam_LDADD =\
  $(EXTRA_GNOME_LIBS)\
  $(INTLLIBS)\
+ $(GAL_LIBS)\
  $(GCONF_LIBS)\
  $(GPHOTO_LIBS)\
  ../libgnocam/libgnocam.la

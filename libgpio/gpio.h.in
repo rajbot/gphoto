@@ -48,12 +48,8 @@ typedef enum {
 	GPIO_DEVICE_SERIAL,
 	GPIO_DEVICE_PARALLEL,	/* <- Not supported yet */
 	GPIO_DEVICE_SOCKET,
-#ifdef GPIO_USB
 	GPIO_DEVICE_USB,
-#endif
-#ifdef GPIO_IEEE1394
 	GPIO_DEVICE_1394, 	/* <- Not supported yet */
-#endif
 } gpio_device_type;
 
 

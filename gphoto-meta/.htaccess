@@ -7,7 +7,7 @@ AddDescription "Manual (XHTML files + gfx)" gphoto2-manual-xhtml*.tar.*
 AddDescription "Manual (man pages)" gphoto2-manual-man*.tar.*
 AddDescription "Manual (TXT file)" gphoto2-manual-txt.tar.*
 AddDescription "Manual (XML sources)" gphoto2-manual-*.tar.*
-AddDescription "meta package - contains everything" gphoto2-meta-*.tar.*
+AddDescription "all in one: software + html manual" gphoto2-meta-*.tar.*
 AddDescription "gphoto2 command line interface" gphoto2-*.tar.*
 AddDescription "libgphoto2 drivers and library" libgphoto2-*.tar.*
 AddDescription "GTK EXIF viewer" gexif-*.tar.*

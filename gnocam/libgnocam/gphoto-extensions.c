@@ -27,6 +27,7 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 	g_return_val_if_fail (client = gconf_client_get_default (), GP_ERROR);
 
 	/* Make sure we are given a camera name. */
+	if (!strncmp (name_or_url, "camera:", 7)) name_or_url += 7;
 	if (name_or_url [0] == '/') {
 		name_or_url += 2;
 		for (i = 0; name_or_url [i] != 0; i++) if (name_or_url [i] == '/') break;

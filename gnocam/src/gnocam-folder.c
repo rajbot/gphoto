@@ -15,7 +15,9 @@ struct _GnoCamFolderPrivate
 {
 	GtkWidget*		widget;
 	BonoboUIComponent*	component;
+	
 	Camera*			camera;
+	CameraWidget*		configuration;
 	
 	gchar*			path;
 };
@@ -61,27 +63,7 @@ gnocam_folder_get_ui_component (GnoCamFolder* folder)
 void
 gnocam_folder_set_ui_container (GnoCamFolder* folder, Bonobo_UIContainer container)
 {
-        gint            result;
-        CameraWidget*   widget = NULL;
-
         bonobo_ui_component_set_container (folder->priv->component, container);
-	bonobo_ui_component_set_translate (folder->priv->component, "/menu", GNOCAM_FOLDER_UI, NULL);
-
-	/* Upload? */
-	if (folder->priv->camera->abilities->file_put) {
-		bonobo_ui_component_set_translate (folder->priv->component, "/menu/Folder/Folder", GNOCAM_FOLDER_UI_UPLOAD, NULL);
-		bonobo_ui_component_add_verb (folder->priv->component, "Upload", on_upload_clicked, folder);
-	}
-	
-	/* Folder configuration? */
-        result = gp_camera_folder_config_get (folder->priv->camera, &widget, folder->priv->path);
-        if (result == GP_OK) menu_setup (folder->priv->component, folder->priv->camera, widget, "/menu/Folder/Folder", folder->priv->path, NULL);
-}
-
-void
-gnocam_folder_unset_ui_container (GnoCamFolder* folder)
-{
-        bonobo_ui_component_unset_container (folder->priv->component);
 }
 
 GtkWidget*
@@ -101,8 +83,9 @@ gnocam_folder_destroy (GtkObject* object)
 
 	folder = GNOCAM_FOLDER (object);
 
-	if (folder->priv->camera) gp_camera_unref (folder->priv->camera);
-	if (folder->priv->path) g_free (folder->priv->path);
+	if (folder->priv->configuration) gp_widget_unref (folder->priv->configuration);
+	gp_camera_unref (folder->priv->camera);
+	g_free (folder->priv->path);
 	
 	g_free (folder->priv);
 }
@@ -125,15 +108,17 @@ gnocam_folder_init (GnoCamFolder* folder)
 
 	priv = g_new (GnoCamFolderPrivate, 1);
 	folder->priv = priv;
+	folder->priv->configuration = NULL;
 }
 
 GnoCamFolder*
-gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, BonoboControl* control)
+gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bonobo_UIContainer container)
 {
 	GnoCamFolder*			new;
 	Bonobo_Storage_DirectoryList*   list;
 	gchar*				row [] = {NULL, NULL, NULL};
 	gint				i;
+	gint				result;
 	CORBA_Environment		ev;
 
 	CORBA_exception_init (&ev);
@@ -166,6 +151,20 @@ gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bo
                 row [1] = g_strdup (list->_buffer [i].name);
                 gtk_clist_append (GTK_CLIST (new->priv->widget), row);
         }
+
+	/* Create menu */
+        bonobo_ui_component_set_container (new->priv->component, container);
+        bonobo_ui_component_set_translate (new->priv->component, "/menu", GNOCAM_FOLDER_UI, NULL);
+
+        /* Upload? */
+        if (new->priv->camera->abilities->file_put) {
+                bonobo_ui_component_set_translate (new->priv->component, "/menu/Folder/Folder", GNOCAM_FOLDER_UI_UPLOAD, NULL);
+                bonobo_ui_component_add_verb (new->priv->component, "Upload", on_upload_clicked, new);
+        }
+
+        /* Folder configuration? */
+        result = gp_camera_folder_config_get (new->priv->camera, &(new->priv->configuration), new->priv->path);
+        if (result == GP_OK) menu_setup (new->priv->component, new->priv->camera, new->priv->configuration, "/menu/Folder/Folder", new->priv->path, NULL);
 
 	return (new);
 }

@@ -1,8 +1,8 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
+
 #ifndef _BONOBO_MONIKER_CAMERA_H_
 #define _BONOBO_MONIKER_CAMERA_H_
 
-#include <bonobo/bonobo-stream.h>
+#include <bonobo.h>
 
 BEGIN_GNOME_DECLS
 

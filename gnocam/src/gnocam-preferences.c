@@ -1,0 +1,346 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include <gphoto2.h>
+
+#include "gnocam-preferences.h"
+
+#include <gal/util/e-util.h>
+#include <gconf/gconf-client.h>
+#include <glade/glade.h>
+#include <bonobo.h>
+
+#define PARENT_TYPE GNOME_TYPE_DIALOG
+static GnomeDialogClass* parent_class = NULL;
+
+struct _GnoCamPreferencesPrivate {
+	GConfClient*	client;
+
+	GtkWidget*	clist;
+};
+
+
+/**************/
+/* Prototypes */
+/**************/
+
+void on_druid_cancel 				(GnomeDruid* druid);
+void on_druidpagestandard_model_prepare 	(GnomeDruidPage* page, GtkWidget* druid);
+void on_druidpagestandard_port_prepare 		(GnomeDruidPage* page, GtkWidget* druid);
+void on_druid_finish 				(GnomeDruidPage* page, GtkWidget* druid);
+
+/*************/
+/* Callbacks */
+/*************/
+
+void
+on_druidpagestandard_model_prepare (GnomeDruidPage* page, GtkWidget* druid)
+{
+	gchar		buffer[1024];
+	gchar*		model;
+	GladeXML*	xml;
+	gint		number_of_models, i;
+	GList*		list = NULL;
+	GtkWindow*	window;
+	GtkEntry*	entry;
+	GtkCombo*	combo;
+
+	g_return_if_fail (xml = gtk_object_get_data (GTK_OBJECT (druid), "xml"));
+	g_return_if_fail (entry = GTK_ENTRY (glade_xml_get_widget (xml, "entry_model")));
+	g_return_if_fail (combo = GTK_COMBO (glade_xml_get_widget (xml, "combo_model")));
+	g_return_if_fail (window = GTK_WINDOW (glade_xml_get_widget (xml, "window_druid")));
+
+	/* Build model list. */
+        if ((number_of_models = gp_camera_count ()) >= 0) {
+                for (i = 0; i < number_of_models; i++) {
+                        if (gp_camera_name (i, buffer) != GP_OK) strcpy (buffer, "?");
+                        list = g_list_append (list, g_strdup (buffer));
+                }
+		if (!list) list = g_list_append (NULL, g_strdup (""));
+		model = g_strdup (gtk_entry_get_text (entry));
+                gtk_combo_set_popdown_strings (combo, list);
+		gtk_entry_set_text (entry, model);
+        } else {
+                gchar* tmp = g_strdup_printf (_("Could not get number of supported models!\n(%s)"), gp_result_as_string (number_of_models));
+                gnome_error_dialog_parented (tmp, window);
+                g_free (tmp);
+        }
+}
+
+void
+on_druidpagestandard_port_prepare (GnomeDruidPage* page, GtkWidget* druid)
+{
+	GladeXML*	xml;
+	GtkWindow*	window;
+	GtkEntry*	entry_model;
+	GtkEntry*	entry_port;
+	GtkCombo*	combo;
+	GList*		list = NULL;
+	gint		i, result;
+	CameraPortInfo	info;
+	CameraAbilities	abilities;
+	gchar*		port;
+	
+	g_return_if_fail (xml = gtk_object_get_data (GTK_OBJECT (druid), "xml"));
+	g_return_if_fail (entry_model = GTK_ENTRY (glade_xml_get_widget (xml, "entry_model")));
+	g_return_if_fail (entry_port = GTK_ENTRY (glade_xml_get_widget (xml, "entry_port")));
+	g_return_if_fail (combo = GTK_COMBO (glade_xml_get_widget (xml, "combo_port")));
+	g_return_if_fail (window = GTK_WINDOW (glade_xml_get_widget (xml, "window_druid")));
+	
+        if ((result = gp_camera_abilities_by_name (gtk_entry_get_text (entry_model), &abilities)) == GP_OK) {
+                for (i = 0; i < gp_port_count_get (); i++) {
+                        if ((result = gp_port_info_get (i, &info)) != GP_OK) {
+                                gchar* tmp = g_strdup_printf (_("Could not get information about port number %i!\n(%s)"), i, gp_result_as_string (result));
+                                gnome_error_dialog_parented (tmp, window);
+                                g_free (tmp);
+				continue;
+                        }
+                        if (    ((info.type == GP_PORT_SERIAL) && (SERIAL_SUPPORTED (abilities.port))) ||
+                        	((info.type == GP_PORT_PARALLEL) && (PARALLEL_SUPPORTED (abilities.port))) ||
+                                ((info.type == GP_PORT_USB) && (USB_SUPPORTED (abilities.port))) ||
+                                ((info.type == GP_PORT_IEEE1394) && (IEEE1394_SUPPORTED (abilities.port))) ||
+                                ((info.type == GP_PORT_NETWORK) && (NETWORK_SUPPORTED (abilities.port))))
+                                list = g_list_append (list, g_strdup (info.name));
+                }
+                if (!list) list = g_list_append (NULL, g_strdup (""));
+		port = g_strdup (gtk_entry_get_text (entry_port));
+                gtk_combo_set_popdown_strings (combo, list);
+		gtk_entry_set_text (entry_port, port);
+        } else {
+                gchar* tmp = g_strdup_printf (_("Could not get abilities for model '%s'!\n(%s)"), gtk_entry_get_text (entry_model), gp_result_as_string (result));
+                gnome_error_dialog_parented (tmp, window);
+                g_free (tmp);
+        }
+}
+
+void
+on_druid_finish (GnomeDruidPage* page, GtkWidget* druid)
+{
+	GConfClient*	client;
+	GladeXML*	xml;
+	gchar* 		model;
+	gchar*		name;
+	gchar*		port;
+	gint		i;
+
+	g_return_if_fail (xml = gtk_object_get_data (GTK_OBJECT (druid), "xml"));
+	g_return_if_fail (model = gtk_entry_get_text (GTK_ENTRY (glade_xml_get_widget (xml, "entry_model"))));
+	g_return_if_fail (name = gtk_entry_get_text (GTK_ENTRY (glade_xml_get_widget (xml, "entry_name"))));
+	g_return_if_fail (port = gtk_entry_get_text (GTK_ENTRY (glade_xml_get_widget (xml, "entry_port"))));
+	g_return_if_fail (client = gconf_client_get_default ());
+
+	for (i = 0; ; i++) {
+		gchar* path = g_strdup_printf ("/apps/" PACKAGE "/camera/%i", i);
+		if (!gconf_client_dir_exists (client, path, NULL)) {
+			gchar* tmp;
+
+			tmp = g_strconcat (path, "/port", NULL);
+			gconf_client_set_string (client, tmp, port, NULL);
+			g_free (tmp);
+
+			tmp = g_strconcat (path, "/model", NULL);
+			gconf_client_set_string (client, tmp, model, NULL);
+			g_free (tmp);
+
+			tmp = g_strconcat (path, "/name", NULL);
+			gconf_client_set_string (client, tmp, name, NULL);
+			g_free (tmp);
+
+			g_free (path);
+			break;
+		}
+		g_free (path);
+	}
+
+	gtk_widget_destroy (glade_xml_get_widget (xml, "window_druid"));
+}
+
+void
+on_druid_cancel (GnomeDruid* druid)
+{
+	gtk_widget_destroy (glade_xml_get_widget (gtk_object_get_data (GTK_OBJECT (druid), "xml"), "window_druid"));
+}
+
+static void
+on_new_clicked (GtkButton* button)
+{
+	GladeXML*	xml;
+
+	/* Create the druid. */
+	g_return_if_fail (xml = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "window_druid"));
+	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "druid")), "xml", xml);
+	glade_xml_signal_autoconnect (xml);
+}
+
+static void
+on_delete_clicked (GtkButton *button, gpointer user_data)
+{
+	GnoCamPreferences*	preferences;
+	GList*			selection;
+	GtkCList*		clist;
+
+	preferences = GNOCAM_PREFERENCES (user_data);
+	clist = GTK_CLIST (preferences->priv->clist);
+
+	/* Remove the rows in the camera list. */
+	while ((selection = g_list_first (clist->selection))) {
+		gint	row = GPOINTER_TO_INT (selection->data);
+		gchar*	tmp;
+		
+		tmp = g_strdup_printf ("/apps/" PACKAGE "/camera/%i", GPOINTER_TO_INT (gtk_clist_get_row_data (clist, row)));
+		gconf_client_remove_dir (preferences->priv->client, tmp, NULL);
+		g_free (tmp);
+		
+		gtk_clist_remove (clist, row);
+	}
+}
+
+/*************************/
+/* Gnome-Dialog specific */
+/*************************/
+
+static void
+gnocam_preferences_destroy (GtkObject* object)
+{
+	GnoCamPreferences*	preferences;
+
+	preferences = GNOCAM_PREFERENCES (object);
+
+	gtk_object_unref (GTK_OBJECT (preferences->priv->client));
+	g_free (preferences->priv);
+
+	(*GTK_OBJECT_CLASS (parent_class)->destroy) (object);
+}
+
+static void
+gnocam_preferences_class_init (GnoCamPreferencesClass* klass)
+{
+	GtkObjectClass* 	object_class;
+
+	object_class = GTK_OBJECT_CLASS (klass);
+	object_class->destroy = gnocam_preferences_destroy;
+
+	parent_class = gtk_type_class (PARENT_TYPE);
+}
+
+static void
+gnocam_preferences_init (GnoCamPreferences* preferences)
+{
+	preferences->priv = g_new (GnoCamPreferencesPrivate, 1);
+}
+
+GtkWidget*
+gnocam_preferences_new (GtkWindow* parent)
+{
+	GnoCamPreferences*	new;
+	GtkWidget*		label;
+	GtkWidget*		vbuttonbox;
+	GtkWidget*		hbox;
+	GtkWidget*		vbox;
+	GtkWidget*		widget;
+	GtkWidget*		frame;
+	GtkWidget*		notebook;
+	GtkWidget*		button;
+	const gchar*		buttons [] = {GNOME_STOCK_BUTTON_OK, NULL};
+	gchar*			titles [] = {_("Name"), _("Model"), _("Port"), NULL};
+
+	new = gtk_type_new (gnocam_preferences_get_type ());
+	gnome_dialog_constructv (GNOME_DIALOG (new), _(PACKAGE " - Preferences"), buttons);
+	gnome_dialog_set_close (GNOME_DIALOG (new), TRUE);
+	new->priv->client = gconf_client_get_default ();
+	gnome_dialog_set_parent (GNOME_DIALOG (new), parent);
+
+	/* Create the notebook */
+	gtk_widget_show (notebook = gtk_notebook_new ());
+	gtk_container_add (GTK_CONTAINER (GNOME_DIALOG (new)->vbox), notebook);
+
+	/* Create the page for GNOME settings */
+	gtk_widget_show (vbox = gtk_vbox_new (FALSE, 0));
+	gtk_widget_show (label = gtk_label_new (_("GNOME")));
+	gtk_notebook_append_page (GTK_NOTEBOOK (notebook), vbox, label);
+	gtk_widget_show (frame = gtk_frame_new (_("Cameras")));
+	gtk_container_set_border_width (GTK_CONTAINER (frame), 10);
+	gtk_container_add (GTK_CONTAINER (vbox), frame);
+	gtk_widget_show (hbox = gtk_hbox_new (FALSE, 10));
+	gtk_container_set_border_width (GTK_CONTAINER (hbox), 10);
+	gtk_container_add (GTK_CONTAINER (frame), hbox);
+	gtk_widget_show (new->priv->clist = gtk_clist_new_with_titles (3, titles));
+	{
+		gint	i;
+
+	        for (i = 0; ; i++) {
+	                gchar*          path;
+	
+	                /* Check each entry in gconf's database. */
+	                path = g_strdup_printf ("/apps/" PACKAGE "/camera/%i", i);
+	                if (gconf_client_dir_exists (new->priv->client, path, NULL)) {
+	                        gchar*  tmp;
+				gchar*	row [3];
+	
+	                        tmp = g_strconcat (path, "/name", NULL);
+	                        row [0] = gconf_client_get_string (new->priv->client, tmp, NULL);
+	                        g_free (tmp);
+
+				tmp = g_strconcat (path, "/model", NULL);
+				row [1] = gconf_client_get_string (new->priv->client, tmp, NULL);
+				g_free (tmp);
+
+				tmp = g_strconcat (path, "/port", NULL);
+				row [2] = gconf_client_get_string (new->priv->client, tmp, NULL);
+				g_free (tmp);
+
+				gtk_clist_append (GTK_CLIST (new->priv->clist), row);
+	
+	                        g_free (path);
+	
+	                } else {
+	                        g_free (path);
+	                        break;
+        	        }
+	        }
+
+	}
+	gtk_container_add (GTK_CONTAINER (hbox), new->priv->clist);
+	gtk_widget_show (vbuttonbox = gtk_vbutton_box_new ());
+	gtk_container_add (GTK_CONTAINER (hbox), vbuttonbox);
+	gtk_widget_show (button = gtk_button_new_with_label (_("New")));
+	gtk_container_add (GTK_CONTAINER (vbuttonbox), button);
+	gtk_signal_connect (GTK_OBJECT (button), "clicked", GTK_SIGNAL_FUNC (on_new_clicked), new);
+	gtk_widget_show (button = gtk_button_new_with_label (_("Delete")));
+	gtk_container_add (GTK_CONTAINER (vbuttonbox), button);
+	gtk_signal_connect (GTK_OBJECT (button), "clicked", GTK_SIGNAL_FUNC (on_delete_clicked), new);
+
+	/* Create the page for GPhoto2 settings */
+	gtk_widget_show (vbox = gtk_vbox_new (FALSE, 0));
+	gtk_widget_show (label = gtk_label_new (_("GPhoto2")));
+	gtk_notebook_append_page (GTK_NOTEBOOK (notebook), vbox, label);
+	gtk_widget_show (frame = gtk_frame_new (_("Debug Level")));
+	gtk_container_set_border_width (GTK_CONTAINER (frame), 10);
+	gtk_container_add (GTK_CONTAINER (vbox), frame);
+	gtk_widget_show (vbox = gtk_vbox_new (FALSE, 0));
+	gtk_container_set_border_width (GTK_CONTAINER (vbox), 10);
+	gtk_container_add (GTK_CONTAINER (frame), vbox);
+	gtk_widget_show (widget = bonobo_widget_new_control ("config:/apps/" PACKAGE "/debug_level", NULL));
+	bonobo_control_frame_control_activate (bonobo_widget_get_control_frame (BONOBO_WIDGET (widget)));
+	gtk_container_add (GTK_CONTAINER (vbox), widget);
+
+	/* Create the page for GnoCam settings */
+	gtk_widget_show (vbox = gtk_vbox_new (FALSE, 0));
+	gtk_widget_show (label = gtk_label_new (PACKAGE));
+	gtk_notebook_append_page (GTK_NOTEBOOK (notebook), vbox, label);
+	gtk_widget_show (frame = gtk_frame_new (_("Default Prefix")));
+	gtk_container_set_border_width (GTK_CONTAINER (frame), 10);
+	gtk_container_add (GTK_CONTAINER (vbox), frame);
+	gtk_widget_show (vbox = gtk_vbox_new (FALSE, 0));
+	gtk_container_set_border_width (GTK_CONTAINER (vbox), 10);
+	gtk_container_add (GTK_CONTAINER (frame), vbox);
+	gtk_widget_show (widget = bonobo_widget_new_control ("config:/apps/" PACKAGE "/prefix", NULL));
+	bonobo_control_frame_control_activate (bonobo_widget_get_control_frame (BONOBO_WIDGET (widget)));
+	gtk_container_add (GTK_CONTAINER (vbox), widget);
+
+	return (GTK_WIDGET (new));
+}
+
+E_MAKE_TYPE (gnocam_preferences, "GnoCamPreferences", GnoCamPreferences, gnocam_preferences_class_init, gnocam_preferences_init, PARENT_TYPE)
+

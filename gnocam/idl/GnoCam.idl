@@ -19,6 +19,9 @@ module GNOME {
 
 		interface folder : Bonobo::Unknown {
 		};
+
+		interface camera : Bonobo::Unknown {
+		};
 	};
 };
 

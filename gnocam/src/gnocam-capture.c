@@ -7,7 +7,7 @@
 #include <bonobo/bonobo-stream-memory.h>
 #include <gal/util/e-util.h>
 
-#define PARENT_TYPE bonobo_window_get_type ()
+#define PARENT_TYPE BONOBO_TYPE_WINDOW
 static BonoboWindowClass* parent_class = NULL;
 
 struct _GnoCamCapturePrivate {

@@ -1,9 +1,11 @@
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
+
 #include <gphoto2.h>
 #include <parser.h>
 #include <bonobo.h>
 
-#include "gnocam-control.h"
 #include "utils.h"
 
 /********************/
@@ -166,7 +168,6 @@ menu_setup (BonoboUIComponent* component, Camera* camera, CameraWidget* widget, 
 
         /* Send it to the component. */
         xmlDocDumpMemory (doc, (xmlChar**) &tmp, &i);
-	printf ("DUMP:\n\n%s\n\n\n", tmp);
         xmlFreeDoc (doc);
         bonobo_ui_component_set_translate (component, path, tmp, NULL);
         g_free (tmp);

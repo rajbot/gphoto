@@ -10,7 +10,6 @@
 #include <gphoto2.h>
 #include <bonobo/bonobo-moniker-extender.h>
 
-#include "gnocam-control.h"
 #include "bonobo-moniker-camera.h"
 
 static Bonobo_Unknown
@@ -28,7 +27,6 @@ camera_resolve (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options, co
 		}
 		g_return_val_if_fail (stream, CORBA_OBJECT_NIL);
 
-		g_warning ("END: camera_resolve");
 		return CORBA_Object_duplicate (BONOBO_OBJREF (stream), ev);
 	}
 
@@ -43,33 +41,15 @@ camera_resolve (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options, co
 		}
 		g_return_val_if_fail (storage, CORBA_OBJECT_NIL);
 
-		g_warning ("END: camera_resolve");
 		return CORBA_Object_duplicate (BONOBO_OBJREF (storage), ev);
 	}
 
-	/* Control? */
-	if (!strcmp (requested_interface, "IDL:Bonobo/Control:1.0")) {
-		GnoCamControl*	control;
-
-		/* Create the control */
-		control = gnocam_control_new (moniker, ev);
-		if (BONOBO_EX (ev)) return (CORBA_OBJECT_NIL);
-		g_return_val_if_fail (control, CORBA_OBJECT_NIL);
-
-		return (CORBA_Object_duplicate (BONOBO_OBJREF (control), ev));
-	}
-
-	g_warning ("END: camera_resolve");
 	return bonobo_moniker_use_extender ("OAFIID:Bonobo_MonikerExtender_stream", moniker, options, requested_interface, ev);
 }
 
 static BonoboObject *
 bonobo_moniker_camera_factory (BonoboGenericFactory *this, void* data)
 {
-	gint result = gp_init (GP_DEBUG_NONE);
-	
-	if (result != GP_OK) g_warning (_("Could not initialize gphoto2! (%s)"), gp_result_as_string (result));
-	
 	return BONOBO_OBJECT (bonobo_moniker_simple_new ("camera:", camera_resolve));
 }
 

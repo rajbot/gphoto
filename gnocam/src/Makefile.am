@@ -16,10 +16,20 @@ INCLUDES = \
 bin_PROGRAMS = gnocam
 
 gnocam_SOURCES =\
- file-operations.h file-operations.c\
+ e-clipped-label.h e-clipped-label.c\
+ e-shell-constants.h\
+ e-shell-folder-title-bar.h e-shell-folder-title-bar.c\
+ e-title-bar.h e-title-bar.c\
  gnocam.c\
- gnocam-shortcut-bar.h gnocam-shortcut-bar.c\
- preferences.h preferences.c
+ gnocam-capture.h gnocam-capture.c\
+ gnocam-camera.h gnocam-camera.c\
+ gnocam-file.h gnocam-file.c\
+ gnocam-folder.h gnocam-folder.c\
+ gnocam-main.h gnocam-main.c\
+ gnocam-preferences.h gnocam-preferences.c\
+ gnocam-storage-view.h gnocam-storage-view.c\
+ utils.h utils.c\
+ gnocam-shortcut-bar.h gnocam-shortcut-bar.c
 
 gnocam_LDFLAGS =\
  $(GPHOTO2_LIBS)\

@@ -1,6 +1,0 @@
-
-/* Prototypes */
-
-void preferences (void);
-
-

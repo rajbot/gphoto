@@ -14,14 +14,12 @@ INCLUDES = \
 CFLAGS = @CFLAGS@\
  `gphoto2-config --cflags`\
  `gpio-config --cflags`\
- `libglade-config --cflags bonobo`\
  `gnome-config --cflags libglade gdk_pixbuf gnomeui vfs xml gtkhtml bonobox`\
  `gconf-config --cflags gconf gconf-gtk`
 
 LDFLAGS = @LDFLAGS@\
  `gphoto2-config --libs`\
  `gpio-config --libs`\
- `libglade-config --libs bonobo`\
  `gnome-config --libs libglade gdk_pixbuf gnomeui vfs xml gtkhtml bonobox`\
  `gconf-config --libs gconf gconf-gtk`
  

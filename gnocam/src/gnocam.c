@@ -166,7 +166,7 @@ int main (int argc, char *argv[])
 	gnome_init (PACKAGE, VERSION, argc, argv);
 	oaf_init (argc, argv);
 	g_assert (bonobo_init (CORBA_OBJECT_NIL, CORBA_OBJECT_NIL, CORBA_OBJECT_NIL));
-	glade_bonobo_init ();
+	glade_gnome_init ();
 	if (!gnome_vfs_init ()) {
 		gnome_error_dialog (_("Could not initialize gnome-vfs!"));
 		return (1);

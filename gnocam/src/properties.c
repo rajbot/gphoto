@@ -96,6 +96,8 @@ values_set (GladeXML* xml_properties, CameraWidget *camera_widget)
 	guint 		k;
 	gint 		i;
 	gchar*		value_new;
+	time_t		time;
+	struct tm*	t;
 
 	g_assert (xml_properties != NULL);
 	g_assert (camera_widget != NULL);
@@ -139,15 +141,16 @@ values_set (GladeXML* xml_properties, CameraWidget *camera_widget)
 	                gp_widget_value_set (camera_widget, value_new);
                 break;
         case GP_WIDGET_BUTTON:
-//FIXME: What do we have to do here?
+		/* Nothing to do here. */
 		break;
 	case GP_WIDGET_DATE:
 		if ((preference_widget = gtk_object_get_data (object, gp_widget_label (camera_widget))) == NULL) break;
-//FIXME: Get the time out of the widget. I have no idea how to work with time_t...
-//		value_new = g_strdup_printf ("%i/%i/%i %i:%i:%i", ...);
-//		if (strcmp (gp_widget_value_get (camera_widget, value_new) != 0))
-//			gp_widget_value_set (camera_widget, value_new);
-//		g_free (value_new);
+		time = gnome_date_edit_get_date (GNOME_DATE_EDIT (preference_widget));
+		t = localtime (&time);
+		value_new = g_strdup_printf ("%i/%i/%i %i:%i:%i", t->tm_year + 1900, t->tm_mon, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
+		if (strcmp (gp_widget_value_get (camera_widget), value_new) != 0)
+			gp_widget_value_set (camera_widget, value_new);
+		g_free (value_new);
 		break;
 	case GP_WIDGET_WINDOW:
 	        for (i = 0; i < gp_widget_child_count (camera_widget); i++) {
@@ -167,18 +170,21 @@ values_set (GladeXML* xml_properties, CameraWidget *camera_widget)
 void 
 page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 {
-	GtkWidget *frame;
-	GtkWidget *widget;
-	GtkWidget *button;
-	GtkWidget *hbox;
-	GtkWidget *combo;
-	GtkWidget *hscale;
-	GtkAdjustment *adjustment;
-	GSList *list;
-	GList *combo_items;
-	guint j, k;
-	gfloat min, max, increment;
-	GnomePropertyBox *propertybox;
+	GtkWidget*	frame;
+	GtkWidget*	widget;
+	GtkWidget*	button;
+	GtkWidget*	hbox;
+	GtkWidget*	combo;
+	GtkWidget*	hscale;
+	GtkAdjustment*	adjustment;
+	GSList*		list;
+	GList*		combo_items;
+	guint 		j, k;
+	gfloat 			min, max, increment;
+	GnomePropertyBox*	propertybox;
+	time_t			t;
+	struct tm		tm_struct;
+	gchar*			value;
 
 	g_assert (vbox != NULL);
 	g_assert (camera_widget != NULL);
@@ -290,15 +296,30 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 		gtk_widget_show (hbox);
 		gtk_container_add (GTK_CONTAINER (frame), hbox);
 
-		widget = gtk_clock_new (GTK_CLOCK_INCREASING);
-		gtk_widget_show (widget);
-		gtk_clock_set_format (GTK_CLOCK (widget), _("%H:%M:%S"));
-//FIXME: Set initial time. I don't know how to handle time_t.
-//		(GTK_CLOCK (widget))->initial_time = ...
-		gtk_clock_start (GTK_CLOCK (widget));
-		gtk_container_add (GTK_CONTAINER (hbox), widget);
+		/* Get the time out of the widget. */
+                value = g_strdup (gp_widget_value_get (camera_widget));
+//FIXME: Convert value to time_t. Value has the format "year/month/day hour/minute/second"
+//How do I do that?
+		tm_struct.tm_year = 2000 - 1900;
+		tm_struct.tm_mon = 1;
+		tm_struct.tm_mday = 1;
+		tm_struct.tm_hour = 0;
+		tm_struct.tm_min = 0;
+		tm_struct.tm_sec = 0;
+		t = mktime (&tm_struct);
+                g_free (value);
 
+		/* Create the clock. */
+//FIXME: Can I set the date and time of a gtk-clock?
+//		widget = gtk_clock_new (GTK_CLOCK_INCREASING);
+//		gtk_widget_show (widget);
+//		gtk_clock_set_format (GTK_CLOCK (widget), _("%Y/%m/%d %H:%M:%S"));
+//		gtk_clock_start (GTK_CLOCK (widget));
+//		gtk_container_add (GTK_CONTAINER (hbox), widget);
+
+		/* Create the widget to edit the date. */
 		widget = gnome_date_edit_new ((time_t) 0, TRUE, TRUE);
+		gnome_date_edit_set_time (GNOME_DATE_EDIT (widget), t);
 		gtk_widget_show (widget);
 		gtk_container_add (GTK_CONTAINER (hbox), widget);
 
@@ -315,7 +336,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 	}
 }
 
-GtkWidget *
+GtkWidget*
 page_new (GnomePropertyBox *propertybox, CameraWidget *camera_widget)
 {
 	GtkWidget *vbox, *label;

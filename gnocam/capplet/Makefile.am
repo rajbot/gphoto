@@ -4,6 +4,7 @@ INCLUDES = \
  -I$(top_srcdir)/libgnocam\
  -I$(top_srcdir)/intl\
  -DGNOME_LOCALEDIR=\""$(datadir)/locale"\"\
+ -DIMAGEDIR=\""$(datadir)/pixmaps"\"\
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
  $(CAPPLET_CFLAGS)\
  $(GAL_CFLAGS)\
@@ -14,13 +15,15 @@ INCLUDES = \
 bin_PROGRAMS = camera-capplet
 
 camera_capplet_SOURCES =\
+ gnocam-camera-druid.c gnocam-camera-druid.h\
  gnocam-capplet-content.c gnocam-capplet-content.h\
  main.c
 
 camera_capplet_LDADD =\
- ../libgnocam/libgnocam.la\
  $(CAPPLET_LIBS)\
  $(GAL_LIBS)\
+ $(GCONF_LIBS)\
+ $(GPHOTO_LIBS)\
  $(INTLLIBS)
 
 EXTRA_DIST = camera-capplet.desktop

@@ -65,6 +65,9 @@ gnocam_preferences_init (GnoCamPreferences* preferences)
 GtkWidget*
 gnocam_preferences_new (GtkWindow* window)
 {
+	GdkPixbuf*		pixbuf;
+	GdkPixmap*		pixmap = NULL;
+	GdkBitmap*		bitmap = NULL;
 	GnoCamPreferences*	new;
 	GtkWidget*		label;
 	GtkWidget*		hbox;
@@ -84,6 +87,20 @@ gnocam_preferences_new (GtkWindow* window)
 	gtk_widget_show (notebook = gtk_notebook_new ());
 	gtk_container_add (GTK_CONTAINER (GNOME_DIALOG (new)->vbox), notebook);
 
+        /* Create the page for GnoCam settings */
+        gtk_widget_show (vbox = gtk_vbox_new (FALSE, 0));
+        gtk_widget_show (label = gtk_label_new (PACKAGE));
+        gtk_notebook_append_page (GTK_NOTEBOOK (notebook), vbox, label);
+        gtk_widget_show (frame = gtk_frame_new (_("Default Prefix")));
+        gtk_container_set_border_width (GTK_CONTAINER (frame), 10);
+        gtk_container_add (GTK_CONTAINER (vbox), frame);
+        gtk_widget_show (vbox = gtk_vbox_new (FALSE, 0));
+        gtk_container_set_border_width (GTK_CONTAINER (vbox), 10);
+        gtk_container_add (GTK_CONTAINER (frame), vbox);
+        gtk_widget_show (widget = bonobo_widget_new_control ("config:/apps/" PACKAGE "/prefix", NULL));
+        bonobo_control_frame_control_activate (bonobo_widget_get_control_frame (BONOBO_WIDGET (widget)));
+        gtk_container_add (GTK_CONTAINER (vbox), widget);
+
 	/* Create the page for GNOME settings */
 	gtk_widget_show (hbox = gtk_hbox_new (FALSE, 10));
 	gtk_container_set_border_width (GTK_CONTAINER (hbox), 10);
@@ -93,23 +110,17 @@ gnocam_preferences_new (GtkWindow* window)
 	gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
 	gtk_label_set_line_wrap (GTK_LABEL (label), TRUE);
 	gtk_container_add (GTK_CONTAINER (hbox), label);
-	gtk_widget_show (button = gtk_button_new_with_label (_("Contol-Center")));
+	gtk_widget_show (button = gtk_button_new ());
 	gtk_signal_connect (GTK_OBJECT (button), "clicked", GTK_SIGNAL_FUNC (on_control_center_clicked), new);
 	gtk_container_add (GTK_CONTAINER (hbox), button);
-
-	/* Create the page for GnoCam settings */
-	gtk_widget_show (vbox = gtk_vbox_new (FALSE, 0));
-	gtk_widget_show (label = gtk_label_new (PACKAGE));
-	gtk_notebook_append_page (GTK_NOTEBOOK (notebook), vbox, label);
-	gtk_widget_show (frame = gtk_frame_new (_("Default Prefix")));
-	gtk_container_set_border_width (GTK_CONTAINER (frame), 10);
-	gtk_container_add (GTK_CONTAINER (vbox), frame);
-	gtk_widget_show (vbox = gtk_vbox_new (FALSE, 0));
-	gtk_container_set_border_width (GTK_CONTAINER (vbox), 10);
-	gtk_container_add (GTK_CONTAINER (frame), vbox);
-	gtk_widget_show (widget = bonobo_widget_new_control ("config:/apps/" PACKAGE "/prefix", NULL));
-	bonobo_control_frame_control_activate (bonobo_widget_get_control_frame (BONOBO_WIDGET (widget)));
-	gtk_container_add (GTK_CONTAINER (vbox), widget);
+	gtk_widget_show (hbox = gtk_hbox_new (FALSE, 5));
+	gtk_container_add (GTK_CONTAINER (button), hbox);
+	pixbuf = gdk_pixbuf_new_from_file (IMAGEDIR "/control-center.png");
+	gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 4);
+	gtk_widget_show (widget = gtk_pixmap_new (pixmap, bitmap));
+	gtk_box_pack_start (GTK_BOX (hbox), widget, FALSE, FALSE, 10);
+	gtk_widget_show (label = gtk_label_new (_("Control-Center")));
+	gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 10);
 
 	return (GTK_WIDGET (new));
 }

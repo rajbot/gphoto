@@ -3,7 +3,7 @@ INCLUDES = \
  -I$(top_srcdir)/libgnocam\
  -DGNOME_LOCALEDIR=\""$(datadir)/locale"\"\
  -DGNOCAM_DATADIR=\""$(datadir)"\"\
- -DGNOCAM_ICONSDIR=\""$(iconsdir)"\"\
+ -DIMAGEDIR=\""$(datadir)/pixmaps"\"\
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
  $(GCONF_CFLAGS)\
  $(EXTRA_WARNING_CFLAGS)\

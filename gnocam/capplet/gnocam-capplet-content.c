@@ -9,9 +9,10 @@
 #include <gal/e-table/e-table-simple.h>
 #include <gal/e-table/e-cell-text.h>
 #include <gal/e-table/e-cell-popup.h>
+#include <gal/e-table/e-cell-combo.h>
 #include <gconf/gconf-client.h>
 
-#include <gnocam-camera-druid.h>
+#include "gnocam-camera-druid.h"
 
 #define PARENT_TYPE GTK_TYPE_VBOX
 static GtkVBoxClass* parent_class = NULL;
@@ -33,8 +34,8 @@ struct _GnoCamCappletContentPrivate {
 #define E_TABLE_SPEC                                                                                                                                            \
 "<ETableSpecification>"																		\
 "  <ETableColumn model_col=\"0\" _title=\"Name\"  expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"string\" compare=\"string\"/>"		\
-"  <ETableColumn model_col=\"1\" _title=\"Model\" expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"model\" compare=\"string\"/>"		\
-"  <ETableColumn model_col=\"2\" _title=\"Port\"  expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"port\" compare=\"string\"/>"			\
+"  <ETableColumn model_col=\"1\" _title=\"Model\" expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"string\" compare=\"string\"/>"		\
+"  <ETableColumn model_col=\"2\" _title=\"Port\"  expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"string\" compare=\"string\"/>"			\
 "  <ETableState>"                                                                                                                                               \
 "    <column source=\"0\"/>"                                                                                                                                    \
 "    <column source=\"1\"/>"                                                                                                                                    \
@@ -149,7 +150,7 @@ set_value_at (ETableModel* model, gint col, gint row, const void* value, gpointe
 
 	content = GNOCAM_CAPPLET_CONTENT (user_data);
 
-	g_free (g_slist_nth_data (content->priv->list, 3 * row * col));
+	g_free (g_slist_nth_data (content->priv->list, 3 * row + col));
 	(g_slist_nth (content->priv->list, 3 * row + col))->data = g_strdup (value);
 
 	capplet_widget_state_changed (content->priv->capplet, TRUE);
@@ -273,13 +274,17 @@ gnocam_capplet_content_init (GnoCamCappletContent* content)
 GtkWidget*
 gnocam_capplet_content_new (CappletWidget* capplet)
 {
+	GdkPixbuf*		pixbuf;
+	GdkPixmap*		pixmap = NULL;
+	GdkBitmap*		bitmap = NULL;
 	GnoCamCappletContent*	new;
 	GtkWidget*		hbox;
 	GtkWidget*		vbuttonbox;
 	GtkWidget*		button;
+	GtkWidget*		widget;
 	ETableExtras*		extras;
-	ECell*			cell;
-	ECell*			child;
+//	ECell*			cell;
+//	ECell*			child;
 
 	new = gtk_type_new (GNOCAM_TYPE_CAPPLET_CONTENT);
 	
@@ -290,11 +295,23 @@ gnocam_capplet_content_new (CappletWidget* capplet)
 	new->priv->list = gconf_client_get_list (new->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, NULL);
 	new->priv->backup = gconf_client_get_list (new->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, NULL);
 
+	/* Create a hbox */
+	hbox = gtk_hbox_new (FALSE, 10);
+	gtk_widget_show (hbox);
+	gtk_box_pack_start (GTK_BOX (new), hbox, FALSE, FALSE, 10);
+
+	/* Create the logo */
+	pixbuf = gdk_pixbuf_new_from_file (IMAGEDIR "/gnocam.png");
+	gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 4);
+	widget = gtk_pixmap_new (pixmap, bitmap);
+	gtk_widget_show (widget);
+	gtk_box_pack_start (GTK_BOX (hbox), widget, FALSE, FALSE, 10);
+
 	/* Create the hbox */
 	hbox = gtk_hbox_new (FALSE, 10);
 	gtk_widget_show (hbox);
 	gtk_container_set_border_width (GTK_CONTAINER (hbox), 10);
-	gtk_container_add (GTK_CONTAINER (new), hbox);
+	gtk_box_pack_start (GTK_BOX (new), hbox, TRUE, TRUE, 10);
 
 	/* Create the model */
 	new->priv->model = e_table_simple_new (col_count, row_count, value_at, set_value_at, is_cell_editable, 
@@ -304,16 +321,16 @@ gnocam_capplet_content_new (CappletWidget* capplet)
         extras = e_table_extras_new ();
 
 	/* Create the cell for port */
-	child = e_cell_text_new (NULL, GTK_JUSTIFY_LEFT);
-	cell = e_cell_popup_new ();
-	e_cell_popup_set_child (E_CELL_POPUP (cell), child);
-	e_table_extras_add_cell (extras, "port", cell);
+//	child = e_cell_text_new (NULL, GTK_JUSTIFY_LEFT);
+//	cell = e_cell_popup_new ();
+//	e_cell_popup_set_child (E_CELL_POPUP (cell), child);
+//	e_table_extras_add_cell (extras, "port", cell);
 
 	/* Create the cell for model */
-	child = e_cell_text_new (NULL, GTK_JUSTIFY_LEFT);
-	cell = e_cell_popup_new ();
-	e_cell_popup_set_child (E_CELL_POPUP (cell), child);
-	e_table_extras_add_cell (extras, "model", cell);
+//	child = e_cell_text_new (NULL, GTK_JUSTIFY_LEFT);
+//	cell = e_cell_popup_new ();
+//	e_cell_popup_set_child (E_CELL_POPUP (cell), child);
+//	e_table_extras_add_cell (extras, "model", cell);
 
 	/* Create the table */
 	new->priv->table = e_table_new (new->priv->model, extras, E_TABLE_SPEC, NULL);

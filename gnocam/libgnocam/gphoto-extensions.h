@@ -9,8 +9,11 @@
 BEGIN_GNOME_DECLS
 
 #define CHECK_RESULT(result,ev)         G_STMT_START{                                                                           \
-        if (result <= 0) {                                                                                                      \
-                switch (result) {                                                                                               \
+	gint	r;														\
+																\
+	r = result;														\
+        if (r <= 0) {      													\
+                switch (r) {													\
                 case GP_OK:                                                                                                     \
                         break;                                                                                                  \
                 case GP_ERROR_IO:                                                                                               \
@@ -21,6 +24,7 @@ BEGIN_GNOME_DECLS
                 case GP_ERROR_MODEL_NOT_FOUND:                                                                                  \
                         CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotFound, NULL);                       \
                         break;                                                                                                  \
+		case GP_ERROR_DIRECTORY_EXISTS:											\
                 case GP_ERROR_FILE_EXISTS:                                                                                      \
                         CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NameExists, NULL);                     \
                         break;                                                                                                  \

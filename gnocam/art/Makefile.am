@@ -1,7 +1,7 @@
-imagesdir = $(datadir)/images/$(PACKAGE)
+imagesdir = $(datadir)/pixmaps
 
 images_DATA =\
- logo.png
+ gnocam.png
 
 EXTRA_DIST =\
  $(images_DATA)

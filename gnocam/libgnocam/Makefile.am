@@ -8,9 +8,8 @@ INCLUDES =\
  -I$(top_builddir)\
  -I$(includedir)\
  $(GCONF_CFLAGS)\
- $(GNOME_INCLUDEDIR)\
+ $(BONOBO_CFLAGS)\
  $(EXTRA_WARNING_CFLAGS)\
- $(GNOME_CFLAGS)\
  $(GPHOTO_CFLAGS)\
  $(VFS_CFLAGS)
 	
@@ -25,13 +24,11 @@ noinst_LTLIBRARIES = libgnocam.la
 
 libgnocam_la_SOURCES =\
  $(CORBA_SOURCES)\
- gnocam-camera-druid.h gnocam-camera-druid.c\
  gphoto-extensions.h gphoto-extensions.c
 
 libgnocam_la_LIBADD =\
- $(GNOME_LIBS)\
  $(GPHOTO_LIBS)\
- $(OAF_LIBS)\
+ $(BONOBO_LIBS)\
  $(GCONF_LIBS)\
  $(VFS_LIBS)
 

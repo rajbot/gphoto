@@ -17,9 +17,11 @@ struct _GnoCamCameraDruidPrivate {
 
 	GConfClient*	client;
 
-	GtkCombo*	combo_model;
-	GtkCombo*	combo_port;
-	GtkEntry*	entry_name;
+	GnomeDruid*		druid;
+	GnomeDruidPageFinish*	page_finish;
+	GtkCombo*		combo_model;
+	GtkCombo*		combo_port;
+	GtkEntry*		entry_name;
 };
 
 #define PAGE_START 						\
@@ -38,6 +40,32 @@ struct _GnoCamCameraDruidPrivate {
 /*************/
 /* Callbacks */
 /*************/
+
+static void
+on_model_changed (GtkEditable* editable, gpointer user_data)
+{
+	GnoCamCameraDruid*      druid;
+	gchar*			model;
+
+	druid = GNOCAM_CAMERA_DRUID (user_data);
+
+	model = gtk_entry_get_text (GTK_ENTRY (editable));
+	if (strcmp ("", model)) gnome_druid_set_buttons_sensitive (druid->priv->druid, TRUE, TRUE, TRUE);
+	else gnome_druid_set_buttons_sensitive (druid->priv->druid, TRUE, FALSE, TRUE);
+}
+
+static void
+on_name_changed (GtkEditable* editable, gpointer user_data)
+{
+	GnoCamCameraDruid*      druid;
+	gchar*			name;
+
+	druid = GNOCAM_CAMERA_DRUID (user_data);
+
+	name = gtk_entry_get_text (GTK_ENTRY (editable));
+	if (strcmp ("", name)) gnome_druid_set_buttons_sensitive (druid->priv->druid, TRUE, TRUE, TRUE);
+	else gnome_druid_set_buttons_sensitive (druid->priv->druid, TRUE, FALSE, TRUE);
+}
 
 static void
 on_page_model_prepare (GnomeDruidPage* page, GtkWidget* d, gpointer user_data)
@@ -91,7 +119,7 @@ on_page_port_prepare (GnomeDruidPage* page, GtkWidget* d, gpointer user_data)
                                 ((info.type == GP_PORT_NETWORK) && (NETWORK_SUPPORTED (abilities.port))))
                                 list = g_list_append (list, g_strdup (info.name));
                 }
-                if (!list) list = g_list_append (NULL, g_strdup (""));
+                if (!list) gnome_druid_set_page (druid->priv->druid, GNOME_DRUID_PAGE (druid->priv->page_finish));
                 port = g_strdup (gtk_entry_get_text (GTK_ENTRY (druid->priv->combo_port->entry)));
                 gtk_combo_set_popdown_strings (druid->priv->combo_port, list);
 		gtk_entry_set_text (GTK_ENTRY (druid->priv->combo_port->entry), port);
@@ -184,9 +212,9 @@ gnocam_camera_druid_init (GnoCamCameraDruid* druid)
 GtkWidget*
 gnocam_camera_druid_new (GConfClient* client, GtkWindow* window)
 {
+	GdkColor		blue;
+	GdkColor		grey;
 	GnoCamCameraDruid*	new;
-	GtkWidget*		druid;
-	GtkWidget*		widget;
 	GtkWidget*		page;
 	GtkWidget*		frame;
 	GtkWidget*		label;
@@ -196,37 +224,52 @@ gnocam_camera_druid_new (GConfClient* client, GtkWindow* window)
 	if (window) gtk_window_set_transient_for (GTK_WINDOW (new), window);
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
 
+	blue.red = 24 * 256;
+	blue.green = 24 * 256;
+	blue.blue = 112 * 256;
+
+	grey.red = 208 * 256;
+	grey.green = 212 * 256;
+	grey.blue = 208 * 256;
+
 	/* Druid */
-	druid = gnome_druid_new ();
-	gtk_widget_show (druid);
-	gtk_container_add (GTK_CONTAINER (new), druid);
-	gtk_signal_connect (GTK_OBJECT (druid), "cancel", GTK_SIGNAL_FUNC (on_cancel), new);
+	new->priv->druid = GNOME_DRUID (gnome_druid_new ());
+	gtk_widget_show (GTK_WIDGET (new->priv->druid));
+	gtk_container_add (GTK_CONTAINER (new), GTK_WIDGET (new->priv->druid));
+	gtk_signal_connect (GTK_OBJECT (new->priv->druid), "cancel", GTK_SIGNAL_FUNC (on_cancel), new);
 	
 	/* Start page */
-	widget = gnome_druid_page_start_new ();
-	gtk_widget_show (widget);
-	gnome_druid_page_start_set_text (GNOME_DRUID_PAGE_START (widget), PAGE_START);
-	gnome_druid_page_start_set_title (GNOME_DRUID_PAGE_START (widget), _("Welcome to " PACKAGE "!"));
-	gnome_druid_append_page (GNOME_DRUID (druid), GNOME_DRUID_PAGE (widget));
+	page = gnome_druid_page_start_new ();
+	gtk_widget_show (page);
+	gnome_druid_page_start_set_text (GNOME_DRUID_PAGE_START (page), PAGE_START);
+	gnome_druid_page_start_set_title (GNOME_DRUID_PAGE_START (page), _("Welcome to " PACKAGE "!"));
+	gnome_druid_page_start_set_logo (GNOME_DRUID_PAGE_START (page), gdk_imlib_load_image (IMAGEDIR "/gnocam.png"));
+	gdk_color_alloc (gtk_widget_get_colormap (page), &blue);
+	gnome_druid_page_start_set_logo_bg_color (GNOME_DRUID_PAGE_START (page), &blue);
+	gdk_color_alloc (gtk_widget_get_colormap (page), &grey);
+	gnome_druid_page_start_set_textbox_color (GNOME_DRUID_PAGE_START (page), &grey);
+	gnome_druid_append_page (GNOME_DRUID (new->priv->druid), GNOME_DRUID_PAGE (page));
 
 	/* First page */
         page = gnome_druid_page_standard_new ();
+	gnome_druid_page_standard_set_logo (GNOME_DRUID_PAGE_STANDARD (page), gdk_imlib_load_image (IMAGEDIR "/gnocam.png"));
+	gdk_color_alloc (gtk_widget_get_colormap (page), &blue);
+	gnome_druid_page_standard_set_logo_bg_color (GNOME_DRUID_PAGE_STANDARD (page), &blue);
 	gtk_container_set_border_width (GTK_CONTAINER (GNOME_DRUID_PAGE_STANDARD (page)->vbox), 10);
 	gnome_druid_page_standard_set_title (GNOME_DRUID_PAGE_STANDARD (page), _("Model?"));
 	gtk_signal_connect (GTK_OBJECT (page), "prepare", GTK_SIGNAL_FUNC (on_page_model_prepare), new);
 	gtk_widget_show (page);
-	gnome_druid_append_page (GNOME_DRUID (druid), GNOME_DRUID_PAGE (page));
+	gnome_druid_append_page (GNOME_DRUID (new->priv->druid), GNOME_DRUID_PAGE (page));
 
 	/* Model */
-	label = gtk_label_new (_("Please choose a camera model from the list below."));
+	label = gtk_label_new (_("Please choose a camera model. If you can't find yours, you can still try a similar model."));
 	gtk_label_set_line_wrap (GTK_LABEL (label), TRUE);
 	gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
 	gtk_widget_show (label);
 	gtk_box_pack_start (GTK_BOX (GNOME_DRUID_PAGE_STANDARD (page)->vbox), label, FALSE, FALSE, 10);
-
 	frame = gtk_frame_new (_("Model"));
 	gtk_widget_show (frame);
-	gtk_container_add (GTK_CONTAINER (GNOME_DRUID_PAGE_STANDARD (page)->vbox), frame);
+	gtk_box_pack_start (GTK_BOX (GNOME_DRUID_PAGE_STANDARD (page)->vbox), frame, FALSE, FALSE, 10);
 	hbox = gtk_hbox_new (FALSE, 10);
 	gtk_widget_show (hbox);
 	gtk_container_set_border_width (GTK_CONTAINER (hbox), 10);
@@ -237,6 +280,7 @@ gnocam_camera_druid_new (GConfClient* client, GtkWindow* window)
 	new->priv->combo_model = GTK_COMBO (gtk_combo_new ());
 	gtk_widget_show (GTK_WIDGET (new->priv->combo_model));
 	gtk_box_pack_start (GTK_BOX (hbox), GTK_WIDGET (new->priv->combo_model), FALSE, FALSE, 10);
+	gtk_signal_connect (GTK_OBJECT (GTK_COMBO (new->priv->combo_model)->entry), "changed", GTK_SIGNAL_FUNC (on_model_changed), new);
 
 	/* Name */
 	label = gtk_label_new (_("Your camera will be identified by a name. You probably want to use a short, easy to remember name for your camera, for "
@@ -245,7 +289,6 @@ gnocam_camera_druid_new (GConfClient* client, GtkWindow* window)
 	gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
 	gtk_widget_show (label);
 	gtk_box_pack_start (GTK_BOX (GNOME_DRUID_PAGE_STANDARD (page)->vbox), label, FALSE, FALSE, 10);
-
 	frame = gtk_frame_new (_("Name"));
 	gtk_widget_show (frame);
 	gtk_box_pack_start (GTK_BOX (GNOME_DRUID_PAGE_STANDARD (page)->vbox), frame, FALSE, FALSE, 10);
@@ -257,16 +300,21 @@ gnocam_camera_druid_new (GConfClient* client, GtkWindow* window)
 	gtk_widget_show (label);
 	gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 10);
 	new->priv->entry_name = GTK_ENTRY (gtk_entry_new ());
+	gtk_entry_set_text (new->priv->entry_name, _("camera"));
 	gtk_widget_show (GTK_WIDGET (new->priv->entry_name));
 	gtk_box_pack_start (GTK_BOX (hbox), GTK_WIDGET (new->priv->entry_name), FALSE, FALSE, 10);
+	gtk_signal_connect (GTK_OBJECT (new->priv->entry_name), "changed", GTK_SIGNAL_FUNC (on_name_changed), new);
 
 	/* Second page */
 	page = gnome_druid_page_standard_new ();
 	gtk_container_set_border_width (GTK_CONTAINER (GNOME_DRUID_PAGE_STANDARD (page)->vbox), 10);
 	gtk_signal_connect (GTK_OBJECT (page), "prepare", GTK_SIGNAL_FUNC (on_page_port_prepare), new);
 	gnome_druid_page_standard_set_title (GNOME_DRUID_PAGE_STANDARD (page), _("Port?"));
+	gnome_druid_page_standard_set_logo (GNOME_DRUID_PAGE_STANDARD (page), gdk_imlib_load_image (IMAGEDIR "/gnocam.png"));
+	gdk_color_alloc (gtk_widget_get_colormap (page), &blue);
+	gnome_druid_page_standard_set_logo_bg_color (GNOME_DRUID_PAGE_STANDARD (page), &blue);
 	gtk_widget_show (page);
-	gnome_druid_append_page (GNOME_DRUID (druid), GNOME_DRUID_PAGE (page));
+	gnome_druid_append_page (new->priv->druid, GNOME_DRUID_PAGE (page));
 
 	/* Port */
 	label = gtk_label_new (_("How did you connect your camera to this computer?"));
@@ -289,12 +337,17 @@ gnocam_camera_druid_new (GConfClient* client, GtkWindow* window)
 	gtk_box_pack_start (GTK_BOX (hbox), GTK_WIDGET (new->priv->combo_port), FALSE, FALSE, 10);
 
 	/* Finish page */
-	widget = gnome_druid_page_finish_new ();
-	gtk_signal_connect (GTK_OBJECT (widget), "finish", GTK_SIGNAL_FUNC (on_finish), new);
-	gtk_widget_show (widget);
-	gnome_druid_page_finish_set_text (GNOME_DRUID_PAGE_FINISH (widget), PAGE_FINISH);
-	gnome_druid_page_finish_set_title (GNOME_DRUID_PAGE_FINISH (widget), _("Thank you!"));
-	gnome_druid_append_page (GNOME_DRUID (druid), GNOME_DRUID_PAGE (widget));
+	new->priv->page_finish = GNOME_DRUID_PAGE_FINISH (gnome_druid_page_finish_new ());
+	gtk_signal_connect (GTK_OBJECT (new->priv->page_finish), "finish", GTK_SIGNAL_FUNC (on_finish), new);
+	gtk_widget_show (GTK_WIDGET (new->priv->page_finish));
+	gnome_druid_page_finish_set_text (new->priv->page_finish, PAGE_FINISH);
+	gnome_druid_page_finish_set_title (new->priv->page_finish, _("Thank you!"));
+	gnome_druid_append_page (new->priv->druid, GNOME_DRUID_PAGE (new->priv->page_finish));
+	gnome_druid_page_finish_set_logo (new->priv->page_finish, gdk_imlib_load_image (IMAGEDIR "/gnocam.png"));
+	gdk_color_alloc (gtk_widget_get_colormap (GTK_WIDGET (new->priv->page_finish)), &blue);
+	gnome_druid_page_finish_set_logo_bg_color (new->priv->page_finish, &blue);
+	gdk_color_alloc (gtk_widget_get_colormap (GTK_WIDGET (new->priv->page_finish)), &grey);
+	gnome_druid_page_finish_set_textbox_color (new->priv->page_finish, &grey);
 
 	return (GTK_WIDGET (new));
 }

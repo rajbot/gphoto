@@ -6,6 +6,14 @@ then
     metadir="${PWD}"
 fi
 
+# Use canonical language environment (idea taken from autobook)
+for var in LANG LC_ALL LC_MESSAGES LC_CTYPE LANGUAGES
+do
+  if eval test x"\${$var+set}" = xset; then
+    eval $var=C; eval export $var
+  fi
+done
+
 run_niced=false
 
 cvsmodulelistsource="${metadir}/cvs-module-list"
@@ -43,6 +51,18 @@ cmd() {
     then
 	fail
     fi
+}
+
+xmd() {
+    echo "#> ${@}" >&2
+    if $run_niced && [ "$1" != "cd" ]
+    then
+	nice "${@}"
+    else
+	"${@}"
+    fi
+    status="$?"
+    return "$status"
 }
 
 filterlist() {

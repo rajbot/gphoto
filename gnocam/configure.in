@@ -121,8 +121,8 @@ if $try_capplet; then
 	AC_MSG_CHECKING(for capplet libraries)
 	if gnome-config --libs capplet > /dev/null 2>&1; then
 		AC_MSG_RESULT(found)
-		CAPPLET_LIBS="$GCONF_LIBS `gnome-config --libs capplet gal gnomeui gdk_pixbuf bonobo gconf`"
-		CAPPLET_CFLAGS="$GCONF_CFLAGS `gnome-config --cflags capplet gal gnomeui gdk_pixbuf bonobo gconf`"
+		CAPPLET_LIBS="$GCONF_LIBS `gnome-config --libs capplet gal gnomeui gdk_pixbuf bonobo`"
+		CAPPLET_CFLAGS="$GCONF_CFLAGS `gnome-config --cflags capplet gal gnomeui gdk_pixbuf bonobo`"
 		AC_SUBST(CAPPLET_LIBS)
 		AC_SUBST(CAPPLET_CFLAGS)
 		have_capplet=true

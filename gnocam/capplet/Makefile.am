@@ -6,6 +6,7 @@ INCLUDES = \
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
  -I$(top_srcdir)/libgnocam\
  $(CAPPLET_CFLAGS)\
+ $(GCONF_CFLAGS)\
  $(GPHOTO_CFLAGS)
 
 if CAPPLET
@@ -21,6 +22,7 @@ camera_capplet_SOURCES =\
 camera_capplet_LDADD =\
  $(top_builddir)/libgnocam/libgnocam.a\
  $(CAPPLET_LIBS)\
+ $(GCONF_LIBS)\
  $(GPHOTO_LIBS)
 
 sysdir=$(datadir)/control-center/Peripherals

@@ -80,10 +80,6 @@ do_idle_tests (gpointer data)
 				"GNOME/Camera:CaptureImage", &ev, data);
 	CHECK (&ev);
 
-	g_message ("Getting configuration...");
-	GNOME_Camera_showConfiguration (camera, &ev);
-	CHECK (&ev);
-
 	g_message ("Capturing image...");
 	GNOME_Camera_captureImage (camera, &ev);
 	CHECK (&ev); 

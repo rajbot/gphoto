@@ -1,5 +1,6 @@
 INCLUDES =\
  $(VFS_CFLAGS)\
+ $(EXTRA_GNOME_CFLAGS)\
  -DG_LOG_DOMAIN=\"gnocam-test\"
 
 noinst_PROGRAMS =\

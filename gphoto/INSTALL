@@ -56,4 +56,16 @@ After you have checked the code out, you can use
 to update your personal copy of gPhoto to the latest version 
 from the GNOME CVS server and rebuild. 
 
+SETUP on FreeBSD-3.2R:
+   # cd xxx/packages-3.2-release/All
+   # pkg_add gmake-3.77.tgz
+   # pkg_add automake-1.4.tgz
+   # pkg_add autoconf-2.13.tgz
+   # pkg_add jpeg-6b
+   # pkg_add glib-1.2.3
+   # pkg_add gtk-1.2.3
+   # pkg_add imlib-1.9.4
+   # ln -s /dev/cuaa0 /dev/ttyS0
+   # chmod 666 /dev/cuaa0
+
 See http://www.gphoto.org/ for updates.

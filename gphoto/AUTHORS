@@ -29,8 +29,16 @@ Minolta Dimage V library
 Gary Ross <gdr@hooked.net>
 Casio QV library
 
+Phill Hugo <phill@gphoto.org>
+Konica Q-M100, HP-C20/30 library
+Rewrote dynamic loaded libraries
+
 Ed Legowski <edlegowski@pobox.com>
 Konica Q-M100, HP-C20/30 library
+
+Toshiki Fujisawa <gphoto@fujisaw.gr.jp>
+Konica Q-M200 library
+FreeBSD 3.2 patches
 
 M. Adam Kendall <joker@penguinpub.com>
 Sony DSC-F1 library
@@ -54,10 +62,6 @@ Bug fixing
 Cliff Wright <cliff@snipe444.org>
 Ricoh RDC 300/300Z library
 Bug fixing
-
-Phill Hugo <phill@gphoto.org>
-Konica Q-M100, HP-C20/30 library
-Rewrote dynamic loaded libraries
 
 Beat Christen <spiff@longstreet.ch>
 Toshiba PDR M1 library

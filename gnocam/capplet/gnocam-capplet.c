@@ -271,44 +271,45 @@ gnocam_capplet_delete (GnocamCapplet *c, GtkTreeIter *iter)
 static void
 on_changed (GnocamChooser *ch, GnocamCapplet *c)
 {
-	gchar *k, *key;
+	gchar *key;
+	const gchar *id, *s;
 
 	g_return_if_fail (GNOCAM_IS_CAPPLET (c));
 	g_return_if_fail (GNOCAM_IS_CHOOSER (ch));
 
-	key = g_object_get_data (G_OBJECT (ch), "name");
-	key = gconf_escape_key (key, strlen (key));
-	k = g_strdup_printf ("/desktop/gnome/cameras/%s", key);
-	g_free (key);
-	if (gnocam_chooser_get_manufacturer (ch)) {
-		key = g_strdup_printf ("%s/manufacturer", k);
-		gconf_client_set_string (c->priv->c, key,
-			gnocam_chooser_get_manufacturer (ch), NULL);
+	id = g_object_get_data (G_OBJECT (ch), "id");
+	g_assert (id);
+
+	s = gnocam_chooser_get_manufacturer (ch);
+	if (s) {
+		key = g_strdup_printf ("%s/manufacturer", id);
+		gconf_client_set_string (c->priv->c, key, s, NULL);
 		g_free (key);
 	}
-	if (gnocam_chooser_get_model (ch)) {
-		key = g_strdup_printf ("%s/model", k);
-		gconf_client_set_string (c->priv->c, key, 
-			gnocam_chooser_get_model (ch), NULL);
+	s = gnocam_chooser_get_model (ch);
+	if (s) {
+		key = g_strdup_printf ("%s/model", id);
+		gconf_client_set_string (c->priv->c, key, s, NULL);
 		g_free (key);
 	}
-	if (gnocam_chooser_get_port (ch)) {
-		key = g_strdup_printf ("%s/port", k);
-		gconf_client_set_string (c->priv->c, key,
-			gnocam_chooser_get_port (ch), NULL);
+	s = gnocam_chooser_get_port (ch);
+	if (s) {
+		key = g_strdup_printf ("%s/port", id);
+		gconf_client_set_string (c->priv->c, key, s, NULL);
 		g_free (key);
 	}
-	g_free (k); 
 }
 
 static void
 on_destroy (GtkObject *o, GnocamCapplet *c)
 {
-	gchar *name = g_object_get_data (G_OBJECT (o), "name");
+	const gchar *id;
 
 	g_return_if_fail (GNOCAM_IS_CAPPLET (c));
 
-	g_hash_table_remove (c->priv->h, name);
+	id = g_object_get_data (G_OBJECT (o), "id");
+	g_assert (id);
+	g_hash_table_remove (c->priv->h, id);
 }
 
 static void
@@ -335,7 +336,6 @@ gnocam_capplet_edit (GnocamCapplet *c, GtkTreeIter *iter)
 	g_object_set_data_full (G_OBJECT (ch), "id", id,
 				(GDestroyNotify) g_free);
 	g_hash_table_insert (c->priv->h, g_strdup (id), ch);
-	g_value_unset (&v);
 	key = g_strdup_printf ("%s/manufacturer", id);
 	gnocam_chooser_set_manufacturer (ch,
 		gconf_client_get_string (c->priv->c, key, NULL));

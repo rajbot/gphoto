@@ -160,8 +160,8 @@ create_menu (gpointer user_data)
 
 	/* Preview? */
 	if (camera->priv->camera->abilities->file_preview) {
-		bonobo_ui_component_set_translate (camera->priv->component, "/menu/View", GNOCAM_CAMERA_UI_PREVIEW, NULL);
 		bonobo_ui_component_set_translate (camera->priv->component, "/commands", GNOCAM_CAMERA_UI_PREVIEW_COMMAND, NULL);
+		bonobo_ui_component_set_translate (camera->priv->component, "/menu/View", GNOCAM_CAMERA_UI_PREVIEW, NULL);
 		if (gconf_client_get_bool (camera->priv->client, "/apps/" PACKAGE "/preview", NULL))
 			bonobo_ui_component_set_prop (camera->priv->component, "/commands/Preview", "state", "1", NULL);
 		else 

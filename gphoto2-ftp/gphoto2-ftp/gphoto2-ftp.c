@@ -90,6 +90,16 @@ main (int argc, char **argv)
 	n = IPTOS_LOWDELAY;
 	setsockopt (0, IPPROTO_IP, IP_TOS, (char *) &n, sizeof (int));
 
+	fprintf (stdout, "220-Hello and welcome to the wonderful world\r\n");
+	fprintf (stdout, "220-of gphoto!\r\n");
+	fprintf (stdout, "220-\r\n");
+	fprintf (stdout, "220-Use this server like a standard FTP-Server.\r\n");
+	fprintf (stdout, "220-List files in virtual directory\r\n");
+	fflush (stdout);
+	fprintf (stdout, "220-'/capture-image' in order to capture\r\n");
+	fflush (stdout);
+	fprintf (stdout, "220-an image.\r\n");
+	fflush (stdout);
 	fprintf (stdout, "220 FTP server ready.\r\n");
 	fflush (stdout);
 

@@ -27,6 +27,7 @@
 #include <sys/socket.h>
 
 #include <netinet/ip.h>
+#include <arpa/inet.h>
 
 #include <syslog.h>
 #include <errno.h>
@@ -48,7 +49,6 @@ gf_conn_open (GFParams *params)
 	conn->idletime = params->idletime;
 
 	if (params->passive) {
-		struct sockaddr_in sai;
 		socklen_t sai_size = sizeof (sai);
 
 		conn->fd = accept (params->fd,
@@ -71,10 +71,10 @@ gf_conn_open (GFParams *params)
 	n = IPTOS_THROUGHPUT;
 	setsockopt (conn->fd, SOL_IP, IP_TOS, (char *) &n, sizeof (int));
 
-	if (params->passive) {
-		fprintf (stdout, "150 Opening data connection.\r\n");
-		fflush (stdout);
-	}
+	fprintf (stdout, "150 Connecting to %s:%d\r\n",
+		 inet_ntoa (sai.sin_addr),
+		 ntohs ((unsigned short) sai.sin_port));
+	fflush (stdout);
 
 	return (conn);
 

@@ -25,6 +25,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <syslog.h>
+
 #include <gphoto2/gphoto2-list.h>
 
 #include <gphoto2-ftp-conn.h>
@@ -67,7 +69,7 @@ gf_list_file (GFParams *params, GFListOption options, GFConn *conn,
 	strcat (buf, file);
 	strcat (buf, "\r\n");
 
-	gf_conn_write (conn, buf, strlen (buf) + 1);
+	gf_conn_write (conn, buf, strlen (buf));
 
 	return (1);
 }
@@ -85,23 +87,25 @@ gf_list_folder (GFParams *params, GFListOption options, GFConn *conn,
 	memset (buf, 0, sizeof (buf));
 
 	if (folder) {
-		strcpy (buf, "\r\r");
+		strcpy (buf, "\r\n");
 		strncat (buf, folder, sizeof (buf) - 1 - 5);
 		strcat (buf, ":\r\n");
-		gf_conn_write (conn, buf, strlen (buf) + 1);
-	} else
-		folder = params->folder;
+		gf_conn_write (conn, buf, strlen (buf));
+	}
 
-	if (gp_camera_folder_list_files (params->camera, folder,
+	if (gp_camera_folder_list_files (params->camera,
+					 folder ? folder : params->folder,
 					 &list, NULL) >= 0) {
 		c = gp_list_count (&list);
 		if (c < 0)
 			c = 0;
-		sprintf (buf, "total %d\r\n", c);
-		gf_conn_write (conn, buf, strlen (buf) + 1);
+		sprintf (buf, "Total %d\r\n", c);
+		gf_conn_write (conn, buf, strlen (buf));
 		for (i = 0; i < c; i++) {
 			gp_list_get_name (&list, i, &name);
-			n += gf_list_file (params, options, conn, folder, name);
+			n += gf_list_file (params, options, conn,
+					   folder ? folder : params->folder,
+					   name);
 		}
 	}
 
@@ -114,6 +118,8 @@ gf_list (GFParams *params, const char *args)
 	GFConn *conn;
 	GFListOption options = 0;
 	unsigned int n = 0;
+	int r;
+	CameraFilePath path;
 
 	/* Process options. */
 	while (args && (*args == '-')) {
@@ -166,8 +172,23 @@ gf_list (GFParams *params, const char *args)
 	if (!conn)
 		return (-1);
 
-	/* Help needed here. Please contact <lutz@users.sourceforge.net>. */
-//	n = gf_list_folder (params, options, conn, NULL);
+	if (args && !strcmp (args, "/capture-image")) {
+		r = gp_camera_capture (params->camera, GP_CAPTURE_IMAGE,
+				       &path, NULL);
+		if (r < 0) {
+			syslog (LOG_INFO, "Could not capture: '%s'",
+				gp_result_as_string (r));
+			n = 0;
+		} else {
+			gf_conn_write (conn, path.folder, strlen (path.folder));
+			if (strlen (path.folder) > 1)
+				gf_conn_write (conn, "/", 1);
+			gf_conn_write (conn, path.name, strlen (path.name));
+			gf_conn_write (conn, "\r\n", 2);
+			n = 1;
+		}
+	} else
+		n = gf_list_folder (params, options, conn, NULL);
 
 	gf_conn_close (conn);
 
@@ -177,6 +198,7 @@ gf_list (GFParams *params, const char *args)
 		break;
 	case 1:
 		fprintf (stdout, "226 1 match.\r\n");
+		break;
 	default:
 		fprintf (stdout, "226 %d matches total.\r\n", n);
 	}

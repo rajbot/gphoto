@@ -56,12 +56,45 @@ and compile. Every line describes a CVS module with its location,
 name, the revision to download and some options describing how to
 process it.
 
-[ ... to be continued ... ]
+You may want to change the sequence of the modules in cvs-module-list
+or remove some modules altogether. However, keep in mind the following
+dependency graph.
+
+E.g., if you want to use gtkam with a USB camera, you need at least
+libusb, libgphoto2 and gtkam in cvs-module-list, probably also
+libexif. Also, you must have gtk+-2.0 with the development files
+installed.
+
+Module dependency graph:
+
+                 libusb
+                    |
+                   [2]
+                    V
+     gphoto2 <-- libgphoto2 --> gtkam
+        ^           ^             ^
+        |           |             |
+(popt)--+          [1]            +------------+------- (gtk+-2.0)
+        |           |             |            |
+        V           |             V            V
+        exif <-- libexif --> libexif-gtk --> gexif
+     
+Footnotes:
+  [1] - libexif is recommended for cameras using EXIF JPEG images
+        (almost all cameras do that)
+  [2] - libusb is required if libgphoto2 must be able to use 
+        USB cameras
+
+The two modules popt and gtk+-2.0 are optional and not contained in
+this package, but required for some modules:
+
+- all graphical applications (gtkam, gexif) require gtk+-2.0
+- the command line applications (gphoto2, exif) require popt
 
 
 ========================================================================
 What is still missing?
 ========================================================================
 
-- install autoconf, automake, gettext, libtool, pkg-config in adequate
-  versions before building anything
+- better dependency tracking in compileinstall.sh
+- install required tools and libs in compileinstall.sh

@@ -34,6 +34,9 @@
 extern struct ImageInfo Thumbnails;
 extern struct ImageInfo Images;
 extern struct _Camera *Camera;
+
+extern int	  post_process;
+extern char	  post_process_script[];
 extern GtkWidget *post_process_pixmap;
 
 /* Search the image_info tags for "name", return its value (string) */
@@ -1576,14 +1579,72 @@ void open_both (gpointer data, guint action, GtkWidget *widget) {
 
 void post_process_change (GtkWidget *widget, GtkWidget *win) {
 
+	GtkWidget *dialog, *ok, *cancel, *label, *pp, *script;
+
 	GdkPixmap *pixmap;
 	GdkBitmap *bitmap;
 	GtkStyle *style;
 
+
+	dialog = gtk_dialog_new();
+	gtk_window_set_title(GTK_WINDOW(dialog), "Post-Processing Options"); 
+
+	ok = gtk_button_new_with_label("OK");
+	gtk_widget_show(ok);
+	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
+		ok);
+
+	cancel = gtk_button_new_with_label("Cancel");
+	gtk_widget_show(cancel);
+	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
+		cancel);
+
+	pp = gtk_toggle_button_new_with_label("Enable post-processing");
+	gtk_widget_show(pp);
+	if (post_process)
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(pp), TRUE);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), pp,
+		FALSE, FALSE, 0);
+
+	label = gtk_label_new("Program to run:");
+	gtk_widget_show(label);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
+		FALSE, FALSE, 0);
+	
+
+	script = gtk_entry_new();
+	gtk_widget_show(script);
+	gtk_entry_set_text(GTK_ENTRY(script), post_process_script);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), script,
+		FALSE, FALSE, 0);
+
+	label = gtk_label_new(
+"Note: gPhoto will replace \"%s\" in the script command-line
+with the full path to the selected image. Please make sure the
+script exists.
+Example: /usr/local/bin/datestamp %s");
+	gtk_widget_show(label);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
+		FALSE, FALSE, 0);
+
+	gtk_widget_show(dialog);
+
+	/* Wait for them to close the dialog */
+	if (wait_for_hide(dialog, ok, cancel) == 0)
+		return;
+
 	style = gtk_widget_get_style(win);
+
+	/* We are turning on post_process'ing */
+	pixmap = gdk_pixmap_create_from_xpm_d(win->window, &bitmap,
+                 &style->bg[GTK_STATE_NORMAL],(gchar **)post_processing_off_xpm);
+        gtk_pixmap_set(GTK_PIXMAP(post_process_pixmap), pixmap, bitmap);
+	post_process = 0;
+
+
+	/* We are turning on post_process'ing */
+	post_process = 1;
 	pixmap = gdk_pixmap_create_from_xpm_d(win->window, &bitmap,
                  &style->bg[GTK_STATE_NORMAL],(gchar **)post_processing_on_xpm);
         gtk_pixmap_set(GTK_PIXMAP(post_process_pixmap), pixmap, bitmap);
-
-	error_dialog("Post Processing Not Yet Implemented");
 }

@@ -157,6 +157,8 @@ int main (int argc, char *argv[]) {
 	gtk_widget_show(vseparator);
 	gtk_box_pack_end(GTK_BOX(sbox), vseparator, FALSE, FALSE, 0);
 
+	post_process = 0;
+	sprintf(post_process_script, "");
 	post_process_button = gtk_button_new();
 	gtk_widget_show(post_process_button);
 	gtk_button_set_relief(GTK_BUTTON(post_process_button),GTK_RELIEF_NONE);

@@ -10,4 +10,5 @@ LDFLAGS = @LDFLAGS@ -g -ldl
 lib_LTLIBRARIES = libgpio.la
 libgpio_la_LDFLAGS = -version-info @LIBGPIO_VERSION_INFO@
 libgpio_la_SOURCES = 	gpio.c \
-			library.c library.h
+			library.c library.h \
+			port.c

@@ -7,14 +7,15 @@
 
 /* Linux */
 #ifdef linux
-#define GPIO_SERIAL_PREFIX "/dev/ttyS%i"
+/* devfs is accounted for in the implementation */
+#define GPIO_SERIAL_PREFIX 	"/dev/ttyS%i"
 #define GPIO_SERIAL_RANGE_LOW	0
 #define GPIO_SERIAL_RANGE_HIGH	32
 #endif
 
 /* BSD */
 #if defined(__FreeBSD__) || defined(__NetBSD__)
-#define GPIO_SERIAL_PREFIX "/dev/tty0%i"
+#define GPIO_SERIAL_PREFIX	"/dev/tty0%i"
 #define GPIO_SERIAL_RANGE_LOW	0
 #define GPIO_SERIAL_RANGE_HIGH	32
 #endif
@@ -36,13 +37,13 @@
 
 /* Windows */
 #ifdef WIN32
-#define GPIO_SERIAL_PREFIX "COM%i:"
-#define GPIO_SERIAL_RANGE_LOW	0
-#define GPIO_SERIAL_RANGE_HIGH	32
+#define GPIO_SERIAL_PREFIX 	"COM%i:"
+#define GPIO_SERIAL_RANGE_LOW	1
+#define GPIO_SERIAL_RANGE_HIGH	4
 #endif
 
 #ifdef OS2
-#define GPIO_SERIAL_PREFIX "COM%i"
+#define GPIO_SERIAL_PREFIX 	"COM%i"
 #define GPIO_SERIAL_RANGE_LOW   1
 #define GPIO_SERIAL_RANGE_HIGH  4
 #endif
@@ -73,7 +74,5 @@ extern struct gpio_operations gpio_serial_operations;
 #define PIN_DSR 3
 #define PIN_CD  4
 #define PIN_RING 5 
-
-
 
 #endif /* _GPIO_SERIAL_H_ */

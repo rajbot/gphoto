@@ -6,6 +6,8 @@
 #include <os2.h>
 #endif
 
+#include "gpio-port.h"
+
 #include "gpio-serial.h"
 
 #ifdef GPIO_PARALLEL

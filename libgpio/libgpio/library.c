@@ -66,11 +66,11 @@ int gpio_library_list_load(char *filename, int loaded[], gpio_device_info *list,
 
 int gpio_library_list (gpio_device_info *list, int *count) {
 
-	DIR *d;
+	GP_DIR d;
+	GP_DIRENT de;
 	int loaded[256];
 	int x;
 	char buf[1024];
-	struct dirent *de;
 
 	*count = 0;
 
@@ -78,7 +78,7 @@ int gpio_library_list (gpio_device_info *list, int *count) {
 		loaded[x]=0;
 
 	/* Look for available camera libraries */
-	d = opendir(IOLIBS);
+	d = GP_OPENDIR(IOLIBS);
 	if (!d) {
 		gpio_debug_printf("couldn't open %s ", IOLIBS);
 		return GPIO_ERROR;
@@ -86,17 +86,19 @@ int gpio_library_list (gpio_device_info *list, int *count) {
 
 	do {
 	   /* Read each entry */
-	   de = readdir(d);
+	   de = GP_READDIR(d);
 	   if (de) {
-#if defined(OS2) || defined(WINDOWS)
-		sprintf(buf, "%s\\%s", IOLIBS, de->d_name);
+#if defined(OS2) || defined(WIN32)
+		sprintf(buf, "%s\\%s", IOLIBS, GP_FILENAME(de->d_name));
 #else
-		sprintf(buf, "%s/%s", IOLIBS, de->d_name);
+		sprintf(buf, "%s/%s", IOLIBS, GP_FILENAME(de->d_name));
 #endif
 		if (gpio_library_is_valid(buf) == GPIO_OK)
 			gpio_library_list_load(buf, loaded, list, count);
 	   }
 	} while (de);
+
+	GP_CLOSEDIR(d);
 
 	return (GPIO_OK);
 }

@@ -4,6 +4,7 @@
 #include "frontend.h"
 #include "information.h"
 #include "gnocam.h"
+#include "properties.h"
 
 /**********************/
 /* External Variables */

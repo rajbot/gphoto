@@ -6,7 +6,6 @@ typedef struct {
 	gchar* 		name;
 	GladeXML*	xml;
 	GladeXML*	xml_properties;
-	GladeXML*	xml_preview;
+	GtkTreeItem*	item;
 } frontend_data_t;
-
 

@@ -73,7 +73,7 @@ gp_camera_new_by_description (gint id, gchar* name, gchar* model, gchar* port, g
 	frontend_data->name = g_strdup (name);
 	frontend_data->xml = xml;
 	frontend_data->xml_properties = NULL;
-	frontend_data->xml_preview = NULL;
+	frontend_data->item = NULL;
 	camera->frontend_data = frontend_data;
 
 	return (camera);

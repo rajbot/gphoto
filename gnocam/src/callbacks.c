@@ -326,45 +326,13 @@ on_properties_activate (GtkMenuItem* menuitem, gpointer user_data)
 void
 on_capture_preview_activate (GtkMenuItem* menuitem, gpointer user_data)
 {
-	GtkTreeItem*		item;
-	GladeXML*		xml_preview;
-	Camera*			camera;
-	frontend_data_t*	frontend_data;
+        GtkTreeItem*            item;
+        Camera*                 camera;
 
-	g_assert (menuitem != NULL);
-	g_assert ((item = GTK_TREE_ITEM (gtk_object_get_data (GTK_OBJECT (menuitem), "item"))) != NULL);
-	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
-	g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
+        g_assert ((item = GTK_TREE_ITEM (gtk_object_get_data (GTK_OBJECT (menuitem), "item"))) != NULL);
+        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
 
-	if (!(frontend_data->xml_preview)) {
-		
-		/* Open the preview window. */
-		g_assert ((xml_preview = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "app_preview")) != NULL);
-		frontend_data->xml_preview = xml_preview;
-
-		/* Store some data. */
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview")), "camera", camera);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_capture_image")), "item", item);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_capture_video")), "item", item);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_properties")), "camera", camera);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_refresh")), "camera", camera);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_save")), "camera", camera);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_save_as")), "camera", camera);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_close")), "xml_preview", xml_preview);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_exit")), "xml_preview", xml_preview);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_button_refresh")), "camera", camera);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_button_save")), "camera", camera);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_button_save_as")), "camera", camera);
-
-		/* Connect the signals. */
-		glade_xml_signal_autoconnect (xml_preview);
-
-		/* Reference the camera. */
-		gp_camera_ref (camera);
-
-		/* Get a preview. */
-		preview_refresh (camera);
-	}
+	preview_new (camera);
 }
 
 void

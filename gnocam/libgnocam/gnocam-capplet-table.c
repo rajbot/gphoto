@@ -107,12 +107,15 @@ configure_camera (GnoCamCappletTable *table, guint number)
 	}
 
 	/* Set the port */
-	result = gp_camera_set_port_name (camera, port);
-	if (result < 0) {
-		g_warning ("Could not set port: %s",
-			   gp_camera_get_result_as_string (camera, result));
-		gp_camera_unref (camera);
-		return;
+	if (*port) {
+		result = gp_camera_set_port_name (camera, port);
+		if (result < 0) {
+			g_warning ("Could not set port: %s",
+				   gp_camera_get_result_as_string (camera,
+					   			   result));
+			gp_camera_unref (camera);
+			return;
+		}
 	}
 
 	/* Initialize camera */
@@ -174,12 +177,15 @@ get_info (GnoCamCappletTable *table, guint number)
 	}
 
 	/* Set the port */
-	result = gp_camera_set_port_name (camera, port);
-	if (result < 0) {
-		g_warning ("Could not set port: %s",
-			   gp_camera_get_result_as_string (camera, result));
-		gp_camera_unref (camera);
-		return;
+	if (*port) {
+		result = gp_camera_set_port_name (camera, port);
+		if (result < 0) {
+			g_warning ("Could not set port: %s",
+				   gp_camera_get_result_as_string (camera,
+					   			   result));
+			gp_camera_unref (camera);
+			return;
+		}
 	}
 
 	/* Initialize camera */

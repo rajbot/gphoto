@@ -601,8 +601,8 @@ Under Linux each serial port may have different names:
 	}
 	else {
 		save_config();
-		gtk_widget_destroy(dialog);	
 	}
+	gtk_widget_destroy(dialog);
 }
 
 int  load_config() {

@@ -32,6 +32,6 @@ EXTRA_DIST = camera-capplet.desktop
 sysdir = $(datadir)/control-center/Peripherals
 sys_DATA = camera-capplet.desktop
 
-install-data-local:
-	$(INSTALL_DATA) $(srcdir)/camera-capplet.desktop $(DESTDIR)$(datadir)/gnome/apps/Settings/Peripherals/camera-capplet.desktop
+deskdir = $(datadir)/gnome/apps/Settings/Peripherals
+desk_DATA = camera-capplet.desktop
 

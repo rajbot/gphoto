@@ -36,6 +36,8 @@ GtkWidget*	gnocam_folder_new		(Camera* camera, BonoboStorage* storage, Bonobo_St
 
 void		gnocam_folder_show_menu		(GnoCamFolder* folder);
 void		gnocam_folder_hide_menu		(GnoCamFolder* folder);
+void		gnocam_folder_update		(GnoCamFolder* folder);
+gchar*		gnocam_folder_get_path		(GnoCamFolder* folder);
 
 END_GNOME_DECLS
 

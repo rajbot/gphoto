@@ -68,6 +68,7 @@ typedef struct {
 enum {
         DIRECTORY_SELECTED,
         FILE_SELECTED,
+	DIRECTORY_UPDATED,
         DND_ACTION,
         LAST_SIGNAL
 };
@@ -297,6 +298,18 @@ cursor_change (ETable* etable, int row)
 		gtk_signal_emit (GTK_OBJECT (storage_view), signals [FILE_SELECTED], value->path);
 }
 
+/***************/
+/* Our methods */
+/***************/
+
+void
+gnocam_storage_view_update_folder (GnoCamStorageView* storage_view, const gchar* folder)
+{
+	g_warning ("Implement gnocam_storage_view_update_folder!");
+
+	gtk_signal_emit (GTK_OBJECT (storage_view), signals [DIRECTORY_UPDATED], folder);
+}
+
 /*******************/
 /* GtkObject stuff */
 /*******************/
@@ -343,6 +356,14 @@ gnocam_storage_view_class_init (GnoCamStorageViewClass* klass)
 					gtk_marshal_NONE__STRING,
         	                        GTK_TYPE_NONE, 1,
                 	                GTK_TYPE_STRING);
+	
+	signals[DIRECTORY_UPDATED] = gtk_signal_new ("directory_updated",
+					GTK_RUN_FIRST,
+					object_class->type,
+					GTK_SIGNAL_OFFSET (GnoCamStorageViewClass, directory_updated),
+					gtk_marshal_NONE__STRING,
+					GTK_TYPE_NONE, 1,
+					GTK_TYPE_STRING);
 
 	signals[DND_ACTION] = gtk_signal_new ("dnd_action",
                            		GTK_RUN_FIRST,

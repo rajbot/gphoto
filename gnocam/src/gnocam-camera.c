@@ -77,6 +77,9 @@ struct _GnoCamCameraPrivate
 	gboolean			current_is_folder;
 	GnoCamFolder*			folder;
 	GnoCamFile*			file;
+
+	gint				type;
+	gint				duration;
 };
 
 /****************/
@@ -269,6 +272,26 @@ show_current_menu (GnoCamCamera* camera)
 	return;
 }
 
+static void
+do_capture (GnoCamCamera* camera)
+{
+	CameraFilePath		filepath;
+	CameraCaptureSetting	setting;
+	gint			result;
+
+	setting.type = camera->priv->camera->abilities->capture [camera->priv->type].type;
+	strcpy (setting.name, camera->priv->camera->abilities->capture [camera->priv->type].name);
+	setting.duration = camera->priv->duration;
+
+	result = gp_camera_capture (camera->priv->camera, &filepath, &setting);
+	if (result != GP_OK) {
+		g_warning (_("Could not capture: %s!"), gp_camera_get_result_as_string (camera->priv->camera, result));
+		return;
+	}
+
+	gnocam_storage_view_update_folder (GNOCAM_STORAGE_VIEW (camera->priv->storage_view), filepath.folder);
+}
+
 /*************/
 /* Callbacks */
 /*************/
@@ -335,9 +358,64 @@ on_manual_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 }
 
 static void
-on_capture_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* name)
+on_duration_clicked (GnomeDialog* dialog, gint button_number, gpointer user_data)
 {
-	g_warning ("Implement!");
+        GnoCamCamera*	camera;
+
+        camera = GNOCAM_CAMERA (user_data);
+
+        if (button_number == 0) {
+                GtkAdjustment*  adjustment;
+
+                adjustment = GTK_ADJUSTMENT (gtk_object_get_data (GTK_OBJECT (dialog), "adjustment"));
+                camera->priv->duration = adjustment->value;
+
+                do_capture (camera);
+        }
+}
+
+static void
+on_capture_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
+{
+	GnoCamCamera*	camera;
+	gint		i;
+
+	camera = GNOCAM_CAMERA (user_data);
+
+	for (i = 0; camera->priv->camera->abilities->capture [i].type != GP_CAPTURE_NONE; i++) {
+		if (!strcmp (cname, camera->priv->camera->abilities->capture [i].name)) {
+			camera->priv->type = i;
+
+			/* In case of video or audio, ask for duration */
+	        	if ((camera->priv->camera->abilities->capture [i].type == GP_CAPTURE_VIDEO) ||
+		            (camera->priv->camera->abilities->capture [i].type == GP_CAPTURE_AUDIO)) {
+		                GtkWidget*      new;
+		                GtkWidget*      widget;
+		                GtkObject*      adjustment;
+	
+		                /* Ask for duration */
+		                if (camera->priv->camera->abilities->capture [i].type == GP_CAPTURE_VIDEO)
+		                        new = gnome_message_box_new (_("How long should the video be (in seconds)?"), GNOME_MESSAGE_BOX_QUESTION,
+		                                GNOME_STOCK_BUTTON_OK, GNOME_STOCK_BUTTON_CANCEL, NULL);
+		                else
+		                        new = gnome_message_box_new (_("How long should the record be (in seconds)?"), GNOME_MESSAGE_BOX_QUESTION,
+		                                GNOME_STOCK_BUTTON_OK, GNOME_STOCK_BUTTON_CANCEL, NULL);
+				gnome_dialog_set_parent (GNOME_DIALOG (new), camera->priv->window);
+		                gtk_widget_show (new);
+		                gtk_signal_connect (GTK_OBJECT (new), "clicked", GTK_SIGNAL_FUNC (on_duration_clicked), camera);
+		                adjustment = gtk_adjustment_new (0, 0, 99999, 1, 10, 1);
+		                widget = gtk_spin_button_new (GTK_ADJUSTMENT (adjustment), 2, 0);
+		                gtk_widget_show (widget);
+		                gtk_container_add (GTK_CONTAINER ((GNOME_DIALOG (new))->vbox), widget);
+		                gtk_object_set_data (GTK_OBJECT (new), "adjustment", adjustment);
+				break;
+			}
+			if (camera->priv->camera->abilities->capture [i].type == GP_CAPTURE_IMAGE) {
+				do_capture (camera);
+				break;
+			}
+		}
+	}
 }
 
 static void
@@ -392,6 +470,17 @@ on_file_selected (GnoCamStorageView* storage_view, const gchar* path, void* data
 }
 
 static void
+on_directory_updated (GnoCamStorageView* storage_view, const gchar* directory, gpointer user_data)
+{
+	GnoCamFolder*	folder;
+
+	folder = GNOCAM_FOLDER (user_data);
+
+	if (!strcmp (gnocam_folder_get_path (folder), directory))
+		gnocam_folder_update (folder);
+}
+
+static void
 on_directory_selected (GnoCamStorageView* storage_view, const gchar* path, void* data)
 {
 	GnoCamCamera*		camera;
@@ -412,6 +501,7 @@ on_directory_selected (GnoCamStorageView* storage_view, const gchar* path, void*
 			camera->priv->container, camera->priv->client, camera->priv->window);
 		if (!folder) return;
 		gtk_widget_show (folder);
+		gtk_signal_connect (GTK_OBJECT (camera->priv->storage_view), "directory_updated", GTK_SIGNAL_FUNC (on_directory_updated), folder);
 
 		/* Create the scroll-frame */
 		scroll_frame = e_scroll_frame_new (NULL, NULL);

@@ -251,25 +251,6 @@ on_manual_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
         g_message (manual.text);
 }
 
-#if 0
-static void
-on_duration_clicked (GnomeDialog* dialog, gint button_number, gpointer user_data)
-{
-	GnoCamCapture*	capture;
-
-	capture = GNOCAM_CAPTURE (user_data);
-
-	if (button_number == 0) {
-		GtkAdjustment*	adjustment;
-
-		adjustment = GTK_ADJUSTMENT (gtk_object_get_data (GTK_OBJECT (dialog), "adjustment"));
-		capture->priv->duration = adjustment->value;
-
-		do_capture (capture);
-	}
-}
-#endif 
-
 static void
 on_capture_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
 {
@@ -281,30 +262,6 @@ on_capture_clicked (BonoboUIComponent* component, gpointer user_data, const gcha
 	for (i = 0; capture->priv->camera->abilities->capture [i].type != GP_CAPTURE_NONE; i++) {
 		if (!strcmp (capture->priv->camera->abilities->capture [i].name, cname)) {
 			capture->priv->type = i;
-#if 0
-			if ((capture->priv->camera->abilities->capture [i].type == GP_CAPTURE_VIDEO) || 
-			    (capture->priv->camera->abilities->capture [i].type == GP_CAPTURE_AUDIO)) {
-				GtkWidget*	new;
-				GtkWidget*	widget;
-				GtkObject*	adjustment;
-				
-				/* Ask for duration */
-				if (capture->priv->camera->abilities->capture [i].type == GP_CAPTURE_VIDEO) 
-					new = gnome_message_box_new (_("How long should the video be (in seconds)?"), GNOME_MESSAGE_BOX_QUESTION, 
-						GNOME_STOCK_BUTTON_OK, GNOME_STOCK_BUTTON_CANCEL, NULL);
-				else 
-					new = gnome_message_box_new (_("How long should the record be (in seconds)?"), GNOME_MESSAGE_BOX_QUESTION,
-						GNOME_STOCK_BUTTON_OK, GNOME_STOCK_BUTTON_CANCEL, NULL);
-				gtk_widget_show (new);
-				gtk_signal_connect (GTK_OBJECT (new), "clicked", GTK_SIGNAL_FUNC (on_duration_clicked), capture);
-				adjustment = gtk_adjustment_new (0, 0, 99999, 1, 10, 1);
-				widget = gtk_spin_button_new (GTK_ADJUSTMENT (adjustment), 2, 0);
-				gtk_widget_show (widget);
-				gtk_container_add (GTK_CONTAINER ((GNOME_DIALOG (new))->vbox), widget);
-				gtk_object_set_data (GTK_OBJECT (new), "adjustment", adjustment);
-
-			} else 
-#endif
 			do_capture (capture);
 			break;
 		}

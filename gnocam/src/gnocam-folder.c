@@ -420,6 +420,18 @@ gnocam_folder_hide_menu (GnoCamFolder* folder)
 	gtk_idle_add (unset_container, folder);
 }
 
+void
+gnocam_folder_update (GnoCamFolder* folder)
+{
+	g_warning ("Implement gnocam_folder_update!");
+}
+
+gchar*
+gnocam_folder_get_path (GnoCamFolder* folder)
+{
+	return (folder->priv->path);
+}
+
 /***********/
 /* E-Table */
 /***********/

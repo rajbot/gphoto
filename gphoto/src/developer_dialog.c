@@ -19,6 +19,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.6  1999/06/22 12:17:12  pauljenn
+ * included config.h in sources requiring VERSION to be defined
+ *
  * Revision 1.5  1999/06/21 18:04:11  ole
  * 1999-06-21  Ole Aamot  <oleaa@ifi.uio.no>
  *
@@ -62,6 +65,7 @@
  *
  */
 
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>

@@ -376,11 +376,11 @@ builddist() {
 			gunzip -c "$f" | bzip2 -c > "$b"
 		    fi
 		done
+		cmd mv "${module}-"[0-9]*.tar.bz2 "${distdir}/"
 	    fi
 
 	    # move source tarballs to distribution files
 	    cmd mv "${module}-"[0-9]*.tar.gz "${distdir}/"
-	    cmd mv "${module}-"[0-9]*.tar.bz2 "${distdir}/"
 
 	    if [ "$distopts" = "install" ]
 	    then

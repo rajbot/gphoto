@@ -1,3 +1,208 @@
+KNC_FORMAT
+----------
+
+0x10: Byte 0 of command identifier
+0x80: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+0xXX: Byte 0 of p ID
+        0x02: Flash memory card
+0xXX: Byte 1 of p ID
+	0x00: Flash memory card
+
+0x10: Byte 0 of command identifier
+0x80: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+
+KNC_ERASE_ALL
+-------------
+0x20: Byte 0 of command identifier
+0x80: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+0xXX: Byte 0 of p ID
+        0x02: Flash memory card
+0xXX: Byte 1 of p ID
+        0x00: Flash memory card
+
+0x20: Byte 0 of command identifier
+0x80: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+0xXX: Byte 0 of number of images not erased
+0xXX: Byte 1 of number of images not erased
+
+KNC_SET_PROT
+------------
+
+0x30: Byte 0 of command identifier
+0x80: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+0xXX: Byte 0 of p ID
+        0x02: Flash memory card
+0xXX: Byte 1 of p ID
+        0x00: Flash memory card
+0xXX: Byte 3 of image ID (QM200 only)
+0xXX: Byte 4 of image ID (QM200 only)
+0xXX: Byte 0 of image ID
+0xXX: Byte 1 of image ID
+
+0x30: Byte 0 of command identifier
+0x80: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+
+KNC_GET_STATUS
+--------------
+
+0x20: Byte 0 of command identifier
+0x90: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+(...)
+
+You can add pairs of additional bytes. If those are all 0x00, then nothing
+will change. If at least one deviates, all individual pieces of the status
+information will be returned as being zero.
+
+0x20: Byte 0 of command identifier
+0x90: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+
+0xXX: Result of self test
+0xXX: Power level
+0xXX: Power source
+0xXX: Card status
+0xXX: Display
+0xXX: Byte 0 of card size
+0xXX: Byte 1 of card size
+0xXX: Byte 0 of pictures in camera
+0xXX: Byte 0 of left pictures in camera
+0xXX: Year
+0xXX: Month
+0xXX: Day
+0xXX: Hour
+0xXX: Minute
+0xXX: Second
+0xXX: Byte 0 of bit rates
+0xXX: Byte 1 of bit rates
+0xXX: Byte 0 of bit flags
+0xXX: Byte 1 of bit flags
+0xXX: Flash
+0xXX: Resolution
+0xXX: Focus
+0xXX: Exposure
+0xXX: Byte 0 of total pictures
+0xXX: Byte 1 of total pictures
+0xXX: Byte 0 of total strobes
+0xXX: Byte 1 of total strobes
+
+KNC_ERASE_IMAGE
+---------------
+
+0x00: Byte 0 of command identifier
+0x80: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+0xXX: Byte 0 of p ID
+	0x02: Flash memory card
+0xXX: Byte 1 of p ID
+	0x00: Flash memory card
+0xXX: Byte 3 of image ID (QM200 only)
+0xXX: Byte 4 of image ID (QM200 only)
+0xXX: Byte 0 of image ID
+0xXX: Byte 1 of image ID
+
+0x00: Byte 0 of command identifier
+0x80: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+
+KNC_RESET_PREFS
+---------------
+
+0xc1: Byte 0 of command identifier
+0x90: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+
+0xc1: Byte 0 of command identifier
+0x90: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+
+KNC_GET_DATE_AND_TIME
+---------------------
+
+0x30: Byte 0 of command identifier
+0x90: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+
+0x30: Byte 0 of command identifier
+0x90: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+0xXX: Year
+0xXX: Month
+0xXX: Day
+0xXX: Hour
+0xXX: Minute
+0xXX: Second
+
+KNC_SET_DATE_AND_TIME
+---------------------
+
+0xb0: Byte 0 of command identifier
+0x90: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+
+0xb0: Byte 0 of command identifier
+0x90: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+
+KNC_GET_PREFS
+-------------
+
+0x40: Byte 0 of command identifier
+0x90: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+
+0x40: Byte 0 of command identifier
+0x90: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+0xXX: Byte 0 of shutoff time
+0xXX: Byte 0 of self timer time
+0xXX: Byte 1 of self timer time
+0xXX: Byte 0 of beep
+0xXX: Byte 1 of beep
+0xXX: Byte 0 of slide show interval
+0xXX: Byte 1 of slide show interval
+
+KNC_SET_PREF
+------------
+
+0xc0: Byte 0 of command identifier
+0x90: Byte 1 of command identifier
+0x00: Reserved
+0x00: Reserved
+0xXX: Byte 0 of preference
+0xXX: Byte 1 of preference
+0xXX: Byte 0 of value
+0xXX: Byte 1 of value
+
+0xc0: Byte 0 of command identifier
+0x90: Byte 1 of command identifier
+0xXX: Byte 0 of return status
+0xXX: Byte 1 of return status
+
 KNC_TAKE_PICTURE
 ----------------
 
@@ -253,3 +458,106 @@ Following bytes only in case of success:
 (...)
 0xXX: Byte 29 of manufacturer
 
+/*
+ * The following are the pref that can be set. The
+ * sixteen bits that identify the preference are as follows.
+ * Low order byte:      0000    0aa0
+ * High order byte:     1x0b    xxxx
+ * x can be 1 or 0 with no effect on the command. The a and b
+ * bits identify the preference and are as follows.
+ *
+ *      b:      0                       1
+ * aa:  ----------------------------------------------------
+ * 00   |       resolution              flash
+ * 01   |       exposure                focus / self timer
+ * 10   |       self timer time         auto off time
+ * 11   |       slide show interval     beep
+ *
+ * A short explanation of the values of the pref:
+ *
+ * RESOLUTION (default: 2)
+ * Only the low order byte is processed.
+ *  - 0: medium resolution (same as 2)
+ *  - 1: high resolution (1152 x 872)
+ *  - 2: medium resolution (1152 x 872)
+ *  - 3: low resolution ( 576 x 436)
+ * Other values are accepted as well, produce however strange
+ * results on the display, as the camera will calculate the
+ * remaining pictures on the basis of this value. Those values
+ * are at some point changed to 'normal' ones.
+ * Each pixel has an area of 4.6um x 4.6 um.
+ *
+ * EXPOSURE (default: 0)
+ * Only the low order byte is processed.
+ *  - 0 to 255.
+ * The behaviour is somewhat strange. Sending a value will
+ * not necessarily set the value to exactly the sent one.
+ * The following table gives an overview.
+ *      sent    received        sent    received
+ *      ----------------        ----------------
+ *        0  -    0             128     129
+ *        1       0             129     130
+ *        2       1             131  -  131
+ *        3       2             132     133
+ *        5  -    5             134     135
+ *        6       5             135     136
+ *        7       6             136  -  136
+ *        8       7                (...)
+ *        9       8             246  -  246
+ *       10  -   10             247     248
+ *         (...)                248     249
+ *      120  -  120             249     250
+ *      121     120             250     251
+ *      122     121             251  -  251
+ *      123     122             252     253
+ *      124     123             253     254
+ *      125  -  125             254     255
+ *      126     125             255       0
+ *      127     126
+ *
+ * Additional information from HP:
+ *  - Range: EV 6 to EV 16 (ISO 100).
+ *  - Exposure times: 1/500th to 2 (sec)
+ *
+ * SELF_TIMER_TIME (default: 10)
+ *  - 3 to 40. Measured in seconds.
+ * All other values are rejected.
+ *
+ * SLIDE_SHOW_INTERVAL (default: 3)
+ *  - 1 to 30. Measured in seconds.
+ * All other values are rejected.
+ *
+ * FLASH (default: 2)
+ * Only the low order byte is processed.
+ *  - 0: off
+ *  - 1: on
+ *  - 2: auto
+ *  - 5: on, redeye
+ *  - 6: auto, redeye
+ * Other values are accepted as well, but will be changed to 2
+ * at some point.
+ *
+ * FOCUS_SELF_TIMER (default: 0)
+ * Only the low order byte is processed.
+ *  - 0: fixed, next picture in normal mode
+ *  - 1: fixed, next picture in self timer mode
+ *  - 2: auto, next picture in normal mode
+ *  - 3: auto, next picture in self timer mode
+ * After the next picture has been taken in self timer mode,
+ * the value is automatically changed to the next lower even
+ * value (normal mode).
+ *
+ * Additional information from HP:
+ *  - Fixed: 2.6 feet to infinity
+ *  - Auto: 8 inches to infinity
+ *
+ * AUTO_OFF_TIME (default: 5)
+ * Only the low order byte is processed.
+ *  - 0: Will be changed by the camera to 255.
+ *  - 1 to 255. Measured in minutes.
+ *
+ * BEEP (default: 1)
+ * Only the low order byte is processed.
+ *  - 0: off
+ *  - 1 to 255: on
+ */

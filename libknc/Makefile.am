@@ -1,1 +1,1 @@
-SUBDIRS = libknc tests po
+SUBDIRS = libknc libgphoto2 tests po

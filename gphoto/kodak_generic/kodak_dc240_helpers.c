@@ -462,10 +462,7 @@ kdc240_restart
    /* Else, we need to fool around to make sure the camera is going */
    else
    {
-      /* Send break */
       state_machine_assert_break(machine);
-
-      /* Switch the camera into high gear */
       kdc240_baud_command();
    }
 }
@@ -492,7 +489,9 @@ kdc240_command
 
    if (!camera_init)
    {
-      kdc240_restart();
+      /* Re-initialize the state machine */
+      state_machine_reinitialize(machine);
+
       if (!camera_init)
       {
          printf ("kdc240_command: Is your camera turned on?\n");
@@ -541,7 +540,9 @@ kdc240_complex_command
 
    if (!camera_init)
    {
-      kdc240_restart();
+      /* Re-initialize the state machine */
+      state_machine_reinitialize(machine);
+
       if (!camera_init)
       {
          printf ("kdc240_command: Is your camera turned on?\n");

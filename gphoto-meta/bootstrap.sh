@@ -119,13 +119,6 @@ function checktools {
     local action tool restofline
     local autoinstall=false
 
-    if test -d "$toolroot"
-    then
-	echo "##### Going to use/build our own tools from/to ${toolroot}"
-	echo "    # If you don't want to use these tools, remove the"
-	echo "    # ${toolroot} directory."
-    fi
-
     echo "##### Checking for presence of tools..."
     while read tool action restofline
     do
@@ -153,7 +146,14 @@ function checktools {
 	fi
     done < ${buildtoollist}
 
-    if "${parm_tools}" || "${autoinstall}"
+    if test -d "$toolroot"
+    then
+	echo "##### Going to use/build our own tools from/to ${toolroot}"
+	echo "    # If you don't want to use these tools, remove the"
+	echo "    # ${toolroot} directory."
+    fi
+
+    if "${autoinstall}" || ( "${parm_tools" && [ ! -d "$toolroot" ] )
     then
 	installautotools
     fi
@@ -348,7 +348,7 @@ function builddist {
 		do
 		    local b
 		    b="$(basename "${f}" ".gz").bz2"
-		    if [ ! -s "$b" ]
+		    if [ -s "$f" ] && [ ! -s "$b" ]
 		    then
 			gunzip -c "$f" | bzip2 -c > "$b"
 		    fi

@@ -40,6 +40,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.11  1999/06/29 19:51:02  scottf
+ * label rewording
+ * added check for "%s" in the post-process command-line
+ * fixed some gallery issues so that the $PWD is displayed in the label
+ * removed the ugly scrollbars in the directory file_selection boxes.
+ * other misc fixes as well. (good day! :)
+ *
  * Revision 1.10  1999/06/29 01:55:36  scottf
  * source code tidying. moved browse_ callbacks to callbacks.c but left
  * url_send_browse in util (could be very handy).
@@ -114,8 +121,7 @@ extern GtkWidget *index_window;
 extern struct ImageInfo Thumbnails;
 extern struct ImageInfo Images;
 extern struct _Camera *Camera;
-
-extern char filesel_cwd[];
+extern char   *filesel_cwd;
 
 /* initialize some tags */
 char gallery_name[256];
@@ -133,6 +139,7 @@ char picture_previous[128];
 void gallery_change_dir(GtkWidget *widget, GtkWidget *label) {
 
 	GtkWidget *filesel;
+	GList *child;
 
         filesel = gtk_file_selection_new("Select an Output Directory...");
 	gtk_window_set_position (GTK_WINDOW (filesel), GTK_WIN_POS_CENTER);
@@ -140,7 +147,13 @@ void gallery_change_dir(GtkWidget *widget, GtkWidget *label) {
 		filesel_cwd);
         gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_entry);
         gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_text);
-        gtk_widget_hide(GTK_FILE_SELECTION(filesel)->file_list);
+        /* get the main vbox children */
+        child = gtk_container_children(
+                GTK_CONTAINER(GTK_FILE_SELECTION(filesel)->main_vbox));
+        /* get the dir/file list box children */
+        child = gtk_container_children(
+                GTK_CONTAINER(child->next->next->data));
+        gtk_widget_hide(GTK_WIDGET(child->next->data));
 	gtk_widget_show(filesel);
 
         if (wait_for_hide(filesel,
@@ -152,10 +165,9 @@ void gallery_change_dir(GtkWidget *widget, GtkWidget *label) {
 	gtk_label_set(GTK_LABEL(label), strdup(
 	gtk_file_selection_get_filename(GTK_FILE_SELECTION(filesel))));
 	gtk_object_set_data(GTK_OBJECT(label), "dir", strdup(
-	gtk_file_selection_get_filename(GTK_FILE_SELECTION(filesel))));
+	   gtk_file_selection_get_filename(GTK_FILE_SELECTION(filesel))));
 	sprintf(filesel_cwd, "%s", gtk_file_selection_get_filename(
 		GTK_FILE_SELECTION(filesel)));
-
 	gtk_widget_destroy(filesel);
 }
 
@@ -205,7 +217,8 @@ void gallery_main() {
 	if (Thumbnails.next == NULL) {
 		error_dialog(
 "Please retrieve the index first,
-and select the images to include\nin the gallery by clicking on them.
+and select the images to include
+in the gallery by clicking on them.
 Then, re-run the HTML Gallery.");
 		return;
 	}
@@ -312,11 +325,11 @@ Please install/move gallery themes there.");
 	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
 	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 
-	dirlabel = gtk_label_new("./");
+	dirlabel = gtk_label_new(filesel_cwd);
 	gtk_widget_show(dirlabel);
 	gtk_label_set_justify(GTK_LABEL(dirlabel), GTK_JUSTIFY_LEFT);
 	gtk_box_pack_start_defaults(GTK_BOX(hbox), dirlabel);
-	gtk_object_set_data(GTK_OBJECT(dirlabel), "dir", "./");
+	gtk_object_set_data(GTK_OBJECT(dirlabel), "dir", filesel_cwd);
 
 	dirbutton = gtk_button_new_with_label("Change...");
 	gtk_widget_show(dirbutton);

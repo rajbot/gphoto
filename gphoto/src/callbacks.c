@@ -32,7 +32,6 @@
 #include "post_processing_on.xpm"
 #include "post_processing_off.xpm"
 
-char filesel_cwd[1024];
 static int okDownload;
 
 extern struct ImageInfo Thumbnails;
@@ -51,6 +50,8 @@ extern char	  post_process_script[];
 extern GtkWidget *post_process_pixmap;
 extern GtkWidget *index_vp;
 extern GtkWidget *index_table;
+
+extern char 	 *filesel_cwd;
 
 /* Search the image_info tags for "name", return its value (string) */
 char* find_tag(struct Image *im, char* name) {
@@ -245,9 +246,9 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 	GtkWidget *filesel, *label;
 	GtkWidget *entry;
 	GSList *group;
+	GList *child;
 
 	if ((strcmp("tn", type) != 0) && (strcmp("in", type) != 0)) {
-
 		/* Get an output directory */
 
 		filesel = gtk_file_selection_new(
@@ -256,7 +257,13 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 			GTK_WIN_POS_CENTER);
 		gtk_file_selection_set_filename(GTK_FILE_SELECTION(filesel),
 			filesel_cwd);
-		gtk_widget_hide(GTK_FILE_SELECTION(filesel)->file_list);
+	        /* get the main vbox children */
+	        child = gtk_container_children(
+	                GTK_CONTAINER(GTK_FILE_SELECTION(filesel)->main_vbox));
+	        /* get the dir/file list box children */
+	        child = gtk_container_children(
+	                GTK_CONTAINER(child->next->next->data));
+	        gtk_widget_hide(GTK_WIDGET(child->next->data));
 		gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_text);
 		gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_entry);
 
@@ -447,7 +454,7 @@ void port_dialog() {
 	gtk_window_set_title(GTK_WINDOW(dialog), "Select model/port...");
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
 	gtk_container_border_width(GTK_CONTAINER(dialog), 5);
-	gtk_widget_set_usize(dialog, 400, 300);
+	gtk_widget_set_usize(dialog, 450, 300);
 
 	/* Box going across the dialog... */
 	hbox = gtk_hbox_new(FALSE, 5);
@@ -1675,7 +1682,7 @@ void post_process_change (GtkWidget *widget, GtkWidget *win) {
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), pp,
 		FALSE, FALSE, 0);
 
-	label = gtk_label_new("Post-processing program:");
+	label = gtk_label_new("Post-processing command-line:");
 	gtk_widget_show(label);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
 		TRUE, TRUE, 0);
@@ -1688,10 +1695,10 @@ void post_process_change (GtkWidget *widget, GtkWidget *win) {
 		FALSE, FALSE, 0);
 
 	label = gtk_label_new(
-"Note: gPhoto will replace \"%s\" in the script command-line
-with the full path to the selected image. Please make sure the
-script exists.
-Example: /usr/local/bin/datestamp %s");
+"
+Note: gPhoto will replace \"%s\" in the script command-line
+with the full path to the selected image. See the User's Manual
+in the Help menu for more information. ");
 	gtk_widget_show(label);
 	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
@@ -1702,6 +1709,14 @@ Example: /usr/local/bin/datestamp %s");
 	/* Wait for them to close the dialog */
 	if (wait_for_hide(dialog, ok, cancel) == 0)
 		return;
+
+	if (strstr(gtk_entry_get_text(GTK_ENTRY(script)), "%s") == NULL) {
+		error_dialog(
+"Missing \"%s\" in the post-processing entry.
+This is required so the post-processing program
+knows where the image is located.");
+		return;
+	}
 
 	style = gtk_widget_get_style(win);
 

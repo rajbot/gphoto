@@ -24,7 +24,6 @@
 #include "post_processing_off.xpm"
 
 extern  struct Model cameras[];
-extern  char 	  filesel_cwd[];
 extern  GtkAccelGroup*  mainag;
 extern  int 	  command_line_mode;
 extern  char      *gphotoDir;		/* gPhoto directory		*/
@@ -49,6 +48,7 @@ extern  char	  serial_port[20];	/* Serial port			*/
 	struct ImageInfo Images;
 	struct ImageInfo Thumbnails;
 
+	char *filesel_cwd;
 
 int main (int argc, char *argv[]) {
 
@@ -94,9 +94,18 @@ int main (int argc, char *argv[]) {
                 /* (void)seteuid(getuid()); */
 	}
 #endif
+	/* Command line mode anyone? ----------------------------- */
+	if (argc > 1) {
+		command_line_mode = 1;
+		command_line(argc, argv);
+	} else
+		command_line_mode = 0;
 
 	/* Make sure there's a .gphoto directory in their home ---- */
-	sprintf(filesel_cwd, "%s", getenv("PWD"));
+
+	filesel_cwd = (char *)malloc(sizeof(char)*1024);
+	getcwd(filesel_cwd, 1024);
+
 	gphotoDir = getenv("HOME");
 	sprintf(gphotoDir, "%s/.gphoto", gphotoDir);
 	(void)mkdir(gphotoDir, 0744);
@@ -105,13 +114,6 @@ int main (int argc, char *argv[]) {
 
 	library_name = gtk_label_new("");
 	set_camera(camera_model);
-
-	/* Command line mode anyone? ----------------------------- */
-	if (argc > 1) {
-		command_line_mode = 1;
-		command_line(argc, argv);
-	} else
-		command_line_mode = 0;
 
 	/* set up the main window -------------------------------- */
 	mainWin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -245,8 +247,12 @@ int main (int argc, char *argv[]) {
 	if (!has_rc) {
 		/* put anything here to do on the first run */
 	  developer_dialog_create();
-	  browse_gphoto();
-	  error_dialog("Could not load config file.\nResetting to defaults");
+	  error_dialog(
+"Could not load config file.
+Resetting to defaults.
+Click on \"Select Port-Camera Model\"
+in the Configure menu to set your
+camera model and serial port");
 	}
 	gtk_main();
 	return(0);

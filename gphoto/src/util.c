@@ -13,7 +13,7 @@
 #define BROWSER "netscape"
 
 extern int command_line_mode;
-extern char filesel_cwd[];
+extern char *filesel_cwd;
 extern GtkWidget *browse_button;
 
 /* Read in gdk_imlib_load_image_mem for note

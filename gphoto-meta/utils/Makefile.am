@@ -1,1 +1,1 @@
-EXTRA_DIST = autodetect.sh common.sh
+EXTRA_DIST = common.sh

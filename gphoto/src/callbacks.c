@@ -587,9 +587,11 @@ void port_dialog() {
 	}
 	
 	if ( !fopen(serial_port, "w") ) {
-		message_window ( "Missing Serial Device Permissions",
-				 "The user doesn't have read or write access to the selected serial device.
-Please check the permissions (see the manual pages to learn about chown/chmod).
+		message_window ( 
+"Missing Serial Device Permissions",
+"The user doesn't have read or write access to the selected 
+serial device. Please check the permissions
+(see the manual pages to learn about chown/chmod).
 
 Under Linux each serial port may have different names:
 

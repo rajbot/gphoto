@@ -152,6 +152,23 @@ else
 fi
 
 dnl ******************************
+dnl Applet
+dnl ******************************
+AC_MSG_CHECKING(for applet libraries)
+if gnome-config --libs applets > /dev/null 2>&1; then
+	AC_MSG_RESULT(found)
+	APPLET_LIBS="`gnome-config --libs applets bonobo gdk_pixbuf`"
+	APPLET_CFLAGS="`gnome-config --cflags applets bonobo gdk_pixbuf`"
+	AC_SUBST(APPLET_LIBS)
+	AC_SUBST(APPLET_CFLAGS)
+else
+	AC_MSG_ERROR([
+*** You need the applet library installed for this version of
+*** ${PACKAGE}. Get a stable version from  http://www.gnome.org.
+*** Mirrors can be found at http://www.gnome.org/mirrors.])
+fi
+
+dnl ******************************
 dnl GConf
 dnl ******************************
 AM_PATH_GCONF(0.12,,,gconf-gtk)
@@ -189,6 +206,7 @@ dnl *********
 AC_OUTPUT([
 Makefile
 art/Makefile
+applet/Makefile
 intl/Makefile
 macros/Makefile
 po/Makefile.in

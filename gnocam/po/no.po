@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: GnoCam 0.7\n"
-"POT-Creation-Date: 2000-10-10 18:13+0200\n"
+"POT-Creation-Date: 2000-10-14 06:32+0200\n"
 "PO-Revision-Date: 2000-09-08 23:29+0200\n"
 "Last-Translator: Ole Aamot <ole@gnu.org>\n"
 "Language-Team: Norwegian (bokmål) <no@li.org>\n"
@@ -14,62 +14,80 @@ msgstr ""
 "Content-Type: text/plain; charset=iso-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/callbacks.c:414
+#: src/callbacks.c:188
+msgid ""
+"Couldn't find the GnoCam manual.\n"
+"Check that it is installed correctly in $PREFIX/share/gnome/help/gnocam\n"
+msgstr ""
+"Finner ikke GnoCam brukermanualen.\n"
+"Sjekk at den er innstallert i $PREFIX/share/gnome/help/gnocam\n"
+
+#: src/callbacks.c:191
+msgid ""
+"Couldn't find the GnoCam manual!\n"
+"\n"
+"Check that it is installed correctly in $PREFIX/share/gnome/help/gnocam\n"
+msgstr ""
+"Finner ikke GnoCam brukermanualen.\n"
+"\n"
+"Sjekk at den er innstallert i $PREFIX/share/gnome/help/gnocam\n"
+
+#: src/callbacks.c:488
 #, fuzzy, c-format
 msgid "Could not get preview of file '/%s' from the camera!"
 msgstr "Klarte ikke å laste ned miniatyr fra kameraet!"
 
-#: src/callbacks.c:415
+#: src/callbacks.c:489
 #, fuzzy, c-format
 msgid "Could not get preview of file '%s/%s' from the camera!"
 msgstr "Klarte ikke å laste ned miniatyr fra kameraet!"
 
-#: src/callbacks.c:454
+#: src/callbacks.c:528
 #, c-format
 msgid "Folder '%s' does neither contain folders nor files."
-msgstr ""
+msgstr "'%s' inneholder verken foldere eller filer."
 
-#: src/callbacks.c:456
+#: src/callbacks.c:530
 #, c-format
 msgid "Folder '%s' contains 1 folder."
 msgstr "'%s' inneholder 1 katalog."
 
-#: src/callbacks.c:458
+#: src/callbacks.c:532
 #, c-format
 msgid "Folder '%s' contains %i folders."
 msgstr "'%s' inneholder %i kataloger."
 
-#: src/callbacks.c:460
+#: src/callbacks.c:534
 #, c-format
 msgid "Folder '%s' contains 1 file."
 msgstr "'%s' inneholder 1 fil."
 
-#: src/callbacks.c:462
+#: src/callbacks.c:536
 #, c-format
 msgid "Folder '%s' contains 1 folder and 1 file."
 msgstr "'%s' inneholder 1 katalog og en fil."
 
-#: src/callbacks.c:464
+#: src/callbacks.c:538
 #, c-format
 msgid "Folder '%s' contains %i folders and 1 file."
 msgstr "'%s' inneholder 1 katalog og 1 fil."
 
-#: src/callbacks.c:466
+#: src/callbacks.c:540
 #, c-format
 msgid "Folder '%s' contains %i files."
 msgstr "'%s' inneholder %i filer."
 
-#: src/callbacks.c:468
+#: src/callbacks.c:542
 #, c-format
 msgid "Folder '%s' contains 1 folder and %i files."
 msgstr "'%s' inneholder 1 katalog og %i filer."
 
-#: src/callbacks.c:470
+#: src/callbacks.c:544
 #, c-format
 msgid "Folder '%s' contains %i folders and %i files. "
 msgstr "'%s' inneholder %i kataloger og %i filer."
 
-#: src/callbacks.c:475
+#: src/callbacks.c:549
 #, c-format
 msgid ""
 "%s\n"
@@ -82,21 +100,21 @@ msgstr ""
 "Kamera status:\n"
 "%s"
 
-#: src/callbacks.c:521
+#: src/callbacks.c:598
 #, fuzzy, c-format
 msgid "Could not get camera properties of camera %s!"
 msgstr "Klarte ikke å laste ned kamerainnstillinger!"
 
 #. Ask for duration.
-#: src/callbacks.c:622
+#: src/callbacks.c:700
 msgid "How long should the video be (in seconds)?"
 msgstr "Hvor lenge skal videoen vare? (i sekunder)"
 
-#: src/cameras.c:41 src/cameras.c:67
+#: src/callbacks.c:714 src/cameras.c:55
 msgid "Not yet implemented!"
 msgstr "Ikke implementert enda!"
 
-#: src/cameras.c:406
+#: src/cameras.c:472
 #, fuzzy, c-format
 msgid "Could not load image '%s'!"
 msgstr "Klarte ikke å hente fotografi!"
@@ -106,52 +124,57 @@ msgstr "Klarte ikke å hente fotografi!"
 msgid "An error occurred while trying to open file '%s' (%s)."
 msgstr "En feil oppstod idet filen '%s' (%s) ble forsøkt åpnet."
 
-#: src/file-operations.c:133
+#: src/file-operations.c:141
 #, c-format
 msgid "An error occurred while trying to read file '%s' (%s)."
 msgstr "En feil oppstod idet filen '%s' (%s) ble forsøkt lest."
 
-#: src/file-operations.c:167
+#: src/file-operations.c:174
 #, fuzzy, c-format
 msgid "Could not upload file '%s' into folder '%s'!"
 msgstr "Klarte ikke å laste ned liste over mapper!"
 
-#: src/file-operations.c:189
+#: src/file-operations.c:195
 #, c-format
 msgid "An error occurred while trying to open file '%s' for write access (%s)."
 msgstr "En feil oppstod idet filen '%s' (%s) ble forsøkt åpnet for skriving."
 
-#: src/file-operations.c:192
+#: src/file-operations.c:198
 #, c-format
 msgid "An error occurred while trying to write into file '%s' (%s)."
 msgstr "En feil oppstod idet filen '%s' (%s) ble forsøkt skrevet til."
 
-#: src/file-operations.c:195
+#: src/file-operations.c:201
 #, c-format
 msgid "An error occurred while trying to close the file '%s' (%s)."
 msgstr "En feil oppstod idet filen '%s' (%s) ble forsøkt lukket."
 
-#: src/file-operations.c:299
+#: src/file-operations.c:305
 #, fuzzy, c-format
 msgid "Could not get preview of file '%s/%s' from camera!"
 msgstr "Klarte ikke å laste ned miniatyr fra kameraet!"
 
-#: src/file-operations.c:300
+#: src/file-operations.c:306
 #, fuzzy, c-format
 msgid "Could not get file '%s/%s' from camera!"
 msgstr "Klarte ikke å laste ned fil fra kameraet!"
 
-#: src/file-operations.c:366
+#: src/file-operations.c:377
+#, fuzzy, c-format
+msgid "Could not delete '/%s'!"
+msgstr "Kunne ikke slette fil!"
+
+#: src/file-operations.c:378
 #, fuzzy, c-format
 msgid "Could not delete '%s/%s'!"
 msgstr "Kunne ikke slette fil!"
 
-#: src/gnocam.c:42
+#: src/gnocam.c:43
 #, fuzzy
 msgid "Could not initialize gnome-vfs!"
 msgstr "Klarte ikke å laste ned fil fra kameraet!"
 
-#: src/gnocam.c:46
+#: src/gnocam.c:47
 #, fuzzy, c-format
 msgid ""
 "Could not initialize gconf!\n"
@@ -162,27 +185,27 @@ msgstr ""
 "\n"
 "%s"
 
-#: src/gnocam.c:63
+#: src/gnocam.c:64
 msgid "Could not find "
 msgstr "Klarte ikke å finne "
 
-#: src/gnocam.c:63
+#: src/gnocam.c:64
 msgid "gnocam.glade. Check if "
 msgstr "gnocam.glade.  Sjekk at "
 
-#: src/gnocam.c:63
+#: src/gnocam.c:64
 msgid " was installed correctly."
 msgstr " den ble innstallert korrekt."
 
-#: src/gnocam.c:76
+#: src/gnocam.c:77
 msgid "It seems that you are running\n"
 msgstr "Det ser ut som om du kjører\n"
 
-#: src/gnocam.c:77
+#: src/gnocam.c:78
 msgid " for the first time.\n"
 msgstr " for første gang.\n"
 
-#: src/gnocam.c:78
+#: src/gnocam.c:79
 #, c-format
 msgid ""
 " is a small but powerful\n"
@@ -208,385 +231,384 @@ msgstr ""
 "\n"
 "(Standard katalogprefiks er satt til '%s'.)"
 
-#: src/gphoto-extensions.c:185
-#, fuzzy, c-format
-msgid "Could not set camera model to '%s'!"
-msgstr "Klarte ikke å sette kameramodell!"
-
-#: src/gphoto-extensions.c:214 src/gphoto-extensions.c:299
-#: src/preferences.c:771
+#: src/gphoto-extensions.c:35 src/preferences.c:761
 msgid "Could not get number of ports!"
 msgstr "Klarte ikke å finne antall porter!"
 
-#: src/gphoto-extensions.c:225
-#, fuzzy, c-format
-msgid "Could not get port information for port number %i!"
-msgstr "Klarte ikke å finne portinformasjon!"
-
-#: src/gphoto-extensions.c:237
-#, fuzzy, c-format
-msgid "Could not find port '%s'!"
-msgstr "Klarte ikke å finne port!"
-
-#: src/gphoto-extensions.c:264
-#, c-format
-msgid "Could not initialize camera on port '%s' with speed %i!"
-msgstr ""
-
-#: src/gphoto-extensions.c:307
+#: src/gphoto-extensions.c:40
 msgid "Could not get port information!"
 msgstr "Klarte ikke å finne portinformasjon!"
 
-#: src/gphoto-extensions.c:316
+#: src/gphoto-extensions.c:46
 msgid "Could not find port!"
 msgstr "Klarte ikke å finne port!"
 
-#: src/gphoto-extensions.c:328
+#: src/gphoto-extensions.c:58
 msgid "Could not set camera model!"
 msgstr "Klarte ikke å sette kameramodell!"
 
-#: src/gphoto-extensions.c:337
+#: src/gphoto-extensions.c:64
 #, fuzzy
 msgid "Could not initialize camera!"
 msgstr "Klarte ikke å laste ned fil fra kameraet!"
 
-#: src/preferences.c:87
+#: src/preferences.c:88
 #, fuzzy
 msgid "Please indicate a name!"
 msgstr "Du må angi et navn!"
 
-#: src/preferences.c:89
+#: src/preferences.c:90
 #, fuzzy
 msgid "Please indicate a model!"
 msgstr "Du må angi en modell!"
 
-#: src/preferences.c:160
+#: src/preferences.c:161
 msgid "Please select only one camera."
 msgstr "Velg kun ett kamera."
 
-#: src/preferences.c:163
+#: src/preferences.c:164
 msgid "Please select one camera first."
 msgstr "Velg ett kamera først."
 
-#: src/preferences.c:192
+#: src/preferences.c:193
 msgid "Please select a camera first!"
 msgstr "Velg et kamera først!"
 
-#: src/preferences.c:398
+#: src/preferences.c:399
 msgid "Could not get camera abilities!"
 msgstr "Klarte ikke å hente kamerafunksjoner!"
 
-#: src/preferences.c:739
+#: src/preferences.c:729
 msgid "Could not get model name!"
 msgstr "Klarte ikke å hente modellnavn!"
 
-#: src/preferences.c:750
+#: src/preferences.c:740
 msgid "Could not get number of supported models!"
 msgstr "Klarte ikke å hente antall støttede modeller!"
 
-#: src/preferences.c:759
+#: src/preferences.c:749
 msgid "Could not get port info!"
 msgstr "Klarte ikke å hente portinformasjon!"
 
-#: src/preview.c:38
+#: src/preview.c:47
 #, fuzzy, c-format
 msgid "Could not get preview from camera '%s'!"
 msgstr "Klarte ikke å laste ned miniatyr fra kameraet!"
 
-#: src/properties.c:67
+#: src/properties.c:68
 msgid "Could not set camera properties!"
 msgstr "Klarte ikke å lagre kamerainnstillinger!"
 
-#: src/properties.c:320
+#: src/properties.c:262
 msgid "%Y/%m/%d %H:%M:%S"
 msgstr "%Y/%m/%d %H:%M:%S"
 
-#. src/gnocam.glade:1075
-#: libglade-i18n.c:10
+#. gnocam.glade:1106
+#: src/libglade-i18n.c:10
 msgid "Add"
 msgstr "Legg til"
 
-#. src/gnocam.glade:1067
-#: libglade-i18n.c:13
+#. gnocam.glade:1098
+#: src/libglade-i18n.c:13
 msgid "Add camera to list."
 msgstr "Legg kamera til listen"
 
-#. src/gnocam.glade:1345
-#: libglade-i18n.c:16
+#. gnocam.glade:1379
+#: src/libglade-i18n.c:16
 msgid "Bilinear"
 msgstr "Bilineær"
 
-#. src/gnocam.glade:411 src/gnocam.glade:1654
-#: libglade-i18n.c:19
+#. gnocam.glade:424 gnocam.glade:1708
+#: src/libglade-i18n.c:19
 msgid "Capture Image"
 msgstr "Knips bilde"
 
-#. src/gnocam.glade:393
-#: libglade-i18n.c:22
+#. gnocam.glade:406
+#: src/libglade-i18n.c:22
 msgid "Capture Preview"
 msgstr "Forhåndsvisning"
 
-#. src/gnocam.glade:423 src/gnocam.glade:1666
-#: libglade-i18n.c:25
+#. gnocam.glade:436 gnocam.glade:1720
+#: src/libglade-i18n.c:25
 msgid "Capture Video"
 msgstr "Spill inn video"
 
-#. src/gnocam.glade:1507
-#: libglade-i18n.c:28
+#. gnocam.glade:1543
+#: src/libglade-i18n.c:28
 msgid "Clear"
 msgstr "Fjern"
 
-#. src/gnocam.glade:1139
-#: libglade-i18n.c:31
+#. gnocam.glade:1173
+#: src/libglade-i18n.c:31
 msgid "Debug Level"
 msgstr "Debug-nivå"
 
-#. src/gnocam.glade:294 src/gnocam.glade:1103
-#: libglade-i18n.c:34
+#. gnocam.glade:307 gnocam.glade:1136
+#: src/libglade-i18n.c:34
 msgid "Delete"
 msgstr "Slett"
 
-#. src/gnocam.glade:288
-#: libglade-i18n.c:37
+#. gnocam.glade:301
+#: src/libglade-i18n.c:37
 #, fuzzy
 msgid "Delete selected files"
 msgstr "Kunne ikke slette fil!"
 
-#. src/gnocam.glade:23 src/gnocam.glade:1557
-#: libglade-i18n.c:40
+#. gnocam.glade:23 gnocam.glade:1611
+#: src/libglade-i18n.c:40
 msgid "GnoCam"
 msgstr "GnoCam"
 
-#. src/gnocam.glade:378
-#: libglade-i18n.c:43
+#. gnocam.glade:391
+#: src/libglade-i18n.c:43
 msgid ""
 "GnoCam - a small but powerful front-end to gphoto2 for the GNOME desktop"
 msgstr ""
 "GnoCam - en liten og kraftig front-end til gphoto2 for GNOME skrivebordet"
 
-#. src/gnocam.glade:1223
-#: libglade-i18n.c:46
+#. gnocam.glade:1257
+#: src/libglade-i18n.c:46
 msgid "High"
-msgstr ""
+msgstr "Høy"
 
-#. src/gnocam.glade:854
-#: libglade-i18n.c:49
+#. gnocam.glade:885
+#: src/libglade-i18n.c:49
 msgid "How did you connect the camera to the computer?"
 msgstr "Hvordan koblet du kameraet til datamaskinen?"
 
-#. src/gnocam.glade:1345
-#: libglade-i18n.c:52
+#. gnocam.glade:1379
+#: src/libglade-i18n.c:52
 msgid "Hyper"
-msgstr ""
+msgstr "Hyper"
 
-#. src/gnocam.glade:891
-#: libglade-i18n.c:55
+#. gnocam.glade:922
+#: src/libglade-i18n.c:55
 msgid "If you leave this blank, the default speed will be used."
 msgstr ""
 "Hvis du lar dette feltet stå blankt, vil standardhastigheten bli benyttet."
 
-#. src/gnocam.glade:1319
-#: libglade-i18n.c:58
+#. gnocam.glade:1353
+#: src/libglade-i18n.c:58
 msgid "Interpolation Mode:"
 msgstr "Interpolation modus:"
 
-#. src/gnocam.glade:1183
-#: libglade-i18n.c:61
+#. gnocam.glade:1217
+#: src/libglade-i18n.c:61
 msgid "Low"
 msgstr "Lav"
 
-#. src/gnocam.glade:1269
-#: libglade-i18n.c:64
+#. gnocam.glade:1303
+#: src/libglade-i18n.c:64
 msgid "Magnification:"
 msgstr "Forstørrelse:"
 
-#. src/gnocam.glade:1203
-#: libglade-i18n.c:67
+#. gnocam.glade:1237
+#: src/libglade-i18n.c:67
 msgid "Medium"
 msgstr "Medium"
 
-#. src/gnocam.glade:777 src/gnocam.glade:1003
-#: libglade-i18n.c:70
+#. gnocam.glade:808 gnocam.glade:1034
+#: src/libglade-i18n.c:70
 msgid "Model"
 msgstr "Modell"
 
-#. src/gnocam.glade:725 src/gnocam.glade:990
-#: libglade-i18n.c:73
+#. gnocam.glade:756 gnocam.glade:1021
+#: src/libglade-i18n.c:73
 msgid "Name"
 msgstr "Navn"
 
-#. src/gnocam.glade:1345 src/gnocam.glade:1365
-#: libglade-i18n.c:76
+#. gnocam.glade:1379 gnocam.glade:1399
+#: src/libglade-i18n.c:76
 msgid "Nearest"
 msgstr "Nærmest"
 
-#. src/gnocam.glade:1798
-#: libglade-i18n.c:79
+#. gnocam.glade:1852
+#: src/libglade-i18n.c:79
 msgid "New File"
 msgstr "Ny Fil"
 
-#. src/gnocam.glade:1163
-#: libglade-i18n.c:82
+#. gnocam.glade:1197
+#: src/libglade-i18n.c:82
 msgid "None"
 msgstr "Ingen"
 
-#. src/gnocam.glade:751 src/gnocam.glade:1016
-#: libglade-i18n.c:85
+#. gnocam.glade:782 gnocam.glade:1047
+#: src/libglade-i18n.c:85
 msgid "Port"
 msgstr "Port"
 
-#. src/gnocam.glade:1111
-#: libglade-i18n.c:88
+#. gnocam.glade:1145
+#: src/libglade-i18n.c:88
 msgid "Prefix"
 msgstr "Prefiks"
 
-#. src/gnocam.glade:1239
-#: libglade-i18n.c:91
+#. gnocam.glade:1273
+#: src/libglade-i18n.c:91
 msgid "Previews"
 msgstr "Forhåndsvisninger"
 
-#. src/gnocam.glade:1614 src/gnocam.glade:1804
-#: libglade-i18n.c:94
+#. gnocam.glade:472 gnocam.glade:1603 gnocam.glade:1668 gnocam.glade:1858
+#: src/libglade-i18n.c:94
 msgid "Refresh"
 msgstr "Oppfrisk"
 
-#. src/gnocam.glade:1095
-#: libglade-i18n.c:97
+#. gnocam.glade:1128
+#: src/libglade-i18n.c:97
 #, fuzzy
 msgid "Remove selected cameras from list."
 msgstr "Velg ett kamera først."
 
-#. src/gnocam.glade:622
-#: libglade-i18n.c:100
+#. gnocam.glade:653
+#: src/libglade-i18n.c:100
 msgid "Revert"
 msgstr "Gjenopprett"
 
-#. src/gnocam.glade:1818
-#: libglade-i18n.c:103
+#. gnocam.glade:1872
+#: src/libglade-i18n.c:103
 msgid "Save"
 msgstr "Lagre"
 
-#. src/gnocam.glade:1832
-#: libglade-i18n.c:106
+#. gnocam.glade:1886
+#: src/libglade-i18n.c:106
 msgid "Save As..."
 msgstr "Lagre som..."
 
-#. src/gnocam.glade:1812 src/gnocam.glade:1826
-#: libglade-i18n.c:109
+#. gnocam.glade:1866 gnocam.glade:1880
+#: src/libglade-i18n.c:109
 msgid "Save File"
 msgstr "Lagre fil"
 
-#. src/gnocam.glade:520
-#: libglade-i18n.c:112
+#. gnocam.glade:551
+#: src/libglade-i18n.c:112
 msgid "Save File As..."
 msgstr "Lagre fil som..."
 
-#. src/gnocam.glade:266
-#: libglade-i18n.c:115
+#. gnocam.glade:279
+#: src/libglade-i18n.c:115
 msgid "Save File(s)"
 msgstr "Lagre fil(er)"
 
-#. src/gnocam.glade:119 src/gnocam.glade:280
-#: libglade-i18n.c:118
+#. gnocam.glade:119 gnocam.glade:293
+#: src/libglade-i18n.c:118
 msgid "Save File(s) As..."
 msgstr "Lagre fil(er) som..."
 
-#. src/gnocam.glade:488
-#: libglade-i18n.c:121
+#. gnocam.glade:519
+#: src/libglade-i18n.c:121
 msgid "Save Preview As..."
 msgstr "Lagre forhåndsvisning som..."
 
-#. src/gnocam.glade:238
-#: libglade-i18n.c:124
+#. gnocam.glade:251
+#: src/libglade-i18n.c:124
 msgid "Save Preview(s)"
 msgstr "Lagre forhåndsvisning(er)"
 
-#. src/gnocam.glade:93 src/gnocam.glade:252
-#: libglade-i18n.c:127
+#. gnocam.glade:93 gnocam.glade:265
+#: src/libglade-i18n.c:127
 msgid "Save Preview(s) As..."
 msgstr "Lagre forhåndsvisning(er) som..."
 
-#. src/gnocam.glade:507
-#: libglade-i18n.c:130
+#. gnocam.glade:538
+#: src/libglade-i18n.c:130
 msgid "Save _File"
 msgstr "Lagre _fil"
 
-#. src/gnocam.glade:106
-#: libglade-i18n.c:133
+#. gnocam.glade:106
+#: src/libglade-i18n.c:133
 msgid "Save _File(s)"
 msgstr "Lagre _fil(er)"
 
-#. src/gnocam.glade:475
-#: libglade-i18n.c:136
+#. gnocam.glade:506
+#: src/libglade-i18n.c:136
 msgid "Save _Preview"
 msgstr "Lagre _forhåndsvisning"
 
-#. src/gnocam.glade:80
-#: libglade-i18n.c:139
+#. gnocam.glade:80
+#: src/libglade-i18n.c:139
 msgid "Save _Preview(s)"
 msgstr "Lagre _forhåndsvisning(er)"
 
-#. src/gnocam.glade:260
-#: libglade-i18n.c:142
+#. gnocam.glade:273
+#: src/libglade-i18n.c:142
 msgid "Save selected files"
 msgstr "Lagre valgte filer"
 
-#. src/gnocam.glade:232 src/gnocam.glade:246 src/gnocam.glade:274
-#: libglade-i18n.c:145
+#. gnocam.glade:245 gnocam.glade:259 gnocam.glade:287
+#: src/libglade-i18n.c:145
 msgid "Save selected previews"
 msgstr "Lagre valgte forhåndsvisning(er)"
 
-#. src/gnocam.glade:1379
-#: libglade-i18n.c:148
+#. gnocam.glade:1413
+#: src/libglade-i18n.c:148
 msgid "Select File"
 msgstr "Velg fil"
 
-#. src/gnocam.glade:928
-#: libglade-i18n.c:151
+#. gnocam.glade:959
+#: src/libglade-i18n.c:151
 msgid "Select your camera model here."
 msgstr "Velg kameramodellen din her."
 
-#. src/gnocam.glade:669
-#: libglade-i18n.c:154
+#. gnocam.glade:700
+#: src/libglade-i18n.c:154
 msgid "Setting"
 msgstr "Innstilling"
 
-#. src/gnocam.glade:803 src/gnocam.glade:1029
-#: libglade-i18n.c:157
+#. gnocam.glade:834 gnocam.glade:1060
+#: src/libglade-i18n.c:157
 msgid "Speed"
 msgstr "Hastighet"
 
-#. src/gnocam.glade:700
-#: libglade-i18n.c:160
+#. gnocam.glade:731
+#: src/libglade-i18n.c:160
 msgid "The camera will show up in the program with this name."
 msgstr "Kameraet vil vises i programmet med dette navnet"
 
-#. src/gnocam.glade:1345
-#: libglade-i18n.c:163
+#. gnocam.glade:1379
+#: src/libglade-i18n.c:163
 msgid "Tiles"
 msgstr "Tiller"
 
-#. src/gnocam.glade:1089
-#: libglade-i18n.c:166
+#. gnocam.glade:1121
+#: src/libglade-i18n.c:166
 msgid "Update"
 msgstr "Oppdatere"
 
-#. src/gnocam.glade:1081
-#: libglade-i18n.c:169
+#. gnocam.glade:1113
+#: src/libglade-i18n.c:169
 msgid "Update settings of selected camera."
 msgstr "Oppdatere innstillingene på det valgte kameraet"
 
-#. src/gnocam.glade:441
-#: libglade-i18n.c:172
+#. gnocam.glade:454
+#: src/libglade-i18n.c:172
 msgid "Upload File"
 msgstr "Last opp fil"
 
-#. src/gnocam.glade:1549
-#: libglade-i18n.c:175
+#. gnocam.glade:1585
+#: src/libglade-i18n.c:175
 msgid "Upload file"
 msgstr "Last opp fil"
 
-#. src/gnocam.glade:132 src/gnocam.glade:539
-#: libglade-i18n.c:178
+#. gnocam.glade:206
+#: src/libglade-i18n.c:178
+msgid "User _Manual"
+msgstr "Bruker_manual"
+
+#. gnocam.glade:132 gnocam.glade:570
+#: src/libglade-i18n.c:181
 msgid "_Delete"
 msgstr "_Slett"
+
+#~ msgid "Couldn't find the GnoCam manual!"
+#~ msgstr "Klarte ikke å finne GnoCam brukermanualen!"
+
+#, fuzzy
+#~ msgid "Could not set camera model to '%s'!"
+#~ msgstr "Klarte ikke å sette kameramodell!"
+
+#, fuzzy
+#~ msgid "Could not get port information for port number %i!"
+#~ msgstr "Klarte ikke å finne portinformasjon!"
+
+#, fuzzy
+#~ msgid "Could not find port '%s'!"
+#~ msgstr "Klarte ikke å finne port!"

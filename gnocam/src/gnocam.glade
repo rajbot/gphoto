@@ -204,6 +204,25 @@
 
 	    <widget>
 	      <class>GtkPixmapMenuItem</class>
+	      <name>manual1</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_manual_activate</handler>
+		<last_modification_time>Sat, 14 Oct 2000 13:14:59 GMT</last_modification_time>
+	      </signal>
+	      <label>_Manual</label>
+	      <right_justify>False</right_justify>
+	      <stock_icon>GNOME_STOCK_MENU_BOOK_RED</stock_icon>
+	    </widget>
+
+	    <widget>
+	      <class>GtkMenuItem</class>
+	      <name>separator14</name>
+	      <right_justify>False</right_justify>
+	    </widget>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
 	      <name>about</name>
 	      <signal>
 		<name>activate</name>

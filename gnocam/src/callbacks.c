@@ -48,7 +48,8 @@ void on_save_files_as_activate 		(GtkMenuItem* menuitem, gpointer user_data);
 void on_delete_activate 		(GtkMenuItem* menuitem, gpointer user_data);
 void on_exit_activate 			(GtkMenuItem* menuitem, gpointer user_data);
 void on_preferences_activate 		(GtkMenuItem* menuitem, gpointer user_data);
-void on_about_activate 			(GtkMenuItem* menuitem, gpointer user_data);
+void on_about_activate			(GtkMenuItem* menuitem, gpointer user_data);
+void on_manual_activate			(GtkMenuItem* menuitem, gpointer user_data);
 
 void on_camera_tree_popup_file_delete_activate 		(GtkMenuItem* menuitem, gpointer user_data);
 void on_camera_tree_popup_file_save_file_activate 	(GtkMenuItem* menuitem, gpointer user_data);
@@ -193,15 +194,33 @@ on_exit_activate (GtkMenuItem* menuitem, gpointer user_data)
 }
 
 void
-on_preferences_activate (GtkMenuItem *menuitem, gpointer user_data)
+on_preferences_activate (GtkMenuItem* menuitem, gpointer user_data)
 {
         preferences ();
 }
 
 void
-on_about_activate (GtkMenuItem *menuitem, gpointer user_data)
+on_about_activate (GtkMenuItem* menuitem, gpointer user_data)
 {
 	g_assert (glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "about") != NULL);
+}
+
+void
+on_manual_activate (GtkMenuItem* menuitem, gpointer user_data)
+{
+	gchar*	manualfile;
+
+	if ((manualfile = gnome_help_file_find_file ("gnocam", "index.html"))) {
+		gchar* url = g_strconcat ("file:", manualfile, NULL);
+		gnome_help_goto (NULL, url);
+		g_free (url);
+		g_free (manualfile);
+	} else {
+		dialog_information (
+			"Could not find the manual for " PACKAGE ". "
+			"Check if it has been installed correctly in "
+			"$PREFIX/share/gnome/help/gnocam.");
+	}
 }
 
 void 

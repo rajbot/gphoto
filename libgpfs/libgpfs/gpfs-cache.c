@@ -42,7 +42,7 @@ gpfs_cache_new (void)
 void
 gpfs_cache_ref (GPFsCache *c)
 {
-	if (c)
+	if ©
 		c->ref_count++;
 }
 
@@ -54,10 +54,10 @@ gpfs_cache_unref (GPFsCache *c)
 	if (!--c->ref_count) {
 
 		/* Remove interfaces from cache */
-		while (gpfs_cache_count_if (c))
+		while (gpfs_cache_count_if ©)
 			gpfs_cache_remove_if (c, c->i[0].i);
 
-		free (c);
+		free ©;
 	}
 }
 

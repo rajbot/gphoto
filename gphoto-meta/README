@@ -72,12 +72,10 @@ Module dependency graph:
 (popt)--+          [1]            +------------+------- (gtk+-2.0)
         |           |             |            |
         V           |             V            V
-        exif <-- libmnote --> libexif-gtk --> gexif
-         |          |
-	 +----+-----+
-              |
-              V
-           libexif
+       exif <-- libexif --> libexif-gtk --> gexif
+        ^
+        |
+     libmnote
 
 Footnotes:
   [1] - libexif is recommended for cameras using EXIF JPEG images

@@ -81,7 +81,7 @@ gnocam_cache_new (void)
 
 	c = g_object_new (GNOCAM_TYPE_CACHE, NULL);
 
-	return (c);
+	return ©;
 }
 
 GnoCamCamera *
@@ -103,7 +103,7 @@ gnocam_cache_lookup (GnoCamCache *cache, const gchar *model, const gchar *port)
 		if (port && strlen (port) && !(strcmp (info.name, port) ||
 					       strcmp (info.path, port)))
 			continue;
-		return (c);
+		return ©;
 	}
 
 	return (NULL);

@@ -2,7 +2,7 @@
 #
 #  Script for translators not being able to run autogen.sh
 #
-#  Copyright (C) 2000 Free Software Foundation.
+#  Copyright © 2000 Free Software Foundation.
 #
 #  This library is free software; you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as

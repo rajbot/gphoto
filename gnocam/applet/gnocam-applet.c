@@ -564,7 +564,7 @@ gnocam_applet_about_cb (BonoboUIComponent *uic, GnoCamApplet *a,
 	pixbuf = gdk_pixbuf_new_from_file (IMAGEDIR "gnocam-camera1.png", &e);
 	about = gnome_about_new (
 		_("Camera Applet"), VERSION,
-		_("Copyright (c) 2002 Lutz Mueller"),
+		_("Copyright © 2002 Lutz Mueller"),
 		_("Access your digital camera."),
 		authors, documenters,
 		(strcmp (translator_credits, "translator_credits") ?

@@ -140,7 +140,7 @@ func_read_cb (GPFsIf *i, GPFsErr *e, const char *data, unsigned int size,
 	memcpy (c, data, size);
 	printf ("Received data '%s' from interface '%s'!\n", c,
 		gpfs_if_get_name (i));
-	free (c);
+	free ©;
 }
 
 int
@@ -192,7 +192,7 @@ main (int argc, char **argv)
 	}
 
 	printf ("There are now %i interfaces in our cache.\n", 
-		gpfs_cache_count_if (c));
+		gpfs_cache_count_if ©);
 	printf ("Testing interfaces again...\n");
 	for (j = 0; j < n; j++) {
 		i = gpfs_file_get_if (f, j);
@@ -201,7 +201,7 @@ main (int argc, char **argv)
 
 	gpfs_file_unref (f);
 
-	gpfs_cache_unref (c);
+	gpfs_cache_unref ©;
 
 	return 0;
 }

@@ -61,11 +61,10 @@ void MainWindow::initWidgets()
     iconView = new KIconView(this);
     iconView->setMode(KIconView::Select);
     iconView->setSelectionMode(KIconView::Multi);
-    iconView->setAutoArrange(true);
+    iconView->setItemsMovable(false);
+    iconView->setResizeMode(KIconView::Adjust);
     connect(iconView,SIGNAL(selectionChanged()),
             this,SLOT(selectionChanged()));
-    connect(iconView,SIGNAL(moved()),
-            iconView,SLOT(arrangeItemsInGrid()));
     
     /* FIXME: Iconviews don't support background pixmaps ? */
     /*iconView->setBackgroundPixmap( KApplication::kApplication()->iconLoader()->loadIcon("canvas",KIcon::Desktop));
@@ -171,26 +170,26 @@ void MainWindow::initCamera()
     } 
 }
 
-
-/* Slots */
 void MainWindow::saveSelected() 
 {
+    for (QIconViewItem *i = iconView->firstItem(); i; i = i->nextItem()) {
+        if (i->isSelected())
+            GPInterface::downloadPicture(i->text(),"/");
+    } 
 }
-
 
 void MainWindow::selectWorkDir()
 {
     QString dir = KFileDialog::getExistingDirectory(
-        GPInterface::getFolder(), this);
+        GPInterface::getWorkDir(), this);
     
     if (!dir.isNull()) 
-        GPInterface::setFolder(dir);
+        GPInterface::setWorkDir(dir);
 }
 
 
 void MainWindow::downloadThumbs()
 {
-    
     iconView->clear();
     try {
         QProgressBar* bar=new QProgressBar(statusBar());
@@ -200,10 +199,6 @@ void MainWindow::downloadThumbs()
     catch (QString str) {
         KMessageBox::error(this, str);
     }
-    /*new QIconViewItem(iconView,0,"Testje", 
-            GPInterface::downloadThumb(0));
-    new QIconViewItem(iconView,0,"Testje 2",
-            GPInterface::downloadThumb(1));*/
 }
 
 

@@ -6,7 +6,8 @@ then
     metadir="${PWD}"
 fi
 
-cvsmodulelist="${metadir}/cvs-module-list"
+cvsmodulelistsource="${metadir}/cvs-module-list"
+cvsmodulelist="${metadir}/cvs-module-list.filtered"
 
 cvsorig="${metadir}/cvs-orig"
 cvssrc="${metadir}/cvs-src"
@@ -38,6 +39,12 @@ cmd() {
 	fail
     fi
 }
+
+if [ "$cvsmodulelistsource" -nt "$cvsmodulelist" ]
+then
+    echo "Re-creating $cvsmodulelist from $cvsmodulelistsource"
+    grep -v '^#' < "$cvsmodulelistsource" | grep -v "^$" > "$cvsmodulelist"
+fi
 
 if bzip2 --version < /dev/null > /dev/null 2>&1
 then

@@ -49,7 +49,7 @@ oaf_in_files = GNOME_GnoCam.oaf.in
 oaf_DATA = $(oaf_in_files:.oaf.in=.oaf)
 @XML_I18N_MERGE_OAF_RULE@
 
-EXTRA_DIST = $(oaf_in_files)
+EXTRA_DIST = $(oaf_in_files) $(oaf_DATA)
 
 dist-hook:
 	cd $(distdir); rm -f $(BUILT_SOURCES)

@@ -180,8 +180,7 @@ static GnomeVFSMethod method = {
 GnomeVFSMethod*
 vfs_module_init (const gchar* method_name, const gchar* args)
 {
-	g_print ("vfs_module_init\n");
-
+	if (!gconf_is_initialized ()) gconf_init (0, NULL, NULL);
 	gp_init (GP_DEBUG_NONE);
 	return &method;
 }
@@ -309,7 +308,7 @@ static GnomeVFSResult do_open_directory (
 	
 	g_print ("do_open_directory (%s)\n", gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE));
 	
-	*handle = directory_handle_new (uri, &result);
+	*handle = directory_handle_new (uri, options, &result);
 	return (result);
 }
 
@@ -331,29 +330,35 @@ static GnomeVFSResult do_read_directory (
 {
 	directory_handle_t*	directory_handle;
 	
-	g_print ("do_read_directory\n");
+	g_print ("CAMERA: do_read_directory\n");
 
-	info->valid_fields = 0;
 	directory_handle = (directory_handle_t*) handle;
+	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_NONE;
 	if (directory_handle->position < g_slist_length (directory_handle->folders)) {
 
 		/* Folder */
 		info->name = g_strdup (g_slist_nth_data (directory_handle->folders, directory_handle->position));
 		info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
 		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
-		g_print ("  %s read...\n", info->name);
+		if (directory_handle->options & GNOME_VFS_FILE_INFO_GET_MIME_TYPE) {
+			info->mime_type = g_strdup ("x-directory/normal");
+			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+		}
 	} else if (directory_handle->position < g_slist_length (directory_handle->folders) + g_slist_length (directory_handle->files)) {
 
 		/* File */
 		info->name = g_strdup (g_slist_nth_data (directory_handle->files, directory_handle->position - g_slist_length (directory_handle->folders)));
 		info->type = GNOME_VFS_FILE_TYPE_REGULAR;
 		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
-		info->mime_type = g_strdup ("image/jpeg");
-		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
-		info->flags = GNOME_VFS_FILE_FLAGS_NONE;
-		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_FLAGS;
-		g_print ("  %s read...\n", info->name);
-	} else return (GNOME_VFS_ERROR_EOF);
+		if (directory_handle->options & GNOME_VFS_FILE_INFO_GET_MIME_TYPE) {
+			info->mime_type = g_strdup ("image/png");
+			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+		}
+	} else {
+		directory_handle->position = -1;
+		return (GNOME_VFS_ERROR_EOF);
+	}
+	GNOME_VFS_FILE_INFO_SET_LOCAL (info, FALSE);
 	
 	directory_handle->position++;
 	return (GNOME_VFS_OK);
@@ -362,23 +367,42 @@ static GnomeVFSResult do_read_directory (
 static GnomeVFSResult do_get_file_info (
         GnomeVFSMethod*                 method,
         GnomeVFSURI*                    uri,
-        GnomeVFSFileInfo*               file_info,
+        GnomeVFSFileInfo*               info,
         GnomeVFSFileInfoOptions         options,
         GnomeVFSContext*                context)
 {
-	g_print ("do_get_file_info\n");
-	file_info->valid_fields = 0;
-	g_print ("BASENAME: %s\n", gnome_vfs_uri_get_basename (uri));
-	file_info->name = g_strdup (gnome_vfs_uri_get_basename (uri));
-
-	/* Type of file? */
-	file_info->type = GNOME_VFS_FILE_TYPE_REGULAR;
-	file_info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
-
-	/* Mime type? */
-	file_info->mime_type = g_strdup ("image/jpeg");
-	file_info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+	GnomeVFSURI*	parent;
 	
+	g_print ("CAMERA: do_get_file_info (%s)\n", gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE));
+
+	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_NONE;
+	if (gnome_vfs_uri_get_basename (uri)) {
+		
+		/* File */
+		info->name = g_strdup (gnome_vfs_uri_get_basename (uri));
+		info->type = GNOME_VFS_FILE_TYPE_REGULAR;
+		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
+		if (options & GNOME_VFS_FILE_INFO_GET_MIME_TYPE) {
+			info->mime_type = g_strdup ("image/png");
+			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+		}
+	} else {
+		
+		/* Directory */
+		if (!(parent = gnome_vfs_uri_get_parent (uri))) info->name = g_strdup ("/");
+		else {
+			info->name = g_strdup (gnome_vfs_uri_extract_dirname (uri));
+			gnome_vfs_uri_unref (parent);
+		}
+		info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
+		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
+		if (options & GNOME_VFS_FILE_INFO_GET_MIME_TYPE) {
+			info->mime_type = g_strdup ("x-directory/normal");
+			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+		}
+	}
+	GNOME_VFS_FILE_INFO_SET_LOCAL (info, FALSE);	
+
 	return (GNOME_VFS_OK);
 }
 

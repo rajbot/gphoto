@@ -27,7 +27,7 @@ camera_new_by_uri (GnomeVFSURI* uri, GnomeVFSResult* result)
 
         /* Does gconf know about the camera (host)? */
 	g_print ("    searching host...\n");
-//	g_assert (client = gconf_client_get_default ());
+	g_assert (client = gconf_client_get_default ());
 //	gconf_client_add_dir (client, "/apps/GnoCam", GCONF_CLIENT_PRELOAD_NONE, NULL);
 //	if (!(value = gconf_client_get (client, "/apps/GnoCam/cameras", NULL))) {
 //		gtk_object_unref (GTK_OBJECT (client));
@@ -55,10 +55,11 @@ camera_new_by_uri (GnomeVFSURI* uri, GnomeVFSResult* result)
 //	        *result = GNOME_VFS_ERROR_HOST_NOT_FOUND;
 //	        return (NULL);
 //	}
-//	gtk_object_unref (GTK_OBJECT (client));
+	gtk_object_unref (GTK_OBJECT (client));
 
         /* Connect to the camera (host). */
 	g_print ("    connecting to host...\n");
+//	if (!(camera = gp_camera_new_by_description (0, "MyCamera", "Directory Browse", "Serial Port 0", 0))) {
 	if (!(camera = gp_camera_new_by_description (0, "MyCamera", "HP PhotoSmart C30", "Serial Port 0", 0))) {
 //	if (!(camera = gp_camera_new_by_description (atoi (id), name, model, port, atoi (speed)))) {
                 *result = GNOME_VFS_ERROR_SERVICE_NOT_AVAILABLE;
@@ -85,9 +86,7 @@ file_handle_new (GnomeVFSURI* uri, GnomeVFSResult* result)
 	}
 
 	/* Connect to the camera. */
-	if (!(camera = camera_new_by_uri (uri, result))) {
-		return (NULL);
-	}
+	if (!(camera = camera_new_by_uri (uri, result))) return (NULL);
 
         /* Get the file. */
 	dirname = gnome_vfs_uri_extract_dirname (uri);
@@ -121,7 +120,7 @@ file_handle_free (GnomeVFSMethodHandle* handle)
 }
 
 GnomeVFSMethodHandle*
-directory_handle_new (GnomeVFSURI* uri, GnomeVFSResult* result)
+directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options, GnomeVFSResult* result)
 {
 	Camera* 		camera;
 	directory_handle_t*	directory_handle;
@@ -131,13 +130,10 @@ directory_handle_new (GnomeVFSURI* uri, GnomeVFSResult* result)
 	gint			i;
 
 	/* Connect to the camera. */
-	g_print ("  connecting to camera...\n");
-	if (!(camera = camera_new_by_uri (uri, result))) {
-		return (NULL);
-	}
+	if (!(camera = camera_new_by_uri (uri, result))) return (NULL);
 
 	/* Get folder list. */
-	g_print ("  getting folder list...\n");
+	g_print ("  looking for folders in %s\n", gnome_vfs_uri_extract_dirname (uri));
 	if ((gp_camera_folder_list (camera, &list, gnome_vfs_uri_extract_dirname (uri))) != GP_OK) {
 		g_print ("Could not get folder list!");
 		*result = GNOME_VFS_ERROR_GENERIC;
@@ -145,28 +141,28 @@ directory_handle_new (GnomeVFSURI* uri, GnomeVFSResult* result)
 		return (NULL);
 	}
 	for (i = 0; i < gp_list_count (&list); i++) folders = g_slist_append (folders, g_strdup (gp_list_entry (&list, i)->name));
-	g_print ("    %i folders...\n", g_slist_length (folders));
 
 	/* Get file list. */
-	g_print ("  getting file list...\n");
+	g_print ("  looking for files in %s\n", gnome_vfs_uri_extract_dirname (uri));
 	if ((gp_camera_file_list (camera, &list, gnome_vfs_uri_extract_dirname (uri))) != GP_OK) {
 		g_print ("Could not get file list!");
-		//FIXME: free slist.
+		for (i = 0; i < g_slist_length (folders); i++) g_free (g_slist_nth_data (folders, i));
+		g_slist_free (folders);
 		*result = GNOME_VFS_ERROR_GENERIC;
 		gp_camera_unref (camera);
 		return (NULL);
 	}
 	for (i = 0; i < gp_list_count (&list); i++) files = g_slist_append (files, g_strdup (gp_list_entry (&list, i)->name));
-	g_print ("    %i files...\n", g_slist_length (files));
 
 	/* Create the directory handle. */
 	directory_handle = g_new (directory_handle_t, 1);
 	directory_handle->folders = folders;
 	directory_handle->files = files;
+	directory_handle->options = options;
 	directory_handle->position = 0;
 
 	*result = GNOME_VFS_OK;
-	gp_camera_free (camera);
+//	gp_camera_unref (camera);
 	return ((GnomeVFSMethodHandle*) directory_handle);
 }
 
@@ -180,7 +176,9 @@ directory_handle_free (GnomeVFSMethodHandle* handle)
 
 	directory_handle = (directory_handle_t*) handle;
 	for (i = 0; i < g_slist_length (directory_handle->folders); i++) g_free (g_slist_nth_data (directory_handle->folders, i));
+	g_slist_free (directory_handle->folders);
 	for (i = 0; i < g_slist_length (directory_handle->files); i++) g_free (g_slist_nth_data (directory_handle->files, i));
+	g_slist_free (directory_handle->files);
 	g_free (directory_handle);
 	return (GNOME_VFS_OK);
 }

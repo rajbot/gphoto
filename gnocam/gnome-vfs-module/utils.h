@@ -8,9 +8,10 @@ typedef struct {
 } file_handle_t;
 
 typedef struct {
-	GSList*		folders;
-	GSList*		files;
-        gint		position;
+	GSList*			folders;
+	GSList*			files;
+	GnomeVFSFileInfoOptions	options;
+        gint			position;
 } directory_handle_t;
 
 /**************/
@@ -19,7 +20,7 @@ typedef struct {
 
 Camera*	camera_new_by_uri (GnomeVFSURI* uri, GnomeVFSResult* result);
 
-GnomeVFSMethodHandle*	directory_handle_new 	(GnomeVFSURI* uri, GnomeVFSResult* result);
+GnomeVFSMethodHandle*	directory_handle_new 	(GnomeVFSURI* uri, GnomeVFSFileInfoOptions options, GnomeVFSResult* result);
 GnomeVFSResult		directory_handle_free	(GnomeVFSMethodHandle* handle);
 
 GnomeVFSMethodHandle*	file_handle_new		(GnomeVFSURI* uri, GnomeVFSResult* result);

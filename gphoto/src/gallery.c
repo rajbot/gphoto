@@ -40,6 +40,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.23  2000/03/23 23:18:02  ole
+ * Misc. i18n modifications
+ *
  * Revision 1.22  2000/03/06 21:23:06  ole
  * Released 0.4.3.
  *
@@ -271,9 +274,9 @@ void gallery_main() {
 
 	if (Thumbnails.next == NULL) {
 		error_dialog(
-"Please retrieve the index first,
-and select the images to include
-in the gallery by clicking on them.
+"Please retrieve the index first,\
+and select the images to include\
+in the gallery by clicking on them.\
 Then, re-run the HTML Gallery.");
 		return;
 	}

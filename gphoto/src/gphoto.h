@@ -10,6 +10,9 @@
 #include <gdk_imlib.h>
 #include <gtk/gtk.h>
 
+#include <libintl.h>
+#define N_(String) gettext (String)
+
 struct Image {
 	int     image_size;		/* # of bytes of image */
 	char   *image;			/* image data */

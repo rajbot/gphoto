@@ -111,11 +111,11 @@ void set_camera (char *model) {
 void configure_call() {
 
 	if ((*Camera->configure)() == 0)
-	 	error_dialog("No configuration options.");
+	 	error_dialog(N_("No configuration options."));
 }
 
 void mail_image_call() {
-	error_dialog("Mail image needs to be implemented!");
+	error_dialog(N_("Mail image needs to be implemented!"));
 }
 
 void takepicture_call() {
@@ -123,12 +123,12 @@ void takepicture_call() {
 	char status[256];
 	int picNum;
 
-	update_status("Taking picture...");
+	update_status(N_("Taking picture..."));
 	
 	picNum = (*Camera->take_picture)();
 
 	if (picNum == 0) {
-	    error_dialog ("Could not take a picture.");
+	    error_dialog (N_("Could not take a picture."));
 	    return;
 	}
 	    
@@ -147,7 +147,7 @@ void format (GtkWidget *dialog, GtkObject *button) {
 	i = no_pics;
 
         gtk_widget_hide(dialog);
-        update_status("Deleting ALL pictures.");
+        update_status(N_("Deleting ALL pictures."));
 
 	/* empty camera memory... */
 
@@ -159,7 +159,7 @@ void format (GtkWidget *dialog, GtkObject *button) {
 	    update_status(error);
 	    update_progress((float)i/(float)no_pics);
 	}
-	update_status ("Deleted all images.");
+	update_status (N_("Deleted all images."));
 	update_progress(0);
         gtk_widget_destroy(dialog);
 }
@@ -172,7 +172,7 @@ void del_pics (GtkWidget *dialog, GtkObject *button) {
         struct ImageMembers *node = &Thumbnails;
 
         gtk_widget_hide(dialog);
-        update_status("Deleting selected pictures...");
+        update_status(N_("Deleting selected pictures..."));
 
         /* delete from camera... */
         node = node->next;  /* Point at first thumbnail */
@@ -193,7 +193,7 @@ void del_pics (GtkWidget *dialog, GtkObject *button) {
 		i++;
         }
         gtk_widget_destroy(dialog);
-        update_status("Done.");
+        update_status(N_("Done."));
 }
 
 void del_dialog (int type) {
@@ -215,7 +215,7 @@ void del_dialog (int type) {
 		    nothing_selected = 0;
 	    }
 	    if (nothing_selected) {
-		update_status("Nothing selected to be deleted.");
+		update_status(N_("Nothing selected to be deleted."));
 		return;
 	    }
 	}
@@ -223,16 +223,16 @@ void del_dialog (int type) {
 	dialog = gtk_dialog_new();
 	
 	if (type==0) {
-	    label = gtk_label_new("Are you sure you want to DELETE the selected images?");
+	    label = gtk_label_new(N_("Are you sure you want to DELETE the selected images?"));
 	} else if (type==1) {
-	    label = gtk_label_new("Are you sure you want to DELETE all the images from memory?");
+	    label = gtk_label_new(N_("Are you sure you want to DELETE all the images from memory?"));
 	}
 
 	gtk_widget_show(label);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
 			   FALSE, FALSE, 0);
 
-	button = gtk_button_new_with_label("Yes");
+	button = gtk_button_new_with_label(N_("Yes"));
 	gtk_widget_show(button);
 	
 	if (type==0) {
@@ -247,7 +247,7 @@ void del_dialog (int type) {
 
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
 			   button, FALSE, FALSE, 0);
-	button = gtk_button_new_with_label("No");
+	button = gtk_button_new_with_label(N_("No"));
 	gtk_widget_show(button);
 	gtk_signal_connect_object(GTK_OBJECT(button), "clicked", 
 				  GTK_SIGNAL_FUNC(gtk_widget_destroy), 
@@ -334,7 +334,7 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 		gtk_box_pack_end_defaults(GTK_BOX(GTK_FILE_SELECTION(
 			filesel)->main_vbox), entry);
 
-		label = gtk_label_new("Filename prefix:");
+		label = gtk_label_new(N_("Filename prefix:"));
 		gtk_widget_show(label);
 		gtk_box_pack_end_defaults(GTK_BOX(GTK_FILE_SELECTION(
 			filesel)->main_vbox), label);
@@ -551,7 +551,7 @@ void port_dialog() {
 	gtk_widget_show(vbox);
 	gtk_box_pack_start_defaults(GTK_BOX(hbox), vbox);
 
-	label = gtk_label_new("Camera Model:");
+	label = gtk_label_new(N_("Camera Model:"));
 	gtk_widget_show(label);
         gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
@@ -584,7 +584,7 @@ void port_dialog() {
 
 	port_dialog_update(GTK_COMBO(combo)->entry, description);
 
-	betalabel = gtk_label_new("\ngPhoto user(s) that reported this model:\n");
+	betalabel = gtk_label_new(N_("\ngPhoto user(s) that reported this model:\n"));
 	gtk_label_set_justify(GTK_LABEL(betalabel), GTK_JUSTIFY_LEFT);
 	gtk_widget_show(betalabel);
 	
@@ -610,7 +610,7 @@ void port_dialog() {
 	gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
 	group = NULL;
-	label = gtk_label_new("Port:");
+	label = gtk_label_new(N_("Port:"));
 	gtk_widget_show(label);
 #ifdef __NetBSD__
 	port0 = gtk_radio_button_new_with_label(NULL, "/dev/tty00 (COM1)");
@@ -680,12 +680,12 @@ void port_dialog() {
 /*  	gtk_box_pack_start(GTK_BOX(vbox), betalabel, FALSE, FALSE, 0); */
 /*  	gtk_box_pack_start(GTK_BOX(vbox), tester, FALSE, FALSE, 0); */
 
-        button = gtk_button_new_with_label("Save");
+        button = gtk_button_new_with_label(N_("Save"));
         gtk_widget_show(button);
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
                            button, TRUE, TRUE, 0);
 
-        cbutton = gtk_button_new_with_label("Cancel");
+        cbutton = gtk_button_new_with_label(N_("Cancel"));
         gtk_widget_show(cbutton);
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
                            cbutton, TRUE, TRUE, 0);
@@ -724,12 +724,11 @@ void port_dialog() {
 		
 		sprintf(status, "Error: failed to open %s",serial_port);
 		update_status(status);
-		message_window ("Missing Serial Device Permissions",
-				"Please check the permissions "
-				"(see the manual).", GTK_JUSTIFY_FILL);
+		message_window (N_("Missing Serial Device Permissions"),
+				N_("Please check the permissions (see the manual)."), GTK_JUSTIFY_FILL);
 	} 
 	else {
-		sprintf (status, "Opened %s.", serial_port);
+		sprintf (status, N_("Opened %s."), serial_port);
 		update_status (status);
 		save_config ();
 	}
@@ -782,27 +781,26 @@ void save_config() {
 		return;
 	}
 	if (!command_line_mode)
-	    error_dialog ("Could not open $HOME/.gphoto/gphotorc for writing.");
+	    error_dialog (N_("Could not open $HOME/.gphoto/gphotorc for writing."));
 	else
-	    fprintf(stderr, "Could not open $HOME/.gphoto/gphotorc for writing.\n");
+	    fprintf(stderr, N_("Could not open $HOME/.gphoto/gphotorc for writing.\n"));
 }
 
 void version_dialog() {
     char msg[1024];
 
-	sprintf(msg, "
-Version Information
--------------------
-
-Current Version: %s
-
-New features all over the place. Please see
-the ChangeLog for more information.
-
-As always, report bugs gphoto-devel@gphoto.org
-
-Thanx much.
-", VERSION);
+	sprintf(msg, N_("Version Information\
+-------------------\
+\
+Current Version: %s\
+\
+New features all over the place. Please see\
+the ChangeLog for more information.\
+\
+As always, report bugs gphoto-devel@gphoto.org\
+\
+Thanx much.\
+"), VERSION);
 
 	error_dialog(msg);
 }
@@ -865,27 +863,27 @@ void usersmanual_dialog() {
 
 void faq_dialog() {
    error_dialog(
-"Please visit http://www.gphoto.org/help.php3 
+"Please visit http://www.gphoto.org/help.php3 \
 for the current FAQ list.");
 }
   
 void show_license() {
    
-  error_dialog("
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
+  error_dialog("\
+This program is free software; you can redistribute it and/or modify\
+it under the terms of the GNU General Public License as published by\
+the Free Software Foundation; either version 2 of the License, or\
+(at your option) any later version.\
+\
+This program is distributed in the hope that it will be useful,\
+but WITHOUT ANY WARRANTY; without even the implied warranty of\
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\
+GNU General Public License for more details.\
+\
+You should have received a copy of the GNU General Public License\
+along with this program; if not, write to the Free Software\
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.\
+\
 See http://www.gnu.org for more details on the GNU project."); 
 }
 
@@ -938,7 +936,7 @@ void insert_thumbnail(struct ImageMembers *node) {
     other=other->next;
   };
 
-  if (other==NULL) return;  // didn't find node in the list of thumbs
+  if (other==NULL) return;  /* didn't find node in the list of thumbs */
 
   /* If the thumbnail is already there, then just load the image*/
   if ((node->image!=NULL) && (node->imlibimage!=NULL)) {
@@ -1239,9 +1237,9 @@ void save_opened_image (int i, char *filename) {
 	
 	if (gdk_imlib_save_image(node->imlibimage,filename, NULL) == 0) {
 		error_dialog(
-		"Could not save image. Please make
-		sure that you typed the image
-		extension and that permissions for
+		"Could not save image. Please make\
+		sure that you typed the image\
+		extension and that permissions for\
 		the directory are correct.");
 		return;
 	}
@@ -1371,11 +1369,11 @@ void print_pic () {
         gtk_box_pack_end_defaults(GTK_BOX(hbox),entry); 
 
 	label = gtk_label_new(
-"* The filename is appended to the end
-   of the command.
-* The \"-r\" flag is needed to delete 
-  the temporary file. If not used, a 
-  temporary file will be in your $HOME/.gphoto
+"* The filename is appended to the end\
+   of the command.\
+* The \"-r\" flag is needed to delete \
+  the temporary file. If not used, a \
+  temporary file will be in your $HOME/.gphoto\
   directory.");
         gtk_widget_show(label);
         gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
@@ -1815,9 +1813,9 @@ void post_process_change (GtkWidget *widget, GtkWidget *win) {
 		FALSE, FALSE, 0);
 
 	label = gtk_label_new(
-"
-Note: gPhoto will replace \"%s\" in the script command-line
-with the full path to the selected image. See the User's Manual
+"\
+Note: gPhoto will replace \"%s\" in the script command-line\
+with the full path to the selected image. See the User's Manual\
 in the Help menu for more information. ");
 	gtk_widget_show(label);
 	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
@@ -1833,8 +1831,8 @@ in the Help menu for more information. ");
 	if ((strstr(gtk_entry_get_text(GTK_ENTRY(script)), "%s") == NULL)
 	   && GTK_TOGGLE_BUTTON(pp)->active) {
 		error_dialog(
-"Missing \"%s\" in the post-processing entry.
-This is required so the post-processing program
+"Missing \"%s\" in the post-processing entry.\
+This is required so the post-processing program\
 knows where the image is located.");
 		return;
 	}

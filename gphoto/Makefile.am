@@ -7,6 +7,7 @@ SUBDIRS = canon \
 	directory \
 	fuji \
 	gallery \
+	intl \
 	kodak \
 	kodak_generic \
 	konica \
@@ -17,6 +18,7 @@ SUBDIRS = canon \
 	nikon \
 	philips \
 	photopc \
+	po \
 	ricoh \
 	samsung \
 	sony \

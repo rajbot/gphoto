@@ -257,7 +257,7 @@ void save_image (char *filename, struct Image *im) {
 	else
 	{
 		snprintf(errormsg,1024,
-"The image couldn't be saved to %s because of the following error: 
+"The image couldn't be saved to %s because of the following error: \
  %s",filename,sys_errlist[errno]);
 		error_dialog(errormsg);
 	}

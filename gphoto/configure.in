@@ -3,19 +3,31 @@ AC_INIT(src/gallery.c)
 
 AM_CONFIG_HEADER(config.h)
 
-AM_INIT_AUTOMAKE(gphoto, 0.4.3)
+AM_INIT_AUTOMAKE(gphoto, 0.4.4)
 
 AM_MAINTAINER_MODE
 
+AM_ACLOCAL_INCLUDE(macros)
+
+dnl GNOME_INIT not yet....
+
 dnl Checks for programs.
 AC_PROG_CC
-AC_PROG_CPP
-
+AC_ISC_POSIX
+AC_HEADER_STDC
+AC_ARG_PROGRAM
 AM_PROG_LIBTOOL
 
 dnl Completed by AM_INIT_AUTOMAKE
 dnl AC_PROG_INSTALL
 dnl AC_PROG_MAKE_SET
+
+ALL_LINGUAS=""
+AM_GNOME_GETTEXT
+
+AC_SUBST(CFLAGS)
+AC_SUBST(CPPFLAGS)
+AC_SUBST(LDFLAGS)
 
 dnl Checks for libraries.
 dnl Check -ldl
@@ -76,8 +88,16 @@ AC_DEFINE_UNQUOTED(GALLERYDIR, "$GALLERYDIR")
 driversdir='${libdir}'
 AC_SUBST(driversdir)
 
+GPHOTO_EXPAND_DIR(DRIVERSDIR, "$libdir")
+GPHOTO_EXPAND_DIR(DOCDIR, "$datadir/gphoto/doc")
+
 gallerydir='${datadir}/gphoto/gallery'
 AC_SUBST(gallerydir)
+
+dnl Set PACKAGE_LOCALE_DIR in config.h.
+if test "x${prefix}" = "xNONE"; then
+  AC_DEFINE_UNQUOTED(PACKAGE_LOCALE_DIR, "${datadir}/locale")
+fi
 
 AC_OUTPUT([
 	Makefile
@@ -90,6 +110,7 @@ AC_OUTPUT([
 	gallery/Makefile
 	gallery/RedNGray/Makefile
 	gphoto.spec
+	intl/Makefile
 	kodak/Makefile
 	kodak/dc21x/Makefile
 	kodak_generic/Makefile
@@ -101,6 +122,7 @@ AC_OUTPUT([
 	nikon/Makefile
 	philips/Makefile
 	photopc/Makefile
+	po/Makefile.in
 	ricoh/Makefile
 	samsung/Makefile
 	sony/Makefile
@@ -108,3 +130,12 @@ AC_OUTPUT([
 	src/Makefile
 	src/icons/Makefile
 ])
+
+echo "
+gPhoto ${VERSION} configuration:
+
+       sources location...... ${srcdir}
+       camera libraries...... ${DRIVERSDIR}
+       documentation......... ${DOCDIR}
+       HTML Gallery themes... ${GALLERYDIR}
+"

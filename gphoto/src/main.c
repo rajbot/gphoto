@@ -277,10 +277,10 @@ int main (int argc, char *argv[]) {
 		/* put anything here to do on the first run */
 	  developer_dialog_create();
 	  error_dialog(
-"Could not load config file.
-Resetting to defaults.
-Click on \"Select Port-Camera Model\"
-in the Configure menu to set your
+"Could not load config file.\
+Resetting to defaults.\
+Click on \"Select Port-Camera Model\"\
+in the Configure menu to set your\
 camera model and serial port");
 	}
 	gtk_main();

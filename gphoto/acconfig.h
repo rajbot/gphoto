@@ -4,8 +4,6 @@
 /* Remove automake problems by undefining PACKAGE and VERSION */
 #undef PACKAGE
 #undef VERSION
+#undef DOCDIR
 
 #define HAVE_RTS_IOCTL 0
-
-@BOTTOM@
-#include "defines.h"

@@ -89,7 +89,7 @@ if gnome-config --libs gal > /dev/null 2>&1; then
 	AC_SUBST(GAL_CFLAGS)
     else
         AC_MSG_ERROR([
-*** You need at least GAL 0.5.99.13 for this version of $(PACKAGE).
+*** You need at least GAL 0.5.99.13 for this version of ${PACKAGE}.
 *** Get the latest version from http://www.gnome.org. Mirrors can 
 *** be found at http://www.gnome.org/mirrors.])
     fi

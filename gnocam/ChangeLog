@@ -1,1 +1,6 @@
-Don't touch this file. Run rcs2log instead.
+2001-04-14	Lutz Mueller  <urc8@rz.uni-karlsruhe.de>
+
+	* configure.in: Applied patch from Martin Pool <mbp@samba.org> which
+	fixes a typo in configure.in.
+
+

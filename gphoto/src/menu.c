@@ -175,7 +175,6 @@ void menu_select(gpointer data, guint action, GtkWidget *widget)
 	        case 47: /* Format */
 		        del_dialog(1);
 		        break;
-		default:
 	}
 }
 

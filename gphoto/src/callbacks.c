@@ -269,6 +269,7 @@ void savepictodisk (gint picNum, gint thumbnail, char *prefix) {
 	struct Image *im = NULL; 
 	char fname[1024], error[32], process[1024];
 
+/*
 	struct ImageMembers *node = &Images;
 
 	if (!thumbnail) {
@@ -281,6 +282,7 @@ void savepictodisk (gint picNum, gint thumbnail, char *prefix) {
 		return;
 	    }
 	}
+*/
 
 	if ((im = (*Camera->get_picture)(picNum, thumbnail)) == 0) {
 		sprintf(error, "Could not save #%i", picNum);

@@ -641,8 +641,8 @@ int download_picture(int n,int thumb,struct Image *im)
 	im->image=malloc(fuji_size);  /* Provide some headroom */
 	
 	t1 = times(0);
-#ifdef FUJI_DEBUG
 	if (cmd2(0, (thumb?0:0x02), n, im->image)==-1) return(-1);
+#ifdef FUJI_DEBUG
 	printf("%4d actual bytes vs %4d bytes\n", fuji_count , im->image_size);
 #endif
 	im->image_size=fuji_count;
@@ -803,12 +803,14 @@ struct Image *fuji_get_picture (int picture_number,int thumbnail){
   int i;
   exifparser exifdat;
 
-  newimage=malloc(sizeof(struct Image));
 #ifdef FUJI_DEBUG
   printf("fuji_get_picture called for #%d %s\n",picture_number,
 	 thumbnail?"thumb":"photo");
 #endif
   if (fuji_init()) return(0);/*goto bugout*/;
+
+  newimage=malloc(sizeof(struct Image));
+
   if (thumbnail)
     sprintf(tmpfname, "%s/gphoto-thumbnail-%i-%i.jpg",
 	    gphotoDir, getpid(),fuji_piccount);
@@ -818,13 +820,16 @@ struct Image *fuji_get_picture (int picture_number,int thumbnail){
   };
   fuji_piccount++;
 
-  if (download_picture(picture_number,thumbnail,newimage)) return(0);/*goto bugout;*/
+  if (download_picture(picture_number,thumbnail,newimage)) {
+    free(newimage);
+    return(0);
+  };
 
   buffer=newimage->image;
+
   /* Work on the tags...*/
   exifdat.header=buffer;
   exifdat.data=buffer+12;
-
 
   if (exif_header_parse(&exifdat)>0){
     stat_exif(&exifdat);
@@ -854,12 +859,30 @@ struct Image *fuji_get_picture (int picture_number,int thumbnail){
     /* Tiff info in thumbnail must be converted to be viewable */
     if (thumbnail) {
       newimage->image=fuji_exif_convert(&exifdat);
+      if (newimage->image==NULL) {
+	FILE *fp;
+	
+	fprintf(stderr,"Thumbnail conversion error, saving data\n");
+	if ((fp=fopen("fuji-death-dump.dat","w"))!=NULL){
+	  fwrite(buffer,1,newimage->image_size,fp);
+	  fclose(fp);
+	};
+	free(newimage);
+	return(0);
+      };
       strcpy(newimage->image_type,"tif");
     }
     else  {
       newimage->image=buffer;
       strcpy(newimage->image_type,"jpg");
     };
+  } else    { /* Wasn't recognizable exif data */
+	FILE *fp;
+	fprintf(stderr,"Saving problem data to fuji-death-dump.dat\n");
+	if ((fp=fopen("fuji-death-dump.dat","w"))!=NULL){
+	  fwrite(newimage->image,1,newimage->image_size,fp);
+	  fclose(fp);
+	};
   };
 
   reset_serial(); /* Wish this wasn't necessary...*/

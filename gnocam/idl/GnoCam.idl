@@ -9,7 +9,6 @@ module GNOME {
 
 		Bonobo::Stream capturePreview ();
 		Bonobo::Stream captureImage ();
-		Bonobo::Stream captureMovie ();
 	};
 
 	interface GnoCam : Bonobo::Unknown {

@@ -3,8 +3,11 @@
 
 #include <bonobo/Bonobo.h>
 #include <bonobo/bonobo-storage.h>
+#include <bonobo/bonobo-stream-memory.h>
 #include <bonobo/bonobo-exception.h>
+#include <libgnome/gnome-util.h>
 
+#include "gnocam-util.h"
 #include "bonobo-storage-camera.h"
 
 #define PARENT_TYPE BONOBO_X_OBJECT_TYPE
@@ -13,27 +16,55 @@ static BonoboObjectClass *parent_class;
 struct _GnoCamCameraPrivate
 {
 	Camera *camera;
+	BonoboStorage *storage;
 };
 
 static Bonobo_Stream
 impl_GNOME_Camera_capturePreview (PortableServer_Servant servant, 
 				  CORBA_Environment *ev)
 {
-	return (CORBA_OBJECT_NIL);
+	BonoboStream *stream;
+	CameraFile *file;
+	GnoCamCamera *c;
+
+	g_message ("impl_GNOME_Camera_capturePreview");
+
+	c = GNOCAM_CAMERA (bonobo_object_from_servant (servant));
+	file = gp_file_new ();
+	CHECK_RESULT (gp_camera_capture_preview (c->priv->camera, file), ev);
+	if (BONOBO_EX (ev)) {
+		gp_file_unref (file);
+		g_message ("Returning...");
+		return (CORBA_OBJECT_NIL);
+	}
+
+	stream = bonobo_stream_mem_create (file->data, file->size, TRUE, FALSE);
+	gp_file_unref (file);
+
+	return (CORBA_Object_duplicate (BONOBO_OBJREF (stream), ev));
 }
 
 static Bonobo_Stream
 impl_GNOME_Camera_captureImage (PortableServer_Servant servant,
 				CORBA_Environment *ev)
 {
-	return (CORBA_OBJECT_NIL);
-}
+	Bonobo_Stream stream;
+	GnoCamCamera *c;
+	CameraFilePath path;
+	gchar *full_path;
 
-static Bonobo_Stream
-impl_GNOME_Camera_captureMovie (PortableServer_Servant servant,
-				CORBA_Environment *ev)
-{
-	return (CORBA_OBJECT_NIL);
+	c = GNOCAM_CAMERA (bonobo_object_from_servant (servant));
+	CHECK_RESULT (gp_camera_capture (c->priv->camera,
+				GP_OPERATION_CAPTURE_IMAGE, &path), ev);
+	if (BONOBO_EX (ev))
+		return (NULL);
+
+	full_path = g_concat_dir_and_file (path.folder, path.name);
+	stream = Bonobo_Storage_openStream (BONOBO_OBJREF (c->priv->storage),
+					    full_path, Bonobo_Storage_READ, ev);
+	g_free (full_path);
+
+	return (stream);
 }
 
 static void
@@ -72,7 +103,6 @@ gnocam_camera_class_init (GnoCamCameraClass *klass)
 	epv = &klass->epv;
 	epv->capturePreview = impl_GNOME_Camera_capturePreview;
 	epv->captureImage   = impl_GNOME_Camera_captureImage;
-	epv->captureMovie   = impl_GNOME_Camera_captureMovie;
 }
 
 static void
@@ -102,6 +132,8 @@ gnocam_camera_new (Camera *camera, CORBA_Environment *ev)
 
 	gnocam_camera->priv->camera = camera;
 	gp_camera_ref (camera);
+
+	gnocam_camera->priv->storage = storage;
 
 	g_message ("Adding interface...");
 	bonobo_object_add_interface (BONOBO_OBJECT (gnocam_camera),

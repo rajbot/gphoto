@@ -28,8 +28,8 @@ int main (int argc, char *argv[])
 		g_error (bonobo_exception_get_text (&ev));
 	g_assert (gnocam);
 
-	g_message ("Getting Camera...");
-	camera = GNOME_GnoCam_getCamera (gnocam, "directory", &ev);
+	g_message ("Getting default Camera...");
+	camera = GNOME_GnoCam_getCamera (gnocam, "", &ev);
 	bonobo_object_release_unref (gnocam, NULL);
 	if (BONOBO_EX (&ev))
 		g_error (bonobo_exception_get_text (&ev));
@@ -38,7 +38,6 @@ int main (int argc, char *argv[])
 	g_message ("Getting storage...");
 	storage = Bonobo_Unknown_queryInterface (camera,
 						 "IDL:Bonobo/Storage:1.0", &ev);
-	bonobo_object_release_unref (camera, NULL);
 	if (BONOBO_EX (&ev))
 		g_error (bonobo_exception_get_text (&ev));
 
@@ -48,8 +47,13 @@ int main (int argc, char *argv[])
 	bonobo_object_release_unref (storage, NULL);
 	if (BONOBO_EX (&ev))
 		g_error (bonobo_exception_get_text (&ev));
-
 	bonobo_object_release_unref (stream, NULL);
+
+	g_message ("Capturing preview...");
+	stream = GNOME_Camera_capturePreview (camera, &ev);
+	bonobo_object_release_unref (camera, NULL);
+	if (BONOBO_EX (&ev))
+		g_error (bonobo_exception_get_text (&ev));
 
 	CORBA_exception_free (&ev);
 

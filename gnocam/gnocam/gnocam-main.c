@@ -3,7 +3,9 @@
 #include "gnocam-main.h"
 
 #include <gconf/gconf-client.h>
+#include <bonobo/bonobo-exception.h>
 
+#include "gnocam-util.h"
 #include "gnocam-camera.h"
 
 #define PARENT_TYPE BONOBO_X_OBJECT_TYPE
@@ -24,7 +26,7 @@ impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant,
 	GnoCamCamera *gnocam_camera;
 	Camera *camera = NULL;
 	GSList *list;
-	gint i, result;
+	gint i;
 	const gchar *model = NULL, *port = NULL;
 
 	g_message ("impl_GNOME_GnoCam_getCamera: %s", name);
@@ -40,25 +42,34 @@ impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant,
 		list = gconf_client_get_list (gnocam_main->priv->client,
 					      "/apps/" PACKAGE "/cameras",
 					      GCONF_VALUE_STRING, NULL);
-		for (i = 0; i < g_slist_length (list); i += 3) {
-			if (!strcmp (g_slist_nth_data (list, i), name)) {
-				model = g_slist_nth_data (list, i + 1);
-				port = g_slist_nth_data (list, i + 2);
-				break;
+		if (*name) {
+			for (i = 0; i < g_slist_length (list); i += 3) {
+				if (!strcmp (g_slist_nth_data (list, i), name)){
+					model = g_slist_nth_data (list, i + 1);
+					port = g_slist_nth_data (list, i + 2);
+					break;
+				}
 			}
+		} else if (!*name && g_slist_length (list) >= 3) {
+			model = g_slist_nth_data (list, 1);
+			port = g_slist_nth_data (list, 2);
 		}
-		g_assert (i != g_slist_length (list));
+		g_assert (model && port);
 
 		g_message ("Creating camera...");
-		result = gp_camera_new (&camera);
-		g_assert (result == GP_OK);
+		CHECK_RESULT (gp_camera_new (&camera), ev);
+		if (BONOBO_EX (ev))
+			return (CORBA_OBJECT_NIL);
 
 		g_message ("Initializing camera...");
 		strcpy (camera->model, model);
 		strcpy (camera->port->name, port);
 		camera->port->speed = 0;
-		result = gp_camera_init (camera);
-		g_assert (result == GP_OK);
+		CHECK_RESULT (gp_camera_init (camera), ev);
+		if (BONOBO_EX (ev)) {
+			gp_camera_unref (camera);
+			return (CORBA_OBJECT_NIL);
+		}
 	}
 	g_assert (camera);
 
@@ -127,17 +138,22 @@ gnocam_main_init (GnoCamMain *gnocam_main)
 		GError* gerror = NULL;
 		gchar*  argv[1] = {"Whatever"};
 
+		g_message ("Initializing GConf...");
 		g_assert (gconf_init (1, argv, &gerror));
 	}
 
 	/* Make sure GPhoto is initialized. */
-	if (!gp_is_initialized ())
+	if (!gp_is_initialized ()) {
+		g_message ("Initializing GPhoto...");
 		g_assert (gp_init (GP_DEBUG_NONE) == GP_OK);
+	}
 	
 	gnocam_main->priv = g_new0 (GnoCamMainPrivate, 1);
 	gnocam_main->priv->hash_table = g_hash_table_new (g_str_hash,
 							  g_str_equal);
 	gnocam_main->priv->client = gconf_client_get_default ();
+
+	g_message ("GnoCamMain got initialized!");
 }
 
 BONOBO_X_TYPE_FUNC_FULL (GnoCamMain, GNOME_GnoCam, PARENT_TYPE, gnocam_main);

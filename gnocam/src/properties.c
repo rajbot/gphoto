@@ -3,6 +3,7 @@
 #include <glade/glade.h>
 #include <gphoto2.h>
 #include <libxml/parser.h>
+#include "information.h"
 #include "properties.h"
 #include "gnocam.h"
 #include "gphoto-extensions.h"
@@ -64,7 +65,7 @@ void on_properties_apply (GnomePropertyBox *propertybox, gint arg, gpointer user
 	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (propertybox), "camera")) != NULL);
 
 	if (gp_camera_config (camera) != GP_OK) {
-                gnome_error_dialog_parented (_("Could not set camera properties!"), GTK_WINDOW (propertybox));
+                dialog_information (_("Could not set camera properties!"));
 		gnome_property_box_changed (propertybox);
 	}
 }
@@ -104,7 +105,7 @@ values_set (GladeXML* xml_properties, CameraWidget *camera_widget)
 	g_assert (camera_widget != NULL);
 	g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_properties, "properties"))) != NULL);
 
-	c = g_new (gchar, 256);
+	c = g_new (gchar, 1024);
         switch (gp_widget_type (camera_widget)) {
         case GP_WIDGET_TEXT:
 		gp_widget_value_get (camera_widget, c);
@@ -176,6 +177,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 	gchar*			c;
 	gint			i;
 	gfloat			f;
+	struct tm*		t;
 
 	g_assert (vbox != NULL);
 	g_assert (camera_widget != NULL);
@@ -186,7 +188,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 	gtk_box_pack_start (GTK_BOX (vbox), frame, FALSE, FALSE, 0);
 
 	/* Create the widget. */
-	c = g_new0 (gchar, 128);
+	c = g_new0 (gchar, 1024);
 	switch (gp_widget_type (camera_widget)) {
 	case GP_WIDGET_TEXT:
 		gp_widget_value_get (camera_widget, c);
@@ -252,18 +254,18 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 		break;
 	case GP_WIDGET_DATE:
 		gp_widget_value_get (camera_widget, &i);
+		t = localtime ((time_t*) &i);
 		hbox = gtk_hbox_new (FALSE, 10);
 		gtk_container_add (GTK_CONTAINER (frame), hbox);
-		widget = gtk_clock_new (GTK_CLOCK_INCREASING);
-		gtk_clock_set_format (GTK_CLOCK (widget), _("%Y/%m/%d %H:%M:%S"));
-		gtk_clock_set_seconds (GTK_CLOCK (widget), (time_t) i);
-		gtk_clock_start (GTK_CLOCK (widget));
-		gtk_container_add (GTK_CONTAINER (hbox), widget);
+//FIXME: How do I set the time of a gtk clock?
+//		widget = gtk_clock_new (GTK_CLOCK_INCREASING);
+//		gtk_clock_set_format (GTK_CLOCK (widget), _("%Y/%m/%d %H:%M:%S"));
+//		gtk_clock_start (GTK_CLOCK (widget));
+//		gtk_container_add (GTK_CONTAINER (hbox), widget);
 		widget = gnome_date_edit_new ((time_t) i, TRUE, TRUE);
-		gnome_date_edit_set_time (GNOME_DATE_EDIT (widget), (time_t) i);
 		gtk_container_add (GTK_CONTAINER (hbox), widget);
 		gtk_signal_connect_object (GTK_OBJECT (widget), "date_changed", GTK_SIGNAL_FUNC (on_date_changed), (gpointer) widget);
-		gtk_signal_connect_object (GTK_OBJECT (widget), "time_changed", GTK_SIGNAL_FUNC (on_date_changed), (gpointer)widget);
+		gtk_signal_connect_object (GTK_OBJECT (widget), "time_changed", GTK_SIGNAL_FUNC (on_date_changed), (gpointer) widget);
 		gtk_object_set_data (GTK_OBJECT (widget), "propertybox", propertybox);
 		gtk_object_set_data (GTK_OBJECT (propertybox), gp_widget_label (camera_widget), widget);
 		break;

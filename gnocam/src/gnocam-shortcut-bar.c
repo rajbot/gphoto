@@ -4,14 +4,15 @@
 
 #include <gnome.h>
 #include <gconf/gconf-client.h>
+#include <gal/util/e-util.h>
 
 #include "gnocam-shortcut-bar.h"
 
 #define PARENT_TYPE E_TYPE_SHORTCUT_BAR
-
 static GnoCamShortcutBarClass* parent_class = NULL;
 
 struct _GnoCamShortcutBarPrivate {
+	/* Nothing in here yet... */
 };
 
 static void
@@ -97,23 +98,5 @@ gnocam_shortcut_bar_refresh (GnoCamShortcutBar* bar)
 	}
 }
 
-GtkType gnocam_shortcut_bar_get_type ()
-{
-	static GtkType type = 0;
-
-	if (!type){
-		GtkTypeInfo info = {
-			"GnoCamShortcutBar",
-			sizeof (GnoCamShortcutBar),
-			sizeof (GnoCamShortcutBarClass),
-			(GtkClassInitFunc) class_init,
-			(GtkObjectInitFunc) init,
-			NULL,
-			NULL,
-			(GtkClassInitFunc) NULL
-		};
-		type = gtk_type_unique (PARENT_TYPE, &info);
-	}
-	return type;
-}
+E_MAKE_TYPE (gnocam_shortcut_bar, "GnoCamShortcutBar", GnoCamShortcutBar, class_init, init, PARENT_TYPE)
 

@@ -5,11 +5,8 @@
 #include <gphoto2.h>
 #include <bonobo.h>
 
-#ifdef __cplusplus
-extern "C" {
-#pragma }
-#endif /* __cplusplus */
- 
+BEGIN_GNOME_DECLS
+
 #define GNOCAM_CONTROL_TYPE           (gnocam_control_get_type ())
 #define GNOCAM_CONTROL(o)             (GTK_CHECK_CAST ((o), GNOCAM_CONTROL_TYPE, GnoCamControl))
 #define GNOCAM_CONTROL_CLASS(k)       (GTK_CHECK_CLASS_CAST((k), GNOCAM_CONTROL_TYPE, GnoCamControlClass))
@@ -35,8 +32,6 @@ GtkType gnocam_control_get_type		(void);
 void	gnocam_control_complete 	(GnoCamControl* control, BonoboMoniker* moniker);
 Camera*	gnocam_control_get_camera 	(GnoCamControl* control);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+END_GNOME_DECLS
 
 #endif /* _GNOCAM__CONTROL_H_ */

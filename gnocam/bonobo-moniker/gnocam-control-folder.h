@@ -4,10 +4,7 @@
 
 #include "gnocam-control.h"
 
-#ifdef __cplusplus
-extern "C" {
-#pragma }
-#endif /* __cplusplus */
+BEGIN_GNOME_DECLS
 
 #define GNOCAM_TYPE_CONTROL_FOLDER		(gnocam_control_folder_get_type ())
 #define GNOCAM_CONTROL_FOLDER(obj)		(GTK_CHECK_CAST ((obj), GNOCAM_TYPE_CONTROL_FOLDER, GnoCamControlFolder))
@@ -33,8 +30,6 @@ struct _GnoCamControlFolderClass {
 GtkType    		gnocam_control_folder_get_type		(void);
 GnoCamControlFolder*	gnocam_control_folder_new		(BonoboMoniker* moniker, Bonobo_Storage storage, CORBA_Environment* ev);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+END_GNOME_DECLS
 
 #endif /* _GNOCAM_CONTROL_FOLDER_H_ */

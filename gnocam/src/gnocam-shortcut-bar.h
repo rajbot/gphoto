@@ -4,9 +4,7 @@
 
 #include <gal/shortcut-bar/e-shortcut-bar.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+BEGIN_GNOME_DECLS
 
 typedef struct _GnoCamShortcutBar		GnoCamShortcutBar;
 typedef struct _GnoCamShortcutBarPrivate 	GnoCamShortcutBarPrivate;
@@ -34,9 +32,7 @@ GtkWidget *gnocam_shortcut_bar_new      (void);
 
 void       gnocam_shortcut_bar_refresh	(GnoCamShortcutBar* bar);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+END_GNOME_DECLS
 
 #endif /* _GNOCAM_SHORTCUT_BAR_H_ */
 

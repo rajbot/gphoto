@@ -4,10 +4,7 @@
 
 #include "gnocam-control.h"
 
-#ifdef __cplusplus
-extern "C" {
-#pragma }
-#endif /* __cplusplus */
+BEGIN_GNOME_DECLS
 
 #define GNOCAM_TYPE_CONTROL_FILE		(gnocam_control_file_get_type ())
 #define GNOCAM_CONTROL_FILE(obj)		(GTK_CHECK_CAST ((obj), GNOCAM_TYPE_CONTROL_FILE, GnoCamControlFile))
@@ -33,9 +30,7 @@ struct _GnoCamControlFileClass {
 GtkType    		gnocam_control_file_get_type	(void);
 GnoCamControlFile*	gnocam_control_file_new		(BonoboMoniker* moniker, const Bonobo_ResolveOptions* options, Bonobo_Stream stream, CORBA_Environment* ev);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+END_GNOME_DECLS
 
 #endif /* _GNOCAM_CONTROL_FILE_H_ */
 

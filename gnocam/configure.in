@@ -129,7 +129,6 @@ Makefile
 intl/Makefile
 macros/Makefile
 po/Makefile.in
-capplet/Makefile
 src/Makefile
 ])
 

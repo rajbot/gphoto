@@ -18,7 +18,7 @@ gphoto_LDADD = ../konica/libgphoto_konica_qm100.la \
 	@GTK_LIBS@ @GDK_IMLIB_LIBS@
 
 gphoto_SOURCES =  main.c commandline.c live.c gallery.c menu.c toolbar.c \
-	callbacks.c util.c developer_dialog.c img_edit.c \
+	callbacks.c util.c developer_dialog.c img_edit.c gphoto.c \
 	main.h commandline.h live.h gallery.h menu.h toolbar.h callbacks.h \
 	util.h cameras.h gphoto.h developer.h developer_dialog.h
 

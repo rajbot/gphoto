@@ -104,7 +104,7 @@ int kodak_dc2x_take_picture() {
 
 }
 
-GdkImlibImage *kodak_dc2x_get_picture (int picNum, int thumbnail) {
+struct Image *kodak_dc2x_get_picture (int picNum, int thumbnail) {
 
   int tfd, image_size, image_width, net_width, camera_header, components;
   Dc20Info *my_info;
@@ -114,6 +114,11 @@ GdkImlibImage *kodak_dc2x_get_picture (int picNum, int thumbnail) {
 
   GdkImlibImage *this_image, *scaled_image;
   GdkImlibColorModifier mod;
+
+  FILE *jpgfile;
+  long jpgfile_size;
+  char filename[1024];
+  struct Image *im;
 
   if ((tfd = kodak_dc2x_open_camera()) == 0) {
     error_dialog("Could not open camera.");
@@ -135,7 +140,19 @@ GdkImlibImage *kodak_dc2x_get_picture (int picNum, int thumbnail) {
 	fprintf(stderr,"get_thumb returned ok! Creating ImLib image!\n");
 	this_image = gdk_imlib_create_image_from_data(color_thumb, NULL, 80, 60);
 	fprintf(stderr, "Made it back from imlib_create!\n");
-	return this_image;
+        sprintf(filename, "%s/gphoto-%i.jpg", gphotoDir, picNum);
+        gdk_imlib_save_image (this_image, filename, NULL);
+        jpgfile = fopen(filename, "r");
+        fseek(jpgfile, 0, SEEK_END);
+        jpgfile_size = ftell(jpgfile);      
+        rewind(jpgfile);
+        im = (struct Image*)malloc(sizeof(struct Image));
+        im->image = (char *)malloc(sizeof(char)*jpgfile_size);
+        strcpy(im->image_type, "jpg");
+        im->image_size = (int)jpgfile_size;
+        im->image_info_size = 0;
+        remove(filename);
+	return (im);
       }
     } else {
       fprintf(stderr, "Getting picture #%d from a DC25!\n", picNum ); 
@@ -197,7 +214,20 @@ GdkImlibImage *kodak_dc2x_get_picture (int picNum, int thumbnail) {
 
 	  kodak_dc2x_close_camera(tfd);
 
-	  return scaled_image;
+	  sprintf(filename, "%s/gphoto-%i.jpg", gphotoDir, picNum);
+	  gdk_imlib_save_image (scaled_image, filename, NULL);
+	  jpgfile = fopen(filename, "r");
+	  fseek(jpgfile, 0, SEEK_END);
+	  jpgfile_size = ftell(jpgfile);
+	  rewind(jpgfile);
+	  im = (struct Image*)malloc(sizeof(struct Image));
+	  im->image = (char *)malloc(sizeof(char)*jpgfile_size);
+	  strcpy(im->image_type, "jpg");
+	  im->image_size = (int)jpgfile_size;
+	  im->image_info_size = 0;
+	  remove(filename);
+
+	  return (im);
 	}
 
       }
@@ -243,10 +273,10 @@ int kodak_dc2x_delete_picture (int picNum) {
 }
 
 
-GdkImlibImage *kodak_dc2x_get_preview () {
+struct Image *kodak_dc2x_get_preview () {
 
   int new_pic_num;
-  GdkImlibImage *new_pic;
+  struct Image *new_pic;
 
 
   /* Take new pic */
@@ -258,7 +288,7 @@ GdkImlibImage *kodak_dc2x_get_preview () {
     
     /* delete it from the camera */
     kodak_dc2x_delete_picture(new_pic_num);
-    
+
     /* give it back */
     return new_pic;
 
@@ -281,6 +311,7 @@ int kodak_dc2x_configure () {
 char *kodak_dc2x_summary() {
 
   char summary_string[500];
+  char *summary;
   int tfd;
   Dc20Info   *dc20_info;
   
@@ -301,7 +332,10 @@ and there are %d pictures left in the camera\n",
 dc20_info->model, dc20_info->pic_taken, dc20_info->pic_left);
   */
 
-  return(&summary_string);
+  summary = (char *)malloc(sizeof(char)*strlen(summary_string)+32);
+  strcpy(summary, summary_string);
+
+  return(summary);
 
 
 }

@@ -5,13 +5,18 @@
 
 #include "defs.h"
 #include "transmission.h"
+#include "../src/gphoto.h"
 #include "savePic.h"
 
-int qm100_savePic(int serialdev, char *filename, int pic)
+struct Image *qm100_savePic(int serialdev, char *filename, int pic)
 {
   int jpgfile;
+  long jpgfile_size;
+  struct Image *im;
+
   char success=1;
   char cmd_getpic[QM100_GETPIC_LEN]=QM100_GETPIC;
+
   //  char cmd_getpic[QM100_GETTHUMB_LEN]=QM100_GETTHUMB;
   qm100_packet_block packet;  
 
@@ -42,5 +47,14 @@ int qm100_savePic(int serialdev, char *filename, int pic)
       close(jpgfile);
     }
   qm100_endTransmit(serialdev);
-  return success;
+  jpgfile = fopen(filename, "r");
+  fseek(jpgfile, 0, SEEK_END);
+  jpgfile_size = ftell(jpgfile);
+  rewind(jpgfile);
+  im = (struct Image*)malloc(sizeof(struct Image));
+  im->image = (char *)malloc(sizeof(char)*jpgfile_size);
+  strcpy(im->image_type, "jpg");
+  im->image_size = (int)jpgfile_size;
+  im->image_info_size = 0;
+  return (im);
 }

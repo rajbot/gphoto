@@ -58,8 +58,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-host_alias = i586-pc-linux-gnu
-host_triplet = i586-pc-linux-gnu
+host_alias = i686-pc-linux-gnu
+host_triplet = i686-pc-linux-gnu
 AS = 
 CC = gcc
 CPP = gcc -E
@@ -92,7 +92,7 @@ drivers_LTLIBRARIES = libgphoto_kodak_dc2x.la
 
 CFLAGS = -I/usr/X11R6/include -I/usr/lib/glib/include -DDC25=1
 
-libgphoto_kodak_dc2x_la_SOURCES = kodak_dc2x.c change_res.c comet_to_ppm.c 	convert_pic.c erase.c get_info.c get_pic.c get_thumb.c 	hash_mark.c init_dc20.c pics_to_file.c pixmaps.c read_data.c 	send_pck.c session.c shoot.c thumbs_to_file.c 	change_res.h comet_to_ppm.h convert_pic.h dc20.h erase.h get_info.h 	get_pic.h get_thumb.h hash_mark.h init_dc20.h main.h pics_to_file.h 	pixmaps.h read_data.h send_pck.h session.h shoot.h thumbs_to_file.h
+libgphoto_kodak_dc2x_la_SOURCES = kodak_dc210.c kodak_dc2x.c change_res.c 	comet_to_ppm.c 	convert_pic.c erase.c get_info.c get_pic.c get_thumb.c 	hash_mark.c init_dc20.c pics_to_file.c pixmaps.c read_data.c 	send_pck.c session.c shoot.c thumbs_to_file.c 	change_res.h comet_to_ppm.h convert_pic.h dc20.h erase.h get_info.h 	get_pic.h get_thumb.h hash_mark.h init_dc20.h main.h pics_to_file.h 	pixmaps.h read_data.h send_pck.h session.h shoot.h thumbs_to_file.h
 
 
 libgphoto_kodak_dc2x_la_LDFLAGS = -version-info 0:0:0
@@ -107,10 +107,11 @@ CPPFLAGS =
 LDFLAGS = 
 LIBS = -ljpeg -ldl 
 libgphoto_kodak_dc2x_la_LIBADD = 
-libgphoto_kodak_dc2x_la_OBJECTS =  kodak_dc2x.lo change_res.lo \
-comet_to_ppm.lo convert_pic.lo erase.lo get_info.lo get_pic.lo \
-get_thumb.lo hash_mark.lo init_dc20.lo pics_to_file.lo pixmaps.lo \
-read_data.lo send_pck.lo session.lo shoot.lo thumbs_to_file.lo
+libgphoto_kodak_dc2x_la_OBJECTS =  kodak_dc210.lo kodak_dc2x.lo \
+change_res.lo comet_to_ppm.lo convert_pic.lo erase.lo get_info.lo \
+get_pic.lo get_thumb.lo hash_mark.lo init_dc20.lo pics_to_file.lo \
+pixmaps.lo read_data.lo send_pck.lo session.lo shoot.lo \
+thumbs_to_file.lo
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -124,9 +125,10 @@ TAR = gtar
 GZIP_ENV = --best
 DEP_FILES =  .deps/change_res.P .deps/comet_to_ppm.P .deps/convert_pic.P \
 .deps/erase.P .deps/get_info.P .deps/get_pic.P .deps/get_thumb.P \
-.deps/hash_mark.P .deps/init_dc20.P .deps/kodak_dc2x.P \
-.deps/pics_to_file.P .deps/pixmaps.P .deps/read_data.P .deps/send_pck.P \
-.deps/session.P .deps/shoot.P .deps/thumbs_to_file.P
+.deps/hash_mark.P .deps/init_dc20.P .deps/kodak_dc210.P \
+.deps/kodak_dc2x.P .deps/pics_to_file.P .deps/pixmaps.P \
+.deps/read_data.P .deps/send_pck.P .deps/session.P .deps/shoot.P \
+.deps/thumbs_to_file.P
 SOURCES = $(libgphoto_kodak_dc2x_la_SOURCES)
 OBJECTS = $(libgphoto_kodak_dc2x_la_OBJECTS)
 

@@ -55,17 +55,14 @@ struct ImageInfo {
         struct    ImageInfo *next;
 };
 
-extern int	  picCounter;		/* Whenever gPhoto needs a #	*/
-extern char      *gphotoDir;		/* gPhoto directory		*/
-extern char	  serial_port[20];	/* Serial port			*/
-extern char	  camera_model[100];	/* Currently selected cam model */
+int	  command_line_mode;	/* TRUE if in command line mode */ 
+char     *gphotoDir;		/* gPhoto directory		*/
+char	  serial_port[20];	/* Serial port			*/
+char	  camera_model[100];	/* Currently selected cam model */
 
-extern GtkWidget *status_bar;           /* Main window status bar       */
-extern GtkWidget *library_name; 	/* Main window library bar      */
-extern GtkWidget *notebook;            	/* Main window Notebook         */
-extern GtkWidget *index_table;         	/* Index table                  */
-extern GtkWidget *index_vp;            	/* Viewport for above           */
-extern GtkWidget *index_window; 	/* Index Scrolled Window        */
-extern GtkWidget *progress;             /* Progress bar                 */
+void update_progress (float percentage);
+void update_status   (char *newStatus);
 
 #endif /* _GPHOTO_H */
+
+

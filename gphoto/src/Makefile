@@ -58,8 +58,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-host_alias = i586-pc-linux-gnu
-host_triplet = i586-pc-linux-gnu
+host_alias = i686-pc-linux-gnu
+host_triplet = i686-pc-linux-gnu
 AS = 
 CC = gcc
 CPP = gcc -E
@@ -97,7 +97,7 @@ CFLAGS = -g -Iicons -I/usr/X11R6/include -I/usr/lib/glib/include -I/usr/X11R6/in
 gphoto_LDADD = ../konica/libgphoto_konica_qm100.la 	../casio/libgphoto_casio_qv.la 	../philips/libgphoto_philips.la 	../fuji/libgphoto_fuji.la 	../photopc/libgphoto_photopc.la 	../kodak/libgphoto_kodak_dc2x.la 	../ricoh/libgphoto_ricoh300z.la 	../sony/libgphoto_sony_dscf1.la 	../directory/libgphoto_dir.la 	-L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic -lgmodule -lglib -ldl -lXext -lX11 -lm -L/usr/lib -lgdk_imlib -L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic -lgmodule -lglib -ldl -lXext -lX11 -lm
 
 
-gphoto_SOURCES = main.c commandline.c live.c gallery.c menu.c toolbar.c 	callbacks.c util.c developer_dialog.c img_edit.c 	main.h commandline.h live.h gallery.h menu.h toolbar.h callbacks.h 	util.h cameras.h gphoto.h developer.h developer_dialog.h
+gphoto_SOURCES = main.c commandline.c live.c gallery.c menu.c toolbar.c 	callbacks.c util.c developer_dialog.c img_edit.c gphoto.c 	main.h commandline.h live.h gallery.h menu.h toolbar.h callbacks.h 	util.h cameras.h gphoto.h developer.h developer_dialog.h
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
@@ -110,7 +110,7 @@ CPPFLAGS =
 LDFLAGS = 
 LIBS = -ljpeg -ldl 
 gphoto_OBJECTS =  main.o commandline.o live.o gallery.o menu.o toolbar.o \
-callbacks.o util.o developer_dialog.o img_edit.o
+callbacks.o util.o developer_dialog.o img_edit.o gphoto.o
 gphoto_DEPENDENCIES =  ../konica/libgphoto_konica_qm100.la \
 ../casio/libgphoto_casio_qv.la ../philips/libgphoto_philips.la \
 ../fuji/libgphoto_fuji.la ../photopc/libgphoto_photopc.la \
@@ -129,8 +129,9 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 TAR = gtar
 GZIP_ENV = --best
 DEP_FILES =  .deps/callbacks.P .deps/commandline.P \
-.deps/developer_dialog.P .deps/gallery.P .deps/img_edit.P .deps/live.P \
-.deps/main.P .deps/menu.P .deps/toolbar.P .deps/util.P
+.deps/developer_dialog.P .deps/gallery.P .deps/gphoto.P \
+.deps/img_edit.P .deps/live.P .deps/main.P .deps/menu.P .deps/toolbar.P \
+.deps/util.P
 SOURCES = $(gphoto_SOURCES)
 OBJECTS = $(gphoto_OBJECTS)
 

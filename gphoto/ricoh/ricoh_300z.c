@@ -120,7 +120,7 @@ int ricoh_300z_take_picture () {
 	return ((int)num_pictures_taken);
 }
 
-GdkImlibImage *ricoh_300z_get_picture (int picNum, int thumbnail) {
+struct Image *ricoh_300z_get_picture (int picNum, int thumbnail) {
 
 	/*
 	   Reads image #picNum from the Ricoh 300Z camera.
@@ -133,12 +133,17 @@ GdkImlibImage *ricoh_300z_get_picture (int picNum, int thumbnail) {
 	char textbuf[12];
 	unsigned char date[6];
 
+	FILE *jpgfile;
+	long jpgfile_size;
+	struct Image *im;
+	char filename[1024];
+
 	GdkImlibImage *imlibimage;
 
 	if (picNum != 0) {
 		if (ricoh_300z_open_camera() == 0) {
 			error_dialog("Could not open camera.");
-			return(imlibimage);
+			return 0;
 		}
 	}
 	else picNum = 1;
@@ -202,7 +207,20 @@ GdkImlibImage *ricoh_300z_get_picture (int picNum, int thumbnail) {
 	    }
 	}
 	ricoh_300z_close_camera();
-	return (imlibimage);
+
+          sprintf(filename, "%s/gphoto-%i.jpg", gphotoDir, picNum);
+          gdk_imlib_save_image (imlibimage, filename, NULL);
+          jpgfile = fopen(filename, "r");
+          fseek(jpgfile, 0, SEEK_END);
+          jpgfile_size = ftell(jpgfile);      
+          rewind(jpgfile);
+          im = (struct Image*)malloc(sizeof(struct Image));
+          im->image = (char *)malloc(sizeof(char)*jpgfile_size);
+          strcpy(im->image_type, "jpg");
+          im->image_size = (int)jpgfile_size;
+          im->image_info_size = 0;
+          remove(filename);
+	return (im);
 }
 /*****************************************************************************
 * From Gif-Lib
@@ -376,7 +394,7 @@ void DrawText_im(struct dataim *Image,
     }
 }
 
-GdkImlibImage *ricoh_300z_get_preview () {
+struct Image *ricoh_300z_get_preview () {
 /* I don't beleive the Ricoh has preview capability, so this returns
  * an image with the no support message the first time it it called,
  * unless this is a command line mode call, in which case it takes
@@ -386,13 +404,32 @@ GdkImlibImage *ricoh_300z_get_preview () {
 	static int not_first_time = 0;
 	int picnum;
 
+	FILE *jpgfile;
+	long jpgfile_size;
+	struct Image *im;
+	char filename[1024];	
+
+	GdkImlibImage *imlibimage;
+
 	if(not_first_time || status_bar == NULL) {
 	    picnum = ricoh_300z_take_picture();
 	    return ricoh_300z_get_picture (picnum, 0);
 	} else {
 	    not_first_time = 1;
-	    return gdk_imlib_create_image_from_xpm_data
-	      ((char **) ricoh_nopreview_xpm);
+	    imlibimage = gdk_imlib_create_image_from_xpm_data ((char **) ricoh_nopreview_xpm);
+          sprintf(filename, "%s/gphoto-preview.jpg", gphotoDir);
+          gdk_imlib_save_image (imlibimage, filename, NULL);
+          jpgfile = fopen(filename, "r");
+          fseek(jpgfile, 0, SEEK_END);
+          jpgfile_size = ftell(jpgfile);      
+          rewind(jpgfile);
+          im = (struct Image*)malloc(sizeof(struct Image));
+          im->image = (char *)malloc(sizeof(char)*jpgfile_size);
+          strcpy(im->image_type, "jpg");
+          im->image_size = (int)jpgfile_size;
+          im->image_info_size = 0;
+          remove(filename);
+		return (im);
 	}
 }
 

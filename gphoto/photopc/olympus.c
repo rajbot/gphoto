@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include "eph_io.h"
 #include "../src/gphoto.h"
-#include "../src/util.h"
 
 /* Olympus Camera Functions ----------------------------------
    ----------------------------------------------------------- */
@@ -72,6 +71,7 @@ struct Image *oly_get_picture (int picNum, int thumbnail) {
 	   If thumbnail == FALSE, it reads the whole image.
 	*/
 
+
         long thumbLength, picLength, Size;
         char *picData;
 	char tempName[1024];
@@ -104,13 +104,11 @@ struct Image *oly_get_picture (int picNum, int thumbnail) {
 	        eph_getvar(iob, 0x0e, &picData, &picSize);
 	pid = getpid();
 	if (thumbnail)
-		sprintf(tempName, "%s/gphoto-thumbnail-%i.jpg",
-			gphotoDir, picNum);
-	   else {
+		sprintf(tempName, "%s/gphoto-thumb-%i-%i.jpg",
+			gphotoDir, pid, picNum);
+	   else
 		sprintf(tempName, "%s/gphoto-%i-%i.jpg", 
-			gphotoDir, pid, picCounter);
-		picCounter++;
-	}
+			gphotoDir, pid, picNum);
 	im = (struct Image*)malloc(sizeof(struct Image));
 	im->image = picData;
 	im->image_size = Size;

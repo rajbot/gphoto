@@ -19,11 +19,13 @@
 #include "takePic.h"
 #include "saveThumb.h"
 #include "../src/gphoto.h"
-#include "../src/util.h"
 #include "konica_qm100.h"
+
+int konica_picCounter;
 
 int konica_qm100_initialize()
 {
+  konica_picCounter = 0;
   return(1);
 }
 
@@ -57,36 +59,40 @@ int konica_qm100_take_picture() {
   return PICTURE_COUNT;
 }
 
-GdkImlibImage *konica_qm100_get_picture (int picNum, int thumbnail)
+
+struct Image*konica_qm100_get_picture (int picNum, int thumbnail)
 {
   int serialdev;
   int pid;
   char tempName[1024], rm[1024];
   GdkImlibImage *imlibimage;
 
+  struct Image *im;
+
   pid = getpid();
 
   serialdev = qm100_open(serial_port);
   qm100_setSpeed(serialdev, B115200);
 
-  sprintf(tempName, "%s/gphoto-%i-%i.jpg", gphotoDir, pid, picCounter);
-  picCounter++;
+  sprintf(tempName, "%s/gphoto-%i-%i.jpg", gphotoDir, pid, konica_picCounter);
+  konica_picCounter++;
 
   picNum = qm100_getRealPicNum(serialdev, picNum);
 
   if (thumbnail) {
-    qm100_saveThumb(serialdev, tempName, picNum);
+    im = qm100_saveThumb(serialdev, tempName, picNum);
   } else {
-    qm100_savePic(serialdev, tempName, picNum);
+    im = qm100_savePic(serialdev, tempName, picNum);
   }
   
   qm100_setSpeed(serialdev, B9600);
   qm100_close(serialdev);
-  
+/*  
   imlibimage = gdk_imlib_load_image(tempName);
   sprintf(rm, "rm %s", tempName);
   system(rm);
-  return (imlibimage);
+*/
+  return (im);
 }
 
 int konica_qm100_delete_picture (int picNum)
@@ -108,7 +114,7 @@ int konica_qm100_formatCF()
   return (1);
 }
 
-GdkImlibImage *konica_qm100_get_preview () {
+struct Image *konica_qm100_get_preview () {
   return(0);
 }
 
@@ -157,6 +163,7 @@ int konica_qm100_configure ()
 char *konica_qm100_summary()
 {
   char summary_string[500];
+  char *summary;
   char cmd_status[QM100_STATUS_LEN]=QM100_STATUS;
   int serialdev;
   qm100_packet_block packet;
@@ -167,7 +174,9 @@ char *konica_qm100_summary()
   qm100_close(serialdev);
   update_progress(1);
   sprintf(summary_string, "This camera is a Konica QM100 or Hewlett Packard C20/C30\nIt has taken %d pictures and currently contains %d picture(s)\nThe time according to the Camera is %d:%d:%d %d/%d/%d",COUNTER, PICTURE_COUNT, TIME_HOUR,TIME_MIN,TIME_SEC,TIME_DAY,TIME_MON,TIME_YEAR);
-  return (summary_string);
+  summary = (char *)malloc(sizeof(char)*strlen(summary_string)+32);
+  strcpy(summary, summary_string);
+  return (summary);
 }
 
 char *konica_qm100_description()

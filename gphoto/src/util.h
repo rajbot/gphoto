@@ -11,20 +11,6 @@
 extern GtkWidget *status_bar;
 extern GtkWidget *progress;
 
-int command_line_mode;
-
-void update_status(char *newStatus);
-        /*
-                displays whatever is in string "newStatus" in the
-                status bar at the bottom of the main window
-        */
-
-void update_progress(float percentage);
-        /*
-                sets the progress bar to percentage% at the bottom
-                of the main window
-        */
-
 void error_dialog(char *Error);
         /*
            Standard, run-of-the-mill message box

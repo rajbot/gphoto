@@ -237,7 +237,8 @@ on_right_click (ETable *et, gint row, gint col, GdkEvent *event, gpointer data)
 
 	menu = e_popup_menu_create (context_menu, 0, 0, table);
 	e_auto_kill_popup_menu_on_hide (menu);
-	gtk_menu_popup (menu, NULL, NULL, NULL, NULL, 0, event->button.time);
+	gtk_menu_popup (menu, NULL, NULL, NULL, NULL,
+			event->button.button, event->button.time);
 	return (TRUE);
 }
 

@@ -214,8 +214,13 @@ gnocam_applet_cam_connect (GnocamAppletCam *c)
 	CORBA_exception_init (&ev);
 	c->priv->camera = gnocam_util_get_camera (c->priv->manuf,
 		c->priv->model, c->priv->port, &ev);
-	if (BONOBO_EX (&ev))
+	if (BONOBO_EX (&ev)) {
+		if (c->priv->camera) {
+			//bonobo_object_release_unref (c->priv->camera, NULL);
+			c->priv->camera = CORBA_OBJECT_NIL;
+		}
 		g_warning ("Could not get camera!");
+	}
 	CORBA_exception_free (&ev);
 	gnocam_applet_cam_update (c);
 }

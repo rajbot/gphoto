@@ -57,6 +57,10 @@ gnocam_util_get_camera (const gchar *manuf, const gchar *model,
                             bonobo_object_release_unref (m, NULL);
                             CORBA_free (ml);
                             CORBA_free (l);
+			    if (BONOBO_EX (ev)) {
+				    //bonobo_object_release_unref (c, NULL);
+				    return CORBA_OBJECT_NIL;
+			    }
                             return c;
                         }
                 }

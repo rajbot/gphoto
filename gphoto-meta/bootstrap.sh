@@ -38,6 +38,16 @@ EOF
 done
 set | grep '^parm_'
 
+########################################################################
+# don't rely on external true and false
+
+function true() {
+    return 0
+}
+
+function false() {
+    return 1
+}
 
 ########################################################################
 # installautotools - download, build and locally install build tools
@@ -101,7 +111,7 @@ EOF
 
 function checktools() {
     local action tool restofline
-    local autoinstall="false"
+    local autoinstall=false
 
     if [ -d "$toolroot" ]
     then
@@ -148,13 +158,11 @@ auto	pkg-config
 autocnd	wget
 EOF
 
-    if [ "${parm_tools}" = "false" ]
+    if "${parm_tools}"
     then
 	true
-    elif [ "${autoinstall}" = "false" ]
+    elif "${autoinstall}"
     then
-	true
-    else
 	installautotools
     fi
 
@@ -281,6 +289,7 @@ function builddist() {
     local LD_LIBRARY_PATH="${distroot}/lib:${LD_LIBRARY_PATH}"
     local PATH="${distroot}/bin:${PATH}"
     export PKG_CONFIG_PATH LD_LIBRARY_PATH PATH
+    echo "##### USING PATH=$PATH FOR BUILDING DIST TARBALLS"
     cmd mkdir -p "${cvssrc}"
     cmd mkdir -p "${distdir}"
     while read module releasetag CVSROOT distopts configopts

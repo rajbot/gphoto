@@ -946,6 +946,9 @@ char *philips_getthumb(n, size)
 
 	if ( philips_mode != 0 ) philips_set_mode ( 0 );
 
+	/* try and fix thumbnail problems on RDC-5000 */
+	if ( *cameraid == 5000 ) philips_init_query();
+
 	buf[0] = n & 0xff;
 	buf[1] = (n >> 8) & 0xff;
 

@@ -25,6 +25,11 @@ gpioinc_HEADERS = gpio.h gpio-serial.h
 # DEPS = $(top_builddir)/libgpio.la
 # LDADDS = $(top_builddir)/libgpio.la
 
+confexecdir=$(libdir)
+confexec_DATA = gpioConf.sh
+
+CLEANFILES=gpioConf.sh
+
 EXTRA_DIST = 		\
 	AUTHORS \
 	ChangeLog \
@@ -35,9 +40,6 @@ EXTRA_DIST = 		\
 	gpio-config.in \
 	gpioConf.sh.in \
 	TODO
-
-confexecdir=$(libdir)
-confexec_DATA = gpioConf.sh
 
 gpioConf.sh: gpioConf.sh.in Makefile
 ## Use sed and then mv to avoid problems if the user interrupts.

@@ -1,3 +1,8 @@
+2001-04-20	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
+	* configure.in:
+	* src/gnocam_storage_view.c: Bring API in sync with gal-0.7.99.0
+
 2001-04-14	Lutz Mueller  <urc8@rz.uni-karlsruhe.de>
 
 	* configure.in: Applied patch from Martin Pool <mbp@samba.org> which

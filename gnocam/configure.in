@@ -77,11 +77,11 @@ fi
 dnl ***
 dnl gal
 dnl ***
-AC_MSG_CHECKING(for GAL >= 0.5.99.13)
+AC_MSG_CHECKING(for GAL >= 0.7.0.0)
 if gnome-config --libs gal > /dev/null 2>&1; then
     vers=`gnome-config --modversion gal | sed -e "s/gal-//" -e 's/cvs$//' -e 's/pre$//' | \
         awk 'BEGIN { FS = "."; } { print $1 * 1000000 + $2 * 10000 + $3 * 100 + $4;}'`
-    if test "$vers" -ge 59913; then
+    if test "$vers" -ge 70000; then
         AC_MSG_RESULT(found)
 	GAL_LIBS="`gnome-config --libs gal`"
 	GAL_CFLAGS="`gnome-config --cflags gal`"
@@ -89,7 +89,7 @@ if gnome-config --libs gal > /dev/null 2>&1; then
 	AC_SUBST(GAL_CFLAGS)
     else
         AC_MSG_ERROR([
-*** You need at least GAL 0.5.99.13 for this version of ${PACKAGE}.
+*** You need at least GAL 0.7.0.0 for this version of ${PACKAGE}.
 *** Get the latest version from http://www.gnome.org. Mirrors can 
 *** be found at http://www.gnome.org/mirrors.])
     fi

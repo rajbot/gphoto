@@ -356,8 +356,18 @@ gnocam_storage_view_new (GnoCamCamera* camera)
 	new->priv->hash_table = g_hash_table_new (g_str_hash, g_str_equal);
 
 	/* Create the model */
-	new->priv->model = e_tree_memory_callbacks_new (icon_at, column_count, NULL, NULL, value_at, set_value_at, is_editable, duplicate_value, free_value, 
-							initialize_value, value_is_empty, value_to_string, new);
+	new->priv->model = e_tree_memory_callbacks_new (icon_at, 
+							column_count, 
+							NULL, NULL, 
+							NULL, NULL,
+							value_at, 
+							set_value_at, 
+							is_editable, 
+							duplicate_value, 
+							free_value, 
+							initialize_value, 
+							value_is_empty, 
+							value_to_string, new);
 
 	/* Create extras */
 	extras = e_table_extras_new ();

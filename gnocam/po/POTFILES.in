@@ -9,3 +9,5 @@ src/notification.c
 src/preferences.c
 src/preview.c
 src/properties.c
+src/libglade-i18n.c
+

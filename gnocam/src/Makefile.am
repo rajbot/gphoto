@@ -45,3 +45,11 @@ gnocam_LDADD = \
 
 EXTRA_DIST = $(glade_DATA)
 
+BUILT_SOURCES =\
+ libglade-i18n.c
+
+libglade-i18n.c: gnocam.glade
+	libglade-xgettext -c -o libglade-i18n.c gnocam.glade
+
+CLEANFILES += libglade-i18n.c
+

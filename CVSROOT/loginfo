@@ -30,3 +30,4 @@
 CVSROOT/ ${CVSROOT}/CVSROOT/syncmail -u %{sVv} cvs@home.n-dimensional.de
 gphoto2/ ${CVSROOT}/CVSROOT/syncmail -u %{sVv} prelim-cvs@n-dimensional.de 
 gtkam/   ${CVSROOT}/CVSROOT/syncmail -u %{sVv} prelim-cvs@n-dimensional.de
+gnocam/  ${CVSROOT}/CVSROOT/syncmail -u %{sVv} prelim-cvs@n-dimensional.de

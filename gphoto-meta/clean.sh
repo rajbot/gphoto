@@ -12,7 +12,8 @@ cmd rm -rf autom4te.cache/
 
 if [ "$1" = "--logout" ]
 then
-    while read module release CVSROOT
+    local module releasetag CVSROOT restofline
+    while read module releasetag CVSROOT restofline
     do 
 	if grep -q "${CVSROOT}" $HOME/.cvspass
 	then

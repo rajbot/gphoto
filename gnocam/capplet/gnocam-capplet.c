@@ -5,6 +5,26 @@
 
 #include <gtk/gtkimage.h>
 #include <gtk/gtkhbox.h>
+#include <gtk/gtkvbox.h>
+#include <gtk/gtktreeview.h>
+#include <gtk/gtkliststore.h>
+#include <gtk/gtkcellrenderertext.h>
+
+#ifdef ENABLE_NLS
+#  include <libintl.h>
+#  undef _
+#  define _(String) gettext (String)
+#else
+#  define _(String) (String)
+#endif
+
+enum
+{
+	COL_NAME = 0,
+	COL_MODEL,
+	COL_PORT,
+	NUM_COLS
+};
 
 #define PARENT_TYPE GTK_TYPE_DIALOG
 static GtkDialogClass *parent_class = NULL;
@@ -86,7 +106,10 @@ GtkWidget*
 gnocam_capplet_new (GConfClient *client)
 {
 	GnoCamCapplet *capplet;
-	GtkWidget *hbox, *image;
+	GtkWidget *hbox, *image, *vbox, *w;
+	GtkListStore *s;
+	GtkCellRenderer *c;
+	GtkTreeViewColumn *col;
 
 	capplet = gtk_type_new (GNOCAM_TYPE_CAPPLET);
 	
@@ -99,7 +122,36 @@ gnocam_capplet_new (GConfClient *client)
 	/* Create the logo */
 	image = gtk_image_new_from_file (IMAGEDIR "/gnocam-camera2.png");
 	gtk_widget_show (image);
-	gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, FALSE, 10);
+	gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, FALSE, 0);
+
+	/* Create a vbox */
+	vbox = gtk_vbox_new (FALSE, 10);
+	gtk_widget_show (vbox);
+	gtk_box_pack_start (GTK_BOX (hbox), vbox, TRUE, TRUE, 0);
+
+	/* Create the table */
+	w = gtk_tree_view_new ();
+	gtk_widget_show (w);
+	gtk_box_pack_start (GTK_BOX (vbox), w, TRUE, TRUE, 0);
+
+	/* Create the model for the table */
+	s = gtk_list_store_new (NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
+				G_TYPE_STRING);
+	gtk_tree_view_set_model (GTK_TREE_VIEW (w), GTK_TREE_MODEL (s));
+
+	/* Add the columns */
+	c = gtk_cell_renderer_text_new ();
+	col = gtk_tree_view_column_new_with_attributes (_("Name"), c,
+						"text", COL_NAME, NULL);
+	gtk_tree_view_append_column (GTK_TREE_VIEW (w), col);
+	c = gtk_cell_renderer_text_new ();
+	col = gtk_tree_view_column_new_with_attributes (_("Model"), c,
+						"text", COL_MODEL, NULL);
+	gtk_tree_view_append_column (GTK_TREE_VIEW (w), col);
+	c = gtk_cell_renderer_text_new ();
+	col = gtk_tree_view_column_new_with_attributes (_("Port"), c,
+						"text", COL_PORT, NULL);
+	gtk_tree_view_append_column (GTK_TREE_VIEW (w), col);
 
 	return (GTK_WIDGET (capplet));
 }

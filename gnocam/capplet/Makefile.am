@@ -10,15 +10,9 @@ camera_capplet_SOURCES = gnocam-capplet.c gnocam-capplet.h main.c
 
 @INTLTOOL_DESKTOP_RULE@
 
-desktopdir = $(datadir)/@GETTEXT_PACKAGE@/capplets
+desktopdir = $(datadir)/control-center-2.0/capplets
 Desktop_in_files = camera-capplet.desktop.in
 desktop_DATA = $(Desktop_in_files:.desktop.in=.desktop)
-
-sysdir=$(datadir)/control-center/Peripherals
-sys_DATA=camera-capplet.desktop
-
-deskdir=$(datadir)/gnome/apps/Settings/Peripherals
-desk_DATA=camera-capplet.desktop
 
 $(Desktop_in_files): $(Desktop_in_files:.desktop.in=.desktop.in.in)
 	sed -e "s|\@PREFIX\@|$(prefix)|" $< > $@

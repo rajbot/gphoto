@@ -1,4 +1,5 @@
 AC_INIT(src/gnocam.c)
+AC_PREREQ(2.12)
 
 AM_INIT_AUTOMAKE(GnoCam, 0.9)
 AM_CONFIG_HEADER(config.h)

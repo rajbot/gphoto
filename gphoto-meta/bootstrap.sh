@@ -468,6 +468,16 @@ builddist() {
 	gphoto2 --list-cameras
 	echo "========================================================================"
     ) > "${distdir}/SUPPORTED-CAMERAS"
+
+    echo "##########################################################################"
+    echo "# Installed test versions of everything into ${distroot}"
+    echo "# You may want to set the following variables to use the gphoto suite"
+    echo "# installed there:"
+    echo "##########################################################################"
+    echo "export PATH=\"${PATH}\""
+    echo "export LD_LIBRARY_PATH=\"${LD_LIBRARY_PATH}\""
+    echo "export PKG_CONFIG_PATH=\"${PKG_CONFIG_PATH}\""
+    echo "########################################################################"
 }
 
 
@@ -537,3 +547,5 @@ cvslogin || die
 getsources || die
 builddist || die
 makefiles || die
+echo "Note: To be sure that the packages in ${distdir} really work, run"
+echo "      $(dirname $0)/compileinstall.sh"

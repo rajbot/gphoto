@@ -239,7 +239,8 @@ static GnomeVFSResult do_open (
 	
 	g_print ("do_open\n");
 	
-	*handle = file_handle_new (uri, client, client_mutex, &result);
+	if ((mode == GNOME_VFS_OPEN_READ) || (mode = GNOME_VFS_OPEN_WRITE)) *handle = file_handle_new (uri, mode, client, client_mutex, &result);
+	else result = GNOME_VFS_ERROR_INVALID_OPEN_MODE;
 	
 	return (result);
 }
@@ -254,7 +255,7 @@ static GnomeVFSResult do_create (
         GnomeVFSContext*                context)
 {
 	g_print ("do_create\n");
-	return (GNOME_VFS_ERROR_INTERNAL);
+	return (do_open (method, handle, uri, mode, context));
 }
 
 static GnomeVFSResult do_close (
@@ -278,7 +279,9 @@ static GnomeVFSResult do_read (
 	file_handle_t*		file_handle = NULL;
 
 	g_print ("do_read\n");
-	g_return_val_if_fail ((file_handle = (file_handle_t*) handle), GNOME_VFS_ERROR_INTERNAL);
+	
+	if (!(file_handle = (file_handle_t*) handle)) return (GNOME_VFS_ERROR_INTERNAL);
+	if (file_handle->mode != GNOME_VFS_OPEN_READ) return (GNOME_VFS_ERROR_BAD_PARAMETERS);
 
 	if (gnome_vfs_context_check_cancellation (context)) return GNOME_VFS_ERROR_CANCELLED;
 
@@ -304,8 +307,17 @@ static GnomeVFSResult do_write (
 	GnomeVFSFileSize*               bytes_written,
 	GnomeVFSContext*                context)
 {
+	file_handle_t* 		file_handle = NULL;
+	
 	g_print ("do_write\n");
-	return (GNOME_VFS_ERROR_INTERNAL);
+
+	if (!(file_handle = (file_handle_t*) handle)) return (GNOME_VFS_ERROR_INTERNAL);
+	if (file_handle->mode != GNOME_VFS_OPEN_WRITE) return (GNOME_VFS_ERROR_BAD_PARAMETERS);
+	
+	*bytes_written = 0;
+	if (gp_file_append (file_handle->file, (gchar*) buffer, num_bytes) != GP_OK) return (GNOME_VFS_ERROR_GENERIC);
+	*bytes_written = num_bytes;
+	return (GNOME_VFS_OK);
 }
 
 static GnomeVFSResult do_seek (

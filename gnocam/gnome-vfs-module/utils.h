@@ -3,8 +3,9 @@
 /********************/
 
 typedef struct {
-        CameraFile*     file;
-        glong           position;
+        CameraFile*		file;
+	GnomeVFSOpenMode	mode;
+        glong			position;
 } file_handle_t;
 
 typedef struct {
@@ -23,6 +24,6 @@ Camera*	camera_new_by_uri (GnomeVFSURI* uri, GConfClient* client, GMutex* client
 GnomeVFSMethodHandle*	directory_handle_new (GnomeVFSURI* uri, GConfClient* client, GMutex* client_mutex, GnomeVFSFileInfoOptions options, GnomeVFSResult* result);
 GnomeVFSResult		directory_handle_free (GnomeVFSMethodHandle* handle);
 
-GnomeVFSMethodHandle*	file_handle_new	(GnomeVFSURI* uri, GConfClient* client, GMutex* client_mutex, GnomeVFSResult* result);
+GnomeVFSMethodHandle*	file_handle_new	(GnomeVFSURI* uri, GnomeVFSOpenMode mode, GConfClient* client, GMutex* client_mutex, GnomeVFSResult* result);
 GnomeVFSResult		file_handle_free (GnomeVFSMethodHandle* handle);
 

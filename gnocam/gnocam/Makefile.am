@@ -1,21 +1,21 @@
-INCLUDES =\
- -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
- -DLOCALEDIR=\""$(prefix)/$(DATADIRNAME)/locale"\"\
- $(GNOCAM_CFLAGS)
+INCLUDES=							\
+	-DG_LOG_DOMAIN=\"$(PACKAGE)\"				\
+	-DLOCALEDIR=\""$(prefix)/$(DATADIRNAME)/locale"\"	\
+	$(GNOCAM_CFLAGS)
 
 bin_PROGRAMS=gnocam
 
 CORBA_GENERATED = GnoCam.h GnoCam-common.c GnoCam-stubs.c GnoCam-skels.c
 
-gnocam_SOURCES =					\
- $(CORBA_GENERATED)					\
- bonobo-storage-camera.c bonobo-storage-camera.h	\
- bonobo-stream-camera.c bonobo-stream-camera.h		\
- i18n.h main.c						\
- gnocam-cache.c  gnocam-cache.h				\
- gnocam-camera.c gnocam-camera.h			\
- gnocam-main.c gnocam-main.h				\
- gnocam-util.c gnocam-util.h
+gnocam_SOURCES =						\
+	$(CORBA_GENERATED)					\
+	bonobo-storage-camera.c bonobo-storage-camera.h		\
+	bonobo-stream-camera.c bonobo-stream-camera.h		\
+	i18n.h main.c						\
+	gnocam-cache.c gnocam-cache.h				\
+	gnocam-camera.c gnocam-camera.h				\
+	gnocam-main.c gnocam-main.h				\
+	gnocam-util.c gnocam-util.h
 
 gnocam_LDADD = $(GNOCAM_LIBS)
 

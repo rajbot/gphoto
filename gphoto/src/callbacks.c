@@ -265,8 +265,6 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 		gtk_widget_show(hsep);
 		gtk_box_pack_end_defaults(GTK_BOX(GTK_FILE_SELECTION(
 			filesel)->main_vbox), hsep);
-		gtk_box_pack_end_defaults(GTK_BOX(GTK_FILE_SELECTION(
-			filesel)->main_vbox), label);
 
 		/* if they clicked cancel, return  ------------- */
 		if (wait_for_hide(filesel, GTK_FILE_SELECTION(filesel)->ok_button, 

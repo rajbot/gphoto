@@ -644,7 +644,7 @@ Current Version: %s
 New features all over the place. Please see
 the ChangeLog for more information.
 
-As always, report bugs gphoto-devel@lists.styx.net
+As always, report bugs gphoto-devel@gphoto.org
 
 Thanx much.
 ", VERSION);

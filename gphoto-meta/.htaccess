@@ -1,9 +1,9 @@
 AddDescription "GTK widgets for EXIF tags" libexif-gtk-*.tar.*
 AddDescription "EXIF parser" libexif-*.tar.*
-AddDescription "Manual (one HTML file)" gphoto2-manual-html-nochunks*.tar.*
-AddDescription "Manual (one XHTML file)" gphoto2-manual-xhtml-nochunks*.tar.*
-AddDescription "Manual (HTML files)" gphoto2-manual-html*.tar.*
-AddDescription "Manual (XHTML files)" gphoto2-manual-xhtml*.tar.*
+AddDescription "Manual (one HTML file + gfx)" gphoto2-manual-html-nochunks*.tar.*
+AddDescription "Manual (one XHTML file + gfx)" gphoto2-manual-xhtml-nochunks*.tar.*
+AddDescription "Manual (HTML files + gfx)" gphoto2-manual-html*.tar.*
+AddDescription "Manual (XHTML files + gfx)" gphoto2-manual-xhtml*.tar.*
 AddDescription "Manual (man pages)" gphoto2-manual-man*.tar.*
 AddDescription "Manual (TXT file)" gphoto2-manual-txt.tar.*
 AddDescription "Manual (XML sources)" gphoto2-manual-*.tar.*

@@ -22,6 +22,8 @@ Probably yes. Suggest something better.
 Ok, I have installed it. Now what do I need to do?
 --------------------------------------------------
 
+Something like this:
+
 lutz@lutz:~$ ftp localhost
 Connected to lutz.
 220 FTP server ready.
@@ -43,3 +45,7 @@ Why doesn't 'ls' work?
 
 Short question, short answer: It isn't implemented yet.
 
+Don't you have better things to do?
+-----------------------------------
+
+Actually yes, but I couldn't resist the temptation.

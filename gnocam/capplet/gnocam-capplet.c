@@ -354,8 +354,6 @@ gnocam_capplet_edit (GnocamCapplet *c, GtkTreeIter *iter)
 	if (d) {gtk_window_present (GTK_WINDOW (d)); g_free (id); return;}
 
 	gtk_widget_show (GTK_WIDGET (ch = gnocam_chooser_new ()));
-	g_signal_connect (ch, "changed", G_CALLBACK (on_changed), c);
-	g_signal_connect (ch, "destroy", G_CALLBACK (on_destroy), c);
 	g_object_set_data_full (G_OBJECT (ch), "id", id,
 				(GDestroyNotify) g_free);
 	g_hash_table_insert (c->priv->h, g_strdup (id), ch);
@@ -371,6 +369,8 @@ gnocam_capplet_edit (GnocamCapplet *c, GtkTreeIter *iter)
 	key = g_strdup_printf ("%s/connect_auto", id);
 	gnocam_chooser_set_connect_auto (ch,
 		gconf_client_get_bool (c->priv->c, key, NULL)); g_free (key);
+	g_signal_connect (ch, "changed", G_CALLBACK (on_changed), c);
+	g_signal_connect (ch, "destroy", G_CALLBACK (on_destroy), c);
 }
 
 static void
@@ -584,17 +584,18 @@ gnocam_capplet_new (GConfClient *client)
 	gtk_tree_view_append_column (GTK_TREE_VIEW (w), col);
 	g_signal_connect (r, "edited", G_CALLBACK (on_name_edited), c);
 
-	/* Add the close button */
-	gtk_widget_show (b = gtk_button_new_from_stock (GTK_STOCK_CLOSE));
-	gtk_box_pack_end (GTK_BOX (GTK_DIALOG (c)->action_area), b,
-			  FALSE, FALSE, 0);
-	g_signal_connect (b, "clicked", G_CALLBACK (on_close_clicked), c);
-
 	/* Add the help button */
 	gtk_widget_show (b = gtk_button_new_from_stock (GTK_STOCK_HELP));
 	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (c)->action_area), b,
 			    FALSE, FALSE, 0);
 	g_signal_connect (b, "clicked", G_CALLBACK (on_help_clicked), c);
+
+	/* Add the close button */
+	gtk_widget_show (b = gtk_button_new_from_stock (GTK_STOCK_CLOSE));
+	gtk_box_pack_end (GTK_BOX (GTK_DIALOG (c)->action_area), b,
+			  FALSE, FALSE, 0);
+	g_signal_connect (b, "clicked", G_CALLBACK (on_close_clicked), c);
+	gtk_widget_grab_focus (b);
 
 	/* Load the current settings. */
 	gnocam_capplet_load (c);

@@ -24,7 +24,14 @@ module C {
 
 	interface If : Bonobo::Unknown {
 
+		/* The 'name' of the file, for example 'image.jpeg'. */
 		attribute string name;
+
+		/* The type of the interface, for example 'preview'. */
+		attribute string type;
+
+		/* The description of the interface. */
+		attribute string description;
 
 		void   read (in ReadCallback callback);
 		void   write ();

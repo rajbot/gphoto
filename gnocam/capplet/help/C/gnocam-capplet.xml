@@ -40,6 +40,7 @@
     </legalnotice>
   </articleinfo>
   <indexterm><primary>gnocam-capplet</primary></indexterm>
+
   <sect1 id="gnocam-capplet-intro">
     <title>Introduction</title>
     <para>
@@ -47,5 +48,29 @@
       to those settings in GNOME that enable you to use your digital 
       camera from within GNOME applications.
     </para>
+  </sect1>
+
+  <sect1 id="gnocam-capplet-main">
+    <title>The Main Window</title>
+    <para>
+      The main window of the <application>&app;</application> application
+      displays a list of currently configured cameras. This list can be
+      modified using three buttons:
+    </para>
+    <itemizedlist>
+      <listitem>
+        To add a new camera to the list, click
+        <guibutton>Add</guibutton>.
+      </listitem>
+      <listitem>
+        To display all settings of a camera in the list, select the camera
+	and click <guibutton>Edit</guibutton>.
+      </listitem>
+      <listitem>
+        If you don't use a configured camera any more and would like to
+	remove it from the list, select this camera and click
+	<guibutton>Remove</guibutton>.
+      </listitem>
+    </itemizedlist>
   </sect1>
 </article>

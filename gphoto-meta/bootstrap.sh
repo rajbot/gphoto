@@ -408,14 +408,16 @@ function builddist {
 
 	    if [ "$module" = "gphoto2-manual" ]
 	    then
+		echo "##### building special manual packages"
 		local dir
 		for dir in html xhtml html-nochunks xhtml-nochunks man pdf txt
 		do
 		    if ls "${docdir}/${dir}/"* > /dev/null 2>&1
 		    then
+			echo "    # building special manual package for ${dir}"
 			local base
 			base="${distdir}/${module}-${dir}.tar"
-			tar cvfhz "${base}.gz" "${dir}/"
+			(cd "${docdir}" && tar cvfhz "${base}.gz" "${dir}/")
 			if [ "$compression" = "bz2" ]
 			then
 			    gunzip -c "${base}.gz" | bzip2 -c > "${base}.bz2"

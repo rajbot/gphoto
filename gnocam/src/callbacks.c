@@ -22,8 +22,6 @@ extern GnoCamViewMode	view_mode;
 /* Prototypes */
 /**************/
 
-void on_optionmenu_view_mode_clicked	(GtkButton* button, gpointer user_data);
-
 void on_button_save_preview_clicked 	(GtkButton* button, gpointer user_data);
 void on_button_save_preview_as_clicked 	(GtkButton* button, gpointer user_data);
 void on_button_save_file_clicked	(GtkButton* button, gpointer user_data);
@@ -45,14 +43,6 @@ void on_properties_activate 				(GtkMenuItem* menuitem, gpointer user_data);
 /**************/
 /* Callbacks. */
 /**************/
-
-void
-on_optionmenu_view_mode_clicked (GtkButton* button, gpointer user_data)
-{
-	//FIXME: Why is this callback never called?!?
-	//FIXME: Need to set view_mode variable here.
-	dialog_information (_("Not yet implemented!"));
-}
 
 void
 on_button_save_preview_clicked (GtkButton* button, gpointer user_data)

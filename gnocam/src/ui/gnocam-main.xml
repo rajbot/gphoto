@@ -21,6 +21,8 @@
     </submenu>
   </menu>
   <dockitem name="Toolbar">
+    <control name="ViewMode" _tip="View Mode"/>
+    <separator/>
     <toolitem name="SavePreviews" verb="" _label="Save Previews" pixtype="stock" pixname="Save"/>
     <toolitem name="SavePreviewsAs" verb="" _label="Save Previews As" pixtype="stock" pixname="Save As"/>
     <toolitem name="SaveFiles" verb="" _label="Save Files" pixtype="stock" pixname="Save"/>

@@ -1,5 +1,6 @@
 #include <config.h>
 #include <gnome.h>
+#include <gal/widgets/gtk-combo-box.h>
 #include <libgnomevfs/gnome-vfs.h>
 #include <glade/glade.h>
 #include <gconf/gconf-client.h>
@@ -38,6 +39,8 @@ GladeXML*		xml_main = NULL;
 /* Prototypes. */
 /***************/
 
+void on_view_mode_radiobutton_toggled 	(GtkToggleButton* togglebutton, gpointer user_data);
+
 void on_save_previews_activate 		(GtkWidget* widget, gpointer user_data);
 void on_save_previews_as_activate 	(GtkWidget* widget, gpointer user_data);
 void on_save_files_activate		(GtkWidget* widget, gpointer user_data);
@@ -47,6 +50,15 @@ void on_delete_activate			(GtkWidget* widget, gpointer user_data);
 /**************/
 /* Callbacks. */
 /**************/
+
+void
+on_view_mode_radiobutton_toggled (GtkToggleButton* togglebutton, gpointer user_data)
+{
+	if (togglebutton->active) {
+		view_mode = GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (togglebutton), "view_mode"));
+		gtk_combo_box_popup_hide (GTK_COMBO_BOX (gtk_object_get_data (GTK_OBJECT (togglebutton), "combo_box")));
+	}
+}
 
 void
 on_new_gallery_activate (GtkWidget* widget, gpointer user_data)
@@ -126,6 +138,7 @@ on_delete_activate (GtkWidget* widget, gpointer user_data)
 
 int main (int argc, char *argv[]) 
 {
+	GladeXML*		xml_temp;
 	GError*			gerror = NULL;
 	GConfValue*		value = NULL;
 	guint 			notify_id_cameras;
@@ -183,14 +196,27 @@ int main (int argc, char *argv[])
 	g_assert ((xml_main = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "main_vbox")));
 	widget = glade_xml_get_widget (xml_main, "main_vbox");
 	bonobo_win_set_contents (BONOBO_WIN (window), widget);
+        container = bonobo_ui_container_new ();
+        bonobo_ui_container_set_win (container, BONOBO_WIN (window));
+        component = bonobo_ui_component_new (PACKAGE);
+        bonobo_ui_component_set_container (component, bonobo_object_corba_objref (BONOBO_OBJECT (container)));
+        bonobo_ui_component_add_verb_list (component, verb);
+        bonobo_ui_util_set_ui (component, "", "gnocam-main.xml", PACKAGE);
+
+	/* Add the view mode selection to the toolbar. */
+	g_assert ((xml_temp = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "vbox_view_mode")));
+	glade_xml_signal_autoconnect (xml_temp);
+	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_temp, "view_mode_radiobutton_none")), "view_mode", GINT_TO_POINTER (GNOCAM_VIEW_MODE_NONE));
+	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_temp, "view_mode_radiobutton_preview")), "view_mode", GINT_TO_POINTER (GNOCAM_VIEW_MODE_PREVIEW));
+	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_temp, "view_mode_radiobutton_file")), "view_mode", GINT_TO_POINTER (GNOCAM_VIEW_MODE_FILE));
+	gtk_widget_show_all (widget = gtk_combo_box_new (gtk_label_new ("View Mode"), glade_xml_get_widget (xml_temp, "vbox_view_mode")));
+	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_temp, "view_mode_radiobutton_none")), "combo_box", widget);
+	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_temp, "view_mode_radiobutton_preview")), "combo_box", widget);
+	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_temp, "view_mode_radiobutton_file")), "combo_box", widget);
+	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (glade_xml_get_widget (xml_temp, "view_mode_radiobutton_preview")), TRUE);
+	bonobo_ui_component_object_set (component, "/Toolbar/ViewMode", bonobo_object_corba_objref (BONOBO_OBJECT (bonobo_control_new (widget))), NULL);
 
 	/* Create the viewer. */
-	container = bonobo_ui_container_new ();
-	bonobo_ui_container_set_win (container, BONOBO_WIN (window));
-	component = bonobo_ui_component_new (PACKAGE);
-	bonobo_ui_component_set_container (component, bonobo_object_corba_objref (BONOBO_OBJECT (container)));
-	bonobo_ui_component_add_verb_list (component, verb);
-	bonobo_ui_util_set_ui (component, "", "gnocam-main.xml", PACKAGE);
 	viewer = bonobo_widget_new_control (EOG_IMAGE_VIEWER_ID, bonobo_object_corba_objref (BONOBO_OBJECT (container)));
 	gtk_paned_pack2 (GTK_PANED (glade_xml_get_widget (xml_main, "main_hpaned")), viewer, TRUE, TRUE);
 

@@ -96,6 +96,9 @@ static void	on_save_as_clicked	(BonoboUIComponent* component, gpointer user_data
 static void	on_upload_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 static void	on_config_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 
+static void	on_save_as_ok_button_clicked	(GtkButton* button, gpointer user_data);
+static void	on_cancel_button_clicked	(GtkButton* button, gpointer user_data);
+
 /**********************/
 /* Internal functions */
 /**********************/
@@ -154,6 +157,146 @@ create_menu (gpointer user_data)
 	return (FALSE);
 }
 
+static void
+table_selected_row_foreach_save_as (int model_row, gpointer closure)
+{
+	GnoCamFolder* 		folder;
+	GtkFileSelection*	filesel;
+	gchar*			name;
+
+	folder = GNOCAM_FOLDER (closure);
+         
+        filesel = GTK_FILE_SELECTION (gtk_file_selection_new (_("Save As")));
+        gtk_widget_show (GTK_WIDGET (filesel));
+        gtk_signal_connect (GTK_OBJECT (filesel->ok_button), "clicked", GTK_SIGNAL_FUNC (on_save_as_ok_button_clicked), NULL);
+        gtk_signal_connect (GTK_OBJECT (filesel->cancel_button), "clicked", GTK_SIGNAL_FUNC (on_cancel_button_clicked), NULL);
+
+	name = (gchar*) e_table_model_value_at (E_TABLE (folder)->model, 0, model_row);
+	gtk_file_selection_set_filename (filesel, name);
+	gtk_object_set_data (GTK_OBJECT (filesel), "folder", folder);
+	gtk_object_set_data (GTK_OBJECT (filesel), "name", name);
+}
+
+static void
+upload_file (GnoCamFolder* folder, const gchar* source)
+{
+	Bonobo_Stream           dest;
+        BonoboStream*           src;
+        Bonobo_Stream_iobuf*    buffer;
+        CORBA_Environment       ev;
+	gchar*			destination;
+
+	/* We could ask the user for a filename, but we don't :-) */
+	destination = g_basename (source);
+
+        CORBA_exception_init (&ev);
+
+	/* Read */
+	src = bonobo_stream_open_full ("fs", source, Bonobo_Storage_READ, 0644, &ev);
+	if (BONOBO_EX (&ev)) {
+                g_warning (_("Could not get stream for '%s': %s!"), source, bonobo_exception_get_text (&ev));
+                CORBA_exception_free (&ev);
+                return;
+        }
+        Bonobo_Stream_read (BONOBO_OBJREF (src), 4000000, &buffer, &ev);
+	bonobo_object_release_unref (BONOBO_OBJREF (src), NULL);
+	if (BONOBO_EX (&ev)) {
+                g_warning (_("Could not read stream: %s"), bonobo_exception_get_text (&ev));
+                CORBA_exception_free (&ev);
+                return;
+        }
+
+	/* Write */
+	dest = Bonobo_Storage_openStream (folder->priv->storage, destination, Bonobo_Storage_WRITE | Bonobo_Storage_FAILIFEXIST, &ev);
+	if (BONOBO_EX (&ev)) {
+                g_warning (_("Could not open stream for '%s': %s!"), destination, bonobo_exception_get_text (&ev));
+                CORBA_free (buffer);
+                CORBA_exception_free (&ev);
+                return;
+        }
+        Bonobo_Stream_write (dest, buffer, &ev);
+	bonobo_object_release_unref (dest, NULL);
+	CORBA_free (buffer);
+        if (BONOBO_EX (&ev)) {
+                g_warning (_("Could not write stream: %s"), bonobo_exception_get_text (&ev));
+                CORBA_exception_free (&ev);
+                return;
+       }
+
+       CORBA_exception_free (&ev);
+}
+
+
+static void
+save_file (GnoCamFolder* folder, const gchar* name, const gchar* destination)
+{
+        Bonobo_Stream           stream;
+        BonoboStream*           dest;
+        Bonobo_Stream_iobuf*    buffer;
+	CORBA_Environment	ev;
+
+        CORBA_exception_init (&ev);
+
+	/* Read */
+        if (folder->priv->camera->abilities->file_preview && gconf_client_get_bool (folder->priv->client, "/apps/" PACKAGE "/preview", NULL)) {
+                stream = Bonobo_Storage_openStream (folder->priv->storage, name, Bonobo_Storage_READ | Bonobo_Storage_COMPRESSED, &ev);
+        } else {
+                stream = Bonobo_Storage_openStream (folder->priv->storage, name, Bonobo_Storage_READ, &ev);
+        }
+        if (BONOBO_EX (&ev)) {
+                g_warning (_("Could not get stream for '%s': %s!"), name, bonobo_exception_get_text (&ev));
+                CORBA_exception_free (&ev);
+                return;
+        }
+        Bonobo_Stream_read (stream, 4000000, &buffer, &ev);
+        bonobo_object_release_unref (stream, NULL);
+        if (BONOBO_EX (&ev)) {
+                g_warning (_("Could not read stream: %s"), bonobo_exception_get_text (&ev));
+                CORBA_exception_free (&ev);
+                return;
+        }
+
+	/* Write */
+        dest = bonobo_stream_open_full ("fs", destination, Bonobo_Storage_WRITE | Bonobo_Storage_CREATE, 0664, &ev);
+        if (BONOBO_EX (&ev)) {
+                g_warning (_("Could not open stream for '%s': %s!"), destination, bonobo_exception_get_text (&ev));
+                CORBA_free (buffer);
+                CORBA_exception_free (&ev);
+                return;
+        }
+        Bonobo_Stream_write (BONOBO_OBJREF (dest), buffer, &ev);
+        bonobo_object_release_unref (BONOBO_OBJREF (dest), NULL);
+        CORBA_free (buffer);
+        if (BONOBO_EX (&ev)) {
+                g_warning (_("Could not write stream: %s"), bonobo_exception_get_text (&ev));
+                CORBA_exception_free (&ev);
+                return;
+       }
+
+       CORBA_exception_free (&ev);
+}
+
+static void
+table_selected_row_foreach_save (int model_row, gpointer closure)
+{
+	GnoCamFolder*           folder;
+        gchar*                  name;
+	gchar*			path;
+        gchar*                  full_path;
+
+	folder = GNOCAM_FOLDER (closure);
+
+	name = (gchar*) e_table_model_value_at (E_TABLE (folder)->model, 0, model_row);
+	path = gconf_client_get_string (folder->priv->client, "/apps/" PACKAGE "/prefix", NULL);
+
+        if (!strcmp (path, "/")) full_path = g_strconcat ("/", name, NULL);
+        else full_path = g_strdup_printf ("%s/%s", path, name);
+
+	save_file (folder, name, full_path);
+
+        g_free (full_path);
+}
+
 /*************/
 /* Callbacks */
 /*************/
@@ -165,15 +308,19 @@ on_cancel_button_clicked (GtkButton* button, gpointer user_data)
 }
 
 static void
-on_upload_ok_button_clicked (GtkButton* button, gpointer user_data)
+on_upload_ok_button_clicked (GtkButton* ok_button, gpointer user_data)
 {
-	GnoCamFolder*	folder;
+        GtkWidget*      filesel;
+        GnoCamFolder*   folder;
+        gchar*          source;
 
-	folder = GNOCAM_FOLDER (user_data);
+        filesel = gtk_widget_get_ancestor (GTK_WIDGET (ok_button), GTK_TYPE_FILE_SELECTION);
+        folder = GNOCAM_FOLDER (gtk_object_get_data (GTK_OBJECT (filesel), "folder"));
+        source = gtk_file_selection_get_filename (GTK_FILE_SELECTION (filesel));
 
-	g_message (_("Not implemented!"));
+        upload_file (folder, source);
 
-	gtk_widget_destroy (gtk_widget_get_ancestor (GTK_WIDGET (button), GTK_TYPE_FILE_SELECTION));
+        gtk_widget_destroy (filesel);
 }
 
 static void
@@ -193,66 +340,9 @@ on_upload_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 static void
 on_save_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
 {
-#if 0
-	GnoCamFolder*	folder;
-	GList*		selection;
-	gint		i;
-	gchar*		path;
-
-	folder = GNOCAM_FOLDER (user_data);
-
-	selection = g_list_first (GTK_CLIST (folder->priv->clist)->selection);
-	path = gconf_client_get_string (folder->priv->client, "/apps/" PACKAGE "/prefix", NULL);
-	g_return_if_fail (path);
-
-	for (i = 0; i < g_list_length (selection); i++) {
-		Bonobo_Stream		stream;
-		BonoboStream*		dest;
-		Bonobo_Stream_iobuf*    buffer;
-		gint 			row;
-		gchar*			name;
-		gchar*			full_path;
-		CORBA_Environment	ev;
-
-		row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
-		gtk_clist_get_text (GTK_CLIST (folder->priv->clist), row, 1, &name);
-
-		CORBA_exception_init (&ev);
-		stream = Bonobo_Storage_openStream (folder->priv->storage, name, Bonobo_Storage_READ, &ev);
-		if (BONOBO_EX (&ev)) {
-			g_warning (_("Could not get stream for '%s': %s"), name, bonobo_exception_get_text (&ev));
-			CORBA_exception_free (&ev);
-			continue;
-		}
-                Bonobo_Stream_read (stream, 4000000, &buffer, &ev);
-		Bonobo_Stream_unref (stream, NULL);
-		if (BONOBO_EX (&ev)) {
-			g_warning (_("Could not read stream: %s"), bonobo_exception_get_text (&ev));
-			CORBA_exception_free (&ev);
-			continue;
-		}
-		if (!strcmp (path, "/")) full_path = g_strconcat ("/", name, NULL);
-		else full_path = g_strdup_printf ("%s/%s", path, name);
-		dest = bonobo_stream_open_full ("fs", full_path, Bonobo_Storage_WRITE | Bonobo_Storage_CREATE, 0664, &ev);
-                if (BONOBO_EX (&ev)) {
-			g_warning (_("Could not get stream for '%s': %s"), full_path, bonobo_exception_get_text (&ev));
-			g_free (full_path);
-			CORBA_free (buffer);
-			CORBA_exception_free (&ev);
-			continue;
-		}
-		g_free (full_path);
-                Bonobo_Stream_write (BONOBO_OBJREF (dest), buffer, &ev);
-		Bonobo_Stream_unref (BONOBO_OBJREF (dest), NULL);
-		CORBA_free (buffer);
-		if (BONOBO_EX (&ev)) {
-			g_warning (_("Could not write stream: %s"), bonobo_exception_get_text (&ev));
-			CORBA_exception_free (&ev);
-			continue;
-                }
-		CORBA_exception_free (&ev);
-	}
-#endif
+	g_return_if_fail (GNOCAM_IS_FOLDER (user_data));
+	
+	e_table_selected_row_foreach (E_TABLE (user_data), table_selected_row_foreach_save, user_data);
 }
 
 static void
@@ -267,41 +357,30 @@ on_config_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 	gtk_widget_show (widget);
 }
 
-#if 0
 static void
 on_save_as_ok_button_clicked (GtkButton* ok_button, gpointer user_data)
 {
-	g_message (_("Not implemented!"));
+	GtkWidget*	filesel;
+	GnoCamFolder*	folder;
+	gchar*		name;
+	gchar*		dest;
+
+	filesel = gtk_widget_get_ancestor (GTK_WIDGET (ok_button), GTK_TYPE_FILE_SELECTION);
+	folder = GNOCAM_FOLDER (gtk_object_get_data (GTK_OBJECT (filesel), "folder"));
+	name = gtk_object_get_data (GTK_OBJECT (filesel), "name");
+	dest = gtk_file_selection_get_filename (GTK_FILE_SELECTION (filesel));
+	
+	save_file (folder, name, dest);
+	
+	gtk_widget_destroy (filesel);
 }
-#endif
 
 static void
 on_save_as_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
 {
-#if 0
-	GnoCamFolder*   folder;
-	GList*		selection;
-	gint 		i;
+	g_return_if_fail (GNOCAM_IS_FOLDER (user_data));
 
-	folder = GNOCAM_FOLDER (user_data);
-
-	selection = g_list_first (GTK_CLIST (folder->priv->clist)->selection);
-
-	for (i = 0; i < g_list_length (selection); i++) {
-		gint			row;
-		gchar*			name;
-		GtkFileSelection*	filesel;
-
-		row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
-		gtk_clist_get_text (GTK_CLIST (folder->priv->clist), row, 1, &name);
-
-		filesel = GTK_FILE_SELECTION (gtk_file_selection_new (_("Save As")));
-		gtk_widget_show (GTK_WIDGET (filesel));
-		gtk_file_selection_set_filename (filesel, name);
-		gtk_signal_connect (GTK_OBJECT (filesel->ok_button), "clicked", GTK_SIGNAL_FUNC (on_save_as_ok_button_clicked), NULL);
-		gtk_signal_connect (GTK_OBJECT (filesel->cancel_button), "clicked", GTK_SIGNAL_FUNC (on_cancel_button_clicked), NULL);
-	}
-#endif
+	e_table_selected_row_foreach (E_TABLE (user_data), table_selected_row_foreach_save_as, user_data);
 }
 
 /*****************/

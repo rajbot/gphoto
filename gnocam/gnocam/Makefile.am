@@ -35,7 +35,7 @@ $(server_in_files): $(server_in_files:.server.in=.server.in.in)
 	sed -e "s|\@PREFIX\@|$(prefix)|" $< > $@
 
 BUILT_SOURCES = $(CORBA_GENERATED) GNOME_GnoCam.server.in GNOME_GnoCam.server
-CLEANFILES   += $(CORBA_GENERATED) GNOME_GnoCam.server.in GNOME_GnoCam.server
+CLEANFILES    = $(CORBA_GENERATED) GNOME_GnoCam.server.in GNOME_GnoCam.server
 
 dist-hook:
 	cd $(distdir); rm -f $(BUILT_SOURCES)

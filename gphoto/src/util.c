@@ -124,6 +124,7 @@ int confirm_dialog (char *message) {
 
 	dialog = gtk_dialog_new();
 	gtk_window_set_title(GTK_WINDOW(dialog), "Confirm");
+	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
 	GTK_WINDOW(dialog)->type = GTK_WINDOW_DIALOG;
 
 	label = gtk_label_new(message);
@@ -144,7 +145,7 @@ int confirm_dialog (char *message) {
 	gtk_widget_show(dialog);
 
 	retval = wait_for_hide(dialog, yes, no);
-	if (dialog)
+	if (GTK_IS_OBJECT(dialog))
 		gtk_widget_destroy(dialog);
 	return (retval);
 }

@@ -243,22 +243,31 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 	struct ImageMembers *node = &Thumbnails;
 
 	GtkWidget *filesel, *label;
-	GtkWidget *entry;
+	GtkWidget *entry, *hsep;
 	GSList *group;
 
 	if ((strcmp("tn", type) != 0) && (strcmp("in", type) != 0)) {
 		/* Get an output directory */
 		filesel = gtk_directory_selection_new(
 				"Select a directory to store the images...");
-		label = gtk_label_new("Filename prefix:");
-		gtk_widget_show(label);
-		gtk_box_pack_end_defaults(GTK_BOX(GTK_FILE_SELECTION(
-			filesel)->main_vbox), label);
 
 		entry = gtk_entry_new();
 		gtk_widget_show(entry);
 		gtk_box_pack_end_defaults(GTK_BOX(GTK_FILE_SELECTION(
 			filesel)->main_vbox), entry);
+
+		label = gtk_label_new("Filename prefix:");
+		gtk_widget_show(label);
+		gtk_box_pack_end_defaults(GTK_BOX(GTK_FILE_SELECTION(
+			filesel)->main_vbox), label);
+
+		hsep = gtk_hseparator_new();
+		gtk_widget_show(hsep);
+		gtk_box_pack_end_defaults(GTK_BOX(GTK_FILE_SELECTION(
+			filesel)->main_vbox), hsep);
+		gtk_box_pack_end_defaults(GTK_BOX(GTK_FILE_SELECTION(
+			filesel)->main_vbox), label);
+
 		/* if they clicked cancel, return  ------------- */
 		if (wait_for_hide(filesel, GTK_FILE_SELECTION(filesel)->ok_button, 
 		    GTK_FILE_SELECTION(filesel)->cancel_button) == 0)
@@ -269,11 +278,10 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 			return;
 		filesel_dir = gtk_file_selection_get_filename(
 				GTK_FILE_SELECTION(filesel));
-	        sprintf(filesel_cwd, "%s", filesel_dir);
 		filesel_prefix = gtk_entry_get_text(GTK_ENTRY(entry));
 		sprintf(saveselectedtodisk_dir, "%s%s", filesel_dir,
 			filesel_prefix);
-		free(filesel_dir);
+	        sprintf(filesel_cwd, "%s", filesel_dir);
 		gtk_widget_destroy(filesel);
 	}
 
@@ -296,7 +304,7 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 			pic++;
 		}
 	}
-	sprintf(fname, "Done. Images saved in %s", filesel_dir);
+	sprintf(fname, "Done. Images saved in %s", filesel_cwd);
 	update_status(fname);
 }
 

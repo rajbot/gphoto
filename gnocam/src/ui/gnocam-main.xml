@@ -28,4 +28,8 @@
     <toolitem name="Delete" verb="" _label="Delete" _tip="Delete" pixtype="stock" pixname="Trash"/>
   </dockitem>
 
+  <status>
+    <item name="main"/>
+  </status>
+
 </Root>

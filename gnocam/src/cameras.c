@@ -13,6 +13,7 @@
 #include <gconf/gconf-client.h>
 #include <parser.h>
 #include <libgnomevfs/gnome-vfs.h>
+#include <gal/e-paned/e-hpaned.h>
 #include "gphoto-extensions.h"
 #include "gnocam.h"
 #include "cameras.h"
@@ -30,8 +31,8 @@ extern GtkTree*			main_tree;
 extern GnoCamViewMode		view_mode;
 extern GList*			preview_list;
 extern GtkWindow*		main_window;
-extern GladeXML*		xml_main;
 extern gint			counter;
+extern EPaned*			main_paned;
 
 /**************/
 /* Prototypes */
@@ -185,11 +186,10 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 	CORBA_Environment	ev;
 	Bonobo_Control		control;
 	GtkWidget*		widget;
-	GtkPaned*		paned;
 	GnomeVFSURI*		uri;
 
 	g_return_if_fail (item);
-	g_return_if_fail (paned = GTK_PANED (glade_xml_get_widget (xml_main, "main_hpaned")));
+	g_return_if_fail (main_paned);
 
 	/* We don't display anything if a folder gets selected or if the user selected GNOCAM_VIEW_MODE_NONE. */
 	if (item->subtree || view_mode == GNOCAM_VIEW_MODE_NONE) return;
@@ -198,7 +198,7 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 	CORBA_exception_init (&ev);
 
 	/* If there is an old viewer, destroy it. */
-	if (paned->child2) gtk_container_remove (GTK_CONTAINER (paned), paned->child2);
+	if (main_paned->child2) gtk_container_remove (GTK_CONTAINER (main_paned), main_paned->child2);
 
 //FIXME: Until monikers can resolve "camera:", we first have to save the file.
 
@@ -218,9 +218,8 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 		CORBA_exception_free (&ev);
 		return;
 	}
-	widget = bonobo_widget_new_control_from_objref (control, corba_container);
-	gtk_widget_show (widget);
-	gtk_paned_pack2 (paned, widget, TRUE, TRUE);
+	gtk_widget_show (widget = bonobo_widget_new_control_from_objref (control, corba_container));
+	e_paned_pack2 (main_paned, widget, TRUE, TRUE);
 
 	/* Clean up. */
 	CORBA_exception_free (&ev);
@@ -637,6 +636,8 @@ camera_tree_item_popup_create (GtkTreeItem* item)
         component = bonobo_ui_component_new_default ();
         bonobo_ui_component_set_container (component, corba_container);
         gtk_object_set_data (GTK_OBJECT (item), "component", component);
+	gtk_object_set_data (GTK_OBJECT (component), "camera", camera);
+	gtk_object_set_data (GTK_OBJECT (component), "uri", uri);
 
         /* Prepare the popup. */
         doc = xmlNewDoc ("1.0");
@@ -657,6 +658,7 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 	                xmlAddChild (node, node_child = xmlNewNode (ns, "submenu"));
 	                xmlSetProp (node_child, "name", "File Configuration");
 	                xmlSetProp (node_child, "_label", "File Configuration");
+			xmlSetProp (node_child, "_tip", "File configuration");
 			popup_prepare (component, window_file, node_child, command, ns);
 	                xmlAddChild (node, xmlNewNode (ns, "separator"));
 	        }
@@ -712,6 +714,7 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 	                        xmlAddChild (node, node_child = xmlNewNode (ns, "submenu"));
 	                        xmlSetProp (node_child, "name", "Camera Configuration");
 	                        xmlSetProp (node_child, "_label", "Camera Configuration");
+				xmlSetProp (node_child, "_tip", "Camera configuration");
 	                        popup_prepare (component, window_camera, node_child, command, ns);
 	                }
 	
@@ -759,6 +762,7 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 	                xmlAddChild (node, node_child = xmlNewNode (ns, "submenu"));
 	                xmlSetProp (node_child, "name", "Folder Configuration");
 	                xmlSetProp (node_child, "_label", "Folder Configuration");
+			xmlSetProp (node_child, "_tip", "Folder configuration");
 	                popup_prepare (component, window_folder, node_child, command, ns);
         	        xmlAddChild (node, xmlNewNode (ns, "separator"));
 	        }
@@ -797,17 +801,17 @@ camera_tree_item_popup_create (GtkTreeItem* item)
                 g_free (tmp);
                 if (window_camera) {
 			tmp = g_strdup_printf ("/popups/%i/Camera Configuration", counter);
-			popup_fill (item, tmp, window_camera, window_camera, TRUE);
+			popup_fill (component, tmp, window_camera, window_camera, TRUE);
 			g_free (tmp);
 		}
                 if (window_folder) {
 			tmp = g_strdup_printf ("/popups/%i/Folder Configuration", counter);
-			popup_fill (item, tmp, window_folder, window_folder, FALSE);
+			popup_fill (component, tmp, window_folder, window_folder, FALSE);
 			g_free (tmp);
 		}
 		if (window_file) {
 			tmp = g_strdup_printf ("/popups/%i/File Configuration", counter);
-			popup_fill (item, tmp, window_file, window_file, FALSE);
+			popup_fill (component, tmp, window_file, window_file, FALSE);
 			g_free (tmp);
 		}
                 counter++;

@@ -34,8 +34,6 @@ void on_preview_refresh_activate    (GtkWidget* widget, gpointer user_data);
 void on_preview_capture_image_activate 	(GtkWidget* widget, gpointer user_data);
 void on_preview_capture_video_activate 	(GtkWidget* widget, gpointer user_data);
 
-void on_preview_properties_activate 	(GtkWidget* widget, gpointer user_data);
-
 void preview_refresh 	(GtkWidget* preview);
 void preview_save 	(GtkWidget* preview);
 void preview_save_as 	(GtkWidget* preview);
@@ -54,19 +52,6 @@ void
 on_preview_capture_video_activate (GtkWidget* widget, gpointer user_data)
 {
 	capture_video (gtk_object_get_data (GTK_OBJECT (user_data), "camera"));
-}
-
-void
-on_preview_properties_activate (GtkWidget* widget, gpointer user_data)
-{
-	gint	result;
-	gchar*	message = NULL;
-	
-	if ((result = gp_camera_config (gtk_object_get_data (GTK_OBJECT (user_data), "camera"))) != GP_OK) {
-		message = g_strdup_printf (_("Could not get camera properties!\n(%s)"), message);
-		gnome_error_dialog_parented (message, main_window);
-		g_free (message);
-	}
 }
 
 void
@@ -193,6 +178,9 @@ preview_save_as (GtkWidget* preview)
 GtkWidget*
 preview_new (Camera* camera)
 {
+	xmlDocPtr		doc;
+	xmlNodePtr		node, command, node_child;
+	xmlNsPtr		ns;
 	GtkWidget*		window;
 	BonoboUIComponent*	component;
 	BonoboUIContainer*	container;
@@ -205,11 +193,13 @@ preview_new (Camera* camera)
 		BONOBO_UI_UNSAFE_VERB ("CaptureVideo", on_preview_capture_video_activate),
 		BONOBO_UI_UNSAFE_VERB ("Close", on_preview_close_activate),
 		BONOBO_UI_UNSAFE_VERB ("Exit", on_exit_activate),
-		BONOBO_UI_UNSAFE_VERB ("Properties", on_preview_properties_activate),
 		BONOBO_UI_UNSAFE_VERB ("Preferences", on_preferences_activate),
 		BONOBO_UI_UNSAFE_VERB ("Manual", on_gnocam_manual_activate),
 		BONOBO_UI_UNSAFE_VERB ("About", on_about_activate),
 		BONOBO_UI_VERB_END};
+	gchar*			tmp;
+	gint			i;
+	CameraWidget*		window_camera = NULL;
 
         g_return_val_if_fail (camera, NULL);
 
@@ -219,6 +209,7 @@ preview_new (Camera* camera)
 	corba_container = bonobo_object_corba_objref (BONOBO_OBJECT (container));
 	bonobo_ui_container_set_win (container, BONOBO_WINDOW (window));
 	component = bonobo_ui_component_new ("Preview");
+	gtk_object_set_data (GTK_OBJECT (component), "camera", camera);
 	bonobo_ui_component_set_container (component, corba_container);
 	bonobo_ui_component_add_verb_list_with_data (component, verb, window);
 	bonobo_ui_util_set_ui (component, "", "gnocam-preview.xml", "Preview");
@@ -233,6 +224,23 @@ preview_new (Camera* camera)
 
         /* Get a preview. */
         preview_refresh (window);
+
+	/* Create the "camera properties" menu item. */
+	if (gp_camera_config_get (camera, &window_camera) == GP_OK) {
+		doc = xmlNewDoc ("1.0");
+		ns = xmlNewGlobalNs (doc, "xxx", "xxx");
+		xmlDocSetRootElement (doc, node = xmlNewNode (ns, "Root"));
+		xmlAddChild (node, command = xmlNewNode (ns, "commands"));
+		xmlAddChild (node, node_child = xmlNewNode (ns, "menu"));
+		xmlAddChild (node_child, node = xmlNewNode (ns, "submenu"));
+		xmlSetProp (node, "name", "Edit");
+		popup_prepare (component, window_camera, node, command, ns);
+		xmlDocDumpMemory (doc, (xmlChar**) &tmp, &i);
+		xmlFreeDoc (doc);
+		bonobo_window_xml_merge (BONOBO_WINDOW (window), "/", tmp, "Preview");
+		g_free (tmp);
+		popup_fill (component, "/menu/Edit", window_camera, window_camera, TRUE);
+	}
 
 	return (window);
 }

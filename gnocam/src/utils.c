@@ -11,8 +11,6 @@
 #include "utils.h"
 #include "cameras.h"
 
-//FIXME: UserData is butt-ugly. And doesn't get freed on exit.
-
 /**********************/
 /* External variables */
 /**********************/
@@ -20,29 +18,15 @@
 extern GtkWindow*	main_window;
 extern gint		counter;
 
-/********************/
-/* Type definitions */
-/********************/
-
-typedef struct {
-	CameraWidget*	window;
-	CameraWidget*	widget;
-	gint		i;
-} UserData;
-
 /**************/
 /* Prototypes */
 /**************/
 
-void on_toggle_activated	(BonoboUIComponent* component, const gchar* path, Bonobo_UIComponent_EventType type, const gchar* state, gpointer user_data);
-
-void on_radio_button_activate (GtkWidget* widget, gpointer user_data);
-
-void on_adjustment_value_changed (GtkAdjustment* adjustment, gpointer user_data);
-
-void on_togglebutton_toggled (GtkToggleButton* button, gpointer user_data);
-
-void on_date_changed (GnomeDateEdit* gnomedateedit, gpointer user_data);
+void on_entry_changed			(GtkObject* object, gpointer user_data);
+void on_radio_button_activate 		(GtkObject* object, gpointer user_data);
+void on_adjustment_value_changed 	(GtkObject* object, gpointer user_data);
+void on_togglebutton_toggled 		(GtkObject* object, gpointer user_data);
+void on_date_changed 			(GtkObject* object, gpointer user_data);
 
 void on_duration_button_ok_clicked      (GtkButton* button, gpointer user_data);
 void on_duration_button_cancel_clicked  (GtkButton* button, gpointer user_data);
@@ -52,110 +36,205 @@ void on_duration_button_cancel_clicked  (GtkButton* button, gpointer user_data);
 /*************/
 
 void
-on_radio_button_activate (GtkWidget* widget, gpointer user_data)
+on_entry_changed (GtkObject* object, gpointer user_data)
 {
-	g_warning ("Not yet implemented!\n");
+	Camera*		camera;
+	CameraWidget*	window;
+	CameraWidget*	widget;
+	GnomeVFSURI*	uri;
+	gchar*		folder;
+	gchar*		file;
+	gchar*		value_string;
+	gchar*		value_string_new;
+	gchar*		tmp;
+	gint		result = GP_OK;
+
+	g_return_if_fail (object);
+	g_return_if_fail (window = gtk_object_get_data (object, "window"));
+	g_return_if_fail (widget = gtk_object_get_data (object, "widget"));
+	g_return_if_fail (camera = gtk_object_get_data (object, "camera"));
+
+	gp_widget_value_get (widget, &value_string);
+	value_string_new = gtk_entry_get_text (GTK_ENTRY (object));
+	if (!value_string || (value_string && (strcmp (value_string, value_string_new) != 0))) {
+		g_return_if_fail (gp_widget_value_set (widget, value_string_new) == GP_OK);
+		if (gtk_object_get_data (object, "for_camera")) result = gp_camera_config_set (camera, window);
+		else {
+			g_return_if_fail (uri = gtk_object_get_data (object, "uri"));
+			file = (gchar*) gnome_vfs_uri_get_basename (uri);
+			folder = gnome_vfs_uri_extract_dirname (uri);
+			if (file) result = gp_camera_file_config_set (camera, window, folder, file);
+			else if (folder) result = gp_camera_folder_config_set (camera, window, folder);
+			else g_assert_not_reached ();
+			g_free (folder);
+		}
+		if (result != GP_OK) {
+			tmp = g_strdup_printf ("Could not set configuration!\n(%s)", gp_camera_result_as_string (camera, result));
+			gnome_error_dialog_parented (tmp, main_window);
+			g_free (tmp);
+		}
+	}
 }
 
 void
-on_adjustment_value_changed (GtkAdjustment* adjustment, gpointer user_data)
+on_radio_button_activate (GtkObject* object, gpointer user_data)
 {
-	GtkTreeItem*	item;
+	Camera*		camera;
+	CameraWidget*	window;
+	CameraWidget*	widget;
+	GnomeVFSURI*	uri;
+	gchar*		folder;
+	gchar*		file;
+	gchar*		value_string;
+	gchar*		value_string_new;
+	gchar*		tmp;
+	gint		result = GP_OK;
+
+	g_return_if_fail (object);
+	g_return_if_fail (window = gtk_object_get_data (object, "window"));
+	g_return_if_fail (widget = gtk_object_get_data (object, "widget"));
+	g_return_if_fail (camera = gtk_object_get_data (object, "camera"));
+
+	gp_widget_value_get (widget, &value_string);
+	value_string_new = gp_widget_choice (widget, GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (object), "choice")));
+	if (!value_string || (value_string && (strcmp (value_string_new, value_string) != 0))) {
+		g_return_if_fail (gp_widget_value_set (widget, value_string_new) == GP_OK);
+		if (gtk_object_get_data (object, "for_camera")) result = gp_camera_config_set (camera, window);
+		else {
+			g_return_if_fail (uri = gtk_object_get_data (object, "uri"));
+			file = (gchar*) gnome_vfs_uri_get_basename (uri);
+			folder = gnome_vfs_uri_extract_dirname (uri);
+			if (file) result = gp_camera_file_config_set (camera, window, folder, file);
+			else if (folder) result = gp_camera_folder_config_set (camera, window, folder);
+			else g_assert_not_reached ();
+			g_free (folder);
+		}
+		if (result != GP_OK) {
+			tmp = g_strdup_printf ("Could not set configuration!\n(%s)", gp_camera_result_as_string (camera, result));
+			gnome_error_dialog_parented (tmp, main_window);
+			g_free (tmp);
+		}
+	}
+}
+
+void
+on_adjustment_value_changed (GtkObject* object, gpointer user_data)
+{
 	Camera*		camera;
 	CameraWidget*	window;
 	CameraWidget*	widget;
 	gfloat		f, f_new;
 	gchar*		folder;
 	gchar*		file;
+	gchar*		tmp;
 	GnomeVFSURI* 	uri;
-	
-	g_return_if_fail (adjustment);
-	g_return_if_fail (item = gtk_object_get_data (GTK_OBJECT (adjustment), "item"));
-	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
-	g_return_if_fail (window = gtk_object_get_data (GTK_OBJECT (adjustment), "window"));
-	g_return_if_fail (widget = gtk_object_get_data (GTK_OBJECT (adjustment), "widget"));
-	g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (item), "uri"));
+	gint		result = GP_OK;
 
-	file = (gchar*) gnome_vfs_uri_get_basename (uri);
-	folder = gnome_vfs_uri_extract_dirname (uri);
-	
+	g_return_if_fail (object);
+	g_return_if_fail (window = gtk_object_get_data (object, "window"));
+	g_return_if_fail (widget = gtk_object_get_data (object, "widget"));
+	g_return_if_fail (camera = gtk_object_get_data (object, "camera"));
+
 	gp_widget_value_get (widget, &f);
-	f_new = adjustment->value;
+	f_new = GTK_ADJUSTMENT (object)->value;
 	if (f != f_new) {
-		gp_widget_value_set (widget, &f_new);
-		if (gtk_object_get_data (GTK_OBJECT (adjustment), "camera")) gp_camera_config_set (camera, window);
-		if (file) gp_camera_file_config_set (camera, window, folder, file);
-		else if (folder) gp_camera_folder_config_set (camera, window, folder);
-		else g_assert_not_reached ();
+		g_return_if_fail (gp_widget_value_set (widget, &f_new) == GP_OK);
+		if (gtk_object_get_data (object, "for_camera")) result = gp_camera_config_set (camera, window);
+		else {
+			g_return_if_fail (uri = gtk_object_get_data (object, "uri"));
+			file = (gchar*) gnome_vfs_uri_get_basename (uri);
+			folder = gnome_vfs_uri_extract_dirname (uri);
+			if (file) result = gp_camera_file_config_set (camera, window, folder, file);
+			else if (folder) result = gp_camera_folder_config_set (camera, window, folder);
+			else g_assert_not_reached ();
+			g_free (folder);
+		}
+		if (result != GP_OK) {
+			tmp = g_strdup_printf ("Could not set camera configuration!\n(%s)", gp_camera_result_as_string (camera, result));
+			gnome_error_dialog_parented (tmp, main_window);
+			g_free (tmp);
+		}
 	}
 }
 
 void
-on_togglebutton_toggled (GtkToggleButton* button, gpointer user_data)
+on_togglebutton_toggled (GtkObject* object, gpointer user_data)
 {
-	GtkTreeItem*	item;
 	Camera*		camera;
 	CameraWidget*	window;
 	CameraWidget*	widget;
 	gint		i, i_new = 0;
 	gchar*		folder;
 	gchar*		file;
+	gchar*		tmp;
 	GnomeVFSURI*	uri;
+	gint		result = GP_OK;
 	
-	g_return_if_fail (button);
-	g_return_if_fail (item = gtk_object_get_data (GTK_OBJECT (button), "item"));
-	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
-	g_return_if_fail (window = gtk_object_get_data (GTK_OBJECT (button), "window"));
-	g_return_if_fail (widget = gtk_object_get_data (GTK_OBJECT (button), "widget"));
-	g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (item), "uri"));
+	g_return_if_fail (object);
+	g_return_if_fail (window = gtk_object_get_data (object, "window"));
+	g_return_if_fail (widget = gtk_object_get_data (object, "widget"));
+	g_return_if_fail (camera = gtk_object_get_data (object, "camera"));
 
-	file = (gchar*) gnome_vfs_uri_get_basename (uri);
-	folder = gnome_vfs_uri_extract_dirname (uri);
-	
 	gp_widget_value_get (widget, &i);
-	if (gtk_toggle_button_get_active (button)) i_new = 1;
+	if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (object))) i_new = 1;
 	if (i != i_new) {
-		gp_widget_value_set (widget, &i);
-		if (gtk_object_get_data (GTK_OBJECT (button), "camera")) gp_camera_config_set (camera, window);
-		else if (file) gp_camera_file_config_set (camera, window, folder, file);
-		else if (folder) gp_camera_folder_config_set (camera, window, folder);
-		else g_assert_not_reached ();
+		g_return_if_fail (gp_widget_value_set (widget, &i_new) == GP_OK);
+		if (gtk_object_get_data (object, "for_camera")) result = gp_camera_config_set (camera, window);
+		else {
+			g_return_if_fail (uri = gtk_object_get_data (object, "uri"));
+			file = (gchar*) gnome_vfs_uri_get_basename (uri);
+			folder = gnome_vfs_uri_extract_dirname (uri);
+			if (file) result = gp_camera_file_config_set (camera, window, folder, file);
+			else if (folder) result = gp_camera_folder_config_set (camera, window, folder);
+			else g_assert_not_reached ();
+			g_free (folder);
+		}
+		if (result != GP_OK) {
+			tmp = g_strdup_printf ("Could not set configuration!\n(%s)", gp_camera_result_as_string (camera, result));
+			gnome_error_dialog_parented (tmp, main_window);
+			g_free (tmp);
+		}
 	}
-	g_free (folder);
 }
 
 void
-on_date_changed (GnomeDateEdit* gnomedateedit, gpointer user_data)
+on_date_changed (GtkObject* object, gpointer user_data)
 {
-	GtkTreeItem*	item;
 	Camera*		camera;
 	CameraWidget*	widget;
 	CameraWidget*	window;
 	gint		i, i_new;
 	gchar*		folder;
 	gchar* 		file;
+	gchar*		tmp;
 	GnomeVFSURI*	uri;
+	gint		result = GP_OK;
 	
-	g_return_if_fail (gnomedateedit);
-	g_return_if_fail (item = gtk_object_get_data (GTK_OBJECT (gnomedateedit), "item"));
-	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
-	g_return_if_fail (window = gtk_object_get_data (GTK_OBJECT (gnomedateedit), "window"));
-	g_return_if_fail (widget = gtk_object_get_data (GTK_OBJECT (gnomedateedit), "widget"));
-	g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (item), "uri"));
-
-	file = (gchar*) gnome_vfs_uri_get_basename (uri);
-	folder = gnome_vfs_uri_extract_dirname (uri);
+	g_return_if_fail (object);
+	g_return_if_fail (window = gtk_object_get_data (object, "window"));
+	g_return_if_fail (widget = gtk_object_get_data (object, "widget"));
+	g_return_if_fail (camera = gtk_object_get_data (object, "camera"));
 
 	gp_widget_value_get (widget, &i);
-	i_new = (int) gnome_date_edit_get_date (gnomedateedit);
+	i_new = (int) gnome_date_edit_get_date (GNOME_DATE_EDIT (object));
 	if (i != i_new) {
-		gp_widget_value_set (widget, &i_new);
-		if (gtk_object_get_data (GTK_OBJECT (gnomedateedit), "camera")) gp_camera_config_set (camera, window);
-		else if (file) gp_camera_file_config_set (camera, window, folder, file);
-		else if (folder) gp_camera_folder_config_set (camera, window, folder);
-		else g_assert_not_reached ();
+		g_return_if_fail (gp_widget_value_set (widget, &i_new) == GP_OK);
+		if (gtk_object_get_data (object, "for_camera")) result = gp_camera_config_set (camera, window);
+		else {
+			g_return_if_fail (uri = gtk_object_get_data (object, "uri"));
+			file = (gchar*) gnome_vfs_uri_get_basename (uri);
+			folder = gnome_vfs_uri_extract_dirname (uri);
+			if (file) result = gp_camera_file_config_set (camera, window, folder, file);
+			else if (folder) result = gp_camera_folder_config_set (camera, window, folder);
+			else g_assert_not_reached ();
+			g_free (folder);
+		}
+		if (result != GP_OK) {
+			tmp = g_strdup_printf ("Could not set configuration!\n(%s)", gp_camera_result_as_string (camera, result));
+			gnome_error_dialog_parented (tmp, main_window);
+			g_free (tmp);
+		}
 	}
-	g_free (folder);
 }
 
 void
@@ -247,37 +326,6 @@ capture_video (Camera* camera)
 	gp_camera_ref (camera);
 }
 
-void
-properties (Camera* camera)
-{
-        frontend_data_t*        frontend_data;
-	gchar*			message;
-	gint			result;
-
-        g_return_if_fail (camera);
-        g_return_if_fail (frontend_data = (frontend_data_t*) camera->frontend_data);
-
-        if (!(frontend_data->xml_properties)) {
-
-                /* Reference the camera. */
-                gp_camera_ref (camera);
-
-                /* Get the camera properties from the backend. */
-                if ((result = gp_camera_config (camera)) != GP_OK) {
-			message = g_strdup_printf (
-				_("Could not get camera properties of camera '%s'!\n(%s)"), 
-				frontend_data->name, 
-				gp_camera_result_as_string (camera, result));
-			gnome_error_dialog_parented (message, main_window);
-			g_free (message);
-                }
-        } else {
-		message = g_strdup_printf (_("The camera properties dialog for camera '%s' is already open."), frontend_data->name);
-		gnome_ok_dialog_parented (message, main_window);
-		g_free (message);
-	}
-}
-
 void 
 popup_prepare (BonoboUIComponent* component, CameraWidget* widget, xmlNodePtr popup, xmlNodePtr command, xmlNsPtr ns)
 {
@@ -299,6 +347,8 @@ popup_prepare (BonoboUIComponent* component, CameraWidget* widget, xmlNodePtr po
 			xmlSetProp (node, "_tip", gp_widget_label (child));
 			popup_prepare (component, child, node, command, ns);
 			break;
+		case GP_WIDGET_TEXT:
+		case GP_WIDGET_MENU:
 		case GP_WIDGET_RADIO:
 		case GP_WIDGET_DATE:
 		case GP_WIDGET_TOGGLE:
@@ -312,12 +362,10 @@ popup_prepare (BonoboUIComponent* component, CameraWidget* widget, xmlNodePtr po
 			xmlSetProp (node, "name", id);
 			xmlSetProp (node, "_label", gp_widget_label (child));
 			xmlSetProp (node, "_tip", gp_widget_label (child));
-			xmlSetProp (node, "verb", id);
+			g_warning ("GP_WIDGET_BUTTON is not yet implemented!");
 			break;
-		case GP_WIDGET_TEXT:
-		case GP_WIDGET_MENU:
 		default:
-			g_warning ("Not yet implemented!");
+			g_warning ("Encountered unsupported widget!");
 			break;
 		}
 		g_free (id);
@@ -325,23 +373,25 @@ popup_prepare (BonoboUIComponent* component, CameraWidget* widget, xmlNodePtr po
 }
 
 void 
-popup_fill (GtkTreeItem* item, gchar* path, CameraWidget* window, CameraWidget* widget, gboolean camera)
+popup_fill (BonoboUIComponent* component, gchar* path, CameraWidget* window, CameraWidget* widget, gboolean for_camera)
 {
 	GtkWidget*		hbox;
 	GtkWidget*		gtkwidget;
 	GtkWidget*		menu;
 	GtkWidget*		menu_item;
 	GtkObject*		adjustment;
+	Camera*			camera;
 	CameraWidget*		child;
 	gint			i, j;
 	gchar*			tmp;
 	gchar*			value_string;
 	gfloat			max, min, increment, value_float;
 	gint			value_int;
-	BonoboUIComponent*	component;
+	GnomeVFSURI*		uri;
 
-	g_return_if_fail (component = gtk_object_get_data (GTK_OBJECT (item), "component"));
-
+	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (component), "camera"));
+	
+	uri = gtk_object_get_data (GTK_OBJECT (component), "uri");
 	for (i = 0; i < gp_widget_child_count (widget); i++) {
 		child = gp_widget_child (widget, i);
 		switch (gp_widget_type (child)) {
@@ -349,9 +399,10 @@ popup_fill (GtkTreeItem* item, gchar* path, CameraWidget* window, CameraWidget* 
 			break;
 		case GP_WIDGET_SECTION:
 			tmp = g_strdup_printf ("%s/%i", path, gp_widget_id (child));
-			popup_fill (item, tmp, window, child, camera);
+			popup_fill (component, tmp, window, child, for_camera);
 			g_free (tmp);
 			break;
+		case GP_WIDGET_MENU:
 		case GP_WIDGET_RADIO:
 			gp_widget_value_get (child, &value_string);
 			gtk_widget_show (hbox = gtk_hbox_new (FALSE, 5));
@@ -363,10 +414,12 @@ popup_fill (GtkTreeItem* item, gchar* path, CameraWidget* window, CameraWidget* 
 			for (j = 0; j < gp_widget_choice_count (child); j++) {
 				gtk_widget_show (menu_item = gtk_menu_item_new_with_label (gp_widget_choice (child, j)));
 				gtk_menu_append (GTK_MENU (menu), menu_item);
-				gtk_object_set_data (GTK_OBJECT (menu_item), "item", item);
+				gtk_object_set_data (GTK_OBJECT (menu_item), "uri", uri);
+				gtk_object_set_data (GTK_OBJECT (menu_item), "camera", camera);
 				gtk_object_set_data (GTK_OBJECT (menu_item), "window", window);
 				gtk_object_set_data (GTK_OBJECT (menu_item), "widget", child);
-				if (camera) gtk_object_set_data (GTK_OBJECT (menu_item), "camera", GINT_TO_POINTER (1));
+				gtk_object_set_data (GTK_OBJECT (menu_item), "choice", GINT_TO_POINTER (j));
+				if (for_camera) gtk_object_set_data (GTK_OBJECT (menu_item), "for_camera", GINT_TO_POINTER (1));
 				if (value_string && (strcmp (value_string, gp_widget_choice (child, j)) == 0)) 
 					gtk_option_menu_set_history (GTK_OPTION_MENU (gtkwidget), j);
 				gtk_signal_connect (GTK_OBJECT (menu_item), "activate", GTK_SIGNAL_FUNC (on_radio_button_activate), NULL);
@@ -379,12 +432,13 @@ popup_fill (GtkTreeItem* item, gchar* path, CameraWidget* window, CameraWidget* 
 		case GP_WIDGET_TOGGLE:
 			gp_widget_value_get (child, &value_int);
 			gtk_widget_show (gtkwidget = gtk_check_button_new_with_label (gp_widget_label (child)));
-			gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (gtkwidget), (value_int == 1));
-			gtk_object_set_data (GTK_OBJECT (gtkwidget), "item", item);
+			gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (gtkwidget), (value_int != 0));
+			gtk_object_set_data (GTK_OBJECT (gtkwidget), "uri", uri);
+			gtk_object_set_data (GTK_OBJECT (gtkwidget), "camera", camera);
 			gtk_object_set_data (GTK_OBJECT (gtkwidget), "window", window);
 			gtk_object_set_data (GTK_OBJECT (gtkwidget), "widget", child);
-			if (camera) gtk_object_set_data (GTK_OBJECT (gtkwidget), "camera", GINT_TO_POINTER (1));
-			gtk_signal_connect_object (GTK_OBJECT (gtkwidget), "toggled", GTK_SIGNAL_FUNC (on_togglebutton_toggled), (gpointer) gtkwidget);
+			if (for_camera) gtk_object_set_data (GTK_OBJECT (gtkwidget), "for_camera", GINT_TO_POINTER (1));
+			gtk_signal_connect (GTK_OBJECT (gtkwidget), "toggled", GTK_SIGNAL_FUNC (on_togglebutton_toggled), NULL);
 			tmp = g_strdup_printf ("%s/%i", path, gp_widget_id (child));
 			bonobo_ui_component_object_set (component, tmp, bonobo_object_corba_objref (BONOBO_OBJECT (bonobo_control_new (gtkwidget))), NULL);
 			g_free (tmp);
@@ -396,11 +450,12 @@ popup_fill (GtkTreeItem* item, gchar* path, CameraWidget* window, CameraWidget* 
 			gtk_widget_show (gtkwidget = gtk_label_new (gp_widget_label (child)));
 			gtk_box_pack_start (GTK_BOX (hbox), gtkwidget, FALSE, FALSE, 0);
 			adjustment = gtk_adjustment_new (value_float, min, max, increment, 0, 0);
-			gtk_object_set_data (adjustment, "item", item);
+			gtk_object_set_data (adjustment, "uri", uri);
+			gtk_object_set_data (adjustment, "camera", camera);
 			gtk_object_set_data (adjustment, "window", window);
 			gtk_object_set_data (adjustment, "widget", child);
-			if (camera) gtk_object_set_data (GTK_OBJECT (gtkwidget), "camera", GINT_TO_POINTER (1));
-			gtk_signal_connect_object (adjustment, "value_changed", GTK_SIGNAL_FUNC (on_adjustment_value_changed), adjustment);
+			if (for_camera) gtk_object_set_data (GTK_OBJECT (adjustment), "for_camera", GINT_TO_POINTER (1));
+			gtk_signal_connect (adjustment, "value_changed", GTK_SIGNAL_FUNC (on_adjustment_value_changed), NULL);
 			gtk_widget_show (gtkwidget = gtk_hscale_new (GTK_ADJUSTMENT (adjustment)));
 			gtk_range_set_update_policy (GTK_RANGE (gtkwidget), GTK_UPDATE_DISCONTINUOUS);
 			gtk_box_pack_end (GTK_BOX (hbox), gtkwidget, TRUE, TRUE, 0);
@@ -414,18 +469,41 @@ popup_fill (GtkTreeItem* item, gchar* path, CameraWidget* window, CameraWidget* 
 			gtk_widget_show (gtkwidget = gtk_label_new (gp_widget_label (child)));
 			gtk_box_pack_start (GTK_BOX (hbox), gtkwidget, FALSE, FALSE, 0);
 			gtk_widget_show (gtkwidget = gnome_date_edit_new ((time_t) value_int, TRUE, TRUE));
-			gtk_object_set_data (GTK_OBJECT (gtkwidget), "item", item);
+			gtk_object_set_data (GTK_OBJECT (gtkwidget), "uri", uri);
+			gtk_object_set_data (GTK_OBJECT (gtkwidget), "camera", camera);
 			gtk_object_set_data (GTK_OBJECT (gtkwidget), "window", window);
 			gtk_object_set_data (GTK_OBJECT (gtkwidget), "widget", child);
-			if (camera) gtk_object_set_data (GTK_OBJECT (gtkwidget), "camera", GINT_TO_POINTER (1));
-			gtk_signal_connect_object (GTK_OBJECT (gtkwidget), "date_changed", GTK_SIGNAL_FUNC (on_date_changed), (gpointer) gtkwidget);
-			gtk_signal_connect_object (GTK_OBJECT (gtkwidget), "time_changed", GTK_SIGNAL_FUNC (on_date_changed), (gpointer) gtkwidget);
+			if (for_camera) gtk_object_set_data (GTK_OBJECT (gtkwidget), "for_camera", GINT_TO_POINTER (1));
+			gtk_signal_connect (GTK_OBJECT (gtkwidget), "date_changed", GTK_SIGNAL_FUNC (on_date_changed), NULL);
+			gtk_signal_connect (GTK_OBJECT (gtkwidget), "time_changed", GTK_SIGNAL_FUNC (on_date_changed), NULL);
 			gtk_box_pack_end (GTK_BOX (hbox), gtkwidget, TRUE, TRUE, 0);
 			tmp = g_strdup_printf ("%s/%i", path, gp_widget_id (child));
 			bonobo_ui_component_object_set (component, tmp, bonobo_object_corba_objref (BONOBO_OBJECT (bonobo_control_new (hbox))), NULL);
 			g_free (tmp);
 			break;
+		case GP_WIDGET_TEXT:
+			gp_widget_value_get (child, &value_string);
+			gtk_widget_show (hbox = gtk_hbox_new (FALSE, 5));
+			gtk_widget_show (gtkwidget = gtk_label_new (gp_widget_label (child)));
+			gtk_box_pack_start (GTK_BOX (hbox), gtkwidget, FALSE, FALSE, 0);
+			gtk_widget_show (gtkwidget = gtk_entry_new ());
+			if (value_string) gtk_entry_set_text (GTK_ENTRY (gtkwidget), value_string);
+			gtk_object_set_data (GTK_OBJECT (gtkwidget), "uri", uri);
+			gtk_object_set_data (GTK_OBJECT (gtkwidget), "camera", camera);
+			gtk_object_set_data (GTK_OBJECT (gtkwidget), "window", window);
+			gtk_object_set_data (GTK_OBJECT (gtkwidget), "widget", child);
+			if (for_camera) gtk_object_set_data (GTK_OBJECT (gtkwidget), "for_camera", GINT_TO_POINTER (1));
+			gtk_signal_connect (GTK_OBJECT (gtkwidget), "changed", GTK_SIGNAL_FUNC (on_entry_changed), NULL);
+			gtk_box_pack_end (GTK_BOX (hbox), gtkwidget, TRUE, TRUE, 0);
+			tmp = g_strdup_printf ("%s/%i", path, gp_widget_id (child));
+			bonobo_ui_component_object_set (component, tmp, bonobo_object_corba_objref (BONOBO_OBJECT (bonobo_control_new (hbox))), NULL);
+			g_free (tmp);
+			break;
+		case GP_WIDGET_BUTTON:
+			g_warning ("GP_WIDGET_BUTTON not implemented!");
+			break;
 		default:
+			g_warning ("Encountered unsupported widget!");
 			break;
 		}
 	}

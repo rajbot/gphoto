@@ -6,6 +6,7 @@
 #include <liboaf/liboaf.h>
 #include <bonobo.h>
 #include <gphoto2.h>
+#include <gal/e-paned/e-hpaned.h>
 #include "gnocam.h"
 #include "cameras.h"
 #include "frontend.h"
@@ -20,12 +21,13 @@
 
 GConfClient*		gconf_client 	= NULL;
 Bonobo_UIContainer	corba_container = CORBA_OBJECT_NIL;
+BonoboUIComponent*      component	= NULL;
 GtkTree*		main_tree 	= NULL;
 GnoCamViewMode		view_mode 	= GNOCAM_VIEW_MODE_PREVIEW;
 GList*			preview_list 	= NULL;
-GladeXML*		xml_main 	= NULL;
 GtkWindow*		main_window	= NULL;
 gint			counter		= 0;
+EPaned*			main_paned	= NULL;
 
 /***************/
 /* Prototypes. */
@@ -130,9 +132,9 @@ int main (int argc, char *argv[])
 	GtkWidget*		widget;
 	GtkWidget*		menu;
 	GtkWidget*		menu_item;
+	GtkWidget*		scrolledwindow;
 	gint			i;
 	BonoboUIContainer*      container;
-	BonoboUIComponent*	component;
 	BonoboUIVerb		verb [] = {
 		BONOBO_UI_UNSAFE_VERB ("Exit", on_exit_activate),
 		BONOBO_UI_UNSAFE_VERB ("Preferences", on_preferences_activate),
@@ -169,14 +171,20 @@ int main (int argc, char *argv[])
 		gp_init (gconf_value_get_int (value));
 		gconf_value_free (value);
 	} else gp_init (GP_DEBUG_NONE);
-	gp_frontend_register (gp_frontend_status, gp_frontend_progress, gp_frontend_message, gp_frontend_confirm, gp_frontend_prompt);
+	gp_frontend_register (gp_frontend_status, gp_frontend_progress, gp_frontend_message, NULL, NULL);
 
-	/* Create the window. We cannot do it with libglade as bonobo-support in libglade misses some features like toolbars and menus. */
+	/* Create the window. */
 	gtk_widget_show (GTK_WIDGET (main_window = GTK_WINDOW (bonobo_window_new (PACKAGE, PACKAGE))));
 	gtk_signal_connect (GTK_OBJECT (main_window), "delete_event", GTK_SIGNAL_FUNC (gtk_main_quit), NULL);
-	g_assert ((xml_main = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "main_vbox")));
-	gtk_widget_show (widget = glade_xml_get_widget (xml_main, "main_vbox"));
-	bonobo_window_set_contents (BONOBO_WINDOW (main_window), widget);
+	gtk_widget_show (GTK_WIDGET (main_paned = E_PANED (e_hpaned_new ())));
+	gtk_widget_show (scrolledwindow = gtk_scrolled_window_new (NULL, NULL));
+	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+	e_paned_pack1 (main_paned, scrolledwindow, TRUE, TRUE);
+	gtk_widget_show (widget = gtk_viewport_new (NULL, NULL));
+	gtk_container_add (GTK_CONTAINER (scrolledwindow), widget);
+	gtk_widget_show (GTK_WIDGET (main_tree = GTK_TREE (gtk_tree_new ())));
+	gtk_container_add (GTK_CONTAINER (widget), GTK_WIDGET (main_tree));
+	bonobo_window_set_contents (BONOBO_WINDOW (main_window), GTK_WIDGET (main_paned));
         container = bonobo_ui_container_new ();
 	corba_container = bonobo_object_corba_objref (BONOBO_OBJECT (container));
         bonobo_ui_container_set_win (container, BONOBO_WINDOW (main_window));
@@ -200,12 +208,6 @@ int main (int argc, char *argv[])
 	gtk_option_menu_set_menu (GTK_OPTION_MENU (widget), menu);
 	gtk_option_menu_set_history (GTK_OPTION_MENU (widget), 1);
 	bonobo_ui_component_object_set (component, "/Toolbar/ViewMode", bonobo_object_corba_objref (BONOBO_OBJECT (bonobo_control_new (widget))), NULL);
-
-	/* Set the global variables. */
-	main_tree = GTK_TREE (glade_xml_get_widget (xml_main, "main_tree"));
-
-	/* Connect the signals. */
-	glade_xml_signal_autoconnect (xml_main);
 
 	/* Do we already have a prefix in the database? */
 	if (!(value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL))) {

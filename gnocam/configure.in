@@ -71,6 +71,19 @@ else
 *** http://www.gnome.org/mirrors.]) 
 fi
 
+dnl ***
+dnl gal
+dnl ***
+AC_MSG_CHECKING(for GAL)
+if gnome-config --libs gal > /dev/null 2>&1; then
+    AC_MSG_RESULT(found)
+else
+    AC_MSG_ERROR([
+*** You need gal for this version of ${PACKAGE}. Get the latest
+*** version from http://www.gnome.org. Mirrors can be found at
+*** http://www.gnome.org/mirrors.])
+fi
+
 dnl *********
 dnl gnome-vfs
 dnl *********

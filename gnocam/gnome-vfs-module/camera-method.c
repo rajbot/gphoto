@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
+
 #define CAM_VFS_DEBUG(x) G_STMT_START {\
 	printf ("%s:%d ", __FILE__,__LINE__);\
 	printf ("%s() ", __FUNCTION__);\
@@ -38,6 +40,7 @@ static GnomeVFSResult do_open (
 	gchar *moniker;
 
 	CAM_VFS_DEBUG (("ENTER"));
+	g_static_mutex_lock (&mutex);
 	
 	CORBA_exception_init (&ev);
 
@@ -48,6 +51,7 @@ static GnomeVFSResult do_open (
 	g_free (moniker); 
 	if (BONOBO_EX (&ev)) { 
 		CORBA_exception_free (&ev); 
+		g_static_mutex_unlock (&mutex);
 		CAM_VFS_DEBUG (("EXIT (GNOME_VFS_ERROR_GENERIC)"));
 		return (GNOME_VFS_ERROR_GENERIC); 
 	}
@@ -58,7 +62,8 @@ static GnomeVFSResult do_open (
 	file_handle->stream = stream;
 	file_handle->pos = 0;
 	*handle = (GnomeVFSMethodHandle *) file_handle;
-						
+
+	g_static_mutex_unlock (&mutex);
 	CAM_VFS_DEBUG (("EXIT"));
 
 	return (GNOME_VFS_OK);
@@ -84,11 +89,13 @@ static GnomeVFSResult do_close (
 	FileHandle *file_handle;
 
 	CAM_VFS_DEBUG (("ENTER"));
+	g_static_mutex_lock (&mutex);
 	
 	file_handle = (FileHandle *) handle;
 	bonobo_object_release_unref (file_handle->stream, NULL);
 	g_free (file_handle);
 
+	g_static_mutex_unlock (&mutex);
 	CAM_VFS_DEBUG (("EXIT"));
 	
 	return (GNOME_VFS_OK);
@@ -107,6 +114,7 @@ static GnomeVFSResult do_read (
 	Bonobo_Stream_iobuf *iobuf;
 
 	CAM_VFS_DEBUG (("ENTER"));
+	g_static_mutex_lock (&mutex);
 	
 	file_handle = (FileHandle *) handle;
 	
@@ -114,6 +122,8 @@ static GnomeVFSResult do_read (
 	Bonobo_Stream_read (file_handle->stream, num_bytes, &iobuf, &ev);
 	if (BONOBO_EX (&ev)) {
 		CORBA_exception_free (&ev);
+		g_static_mutex_unlock (&mutex);
+		CAM_VFS_DEBUG (("EXIT (GNOME_VFS_ERROR_GENERIC)"));
 		return (GNOME_VFS_ERROR_GENERIC);
 	}
 	CORBA_exception_free (&ev);
@@ -126,6 +136,7 @@ static GnomeVFSResult do_read (
 	CORBA_free (iobuf);
 
 	CAM_VFS_DEBUG (("EXIT"));
+	g_static_mutex_unlock (&mutex);
 	
 	return (GNOME_VFS_OK);
 }
@@ -141,13 +152,15 @@ static GnomeVFSResult do_write (
 	FileHandle *file_handle;
 
 	CAM_VFS_DEBUG (("ENTER"));
+	g_static_mutex_lock (&mutex);
 
 	file_handle = (FileHandle *) handle;
 
 	g_warning ("Implement do_write!");
 
 	*bytes_written = num_bytes;
-	
+
+	g_static_mutex_unlock (&mutex);
 	CAM_VFS_DEBUG (("EXIT"));
 	
 	return (GNOME_VFS_OK);
@@ -165,6 +178,7 @@ static GnomeVFSResult do_seek (
 	CORBA_Environment ev;
 
 	CAM_VFS_DEBUG (("ENTER"));
+	g_static_mutex_lock (&mutex);
 
 	file_handle = (FileHandle *) handle;
 
@@ -184,6 +198,7 @@ static GnomeVFSResult do_seek (
 	Bonobo_Stream_seek (file_handle->stream, offset, whence, &ev);
 	if (BONOBO_EX (&ev)) {
 		CORBA_exception_free (&ev);
+		g_static_mutex_unlock (&mutex);
 		CAM_VFS_DEBUG (("EXIT (GNOME_VFS_ERROR_GENERIC)"));
 		return (GNOME_VFS_ERROR_GENERIC);
 	}
@@ -202,6 +217,7 @@ static GnomeVFSResult do_seek (
 		break;
 	}
 
+	g_static_mutex_unlock (&mutex);
 	CAM_VFS_DEBUG (("EXIT"));
 
 	return (GNOME_VFS_OK);
@@ -215,11 +231,13 @@ static GnomeVFSResult do_tell (
 	FileHandle *file_handle;
 
 	CAM_VFS_DEBUG (("ENTER"));
+	g_static_mutex_lock (&mutex);
 
 	file_handle = (FileHandle *) handle;
 
 	*offset_return = file_handle->pos;
 
+	g_static_mutex_unlock (&mutex);
 	CAM_VFS_DEBUG (("EXIT"));
 	
 	return GNOME_VFS_OK;
@@ -232,12 +250,12 @@ typedef struct {
 } DirectoryHandle;
 
 static GnomeVFSResult do_open_directory (
-        GnomeVFSMethod*                 method,
-        GnomeVFSMethodHandle**          handle,
-        GnomeVFSURI*                    uri,
-	GnomeVFSFileInfoOptions         options,
-        const GnomeVFSDirectoryFilter*  filter,
-        GnomeVFSContext*                context)
+        GnomeVFSMethod                *method,
+        GnomeVFSMethodHandle         **handle,
+        GnomeVFSURI                   *uri,
+	GnomeVFSFileInfoOptions        options,
+        const GnomeVFSDirectoryFilter *filter,
+        GnomeVFSContext               *context)
 {
 	Bonobo_Storage storage;
 	Bonobo_Storage_DirectoryList *list;
@@ -245,7 +263,9 @@ static GnomeVFSResult do_open_directory (
 	CORBA_Environment ev;
 	gchar *moniker;
 
-	CAM_VFS_DEBUG (("ENTER"));
+	CAM_VFS_DEBUG (("ENTER..."));
+	g_static_mutex_lock (&mutex);
+	CAM_VFS_DEBUG (("... done."));
 
 	CORBA_exception_init (&ev);
 	
@@ -257,6 +277,8 @@ static GnomeVFSResult do_open_directory (
 	g_free (moniker);
 	if (BONOBO_EX (&ev)) {
 		CORBA_exception_free (&ev);
+		g_static_mutex_unlock (&mutex);
+		CAM_VFS_DEBUG (("EXIT (GNOME_VFS_ERROR_GENERIC)"));
 		return (GNOME_VFS_ERROR_GENERIC);
 	}
 
@@ -270,6 +292,8 @@ static GnomeVFSResult do_open_directory (
 	if (BONOBO_EX (&ev)) {
 		bonobo_object_release_unref (storage, NULL);
 		CORBA_exception_free (&ev);
+		g_static_mutex_unlock (&mutex);
+		CAM_VFS_DEBUG (("EXIT (GNOME_VFS_ERROR_GENERIC)"));
 		return (GNOME_VFS_ERROR_GENERIC);
 	}
 	
@@ -283,6 +307,7 @@ static GnomeVFSResult do_open_directory (
 	directory_handle->pos = 0;
 	*handle = (GnomeVFSMethodHandle *) directory_handle;
 
+	g_static_mutex_unlock (&mutex);
 	CAM_VFS_DEBUG (("EXIT"));
 
 	return (GNOME_VFS_OK);
@@ -296,12 +321,14 @@ static GnomeVFSResult do_close_directory (
 	DirectoryHandle *directory_handle;
 
 	CAM_VFS_DEBUG (("ENTER"));
+	g_static_mutex_lock (&mutex);
 	
 	/* Free the handle */
 	directory_handle = (DirectoryHandle *) handle;
-//	bonobo_object_release_unref (directory_handle->storage, NULL);
+	bonobo_object_release_unref (directory_handle->storage, NULL);
 	CORBA_free (directory_handle->list);
 
+	g_static_mutex_unlock (&mutex);
 	CAM_VFS_DEBUG (("EXIT"));
 
 	return (GNOME_VFS_OK);
@@ -316,9 +343,11 @@ static GnomeVFSResult do_read_directory (
 	DirectoryHandle *dh;
 
 	CAM_VFS_DEBUG (("ENTER"));
+	g_static_mutex_lock (&mutex);
 
 	dh = (DirectoryHandle *) handle;
 	if (dh->list->_length <= dh->pos) {
+		g_static_mutex_unlock (&mutex);
 		CAM_VFS_DEBUG (("EXIT (GNOME_VFS_ERROR_EOF)"));
 		return (GNOME_VFS_ERROR_EOF);
 	}
@@ -344,6 +373,7 @@ static GnomeVFSResult do_read_directory (
 
 	dh->pos++;
 
+	g_static_mutex_unlock (&mutex);
 	CAM_VFS_DEBUG (("EXIT"));
 
 	return (GNOME_VFS_OK);
@@ -393,7 +423,9 @@ static GnomeVFSResult do_get_file_info (
 	Bonobo_Stream stream;
 	Bonobo_Storage storage;
 
-	CAM_VFS_DEBUG (("ENTER"));
+	CAM_VFS_DEBUG (("ENTER..."));
+	g_static_mutex_lock (&mutex);
+	CAM_VFS_DEBUG (("... done."));
 
 	CORBA_exception_init (&ev);
 
@@ -414,6 +446,7 @@ static GnomeVFSResult do_get_file_info (
 		CAM_VFS_DEBUG (("... done."));
 		g_free (moniker);
 		if (BONOBO_EX (&ev)) {
+			g_static_mutex_unlock (&mutex);
 			CAM_VFS_DEBUG (("EXIT (GNOME_VFS_ERROR_NOT_FOUND)"));
 			return (GNOME_VFS_ERROR_NOT_FOUND);
 		}
@@ -428,6 +461,7 @@ static GnomeVFSResult do_get_file_info (
 		info->type = GNOME_VFS_FILE_TYPE_DIRECTORY; 
 		info->mime_type = g_strdup ("x-directory/normal");
 
+		g_static_mutex_unlock (&mutex);
 		CAM_VFS_DEBUG (("EXIT"));
 
 		return (GNOME_VFS_OK);
@@ -442,7 +476,8 @@ static GnomeVFSResult do_get_file_info (
 	}
 	
 	CORBA_exception_free (&ev);
-	
+
+	g_static_mutex_unlock (&mutex);
 	CAM_VFS_DEBUG (("EXIT"));
 	
 	return (GNOME_VFS_OK);
@@ -459,6 +494,7 @@ static GnomeVFSResult do_get_file_info_from_handle (
 	FileHandle *file_handle;
 
 	CAM_VFS_DEBUG (("ENTER"));
+	g_static_mutex_lock (&mutex);
 
 	CORBA_exception_init (&ev);
 
@@ -467,12 +503,14 @@ static GnomeVFSResult do_get_file_info_from_handle (
 	get_info_from_stream (file_handle->stream, info, &ev);
 	if (BONOBO_EX (&ev)) {
 		CORBA_exception_free (&ev);
+		g_static_mutex_unlock (&mutex);
 		CAM_VFS_DEBUG (("EXIT (GNOME_VFS_ERROR_GENERIC)"));
 		return (GNOME_VFS_ERROR_GENERIC);
 	}
 
 	CORBA_exception_free (&ev);
 	
+	g_static_mutex_unlock (&mutex);
 	CAM_VFS_DEBUG (("EXIT"));
 	
 	return (GNOME_VFS_OK);

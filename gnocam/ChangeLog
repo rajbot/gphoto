@@ -1,4 +1,8 @@
-2001-05-29	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+2001-05-28	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
+	* gnome-vfs-module/camera-method.c: Put mutexes in again...
+
+2001-05-28	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
 	While desparately trying to get the gnome-vfs-module to work again...
 

@@ -1,3 +1,5 @@
 POTFILES
 Makefile.in
 Makefile
+*.gmo
+GnoCam.pot

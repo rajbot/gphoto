@@ -1543,8 +1543,8 @@ Hyper
     <name>camera_tree_popup_folder_upload_file</name>
     <signal>
       <name>activate</name>
-      <handler>on_camera_tree_popup_folder_upload_activate</handler>
-      <last_modification_time>Mon, 02 Oct 2000 20:24:15 GMT</last_modification_time>
+      <handler>on_camera_tree_popup_folder_upload_file_activate</handler>
+      <last_modification_time>Sun, 08 Oct 2000 13:42:08 GMT</last_modification_time>
     </signal>
     <label>Upload file</label>
     <right_justify>False</right_justify>

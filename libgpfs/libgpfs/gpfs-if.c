@@ -1,10 +1,9 @@
-#include <config.h>
+#include "config.h"
 #include "gpfs-if.h"
+#include "gpfs-i18n.h"
 
 #include <stdlib.h>
 #include <string.h>
-
-#include "gpfs-i18n.h"
 
 #define CNV(i,e) {							\
 	if (!i) {							\

@@ -1,4 +1,4 @@
-#include <config.h>
+#include "config.h"
 #include "gpfs-file.h"
 
 #include <stdlib.h>

@@ -1,6 +1,5 @@
-#include <config.h>
+#include "config.h"
 #include "gpfs-err-type.h"
-
 #include "gpfs-i18n.h"
 
 static struct {

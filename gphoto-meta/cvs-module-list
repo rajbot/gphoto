@@ -11,18 +11,18 @@
 
 libusb		HEAD	:pserver:anonymous@cvs.libusb.sourceforge.net:/cvsroot/libusb	install
 
-libexif 	HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif	install
+libexif 	libexif-before-0_6_0-api-change	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif	install
 
 # gphoto2-manual	HEAD	:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto	install
 
 libgphoto2	HEAD	:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto	install
 gphoto2		HEAD	:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto   install
 
-libmnote	HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif	install
-exif		HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif install
+# libmnote	HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif	install
+#exif		HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif install
 
-libexif-gtk	HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif	install
-gexif		HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif install
+# libexif-gtk	HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif	install
+#gexif		HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif install
 
 gtkam		HEAD	:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto   install
 

@@ -9,13 +9,13 @@
 # 
 #  - Empty lines are ignored.
 
+libusb		HEAD	:pserver:anonymous@cvs.libusb.sourceforge.net:/cvsroot/libusb	install
+
 libexif 	HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif	install
 exif		HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif install
 
 libexif-gtk	HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif	install
 gexif		HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif install
-
-libusb		HEAD	:pserver:anonymous@cvs.libusb.sourceforge.net:/cvsroot/libusb	install
 
 # gphoto2-manual	HEAD	:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto	install
 

@@ -111,7 +111,8 @@ function checktools() {
 	# these are global variables
 	PATH="${toolroot}/bin:${PATH}"
 	LD_LIBRARY_PATH="${toolroot}/lib:${LD_LIBRARY_PATH}"
-	export PATH LD_LIBRARY_PATH
+	PKG_CONFIG_PATH="/usr/lib/pkgconfig"
+	export PATH LD_LIBRARY_PATH PKG_CONFIG_PATH
     fi
 
     echo "##### Checking for presence of tools..."
@@ -299,6 +300,11 @@ function builddist() {
 	    echo "##### Distribution tarball ${file} for ${module} is current."
 	    echo "    # Not rebuilding dist tarball for ${module}."
 	else
+	    if [ "$module" = "gphoto2-manual" ] && ! xmlto --version > /dev/null 2> /dev/null
+	    then
+		echo "##### skipping gphoto2-manual - requires xmlto, which is not installed"
+		continue
+	    fi
 	    echo "########################################################################"
 	    echo "##### Creating new distribution tarball of ${module} now:"
 	    echo "#        releasetag:  $releasetag"
@@ -409,8 +415,13 @@ EOF
 ########################################################################
 # main program
 
-checktools
-cvslogin
-getsources
-builddist
-makefiles
+function die() {
+    echo "$this: Fatal error. Dying."
+    exit 13
+}
+
+checktools || die 
+cvslogin || die
+getsources || die
+builddist || die
+makefiles || die

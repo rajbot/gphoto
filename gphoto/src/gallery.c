@@ -40,6 +40,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.14  1999/07/01 20:02:05  scottf
+ * added several misc things
+ *
  * Revision 1.13  1999/07/01 16:22:22  scottf
  * renamed "struct ImageInfo" to "struct ImageMembers" to avoid confusion
  * added "free_imagemembers(struct ImageMembers *im)" to util.c to centralize
@@ -211,6 +214,7 @@ void gallery_main() {
 	GList *dlist;
 
 	GtkWidget *dialog, *list, *list_item, *scrwin, *obutton, *cbutton;
+	GtkWidget *netscape;
 	GtkWidget *galentry;
 	GtkWidget *label, *dirlabel, *dirbutton, *hbox, *hseparator;
 
@@ -241,7 +245,7 @@ Then, re-run the HTML Gallery.");
 	}
 
 	dialog = gtk_dialog_new();
-	gtk_widget_set_usize(dialog, 400, 300);
+	gtk_widget_set_usize(dialog, 300, 300);
 	gtk_container_border_width(GTK_CONTAINER(dialog), 5);
 
 	hbox = gtk_hbox_new(FALSE, 5);
@@ -339,6 +343,13 @@ Please install/move gallery themes there.");
 	gtk_signal_connect(GTK_OBJECT(dirbutton), "clicked",
 		GTK_SIGNAL_FUNC(gallery_change_dir),dirlabel);
 	gtk_box_pack_end(GTK_BOX(hbox), dirbutton, FALSE, FALSE, 0);
+
+	netscape = gtk_check_button_new_with_label(
+		"View in \"netscape\" when finished");
+	gtk_widget_show(netscape);
+	gtk_box_pack_start_defaults(
+		GTK_BOX(GTK_DIALOG(dialog)->vbox), netscape);
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(netscape),TRUE);
 
 	obutton = gtk_button_new_with_label("Create");
 	gtk_widget_show(obutton);
@@ -498,9 +509,9 @@ Please install/move gallery themes there.");
 		"/usr/local/share/gphoto/gallery/%s/index_bottom.html",
 		theme);			
 	gallery_parse_tags(filename, filename2);
+	if (GTK_TOGGLE_BUTTON(netscape)->active)
+		browse_gallery();
 	gtk_widget_destroy(dialog);
-	browse_gallery();
 	sprintf(statmsg, "Loaded file:%sindex.html in %s", filesel_cwd, BROWSER);
 	update_status(statmsg);
-/*	activate_button(browse_button); */
 }

@@ -11,6 +11,8 @@
 
 extern struct _Camera *Camera;
 
+int live_video_mode = 0;
+
 void live_snapshot(GtkWidget *dialog) {
 
 	int w, h;
@@ -29,8 +31,7 @@ void live_snapshot(GtkWidget *dialog) {
 		return;
 	}
 	imlibimage = gdk_imlib_load_image_mem(im->image, im->image_size);
-	free(im->image);
-	free(im);
+	free_image(im);
         w = imlibimage->rgb_width;
         h = imlibimage->rgb_height;
         gdk_imlib_render(imlibimage, w, h);
@@ -39,35 +40,63 @@ void live_snapshot(GtkWidget *dialog) {
 	update_status("Done.");
 }
 
+void live_video (GtkWidget *button, GtkWidget *dialog) {
+
+	if (!GTK_TOGGLE_BUTTON(button)->active) {
+		live_video_mode = 0;
+		return;
+	}
+	live_video_mode = 1;
+	while (live_video_mode) {
+		while (gtk_events_pending())
+			gtk_main_iteration();
+		live_snapshot(dialog);
+	}
+}
+
 void live_main () {
 	int w, h;
 
 	GtkWidget *dialog;
-	GtkWidget *button;
+	GtkWidget *button, *hbox;
 
 	GtkWidget *gpixmap;
 	GdkPixmap *pixmap;
 	GdkImlibImage *imlibimage;
 	struct Image *im;
-	
+
 	update_status("Getting live image...");
 	dialog = gtk_dialog_new();
 	gtk_window_set_title(GTK_WINDOW(dialog), "Live Camera!");
 	gtk_container_border_width (GTK_CONTAINER(dialog), 10);
-        button = gtk_button_new_with_label("Take Picture");
-        gtk_widget_show(button);
-        gtk_box_pack_end(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-                                  button, FALSE, FALSE, 0);
-        gtk_signal_connect_object(GTK_OBJECT(button), "clicked",
-                           GTK_SIGNAL_FUNC(takepicture_call),
-                           GTK_OBJECT(dialog));
-	button = gtk_button_new_with_label("Live update");
+
+	hbox = gtk_hbox_new(FALSE,0);
+	gtk_widget_show(hbox);
+	gtk_box_pack_end_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),hbox);
+
+	button = gtk_button_new_with_label("Update Picture");
 	gtk_widget_show(button);
-	gtk_box_pack_end(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-				  button, FALSE, FALSE, 0);
+	gtk_box_pack_start_defaults(GTK_BOX(hbox),button);
         gtk_signal_connect_object(GTK_OBJECT(button), "clicked",
                            GTK_SIGNAL_FUNC(live_snapshot),
                            GTK_OBJECT(dialog));
+
+        button = gtk_button_new_with_label("Take Picture");
+        gtk_widget_show(button);
+        gtk_box_pack_start_defaults(GTK_BOX(hbox),button);
+        gtk_signal_connect_object(GTK_OBJECT(button), "clicked",
+                           GTK_SIGNAL_FUNC(takepicture_call),
+                           GTK_OBJECT(dialog));
+
+	button = gtk_check_button_new_with_label(
+	"Video Mode (Warning: Heavy processor usage)");
+	gtk_widget_show(button);
+        gtk_box_pack_end_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+		button);
+        gtk_signal_connect(GTK_OBJECT(button), "clicked",
+        	GTK_SIGNAL_FUNC(live_video), dialog);
+
+
 	button = gtk_button_new_with_label("Close");
 	gtk_widget_show(button);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),

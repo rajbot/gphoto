@@ -14,6 +14,7 @@ extern struct _Camera ricoh_300z;
 extern struct _Camera olympus;
 extern struct _Camera sony_dscf1;
 extern struct _Camera sony_dscf55;
+extern struct _Camera sony_msac_sr1;
 extern struct _Camera dimage_v;
 extern struct _Camera directory;
 
@@ -121,6 +122,7 @@ struct Model cameras[] = {
 	{"Sony DSC-F55", &sony_dscf55},
 	{"Sony DSC-F505", &sony_dscf55},
 	{"Sony Memory Stick Adapter", &sony_dscf55},
+	{"Sony MSAC-SR1 and DCR-PC100", &sony_msac_sr1},
 	{"Toshiba PDR-M1", &fuji},
 	{"", NULL}
 };

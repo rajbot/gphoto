@@ -8,3 +8,4 @@ exif		HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif insta
 libexif-gtk	HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif	install
 gexif		HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif install
 gtkam		HEAD	:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto   install
+gnocam		HEAD	:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto	install

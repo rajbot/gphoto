@@ -8,82 +8,40 @@
 #include "cameras.h"
 #include "information.h"
 
-/**************/
-/* Prototypes */
-/**************/
-
-void folders_create_recursive (GladeXML *xml, GtkWidget *item, Camera *camera, gchar *path);
-
 /*************/
 /* Functions */
 /*************/
 
 void
-folders_create_recursive (GladeXML *xml, GtkWidget *item, Camera *camera, gchar *path)
+cameras_clean_subtree (GtkTree* tree)
 {
-        CameraList 		folder_list;
-        CameraListEntry*	folder_list_entry;
-        gint 			count, i, j;
-        GnomeApp*		app;
-        GtkWidget*		subtree;
-	gchar*			new_path;
+	GtkTreeItem*	item;
+	gint		i;
+	GtkWidget*	owner;
 
-        g_assert (item != NULL);
-        g_assert (camera != NULL);
-        g_assert (path != NULL);
-        g_assert (xml != NULL);
-        g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
+	g_assert (tree != NULL);
 
-        if (gp_camera_folder_list (camera, &folder_list, path) == GP_OK) {
-                count = gp_list_count (&folder_list);
-                /* Do we have subfolders? */
-                if (count > 0) {
-//FIXME (Directory Browse): I can't parse the whole file tree. If I try to do so, I get the following error:
-//GLib-ERROR **: Cannot create pipe main loop wake-up: Too many open files
-//and the program crashes.
-//Therefore, we'll go not deeper than two levels, that is two times '/' in the path.
-j = 0;
-for (i = 0; path[i] != '\0'; i++) if (path[i] == '/') j++;
-if (j > 1) {
-g_warning ("Can't go deeper than two levels in tree!");
-return;
-}
-//
-// We should probably fix this in the future.
-//
-                        /* We have subfolders. */
-                        subtree = gtk_tree_new ();
-                        gtk_tree_item_set_subtree (GTK_TREE_ITEM (item), subtree);
+	/* Delete all items of tree. */
+	owner = tree->tree_owner;
+	for (i = g_list_length (tree->children) - 1; i >= 0; i--) {
+		item = GTK_TREE_ITEM (g_list_nth_data (tree->children, i));
+		if (item->subtree) {
+			cameras_clean_subtree (GTK_TREE (item->subtree));
+			gtk_object_unref (GTK_OBJECT (item->subtree));
+		}
+		g_free (gtk_object_get_data (GTK_OBJECT (item), "path"));
+		gtk_container_remove (GTK_CONTAINER (tree), GTK_WIDGET (item));
+	}
 
-                        for (i = 0; i < count; i++) {
-                                folder_list_entry = gp_list_entry (&folder_list, i);
-
-                                /* Add the subfolder to the tree. */
-                                item = gtk_tree_item_new_with_label (folder_list_entry->name);
-                                gtk_widget_show (item);
-                                gtk_tree_append (GTK_TREE (subtree), item);
-
-				/* Construct the new path. */
-				if (strcmp (path, "/") == 0) new_path = g_strdup_printf ("/%s", folder_list_entry->name);
-                                else new_path = g_strdup_printf ("%s/%s", path, folder_list_entry->name);
-
-				/* Store some data. */
-				gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
-				gtk_object_set_data (GTK_OBJECT (item), "path", new_path);
-
-				/* Look in path for subfolders. */
-                                folders_create_recursive (xml, item, camera, new_path);
-                        }
-                }
-        } else {
-                dialog_information ("Could not get folder list of folder '%s'!", path);
-        }
+	/* Make sure the subtree itself does not get lost. */
+	if (GTK_WIDGET (tree)->parent == NULL) gtk_tree_item_set_subtree (GTK_TREE_ITEM (owner), GTK_WIDGET (tree));
 }
 
 void
 cameras_update (GladeXML* xml, GConfValue* value)
 {
         GtkTree*        tree;
+	GtkWidget*	sub_tree;
         GSList*         list_cameras = NULL;
         GtkObject*      object;
 	GtkWidget*	item;
@@ -163,6 +121,8 @@ cameras_update (GladeXML* xml, GConfValue* value)
 			        /* Connect the signals. */
 			        gtk_signal_connect (GTK_OBJECT (item), "drag_data_received", GTK_SIGNAL_FUNC (on_drag_data_received), NULL);
 			        gtk_signal_connect (GTK_OBJECT (item), "button_press_event", GTK_SIGNAL_FUNC (on_tree_cameras_button_press_event), NULL);
+				gtk_signal_connect (GTK_OBJECT (item), "expand", GTK_SIGNAL_FUNC (on_tree_item_expand), NULL);
+				gtk_signal_connect (GTK_OBJECT (item), "collapse", GTK_SIGNAL_FUNC (on_tree_item_collapse), NULL);
 			
 			        /* Store some data. */
 			        gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
@@ -172,10 +132,15 @@ cameras_update (GladeXML* xml, GConfValue* value)
 	
 			        /* Do we have folders? */
 			        if (gp_camera_folder_list (camera, &folder_list, path) == GP_OK) {
-			                folders_create_recursive (xml, item, camera, path);
-			        } else {
-			                gnome_app_error (app, _("Could not get folder list!"));
-			        }
+					if (gp_list_count (&folder_list) > 0) {
+
+						/* Create the subtree. Don't populate it yet. */
+						sub_tree = gtk_tree_new ();
+						gtk_widget_ref (sub_tree);
+						gtk_widget_show (sub_tree);
+						gtk_tree_item_set_subtree (GTK_TREE_ITEM (item), sub_tree);
+					}
+			        } else dialog_information ("Could not get folder list for folder '%s'!", path);
 			}
                 }
                 g_free (description);
@@ -183,13 +148,15 @@ cameras_update (GladeXML* xml, GConfValue* value)
 
         /* Delete all unchecked cameras. */
         tree_list = g_list_first (tree->children);
-        for (j = 0; j < g_list_length (tree_list); j++) {
+        for (j = g_list_length (tree_list) - 1; j >= 0; j--) {
                 item = GTK_WIDGET (g_list_nth_data (tree_list, j));
                 if (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (item), "checked")) == 0) {
 
-			/* Remove all sub-folders. */
-//FIXME: Shouldn't we free all paths first? -> g_free (gtk_object_get_data (item, "path")) for all items below this item...
-			if (GTK_TREE_ITEM (item)->subtree) gtk_tree_item_remove_subtree (GTK_TREE_ITEM (item));
+			/* Remove subtree. */
+			if (GTK_TREE_ITEM (item)->subtree) {
+				cameras_clean_subtree (GTK_TREE (GTK_TREE_ITEM (item)->subtree));
+				gtk_object_unref (GTK_OBJECT (GTK_TREE_ITEM (item)->subtree));
+			}
 
 			/* Remove the entry. */
 			gp_camera_free (gtk_object_get_data (GTK_OBJECT (item), "camera"));

@@ -9,6 +9,7 @@
 #include "save.h"
 #include "gnocam.h"
 #include "callbacks.h"
+#include "information.h"
 
 /******************************************************************************/
 /* Prototypes                                                                 */
@@ -338,6 +339,74 @@ on_drag_data_received (GtkWidget *widget, GdkDragContext *context, gint x, gint 
                 g_free (message);
         }
         gnome_uri_list_free_strings (filenames);
+}
+
+void
+on_tree_item_expand (GtkTreeItem* tree_item, gpointer user_data)
+{
+	CameraList		folder_list;
+	CameraList		folder_list_subfolder;
+	CameraListEntry*	folder_list_entry;
+	Camera*			camera;
+	gchar*			path;
+	gchar*			new_path;
+	gint			count;
+	gint			i;
+	GtkWidget*		item;
+	GtkWidget*		tree;
+
+	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (tree_item), "camera")) != NULL);
+	g_assert ((path = gtk_object_get_data (GTK_OBJECT (tree_item), "path")) != NULL);
+	g_assert (tree_item->subtree);
+	g_assert (GTK_OBJECT (tree_item->subtree)->ref_count > 0);
+
+	/* Get the subfolders. */
+	if (gp_camera_folder_list (camera, &folder_list, path) == GP_OK) {
+                count = gp_list_count (&folder_list);	
+		if (count > 0) {
+			for (i = 0; i < count; i++) {
+				folder_list_entry = gp_list_entry (&folder_list, i);
+				
+				/* Add the subfolder to the tree. */
+				item = gtk_tree_item_new_with_label (folder_list_entry->name);
+				gtk_widget_show (item);
+				gtk_tree_append (GTK_TREE (tree_item->subtree), item);
+
+				/* Construct the new path. */
+				if (strcmp (path, "/") == 0) new_path = g_strdup_printf ("/%s", folder_list_entry->name);
+				else new_path = g_strdup_printf ("%s/%s", path, folder_list_entry->name);
+				
+				/* Store some data. */
+				gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
+				gtk_object_set_data (GTK_OBJECT (item), "path", new_path);
+		
+				/* Connect the signals. */
+				gtk_signal_connect (GTK_OBJECT (item), "expand", GTK_SIGNAL_FUNC (on_tree_item_expand), NULL);
+				gtk_signal_connect (GTK_OBJECT (item), "collapse", GTK_SIGNAL_FUNC (on_tree_item_collapse), NULL);
+				
+				/* Does this folder have subfolders? */
+				if (gp_camera_folder_list (camera, &folder_list_subfolder, new_path) == GP_OK) {
+					if (gp_list_count (&folder_list_subfolder) > 0) {
+
+						/* Create the subtree. Don't populate it yet. */
+						tree = gtk_tree_new ();
+						gtk_widget_ref (tree);
+						gtk_widget_show (tree);
+						gtk_tree_item_set_subtree (GTK_TREE_ITEM (item), tree);
+					}
+				} else dialog_information ("Could not get folder list for folder '%s'!", new_path);
+			}
+		} else dialog_information ("Folder '%s' is empty!", path);
+	} else dialog_information ("Could not get folder list for folder '%s'!", path);
+}
+
+void
+on_tree_item_collapse (GtkTreeItem* tree_item, gpointer user_data)
+{
+	g_return_if_fail (tree_item->subtree);
+
+	/* Remove items of subtrees. */
+	cameras_clean_subtree (GTK_TREE (tree_item->subtree));
 }
 
 void

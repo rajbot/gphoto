@@ -146,6 +146,7 @@ gp_widget_clone (CameraWidget* widget)
 gboolean
 gp_camera_update_by_description (GladeXML* xml, Camera** camera, gchar* description)
 {
+	Camera*		camera_old;
 	GnomeApp*	app;
 	guint 		id;
 	gchar*		name;
@@ -156,7 +157,7 @@ gp_camera_update_by_description (GladeXML* xml, Camera** camera, gchar* descript
 	gboolean	speed_changed;
 	gint		i;
 	gint		number_of_ports;
-	CameraPortInfo	port_info;
+	CameraPortInfo		port_info;
 	frontend_data_t*	frontend_data;
 
 	g_assert (xml != NULL);
@@ -173,7 +174,7 @@ gp_camera_update_by_description (GladeXML* xml, Camera** camera, gchar* descript
 
 	/* Did the model change? */
 	if (strcmp ((*camera)->model, model) != 0) {
-		gp_camera_free (*camera);
+		camera_old = *camera;
 		if (gp_camera_new_by_name (&(*camera), model) == GP_ERROR) {
 			gnome_app_error (app, _("Could not set camera model!"));
 
@@ -183,11 +184,12 @@ gp_camera_update_by_description (GladeXML* xml, Camera** camera, gchar* descript
 			g_free (name);
 			g_free (model);
 			g_free (port);
-			*camera = NULL;
+			*camera = camera_old;
 
 			return (FALSE);
 		}
 		(*camera)->frontend_data = frontend_data;
+		gp_camera_free (camera_old);
 	}
 	g_free (model);
 
@@ -209,8 +211,6 @@ gp_camera_update_by_description (GladeXML* xml, Camera** camera, gchar* descript
 			g_free (frontend_data->name);
 			g_free (frontend_data);
 	                g_free (port);
-			gp_camera_free (*camera);
-			*camera = NULL;
 
 	                return (FALSE);
 	        }
@@ -222,8 +222,6 @@ gp_camera_update_by_description (GladeXML* xml, Camera** camera, gchar* descript
 				g_free (frontend_data->name);
 				g_free (frontend_data);
 	                        g_free (port);
-				gp_camera_free (*camera);
-				*camera = NULL;
 
 	                        return (FALSE);
 	                }
@@ -235,10 +233,8 @@ gp_camera_update_by_description (GladeXML* xml, Camera** camera, gchar* descript
 			/* Clean up. */
 			g_free (frontend_data->name);
 			g_free (frontend_data);
-			gp_camera_free (*camera);
-			*camera = NULL;
 	                g_free (port);
-		
+
 	                return (FALSE);
 	        }
                 port_changed = TRUE;
@@ -265,8 +261,6 @@ gp_camera_update_by_description (GladeXML* xml, Camera** camera, gchar* descript
 			/* Clean up. */
 			g_free (frontend_data->name);
 			g_free (frontend_data);
-			gp_camera_free (*camera);
-			*camera = NULL;
 			
 			return (FALSE);
 		}

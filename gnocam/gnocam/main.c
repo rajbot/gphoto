@@ -29,6 +29,8 @@
 
 #include "gnocam-main.h"
 
+static GnoCamCache *cache = NULL;
+
 static BonoboObject *
 gnocam_factory (BonoboGenericFactory *this, const char *oaf_iid,
 		gpointer data)
@@ -38,7 +40,7 @@ gnocam_factory (BonoboGenericFactory *this, const char *oaf_iid,
 g_message ("Trying to create a new GnoCamMain...");
 
 	if (!strcmp (oaf_iid, "OAFIID:GNOME_GnoCam")) {
-		m = gnocam_main_new ();
+		m = gnocam_main_new (cache);
 		if (!m)
 			return NULL;
 g_message ("Done. Returning GnoCamMain.");
@@ -52,6 +54,8 @@ g_message ("Done. Returning GnoCamMain.");
 int
 main (int argc, char **argv)
 {
+	int result;
+
 	bindtextdomain (PACKAGE, LOCALEDIR);
 	bind_textdomain_codeset (PACKAGE, "UTF-8");
 	textdomain (PACKAGE);
@@ -59,6 +63,12 @@ main (int argc, char **argv)
 	gnome_program_init ("gnocam", VERSION, LIBGNOMEUI_MODULE, argc,
 			    argv, NULL);
 
-	return bonobo_generic_factory_main ("OAFIID:GNOME_GnoCam_Factory",
-					    gnocam_factory, NULL);
+	cache = gnocam_cache_new ();
+
+	result = bonobo_generic_factory_main ("OAFIID:GNOME_GnoCam_Factory",
+					      gnocam_factory, NULL);
+
+	g_object_unref (cache);
+
+	return (result);
 }

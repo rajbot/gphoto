@@ -12,6 +12,7 @@ gnocam_SOURCES =					\
  bonobo-storage-camera.c bonobo-storage-camera.h	\
  bonobo-stream-camera.c bonobo-stream-camera.h		\
  main.c							\
+ gnocam-cache.c  gnocam-cache.h				\
  gnocam-camera.c gnocam-camera.h			\
  gnocam-main.c gnocam-main.h				\
  gnocam-util.c gnocam-util.h

@@ -1,22 +1,3 @@
-/* gnocam-main.c
- *
- * Copyright (C) 2002 Lutz Müller <lutz@users.sourceforge.net>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details. 
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
- */
 #include <config.h>
 #include "gnocam-main.h"
 
@@ -34,7 +15,7 @@ static BonoboObjectClass *parent_class;
 
 struct _GnoCamMainPrivate
 {
-	GList *cached_cameras;
+	GnoCamCache *cache;
 };
 
 static GNOME_GnoCam_ModelList *
@@ -98,15 +79,6 @@ impl_GNOME_GnoCam_getPortList (PortableServer_Servant servant,
 	return (list);
 }
 
-static void
-on_camera_destroy (BonoboObject *object, GnoCamMain *m)
-{
-	g_message ("A camera got destroyed.");
-
-	m->priv->cached_cameras = g_list_remove (m->priv->cached_cameras,
-						 object);
-}
-
 static GnoCamCamera *
 gnocam_main_get_camera (GnoCamMain *gm, const gchar *model, const gchar *port,
 		        CORBA_Environment *ev)
@@ -120,34 +92,10 @@ gnocam_main_get_camera (GnoCamMain *gm, const gchar *model, const gchar *port,
 
 	g_return_val_if_fail (GNOCAM_IS_MAIN (gm), NULL);
 
-	/* Cached? */
-	if (model && strlen (model)) {
-
-		g_message ("Looking for model '%s' in cache (%i entries)...",
-			   model, g_list_length (gm->priv->cached_cameras));
-	        for (i = 0; i < g_list_length (gm->priv->cached_cameras); i++) {
-			CameraAbilities a;
-
-			memset (&a, 0, sizeof (CameraAbilities));
-	                gc = g_list_nth_data (gm->priv->cached_cameras, i);
-	                gp_camera_get_abilities (gc->camera, &a);
-	                if (!strcmp (a.model, model)) {
-				if (port && strlen (port)) {
-				    GPPortInfo info;
-
-				    memset (&info, 0, sizeof (GPPortInfo));
-				    gp_camera_get_port_info (gc->camera, &info);
-				    if (!strcmp (port, info.name) || 
-				        !strcmp (port, info.path))
-					break;
-				} else
-				    break;
-			}
-	        }
-        	if (i < g_list_length (gm->priv->cached_cameras)) {
-        	        bonobo_object_ref (gc);
-        	        return gc;
-        	}
+	gc = gnocam_cache_lookup (gm->priv->cache, model, port);
+	if (gc) {
+		bonobo_object_ref (gc);
+		return gc;
 	}
 
 	CR (gp_camera_new (&camera), ev);
@@ -203,7 +151,7 @@ gnocam_main_get_camera (GnoCamMain *gm, const gchar *model, const gchar *port,
         if (BONOBO_EX (ev))
                 return NULL;
 
-	gm->priv->cached_cameras = g_list_append (gm->priv->cached_cameras, gc);        g_signal_connect (gc, "destroy", G_CALLBACK (on_camera_destroy), gm);
+	gnocam_cache_add (gm->priv->cache, gc);
 
         g_message ("Successfully created a camera.");
 
@@ -316,11 +264,9 @@ gnocam_main_finalize (GObject *object)
 	GnoCamMain *gm = GNOCAM_MAIN (object);
 
 	if (gm->priv) {
-		if (gm->priv->cached_cameras) {
-			g_warning ("Still %i cameras in cache!",
-				   g_list_length (gm->priv->cached_cameras));
-			g_list_free (gm->priv->cached_cameras);
-			gm->priv->cached_cameras = NULL;
+		if (gm->priv->cache) {
+			g_object_unref (gm->priv->cache);
+			gm->priv->cache = NULL;
 		}
 
 		g_free (gm->priv);
@@ -361,11 +307,14 @@ gnocam_main_init (GnoCamMain *gm)
 }
 
 GnoCamMain *
-gnocam_main_new (void)
+gnocam_main_new (GnoCamCache *cache)
 {
 	GnoCamMain *gm;
 
 	gm = g_object_new (GNOCAM_TYPE_MAIN, NULL);
+
+	gm->priv->cache = cache;
+	g_object_ref (cache);
 
 	return (gm);
 }

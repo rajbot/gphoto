@@ -26,6 +26,8 @@
 
 #include <bonobo/bonobo-object.h>
 
+#include <gnocam-cache.h>
+
 G_BEGIN_DECLS
 
 #define GNOCAM_TYPE_MAIN	(gnocam_main_get_type())
@@ -51,7 +53,7 @@ struct _GnoCamMainClass {
 };
 
 GType       gnocam_main_get_type (void);
-GnoCamMain *gnocam_main_new	 (void);
+GnoCamMain *gnocam_main_new	 (GnoCamCache *);
 
 G_END_DECLS
 

@@ -18,11 +18,20 @@ Agfa ePhoto 1280
 Richard Caley <rjc@cstr.ed.ac.uk>
 Agfa ePhoto 1680
 
+Gary Ross <gdr@hooked.net>
+Casio QV-10
+
 Reklaw <reklaw@disinfo.net> 
 Casio QV-11
 
+Russell Nelson <nelson@crynwr.com>
+Casio QV-70
+
 Rolf Offermanns <rolf@kawo2.rwth-aachen.de> 
 Casio QV-100
+
+Nils Faerber <nils@unix-ag.org>
+Casio QV-200
 
 Rene Adad <adren@wanadoo.fr>
 Epson PhotoPC 500
@@ -30,14 +39,33 @@ Epson PhotoPC 500
 Shunsuke Sumitani <blunted@purdue.edu>
 Epson PhotoPC 600
 
-Berjoan Damien <damien@casm.insa-lyon.fr>
+Berjoan Damien <damien@casm.insa-lyon.fr> and
+Yann Vernier <yann@algonet.se>
 Epson PhotoPC 700
 
 Thomas Kuehn <th.kuehn@fh-wolfenbuettel.de>
 Fuji DX-5
 
+Matt Martin <matt.martin@ieee.org>
+Fuji DS-7
+
 Simon Walker <simon@intent.demon.co.uk>
 HP C30
+
+Del Simmons <del@cimedia.com>
+Kodak DC-20/25
+
+William R. McDonough <wrmcd@wilmcd.com>
+Kodak DC-200+
+
+Wesley (Buck) Lemke <wesley@dwave.net>
+Kodak DC-210
+
+Randy D. Scott <scottr@wwa.com>
+Kodak DC240
+
+Phill Hugo <plh102@york.ac.uk>
+Konica Q-M100
 
 Chris Worley <cworley@altatech.com>
 Konica Q-M100V
@@ -48,11 +76,26 @@ Nikon CoolPix 900
 Ike Hishikawa <ike@whitedragon.org>
 Nikon CoolPix 900S
 
+Michael C. Piantedosi <drclaw@excelr8.net>
+Nikon CoolPix 950
+
+Scott Fritzinger <scottf@scs.unr.edu>
+Olympus D-220L
+
+Andrew Burd <fretless@bookastudios.com>
+Olympus D-300L
+
 Jon Stroud <jgstroud@eos.ncsu.edu>
 Olympus D-320L
 
 Shaun Moran <Shaun@TheMorans.com>
 Olympus D-340L
+
+Ole Aamot <oleaa@ifi.uio.no>
+Olympus C-400L
+
+Michael Ball <michael.ball@db.com>
+Olympus D-400Z
 
 Martin Preishuber <Martin.Preishuber@stuco.uni-klu.ac.at>
 Olympus C-410L
@@ -78,14 +121,26 @@ Olympus C-1000L
 Oliver Graf <ograf@fga.de>
 Olympus C-1400L
 
+Scott Matthews <overhead@charter.net>
+Philips ESP-60
+
+Bob Paauwe <bpaauwe@bobsplace.com>
+Philips ESP-80
+
 Brad Willson <cpu@ifixcomputers.com>
 Polaroid PDC 640
+
+Clifford Wright <cliff@snipe444.org>
+Ricoh 300
 
 Tim Fletcher <tim@night-shade.demon.co.uk>
 Sanyo VPC-G210
 
 Igor Sarychkin <igor@cccp.demon.co.uk>
 Sanyo VPC-G250
+
+M. Adam Kendall <joker@penguinpub.com>
+Sony DSC-F1
 
 If you feel left out, then please
 add yourself to the file "AUTHORS", 

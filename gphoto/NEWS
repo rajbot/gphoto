@@ -1,19 +1,105 @@
+From http://www.gphoto.org/news.php3
 
-   gPhoto News
+   gPhoto News, June 1999
    
-            Last updated by Ole and generated Fri, May 28, 1999.
      gPhoto is IN DEVELOPMENT, so please [1]submit bugs and comments to
                     [2]gphoto-devel@gphoto.org. Thanks!
-                                May 28, 1999
+                               June 22, 1999
                                       
-   Camera support and open specifications
+   Casio Qv-7000SX with IrDA
    
-   Kodak and Minolta both provide specifications openly for their cameras
-   meaning drivers for them can be written openly.
+   Linux Kernel hacker Dag Brattli [3]<dagb@cs.uit.no> announced on the
+   [4]gphoto-devel [5]mailing list today that he will write a gphoto
+   driver for the Casio Qv-7000SX digital camera with Tran-P.
    
-   Konica has recently started work on a GPL application for *BSD and
-   GNU/Linux which Phill Hugo [3]<phill@gnu.org> will incorporate into
-   gPhoto extending the current Konica driver.
+   Dag Brattli is the founder and maintainer of the [6]Linux-IrDA
+   project. The first Linux-implementation of the IrDATM standards was
+   included in the 2.2 kernel.
+   
+   IrDATM (Infrared Data Association) is an industry standard for
+   infrared wireless communication. Most laptops sold today are equipped
+   with an IrDA compliant infrared transceiver, which enables you to
+   communicate with devices such as printers, modems, fax, LAN, and other
+   laptops, as well as digital cameras.
+   
+                               June 20, 1999
+                                      
+   Negative response from Canon Australia
+   
+   Raymond Newman [7]<raymond@one.com.au> forwarded this to the
+   [8]gphoto-devel@gphoto.org [9]mailing list today:
+Subj: Re: A PS-A5 / Unix possability???
+From: [10]gpaterson@cscpo.canon.com.au
+To:   [11]raymond@one.com.au
+
+Dear Mr Newman
+
+I'm sorry, but Canon Inc are still not releasing the requested
+information for the PowerShot A5 Digital Camera (it may well be company
+confidential or 3rd party developed protocol).
+
+The product has been designed and marketed for the Microsoft Windows and
+Apple Macintosh platforms only.
+
+If your requirement is still solely for the Unix / Linux environment I
+can only suggest selling or trading in your PS-A5 on another product
+that is qualified for your required platform.
+
+I'm sure that this is not what you wanted to hear, but I don't believe
+that there are any other options within Canon.
+
+regards
+Glenn Paterson
+CSCPO, Canon Australia
+
+   We urge Canon and competing camera manufacturers to release open
+   specifications now, and the several million users of free operating
+   systems to not buy camera products from Canon until they provide
+   specs.
+   
+                               June 18, 1999
+                                      
+   gphoto 0.3.2 RPMs and tarball
+   
+   Paul Jenner [12]<psj@mustec.eu.org> has built new RPMs and tarball CVS
+   snapshots of gphoto-0.3.2. gPhoto is still in heavy development, and
+   will hopefully reach a stable 0.4 soon.
+     * [13]gphoto-0.3.2-1.i386.rpm (596 Kb)
+     * [14]gphoto-0.3.2-1.src.rpm (439 Kb)
+     * [15]gphoto-0.3.2.tar.gz (438 Kb)
+       
+                               June 13, 1999
+                                      
+   DC210 support for gPhoto
+   
+   Brian Hirt [16]<bhirt@mobygames.com>, the developer of [17]KDCPI, a
+   command line perl program that interfaces with the Kodak DC210,
+   reported to [18]<gphoto-kodak@gphoto.org> [19]mailing list that he has
+   downloaded the gPhoto source and started working on a gphoto library.
+   
+   A development version of the DC210 library is in gphoto/kodak in GNOME
+   CVS.
+   
+                               June 12, 1999
+                                      
+   The gPhoto roadmap
+   
+   Bob Paauwe [20]<bpaauwe@bobsplace.com> has scanned of the
+   [21]gphoto-devel@gphoto.org [22]mailing list archive and organized a
+   new [23]todo list by version number.
+   
+   The next stable development release (version 0.4, as all stable
+   release will use even number versions) sure will have a lot of new
+   features.
+   
+                               June 10, 1999
+                                      
+   Nikon considers gPhoto support
+   
+   Phill Hugo [24]<phill@gnu.org> has spoken to Nikon as part of gPhoto
+   and have a few leads on developing a driver for them.
+   
+   Please mention gPhoto and this site, if you mail them.
    
    It is always a great help for potential camera customers to pressure
    companies into support our work BEFORE you give them your money.
@@ -23,436 +109,98 @@
    make them, the better gPhoto can be and the more enjoyment you'll get
    from your camera.
    
-   Phill has added the file ``CONTACTS'' in CVS, that contains a list of
-   company members who you can write to asking for GPL drivers or open
-   specifications. There is also a sample letter in ``LETTER''.
+   Phill has added the file ``[25]CONTACTS'' in CVS, that contains a list
+   of company members who you can write to asking for GPL drivers or open
+   specifications. There is also a sample letter in ``[26]LETTER''.
    
-                                May 27, 1999
+                                June 7, 1999
                                       
-   gPhoto in GNOME CVS
+   Alan Cox plugs gPhoto
    
-   Scott Fritzinger [4]<scottf@scs.unr.edu> has imported the most recent
-   source tree into GNOME CVS.
+   Today Linux kernel hacker Alan Cox [27]<alan@redhat.com> comments
+   gPhoto in his [28]development diary:
    
-   For anonymous access to gPhoto in GNOME CVS you should follow these
-   steps:
-    1. First you need to setup the CVS environmental variables. You might
-       want to put this in your login script.
-       export CVSROOT=:pserver:anonymous@anoncvs.gnome.org:/cvs/gnome
-    2. Then use CVS as normal like this:
-          + cvs login
-            There is no password for the 'anonymous' user.
-          + cvs -z3 checkout gphoto
-            Please use the -z3 option to minimize network bandwidth (-z9
-            eats too much CPU time - please don't use it).
-       
-   You can get individual library modules by:
-     * cvs -z3 checkout gphoto/sony
-     * cvs -z3 checkout gphoto/philips
-       
-   Daily snapshots and patches will be available from anonymous FTP
-   [5]ftp://ftp.jimpick.com/pub/gnome/snap/gphoto/ tomorrow.
+     "...It also happens to be supported by gphoto which is very cute,
+     very slick and very buggy (but it doesnt claim to be finished). It
+     crashed every download until I attacked it with gdb and fixed my
+     copy up."
+     
+   Some of the driver problems will be sorted out with his help.
    
-   [6]bonsai is a tool that lets you perform queries on [7]gphoto files
-   in the CVS.
+   Thanks, Alan.
    
-   [8]GNOME Cross-Reference is a cross referenced display of the GNOME
-   source code. The sources displayed are those that are currently
-   checked in to the mainline of the GNOME project CVS server; these
-   pages are updated many times a day, so they should be pretty close to
-   the latest-and-greatest.
-   
-   Visit the [9]www.gnome.org web for further information about the GNOME
-   project.
-   
-                                May 26, 1999
+                                June 2, 1999
                                       
-   gPhoto CVS shut down - merging with GNOME CVS
+   autoconf in CVS
    
-   Miguel de Icaza [10]<miguel@gnu.org>, coordinator of the [11]GNOME
-   project and [12]Gnumeric author, has offered us CVS server-space:
-From: Miguel de Icaza <[13]miguel@nuclecu.unam.mx>
-Subject: Re: [GNU Photo devel] gphoto (again)
-To: [14]gdr@hooked.net
-CC: [15]oleaa@ifi.uio.no, [16]gphoto-devel@gphoto.org
-Date: Mon, 24 May 1999 20:27:33 -0500
+   Paul S Jenner [29]<psj@mustec.eu.org> has committed the final autoconf
+   patch to CVS along with Gary Ross' [30]<gdr@hooked.net> Casio changes
+   that came with it.
+   
+   Now it is finally in CVS you can build gphoto with autoconf provided
+   you have [31]GNU autoconf, [32]GNU automake and [33]GNU libtool on
+   your system. To build simply run:
+   
+./autogen.sh
+make
+make install
 
-Please guys, all of those in the gPhoto team that want access to the
-GNOME CVS send your information to Ole, and have him mail me all of
-the details in a single chunk.
-
-The information I need is:
-
-    Your full name.
-    Your desired login name.
-    Your crypted password.
-
-Do not use a crypted password that is used for your regular machine
-login.
-
-Best wishes,
-Miguel.
-
-   [17]Scott Fritzinger [18]<scottf@scs.unr.edu>, the main author of
-   gPhoto, imports the current tree into GNOME CVS as soon he get his
-   account.
-   
-                                May 5, 1999
+   [ [34]May 1999 | [35]April 1999 | [36]March 1999 | [37]February 1999 ]
                                       
-   Support for Kodak DC240
-   
-   Randy D. Scott [19]<scottr@wwa.com> writes
-   
-     Just a few hours ago, I finished my initial coding for support of
-     the Kodak DC240 camera. It's got a few problems still, but it was
-     good enough for me to get a batch of pictures off of it.
-     
-     In fact, since I don't run Windows, today was the first time that
-     I've been able to see the pictures that I've taken. Digital cameras
-     are cool...
-     
-     Anyway, I'll finish cleaning it up a little in the next few days
-     and then make it available for others to play with (assuming that
-     anyone actually has one of these)
-     
-     Also, I'd like to discuss combining all of the Kodak drivers for
-     those cameras that require approximately the same protocol (which
-     would be the DC20, DC25, DC200, DC210, and DC240, minimally, I
-     think). I'm thinking that it would be possible to "auto-detect" the
-     type of Kodak camera connect and have the driver communicate
-     appropriately.
-     
-   We have set up a special [20]mailinglist for Kodak library related
-   discussions called [21]gphoto-kodak.
-   
-   Future digital camera buyers who want to be updated on the gPhoto
-   effort, could join the general [22]gphoto list, for announcements.
-   
-   [23]Eastman Kodak, Inc. is one of few digital camera companies that
-   [24]support the developers in this project with open camera
-   specifications.
-   
-                                May 2, 1999
-                                      
-   Images from Open Networks '99
-   
-   The leader of the [25]KDE project, Kalle Dalheimer, as well as the
-   leader of the [26]GNOME project, Miguel de Icaza, were both speakers
-   at the [27]Open Networks '99 show in Copenhagen, Denmark, a three day
-   conference on April 30th, May 1st and 2nd 1999.
-   
-   Ole has posted [28]these images from the events.
-   
-                                May 1, 1999
-                                      
-   Support for Canon PowerShot A5 Zoom
-   
-   Henri Bergius [29]<Henri.Bergius@iki.fi> writes
-   
-     I am working as Webmaster for a medium-sized software company here
-     in Finland. All our web work is done with Open Source software, and
-     our web team is actively participating in some OSS projects, like
-     the Midgard Web Application Server.
-     
-     Yesterday, the marketing dept. brought us a new digital camera,
-     Canon PowerShot A5 Zoom, which they intend to use for documenting
-     events and seminars the company is in. Managing the camera
-     (downloading and indexing pictures, etc.) would be the web team's
-     job.
-     
-     As the web team uses Linux computers, I went looking whether the
-     camera would be supported in UNIX enviroment (I would hate having
-     to get us a NT box just because of the camera). Alas, I noticed
-     that no Canon cameras were mentioned in you page.
-     
-     Now what I am asking is whether there is already someone working on
-     supporting the camera. And if not, then how we could help having
-     support for it in gPhoto.
-     
-     If needed, I have one programmer who could possibly help you in the
-     project, but all that time is, of course, something that has to be
-     taken off from working on Midgard. But whatever, we would like to
-     help your team to get the camera to list of supported ones.
-     
-   Update: Henri Bergius has now pointed out that the offer for help
-   which he voiced was about helping an already existing camera support
-   project, not about creating a new one.
-   
-   So if you are working on a Canon A5 driver, please contact the
-   [30]gphoto-devel [31]mailinglist.
-   
-                               April 28, 1999
-                                      
-   Casio QV library in CVS
-   
-   Gary Ross [32]<gdr@hooked.net> writes
-   
-     I've checked in my code for the Casio support. It works for me on
-     my QV-10 and I believe it'll work ok for all but QV 700 models.
-     It's a first rev so most likely there will be some clean up to do
-     yet. Give it a try and let me know how it works out.
-     
-   Get the latest source from [33]CVS, visit the list of known
-   [34]supported camera models and send [35]feedback to the gPhoto
-   [36]development team.
-   
-                               April 22, 1999
-                                      
-   New toolbar
-   
-   Toolbar
-   
-   The human mind is excellent in recognizing graphics, patterns, faces,
-   pictures, etceteras. That's why charts and diagrams are so popular.
-   
-   'A picture says more than a thousand words'.
-   
-   Pictures are recognizable. The human eye recognizes a picture a lot
-   easier than text. Road signs have pictures, and for a good reason.
-   
-   The icons on the gPhoto toolbar are perhaps not self explanatory.
-   
-   Functions:
-    1. File-Open
-    2. File-Save Current Image
-    3. File-Batch Save
-    4. File-Print
-    5. File-Close
-    6. Camera-Get Index-Thumbnails
-    7. Camera-Get Index-No thumbnails
-    8. Camera-Get Selected Images
-    9. Camera-Take-Picture
-   10. Camera-Delete Selected Images
-   11. Rotate Clockwise
-   12. Rotate Counter-Clockwise
-   13. Flip Horizontal
-   14. Flip Vertical
-   15. Resize
-   16. Configuration
-   17. Help
-   18. Exit
-       
-   It takes time to learn the meaning, usually a short initial effort.
-   Pull downs are easier to learn, which makes them good for low
-   frequency functions. An inexperienced user can explore all menu
-   options easily. The experienced gPhoto users will probably prefer the
-   keyboard shortcuts, or the command line interface (CLI).
-   
-   [37]Download the latest snapshot of gPhoto [38]CVS source tree, and
-   report bugs and comments to [39]gphoto-devel@gphoto.org.
-   
-                               April 17, 1999
-                                      
-   Autoconf script in the works
-   
-   Paul S Jenner <[40]psj101@york.ac.uk> has started building gphoto with
-   [41]GNU autoconf and have a rough first prototype for anyone willing
-   to help. Please mail the [42]gphoto-devel [43]mailinglist.
-   
-                               March 19, 1999
-                                      
-   Kodak Support
-   
-   Brent Metz <bmetz@vt.edu> has announced that Kodak have given him the
-   interface protocol details for their DC200 and DC210 cameras. A driver
-   for gPhoto is now in the pipeline. Thanks Kodak.
-   
-                               March 14, 1999
-                                      
-   New Site Theme
-   
-   No, this isn't [44]slashdot.org. It's the result of a tweak with the
-   PHP includes file which looks a lot better - my opinion of course -
-   than the old grey page. Tux has a new camera too! Enjoy
-   
-                               March 09, 1999
-                                      
-   Konica Q-M100 and Hewlett Packard C20/C30 support in fast progress
-   
-   Phill Hugo [45]<plh102@york.ac.uk> has implemented a basic gphoto
-   library for the Konica Q-M100 and Hewlett Packard C20/C30 camera
-   models, based on the protocol details by Jesper Skov
-   [46]<jskov@cygnus.co.uk>.
-   
-   Konica, like too many camera manufacturers, has not released free
-   specs yet, so their camera is limited to the following camera
-   operations:
-     * Get pictures (Real thumbnails work now!)
-     * Delete pictures (buggy due to Konica's gap method)
-     * Get status (all the info the camera knows about, picture count,
-       time, etc.)
-     * NEW! Take picture (with default settings (I'll work on a dialog to
-       select flash, focus and exposure modes, etc)
-       
-   A config option is in progress, to allow formatting of the CF card.
-   Eventually, when/if Konica release the camera specs to the free
-   software community, I [47]<plh102@york.ac.uk> will add all the other
-   stuff these cameras can do over the serial wire. (Change exposure
-   settings, shutter speed, flash mode, f-stops, etc.)
-   
-   [48]Download the latest cvs snap
-   
-                               March 02, 1999
-                                      
-   A reverse engineer of the Konica Q-M100
-   
-   Phill Hugo [49]<plh102@york.ac.uk> sent us Jesper Skov's
-   [50]<jskov@cygnus.co.uk> perl script that download pictures from the
-   Konica Q-M100 camera. For now it is the only way to get pictures from
-   the camera until Phill converts it to a gPhoto plugin. It is likely to
-   also work with the Hewlett Packard C20 and C30 since they OEMd their
-   hardware from Konica.
-   
-                               March 02, 1999
-                                      
-   Related tools
-   
-   Check out the great resource of related camera libraries and tools at
-   [51]ftp://ftp.itojun.org/pub/digi-cam/.
-   
-                             February 27, 1999
-                                      
-   Code organization
-   
-   Matt has splitted the UI code out of 'main.c'. Things build normally.
-   Most of the individual camera libs need to be fixed up in this way
-   also. They should by dynamically loaded when needed as with SANE, or
-   the executable will balloon over time. Also, every single lib in
-   [52]CVS must be functional for the thing to build at all (without
-   messing with the code). Maybe this could be fixed with a dynamic
-   loading approach...
-   
-   Any volunteers?
-   
-   Send mail to [53]gphoto-devel@gphoto.org if you'd like to help.
-   
-                             February 24, 1999
-                                      
-   Scott shifts focus from gPhoto to SohoVoice
-   
-   Scott Fritzinger, the main gPhoto developer, posted [54]this
-   announcement to the [55]gphoto-devel mailinglist.
-   He's working on a new, cool Linux-application called SohoVoice, and
-   will focus on that.
-   
-                             February 13, 1999
-                                      
-   Keyboard accelerator group and various modifications
-   
-   Matt added a add_to_menu_acc function call to create a menu entry with
-   acclerator. This could/should be combined with the add_to_menu
-   function if it doesn't crash-and-burn for anyone.
-   
-   He also defined some keys for random functions:
-     * get index (ctrl-i)
-     * get empty index (ctrl-e)
-     * select all (ctrl-a)
-     * select none (ctrl-n)
-     * close (ctrl-c)
-     * quit (ctrl-q)
-       
-   It might make sense to have a function call in the camera API, which
-   gets some lightweight info about a photo (ie: camera's internal
-   filename or number), so the label is more informative.
-     * Added a label to each thumbnail, which contains the 'info' string.
-       Since that string is empty, the photo number is sprinted into
-       there.
-     * Moved index creation to a new function 'makeindex', which takes an
-       argument to select thumbnails or an empty index. Two functions
-       call makeindex, one is the original 'getindex'. The other is a new
-       'getindex_empty' function which calls makeindex with thumbnails
-       disabled.
-     * Moved thumbnail downloading to a separate function
-       'insert_thumbnail'
-     * Intercepted button presses to 'thumb_click' function a double
-       click will (re)load the thumbnail (calling insert_thumbnail)
-       
-                             February 01, 1999
-                                      
-   Past versions posted
-   
-   Scott has updated the 'download' page with [56]a link to the past
-   versions of gphoto (0.0.1-1 up to 0.1.2-DR), just in case someone
-   wants a past version for some reason.
-   
-   We are trying to keep the [57]CVS source compiling at all times. This
-   means that grabbing the source from there will 99% of the time give
-   you source that compiles, but doesn't guarantee to work.
-   
-        [ [58]Main | [59]News | [60]ToDo | [61]Help | [62]Download |
-   [63]Preview | [64]Cameras | [65]Supporting | [66]Feedback | [67]Docs |
-            [68]Discussion | [69]Team | [70]Themes | [71]Links ]
+        [ [38]Main | [39]News | [40]ToDo | [41]Help | [42]Download |
+   [43]Preview | [44]Cameras | [45]Supporting | [46]Feedback | [47]Docs |
+            [48]Discussion | [49]Team | [50]Themes | [51]Links ]
 
 References
 
    1. http://www.gphoto.org/feedback.php3
    2. mailto:gphoto-devel@gphoto.org
-   3. mailto:phill@gnu.org
-   4. mailto:scottf@scs.unr.edu
-   5. ftp://ftp.jimpick.com/pub/gnome/snap/gphoto
-   6. http://cvs.gnome.org/bonsai
-   7. http://cvs.gnome.org/bonsai/rview.cgi?cvsroot=/cvs/gnome&dir=gphoto
-   8. http://cvs.gnome.org/lxr/source/
-   9. http://www.gnome.org/
-  10. mailto:miguel@gnu.org
-  11. http://www.gnome.org/
-  12. http://www.gnome.org/gnumeric
-  13. mailto:miguel@nuclecu.unam.mx
-  14. mailto:gdr@hooked.net
-  15. mailto:oleaa@ifi.uio.no
-  16. mailto:gphoto-devel@gphoto.org
-  17. http://www.scs.unr.edu/~scottf
-  18. mailto:scotff@scs.unr.edu
-  19. mailto:scottr@wwa.com
-  20. http://www.gphoto.org/lists.php3
-  21. http://lists.styx.net/mailman/listinfo/gphoto-kodak
-  22. http://lists.styx.net/mailman/listinfo/gphoto
-  23. http://www.kodak.com/
-  24. http://www.gphoto.org/supporting.php3
-  25. http://www.kde.org/
-  26. http://www.gnome.org/
-  27. http://www.on99.dk/
-  28. http://www.gphoto.org/on99/
-  29. mailto:Henri.Bergius@iki.fi
-  30. mailto:gphoto-devel@gphoto.org
-  31. http://www.gphoto.org/lists.php3
-  32. mailto:gdr@hooked.net
-  33. http://www.gphoto.org/cvs.php3
-  34. http://www.gphoto.org/cameras.php3
-  35. http://www.gphoto.org/feedback.php3
-  36. http://www.gphoto.org/team.php3
-  37. http://www.gphoto.org/download.php3
-  38. http://www.gphoto.org/cvs.php3
-  39. mailto:gphoto-devel@gphoto.org
-  40. mailto:psj101@york.ac.uk
-  41. http://www.gnu.org/software/autoconf/
-  42. mailto:gphoto-devel@gphoto.org
-  43. http://www.gphoto.org/lists.php3
-  44. http://slashdot.org/
-  45. mailto:plh102@york.ac.uk
-  46. mailto:jskov@cygnus.co.uk
-  47. mailto:plh102@york.ac.uk
-  48. http://www.gphoto.org/download.php3
-  49. mailto:plh102@york.ac.uk
-  50. mailto:jskov@cygnus.co.uk
-  51. ftp://ftp.itojun.org/pub/digi-cam/
-  52. http://www.gphoto.org/cvs.php3
-  53. mailto:gphoto-devel@gphoto.org
-  54. http://lists.styx.net/archives/private/gphoto-devel/1999-February/000350.html
-  55. http://www.gphoto.org/lists.php3
-  56. http://www.gphoto.org/pub/tar/
-  57. http://www.gphoto.org/cvs.php3
-  58. http://www.gphoto.org/main.php3
-  59. http://www.gphoto.org/news.php3
-  60. http://www.gphoto.org/todo.php3
-  61. http://www.gphoto.org/help.php3
-  62. http://www.gphoto.org/download.php3
-  63. http://www.gphoto.org/screenshots.php3
-  64. http://www.gphoto.org/cameras.php3
-  65. http://www.gphoto.org/supporting.php3
-  66. http://www.gphoto.org/feedback.php3
-  67. http://www.gphoto.org/docs.php3
-  68. http://www.gphoto.org/lists.php3
-  69. http://www.gphoto.org/team.php3
-  70. http://www.gphoto.org/themes.php3
-  71. http://www.gphoto.org/links.php3
+   3. mailto:dagb@cs.uit.no
+   4. mailto:gphoto-devel@gphoto.org
+   5. http://www.gphoto.org/lists.php3
+   6. http://www.cs.uit.no/linux-irda/
+   7. mailto:raymond@one.com.au
+   8. mailto:gphoto-devel@gphoto.org
+   9. http://www.gphoto.org/lists.php3
+  10. mailto:gpaterson@cscpo.canon.com.au
+  11. mailto:raymond@one.com.au
+  12. mailto:psj@mustec.eu.org
+  13. ftp://ftp.gphoto.org/projects/gphoto/pub/rpm/i386/gphoto-0.3.2-1.i386.rpm
+  14. ftp://ftp.gphoto.org/projects/gphoto/pub/rpm/SRPMS/gphoto-0.3.2-1.src.rpm
+  15. ftp://ftp.gphoto.org/projects/gphoto/pub/tar/0.3/gphoto-0.3.2.tar.gz
+  16. http://www.gphoto.org/bhirt@mobygames.com
+  17. http://www.berkhirt.com/HomerProductions/products/kdcpi/
+  18. mailto:gphoto-kodak@gphoto.org
+  19. http://www.gphoto.org/lists.php3
+  20. mailto:bpaauwe@bobsplace.com
+  21. mailto:gphoto-devel@gphoto.org
+  22. http://www.gphoto.org/lists.php3
+  23. http://www.gphoto.org/todo.php3
+  24. mailto:phill@gnu.org
+  25. ftp://ftp.gphoto.org/projects/gphoto/pub/CONTACTS
+  26. ftp://ftp.gphoto.org/projects/gphoto/pub/LETTER
+  27. mailto:alan@redhat.com
+  28. http://www.uk.linux.org/diary
+  29. mailto:psj@mustec.eu.org
+  30. mailto:gdr@hooked.net
+  31. http://www.gnu.org/software/autoconf
+  32. http://www.gnu.org/software/automake
+  33. http://www.gnu.org/software/libtool
+  34. http://www.gphoto.org/199905.php3
+  35. http://www.gphoto.org/199904.php3
+  36. http://www.gphoto.org/199903.php3
+  37. http://www.gphoto.org/199902.php3
+  38. http://www.gphoto.org/main.php3
+  39. http://www.gphoto.org/news.php3
+  40. http://cvs.gnome.org/lxr/source/gphoto/TODO
+  41. http://www.gphoto.org/help.php3
+  42. http://www.gphoto.org/download.php3
+  43. http://www.gphoto.org/screenshots.php3
+  44. http://www.gphoto.org/cameras.php3
+  45. http://www.gphoto.org/supporting.php3
+  46. http://www.gphoto.org/feedback.php3
+  47. http://www.gphoto.org/docs.php3
+  48. http://www.gphoto.org/lists.php3
+  49. http://www.gphoto.org/team.php3
+  50. http://www.gphoto.org/themes.php3
+  51. http://www.gphoto.org/links.php3

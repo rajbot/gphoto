@@ -1,15 +1,5 @@
 $Id$
 
-$Log$
-Revision 1.1  1999/05/27 18:32:01  scottf
-Initial revision
-
-Revision 1.6  1999/05/11 23:36:00  ole
-Small changes.
-
-Revision 1.5  1999/05/05 19:54:00  ole
-Initial revision
-
 This is a developer release of gPhoto (GNU Photo).
 
 DESCRIPTION
@@ -40,8 +30,8 @@ IMPORTANT NOTICES
 
 REQUIREMENTS:
         * GNU utils (sed)
-	* Gtk (1.0.1 and up)
-	* Imlib (tested on 1.4)
+	* Gtk (1.2 and up)
+	* Imlib (1.4 and up)
 	* ImageMagick (4.1 and up)
 	* libjpeg / libpng / libgif / libtiff / libz
 	  (required by Imlib < 1.8)
@@ -49,13 +39,16 @@ REQUIREMENTS:
 WHATS IN THE PACKAGE:
 	* GTK+ graphical application, by Scott Fritzinger <scottf@scs.unr.edu>
 	* Casio QV library implemented by Gary Ross <gdr@hooked.net>
+	* Directory Browse library, by Scott Fritzinger <scottf@scs.unr.edu>
         * Fuji DS-7 library implemented by Matt Martin <matt.martin@ieee.org>
         * Kodak DC-2x library implemented by Del Simmons <del@cimedia.com>
-	* Kodak DC210 library implemented by Brent Metz <bmetz@vt.edu>
+	* Kodak DC-2x0 library implemented by Brian Hirt <bhirt@mobygames.com>
+	* Konica Q M-100 library implemented by Phill Hugo <phill@gphoto.org>
+	* Philips ESP library written by Bob Paauwe <bpaauwe@bobsplace.com>
 	* PhotoPC library written by Eugene Crosser <crosser@average.org> 
 	  and implemented for gPhoto by Scott Fritzinger <scottf@scs.unr.edu>
         * Ricoh 300 library implemented by Clifford Wright <cliff@snipe444.org>
-	* Konica Q M-100 library implemented by Phill Hugo <phill@gphoto.org>
+	* Sony DSC library written by M. Adam Kendall <joker@penguinpub.com>
 
 FEATURES/CHANGES:
 	Here are the major changes to 0.2:
@@ -107,7 +100,7 @@ FEATURES/CHANGES:
 		After building the gPhoto binary, type "gphoto -h" for
 		command-line options. Here's the low-down:
 
-	GNU Photo v.0.2
+	GNU Photo v.0.4
 	Usage: gphoto [-h] [-n] [-s # filename] [-t # filename]
 	              [-d #] [-l filename]
 	        -n                      display the # of pictures
@@ -123,31 +116,30 @@ FEATURES/CHANGES:
 
 	A simple script set up can automate a lot of things
 	(batch saving, webcam, delete all pics, etc..), so
-	please send scripts to gphoto-devel@lists.styx.net,
-	if you have written some.
+	please send scripts to gphoto-devel@gphoto.org when
+	you have written some.
 
         ------------------------------------------------------------
 			
 INSTALLATION:
 	1) Untar/zip the archive by:
 
-		tar zxvf gphoto.tgz
+		tar zxvf gphoto-0.x.tgz
 
 	   (but you knew that because you're reading this :-)
 
-	2) Enter the gphoto-x-xx/src directory, and type 'make'.
-	   This will build the camera model library, and install
-	   them, and also build the gphoto binary.
+	2) Enter the gphoto-0.x/ directory, and type './configure'.
+	   Then type 'make' to build the camera model libraries, and
+           the gphoto binary.
 
-	3) Type 'make install' to install the photopc library into
-	   /usr/local/lib and the gPhoto executable into
-	   /usr/local/bin
+	3) Type 'make install' to install the camera libraries into
+	   /usr/local/share/gphoto/drivers/ and the 'gphoto' executable 
+           into /usr/local/bin/
 
 UNINSTALL:
-	In the gphoto-x-xx directory, type 'make uninstall'
+	In the gphoto-0.x directory, type 'make uninstall'
 
 BUGS/PROBLEMS:
-	* Crashes when closing images too fast. Being worked on.
 	* Will occasionally not perform operation if camera is
 	  in power-off mode and is turned on by gPhoto. Redo
 	  the operation.
@@ -160,7 +152,7 @@ UPDATES:
 	http://www.gphoto.org/pub/
 
 FAQS:
-	http://www.gphoto.org/pub/FAQ
+	http://www.gphoto.org/help.php3
 
 DEVELOPMENT DOCUMENTATION:
 	http://www.gphoto.org/pub/PROGRAMMERS
@@ -182,6 +174,9 @@ AUTHORS:
 
 	Gary Ross (gdr@hooked.net)
 	Casio QV library
+
+	M. Adam Kendall (joker@penguinpub.com)
+	Implemented the Sony DSC compatible library.
 
 	Del Simmons (del@gphoto.org)
 	Kodak DC20/25 library
@@ -205,9 +200,9 @@ AUTHORS:
 	Warren Baird (wjbaird@bigfoot.com)
 	Bug fixing
 
-	Brent D. Metz (bmetz@vt.edu)
-	Kodak 200/210 library
-	
+	Brian Hirt (bhirt@loopy.berkhirt.com)
+	Kodak 210 library
+
 	Mandrake (mandrake@lobotomy.com)
 	Kodak DC210 library hacking
 
@@ -230,7 +225,7 @@ AUTHORS:
 	The gPhoto project is the easiest
 	way for Digital Camera Companies
 	to support potential customers.
-	
+
 	Emailing the gPhoto developers' list
 	<gphoto-devel@gphoto.org> is a good
 	place to start in procuring talents.

@@ -1,16 +1,7 @@
 $Id$
 
-$Log$
-Revision 1.1  1999/05/27 18:32:01  scottf
-Initial revision
-
-Revision 1.4  1999/05/05 19:55:04  ole
-Initial revision
-
 HTML gallery engine specs in gPhoto
-
-For updates on this document checkout from CVS.
-Details at http://www.gphoto.org/index.php3?cvs
+For updates of this document, see http://www.gphoto.org/themes.php3
 
 *************************************************************************
 
@@ -106,12 +97,4 @@ the theme directory to the output directory automatically)
 
 *************************************************************************
 
-Please report new HTML themes to gphoto-devel@lists.styx.net.
-
-Thanks!
-
------------------------
-gPhoto gallery themes specs. 0.2-1 (Thu Jan  7 16:39:44 CET 1999)
-
-Copyright (C) 1998-99 Scott Fritzinger (scottf@scs.unr.edu)
-Copyright (C) 1998-99 Ole Kristian Aamot (oleaa@ifi.uio.no)
+Please report new HTML themes to gphoto-devel@gphoto.org.  Thanks.

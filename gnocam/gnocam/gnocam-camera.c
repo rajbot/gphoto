@@ -122,6 +122,8 @@ on_capture_close (GnomeDialog *dialog, gpointer data)
 	g_return_val_if_fail (GNOCAM_IS_CAMERA (data), FALSE);
 	c = GNOCAM_CAMERA (data);
 
+	g_message ("on_capture_close");
+
 	bonobo_object_unref (BONOBO_OBJECT (c));
 
 	return (FALSE);
@@ -138,6 +140,8 @@ on_capture_clicked (GnomeDialog *dialog, gint button_number, gpointer data)
 
 	g_return_if_fail (GNOCAM_IS_CAMERA (data));
 	c = GNOCAM_CAMERA (data);
+
+	g_message ("on_capture_clicked");
 
 	switch (button_number) {
 	case 1: /* Cancel */

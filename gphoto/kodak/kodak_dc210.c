@@ -278,9 +278,16 @@ int kodak_dc210_number_of_pictures ()
 
 int kodak_dc210_take_picture() 
 {
+  int serialdev;
 
-  fprintf(stderr,"Cannot take picture, not implemented");
-  return(0);
+  if (serialdev = kodak_dc210_open_camera (serial_port))
+  {
+    kodak_dc210_send_command( serialdev,DC_TAKE_PICTURE,0x00,0x00,0x00,0x00);
+    kodak_dc210_command_complete( serialdev );
+    kodak_dc210_close_camera ( serialdev );
+  }
+
+  return( kodak_dc210_number_of_pictures() );
 }
 
 struct Image *kodak_dc210_get_thumbnail (int serialdev, int picNum) 
@@ -433,19 +440,44 @@ struct Image *kodak_dc210_get_picture (int picNum, int thumbnail)
 
 int kodak_dc210_delete_picture (int picNum) 
 {
+  int serialdev;
 
-  error_dialog("Why would you want to do that?.");
-  return (0);
+  if (serialdev = kodak_dc210_open_camera (serial_port))
+  {
+    picNum--;
+
+    kodak_dc210_send_command( serialdev,DC_ERASE_IMAGE_IN_CARD,0x00,(char)picNum,0x00,0x00);
+    kodak_dc210_command_complete( serialdev );
+    kodak_dc210_close_camera ( serialdev );
+  }
+
+  return (1);
 }
 
 
 struct Image *kodak_dc210_get_preview () 
 {
+  int numPicBefore;
+  int numPicAfter;
+  struct Image *im = NULL;
+ 
+  /* find out how many pictures are in the camera so we can 
+     make sure a picture was taken later */
+  numPicBefore = kodak_dc210_number_of_pictures();
 
-  fprintf(stderr,"No previews of pictures");
-  return(0);
+  /* take a picture -- it returns the picture number taken */
+  numPicAfter = kodak_dc210_take_picture();
+
+  /* if a picture was taken then get the picture from the camera and 
+     then delete it */
+  if (numPicBefore + 1 == numPicAfter)
+  {
+    im = kodak_dc210_get_picture (numPicAfter,0);
+    kodak_dc210_delete_picture (numPicAfter);
+  }
+
+  return(im);
 }
-
 
 int kodak_dc210_configure () 
 {

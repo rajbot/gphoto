@@ -199,7 +199,7 @@ void savepictodisk (int picNum, int thumbnail, char *prefix) {
 	 */
 
 	struct Image *im = NULL; 
-	char fname[1024], error[32], process[1024], confirm[1024];
+	char fname[1024], error[32], process[1024];
 
 	if ((im = (*Camera->get_picture)(picNum, thumbnail)) == 0) {
 		sprintf(error, "Could not save #%i", picNum);
@@ -207,15 +207,11 @@ void savepictodisk (int picNum, int thumbnail, char *prefix) {
 		return;
 	}
 	sprintf(fname, "%s.%s", prefix, im->image_type);
-	if (save_image(fname, im) == 0) {
-		sprintf(confirm, "File %s exists. Overwrite?", fname);
-		if (confirm_dialog(confirm)) {
-			remove(fname);
-			(void)save_image(fname, im);
-			if (post_process) {
-				sprintf(process, post_process_script, fname);
-				system(process);
-			}
+	if (confirm_overwrite(fname)) {
+		save_image(fname, im);
+		if (post_process) {
+			sprintf(process, post_process_script, fname);
+			system(process);
 		}
 	}
 	free_image(im);
@@ -244,7 +240,6 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 
 	GtkWidget *filesel, *label;
 	GtkWidget *entry, *hsep;
-	GSList *group;
 
 	if ((strcmp("tn", type) != 0) && (strcmp("in", type) != 0)) {
 		/* Get an output directory */
@@ -422,15 +417,13 @@ void port_dialog_update(GtkWidget *entry, GtkWidget *label) {
 
 void port_dialog() {
 
-	GtkWidget *dialog, *label, *button, *cbutton, *toggle;
+	GtkWidget *dialog, *label, *button, *cbutton;
 	GtkWidget *port0, *port1, *port2, *port3, *other, *ent_other;
 	GtkWidget *hbox, *vbox, *vseparator;
 	GtkWidget *combo, *description;
 	GSList *group;
-	GList *dlist, *list;
-	GtkObject *olist_item;
+	GList *list;
 
-	FILE *conf;
 	char serial_port_prefix[20], tempstring[20];
 	char *camera_selected;
 	int i=0;
@@ -780,7 +773,6 @@ void insert_thumbnail(struct ImageMembers *node) {
   struct ImageMembers *other=&Thumbnails;
   struct Image *im;
   double aspectRatio;
-  char info[1024];
   GString *tag;
 
 
@@ -882,8 +874,8 @@ void makeindex (int getthumbs) {
 	GtkStyle *style;
 	GtkWidget *vbox;
 
-	extern activate_button(GtkWidget *cur_button);
-	extern deactivate_button(GtkWidget *cur_button);
+	extern void activate_button(GtkWidget *cur_button);
+	extern void deactivate_button(GtkWidget *cur_button);
 
 	struct ImageMembers *node = &Thumbnails;
 
@@ -997,8 +989,8 @@ void getpics (char *pictype) {
 	int i=0;
 	int x=0, y=0;	
 
-	extern activate_button(GtkWidget *cur_button);
-        extern deactivate_button(GtkWidget *cur_button);
+	extern void activate_button(GtkWidget *cur_button);
+        extern void deactivate_button(GtkWidget *cur_button);
 
 	struct ImageMembers *node = &Thumbnails;
 	
@@ -1077,20 +1069,12 @@ void closepic () {
 
 void save_opened_image (int i, char *filename) {
 
-	FILE *f;
 	int x=0;
-	char confirm[1024];
 
 	struct ImageMembers *node = &Images;
 
-	if (f = fopen(filename, "r")) {
-		fclose(f);
-		sprintf(confirm, "File %s exists. Overwrite?", filename);
-		if (confirm_dialog(confirm))
-			remove (filename);
-		   else
-			return;
-	}
+	if (!confirm_overwrite(filename))
+		return;
 
 	while (x < i) {
 		node = node->next;
@@ -1107,26 +1091,39 @@ void save_opened_image (int i, char *filename) {
 	}
 }
 
+GtkWidget *save_dialog_filew;
+
 void save_dialog_update(GtkWidget *button, GtkWidget *label) {
 
-	if (GTK_TOGGLE_BUTTON(button)->active)
+	GList *child;
+
+	child = gtk_container_children(
+		GTK_CONTAINER(GTK_FILE_SELECTION(save_dialog_filew)->main_vbox));
+	/* get the dir/file list box children */
+	child = gtk_container_children(
+        	GTK_CONTAINER(child->next->next->data));
+
+	if (GTK_TOGGLE_BUTTON(button)->active) {
+        	gtk_widget_hide(GTK_WIDGET(child->next->data));
 		gtk_label_set_text(GTK_LABEL(label), 
-		"Save all opened images (enter the filename prefix below)");
-	   else
+		"Save all opened images (enter the filename prefix below)");}
+	   else {
+        	gtk_widget_show(GTK_WIDGET(child->next->data));
 		gtk_label_set_text(GTK_LABEL(label),"Save all opened images");
+	}
 }
 
 void save_dialog (GtkWidget *widget, gpointer data) {
 
-	GtkWidget *filew, *saveall_checkbutton;
+	GtkWidget *saveall_checkbutton;
 	int currentPic, x=0;
 	char filename[1024];
 
 	sprintf(filename, "%s/*.*", filesel_cwd);
 
-	filew = gtk_file_selection_new ("Save Image(s)...");
-	gtk_window_set_position (GTK_WINDOW (filew),GTK_WIN_POS_CENTER);
-        gtk_file_selection_set_filename(GTK_FILE_SELECTION(filew), 
+	save_dialog_filew = gtk_file_selection_new ("Save Image(s)...");
+	gtk_window_set_position (GTK_WINDOW (save_dialog_filew),GTK_WIN_POS_CENTER);
+        gtk_file_selection_set_filename(GTK_FILE_SELECTION(save_dialog_filew), 
 		filename);
 	saveall_checkbutton = gtk_check_button_new_with_label(
 		"Save all opened images");
@@ -1135,11 +1132,12 @@ void save_dialog (GtkWidget *widget, gpointer data) {
 		"clicked", GTK_SIGNAL_FUNC(save_dialog_update),
 		GTK_BIN(saveall_checkbutton)->child);
 	gtk_box_pack_start_defaults(
-		GTK_BOX(GTK_FILE_SELECTION(filew)->main_vbox),
+		GTK_BOX(GTK_FILE_SELECTION(save_dialog_filew)->main_vbox),
 		saveall_checkbutton);
 
-	if (wait_for_hide(filew, GTK_FILE_SELECTION(filew)->ok_button,
-	    GTK_FILE_SELECTION(filew)->cancel_button) == 0)
+	if (wait_for_hide(save_dialog_filew,
+	    GTK_FILE_SELECTION(save_dialog_filew)->ok_button,
+	    GTK_FILE_SELECTION(save_dialog_filew)->cancel_button) == 0)
 		return;
 
 	currentPic = gtk_notebook_current_page(GTK_NOTEBOOK(notebook));
@@ -1151,7 +1149,7 @@ void save_dialog (GtkWidget *widget, gpointer data) {
 	if (!GTK_TOGGLE_BUTTON(saveall_checkbutton)->active) {
 		save_opened_image(currentPic, 
 			gtk_file_selection_get_filename(
-			GTK_FILE_SELECTION(filew)));
+			GTK_FILE_SELECTION(save_dialog_filew)));
 		return;
 	}
 
@@ -1159,11 +1157,11 @@ void save_dialog (GtkWidget *widget, gpointer data) {
 	while (gtk_notebook_get_nth_page(GTK_NOTEBOOK(notebook),x)!=NULL){
 		sprintf(filename, "%s-%i.jpg",
 			gtk_file_selection_get_filename(
-			GTK_FILE_SELECTION(filew)), x);
+			GTK_FILE_SELECTION(save_dialog_filew)), x);
 		save_opened_image(x, filename);
 		x++;
 	}
-	gtk_widget_destroy(filew);
+	gtk_widget_destroy(save_dialog_filew);
 }
 
 void open_dialog (GtkWidget *widget, gpointer data) {
@@ -1299,6 +1297,8 @@ void color_dialog() {
 	int i=0,currentPic;
 	struct ImageMembers *node = &Images;
 
+	extern GtkWidget *img_edit_new(struct ImageMembers *n);
+
 	currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
 	if (currentPic == 0) {
 	  update_status("Can't modify the index colors.");
@@ -1365,7 +1365,6 @@ void resize_dialog_update(GtkWidget *entry) {
 void resize_dialog() {
 
 	int i=0, w, h, currentPic;
-	char size[10];
 	char *dimension;
 
 	GtkWidget *dialog, *rbutton, *button;

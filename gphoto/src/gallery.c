@@ -40,6 +40,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.17  1999/07/03 20:17:09  scottf
+ * rehashed the confirmation of overwrite to be more modular.
+ * fixed small gallery bugs. this is a good release candidate.
+ *
  * Revision 1.16  1999/07/02 19:53:29  scottf
  * fixing saveselectedtodisk bug
  *
@@ -186,7 +190,12 @@ void gallery_change_dir(GtkWidget *widget, GtkWidget *label) {
 
 void gallery_parse_tags(char *dest, char *source) {
 
+	/* Returns 0 if it could not create destination file.
+	 * Returns 1 if everything went OK.
+	 */
+
 	char fname[1024];
+
 	sprintf(fname,
 "sed 's/#GALLERY_NAME#/%s/; \
 s/#GALLERY_INDEX#/%s/; \
@@ -203,7 +212,6 @@ gallery_name, gallery_index, date, thumbnail, thumbnail_filename,
 thumbnail_number, picture, picture_filename, picture_number,
 picture_next, picture_previous, source, dest);
 
-/*	printf("%s", fname);*/
 	system(fname);
 }
 
@@ -216,7 +224,6 @@ void gallery_main() {
 	int i=0, j=0, num_selected = 0;
 	char outputdir[1024], theme[32];
 	char filename[1024], filename2[1024], cp[1024], error[32], statmsg[128];
-	char confirm[1024];
 	struct Image *im;
 
 	GList *dlist;
@@ -227,7 +234,6 @@ void gallery_main() {
 	GtkWidget *label, *dirlabel, *dirbutton, *hbox, *hseparator;
 
 	struct ImageMembers *node = &Thumbnails;
-	struct ImageMembers *node_image;
 
 	if (Thumbnails.next == NULL) {
 		error_dialog(
@@ -254,6 +260,7 @@ Then, re-run the HTML Gallery.");
 
 	dialog = gtk_dialog_new();
 	gtk_container_border_width(GTK_CONTAINER(dialog), 5);
+	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
 
 	hbox = gtk_hbox_new(FALSE, 5);
 	gtk_widget_show(hbox);
@@ -353,7 +360,6 @@ Please install/move gallery themes there.");
 		"View in \"netscape\" when finished");
 	gtk_widget_show(netscape);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), netscape, FALSE, FALSE,0);
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(netscape),TRUE);
 
 	obutton = gtk_button_new_with_label("Create");
 	gtk_widget_show(obutton);
@@ -370,12 +376,17 @@ Please install/move gallery themes there.");
 	gtk_widget_grab_default(obutton);
 	
 	/* wait until the dialog is closed */
-        if (wait_for_hide(dialog, obutton, cbutton) == 0)
+        if (wait_for_hide(dialog, obutton, cbutton) == 0) {
+		if (GTK_IS_OBJECT(dialog))
+			gtk_widget_destroy(dialog);
                 return;
+	}
 
 	dlist = GTK_LIST(list)->selection;
 	if (!dlist) {
 		error_dialog("You must select a theme!");
+		if (GTK_IS_OBJECT(dialog))
+			gtk_widget_destroy(dialog);
 		return;
 	}
 
@@ -402,14 +413,23 @@ Please install/move gallery themes there.");
 		    (strcmp(file->d_name, "thumbnail.html") != 0 ) &&
 		    (strcmp(file->d_name, ".") != 0 ) &&
 		    (strcmp(file->d_name, "..") != 0 )) {
-			sprintf(cp, "cp %s/%s %s", filename, file->d_name,
-						   outputdir);
-			system(cp);
+			sprintf(filename2, "%s%s", outputdir, file->d_name);
+			if (confirm_overwrite(filename2)) {
+				sprintf(cp, "cp %s/%s %s", filename, file->d_name,
+					outputdir);
+				system(cp);
+			}
 		}
 		file = readdir(dir);
 	}	
 	closedir(dir);
 	sprintf(filename, "%sindex.html", outputdir);	
+	if (!confirm_overwrite(filename)) {
+		if (GTK_IS_OBJECT(dialog))
+			gtk_widget_destroy(dialog);
+		return;
+	}
+
 	sprintf(cp, "echo \" \" > %s", filename);
 	system(cp);
 	sprintf(filename2,
@@ -420,8 +440,6 @@ Please install/move gallery themes there.");
 	system(cp);
 	node = &Thumbnails;
 	while (node->next != NULL) {
-		int loaded;	
-		int picnum;
 		node = node->next;
 		sprintf(filename, "%sindex.html", outputdir);	
 		if (GTK_TOGGLE_BUTTON(node->button)->active) {
@@ -449,14 +467,12 @@ Please install/move gallery themes there.");
 				sprintf(thumbnail_number, "%03i", i+1);
 				sprintf(filename2, "%s%s", outputdir,
 					thumbnail_filename);
-				if (save_image(filename2, im) == 0) {
-					sprintf(confirm, 
-				"File %s exists. Overwrite?", filename2);
-					if (confirm_dialog(confirm)) {
-						remove(filename2);
-						save_image(filename2, im);
-					}
-				}	
+				if (!confirm_overwrite(filename2)) {
+					if (GTK_IS_OBJECT(dialog))
+						gtk_widget_destroy(dialog);
+					return;
+				}
+				save_image(filename2, im);
 				free_image(im);
 			}
 			/* Get the current image */
@@ -465,7 +481,7 @@ Please install/move gallery themes there.");
 			
 			if ((im = (*Camera->get_picture)(j+1, 0))==0) {
 				sprintf(error, "Could not retrieve #%i", j+1);
-				error_dialog(error);	
+				error_dialog(error);
 				sprintf(picture, "Not Available");
 				sprintf(picture_filename, "");
 				sprintf(picture_number, "%03i", i+1);}
@@ -477,14 +493,12 @@ Please install/move gallery themes there.");
 				sprintf(picture_number, "%03i", i+1);
 				sprintf(filename2, "%s%s", outputdir,
 					picture_filename);
-				if (save_image(filename2, im) == 0) {
-					sprintf(confirm, 
-				"File %s exists. Overwrite?", filename2);
-					if (confirm_dialog(confirm)) {
-						remove(filename2);
-						save_image(filename2, im);
-					}
-				}	
+				if (!confirm_overwrite(filename2)) {
+					if (GTK_IS_OBJECT(dialog))
+						gtk_widget_destroy(dialog);
+					return;
+				}
+				save_image(filename2, im);
 				free_image(im);
 			}
 			if (i+1 == num_selected)
@@ -504,18 +518,24 @@ Please install/move gallery themes there.");
 				"/usr/local/share/gphoto/gallery/%s/thumbnail.html",
 				theme);
 			gallery_parse_tags(filename, filename2);
+
 			sprintf(cp, "echo \"</td>\" >> %s", filename);
 			system(cp);
 
 			sprintf(filename, "%spicture-%03i.html",
 				outputdir, i+1);
+			if (!confirm_overwrite(filename)) {
+				if (GTK_IS_OBJECT(dialog))
+					gtk_widget_destroy(dialog);
+				return;
+			}
+
 			sprintf(cp, "echo \" \" > %s", filename);
 			system(cp);
-		
 			sprintf(filename2,
 				"/usr/local/share/gphoto/gallery/%s/picture.html",
 				theme);
-				gallery_parse_tags(filename, filename2);
+			gallery_parse_tags(filename, filename2);
 			i++;
 		}
 		j++;
@@ -527,9 +547,13 @@ Please install/move gallery themes there.");
 		"/usr/local/share/gphoto/gallery/%s/index_bottom.html",
 		theme);			
 	gallery_parse_tags(filename, filename2);
-	if (GTK_TOGGLE_BUTTON(netscape)->active)
-		browse_gallery();
-	gtk_widget_destroy(dialog);
-	sprintf(statmsg, "Loaded file:%sindex.html in %s", filesel_cwd, BROWSER);
+	if (GTK_TOGGLE_BUTTON(netscape)->active) {
+		sprintf(statmsg, "Loaded file:%sindex.html in %s", filesel_cwd, BROWSER);
+		browse_gallery();}
+	   else {
+		sprintf(statmsg, "Gallery saved in: %s", outputdir);
+	}		
+	if (GTK_IS_OBJECT(dialog))
+		gtk_widget_destroy(dialog);
 	update_status(statmsg);
 }

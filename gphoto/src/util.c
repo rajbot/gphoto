@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <sys/dir.h>
 #include <dirent.h>
@@ -150,6 +151,24 @@ int confirm_dialog (char *message) {
 	return (retval);
 }
 
+int confirm_overwrite (char *filename) {
+
+	/* checks to see if a file exists. if it does,
+	 * prompt for confirmation.
+	 * returns 0 if not OK to overwrite file.
+	 * returns 1 if it is OK to overwrite file.
+	 */
+	FILE *f;
+	char confirm[1024];
+
+	if (f = fopen(filename, "r")) {
+		fclose(f);
+                sprintf(confirm, "File %s exists. Overwrite?", filename);
+                return (confirm_dialog(confirm));
+        }
+	return 1; /* File doesn't exist. OK to overwrite */
+}
+
 void ok_click (GtkWidget *dialog) {
 
         gtk_object_set_data(GTK_OBJECT(dialog), "button", "OK");
@@ -225,20 +244,10 @@ void free_image (struct Image *im) {
 		free (im);
 }
 
-int save_image (char *filename, struct Image *im) {
-
-	/* returns:
-	 *	0: image saved
-	 *	1: image not save (file exists)
-	 */
+void save_image (char *filename, struct Image *im) {
 
 	char errormsg[1024];
 	FILE *fp;
-
-	if (fp = fopen (filename, "r")) {
-		fclose(fp);
-		return 0;
-	}
 
 	if (fp = fopen (filename, "w"))
 	{
@@ -252,7 +261,6 @@ int save_image (char *filename, struct Image *im) {
  %s",filename,sys_errlist[errno]);
 		error_dialog(errormsg);
 	}
-	return 1;
 }
 
 void gtk_directory_selection_update(GtkWidget *entry, GtkWidget *dirsel) {
@@ -288,11 +296,13 @@ GtkWidget *gtk_directory_selection_new(char *title) {
 	GList *child;
 
 	dirsel = gtk_file_selection_new(title);
-
+	gtk_window_set_position (GTK_WINDOW (dirsel), GTK_WIN_POS_CENTER);
 	gtk_file_selection_set_filename(GTK_FILE_SELECTION(dirsel),
 		filesel_cwd);
         gtk_widget_hide(GTK_FILE_SELECTION(dirsel)->selection_entry);
         gtk_widget_hide(GTK_FILE_SELECTION(dirsel)->selection_text);
+
+	/* Hide the file selection */
         /* get the main vbox children */
         child = gtk_container_children(
                 GTK_CONTAINER(GTK_FILE_SELECTION(dirsel)->main_vbox));
@@ -303,13 +313,14 @@ GtkWidget *gtk_directory_selection_new(char *title) {
 
 	entry = gtk_entry_new();
 	gtk_widget_show(entry);
+	gtk_entry_set_text(GTK_ENTRY(entry), filesel_cwd);
 	gtk_signal_connect(GTK_OBJECT(entry), "changed",
 		GTK_SIGNAL_FUNC(gtk_directory_selection_update),
 		dirsel);
 	gtk_box_pack_start_defaults(GTK_BOX(
 		GTK_FILE_SELECTION(dirsel)->main_vbox), entry);
 	gtk_box_reorder_child(GTK_BOX(
-		GTK_FILE_SELECTION(dirsel)->main_vbox), entry, 5);
+		GTK_FILE_SELECTION(dirsel)->main_vbox), entry, 2);
 	gtk_widget_grab_focus(entry);
 	return(dirsel);
 }
@@ -322,7 +333,7 @@ GdkImlibImage *gdk_imlib_load_image_mem(char *image, int size) {
 	*/
 
 	FILE *fp;
-	char c[32], rm[48];
+	char c[32];
 	GdkImlibImage *imlibimage;
 
 	sprintf(c, "/tmp/gphoto_image_%i.jpg", utilcounter);
@@ -503,8 +514,6 @@ void execute_program (char *program, char *arg) {
 }
 
 void url_send_browser (char *url) {
-
-	char cl[1024];
 
 	execute_program(BROWSER, url);
 }

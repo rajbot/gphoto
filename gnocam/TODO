@@ -1,18 +1,32 @@
 
+HELP:
+-----
+- Do something like this:
+   gchar* helpfile;
+   
+   helpfile = gnome_help_file_find_file("gnocam", "index.html");
+
+   if (helpfile != NULL) {
+       gchar* url;
+       url = g_strconcat("file:", helpfile, NULL);
+       gnome_help_goto(NULL, url);
+       g_free(url);
+       g_free(helpfile);
+   } else {
+       gnome_error_dialog(_("Couldn't find the GnoCam manual!"));
+   }
+
 Icon, Logo:
 -----------
 - remain to be created.
 
 Drag & Drop:
 ------------
-- implement uploading
 - correctly implement drag (files/previews). Timeout issue?
 
 Else:
 -----
-- Camera properties not yet implemented.
-- Delete code is 2 times in callbacks.c. We should outsource the code. New file?
-- Save (...) should be implemented like save_as (...).
+- Camera properties not yet implemented properly.
 
 Threads:
 --------

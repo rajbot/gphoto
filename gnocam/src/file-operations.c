@@ -52,9 +52,6 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 		g_assert ((camera = gtk_object_get_data (GTK_OBJECT (button), "camera")) != NULL);
 		g_assert ((path = gtk_object_get_data (GTK_OBJECT (button), "path")) != NULL);
 		upload (camera, path, filename_user);
-
-		/* Clean up. */
-		gp_camera_unref (camera);
 	}
 
 	/* Clean up. */
@@ -88,7 +85,8 @@ upload (Camera* camera, gchar* path, gchar* filename)
 	GladeXML*		xml_fileselection;
 	GtkFileSelection*	fileselection;
 	GtkObject*		object;
-        gint			j, k;
+        gint			k;
+	glong			j;
         GnomeVFSURI*            uri;
         GnomeVFSHandle*         handle;
         GnomeVFSFileSize        bytes_read;
@@ -103,7 +101,7 @@ upload (Camera* camera, gchar* path, gchar* filename)
 
 		/* Read the data and upload the file. */
 		file = gp_file_new ();
-	        file->data = g_new (gchar, 1025);
+	        file->data = NULL;
 
 		/* Quick hack to get the filename excluding path. */
 		for (k = strlen (filename) - 1; k >= 0; k--) {
@@ -120,15 +118,21 @@ upload (Camera* camera, gchar* path, gchar* filename)
 	        } else {
 	                j = 0;
 	                while (TRUE) {
-	                        if ((result = gnome_vfs_read (handle, data, 1024, &bytes_read)) != GNOME_VFS_OK) break;
+				result = gnome_vfs_read (handle, data, 1024, &bytes_read);
+	                        if ((result != GNOME_VFS_OK) && (result != GNOME_VFS_ERROR_EOF)) break;
 	                        if (bytes_read == 0) break;
-	                        else if (bytes_read <= 1024) data [bytes_read] = '\0';
-	                        else g_assert_not_reached ();
-	                        for (k = 0; k < bytes_read; k++) file->data [k + j] = data [k];
-	                        file->size = j + bytes_read;
-	                        file->data = g_renew (gchar, file->data, j + 1024);
+				g_assert (bytes_read <= 1024);
+
+				/* Write the data into the CameraFile. */
+				file->data = g_renew (gchar, file->data, j + bytes_read + 1);
+	                        for (k = 0; k < bytes_read; k++) {
+					file->data [k + j] = data [k];
+				}
+				file->data [bytes_read] = '\0';
+				j+= bytes_read;
+	                        file->size = j;
 	                }
-	                if (result == GNOME_VFS_OK) camera_file_upload (camera, path, file);
+	                if ((result == GNOME_VFS_OK) || (result == GNOME_VFS_ERROR_EOF)) camera_file_upload (camera, path, file);
 			else {
 				dialog_information (_("An error occurred while trying to read file '%s' (%s)."), filename, gnome_vfs_result_to_string (result));
 	                        gp_file_free (file);
@@ -168,7 +172,6 @@ camera_file_upload (Camera* camera, gchar* path, CameraFile* file)
 
 	/* Clean up. */
         gp_file_free (file);
-	g_free (path);
 	gp_camera_unref (camera);
 }
 

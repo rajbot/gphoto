@@ -10,6 +10,16 @@
 #include "file-operations.h"
 #include "cameras.h"
 
+/**********************/
+/* External Variables */
+/**********************/
+
+extern GConfClient* 	client;
+
+/*************/
+/* Functions */
+/*************/
+
 void
 preview_refresh (Camera* camera)
 {
@@ -21,8 +31,7 @@ preview_refresh (Camera* camera)
 
 	g_assert (camera != NULL);
         g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
-
-        xml_preview = frontend_data->xml_preview;
+        g_assert ((xml_preview = frontend_data->xml_preview) != NULL);
 
         /* Prepare the image. */
         file = gp_file_new ();
@@ -45,13 +54,12 @@ preview_save (Camera* camera)
 {
 	CameraFile*		file;
 	frontend_data_t*	frontend_data;
-	GConfClient*		client;
 	GConfValue*		value;
 	gchar*			filename;
 
 	g_assert (camera != NULL);
         g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
-	g_assert ((client = gtk_object_get_data (GTK_OBJECT (glade_xml_get_widget (frontend_data->xml, "app")), "client")) != NULL);
+	g_assert (client != NULL);
 
         if ((file = gtk_object_get_data (GTK_OBJECT (glade_xml_get_widget (frontend_data->xml_preview, "app_preview")), "file"))) {
 		g_assert ((value = gconf_client_get (client, "/apps/" PACKAGE "/prefix", NULL)));

@@ -4,6 +4,7 @@
 #include <glade/glade.h>
 #include <gconf/gconf-client.h>
 #include <gphoto2.h>
+#include "gnocam.h"
 #include "gphoto-extensions.h"
 #include "cameras.h"
 #include "information.h"
@@ -23,12 +24,14 @@ GladeXML*	xml;
 
 int main (int argc, char *argv[]) 
 {
-	GError*		gerror = NULL;
-	GConfValue*	value = NULL;
-	guint 		notify_id_cameras, notify_id_magnification, notify_id_interpolation;
-	gchar*		prefix = NULL;
-	gchar*		home = NULL;
-	gchar*		message = NULL;
+	GError*			gerror = NULL;
+	GConfValue*		value = NULL;
+	guint 			notify_id_cameras, notify_id_magnification, notify_id_interpolation;
+	gchar*			prefix = NULL;
+	gchar*			home = NULL;
+	gchar*			message = NULL;
+	gint			i;
+	GtkTree*		tree;
 
 #ifdef GNOCAM_USES_THREADS
 	/* Init threads. */
@@ -113,6 +116,8 @@ int main (int argc, char *argv[])
 #endif
 
 	/* Clean up. */
+	g_assert ((tree = GTK_TREE (glade_xml_get_widget (xml, "tree_cameras"))) != NULL);
+	for (i = g_list_length (tree->children) - 1; i >= 0; i--) camera_tree_item_remove (g_list_nth_data (tree->children, i));
 	gp_exit ();
 	gconf_client_notify_remove (client, notify_id_cameras);
 	gconf_client_notify_remove (client, notify_id_magnification);

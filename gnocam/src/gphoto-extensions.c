@@ -331,17 +331,18 @@ gp_camera_new_by_description (gchar* description)
 		g_free (port);
 		return (NULL);
 	}
+	g_free (model);
 	
 	/* Initialize the camera. */
 	if (gp_camera_init (camera, &port_info) == GP_ERROR) {
 		gnome_app_error (app, _("Could not initialize camera!"));
 		g_free (name);
-		g_free (model);
 		g_free (port);
 //FIXME: Why crashes the whole thing when initialization failed and I free the camera?
 //		gp_camera_free (camera);
 		return (NULL);
 	}
+	g_free (port);
 
 	/* Store our data. */
 	frontend_data = g_new (frontend_data_t, 1);
@@ -352,10 +353,6 @@ gp_camera_new_by_description (gchar* description)
 	frontend_data->xml_properties = NULL;
 	frontend_data->xml_preview = NULL;
 	camera->frontend_data = frontend_data;
-
-	/* Clean up. */
-	g_free (model);
-	g_free (port);
 
 	return (camera);
 }

@@ -1073,6 +1073,7 @@
 	      <last_modification_time>Thu, 07 Sep 2000 13:58:28 GMT</last_modification_time>
 	    </signal>
 	    <label>Add</label>
+	    <relief>GTK_RELIEF_NORMAL</relief>
 	  </widget>
 
 	  <widget>
@@ -1087,6 +1088,7 @@
 	      <last_modification_time>Thu, 07 Sep 2000 13:58:34 GMT</last_modification_time>
 	    </signal>
 	    <label>Update</label>
+	    <relief>GTK_RELIEF_NORMAL</relief>
 	  </widget>
 
 	  <widget>
@@ -1101,6 +1103,7 @@
 	      <last_modification_time>Thu, 07 Sep 2000 13:58:41 GMT</last_modification_time>
 	    </signal>
 	    <label>Delete</label>
+	    <relief>GTK_RELIEF_NORMAL</relief>
 	  </widget>
 	</widget>
       </widget>
@@ -1397,6 +1400,7 @@ Hyper
       <last_modification_time>Mon, 02 Oct 2000 20:41:42 GMT</last_modification_time>
     </signal>
     <stock_button>GNOME_STOCK_BUTTON_OK</stock_button>
+    <relief>GTK_RELIEF_NORMAL</relief>
   </widget>
 
   <widget>
@@ -1411,6 +1415,7 @@ Hyper
       <last_modification_time>Mon, 02 Oct 2000 20:41:51 GMT</last_modification_time>
     </signal>
     <stock_button>GNOME_STOCK_BUTTON_CANCEL</stock_button>
+    <relief>GTK_RELIEF_NORMAL</relief>
   </widget>
 </widget>
 
@@ -1686,11 +1691,11 @@ Hyper
 
 	    <widget>
 	      <class>GtkPixmapMenuItem</class>
-	      <name>exit1</name>
+	      <name>app_preview_exit</name>
 	      <signal>
 		<name>activate</name>
-		<handler>gtk_main_quit</handler>
-		<last_modification_time>Wed, 04 Oct 2000 12:01:43 GMT</last_modification_time>
+		<handler>on_app_preview_exit_activate</handler>
+		<last_modification_time>Wed, 11 Oct 2000 10:30:22 GMT</last_modification_time>
 	      </signal>
 	      <stock_item>GNOMEUIINFO_MENU_EXIT_ITEM</stock_item>
 	    </widget>

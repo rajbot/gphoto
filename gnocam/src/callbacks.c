@@ -57,6 +57,7 @@ void on_camera_tree_popup_folder_upload_file_activate		(GtkMenuItem* menuitem, g
 void on_duration_reply (gchar *string, gpointer user_data);
 
 void on_app_preview_close_activate 	(GtkMenuItem* menuitem, gpointer user_data);
+void on_app_preview_exit_activate 	(GtkMenuItem* menuitem, gpointer user_data);
 void on_app_preview_save_activate 	(GtkMenuItem* menuitem, gpointer user_data);
 void on_app_preview_save_as_activate 	(GtkMenuItem* menuitem, gpointer user_data);
 void on_app_preview_refresh_activate 	(GtkMenuItem* menuitem, gpointer user_data);
@@ -280,9 +281,6 @@ on_tree_item_camera_button_press_event (GtkWidget *widget, GdkEventButton *event
 
                 /* Pop up the dialog. */
                 gtk_menu_popup (GTK_MENU (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera")), NULL, NULL, NULL, NULL, event->button, event->time);
-
-                /* Reference the camera. */
-                gp_camera_ref (camera);
 
                 return (TRUE);
 
@@ -515,6 +513,9 @@ on_properties_activate (GtkMenuItem* menuitem, gpointer user_data)
 	g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
 
 	if (!(frontend_data->xml_properties)) {
+
+                /* Reference the camera. */
+                gp_camera_ref (camera);
 	
 	        /* Get the camera properties from the backend. */
 	        if (gp_camera_config (camera) != GP_OK) {
@@ -549,6 +550,7 @@ on_capture_preview_activate (GtkMenuItem* menuitem, gpointer user_data)
 		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_save")), "camera", camera);
 		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_save_as")), "camera", camera);
 		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_close")), "camera", camera);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_exit")), "camera", camera);
 		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_button_refresh")), "camera", camera);
 		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_button_save")), "camera", camera);
 		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_button_save_as")), "camera", camera);
@@ -639,6 +641,18 @@ on_app_preview_close_activate (GtkMenuItem* menuitem, gpointer user_data)
 	gtk_widget_destroy (glade_xml_get_widget (frontend_data->xml_preview, "app_preview"));
 	frontend_data->xml_preview = NULL;
 	gp_camera_unref (camera);
+}
+
+void
+on_app_preview_exit_activate (GtkMenuItem* menuitem, gpointer user_data)
+{
+        Camera*                 camera;
+
+	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (menuitem), "camera")) != NULL);
+
+	/* Clean up. */
+	gp_camera_unref (camera);
+	gtk_main_quit ();
 }
 
 void

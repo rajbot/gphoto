@@ -40,6 +40,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.15  1999/07/01 22:26:22  scottf
+ * fixed up the html gallery dialog
+ * fixed up the live Camera dialog
+ *
  * Revision 1.14  1999/07/01 20:02:05  scottf
  * added several misc things
  *
@@ -245,12 +249,10 @@ Then, re-run the HTML Gallery.");
 	}
 
 	dialog = gtk_dialog_new();
-	gtk_widget_set_usize(dialog, 300, 300);
 	gtk_container_border_width(GTK_CONTAINER(dialog), 5);
 
 	hbox = gtk_hbox_new(FALSE, 5);
 	gtk_widget_show(hbox);
-	gtk_widget_set_usize(hbox, 390, 25);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
 		FALSE, FALSE, 0);
 
@@ -264,14 +266,12 @@ Then, re-run the HTML Gallery.");
 
 	hseparator = gtk_hseparator_new();
 	gtk_widget_show(hseparator);
-	gtk_widget_set_usize(hseparator, 390, 5);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hseparator,
 		FALSE, FALSE, 0);
 
 	label = gtk_label_new("Theme:");
 	gtk_widget_show(label);
 	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
-	gtk_widget_set_usize(label, 390, 25);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
 		FALSE, FALSE, 0);
 
@@ -306,24 +306,25 @@ Please install/move gallery themes there.");
 		file = readdir(dir);
 	}
 
+	hbox = gtk_hbox_new(FALSE, 0);
+	gtk_widget_show(hbox);
+	gtk_widget_set_usize(hbox, 400, 200);
+	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),hbox);
+
         scrwin = gtk_scrolled_window_new(NULL, NULL);
         gtk_widget_show(scrwin);
         gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW(scrwin), list);
         gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(index_window),
                                         GTK_POLICY_AUTOMATIC,
                                         GTK_POLICY_AUTOMATIC);
-	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-		scrwin);
+	gtk_box_pack_start_defaults(GTK_BOX(hbox),scrwin);
 
 	hseparator = gtk_hseparator_new();
 	gtk_widget_show(hseparator);
-	gtk_widget_set_usize(hseparator, 390, 5);
-	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hseparator,
-		FALSE, FALSE, 0);
+	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hseparator);
 
 	hbox = gtk_hbox_new(FALSE, 5);
 	gtk_widget_show(hbox);
-	gtk_widget_set_usize(hbox, 390, 25);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
 		FALSE, FALSE, 0);	
 
@@ -347,8 +348,7 @@ Please install/move gallery themes there.");
 	netscape = gtk_check_button_new_with_label(
 		"View in \"netscape\" when finished");
 	gtk_widget_show(netscape);
-	gtk_box_pack_start_defaults(
-		GTK_BOX(GTK_DIALOG(dialog)->vbox), netscape);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), netscape, FALSE, FALSE,0);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(netscape),TRUE);
 
 	obutton = gtk_button_new_with_label("Create");

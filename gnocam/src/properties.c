@@ -18,12 +18,9 @@ GtkWindow*	main_window;
 /**************/
 
 void on_entry_changed (GtkEditable *editable, gpointer user_data);
-void on_adjustment_value_changed (GtkAdjustment *adjustment, gpointer user_data);
 void on_radiobutton_toggled (GtkToggleButton *togglebutton, gpointer user_data);
 void on_properties_apply (GnomePropertyBox *propertybox, gint arg, gpointer user_data);
 gint on_properties_close (GnomeDialog *dialog, gpointer user_data);
-
-void on_date_changed (GnomeDateEdit* gnomedateedit, gpointer user_data);
 
 gboolean setting_get (GnomePropertyBox *propertybox, CameraSetting *setting, CameraWidget *camera_widget);
 void page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget);
@@ -33,23 +30,12 @@ GtkWidget *page_new (GnomePropertyBox *propertybox, CameraWidget *camera_widget)
 /* Callbacks                                                                  */
 /******************************************************************************/
 
-void 
-on_date_changed (GnomeDateEdit* gnomedateedit, gpointer user_data)
-{
-	gnome_property_box_changed (GNOME_PROPERTY_BOX (gtk_object_get_data (GTK_OBJECT (gnomedateedit), "propertybox")));
-}
-
 void
 on_entry_changed (GtkEditable *editable, gpointer user_data)
 {
         gnome_property_box_changed (GNOME_PROPERTY_BOX (gtk_object_get_data (GTK_OBJECT (editable), "propertybox")));
 }
 
-void
-on_adjustment_value_changed (GtkAdjustment *adjustment, gpointer user_data)
-{
-	gnome_property_box_changed (GNOME_PROPERTY_BOX (gtk_object_get_data (GTK_OBJECT (adjustment), "propertybox")));
-}
 void
 on_radiobutton_toggled (GtkToggleButton *togglebutton, gpointer user_data)
 {
@@ -215,7 +201,6 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 		widget = gtk_hscale_new (adjustment);
 		gtk_range_set_update_policy (GTK_RANGE (widget), GTK_UPDATE_DISCONTINUOUS);
 		gtk_container_add (GTK_CONTAINER (frame), widget);
-		gtk_signal_connect_object (GTK_OBJECT (adjustment), "value_changed", GTK_SIGNAL_FUNC (on_adjustment_value_changed), (gpointer) adjustment);
 		gtk_object_set_data (GTK_OBJECT (adjustment), "propertybox", propertybox);
 		gtk_object_set_data (GTK_OBJECT (propertybox), gp_widget_label (camera_widget), widget);
 		break;
@@ -273,8 +258,6 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 //		gtk_container_add (GTK_CONTAINER (hbox), widget);
 		widget = gnome_date_edit_new ((time_t) i, TRUE, TRUE);
 		gtk_container_add (GTK_CONTAINER (hbox), widget);
-		gtk_signal_connect_object (GTK_OBJECT (widget), "date_changed", GTK_SIGNAL_FUNC (on_date_changed), (gpointer) widget);
-		gtk_signal_connect_object (GTK_OBJECT (widget), "time_changed", GTK_SIGNAL_FUNC (on_date_changed), (gpointer) widget);
 		gtk_object_set_data (GTK_OBJECT (widget), "propertybox", propertybox);
 		gtk_object_set_data (GTK_OBJECT (propertybox), gp_widget_label (camera_widget), widget);
 		break;

@@ -339,10 +339,9 @@ camera_tree_item_remove (GtkTreeItem* item)
 	gnome_vfs_uri_unref (gtk_object_get_data (GTK_OBJECT (item), "uri"));
 
 	/* Unref the component. */
-	if ((component = gtk_object_get_data (GTK_OBJECT (item), "component"))) {
-		gp_camera_unref (gtk_object_get_data (GTK_OBJECT (component), "camera"));
-	}
+	if ((component = gtk_object_get_data (GTK_OBJECT (item), "component"))) bonobo_object_unref (BONOBO_OBJECT (component));
 
+	/* Unref the configuration windows. */
 	if ((window = gtk_object_get_data (GTK_OBJECT (item), "window_camera"))) gp_widget_unref (window);
 	if ((window = gtk_object_get_data (GTK_OBJECT (item), "window_folder"))) gp_widget_unref (window);
 	if ((window = gtk_object_get_data (GTK_OBJECT (item), "window_file"))) gp_widget_unref (window);
@@ -613,7 +612,8 @@ void
 camera_tree_item_popup_create (GtkTreeItem* item)
 {
 	Camera*			camera;
-	CameraWidget*		window = NULL;
+	CameraWidget*		window_camera = NULL;
+	CameraWidget*		window_file = NULL;
 	CameraWidget*		window_folder = NULL;
         CORBA_Environment       ev;
         xmlDocPtr               doc;
@@ -624,24 +624,27 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 	GnomeVFSURI*		uri;
 	BonoboUIComponent*	component;
 	GtkWidget*		menu = NULL;
+	gchar*			file;
+	gchar*			folder;
 
 	g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (item), "uri"));
 	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
+
+	folder = gnome_vfs_uri_extract_dirname (uri);
+	file = (gchar*) gnome_vfs_uri_get_basename (uri);
 
         /* Create the component. */
         component = bonobo_ui_component_new_default ();
         bonobo_ui_component_set_container (component, corba_container);
         gtk_object_set_data (GTK_OBJECT (item), "component", component);
-        gtk_object_set_data (GTK_OBJECT (component), "camera", camera);
-        gp_camera_ref (camera);
 
         /* Prepare the popup. */
         doc = xmlNewDoc ("1.0");
         ns = xmlNewGlobalNs (doc, "xxx", "xxx");
         xmlDocSetRootElement (doc, node = xmlNewNode (ns, "Root"));
         xmlAddChild (node, command = xmlNewNode (ns, "commands"));
-        xmlAddChild (node, node_child = xmlNewNode (ns, "popups"));
-        xmlAddChild (node_child, node = xmlNewNode (ns, "popup"));
+	xmlAddChild (node, node_child = xmlNewNode (ns, "popups"));
+        xmlAddChild (node_child, node = xmlNewNode (ns, "Popup"));
         tmp = g_strdup_printf ("%i", counter);
         xmlSetProp (node, "name", tmp);
         g_free (tmp);
@@ -650,15 +653,13 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 	if (gtk_object_get_data (GTK_OBJECT (item), "file")) {
 
 	        /* File configuration? */
-	        tmp = gnome_vfs_uri_extract_dirname (uri);
-	        if ((result = gp_camera_file_config_get (camera, &window, tmp, (gchar*) gnome_vfs_uri_get_basename (uri))) == GP_OK) {
+	        if ((result = gp_camera_file_config_get (camera, &window_file, folder, file)) == GP_OK) {
 	                xmlAddChild (node, node_child = xmlNewNode (ns, "submenu"));
 	                xmlSetProp (node_child, "name", "File Configuration");
 	                xmlSetProp (node_child, "_label", "File Configuration");
-	                gp_widget_to_xml (component, window, window, node_child, command, ns);
+			popup_prepare (component, window_file, node_child, command, ns);
 	                xmlAddChild (node, xmlNewNode (ns, "separator"));
 	        }
-	        g_free (tmp);
 	
 	        /* Save preview? */
 	        if (camera->abilities->file_preview) {
@@ -707,11 +708,11 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 		if (strcmp (gnome_vfs_uri_get_path (uri), "/") == 0) {
 
 	                /* Camera configuration? */
-	                if ((result = gp_camera_config_get (camera, &window)) == GP_OK) {
+	                if ((result = gp_camera_config_get (camera, &window_camera)) == GP_OK) {
 	                        xmlAddChild (node, node_child = xmlNewNode (ns, "submenu"));
 	                        xmlSetProp (node_child, "name", "Camera Configuration");
 	                        xmlSetProp (node_child, "_label", "Camera Configuration");
-	                        gp_widget_to_xml (component, window, window, node_child, command, ns);
+	                        popup_prepare (component, window_camera, node_child, command, ns);
 	                }
 	
 	                /* Manual. */
@@ -758,7 +759,7 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 	                xmlAddChild (node, node_child = xmlNewNode (ns, "submenu"));
 	                xmlSetProp (node_child, "name", "Folder Configuration");
 	                xmlSetProp (node_child, "_label", "Folder Configuration");
-	                gp_widget_to_xml (component, window_folder, window_folder, node_child, command, ns);
+	                popup_prepare (component, window_folder, node_child, command, ns);
         	        xmlAddChild (node, xmlNewNode (ns, "separator"));
 	        }
 	
@@ -794,8 +795,21 @@ camera_tree_item_popup_create (GtkTreeItem* item)
                 tmp = g_strdup_printf ("/popups/%i", counter);
                 bonobo_window_add_popup (BONOBO_WINDOW (main_window), GTK_MENU (menu), tmp);
                 g_free (tmp);
-                if (window) ui_set_values_from_widget (component, window, window);
-                if (window_folder) ui_set_values_from_widget (component, window_folder, window_folder);
+                if (window_camera) {
+			tmp = g_strdup_printf ("/popups/%i/Camera Configuration", counter);
+			popup_fill (item, tmp, window_camera, window_camera, TRUE);
+			g_free (tmp);
+		}
+                if (window_folder) {
+			tmp = g_strdup_printf ("/popups/%i/Folder Configuration", counter);
+			popup_fill (item, tmp, window_folder, window_folder, FALSE);
+			g_free (tmp);
+		}
+		if (window_file) {
+			tmp = g_strdup_printf ("/popups/%i/File Configuration", counter);
+			popup_fill (item, tmp, window_file, window_file, FALSE);
+			g_free (tmp);
+		}
                 counter++;
         }
 
@@ -812,10 +826,14 @@ camera_tree_item_popup_create (GtkTreeItem* item)
         /* Store some data. */
         gtk_object_set_data (GTK_OBJECT (item), "menu", menu);
 	gtk_object_set_data (GTK_OBJECT (item), "window_folder", window_folder);
-	gtk_object_set_data (GTK_OBJECT (item), "window", window);
+	gtk_object_set_data (GTK_OBJECT (item), "window_camera", window_camera);
+	gtk_object_set_data (GTK_OBJECT (item), "window_file", window_file);
 
 	/* To make sure the _user_ toggled... */
 	gtk_object_set_data (GTK_OBJECT (component), "done", GINT_TO_POINTER (1));
+
+	/* Clean up. */
+	g_free (folder);
 }
 
 

@@ -29,7 +29,8 @@
 * Preprocessor Defines
 ==============================================================================*/
 
-#define HIGH_HPBS    8192
+#define HPBS_MIN     512
+#define HPBS_MAX     16384
 
 /*==============================================================================
 * Type definitions
@@ -133,7 +134,8 @@ static char *kdc240_description(void);
 
 static void kdc240_open_card(void);
 static void kdc240_close_card(void);
-static void kdc240_set_hpbs(void);
+static int kdc240_get_reasonable_hpbs(void);
+static void kdc240_set_hpbs(int);
 
 static unsigned char *kdc240_create_filename(unsigned char *,
    unsigned long, unsigned long);
@@ -144,6 +146,8 @@ static unsigned char *kdc240_create_filename(unsigned char *,
 STATE_MACHINE_INSTANCE *machine;
 static PICTURE_TYPE *picture_index = NULL;
 static int number_of_pictures = 0;
+static int hpbs = HPBS_MIN;
+static int num_errors = 0;
 
 /*==============================================================================
 * Constants
@@ -253,7 +257,7 @@ kdc240_get_picture
    {
       (int)&buffer,
       58,  (void *)kdc240_get_picture_tx_filename,
-      HIGH_HPBS, (void *)kdc240_get_picture_read
+      hpbs, (void *)kdc240_get_picture_read
    };
 
    /* If we haven't retrieved the index yet, do that first. */
@@ -273,6 +277,8 @@ kdc240_get_picture
 
    kdc240_open_card();
 
+   kdc240_set_hpbs(hpbs);
+
    /* Get picture information if we haven't already */
    if (!picture_index[picture].valid)
    {
@@ -289,8 +295,6 @@ kdc240_get_picture
    buffer.rx_buffer = NULL;
    buffer.filename = kdc240_create_filename(picture_index[picture].filename,
       0, 0);
-
-   kdc240_set_hpbs();
 
    if (thumbnail)
    {
@@ -314,11 +318,23 @@ kdc240_get_picture
       image->image = buffer.rx_buffer;
       strcpy(image->image_type, "jpg");
       image->image_info_size = 0;
+
+      if (num_errors > 0)
+      {
+         num_errors--;
+      }
    }
-   else if (buffer.rx_buffer)
+   else
    {
-      free(buffer.rx_buffer);
+      if (buffer.rx_buffer)
+      {
+         free(buffer.rx_buffer);
+      }
+
+      num_errors++;
    }
+
+   kdc240_set_hpbs(kdc240_get_reasonable_hpbs());
 
    return image;
 }
@@ -355,9 +371,9 @@ kdc240_get_picture_read
 
    bytes_to_copy = buffer->size - buffer->rx_bytes;
 
-   if (bytes_to_copy > HIGH_HPBS)
+   if (bytes_to_copy > hpbs)
    {
-      bytes_to_copy = HIGH_HPBS;
+      bytes_to_copy = hpbs;
       retval = CC_RESPONSE_MORE_PACKETS;
    }
    else
@@ -785,13 +801,48 @@ kdc240_close_card
    kdc240_command(KODAK_CAMERA_DC240, CMD_CLOSE_CARD);
 }
 
-static void
-kdc240_set_hpbs
+static int
+kdc240_get_reasonable_hpbs
 (
    void
 )
 {
-   kdc240_command(KODAK_CAMERA_DC240, CMD_SET_HPBS, HIGH_HPBS + 2);
+   if (hpbs == HPBS_MIN && num_errors > 0)
+   {
+      /* Do nothing, we can't lower HPBS any more */
+   }
+   else if (num_errors > 0)
+   {
+      /* Lower HPBS */
+      hpbs = (HPBS_MIN + hpbs) >> 1;
+   }
+   else
+   {
+      /* Raise HPBS */
+      hpbs = (HPBS_MAX + hpbs) >> 1;
+   }
+
+   /* Error check the resulting HPBS before sending to camera */
+   if (hpbs > HPBS_MAX)
+   {
+      hpbs = HPBS_MAX;
+   }
+   else if (hpbs < HPBS_MIN)
+   {
+      hpbs = HPBS_MIN;
+   }
+
+   return hpbs;
+}
+
+static void
+kdc240_set_hpbs
+(
+   int new_hpbs
+)
+{
+   kdc240_command(KODAK_CAMERA_DC240, CMD_SET_HPBS, new_hpbs + 2);
+   printf ("kdc240_set_hpbs: hpbs set to %d\n", new_hpbs);
 }
 
 static unsigned char *

@@ -174,6 +174,13 @@ on_shortcut_bar_item_selected (EShortcutBar* shortcut_bar, GdkEvent* event, gint
         gchar*          	url = NULL;
         gchar*          	name = NULL;
 
+	if (item_num < 0)
+		return;
+
+	if (event)
+		if (event->button.button != 1)
+			return;
+
 	m = GNOCAM_MAIN (user_data);
 
         /* Get information about the item. */
@@ -219,7 +226,7 @@ on_preferences_activate (BonoboUIComponent* component, gpointer user_data, const
 
 	m = GNOCAM_MAIN (user_data);
 	
-	gtk_widget_show (gnocam_preferences_new (GTK_WINDOW (m)));
+	gtk_widget_show (gnocam_preferences_new (GTK_WINDOW (m), m->priv->client));
 }
 
 static void

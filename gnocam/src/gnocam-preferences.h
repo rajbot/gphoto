@@ -3,6 +3,7 @@
 #define _GNOCAM_PREFERENCES_H_
 
 #include <gnome.h>
+#include <gconf/gconf-client.h>
 
 BEGIN_GNOME_DECLS
 
@@ -29,7 +30,7 @@ struct _GnoCamPreferencesClass
 };
 
 GtkType    gnocam_preferences_get_type (void);
-GtkWidget *gnocam_preferences_new      (GtkWindow* parent);
+GtkWidget *gnocam_preferences_new      (GtkWindow *parent, GConfClient *client);
 
 END_GNOME_DECLS
 

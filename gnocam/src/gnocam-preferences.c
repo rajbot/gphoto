@@ -2,17 +2,16 @@
 #include <config.h>
 #endif
 
-#include <gphoto2.h>
-
-#include "gnocam-preferences.h"
+#include <gnocam-preferences.h>
 
 #include <gal/util/e-util.h>
-#include <bonobo.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
 #define PARENT_TYPE GNOME_TYPE_DIALOG
 static GnomeDialogClass* parent_class = NULL;
 
 struct _GnoCamPreferencesPrivate {
+	GConfClient 	*client;
 };
 
 
@@ -28,6 +27,12 @@ on_control_center_clicked (GtkButton* button, gpointer user_data)
 	if (gnome_execute_async (NULL, 1, argv) < 0) g_warning (_("Cannot execute camera-capplet!"));
 }
 
+static void
+on_prefix_changed (GtkEditable *editable, GnoCamPreferences *preferences)
+{
+	gconf_client_set_string (preferences->priv->client, "/apps/" PACKAGE "/prefix", gtk_entry_get_text (GTK_ENTRY (editable)), NULL);
+}
+
 /*************************/
 /* Gnome-Dialog specific */
 /*************************/
@@ -38,6 +43,8 @@ gnocam_preferences_destroy (GtkObject* object)
 	GnoCamPreferences*	preferences;
 
 	preferences = GNOCAM_PREFERENCES (object);
+
+	gtk_object_unref (GTK_OBJECT (preferences->priv->client));
 
 	g_free (preferences->priv);
 	preferences->priv = NULL;
@@ -63,7 +70,7 @@ gnocam_preferences_init (GnoCamPreferences* preferences)
 }
 
 GtkWidget*
-gnocam_preferences_new (GtkWindow* window)
+gnocam_preferences_new (GtkWindow* window, GConfClient *client)
 {
 	GdkPixbuf*		pixbuf;
 	GdkPixmap*		pixmap = NULL;
@@ -77,8 +84,13 @@ gnocam_preferences_new (GtkWindow* window)
 	GtkWidget*		notebook;
 	GtkWidget*		button;
 	const gchar*		buttons [] = {GNOME_STOCK_BUTTON_OK, NULL};
+	gchar*			tmp;
 
 	new = gtk_type_new (GNOCAM_TYPE_PREFERENCES);
+
+	new->priv->client = client;
+	gtk_object_ref (GTK_OBJECT (client));
+
 	gnome_dialog_constructv (GNOME_DIALOG (new), _(PACKAGE " - Preferences"), buttons);
 	gnome_dialog_set_close (GNOME_DIALOG (new), TRUE);
 	gnome_dialog_set_parent (GNOME_DIALOG (new), window);
@@ -97,9 +109,12 @@ gnocam_preferences_new (GtkWindow* window)
         gtk_widget_show (vbox = gtk_vbox_new (FALSE, 0));
         gtk_container_set_border_width (GTK_CONTAINER (vbox), 10);
         gtk_container_add (GTK_CONTAINER (frame), vbox);
-        gtk_widget_show (widget = bonobo_widget_new_control ("config:/apps/" PACKAGE "/prefix", NULL));
-        bonobo_control_frame_control_activate (bonobo_widget_get_control_frame (BONOBO_WIDGET (widget)));
+	gtk_widget_show (widget = gtk_entry_new ());
         gtk_container_add (GTK_CONTAINER (vbox), widget);
+	tmp = gconf_client_get_string (client, "/apps/" PACKAGE "/prefix", NULL);
+	gtk_entry_set_text (GTK_ENTRY (widget), tmp);
+	g_free (tmp);
+	gtk_signal_connect (GTK_OBJECT (widget), "changed", GTK_SIGNAL_FUNC (on_prefix_changed), new);
 
 	/* Create the page for GNOME settings */
 	gtk_widget_show (hbox = gtk_hbox_new (FALSE, 10));

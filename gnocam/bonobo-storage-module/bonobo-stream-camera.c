@@ -49,8 +49,23 @@ static BonoboStreamClass *bonobo_stream_camera_parent_class;
 static Bonobo_StorageInfo *
 camera_get_info (BonoboStream *stream, const Bonobo_StorageInfoFields mask, CORBA_Environment *ev)
 {
-	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
-	return CORBA_OBJECT_NIL;
+	BonoboStreamCamera *s = BONOBO_STREAM_CAMERA (stream);
+	Bonobo_StorageInfo *info;
+
+	g_return_val_if_fail (s->file != NULL, CORBA_OBJECT_NIL);
+	
+	if (mask & ~(Bonobo_FIELD_CONTENT_TYPE | Bonobo_FIELD_SIZE | Bonobo_FIELD_TYPE)) {
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL); 
+		return CORBA_OBJECT_NIL; 
+	}
+
+	info = Bonobo_StorageInfo__alloc ();
+	info->size = s->file->size;
+	info->type = Bonobo_STORAGE_TYPE_REGULAR;
+	info->name = CORBA_string_dup (s->file->name);
+	info->content_type = CORBA_string_dup (s->file->type);
+
+	return (info);
 }
 
 static void

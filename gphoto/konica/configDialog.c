@@ -84,10 +84,17 @@ typedef enum
 static char *PortLabel[] = 
 {
    "Autodetect",
+#ifdef __NetBSD__
+   "/dev/tty00",
+   "/dev/tty01",
+   "/dev/tty02",
+   "/dev/tty03"
+#else
    "/dev/ttyS0",
    "/dev/ttyS1",
    "/dev/ttyS2",
    "/dev/ttyS3"
+#endif
 };
 /*---------------------------------------------------------------------*
  *                                                                     *

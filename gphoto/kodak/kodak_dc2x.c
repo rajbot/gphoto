@@ -31,7 +31,11 @@ int kodak_dc2x_open_camera() {
   
   /* Open the camera for reading/writing */
 
+#ifdef __NetBSD__
+  char *serial_port = "/dev/tty00"; 
+#else
   char *serial_port = "/dev/ttyS0"; 
+#endif
  
   int tfd;
 

@@ -79,7 +79,11 @@
 #define WHITEBAL      packet.packet[32]
 #define PICNUM        packet.packet+0xf9
 
+#ifdef __NetBSD__
+#define DEFAULT_PORT	   "/dev/tty00"
+#else
 #define DEFAULT_PORT	   "/dev/ttyS0"
+#endif
 #define DEFAULT_SPEED   "57600"
 #define DEFAULT_PACING  "1"
 #define DEFAULT_TRACE   "Off"

@@ -84,7 +84,7 @@ int canon_serial_init(const char *devname)
     newtio.c_cflag = (newtio.c_cflag & ~CSIZE) | CS8;
 
     /* Set into raw, no echo mode */
-    #ifdef __FreeBSD__
+    #if defined(__FreeBSD__) || defined(__NetBSD__)
     newtio.c_iflag &= ~(IGNBRK | IGNCR | INLCR | ICRNL | 
 			IXANY | IXON | IXOFF | INPCK | ISTRIP);
     #else

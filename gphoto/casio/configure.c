@@ -225,7 +225,7 @@ create_casioConfigDlg ()
   gtk_box_pack_start (GTK_BOX (vbox2), normalSize, FALSE, FALSE, 0);
   gtk_signal_connect (GTK_OBJECT (normalSize), "pressed",
                       GTK_SIGNAL_FUNC (setSize),
-                      0);
+                      (gpointer) 0);
 
   doubleSize = gtk_radio_button_new_with_label (Size_group, "640 x 480");
   Size_group = gtk_radio_button_group (GTK_RADIO_BUTTON (doubleSize));
@@ -235,7 +235,7 @@ create_casioConfigDlg ()
   gtk_box_pack_start (GTK_BOX (vbox2), doubleSize, FALSE, FALSE, 0);
   gtk_signal_connect (GTK_OBJECT (doubleSize), "pressed",
                       GTK_SIGNAL_FUNC (setSize),
-                      1);
+                      (gpointer) 1);
 
   vbox1 = gtk_vbox_new (FALSE, 0);
   gtk_widget_set_name (vbox1, "vbox1");
@@ -251,7 +251,7 @@ create_casioConfigDlg ()
   gtk_box_pack_start (GTK_BOX (vbox1), spd_9600, FALSE, FALSE, 0);
   gtk_signal_connect_after (GTK_OBJECT (spd_9600), "pressed",
                             GTK_SIGNAL_FUNC (on_spd_pressed),
-                            DEFAULT);
+                            (gpointer) DEFAULT);
 
   spd_19200 = gtk_radio_button_new_with_label (Speed_group, "19200");
   Speed_group = gtk_radio_button_group (GTK_RADIO_BUTTON (spd_19200));
@@ -261,7 +261,7 @@ create_casioConfigDlg ()
   gtk_box_pack_start (GTK_BOX (vbox1), spd_19200, FALSE, FALSE, 0);
   gtk_signal_connect_after (GTK_OBJECT (spd_19200), "pressed",
                             GTK_SIGNAL_FUNC (on_spd_pressed),
-                            MID);
+                            (gpointer) MID);
 
   spd_38400 = gtk_radio_button_new_with_label (Speed_group, "38400");
   Speed_group = gtk_radio_button_group (GTK_RADIO_BUTTON (spd_38400));
@@ -271,7 +271,7 @@ create_casioConfigDlg ()
   gtk_box_pack_start (GTK_BOX (vbox1), spd_38400, FALSE, FALSE, 0);
   gtk_signal_connect_after (GTK_OBJECT (spd_38400), "pressed",
                             GTK_SIGNAL_FUNC (on_spd_pressed),
-                            HIGH);
+                            (gpointer) HIGH);
 
   spd_57600 = gtk_radio_button_new_with_label (Speed_group, "57600");
   Speed_group = gtk_radio_button_group (GTK_RADIO_BUTTON (spd_57600));
@@ -281,7 +281,7 @@ create_casioConfigDlg ()
   gtk_box_pack_start (GTK_BOX (vbox1), spd_57600, FALSE, FALSE, 0);
   gtk_signal_connect_after (GTK_OBJECT (spd_57600), "pressed",
                             GTK_SIGNAL_FUNC (on_spd_pressed),
-                            TOP);
+                            (gpointer) TOP);
 
   spd_115200 = gtk_radio_button_new_with_label (Speed_group, "115200");
   Speed_group = gtk_radio_button_group (GTK_RADIO_BUTTON (spd_115200));
@@ -291,7 +291,7 @@ create_casioConfigDlg ()
   gtk_box_pack_start (GTK_BOX (vbox1), spd_115200, FALSE, FALSE, 0);
   gtk_signal_connect_after (GTK_OBJECT (spd_115200), "pressed",
                             GTK_SIGNAL_FUNC (on_spd_pressed),
-                            LIGHT);
+                            (gpointer) LIGHT);
 
   vbox3 = gtk_vbox_new (FALSE, 0);
   gtk_widget_set_name (vbox3, "vbox3");

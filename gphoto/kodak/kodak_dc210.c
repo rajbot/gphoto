@@ -372,7 +372,7 @@ int kodak_dc210_open_camera (const char *devname)
 
   struct termios newt, oldt;
 
-  serialdev = open(devname, O_RDWR|O_NOCTTY);
+  serialdev = open(devname, O_RDWR|O_NOCTTY|O_NONBLOCK);
 
   if (serialdev < 0) 
     error_dialog("Cannot open device");
@@ -384,10 +384,11 @@ int kodak_dc210_open_camera (const char *devname)
 
   /* need the device to be raw. 8 bits no parity on 9600 baud to start.  */
   cfmakeraw(&newt);
-  newt.c_oflag &= ~CSTOPB;
+  newt.c_cflag &= ~CSTOPB;
   newt.c_cflag &= ~PARENB;
   newt.c_cflag |= CS8;
   newt.c_cflag &= ~PARODD;
+  newt.c_cflag |= CRTSCTS;
 
   newt.c_cc[VMIN] = 0;
   newt.c_cc[VTIME] = 10;
@@ -594,10 +595,16 @@ struct Image *kodak_dc210_get_thumbnail (int serialdev, int picNum)
       memcpy(imData,bmpHeader, sizeof(bmpHeader));
 
       /* reverse the thumbnail data */
-      for (j=fileSize-1,i=54; j >= 0 ; j--)
-      {
-	imData[i++] = picData[j];
-      }
+      /* not only is the data reversed but the image is flipped
+       * left to right
+       */
+      for (i = 0; i < 72; i++) {
+         for (j = 0; j < 96; j++) {
+            imData[i*96*3+j*3+54] = picData[(71-i)*96*3+j*3+2];
+            imData[i*96*3+j*3+54+1] = picData[(71-i)*96*3+j*3+1];
+            imData[i*96*3+j*3+54+2] = picData[(71-i)*96*3+j*3];
+            }
+         }
 
       strcpy ( im->image_type, "bmp" );
       im->image_info = NULL;

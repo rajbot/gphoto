@@ -17,7 +17,11 @@
 #ifdef DOS
 #define RSPORT "AUX1"
 #else
+#ifdef __NetBSD__
+#define RSPORT	"/dev/tty00"     
+#else   
 #define RSPORT	"/dev/ttyS0"     
+#endif
 #endif 
 #endif 
 

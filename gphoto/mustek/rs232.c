@@ -31,7 +31,9 @@
 
 #include <fcntl.h>
 #include <termios.h>
+#include <sys/types.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 /*
  * sends a command and receives the answer to this

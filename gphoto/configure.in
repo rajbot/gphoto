@@ -79,7 +79,6 @@ AC_OUTPUT(Makefile \
 canon/Makefile \
 casio/Makefile \
 directory/Makefile \
-doc/Makefile \
 fuji/Makefile \
 gallery/CSStheme/Makefile \
 gallery/Default/Makefile \

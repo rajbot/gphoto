@@ -2291,7 +2291,11 @@ void main(void)
 {
 	//dcx_debug(1);
 	os_debug(1);
+#ifdef __NetBSD__
+	dcx_init("/dev/tty00", QM100 );
+#else
 	dcx_init("/dev/ttyS0", QM100 );
+#endif
 	dcx_open();
 	dcx_close();
 }

@@ -134,7 +134,7 @@ os_sio_open(char *sio_dev_name, os_sio_mode_t mode)
 	printf("19 V_spare2  0x%02x\n", 0 );
 	#endif
 
-	#if defined(linux) || defined(FreeBSD_3)
+	#if defined(linux) || defined(FreeBSD_3) || defined(__NetBSD__)
 		switch( mode ){
 		case XON_XOFF:	iflag = (IXON|IXOFF|IGNBRK);	break;
 		case CRTS_CTS:	iflag = (CRTSCTS);		break;

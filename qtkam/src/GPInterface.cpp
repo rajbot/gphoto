@@ -213,6 +213,38 @@ QString GPInterface::getInformation()
     return QString(buf.text);
 }
 
+/**
+ * Returns a string with the camera manual 
+ */
+QString GPInterface::getManual()
+{
+    if (!cameraInitialized)
+        initCamera();
+
+    CameraText buf;
+    if (gp_camera_get_manual(theCamera, &buf) != GP_OK)
+        // FIXME: do proper error handling
+        return QString("ERROR");
+
+    return QString(buf.text);
+}
+
+/**
+ * Returns a string with the driver information.
+ */
+QString GPInterface::getAbout()
+{
+    if (!cameraInitialized)
+        initCamera();
+
+    CameraText buf;
+    if (gp_camera_get_about(theCamera, &buf) != GP_OK)
+        // FIXME: do proper error handling
+        return QString("ERROR");
+
+    return QString(buf.text);
+}
+
 
 QStringList GPInterface::getSupportedPorts(const QString& camera) 
 {

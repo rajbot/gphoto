@@ -259,18 +259,13 @@ void MainWindow::selectInverse()
 
 
 /**
- * Pops up the camera selection dialog, and initializes the
- * newly selected camera.
+ * Pops up the camera selection dialog.
  */
 void MainWindow::selectCamera()
 {
     /* Popup the 'select camera' dialog */
     SelectCameraDialog* w = new SelectCameraDialog(this);
     w->exec();
-
-    /* If the dialog was closed with 'ok', initialize new camera */
-    if (w->result() == SelectCameraDialog::Accepted)
-        initCamera();
 }
 
 
@@ -335,8 +330,12 @@ void MainWindow::configureCamera()
 
 void MainWindow::cameraManual()
 {
+    KMessageBox::information(this, GPInterface::getManual(),
+                            "Camera Manual");
 }
 
 void MainWindow::cameraAbout()
 {
+    KMessageBox::information(this, GPInterface::getAbout(),
+                             "About the driver");
 }

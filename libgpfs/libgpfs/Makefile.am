@@ -15,7 +15,7 @@ libgpfs_la_SOURCES = 		\
 	gpfs-file.c		\
 	gpfs.c			\
 	gpfs-if.c		\
-	gpfs-info.c		\
+	gpfs-prop.c		\
 	gpfs-val.c		\
 	gpfs-val-type.c
 
@@ -28,7 +28,7 @@ libgpfsinclude_HEADERS =	\
 	gpfs-file.h		\
 	gpfs.h			\
 	gpfs-if.h		\
-	gpfs-info.h		\
+	gpfs-prop.h		\
 	gpfs-val.h		\
 	gpfs-val-type.h
 

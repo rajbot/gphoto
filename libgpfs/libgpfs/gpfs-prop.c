@@ -1,5 +1,5 @@
 #include <config.h>
-#include "gpfs-info.h"
+#include "gpfs-prop.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,7 +11,7 @@
         if (!i) {                                                       \
                 gpfs_err_set (e, GPFS_ERR_TYPE_BAD_PARAMETERS,          \
                         _("You need to supply a piece of "		\
-			  "information."));         			\
+			  "proprmation."));         			\
                 return NULL;                                            \
         }                                                               \
 }
@@ -20,36 +20,36 @@
         if (!i) {                                                       \
                 gpfs_err_set (e, GPFS_ERR_TYPE_BAD_PARAMETERS,          \
                             _("You need to supply a piece of "		\
-			      "information."));     			\
+			      "proprmation."));     			\
                 return;                                                 \
         }                                                               \
 }
 
-struct _GPFsInfoPriv 
+struct _GPFsPropPriv 
 {
 	unsigned int ref_count;
 	unsigned char *id, *name, *description;
 
-	GPFsInfoFuncSetVal f_set_val; void *f_data_set_val;
+	GPFsPropFuncSetVal f_set_val; void *f_data_set_val;
 
 	GPFsVal val;
 };
 
-GPFsInfo *
-gpfs_info_new (const char *id, const char *name, const char *description,
+GPFsProp *
+gpfs_prop_new (const char *id, const char *name, const char *description,
 	       GPFsVal *v)
 {
-	GPFsInfo *i;
+	GPFsProp *i;
 
-	i = malloc (sizeof (GPFsInfo));
+	i = malloc (sizeof (GPFsProp));
 	if (!i) return NULL;
-	memset (i, 0, sizeof (GPFsInfo));
-	i->priv = malloc (sizeof (GPFsInfoPriv));
+	memset (i, 0, sizeof (GPFsProp));
+	i->priv = malloc (sizeof (GPFsPropPriv));
 	if (!i->priv) {
 		free (i);
 		return NULL;
 	}
-	memset (i->priv, 0, sizeof (GPFsInfoPriv));
+	memset (i->priv, 0, sizeof (GPFsPropPriv));
 	i->priv->ref_count = 1;
 
 	i->priv->id          = strdup (id);
@@ -61,13 +61,13 @@ gpfs_info_new (const char *id, const char *name, const char *description,
 }
 
 void
-gpfs_info_ref (GPFsInfo *i)
+gpfs_prop_ref (GPFsProp *i)
 {
 	if (i) i->priv->ref_count++;
 }
 
 void
-gpfs_info_unref (GPFsInfo *i)
+gpfs_prop_unref (GPFsProp *i)
 {
 	unsigned int n;
 
@@ -92,25 +92,25 @@ gpfs_info_unref (GPFsInfo *i)
 }
 
 const char *
-gpfs_info_get_description (GPFsInfo *i)
+gpfs_prop_get_description (GPFsProp *i)
 {
 	return i ? i->priv->description : NULL;
 }
 
 const char *
-gpfs_info_get_name (GPFsInfo *i)
+gpfs_prop_get_name (GPFsProp *i)
 {
 	return i ? i->priv->name : NULL;
 }
 
 const char *
-gpfs_info_get_id (GPFsInfo *i)
+gpfs_prop_get_id (GPFsProp *i)
 {
 	return i ? i->priv->name : NULL;
 }
 
 void
-gpfs_info_get_val (GPFsInfo *i, GPFsErr *e, GPFsVal *v)
+gpfs_prop_get_val (GPFsProp *i, GPFsErr *e, GPFsVal *v)
 {
 	CNV(i,e);
 
@@ -118,13 +118,13 @@ gpfs_info_get_val (GPFsInfo *i, GPFsErr *e, GPFsVal *v)
 }
 
 void
-gpfs_info_set_val (GPFsInfo *i, GPFsErr *e, GPFsVal *v)
+gpfs_prop_set_val (GPFsProp *i, GPFsErr *e, GPFsVal *v)
 {
 	CNV(i,e);
 
 	if (!i->priv->f_set_val) {
 		gpfs_err_set (e, GPFS_ERR_TYPE_NOT_SUPPORTED,
-			      _("This value of this piece of information "
+			      _("This value of this piece of proprmation "
 				"cannot be changed."));
 		return;
 	}
@@ -133,7 +133,7 @@ gpfs_info_set_val (GPFsInfo *i, GPFsErr *e, GPFsVal *v)
 }
 
 void
-gpfs_info_set_func_set_val (GPFsInfo *i, GPFsInfoFuncSetVal f, void *f_data)
+gpfs_prop_set_func_set_val (GPFsProp *i, GPFsPropFuncSetVal f, void *f_data)
 {
 	if (!i) return;
 	i->priv->f_set_val = f;
@@ -141,7 +141,7 @@ gpfs_info_set_func_set_val (GPFsInfo *i, GPFsInfoFuncSetVal f, void *f_data)
 }
 
 void
-gpfs_info_get_func_set_val (GPFsInfo *i, GPFsInfoFuncSetVal *f, void **f_data)
+gpfs_prop_get_func_set_val (GPFsProp *i, GPFsPropFuncSetVal *f, void **f_data)
 {
 	if (!i) return;
 	if (f) *f = i->priv->f_set_val;
@@ -149,16 +149,16 @@ gpfs_info_get_func_set_val (GPFsInfo *i, GPFsInfoFuncSetVal *f, void **f_data)
 }
 
 void
-gpfs_info_dump (GPFsInfo *i)
+gpfs_prop_dump (GPFsProp *i)
 {
 	GPFsVal v;
 	unsigned int n;
 
-	printf ("Information '%s':\n", gpfs_info_get_id (i));
-	printf (" - Name: '%s'\n", gpfs_info_get_name (i));
-	printf (" - Description: '%s'\n", gpfs_info_get_description (i));
+	printf ("Proprmation '%s':\n", gpfs_prop_get_id (i));
+	printf (" - Name: '%s'\n", gpfs_prop_get_name (i));
+	printf (" - Description: '%s'\n", gpfs_prop_get_description (i));
 	gpfs_val_init (&v);
-	gpfs_info_get_val (i, NULL, &v);
+	gpfs_prop_get_val (i, NULL, &v);
 	printf (" - Type: '%s'\n", gpfs_val_type_get_name (v.t));
 	switch (v.t) {
 	case GPFS_VAL_TYPE_STRING:

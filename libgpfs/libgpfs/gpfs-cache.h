@@ -17,10 +17,10 @@ GPFsIf       *gpfs_cache_get_if            (GPFsCache *, unsigned int);
 void          gpfs_cache_remove_if         (GPFsCache *, GPFsIf *);
 void          gpfs_cache_if_set_limit_read (GPFsCache *, GPFsIf *,
 					    unsigned int);
-void          gpfs_cache_if_set_limit_info (GPFsCache *, GPFsIf *,
+void          gpfs_cache_if_set_limit_prop (GPFsCache *, GPFsIf *,
 					    unsigned int);
 unsigned int  gpfs_cache_if_get_limit_read (GPFsCache *, GPFsIf *);
-unsigned int  gpfs_cache_if_get_limit_info (GPFsCache *, GPFsIf *);
+unsigned int  gpfs_cache_if_get_limit_prop (GPFsCache *, GPFsIf *);
 
 /* Caching filesystems (structure only) */
 void          gpfs_cache_add_fs    (GPFsCache *, GPFs *);

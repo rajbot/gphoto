@@ -14,8 +14,8 @@ struct _GPFsCacheIf {
 	char *data;
 	unsigned int size;
 
-	/* Info */
-	unsigned int l_info;
+	/* Prop */
+	unsigned int l_prop;
 };
 
 struct _GPFsCache {
@@ -200,7 +200,7 @@ gpfs_cache_if_set_limit_read (GPFsCache *c, GPFsIf *i, unsigned int l)
 }
 
 void
-gpfs_cache_if_set_limit_info (GPFsCache *c, GPFsIf *i, unsigned int l)
+gpfs_cache_if_set_limit_prop (GPFsCache *c, GPFsIf *i, unsigned int l)
 {
 	unsigned int n;
 
@@ -210,11 +210,11 @@ gpfs_cache_if_set_limit_info (GPFsCache *c, GPFsIf *i, unsigned int l)
 	for (n = 0; (n < c->i_count) && (c->i[n].i != i); n++);
 	if (n == c->i_count)
 		return;
-	c->i[n].l_info = l;
+	c->i[n].l_prop = l;
 }
 
 unsigned int
-gpfs_cache_if_get_limit_info (GPFsCache *c, GPFsIf *i)
+gpfs_cache_if_get_limit_prop (GPFsCache *c, GPFsIf *i)
 {
 	unsigned int n;
 
@@ -222,7 +222,7 @@ gpfs_cache_if_get_limit_info (GPFsCache *c, GPFsIf *i)
 		return 0;
 
 	for (n = 0; (n < c->i_count) && (c->i[n].i != i); n++);
-	return (n == c->i_count) ? 0 : c->i[n].l_info;
+	return (n == c->i_count) ? 0 : c->i[n].l_prop;
 }
 
 unsigned int

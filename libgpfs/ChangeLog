@@ -1,3 +1,8 @@
+2002-12-13  Lutz Müller <lutz@users.sourceforge.net>
+
+	* libgpfs/gpfs-info.[c,h]: Renamed to
+	* libgpfs/gpfs-prop.[c,h]
+
 Lutz Müller <lutz@users.sourceforge.net>
 
 	* libgpfs/*: Support ranges.

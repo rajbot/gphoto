@@ -35,8 +35,8 @@ struct _GPFsIf {
 	unsigned int ref_count;
 
 	/* Functions */
-	GPFsIfFuncCountInfo f_count_info; void *f_data_count_info;
-	GPFsIfFuncGetInfo   f_get_info  ; void *f_data_get_info  ;
+	GPFsIfFuncCountProp f_count_prop; void *f_data_count_prop;
+	GPFsIfFuncGetProp   f_get_prop  ; void *f_data_get_prop  ;
 	GPFsIfFuncRead      f_read      ; void *f_data_read      ;
 };
 
@@ -81,33 +81,33 @@ gpfs_if_get_name (GPFsIf *i)
 }
 
 unsigned int
-gpfs_if_count_info (GPFsIf *i, GPFsErr *e)
+gpfs_if_count_prop (GPFsIf *i, GPFsErr *e)
 {
 	CN0 (i, e);
 
-	if (!i->f_count_info) {
+	if (!i->f_count_prop) {
 		gpfs_err_set (e, GPFS_ERR_TYPE_NOT_SUPPORTED,
-			    _("This interface doesn't supply information."));
+			    _("This interface doesn't supply proprmation."));
 		return 0;
 	}
 
-	return i->f_count_info (i, e, i->f_data_count_info);
+	return i->f_count_prop (i, e, i->f_data_count_prop);
 }
 
-GPFsInfo *
-gpfs_if_get_info (GPFsIf *i, GPFsErr *e, unsigned int n)
+GPFsProp *
+gpfs_if_get_prop (GPFsIf *i, GPFsErr *e, unsigned int n)
 {
 	CNN (i, e);
 
-	if (!i->f_get_info) {
+	if (!i->f_get_prop) {
 		gpfs_err_set (e, GPFS_ERR_TYPE_NOT_SUPPORTED,
 			_("The interface '%s' doesn't support "
-			  "getting pieces of information."),
+			  "getting pieces of proprmation."),
 			gpfs_if_get_name (i));
 		return NULL;
 	}
 
-	return i->f_get_info (i, e, n, i->f_data_get_info);
+	return i->f_get_prop (i, e, n, i->f_data_get_prop);
 }
 
 void
@@ -125,35 +125,35 @@ gpfs_if_read (GPFsIf *i, GPFsErr *e, GPFsIfFuncReadCb f, void *d)
 }
 
 void
-gpfs_if_set_func_count_info (GPFsIf *i, GPFsIfFuncCountInfo f, void *f_data)
+gpfs_if_set_func_count_prop (GPFsIf *i, GPFsIfFuncCountProp f, void *f_data)
 {
 	if (!i) return;
-	i->f_count_info = f;
-	i->f_data_count_info = f_data;
+	i->f_count_prop = f;
+	i->f_data_count_prop = f_data;
 }
 
 void
-gpfs_if_get_func_count_info (GPFsIf *i, GPFsIfFuncCountInfo *f, void **f_data)
+gpfs_if_get_func_count_prop (GPFsIf *i, GPFsIfFuncCountProp *f, void **f_data)
 {
 	if (!i) return;
-	if (f) *f = i->f_count_info;
-	if (f_data) *f_data = i->f_data_count_info;
+	if (f) *f = i->f_count_prop;
+	if (f_data) *f_data = i->f_data_count_prop;
 }
 
 void
-gpfs_if_set_func_get_info (GPFsIf *i, GPFsIfFuncGetInfo f, void *f_data)
+gpfs_if_set_func_get_prop (GPFsIf *i, GPFsIfFuncGetProp f, void *f_data)
 {
 	if (!i) return;
-	i->f_get_info = f;
-	i->f_data_get_info = f_data;
+	i->f_get_prop = f;
+	i->f_data_get_prop = f_data;
 }
 
 void
-gpfs_if_get_func_get_info (GPFsIf *i, GPFsIfFuncGetInfo *f, void **f_data)
+gpfs_if_get_func_get_prop (GPFsIf *i, GPFsIfFuncGetProp *f, void **f_data)
 {
 	if (!i) return;
-	if (f) *f = i->f_get_info;
-	if (f_data) *f_data = i->f_data_get_info;
+	if (f) *f = i->f_get_prop;
+	if (f_data) *f_data = i->f_data_get_prop;
 }
 
 void

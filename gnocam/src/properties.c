@@ -170,23 +170,25 @@ values_set (GladeXML* xml_properties, CameraWidget *camera_widget)
 void 
 page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 {
-	GtkWidget*	frame;
-	GtkWidget*	widget;
-	GtkWidget*	button;
-	GtkWidget*	hbox;
-	GtkWidget*	combo;
-	GtkWidget*	hscale;
-	GtkAdjustment*	adjustment;
-	GSList*		list;
-	GList*		combo_items;
-	guint 		j, k;
+	GtkWidget*		frame;
+	GtkWidget*		widget;
+	GtkWidget*		button;
+	GtkWidget*		hbox;
+	GtkWidget*		combo;
+	GtkWidget*		hscale;
+	GtkAdjustment*		adjustment;
+	GSList*			list;
+	GList*			combo_items;
+	guint 			j, k;
 	gfloat 			min, max, increment;
 	GnomePropertyBox*	propertybox;
-	void*			value = NULL;
+	gchar*			c;
+	gint			i;
+	gfloat			f;
 
 	g_assert (vbox != NULL);
 	g_assert (camera_widget != NULL);
-	propertybox = GNOME_PROPERTY_BOX (gtk_object_get_data (GTK_OBJECT (vbox), "propertybox"));
+	g_assert ((propertybox = GNOME_PROPERTY_BOX (gtk_object_get_data (GTK_OBJECT (vbox), "propertybox"))) != NULL);
 
 	/* Create the frame. */
 	frame = gtk_frame_new (gp_widget_label (camera_widget));
@@ -194,12 +196,13 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 	gtk_box_pack_start (GTK_BOX (vbox), frame, FALSE, FALSE, 0);
 
 	/* Create the widget. */
-	gp_widget_value_get (camera_widget, value);
+	c = g_new0 (gchar, 128);
 	switch (gp_widget_type (camera_widget)) {
 	case GP_WIDGET_TEXT:
+		gp_widget_value_get (camera_widget, c);
 		widget = gtk_entry_new ();
 		gtk_widget_show (widget);
-		gtk_entry_set_text (GTK_ENTRY (widget), (gchar*) value);
+		gtk_entry_set_text (GTK_ENTRY (widget), c);
 		gtk_container_add (GTK_CONTAINER (frame), widget);
 
 		/* Connect the signals. */
@@ -211,8 +214,9 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 
 		break;
 	case GP_WIDGET_RANGE:
+		gp_widget_value_get (camera_widget, &f);
 		gp_widget_range_get (camera_widget, &min, &max, &increment);
-		adjustment = GTK_ADJUSTMENT (gtk_adjustment_new (*((gfloat*) value), min, max, increment, 0, 0));
+		adjustment = GTK_ADJUSTMENT (gtk_adjustment_new (f, min, max, increment, 0, 0));
 		hscale = gtk_hscale_new (adjustment);
 		gtk_widget_show (hscale);
 		gtk_range_set_update_policy (GTK_RANGE (hscale), GTK_UPDATE_DISCONTINUOUS);
@@ -227,9 +231,10 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 
 		break;
 	case GP_WIDGET_TOGGLE:
+		gp_widget_value_get (camera_widget, &i);
 		button = gtk_check_button_new_with_label (gp_widget_label (camera_widget));
 		gtk_widget_show (button);
-		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button), ((*((gint*) value)) == 1));
+		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button), (i == 1));
 		gtk_container_add (GTK_CONTAINER (frame), button);
 
 		/* Connect the signals. */
@@ -241,6 +246,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 	
 		break;
 	case GP_WIDGET_RADIO:
+		gp_widget_value_get (camera_widget, c);
                 hbox = gtk_hbox_new (FALSE, 10);
 		gtk_widget_show (hbox);
        	        gtk_container_add (GTK_CONTAINER (frame), hbox);
@@ -250,7 +256,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 			button = gtk_radio_button_new_with_label (list, gp_widget_choice (camera_widget, k));
 			gtk_widget_show (button);
 			list = gtk_radio_button_group (GTK_RADIO_BUTTON (button));
-			if (strcmp ((gchar*) value, gp_widget_choice (camera_widget, k)) == 0)
+			if (strcmp (c, gp_widget_choice (camera_widget, k)) == 0)
        				gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button), TRUE);
                         gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 
@@ -263,6 +269,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 		}
 		break;
 	case GP_WIDGET_MENU:
+		gp_widget_value_get (camera_widget, c);
 		combo = gtk_combo_new ();
 		gtk_widget_show (combo);
 		gtk_container_add (GTK_CONTAINER (frame), combo);
@@ -272,7 +279,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 		}
 		gtk_combo_set_popdown_strings (GTK_COMBO (combo), combo_items);
 		g_list_free (combo_items);
-		gtk_entry_set_text (GTK_ENTRY (GTK_COMBO (combo)->entry), (gchar*) value);
+		gtk_entry_set_text (GTK_ENTRY (GTK_COMBO (combo)->entry), c);
 		gtk_container_add (GTK_CONTAINER (frame), combo);
 
 		/* Connect the signals. */
@@ -291,6 +298,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 		g_warning ("GP_WIDGET_BUTTON not implemented!");
 		break;
 	case GP_WIDGET_DATE:
+		gp_widget_value_get (camera_widget, &i);
 		hbox = gtk_hbox_new (FALSE, 10);
 		gtk_widget_show (hbox);
 		gtk_container_add (GTK_CONTAINER (frame), hbox);
@@ -304,8 +312,8 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 //		gtk_container_add (GTK_CONTAINER (hbox), widget);
 
 		/* Create the widget to edit the date. */
-		widget = gnome_date_edit_new ((time_t) 0, TRUE, TRUE);
-		gnome_date_edit_set_time (GNOME_DATE_EDIT (widget), *((time_t*) value));
+		widget = gnome_date_edit_new ((time_t) i, TRUE, TRUE);
+//		gnome_date_edit_set_time (GNOME_DATE_EDIT (widget), (time_t) i);
 		gtk_widget_show (widget);
 		gtk_container_add (GTK_CONTAINER (hbox), widget);
 
@@ -320,6 +328,7 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 	default:
 		g_assert_not_reached ();
 	}
+	g_free (c);
 }
 
 GtkWidget*

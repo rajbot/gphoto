@@ -1,7 +1,7 @@
 #include <config.h>
 #include <gnome.h>
 #include <glade/glade.h>
-#include <information.h>
+#include "information.h"
 
 /* Static Variables */
 

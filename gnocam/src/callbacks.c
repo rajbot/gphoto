@@ -12,7 +12,6 @@
 #include "information.h"
 #include "cameras.h"
 #include "preview.h"
-#include "gphoto-extensions.h"
 #include "frontend.h"
 
 /**********************/
@@ -416,7 +415,6 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 				file = NULL;
 			} else {
 				gtk_object_set_data (GTK_OBJECT (item), "preview", file);
-				gp_file_ref (file);
 			}
 			gp_frontend_progress (camera, NULL, 0.0);
 		}

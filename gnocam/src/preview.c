@@ -6,7 +6,6 @@
 #include <gconf/gconf-client.h>
 #include "information.h"
 #include "gnocam.h"
-#include "gphoto-extensions.h"
 #include "preview.h"
 #include "file-operations.h"
 #include "cameras.h"

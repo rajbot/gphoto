@@ -3,6 +3,7 @@
 #include <glade/glade.h>
 #include <gphoto2.h>
 #include <gconf/gconf-client.h>
+#include <libxml/parser.h>
 #include "preferences.h"
 #include "callbacks.h"
 #include "gnocam.h"
@@ -451,14 +452,14 @@ dialog_preferences_debug_level_update (gint debug_level)
 void
 dialog_preferences_cameras_update (GSList* list_cameras)
 {
+	xmlDocPtr	doc;
+	xmlNodePtr	node;
 	GtkCList*	clist;
 	GConfValue*	value;
 	gchar*		text[4];
-	gchar*		camera_description;
+	gchar*		xml;
+	gchar*		id;
 	guint		i;
-	guint		j;
-	gint		id;
-	guint		count;
 
 	g_assert (xml_preferences != NULL);
         g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml_preferences, "clist_cameras"))) != NULL);
@@ -467,47 +468,34 @@ dialog_preferences_cameras_update (GSList* list_cameras)
         for (i = 0; i < g_slist_length (list_cameras); i++) {
                 value = g_slist_nth_data (list_cameras, i);
                 g_assert (value->type = GCONF_VALUE_STRING);
-                camera_description = g_strdup (gconf_value_get_string (value));
-		count = 0;
-                for (j = 0; camera_description[j] != '\0'; j++) {
-			if (camera_description[j] == '\n') {
-				camera_description[j] = '\0';
-				count++;
-			}
-		}
-		g_assert (count == 4);
-		id = atoi (camera_description);
-		for (j = 0; camera_description[j] != '\0'; j++);
-                text[0] = g_strdup (&camera_description[++j]);
-                for (; camera_description[j] != '\0'; j++);
-                text[1] = g_strdup (&camera_description[++j]);
-                for (; camera_description[j] != '\0'; j++);
-                text[2] = g_strdup (&camera_description[++j]);
-	        for (; camera_description[j] != '\0'; j++);
-	        text[3] = g_strdup (&camera_description[++j]);
+                g_assert ((xml = g_strdup (gconf_value_get_string (value))) != NULL);
+                if (!(doc = xmlParseMemory (g_strdup (xml), strlen (xml)))) continue;
+                g_assert ((node = xmlDocGetRootElement (doc)) != NULL);
+                if (strcmp (node->name, "Camera") != 0) continue;
+                g_assert ((id = xmlGetProp (node, "ID")) != NULL);
+                g_assert ((text[0] = xmlGetProp (node, "Name")) != NULL);
+                g_assert ((text[1] = xmlGetProp (node, "Model")) != NULL);
+                g_assert ((text[2] = xmlGetProp (node, "Port")) != NULL);
+                g_assert ((text[3] = xmlGetProp (node, "Speed")) != NULL);
                 gtk_clist_append (clist, text);
-		gtk_clist_set_row_data (clist, clist->rows - 1, GINT_TO_POINTER (id));
-		g_free (camera_description);
-		for (j = 0; j < 4; j++) g_free (text[j]);
+		gtk_clist_set_row_data (clist, clist->rows - 1, GINT_TO_POINTER (atoi (id)));
         }
 }
 
 void
 dialog_preferences_cameras_changed ()
 {
-	GtkObject*	object;
 	GtkCList*	clist;
 	gint		i;
-	gchar*		camera_description;
 	GSList*		list_cameras = NULL;
 	gchar*		name;
 	gchar*		model;
 	gchar*		port;
 	gchar*		speed;
+	gchar*		xml;
 	gint		id;
 
 	g_assert (xml_preferences != NULL);
-	g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences"))) != NULL);
 	g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml_preferences, "clist_cameras"))) != NULL);
 	g_assert (change_set != NULL);
 
@@ -518,8 +506,10 @@ dialog_preferences_cameras_changed ()
 		gtk_clist_get_text (clist, i, 1, &model);
 		gtk_clist_get_text (clist, i, 2, &port);
 		gtk_clist_get_text (clist, i, 3, &speed);
-                camera_description = g_strdup_printf ("%i\n%s\n%s\n%s\n%s", id, name, model, port, speed);
-		list_cameras = g_slist_append (list_cameras, camera_description);
+		xml = g_strdup_printf (
+			"<?xml version='1.0'?>"
+			"<Camera ID='%i' Name='%s' Model='%s' Port='%s' Speed='%s'/>", id, name, model, port, speed);
+		list_cameras = g_slist_append (list_cameras, xml);
         }
 
         /* Tell gconf about the new values. */

@@ -9,6 +9,7 @@
 #include <gphoto2.h>
 #include <gconf/gconf-client.h>
 #include <gdk-pixbuf/gdk-pixbuf-loader.h>
+#include <libxml/parser.h>
 #include "gphoto-extensions.h"
 #include "callbacks.h"
 #include "gnocam.h"
@@ -120,7 +121,6 @@ camera_tree_item_remove (GtkTreeItem* item)
 	GtkTree*		tree;
 	Camera*			camera;
 	gboolean		root;
-	frontend_data_t*	frontend_data = NULL;
 	CameraFile*		file;
 
 	g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
@@ -128,7 +128,6 @@ camera_tree_item_remove (GtkTreeItem* item)
 	g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
 	g_assert ((tree = GTK_TREE (GTK_WIDGET (item)->parent)) != NULL);
 	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
-	g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
 
 	/* Root folder needs special care. */
 	root = ((!(filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) && (strcmp ("/", path) == 0));
@@ -184,9 +183,6 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* path)
 
 	/* Root folder needs special care. */
 	root = (strcmp ("/", path) == 0);
-
-	/* If root, ref the camera. */
-	if (root) gp_camera_ref (camera);
 
 	/* Create the new item. */
 	if (root) item = gtk_tree_item_new_with_label (((frontend_data_t*) camera->frontend_data)->name);
@@ -275,16 +271,19 @@ camera_tree_file_add (GtkTree* tree, Camera* camera, gchar* path, gchar* filenam
 void
 camera_tree_update (GtkTree* tree, GConfValue* value)
 {
+	xmlDocPtr	doc;
+	xmlNodePtr	node;
         GSList*         list_cameras = NULL;
 	GtkTreeItem*	item;
-        gchar*          description;
+	gchar*		xml;
+        gchar*          id;
 	gchar*		label;
 	gchar*		name;
 	gchar*		model;
 	gchar*		port;
+	gchar*		speed;
         gint            i;
         gint            j;
-        guint           id, speed;
         Camera*         camera;
 	gboolean	changed;
 
@@ -303,26 +302,28 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
         for (i = 0; i < g_slist_length (list_cameras); i++) {
                 value = g_slist_nth_data (list_cameras, i);
                 g_assert (value->type == GCONF_VALUE_STRING);
-                description = g_strdup (gconf_value_get_string (value));
-
-                /* Get the camera id from the description.      */
-                /* Remember, the description is "id\n...        */
-                id = (guint) atoi (description);
+		g_assert ((xml = g_strdup (gconf_value_get_string (value))) != NULL);
+		if (!(doc = xmlParseMemory (g_strdup (xml), strlen (xml)))) continue;
+		g_assert ((node = xmlDocGetRootElement (doc)) != NULL);
+		if (strcmp (node->name, "Camera") != 0) continue;
+		g_assert ((id = xmlGetProp (node, "ID")) != NULL);
+		g_assert ((name = xmlGetProp (node, "Name")) != NULL);
+		g_assert ((model = xmlGetProp (node, "Model")) != NULL);
+		g_assert ((port = xmlGetProp (node, "Port")) != NULL);
+		g_assert ((speed = xmlGetProp (node, "Speed")) != NULL);
 
                 /* Do we have this camera in the tree? */
                 for (j = 0; j < g_list_length (tree->children); j++) {
 			item = GTK_TREE_ITEM (g_list_nth_data (tree->children, j));
                         g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
-                        if (id == ((frontend_data_t*) camera->frontend_data)->id) {
+                        if (atoi (id) == ((frontend_data_t*) camera->frontend_data)->id) {
 
                                 /* We found the camera. Changed? */
-				g_assert (description_extract (description, &id, &name, &model, &port, &speed));
-
 				gtk_label_get (GTK_LABEL (GTK_BIN (item)->child), &label);
 				changed = (strcmp (label, name) != 0);
 				changed = changed || (strcmp (camera->model, model) != 0);
 				changed = changed || (strcmp (camera->port->name, port) != 0);
-				changed = changed || (speed != camera->port->speed);
+				changed = changed || (atoi (speed) != camera->port->speed);
 				if (changed) {
 
 					/* We simply remove the camera and add a new one to the tree. */
@@ -334,9 +335,8 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
                 if (j == g_list_length (tree->children)) {
 
                         /* We don't have the camera in the tree (yet). */
-                        if ((camera = gp_camera_new_by_description (description))) camera_tree_folder_add (tree, camera, "/");
+                        if ((camera = gp_camera_new_by_description (atoi (id), name, model, port, atoi (speed)))) camera_tree_folder_add (tree, camera, "/");
                 }
-                g_free (description);
         }
 
         /* Delete all unchecked cameras. */

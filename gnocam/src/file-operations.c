@@ -4,11 +4,9 @@
 #include <gconf/gconf-client.h>
 #include <glade/glade.h>
 #include <gphoto2.h>
-#include "file-operations.h"
-#include "gnocam.h"
 #include "information.h"
 #include "cameras.h"
-#include "gphoto-extensions.h"
+#include "file-operations.h"
 #include "frontend.h"
 
 /**********************/
@@ -313,7 +311,6 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 		} else {
 			if (preview) gtk_object_set_data (GTK_OBJECT (item), "preview", file);
 			else gtk_object_set_data (GTK_OBJECT (item), "file", file);
-			gp_file_ref (file);
 		}
 	}
 

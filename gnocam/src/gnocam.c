@@ -90,8 +90,10 @@ int main (int argc, char *argv[])
 	gchar*		home = NULL;
 	gchar*		message = NULL;
 
+#ifdef GNOCAM_USES_THREADS
 	/* Init threads. */
 	g_thread_init (NULL);
+#endif
 
 	/* Init GNOME, glade, gnome-vfs, gconf. */
 	gnome_init (PACKAGE, VERSION, argc, argv);
@@ -182,9 +184,13 @@ int main (int argc, char *argv[])
 //	gtk_drag_source_set (glade_xml_get_widget (xml, "clist_files"), GDK_BUTTON1_MASK | GDK_BUTTON3_MASK, target_table, 1, GDK_ACTION_COPY);
 
 	/* Start the event loop. */
+#ifdef GNOCAM_USES_THREADS
 	gdk_threads_enter ();
+#endif
 	gtk_main ();
+#ifdef GNOCAM_USES_THREADS
 	gdk_threads_leave ();
+#endif
 
 	/* Clean up. */
 	gp_exit ();

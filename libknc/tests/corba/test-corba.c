@@ -8,7 +8,7 @@ main (int argc, char **argv)
 {
 	GNOME_C_Mngr m;
 	CORBA_Environment ev;
-	GNOME_C_Mngr_Device *dev;
+	GNOME_C_Mngr_DeviceList *dl;
 	GNOME_C_IDList *l;
 	unsigned int i, j;
 	CORBA_string s;
@@ -27,35 +27,26 @@ main (int argc, char **argv)
 	CORBA_exception_init (&ev);
 
 	/* Count supported camera models */
-	l = GNOME_C_Mngr_get_devices (m, &ev);
+	dl = GNOME_C_Mngr_get_devices (m, &ev);
 	if (BONOBO_EX (&ev)) {
 		bonobo_object_release_unref (m, NULL);
-		g_warning ("Could not count devices: %s",
+		g_warning ("Could not get list of devices: %s",
 			   bonobo_exception_get_text (&ev));
 		CORBA_exception_free (&ev);
 		return 1;
 	}
 
 	/* List them. */
-	g_message ("Listing %i supported devices...", l->_length);
-	for (i = 0; i < l->_length; i++) {
-		dev = GNOME_C_Mngr_get_device (m, l->_buffer[i], &ev);
-		if (BONOBO_EX (&ev)) {
-			CORBA_free (l);
-			bonobo_object_release_unref (m, NULL);
-			g_warning ("Could not get device %i: %s", i + 1,
-				   bonobo_exception_get_text (&ev));
-			CORBA_exception_free (&ev);
-			return 1;
-		}
+	g_message ("Listing %i supported devices...", dl->_length);
+	for (i = 0; i < dl->_length; i++) {
 		g_message ("%2i: '%s', '%s', %i port(s) supported", i,
-			   dev->manufacturer, dev->model, dev->ports._length);
-		for (j = 0; j < dev->ports._length; j++) {
+			   dl->_buffer[i].manufacturer,
+			   dl->_buffer[i].model, dl->_buffer[i].ports._length);
+		for (j = 0; j < dl->_buffer[i].ports._length; j++) {
 			s = GNOME_C_Mngr_get_port_name (m,
-						dev->ports._buffer[j], &ev);
+				dl->_buffer[i].ports._buffer[j], &ev);
 			if (BONOBO_EX (&ev)) {
-				CORBA_free (dev);
-				CORBA_free (l);
+				CORBA_free (dl);
 				bonobo_object_release_unref (m, NULL);
 				g_warning ("Could not get name of port %i: %s",
 					j + 1, bonobo_exception_get_text (&ev));
@@ -65,9 +56,8 @@ main (int argc, char **argv)
 			g_message ("      %2i: '%s'", j, s);
 			CORBA_free (s);
 		}
-		CORBA_free (dev);
 	}
-	CORBA_free (l);
+	CORBA_free (dl);
 
 	/* Connect to camera */
 	c = GNOME_C_Mngr_connect_to_device_at_port (m, 0, 0, &ev);

@@ -28,6 +28,7 @@ AC_PROG_INTLTOOL
 dnl ---------------------------------------------------------------------------
 dnl Interantionalization
 dnl ---------------------------------------------------------------------------
+AC_DEFINE(GETTEXT_PACKAGE, "libknc", [Gettext package])
 ALL_LINGUAS=""
 AM_GLIB_GNU_GETTEXT
 AC_PROG_INTLTOOL

@@ -94,12 +94,13 @@ gnocam_chooser_setup (GnocamChooser *c)
 	for (i = 0; i < l->_length; i++) {
 		m = bonobo_get_object (l->_buffer[i].iid, "IDL:GNOME/C/Mngr",
 				       &ev);
-		if (BONOB_EX (&ev))
+		if (BONOBO_EX (&ev))
 			continue;
 		dl = GNOME_C_Mngr_get_devices (m, &ev);
 		bonobo_object_release_unref (m, NULL);
 		if (BONOBO_EX (&ev))
 			continue;
+		g_message ("Got %i devices.", dl->_length);
 		CORBA_free (dl);
 	}
 	CORBA_free (l);

@@ -53,6 +53,13 @@
 #define EVEN_HIRES	0xfa	/* Send even rows of HiRES */
 #define ODD_HIRES	0xf9	/* Send odd rows of HiRES */
 
+/* Solaris has no u_int... type family but uint... instead */
+#ifdef sun
+	typedef uint8_t u_int8_t;
+	typedef uint16_t u_int16_t;	
+	typedef uint32_t u_int32_t;
+#endif
+
 /* Feature bits */
 struct mesa_feature {
 	u_int8_t	feature_bits_lo;

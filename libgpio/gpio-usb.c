@@ -45,6 +45,8 @@ int gpio_usb_list(gpio_device_info *list, int *count) {
 int gpio_usb_init(gpio_device *dev)
 {
 	usb_init();
+        usb_find_busses();
+        usb_find_devices();
 }
 
 int gpio_usb_exit(gpio_device *dev)

@@ -23,7 +23,9 @@ libvfs_camera_la_LIBADD =\
 
 libvfs_camera_la_LDFLAGS =\
  -export_dynamic\
- -avoid-version
+ -avoid-version\
+ $(GPHOTO2_LIBS)\
+ $(GPIO_LIBS)
 
 CFLAGS = @CFLAGS@\
  `gphoto2-config --cflags`\
@@ -34,8 +36,6 @@ CFLAGS = @CFLAGS@\
  `glib-config --cflags`
 
 LDFLAGS =@LDFLAGS@\
- `gphoto2-config --libs`\
- `gpio-config --libs`\
  `gnome-config --libs vfs`\
  `gconf-config --libs`\
  `xml-config --libs`\

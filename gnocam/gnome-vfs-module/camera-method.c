@@ -52,6 +52,10 @@ static GConfClient *client = NULL;
 static GMutex *client_mutex;
 static GMutex *cameras_mutex;
 
+static void get_info_from_camera_info (CameraFileInfo *cfi, gboolean preview,
+		                       GnomeVFSFileInfo *info);
+
+
 static GnomeVFSResult
 get_camera (GnomeVFSURI *uri, Camera **camera)
 {
@@ -354,6 +358,8 @@ static GnomeVFSResult do_tell (
 }
 
 typedef struct {
+	Camera *camera;
+	gchar *dirname;
 	CameraList *dirs;
 	CameraList *files;
 	guint pos;
@@ -402,8 +408,8 @@ printf ("do_open_directory\n");
 	result = GNOME_VFS_RESULT (gp_camera_folder_list_folders (camera, path,
 								  dirs));
 	g_mutex_unlock (cameras_mutex);
-	unref_camera (camera);
 	if (result != GNOME_VFS_OK) {
+		unref_camera (camera);
 		gp_list_free (files);
 		gp_list_free (dirs);
 		return (result);
@@ -411,10 +417,14 @@ printf ("do_open_directory\n");
 
 	/* Construct the handle */
 	directory_handle = g_new0 (DirectoryHandle, 1);
+	directory_handle->dirname = g_strdup (path);
+	directory_handle->camera = camera;
 	directory_handle->files = files;
 	directory_handle->dirs = dirs;
 	directory_handle->pos = 0;
 	*handle = (GnomeVFSMethodHandle *) directory_handle;
+
+	
 
 	return (GNOME_VFS_OK);
 }
@@ -428,8 +438,10 @@ static GnomeVFSResult do_close_directory (
 
 	/* Free the handle */
 	directory_handle = (DirectoryHandle *) handle;
+	unref_camera (directory_handle->camera);
 	gp_list_free (directory_handle->files);
 	gp_list_free (directory_handle->dirs);
+	g_free (directory_handle->dirname);
 	g_free (directory_handle);
 
 	return (GNOME_VFS_OK);
@@ -443,6 +455,8 @@ static GnomeVFSResult do_read_directory (
 {
 	CameraListEntry *entry;
 	DirectoryHandle *dh;
+	CameraFileInfo camera_info;
+	GnomeVFSResult result;
 
 	dh = (DirectoryHandle *) handle;
 
@@ -459,9 +473,17 @@ static GnomeVFSResult do_read_directory (
 	if (dh->pos < dh->dirs->count) {
 		entry = gp_list_entry (dh->dirs, dh->pos);
 		info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
+		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+		info->mime_type = g_strdup ("x-directory/normal");
 	} else {
 		entry = gp_list_entry (dh->files, dh->pos - dh->dirs->count);
 		info->type = GNOME_VFS_FILE_TYPE_REGULAR;
+		g_mutex_lock (cameras_mutex);
+		result = GNOME_VFS_RESULT (gp_camera_file_get_info (
+			dh->camera, dh->dirname, entry->name, &camera_info));
+		g_mutex_unlock (cameras_mutex);
+		if (result == GNOME_VFS_OK)
+			get_info_from_camera_info (&camera_info, FALSE, info);
 	}
 	info->name = g_strdup (entry->name);
 

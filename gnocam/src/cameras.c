@@ -197,60 +197,63 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 	g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (item), "uri"));
 	g_return_if_fail (viewer_client);
 
-	/* Folder or file? */
-	if (gnome_vfs_uri_get_basename (uri)) {
-		switch (view_mode) {
-		case GNOCAM_VIEW_MODE_NONE:
-			uri = NULL;
-			break;
-		case GNOCAM_VIEW_MODE_PREVIEW:
-			gnome_vfs_uri_set_user_name (uri, "previews");
-			break;
-		case GNOCAM_VIEW_MODE_FILE:
-			gnome_vfs_uri_set_user_name (uri, NULL);
-			break;
-		}
+	/* We don't display anything if a folder gets selected or if the user selected GNOCAM_VIEW_MODE_NONE. */
+	if (item->subtree || view_mode == GNOCAM_VIEW_MODE_NONE) return;
+
+	/* What do we have to display? */
+	switch (view_mode) {
+	case GNOCAM_VIEW_MODE_NONE:
+		g_assert_not_reached ();
+		break;
+	case GNOCAM_VIEW_MODE_PREVIEW:
+		gnome_vfs_uri_set_user_name (uri, "previews");
+		break;
+	case GNOCAM_VIEW_MODE_FILE:
+		gnome_vfs_uri_set_user_name (uri, NULL);
+		break;
 	}
-	if (uri) {
-		CORBA_exception_init (&ev);
 
-		/* Get the interface. */
-		interface = bonobo_object_client_query_interface (viewer_client, "IDL:Bonobo/PersistStream:1.0", &ev);
-		if (BONOBO_EX (&ev)) {
-			tmp = g_strdup_printf (_("Could not connect to the image viewer! (%s)"), bonobo_exception_get_text (&ev));
-			gnome_error_dialog_parented (tmp, main_window);
-			g_free (tmp);
-			CORBA_exception_free (&ev);
-			return;
-		}
+	/* Init exceptions. */
+	CORBA_exception_init (&ev);
 
-		/* Get the file. */
-		tmp = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE);
-		stream = bonobo_stream_open_full ("camera", tmp, 0664, Bonobo_Storage_READ, &ev);
+	/* Get the interface. */
+	interface = bonobo_object_client_query_interface (viewer_client, "IDL:Bonobo/PersistStream:1.0", &ev);
+	if (BONOBO_EX (&ev)) {
+		tmp = g_strdup_printf (_("Could not connect to the image viewer! (%s)"), bonobo_exception_get_text (&ev));
+		gnome_error_dialog_parented (tmp, main_window);
 		g_free (tmp);
-		if (BONOBO_EX (&ev)) {
-			tmp = g_strdup_printf (_("Could not get stream!\n(%s)"), bonobo_exception_get_text (&ev));
-			gnome_error_dialog_parented (tmp, main_window);
-			g_free (tmp);
-			Bonobo_Unknown_unref (interface, &ev);
-			CORBA_Object_release (interface, &ev);
-			CORBA_exception_free (&ev);
-			return;
-		}
-		corba_stream = bonobo_stream_corba_object_create (BONOBO_OBJECT (stream));
+		CORBA_exception_free (&ev);
+		return;
+	}
 
-		/* Display the file. */
-		Bonobo_PersistStream_load (interface, corba_stream, "image/jpeg", &ev);
-		if (BONOBO_EX (&ev)) {
-			tmp = g_strdup_printf (_("Could not display the file!\n(%s)"), bonobo_exception_get_text (&ev));
-			gnome_error_dialog_parented (tmp, main_window);
-			g_free (tmp);
-		}
-		Bonobo_Unknown_unref (corba_stream, &ev);
+	/* Get the corba stream. */
+	tmp = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE);
+	stream = bonobo_stream_open_full ("camera", tmp, 0664, Bonobo_Storage_READ, &ev);
+	g_free (tmp);
+	if (BONOBO_EX (&ev)) {
+		tmp = g_strdup_printf (_("Could not get stream!\n(%s)"), bonobo_exception_get_text (&ev));
+		gnome_error_dialog_parented (tmp, main_window);
+		g_free (tmp);
 		Bonobo_Unknown_unref (interface, &ev);
 		CORBA_Object_release (interface, &ev);
 		CORBA_exception_free (&ev);
+		return;
 	}
+	corba_stream = bonobo_stream_corba_object_create (BONOBO_OBJECT (stream));
+
+	/* Send the corba stream. */
+	Bonobo_PersistStream_load (interface, corba_stream, "image/jpeg", &ev);
+	if (BONOBO_EX (&ev)) {
+		tmp = g_strdup_printf (_("Could not display the file!\n(%s)"), bonobo_exception_get_text (&ev));
+		gnome_error_dialog_parented (tmp, main_window);
+		g_free (tmp);
+	}
+
+	/* Clean up. */
+	bonobo_object_unref (BONOBO_OBJECT (stream));
+	Bonobo_Unknown_unref (interface, &ev);
+	CORBA_Object_release (interface, &ev);
+	CORBA_exception_free (&ev);
 }
 
 void

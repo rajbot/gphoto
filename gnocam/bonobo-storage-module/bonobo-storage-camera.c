@@ -17,9 +17,33 @@
 #include "bonobo-stream-camera.h"
 #include "utils.h"
 
+#define CHECK_RESULT(result,ev)         G_STMT_START{                                                                           \
+        if (result <= 0) {                                                                                                      \
+                switch (result) {                                                                                               \
+                case GP_OK:                                                                                                     \
+                        break;                                                                                                  \
+                case GP_ERROR_IO:                                                                                               \
+                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_IOError, NULL);			\
+			break;													\
+		case GP_ERROR_DIRECTORY_NOT_FOUND:										\
+		case GP_ERROR_FILE_NOT_FOUND:											\
+		case GP_ERROR_MODEL_NOT_FOUND:											\
+			CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotFound, NULL);			\
+			break;													\
+		case GP_ERROR_FILE_EXISTS:											\
+			CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NameExists, NULL);			\
+			break;													\
+		case GP_ERROR_NOT_SUPPORTED:											\
+			CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);			\
+			break;													\
+		default:													\
+                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_IOError, NULL);			\
+                        break;                                                                                                  \
+                }                                                                                                               \
+        }                               }G_STMT_END
+
+
 static BonoboStorageClass *bonobo_storage_camera_parent_class;
-static GConfClient *client = NULL;
-static GMutex *client_mutex = NULL;
 
 static Bonobo_StorageInfo*
 camera_get_info (BonoboStorage *storage, const CORBA_char *path, const Bonobo_StorageInfoFields mask, CORBA_Environment *ev)
@@ -88,6 +112,7 @@ bonobo_storage_camera_open (const char *path, gint flags, gint mode, CORBA_Envir
                 return NULL;
         }
 
+	/* Connect to the camera. */
 	storage->uri = gnome_vfs_uri_new (path);
 	storage->camera = util_camera_new (storage->uri, ev);
 	if (BONOBO_EX (ev)) {
@@ -110,7 +135,14 @@ camera_open_storage (BonoboStorage *storage, const CORBA_char *path, Bonobo_Stor
 static void
 camera_erase (BonoboStorage *storage, const CORBA_char *path, CORBA_Environment *ev)
 {
-	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
+	BonoboStorageCamera *s = BONOBO_STORAGE_CAMERA (storage);
+	GnomeVFSURI *uri = gnome_vfs_uri_new (path);
+
+	/* Delete the file. */
+	CHECK_RESULT (gp_camera_file_delete (s->camera, (gchar*) gnome_vfs_uri_get_path (uri), (gchar*) gnome_vfs_uri_get_basename (uri)), ev);
+
+	/* Connect to the camera. */
+	gnome_vfs_uri_unref (uri);
 }
 
 static void
@@ -190,16 +222,9 @@ init_storage_plugin (StoragePlugin *plugin)
 
 	/* Init GConf. */
 	if (!gconf_is_initialized ()) gconf_init (1, argv, NULL);
-	client = gconf_client_get_default ();
-	gtk_object_ref (GTK_OBJECT (client));
-	gtk_object_sink (GTK_OBJECT (client));
-#ifdef G_THREADS_ENABLED
-	if (g_thread_supported ()) client_mutex = g_mutex_new ();
-	else client_mutex = NULL;
-#endif
 
 	/* Init GPhoto */
-	gp_init (GP_DEBUG_HIGH);
+	gp_init (GP_DEBUG_NONE);
 	gp_frontend_register (NULL, NULL, NULL, NULL, NULL);
 
 	return 0;

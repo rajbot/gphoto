@@ -18,6 +18,33 @@
 #include "bonobo-stream-camera.h"
 #include "utils.h"
 
+#define CHECK_RESULT(result,ev)         G_STMT_START{                                                                           \
+        if (result <= 0) {                                                                                                      \
+		printf ("GP_*: %i\n", result);											\
+                switch (result) {                                                                                               \
+                case GP_OK:                                                                                                     \
+                        break;                                                                                                  \
+                case GP_ERROR_IO:                                                                                               \
+                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_IOError, NULL);				\
+                        break;                                                                                                  \
+                case GP_ERROR_DIRECTORY_NOT_FOUND:                                                                              \
+                case GP_ERROR_FILE_NOT_FOUND:                                                                                   \
+                case GP_ERROR_MODEL_NOT_FOUND:                                                                                  \
+                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotFound, NULL);                       \
+                        break;                                                                                                  \
+                case GP_ERROR_FILE_EXISTS:                                                                                      \
+                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NameExists, NULL);                     \
+                        break;                                                                                                  \
+                case GP_ERROR_NOT_SUPPORTED:                                                                                    \
+                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);			\
+			break;													\
+		default:													\
+                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_IOError, NULL);				\
+                        break;                                                                                                  \
+                }                                                                                                               \
+        }                               }G_STMT_END
+
+
 static BonoboStreamClass *bonobo_stream_camera_parent_class;
 
 static Bonobo_StorageInfo *
@@ -42,11 +69,19 @@ camera_write (BonoboStream *stream, const Bonobo_Stream_iobuf *buffer, CORBA_Env
 	gchar *folder;
 
 	g_return_if_fail (file = gp_file_new ());
-	g_return_if_fail (gp_file_append (file, buffer->_buffer, buffer->_length) == GP_OK);
+	CHECK_RESULT (gp_file_append (file, buffer->_buffer, buffer->_length), ev);
+	if (BONOBO_EX (ev)) {
+		gp_file_unref (file);
+		return;
+	}
 	g_return_if_fail (folder = gnome_vfs_uri_extract_dirname (s->uri));
-	g_return_if_fail (gp_camera_file_put (s->camera, file, folder) == GP_OK);
+	CHECK_RESULT (gp_camera_file_put (s->camera, file, folder), ev);
 	g_free (folder);
-	g_return_if_fail (gp_file_free (file) == GP_OK);
+	if (BONOBO_EX (ev)) {
+		gp_file_unref (file);
+		return;
+	}
+	CHECK_RESULT (gp_file_unref (file), ev);
 }
 
 static void
@@ -219,6 +254,7 @@ bonobo_stream_camera_open (const char *path, gint flags, gint mode, CORBA_Enviro
 		return NULL;
 	}
 
+	/* Connect to the camera. */
 	stream->uri = gnome_vfs_uri_new (path);
 	stream->camera = util_camera_new (stream->uri, ev);
 	if (BONOBO_EX (ev)) {
@@ -231,14 +267,16 @@ bonobo_stream_camera_open (const char *path, gint flags, gint mode, CORBA_Enviro
 	g_assert (filename = g_strdup (gnome_vfs_uri_get_basename (stream->uri)));
 	g_assert (dirname = gnome_vfs_uri_extract_dirname (stream->uri));
 	if (gnome_vfs_uri_get_user_name (stream->uri) && (strcmp (gnome_vfs_uri_get_user_name (stream->uri), "previews") == 0)) {
-		if (gp_camera_file_get_preview (stream->camera, file, dirname, filename) != GP_OK) {
+		CHECK_RESULT (gp_camera_file_get_preview (stream->camera, file, dirname, filename), ev);
+		if (BONOBO_EX (ev)) {
 			gp_file_unref (file);
 			bonobo_object_unref (BONOBO_OBJECT (stream));
 			CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
 			return NULL;
 		}
 	} else {
-		if (gp_camera_file_get (stream->camera, file, dirname, filename) != GP_OK) {
+		CHECK_RESULT (gp_camera_file_get (stream->camera, file, dirname, filename), ev);
+		if (BONOBO_EX (ev)) {
 			gp_file_unref (file);
 			bonobo_object_unref (BONOBO_OBJECT (stream));
 			CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
@@ -248,7 +286,7 @@ bonobo_stream_camera_open (const char *path, gint flags, gint mode, CORBA_Enviro
 	stream->data = file->data;
 	stream->size = file->size;
 	file->data = NULL;
-	gp_file_unref (file);
+	CHECK_RESULT (gp_file_unref (file), ev);
 
 	return BONOBO_STREAM (bonobo_object_construct (BONOBO_OBJECT (stream), corba_stream));
 }

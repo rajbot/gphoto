@@ -150,6 +150,7 @@ function checktools {
     then
 	installautotools
     elif "$parm_tools"
+    then
 	if [ -d "$toolroot" ]
 	then
 	    echo "##### Going to use/build our own tools from/to ${toolroot}"
@@ -158,6 +159,8 @@ function checktools {
 	else
 	    installautotools
 	fi
+    else
+	echo "##### Going to use autodetected tools from the system"
     fi
 
     # no need for autodetection if we installed our own version

@@ -77,7 +77,7 @@ void menu_select (gpointer data, guint action, GtkWidget *widget) {
 			resize_dialog();
 			break;
 		case 13: /* Select All */
-			select_all;
+			select_all();
 			break;
 		case 14: /* Select Inverse */
 			select_inverse();

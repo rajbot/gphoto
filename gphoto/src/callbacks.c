@@ -29,7 +29,7 @@
 #include <stdlib.h>
 
 /* Search the image_info tags for "name", return its value (string) */
-char* find_tag(struct Image *im, char* name){
+char* find_tag(struct Image *im, char* name) {
 
 	int i;
 
@@ -166,17 +166,34 @@ void del_dialog () {
 
 void savepictodisk (int picNum, int thumbnail, char *prefix) {
 
+	/* Saves picture (thumbnail == 0) or thumbnail (thumbnail == 1)
+	 * #picNum to disk as prefix.(returned image extension)
+	 */
+
 	FILE *fp;
 	struct Image *im = NULL; 
 	char fname[1024];
 
 	im = (*Camera->get_picture)(picNum, thumbnail);
 	sprintf(fname, "%s.%s", prefix, im->image_type);
-	save_image(im, fname);
+	save_image(fname, im);
 	free_image(im);
 }
 
-void saveselectedtodisk () {
+char saveselectedtodisk_dir[1024];
+
+void saveselectedtodisk (GtkWidget *widget, char *type) {
+
+	/* Odd workaround:
+	 * if type == "tn" (thumbnails/no directory needed)
+	 * or type == "in" (images/no directory needed)
+	 * then it is assume that saveselectedtodisk_dir contains
+	 * the path to where we want to save. this allows the batch
+	 * saving of both images and thumbnails without prompting
+	 * for an output directory for thumbnails, and then images.
+	 * if type == "t", selected thumbnails are saved.
+	 * if type == "i", selected images are saved.
+	 */
 
 	int i = 0, pic = 1;
 	char fname[1024];
@@ -188,45 +205,55 @@ void saveselectedtodisk () {
 	GtkWidget *entry;
 	GSList *group;
 
-	filesel = gtk_file_selection_new(
-			"Select a directory to store the images...");
+	if ((strcmp("tn", type) != 0) && (strcmp("in", type) != 0)) {
+		filesel = gtk_file_selection_new(
+				"Select a directory to store the images...");
 
-	gtk_widget_hide(GTK_FILE_SELECTION(filesel)->file_list);
-	gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_text);
-	gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_entry);
+		gtk_widget_hide(GTK_FILE_SELECTION(filesel)->file_list);
+		gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_text);
+		gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_entry);
 
-	label = gtk_label_new("Enter the file prefix for the images:");
-	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
-	gtk_widget_show(label);
-	gtk_box_pack_start_defaults(GTK_BOX(
-		GTK_FILE_SELECTION(filesel)->main_vbox), label);
-	gtk_box_reorder_child(GTK_BOX(
-		GTK_FILE_SELECTION(filesel)->main_vbox), label, 5);
+		label = gtk_label_new("Enter the file prefix for the images:");
+		gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
+		gtk_widget_show(label);
+		gtk_box_pack_start_defaults(GTK_BOX(
+			GTK_FILE_SELECTION(filesel)->main_vbox), label);
+		gtk_box_reorder_child(GTK_BOX(
+			GTK_FILE_SELECTION(filesel)->main_vbox), label, 5);
 
-        entry = gtk_entry_new();
-        gtk_widget_show(entry);
-        gtk_entry_set_max_length(GTK_ENTRY(entry), 25);
-	gtk_box_pack_start_defaults(GTK_BOX(
-		GTK_FILE_SELECTION(filesel)->main_vbox), entry);
-	gtk_box_reorder_child(GTK_BOX(
-		GTK_FILE_SELECTION(filesel)->main_vbox), entry, 6);
+	        entry = gtk_entry_new();
+	        gtk_widget_show(entry);
+	        gtk_entry_set_max_length(GTK_ENTRY(entry), 25);
+		gtk_box_pack_start_defaults(GTK_BOX(
+			GTK_FILE_SELECTION(filesel)->main_vbox), entry);
+		gtk_box_reorder_child(GTK_BOX(
+			GTK_FILE_SELECTION(filesel)->main_vbox), entry, 6);
+	
+		/* if they clicked cancel, return  ------------- */
+		if (wait_for_hide(filesel, GTK_FILE_SELECTION(filesel)->ok_button, 
+		    GTK_FILE_SELECTION(filesel)->ok_button) == 0)
+			return;
+	        /* --------------------------------------------- */
 
-	/* if they clicked cancel, return  ------------- */
-	if (wait_for_hide(filesel, GTK_FILE_SELECTION(filesel)->ok_button, 
-	    GTK_FILE_SELECTION(filesel)->ok_button) == 0)
-		return;
-        /* --------------------------------------------- */
-
-	filesel_dir = gtk_file_selection_get_filename(
-			GTK_FILE_SELECTION(filesel));
-	filesel_prefix = gtk_entry_get_text(GTK_ENTRY(entry));
+		filesel_dir = gtk_file_selection_get_filename(
+				GTK_FILE_SELECTION(filesel));
+		filesel_prefix = gtk_entry_get_text(GTK_ENTRY(entry));
+		sprintf(saveselectedtodisk_dir, "%s%s", filesel_dir,
+			filesel_prefix);
+	}
 
 	while (node->next != NULL) {
                 node = node->next; i++;
                 if (GTK_TOGGLE_BUTTON(node->button)->active) {
-			sprintf(fname, "%s%s-%i", filesel_dir, filesel_prefix,
-				pic);
-			savepictodisk(i, 0, fname);
+			if ((strcmp("i", type)==0)||(strcmp("in", type)==0)) {
+				sprintf(fname, "%s-%i",
+					saveselectedtodisk_dir, pic);
+				savepictodisk(i, 0, fname); }
+			   else {
+				sprintf(fname, "%s-thumbnail-%i",
+					saveselectedtodisk_dir, pic);
+				savepictodisk(i, 1, fname);
+			}
 			pic++;
 		}
 	}
@@ -235,7 +262,7 @@ void saveselectedtodisk () {
 	update_status(fname);
 }
 
-void appendpic (int picNum, int fromCamera, char *fileName) {
+void appendpic (int picNum, int thumbnail, int fromCamera, char *fileName) {
 
 	int w, h;
 	char fname[15], *openName;
@@ -253,11 +280,10 @@ void appendpic (int picNum, int fromCamera, char *fileName) {
 	node = node->next; node->next = NULL;
 
 	if (fromCamera) {
-		im = (*Camera->get_picture)(picNum, 0);
+		im = (*Camera->get_picture)(picNum, thumbnail);
 		node->imlibimage =  gdk_imlib_load_image_mem(im->image,
 							im->image_size);
-		free(im->image);
-		free(im);}
+		free_image(im);}
 	   else
 		node->imlibimage = gdk_imlib_load_image(fileName);
 
@@ -785,7 +811,7 @@ void remove_thumbnail (int i) {
 }
 
 /* Place a thumbnail into the index at location corresponding to node */
-void insert_thumbnail(struct ImageInfo *node){
+void insert_thumbnail(struct ImageInfo *node) {
   char status[256];
   GdkPixmap *pixmap;
   GdkImlibImage *scaledImage;
@@ -852,7 +878,7 @@ void insert_thumbnail(struct ImageInfo *node){
  };
 
 /* intercept mouse click on a thumbnail button */
-gint thumb_click( GtkWidget *widget,GdkEventButton *event,gpointer   callback_data ){
+gint thumb_click( GtkWidget *widget,GdkEventButton *event,gpointer   callback_data ) {
         if (callback_data==NULL) return(FALSE);
 
 	/* Double click will (re)-load the thumbnail*/
@@ -968,7 +994,7 @@ void getindex_empty () {
 }
 
 /* get selected pictures */
-void getpics () {
+void getpics (GtkWidget *widget, char *type) {
 
 	char status[256];
 	int i=0;
@@ -994,10 +1020,15 @@ void getpics () {
 			y++;
 			sprintf(status, "Getting image %i (this might take a minute)", i);
 			update_status(status);
+/*
 			gtk_toggle_button_set_state(
 				GTK_TOGGLE_BUTTON(node->button),
 				FALSE);
-			appendpic(i, TRUE, NULL);
+*/
+			if (strcmp("i", type) == 0)
+				appendpic(i, 0, TRUE, NULL);
+			   else
+				appendpic(i, 1, TRUE, NULL);
 			update_progress((float)y/(float)x);
 		}
 	}
@@ -1012,6 +1043,7 @@ void remove_image(int i) {
 	struct ImageInfo *node = &Images;
 	struct ImageInfo *prev = node;
 
+
 	while (x < i) {
 		prev = node;
 		node = node->next;
@@ -1023,8 +1055,8 @@ void remove_image(int i) {
 	gdk_pixmap_unref(GTK_PIXMAP(node->image)->pixmap);
 	gdk_imlib_free_pixmap(GTK_PIXMAP(node->image)->pixmap);
 	gtk_widget_destroy(node->image);
-/*	gtk_notebook_remove_page(GTK_NOTEBOOK(notebook), i); */
 	gtk_widget_destroy(node->page);
+/*	gtk_notebook_remove_page(GTK_NOTEBOOK(notebook), i);*/
 	free(node);
 }
 
@@ -1074,7 +1106,7 @@ void openpic (GtkWidget *widget, GtkFileSelection *fwin) {
 
 	gtk_widget_hide(GTK_WIDGET(fwin));
 	fname = gtk_file_selection_get_filename(GTK_FILE_SELECTION(fwin));
-	appendpic(0, FALSE, fname);
+	appendpic(0, 0, FALSE, fname);
 }
 	
 
@@ -1228,7 +1260,7 @@ void select_none() {
 	}
 }
 
- void color_dialog(){
+void color_dialog() {
 	int i=0,currentPic;
 	struct ImageInfo *node = &Images;
 
@@ -1243,8 +1275,8 @@ void select_none() {
                 i++;
         }
 
-	gtk_widget_show(img_edit_new(node));
- }
+	gtk_widget_show(GTK_WIDGET(img_edit_new(node)));
+}
 
 void resize_dialog() {
 
@@ -1264,7 +1296,6 @@ void resize_dialog() {
 	currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
 	if (currentPic == 0) {
 	  update_status("Can't scale the index.");
-/*  	  error_dialog("Can't manipulate the index."); */
 	  return;
 	}
 
@@ -1468,31 +1499,34 @@ void scale_double () { /* Scales image size by 200% */
 
 void save_images (gpointer data, guint action, GtkWidget *widget) {
 
-	saveselectedtodisk();
+	saveselectedtodisk(widget, "i");
 }
 
 void open_images (gpointer data, guint action, GtkWidget *widget) {
 
-	getpics();
+	getpics(widget, "i");
 }
 
 void save_thumbs (gpointer data, guint action, GtkWidget *widget) {
 
-	error_dialog("Saving Thumbnails is not yet supported");
+	saveselectedtodisk(widget, "t");
 }
 
 void open_thumbs (gpointer data, guint action, GtkWidget *widget) {
 
-	error_dialog("Opening Thumbnails is not yet supported");
+	getpics(widget, "t");
 }
 
 void save_both (gpointer data, guint action, GtkWidget *widget) {
 
-	error_dialog("Saving Thumbnails & Images is not yet supported");
+	saveselectedtodisk(widget, "t");
+	saveselectedtodisk(widget, "in");
+		/* don't prompt for directory when saving images */
 }
 
 void open_both (gpointer data, guint action, GtkWidget *widget) {
 
-	error_dialog("Opening Thumbnails & Images is not yet supported");
+	getpics(widget, "t");
+	getpics(widget, "i");
 }
 

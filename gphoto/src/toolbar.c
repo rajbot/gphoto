@@ -63,8 +63,6 @@ void create_toolbar (GtkWidget *box, GtkWidget *mainWin) {
                  GTK_SIGNAL_FUNC(filedialog), "o", box, 1);
   add_to_toolbar(mainWin, "Save Current Image", save_current_image_xpm,
                  GTK_SIGNAL_FUNC(filedialog), "s", box, 1);
-/*  add_to_toolbar(mainWin, "Batch Save", batch_save_xpm,
-                 GTK_SIGNAL_FUNC(batch_save_dialog), NULL, box, 1); */
   add_to_toolbar(mainWin, "Print Image", print_image_xpm,
                  GTK_SIGNAL_FUNC(print_pic), NULL, box, 1);
   add_to_toolbar(mainWin, "Close Image", delete_images_xpm,
@@ -75,18 +73,11 @@ void create_toolbar (GtkWidget *box, GtkWidget *mainWin) {
   add_to_toolbar(mainWin, "Get Empty Index", get_index_empty_xpm,
                  GTK_SIGNAL_FUNC(getindex_empty), NULL, box, 1);
   add_to_toolbar(mainWin, "Get Selected Images", get_selected_images_xpm,  
-                 GTK_SIGNAL_FUNC(getpics), NULL, box, 1);
+                 GTK_SIGNAL_FUNC(getpics), "i", box, 1);
   add_to_toolbar(mainWin, "Take picture", take_picture_xpm,
                  GTK_SIGNAL_FUNC(takepicture_call), NULL, box, 1);
   add_to_toolbar(mainWin, "Delete Selected Images", close_image_xpm, 
                  GTK_SIGNAL_FUNC(del_dialog), NULL, box, 1);
-/*    add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1); */
-/*    add_to_toolbar(mainWin, "Cut", tb_cut_xpm,  */
-/*                   GTK_SIGNAL_FUNC(menu_selected), "Cut", box, 1); */
-/*    add_to_toolbar(mainWin, "Copy", tb_copy_xpm, */
-/*                   GTK_SIGNAL_FUNC(menu_selected), "Copy", box, 1); */
-/*    add_to_toolbar(mainWin, "Paste", tb_paste_xpm,   */
-/*                   GTK_SIGNAL_FUNC(menu_selected), "Paste", box, 1); */
   add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1);
   add_to_toolbar(mainWin, "Rotate Clockwise", rotc_xpm,
 		 GTK_SIGNAL_FUNC(manip_pic), "r", box, 1);

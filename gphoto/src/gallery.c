@@ -40,6 +40,11 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.3  1999/06/10 16:38:54  scottf
+ * Updated the callbacks.h file
+ * FIxed the gallery numbering bug (again)
+ * Little fixes here and there
+ *
  * Revision 1.2  1999/06/08 19:08:10  scottf
  * Fixed several gallery.c bugs, and improved it a bit.
  * Added free_image and save_image to util.c
@@ -354,7 +359,7 @@ Please install/move gallery themes there.");
 		/* Get the current thumbnail */
 			sprintf(cp, "Getting Thumbnail #%i...", j+1);
 			update_status(cp);
-			im = (*Camera->get_picture)(i+1, 1);
+			im = (*Camera->get_picture)(j+1, 1);
 			sprintf(thumbnail, 
 	"<a href=\"picture-%03i.html\"><img src=\"thumbnail-%03i.%s\"><\\/a>",
 				i+1, i+1, im->image_type);
@@ -369,7 +374,7 @@ Please install/move gallery themes there.");
 		/* Get the current image */
 			sprintf(cp, "Getting Image #%i...", j+1);
 			update_status(cp);
-			im = (*Camera->get_picture)(i+1, 0);
+			im = (*Camera->get_picture)(j+1, 0);
 			sprintf(picture, "<img src=\"picture-%03i.%s\">",
 				i+1, im->image_type);
 			sprintf(picture_filename, "picture-%03i.%s",

@@ -41,6 +41,8 @@
 #define HIGH_BAUD_RATE      115200
 #define HIGH_BAUD_RATE_CODE 0x1152
 
+#define MAX_CHECKSUM_ERRORS 8
+
 /*==============================================================================
 * Types
 ==============================================================================*/
@@ -49,6 +51,7 @@
 * Local Variables
 ==============================================================================*/
 static BOOLEAN camera_init = FALSE;
+static int checksum_errors = 0;
 
 /*==============================================================================
 * Local Function Prototypes
@@ -225,7 +228,6 @@ kdc240_read_packet
    unsigned char *packet
 )
 {
-   CC_RESPONSE_TYPE resp;
    int i;
    int checksum;
 
@@ -238,7 +240,15 @@ kdc240_read_packet
    if (checksum != packet[i])
    {
       printf ("kdc240_read_packet: checksum error\n");
-      cc_struct->packet_response = COMMAND_RESPONSE_ILL_PACKET;
+      if (++checksum_errors > MAX_CHECKSUM_ERRORS)
+      {
+         cc_struct->packet_response = COMMAND_RESPONSE_CANCEL;
+         cc_struct->rx_func(cc_struct->descriptor, NULL);
+      }
+      else
+      {
+         cc_struct->packet_response = COMMAND_RESPONSE_ILL_PACKET;
+      }
    }
    else
    {
@@ -392,8 +402,6 @@ kdc240_restart
    void
 )  
 {  
-   unsigned char c;
-
    /* Send break */
    state_machine_assert_break(machine);
 
@@ -501,6 +509,8 @@ kdc240_complex_command
 
       cc_struct->loop_top = STATE_1;
 
+      checksum_errors = 0;
+
       state_machine_program(machine, &program);
       while (state_machine_run(machine))
       {
@@ -529,6 +539,8 @@ kdc240_complex_command
 
       cc_struct->loop_top = STATE_3;
 
+      checksum_errors = 0;
+
       state_machine_program(machine, &program);
       while (state_machine_run(machine))
       {
@@ -551,7 +563,6 @@ kdc240_baud_command
 )
 {
    int desc;
-   va_list ap;
 
    desc = kodak_command_create(KODAK_CAMERA_DC240, CMD_BAUD_RATE,
       HIGH_BAUD_RATE_CODE);

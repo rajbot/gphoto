@@ -143,6 +143,7 @@ static unsigned char *kdc240_create_filename(unsigned char *,
 ==============================================================================*/
 STATE_MACHINE_INSTANCE *machine;
 static PICTURE_TYPE *picture_index = NULL;
+static int number_of_pictures = 0;
 
 /*==============================================================================
 * Constants
@@ -254,6 +255,18 @@ kdc240_get_picture
       58,  (void *)kdc240_get_picture_tx_filename,
       HIGH_HPBS, (void *)kdc240_get_picture_read
    };
+
+   /* If we haven't retrieved the index yet, do that first. */
+   if (picture_index == NULL)
+   {
+      kdc240_number_of_pictures();
+   }
+
+   /* Make sure that the picture number is present in the camera. */
+   if (picture > number_of_pictures)
+   {
+      return NULL;
+   }
 
    /* gphoto uses a one-based index, turn it into a zero-based one. */
    picture--;
@@ -544,6 +557,8 @@ kdc240_number_of_pictures
    {
       free(buffer.rx_buffer);
    }
+
+   number_of_pictures = retval;
 
    return retval;
 }

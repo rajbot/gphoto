@@ -54,9 +54,10 @@
 #include "../src/util.h"
 #include "../src/callbacks.h"
 
-#include "blank.xpm"
+/*#include "blank.xpm"*/
 
 extern unsigned char *fuji_exif_convert(exifparser *exifdat);
+extern GtkWidget *open_fuji_config_dialog();
 
 #ifndef CLK_TCK
 #include <sys/param.h>
@@ -87,6 +88,8 @@ int fuji_size;           /* MGM */
 int fuji_piccount;       /* For unique filename to Defeat the ImLib Cache */
 int devfd = -1;
 int maxnum;
+int fuji_debug=0;
+
 struct termios oldt, newt;
 char has_cmd[256];
 int pictures;
@@ -315,9 +318,9 @@ rd_pkt:
 		if (indata != NULL) {
 		  memcpy(indata+fuji_count,answer+4,answer_len-4);
 			fuji_count+=answer_len-4;
-#ifdef FUJI_DEBUG
-			printf("Recd %d of %d\n",fuji_count,fuji_size);
-#endif
+			if (fuji_debug){
+			  printf("Recd %d of %d\n",fuji_count,fuji_size);
+			};
 			update_progress((1.0*fuji_count/fuji_size>1.0)?1.0:
 						1.0*fuji_count/fuji_size);
 
@@ -325,6 +328,7 @@ rd_pkt:
 		/* More packets ? */
 		if (c != 0)
 			goto rd_pkt;
+		update_progress(0); /* Clean up the indicator */
 		return 0;
 	}		
 	fprintf(stderr, "Cannot receive answer, aborting.\n");
@@ -482,14 +486,14 @@ void get_command_list (void)
 }
 
 int get_picture_info(int num,char *name){
-#ifdef FUJI_DEBUG
-	  printf("Getting name..."); /* mgm1 debug*/
-#endif
+
+          if(fuji_debug)  printf("Getting name...");
+
 	  fflush(stdout);
 	  strncpy(name,dc_picture_name(num),100);
-#ifdef FUJI_DEBUG
-	  printf("%s\n",name); /* mgm1 debug*/
-#endif
+
+	  if (fuji_debug) printf("%s\n",name);
+
 	  /*
 	   * To find the picture number, go to the first digit. According to
 	   * recent Exif specs, n_off can be either 3 or 4.
@@ -510,15 +514,13 @@ void get_picture_list (void)
 	free(pinfo);
 	pinfo = calloc(pictures+1, sizeof(struct pict_info));
 	for (i = 1; i <= pictures; i++) {
-#ifdef FUJI_DEBUG
-	  printf("Getting name..."); /* mgm1 debug*/
-#endif
-	  fflush(stdout);
-		name = strdup(dc_picture_name(i));
-		pinfo[i].name = name;
-#ifdef FUJI_DEBUG
-	  printf("%s\n",name); /* mgm1 debug*/
-#endif
+	        if (fuji_debug) printf("Getting name..."); /* mgm1 debug*/
+	        fflush(stdout);
+	        name = strdup(dc_picture_name(i));
+	        pinfo[i].name = name;
+
+		if (fuji_debug) printf("%s\n",name); /* mgm1 debug*/
+
 		/*
 		 * To find the picture number, go to the first digit. According to
 		 * recent Exif specs, n_off can be either 3 or 4.
@@ -631,10 +633,9 @@ int download_picture(int n,int thumb,struct Image *im)
 	clock_t t1, t2;
 
 	if (!thumb) {
-	  fuji_size=get_picture_info(n,name);
-#ifdef FUJI_DEBUG	  
-	  printf("%3d   %12s  \n", n, name);
-#endif
+	        fuji_size=get_picture_info(n,name);
+
+		if (fuji_debug) printf("%3d   %12s  \n", n, name);
 	}
 	else fuji_size=10500;  /* Probly not same for all cams, better way? */
 	im->image_size=fuji_size;
@@ -642,18 +643,21 @@ int download_picture(int n,int thumb,struct Image *im)
 	
 	t1 = times(0);
 	if (cmd2(0, (thumb?0:0x02), n, im->image)==-1) return(-1);
-#ifdef FUJI_DEBUG
-	printf("%4d actual bytes vs %4d bytes\n", fuji_count , im->image_size);
-#endif
+
+	if (fuji_debug) printf("%4d actual bytes vs %4d bytes\n", 
+			       fuji_count , im->image_size);
+
 	im->image_size=fuji_count;
 	t2 = times(0);
-#ifdef FUJI_DEBUG
-	printf("%3d seconds, ", (int)(t2-t1) / CLK_TCK);
-	printf("%4d bytes/s\n", fuji_count * CLK_TCK / (int)(t2-t1));
-#endif
+
+	if (fuji_debug){
+	        printf("%3d seconds, ", (int)(t2-t1) / CLK_TCK);
+		printf("%4d bytes/s\n", fuji_count * CLK_TCK / (int)(t2-t1));
+	};
+
 	if (has_cmd[17]&&!thumb){
 	if (!thumb&&(fuji_count != fuji_size)){
-		    update_status("Short picture file--disk full or quota exceeded\n");
+	    update_status("Short picture file--disk full or quota exceeded\n");
 	    return(-1);
 	  };
 	};
@@ -672,11 +676,11 @@ int delete_pic (const char *picname)
 	int i, ret;
 
 	for (i = 1; i <= pictures; i++)
-	  if (!strcmp(pinfo[i].name, picname)) {
-	    if ((ret = del_frame(i)) == 0)
-	      get_picture_list();
-	    return ret;
-	  }
+	        if (!strcmp(pinfo[i].name, picname)) {
+	                 if ((ret = del_frame(i)) == 0)
+			          get_picture_list();
+			 return ret;
+		}
 	return -1;
 }
 
@@ -761,20 +765,23 @@ again:
 
 
 int fuji_init(){
-  char idstring[256];
-#ifdef FUJI_DEBUG
-    printf("Initializing %s\n",serial_port);
-#endif
-    if (init_serial(serial_port)==-1) return(-1);
-    set_max_speed();
-    if (!fuji_initialized){
-      get_command_list();
-      fuji_initialized=1;  
-      /* For now assume that the user wil not use 2 different fuji cams
-	 in one session */
-      strcpy(idstring,"Identified ");
-      strncat(idstring,dc_version_info(),100);
-      update_status(idstring);
+        char idstring[256];
+
+	if (fuji_debug) printf("Initializing %s\n",serial_port);
+
+	if (init_serial(serial_port)==-1) return(-1);
+
+	set_max_speed();
+	if (!fuji_initialized){
+	        get_command_list();
+	  /* For now assume that the user wil not use 2 different fuji cams
+	     in one session */
+	        strcpy(idstring,"Identified ");
+	        strncat(idstring,dc_version_info(),100);
+	        update_status(idstring);
+
+	  /* load_fuji_options() */
+	        fuji_initialized=1;  
     };
       
     return(0);
@@ -788,9 +795,11 @@ int fuji_init(){
 
 int fuji_configure(){
   /* 
-     DS7 can't be configured, looks like Fuji cams can...
+     DS7 can't be configured, looks like other Fuji cams can...
      expansion needed here.
   */
+ open_fuji_config_dialog();
+
   return(1);
 };
 
@@ -803,10 +812,10 @@ struct Image *fuji_get_picture (int picture_number,int thumbnail){
   int i;
   exifparser exifdat;
 
-#ifdef FUJI_DEBUG
-  printf("fuji_get_picture called for #%d %s\n",picture_number,
-	 thumbnail?"thumb":"photo");
-#endif
+
+  if (fuji_debug) printf("fuji_get_picture called for #%d %s\n",picture_number,
+			 thumbnail?"thumb":"photo");
+
   if (fuji_init()) return(0);/*goto bugout*/;
 
   newimage=malloc(sizeof(struct Image));
@@ -848,13 +857,13 @@ struct Image *fuji_get_picture (int picture_number,int thumbnail){
 
     exif_add_all(&exifdat,thumbnail?1:0,newimage->image_info+(thumbnail?6:0));
 
-#ifdef FUJI_DEBUG
-    printf("====================EXIF TAGS================\n");
-    for(i=0;i<newimage->image_info_size/2;i++)
-      printf("%12s = %12s \n",newimage->image_info[i*2],
-	      newimage->image_info[i*2+1]);
-    printf("=============================================\n");
-#endif
+    if (fuji_debug) {
+            printf("====================EXIF TAGS================\n");
+	    for(i=0;i<newimage->image_info_size/2;i++)
+	            printf("%12s = %12s \n",newimage->image_info[i*2],
+			   newimage->image_info[i*2+1]);
+	    printf("=============================================\n");
+    };
 
     /* Tiff info in thumbnail must be converted to be viewable */
     if (thumbnail) {
@@ -934,8 +943,8 @@ struct Image *fuji_get_preview (){
 
   if (!has_cmd[0x62] || !has_cmd[0x64]) {
     update_status("Cannot preview (unsupported command)\n");
-    newimage->image=(char *)blank_xpm;
-    return ( newimage);
+    /*    newimage->image=(char *)blank_xpm;*/
+    return ( 0 );
   }
 
   newimage->image=malloc(100000); /* What a hack!!!*/

@@ -1,3 +1,4 @@
+
 int fuji_init();
 int fuji_configure();
 struct Image *fuji_get_picture (int picture_number,int thumbnail);
@@ -9,3 +10,6 @@ int fuji_take_picture ();
 char *fuji_summary();
 char *fuji_description();
 
+/* Global Configuration Variables */
+
+extern fuji_debug; 

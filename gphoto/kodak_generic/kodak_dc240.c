@@ -278,6 +278,7 @@ kdc240_get_picture
    int thumbnail
 )
 {
+   unsigned char *status;
    struct Image *image = NULL;
    PICTURE_PACKET_TYPE buffer;
    CC_STRUCT_TYPE cc_struct = 
@@ -322,6 +323,12 @@ kdc240_get_picture
    buffer.rx_buffer = NULL;
    buffer.filename = kdc240_create_filename(picture_index[picture].filename,
       0, 0);
+
+   status = (unsigned char *)malloc(256);
+   strcpy (status, "Fetching file ");
+   strcat (status, picture_index[picture].filename);
+   update_status(status);
+   free(status);
 
    if (thumbnail)
    {

@@ -36,8 +36,6 @@ void on_capture_capture_image_activate  (BonoboUIComponent* component, gpointer 
 void on_capture_capture_preview_activate(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 void on_capture_capture_activate 	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 
-void capture_refresh 			(GtkWidget* capture);
-
 void on_duration_button_ok_clicked	(GtkButton* button, gpointer user_data);
 void on_duration_button_cancel_clicked	(GtkButton* button, gpointer user_data);
 

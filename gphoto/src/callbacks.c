@@ -814,11 +814,15 @@ void insert_thumbnail(struct ImageInfo *node) {
   GdkPixmap *pixmap;
   GdkImlibImage *scaledImage;
   GtkWidget *vbox;
+  GtkTooltips *tooltip;
   /*  char *thumbname;*/
-  int i=0;
+  int i=0, x;
   int w, h;
   struct ImageInfo *other=&Thumbnails;
   struct Image *im;
+  double aspectRatio;
+  char info[1024], tag[256];
+
 
   /* maybe this info should be part of the imageinfo structure */
   while ((other!=node)&&(other!=NULL)){ // Find node in the list
@@ -842,6 +846,16 @@ void insert_thumbnail(struct ImageInfo *node) {
 	error_dialog(error);
 	return;
   }
+  sprintf(info, "Picture #%i                             \n", i); 
+  /* it looks like the tooltips set wrapping by the first line */
+  for (x=0; x<im->image_info_size; x+=2) {
+	sprintf(tag, "%s: %s\n",im->image_info[x],im->image_info[x+1]);
+	strcat(info, tag);
+  }
+
+  tooltip = gtk_tooltips_new();
+  gtk_tooltips_set_tip(tooltip,node->button,info, NULL);
+
   node->imlibimage = gdk_imlib_load_image_mem(im->image, im->image_size);
   /*
   thumbname=find_tag(im,"ImageDescription");
@@ -853,13 +867,19 @@ void insert_thumbnail(struct ImageInfo *node) {
   w = node->imlibimage->rgb_width; 
   h = node->imlibimage->rgb_height;
   gdk_imlib_render(node->imlibimage, w, h);
-  if ((w >= h) && (w > 80)) {
-    h = h * 80 / w;
-    w = 80;
-  }
-  if ((h >= w) && (h > 60)) {
-    w = w * 60/ h;
-    h = 60;
+
+  /* Scale thumbnail to button size. Max height is 60. Max width is 80 so
+   * adjust dimensions while preserving aspect ratio.
+   */
+  aspectRatio = h/w; 
+  if (aspectRatio > 0.75) {
+     /* Thumbnail is tall. Adjust height to 60. Width will be < 80. */
+     w = (int)(60.0 * w / h);
+     h = 60;
+  } else {
+     /* Thumbnail is wide. Adjust width to 80. Height will be < 60. */
+     h = (int)(80.0 * h / w);
+     w = 80;
   }
   scaledImage = gdk_imlib_clone_scaled_image(node->imlibimage,w,h);
   gdk_imlib_kill_image(node->imlibimage);
@@ -902,7 +922,6 @@ void makeindex (int getthumbs) {
 	int num_pictures_taken;
 	char status[256];
 
-	GtkTooltips *tooltip;
 	GtkStyle *style;
 	GtkWidget *vbox;
 
@@ -943,11 +962,9 @@ fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
 		node->next = malloc (sizeof(struct ImageInfo));
 		node = node->next; node->next = NULL;
 
-		sprintf(status, "Picture #%i", i);
+		
 		node->button = gtk_toggle_button_new();
 		gtk_widget_show(node->button);
-		tooltip = gtk_tooltips_new();
-		gtk_tooltips_set_tip(tooltip,node->button,status, NULL);
 
 		/* make a label for the thumbnail */
 		sprintf(status, "%i", i);

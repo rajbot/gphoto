@@ -3,7 +3,7 @@
 
    Modifications:
    Copyright (C) 1999 Scott Fritzinger <scottf@unr.edu>
-
+
    The GPIO Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Library General Public License as
    published by the Free Software Foundation; either version 2 of the
@@ -89,6 +89,7 @@ gpio_device *gpio_new(gpio_device_type type)
                 gpio_debug_printf(GPIO_DEBUG_LOW, glob_debug_level, "Can not allocate device!");
                 return NULL;
         }
+	memset(dev, 0, sizeof(gpio_device));
 
         if (gpio_library_load(dev, type)) {
                 /* whoops! that type of device isn't supported */
@@ -214,18 +215,19 @@ int gpio_free(gpio_device *dev)
 int gpio_write(gpio_device *dev, char *bytes, int size)
         /* Called to write "bytes" to the IO device */
 {
-	int x, retval, dsize;
+	int x, retval;
 	char t[8];
 	char *buf;
 
 	if (glob_debug_level == GPIO_DEBUG_HIGH) {
-		buf = (char*)malloc(size+64);
-		sprintf(buf, "gpio_write: (size=%05i) DATA: ", size);
+		buf = (char *)malloc(sizeof(char)*(4*size+64));
+		buf[0] = 0;
 		for (x=0; x<size; x++) {
 			sprintf(t, "%02x ", (unsigned char)bytes[x]);
-			strcat(buf, t); 
+			strcat(buf, t);
 		}
-		gpio_debug_printf(GPIO_DEBUG_LOW, dev->debug_level, buf);
+		gpio_debug_printf(GPIO_DEBUG_LOW, dev->debug_level,
+			"gpio_write: (size=%05i) DATA: %s", size, buf);
 		free(buf);
 	}
         retval =  dev->ops->write(dev, bytes, size);
@@ -250,13 +252,14 @@ int gpio_read(gpio_device *dev, char *bytes, int size)
 	retval = dev->ops->read(dev, bytes, size);
 
 	if ((retval > 0)&&(glob_debug_level == GPIO_DEBUG_HIGH)) {
-		buf = (char*)malloc(retval+64);
-		sprintf(buf, "gpio_read: (size=%05i) DATA: ", retval);
+		buf = (char *)malloc(sizeof(char)*(4*retval+64));
+		buf[0] = 0;
 		for (x=0; x<retval; x++) {
 			sprintf(t, "%02x ", (unsigned char)bytes[x]);
-			strcat(buf, t); 
+			strcat(buf, t);
 		}
-		gpio_debug_printf(GPIO_DEBUG_LOW, dev->debug_level, buf);
+		gpio_debug_printf(GPIO_DEBUG_LOW, dev->debug_level, 
+			"gpio_read:  (size=%05i) DATA: %s", retval, buf);
 		free(buf);
 	}
 
@@ -343,6 +346,20 @@ int gpio_set_pin(gpio_device *dev, int pin, int level)
 	return (retval);
 }
 
+int gpio_send_break (gpio_device *dev, int duration)
+{
+	int retval;
+
+        if (!dev->ops->send_break) {
+		gpio_debug_printf(GPIO_DEBUG_LOW, dev->debug_level, "gpio_break: gpio_break NULL");
+                return (GPIO_ERROR);
+	}
+
+        retval = dev->ops->send_break(dev, duration);
+	gpio_debug_printf(GPIO_DEBUG_LOW, dev->debug_level,
+		"gpio_send_break: send_break %s", retval < 0? "error":"ok");
+	return (retval);
+}
 
 /* USB-specific functions */
 /* ------------------------------------------------------------------ */

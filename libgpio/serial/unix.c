@@ -67,10 +67,13 @@ int 		gpio_serial_close(gpio_device *dev);
 int 		gpio_serial_read(gpio_device *dev, char *bytes, int size);
 int 		gpio_serial_write(gpio_device *dev, char *bytes, int size);
 
+int 		gpio_serial_update (gpio_device *dev);
+
+/* Specific */
 int		gpio_serial_get_pin(gpio_device *dev, int pin);
 int     	gpio_serial_set_pin(gpio_device *dev, int pin, int level); 
+int		gpio_serial_send_break (gpio_device *dev, int duration);
 
-int 		gpio_serial_update (gpio_device *dev);
 
 /* private */
 int 		gpio_serial_set_baudrate(gpio_device *dev);
@@ -100,6 +103,7 @@ gpio_operations *gpio_library_operations () {
         ops->update = gpio_serial_update;
         ops->get_pin = gpio_serial_get_pin;
         ops->set_pin = gpio_serial_set_pin;
+        ops->send_break = gpio_serial_send_break;
 
         return (ops);
 }
@@ -186,6 +190,7 @@ int gpio_serial_open(gpio_device * dev)
 		perror(dev->settings.serial.port);
 		return GPIO_ERROR;
 	}
+
 /*	if (ioctl (dev->device_fd, TIOCMBIC, &RTS) <0) {
 		perror("ioctl(TIOCMBIC)");
 		return GPIO_ERROR;
@@ -504,4 +509,17 @@ static speed_t gpio_serial_baudconv(int baud)
 
 	return ret;
 #undef BAUDCASE
+}
+
+int gpio_serial_send_break (gpio_device *dev, int duration) {
+
+	/* Duration is in seconds */
+
+#if HAVE_TERMIOS_H
+	tcsendbreak(dev->device_fd, duration / 3);
+	tcdrain(dev->device_fd);
+#else
+	/* ioctl */
+#endif
+
 }

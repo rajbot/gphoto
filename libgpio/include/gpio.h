@@ -6,8 +6,10 @@
 #include <os2.h>
 #endif
 
+/* Include the portability layer */
 #include "gpio-port.h"
 
+/* Include serial by default */
 #include "gpio-serial.h"
 
 #ifdef GPIO_PARALLEL
@@ -111,8 +113,9 @@ struct gpio_operations {
 	int (*update)   (gpio_device *);
 
 	/* for serial and parallel devices */
-	int (*get_pin)	(gpio_device *, int);
-	int (*set_pin)	(gpio_device *, int, int);
+	int (*get_pin)	 (gpio_device *, int);
+	int (*set_pin)	 (gpio_device *, int, int);
+	int (*send_break)(gpio_device *, int);
 
 #ifdef GPIO_USB
 	/* for USB devices */
@@ -122,6 +125,7 @@ struct gpio_operations {
 	int (*msg_read)   (gpio_device * dev, int value, char *bytes, int size);
 #endif
 };
+
 typedef struct gpio_operations gpio_operations;
 
 /* Function pointers for the dynamic libraries */
@@ -284,6 +288,9 @@ gpio_device *gpio_new		(gpio_device_type type);
 				  successful: status
 				unsuccessful: GPIO_ERROR
 		*/
+
+	int gpio_send_break (gpio_device *dev, int duration);
+		/* send a break (duration is in seconds) */
 
 /* USB specific functions
    -------------------------------------------------------------- */

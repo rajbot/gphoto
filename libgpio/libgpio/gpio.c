@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "gpio.h"
+#include "library.h"
 
 gpio_device_info device_list[256];
 int              device_count;
@@ -56,7 +57,6 @@ void gpio_debug_printf (char *format, ...) {
 
 int gpio_init()
 {
-        gpio_operations *ops;
         gpio_debug_printf("Initializing...");
         /* Enumerate all the available devices */
         device_count = 0;

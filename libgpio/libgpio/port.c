@@ -4,60 +4,81 @@
    ------------------------------------------------------------------ */
 #ifdef WIN32
 
-GP_DIR GP_OPENDIR (char *dirname) {
+GPIO_DIR GPIO_OPENDIR (char *dirname) {
 
-	GPWINDIR *wd;
+	GPIOWINDIR *d;
 	char dirn[1024];
 
-	wd = (GPWINDIR*)malloc(sizeof(GPWINDIR));
+	d = (GPIOWINDIR*)malloc(sizeof(GPIOWINDIR));
 
 	/* Append the wildcard */
 	strcpy(dirn, dirname);
 	strcat(dirn, "\\*");
 
-	wd->got_first = 0;
+	d->got_first = 0;
+	d->handle = FindFirstFile(dirn, &(d->search));
+
+	if ((!d->handle) || (d->handle == INVALID_HANDLE_VALUE)) {
+			free(d);
+			return NULL;
+	}
+
+	return (d);
 }
 
-GP_DIRENT GP_READDIR (GP_DIR d) {
+GPIO_DIRENT GPIO_READDIR (GPIO_DIR d) {
+	if (d->got_first == 0) {
+		d->got_first = 1;
+		return (&(d->search));
+	}
 
+	if (!FindNextFile(d->handle, &(d->search)))
+			return (NULL);
+
+	return (&(d->search));
 }
 
-char *GP_FILENAME (GP_DIRENT de) {
+char *GPIO_FILENAME (GPIO_DIRENT de) {
 
+	return (de->cFileName);
 }
 
-int  GP_CLOSEDIR (GP_DIR dir) {
-
+int  GPIO_CLOSEDIR (GPIO_DIR d) {
+	FindClose(d->handle);
+	free(d);
+	return (1);
 }
 
-int GP_IS_FILE (char *filename) {
+int GPIO_IS_FILE (char *filename) {
 
+	return (GPIO_OK);
 }
 
-int GP_IS_DIR (char *dirname) {
+int GPIO_IS_DIR (char *dirname) {
 
+	return (GPIO_OK);
 }
 
 
 #else
 
-GP_DIR GP_OPENDIR (char *dirname) {
+GPIO_DIR GPIO_OPENDIR (char *dirname) {
 	return (opendir(dirname));
 }
 
-GP_DIRENT GP_READDIR (GP_DIR d) {
+GPIO_DIRENT GPIO_READDIR (GPIO_DIR d) {
 	return (readdir(d));
 }
 
-char *GP_FILENAME (GP_DIRENT de) {
+char *GPIO_FILENAME (GPIO_DIRENT de) {
 	return (de->d_name);
 }
 
-int GP_CLOSEDIR (GP_DIR dir) {
+int GPIO_CLOSEDIR (GPIO_DIR dir) {
 	closedir(dir);
 }
 
-int GP_IS_FILE (char *filename) {
+int GPIO_IS_FILE (char *filename) {
 	struct stat st;
 
 	if (stat(filename, &st)==0)
@@ -65,7 +86,7 @@ int GP_IS_FILE (char *filename) {
 	return (!S_ISDIR(st.st_mode));
 }
 
-int GP_IS_DIR (char *dirname) {
+int GPIO_IS_DIR (char *dirname) {
 	struct stat st;
 
 	if (stat(dirname, &st)==0)

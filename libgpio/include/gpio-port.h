@@ -12,20 +12,20 @@
 
 /* Work-around for readdir() */
 typedef struct {
-	HANDLE h;
+	HANDLE handle;
 	int got_first;
-	WIN32_FIND_DATA first;
-} GPWINDIR;
+	WIN32_FIND_DATA search;
+} GPIOWINDIR;
 
 /* Dynamic library functions */
-#define GP_DLOPEN(_filename)		LoadLibrary(_filename)
-#define GP_DLSYM(_handle, _funcname)	GetProcAddress(_handle, _funcname)
-#define GP_DLCLOSE(_handle)		FreeLibrary(_handle)
-#define GP_DLERROR()			"Windows Error"
+#define GPIO_DLOPEN(_filename)		LoadLibrary(_filename)
+#define GPIO_DLSYM(_handle, _funcname)	GetProcAddress(_handle, _funcname)
+#define GPIO_DLCLOSE(_handle)		FreeLibrary(_handle)
+#define GPIO_DLERROR()				"Windows Error"
 
 /* Directory-oriented functions */
-#define GP_DIR				GPWINDIR *
-#define GP_DIRENT			WIN32_FIND_DATA
+#define GPIO_DIR				GPIOWINDIR *
+#define GPIO_DIRENT				WIN32_FIND_DATA *
 
 #else
 
@@ -41,13 +41,20 @@ typedef struct {
 #include <unistd.h>
 
 /* Dynamic library functions */
-#define GP_DLOPEN(_filename)		dlopen(_filename, RTLD_LAZY)
-#define GP_DLSYM(_handle, _funcname)	dlsym(_handle, _funcname)
-#define GP_DLCLOSE(_handle)		dlclose(_handle)
-#define GP_DLERROR()			dlerror()
+#define GPIO_DLOPEN(_filename)		dlopen(_filename, RTLD_LAZY)
+#define GPIO_DLSYM(_handle, _funcname)	dlsym(_handle, _funcname)
+#define GPIO_DLCLOSE(_handle)		dlclose(_handle)
+#define GPIO_DLERROR()				dlerror()
 
 /* Directory-oriented functions */
-#define GP_DIR				DIR*
-#define GP_DIRENT			struct dirent*
+#define GPIO_DIR			DIR *
+#define GPIO_DIRENT			struct dirent *
 
 #endif
+
+GPIO_DIR	GPIO_OPENDIR	(char *dirname);
+GPIO_DIRENT	GPIO_READDIR	(GPIO_DIR d);
+char*		GPIO_FILENAME	(GPIO_DIRENT de);
+int			GPIO_CLOSEDIR	(GPIO_DIR dir);
+int			GPIO_IS_FILE	(char *filename);
+int			GPIO_IS_DIR		(char *dirname);

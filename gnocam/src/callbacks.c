@@ -482,7 +482,7 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 			gtk_object_set_data (GTK_OBJECT (item), "pixmap", widget);
 
 			/* Render the preview. */
-			camera_tree_item_update_pixmap (item);
+			update_pixmap (GTK_PIXMAP (widget), file);
 	
 			/* Clist for exif tags. */
 //			widget = gtk_clist_new (1);

@@ -1,4 +1,4 @@
-//This file should be called camera-tree.c or so.
+//This file should be called utils.c or so.
 //I'll change the name some day. 
 
 #include <config.h>
@@ -248,25 +248,20 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
 }
 
 void
-camera_tree_item_update_pixmap (GtkTreeItem* item)
+update_pixmap (GtkPixmap* pm, CameraFile* file)
 {
 	GdkInterpType		interpolation = 0;
 	gint			magnification;
 	GConfValue*		value;
-        GtkPixmap*              pm;
         GdkPixbuf*              pixbuf;
         GdkPixbufLoader*        loader;
         GdkPixmap*              pixmap;
         GdkBitmap*              bitmap;
-	gchar*			path;
-	gchar*			filename;
-	CameraFile*		file;
 
-	g_assert ((pm = gtk_object_get_data (GTK_OBJECT (item), "pixmap")) != NULL);
+	g_assert (file != NULL);
+	g_assert (pm != NULL);
+
         g_assert ((loader = gdk_pixbuf_loader_new ()) != NULL);
-        g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
-        g_assert ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename")) != NULL);
-        g_assert ((file = gtk_object_get_data (GTK_OBJECT (item), "preview")) != NULL);
         if (gdk_pixbuf_loader_write (loader, file->data, file->size)) {
                 gdk_pixbuf_loader_close (loader);
                 g_assert ((pixbuf = gdk_pixbuf_loader_get_pixbuf (loader)) != NULL);
@@ -306,10 +301,7 @@ camera_tree_item_update_pixmap (GtkTreeItem* item)
                         interpolation), &pixmap, &bitmap, 127);
                 gdk_pixbuf_unref (pixbuf);
                 gtk_pixmap_set (pm, pixmap, bitmap);
-        } else {
-                if (strcmp ("/", path) == 0) dialog_information (_("Could not load image '/%s'!"), filename);
-                else dialog_information (_("Could not load image '%s/%s'!"), path, filename);
-        }
+        } else dialog_information (_("Could not load image '%s'!"), file->name);
 }
 
 void
@@ -317,13 +309,15 @@ camera_tree_update_pixmaps (GtkTree* tree)
 {
         GtkTreeItem*    item;
         gint            i;
+	GtkPixmap*	pixmap;
 
 	g_assert (tree != NULL);
 
         for (i = 0; i < g_list_length (tree->children); i++) {
                 item = GTK_TREE_ITEM (g_list_nth_data (tree->children, i));
                 if (item->subtree) camera_tree_update_pixmaps (GTK_TREE (item->subtree));
-                else if (gtk_object_get_data (GTK_OBJECT (item), "pixmap")) camera_tree_item_update_pixmap (item);
+                else if ((pixmap = gtk_object_get_data (GTK_OBJECT (item), "pixmap"))) 
+			update_pixmap (pixmap, gtk_object_get_data (GTK_OBJECT (item), "preview"));
         }
 } 
 

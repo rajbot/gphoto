@@ -9,6 +9,7 @@ void camera_tree_item_remove (GtkTreeItem* item);
 
 void camera_tree_update (GtkTree* tree, GConfValue* value);
 
-void camera_tree_item_update_pixmap (GtkTreeItem* item);
+void update_pixmap (GtkPixmap* pixmap, CameraFile* file);
+
 void camera_tree_update_pixmaps (GtkTree* tree);
 

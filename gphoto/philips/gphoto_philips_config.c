@@ -64,6 +64,8 @@ struct P_CONFIG_CONTROLS {
 	GtkWidget	*wb_flourescent;
 	GtkWidget	*wb_incandescent;
 	GtkWidget	*wb_auto;
+	GtkWidget	*wb_bw;
+	GtkWidget	*wb_sepia;
 
 	GtkWidget	*m_on;
 	GtkWidget	*m_off;
@@ -386,6 +388,16 @@ void philips_cfg_page3 ( GtkWidget *notebook, struct P_CONFIG_CONTROLS *controls
 	gtk_box_pack_start ( GTK_BOX(box), controls->wb_incandescent, FALSE, FALSE, 0 );
 	gtk_widget_show ( controls->wb_incandescent );
 	group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->wb_incandescent) );
+	if ( (cameraid == 5000) || (cameraid == 4200) ) {
+		controls->wb_bw = gtk_radio_button_new_with_label ( group, "Black & White" );
+		gtk_box_pack_start ( GTK_BOX(box), controls->wb_bw, FALSE, FALSE, 0 );
+		gtk_widget_show ( controls->wb_bw );
+		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->wb_bw) );
+		controls->wb_sepia = gtk_radio_button_new_with_label ( group, "Sepia" );
+		gtk_box_pack_start ( GTK_BOX(box), controls->wb_sepia, FALSE, FALSE, 0 );
+		gtk_widget_show ( controls->wb_sepia );
+		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->wb_sepia) );
+		}
 
 	gtk_container_add ( GTK_CONTAINER(frame), box );
 	gtk_widget_show ( box );

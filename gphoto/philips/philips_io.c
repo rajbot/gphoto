@@ -404,7 +404,9 @@ int *level;	/* white level */
  *    00 = automatic
  *    01 = outdoors
  *    02 = flouresent
- *    05 = incandescent
+ *    03 = incandescent
+ *    04 = black&white
+ *    05 = sepia
  */
 
 philips_setwhitelevel(whitelevel)
@@ -956,6 +958,7 @@ char *philips_getthumb(n, size)
 		}
 
 	*size = (cam_data.data[17] << 24) | (cam_data.data[16] << 16) | (cam_data.data[15] << 8) | cam_data.data[14];
+	dprintf((stderr, "Getting thumbnail %d (%d bytes)\n", n, *size ));
 
 	if ( (image = (char *)malloc ( (long)*size )) == NULL ) {
 		fprintf ( stderr, "unable to allocate memory for image (%d bytes)\n", *size );
@@ -2020,8 +2023,9 @@ char *philips_model ( int id )
 		case 4200: return ( "Ricoh RCD-4200" );
 		case 4300: return ( "Ricoh RCD-4300" );
 		case 4000: return ( "Philips ESP80SXG" );
+		case 5000: return ( "Ricoh RCD-5000" );
 		case 3100: return ( "Ricoh RCD-300Z" );
-		case 3000: return ( "Ricoh RCD-300" );
+		case 3000: return ( "Ricoh RCD-300" ); /* philips ESP2 ? */
 		default:   return ( errorstr );
 		}
 }
@@ -2084,7 +2088,8 @@ PhilipsCfgInfo *philips_getcfginfo ( int *rtn )
 		free ( cfginfo );
 		return ( NULL );
 		}
-	if ( (*rtn = philips_getmacro ( &(cfginfo->macro) )) != 0 ) {
+	*rtn = philips_getmacro ( &(cfginfo->macro) );
+	if ( (*rtn != 0) && (*rtn != 4) ) {
 		free ( cfginfo );
 		return ( NULL );
 		}
@@ -2151,7 +2156,8 @@ int philips_setcfginfo ( PhilipsCfgInfo *cfginfo )
 		free ( cfginfo );
 		return ( rtn );
 		}
-	if ( (rtn = philips_setmacro ( cfginfo->macro )) != 0 ) {
+	rtn = philips_setmacro ( cfginfo->macro );
+	if ( (rtn != 0) && (rtn != 4) ) {
 		free ( cfginfo );
 		return ( rtn );
 		}

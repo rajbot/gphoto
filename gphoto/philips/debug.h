@@ -86,7 +86,7 @@ struct	PHILIPS_CMD	{
 		"set copyright", "\x50\x0F", 2,
 		"set camera mode", "\x50\x12", 2,
 		"set macro", "\x50\x16", 2,
-		"get ???", "\x51\x00\x00", 3,
+		"get camera operating mode", "\x51\x00\x00", 3,
 		"get # images", "\x51\x00\x01", 3,
 		"get total bytes", "\x51\x00\x05", 3,
 		"get available bytes", "\x51\x00\x06", 3,

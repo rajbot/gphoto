@@ -151,6 +151,7 @@ char *GPIO_FILENAME (GPIO_DIRENT de) {
 
 int GPIO_CLOSEDIR (GPIO_DIR dir) {
 	closedir(dir);
+	return (GPIO_OK);
 }
 
 int GPIO_IS_FILE (char *filename) {

@@ -61,9 +61,14 @@ int gpio_library_list_load(char *filename, int loaded[], gpio_device_info *list,
 		gpio_debug_printf(GPIO_DEBUG_LOW, glob_debug_level, 
 			"%s could not list devices ", filename);
 
+	gpio_debug_printf(GPIO_DEBUG_LOW, glob_debug_level,
+		"Loaded these devices from %s:", filename);
 	/* copy in the library path */
-	for (x=old_count; x<(*count); x++)
+	for (x=old_count; x<(*count); x++) {
+		gpio_debug_printf(GPIO_DEBUG_LOW, glob_debug_level,
+			"\t%s path=\"%s\"", list[x].name, list[x].path);
 		strcpy(list[x].library_filename, filename);
+	}
 
 	GPIO_DLCLOSE(lh);
 	return (GPIO_OK);

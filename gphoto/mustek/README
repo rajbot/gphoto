@@ -1,5 +1,15 @@
 Driver for Mustek MDC 800 cameras by Pedro Caria <pmiguel@maquina.com>.
 
+01.10.1999:
+
+ok, corrected the bug sent to [gphoto-devel] by Don Cockman
+<don@hauraki.co.uk>
+
+"Taking photos reports 'memory full' problem, but still works OK"
+
+and wraped the debug messages around MUSTEK_DEBUG.
+
+
 Status of 27.09.1999:
 
  Well the thing works, some minor timming problems wich no longer

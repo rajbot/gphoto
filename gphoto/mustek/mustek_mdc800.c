@@ -221,8 +221,10 @@ int mustek_mdc800_set_port_speed(int serialdev,int speed)
     memcpy((char *)&newt,(char *)&oldt, sizeof(struct termios));
 
     old_speed = cfgetospeed(&oldt);
+#ifdef MUSTEK_DEBUG
     printf("Old speed: %d\n",old_speed);
     printf("Set speed: %d\n",speed);
+#endif
 
     switch (old_speed) {
     case B19200:
@@ -288,10 +290,13 @@ int mustek_mdc800_open_camera (const char *devname)
 
   struct termios newt, oldt;
   struct stat dummy;
-
+#ifdef MUSTEK_DEBUG
   printf("mustek_mdc800_open_camera\n");
+#endif
   if (mustek_dev < 0) {
+#ifdef MUSTEK_DEBUG
     printf("mustek_mdc800_open_camera: OPEN\n");
+#endif
     serialdev = open(devname, O_RDWR|O_NOCTTY);
 
     if (serialdev < 0) 
@@ -320,11 +325,13 @@ int mustek_mdc800_open_camera (const char *devname)
     sleep(1);
     /* FIXME speed hardcoded */
     mustek_mdc800_set_port_speed(serialdev,115200);
-    sleep(1);
+    sleep(1); 
     mustek_dev = serialdev;
     return mustek_dev;
   } else {
+#ifdef MUSTEK_DEBUG
     printf("mustek_mdc800_open_camera: CACHED\n");
+#endif
     return mustek_dev;
   }
 }
@@ -349,7 +356,9 @@ int mustek_mdc800_close_camera (int serialdev)
 int mustek_mdc800_lcd_on (int serialdev) {
   struct timespec timeout;
 
+#ifdef MUSTEK_DEBUG
   printf("mustek_mdc800_lcd_on\n");
+#endif
 
   timeout.tv_sec = 0;
   timeout.tv_nsec = 3000000;
@@ -362,7 +371,9 @@ int mustek_mdc800_lcd_on (int serialdev) {
 int mustek_mdc800_lcd_off (int serialdev) {
   struct timespec timeout;
 
+#ifdef MUSTEK_DEBUG
   printf("mustek_mdc800_lcd_off\n");
+#endif
 
   timeout.tv_sec = 0;
   timeout.tv_nsec = 3000000;
@@ -384,7 +395,9 @@ int sum (char picdata[512]) {
 
 int mustek_mdc800_initialize() 
 {
+#ifdef MUSTEK_DEBUG
   printf("mustek_mdc800_initialize\n");
+#endif
   if (mustek_mdc800_open_camera(serial_port)) {  /* open port */
     sleep(1);
     mustek_mdc800_send_command(mustek_dev,MDC_SET_AUTOFF_NO,0,0,0,1);  /* don't shutdown */
@@ -397,13 +410,17 @@ int mustek_mdc800_initialize()
 /* what's this for ? */
 char *mustek_mdc800_summary() 
 {
+#ifdef MUSTEK_DEBUG
   printf("mustek_mdc800_summary\n");
+#endif
   return("Not Supported");
 }
 
 char *mustek_mdc800_description() 
 {
+#ifdef MUSTEK_DEBUG
   printf("mustek_mdc800_description\n");
+#endif
   return("Mustek MDC-800 Digital Camera Support\n\nPedro Miguel Caria <pmiguel@maquina.com>\nJose Gabriel Marcelino <gabriel@maquina.com>\n\nSerial port support\nEconomic: 506x384\nStandard and High: 1012x768\n");
 }
 
@@ -430,7 +447,9 @@ struct Image *mustek_mdc800_get_picture ( int picNum, int thumbnail) {
   int n1=0,n2=0,n3=0;
   struct timespec timeout;
 
+#ifdef MUSTEK_DEBUG
   printf("mustek_mdc800_get_picture\n"); 
+#endif
   if (mustek_mdc800_open_camera(serial_port)) { /* if port closed, open */
     n1 = div(picNum, 10).rem;  /* transform picNum in BCD */
     n2 = div(div(picNum, 10).quot,10).rem;
@@ -565,9 +584,12 @@ int mustek_mdc800_number_of_pictures() {
   char pics[2];
   unsigned char check;
 
+#ifdef MUSTEK_DEBUG
   printf("mustek_mdc800_number_of_pictures\n");
+#endif
   if (mustek_mdc800_open_camera(serial_port)) {
     mustek_mdc800_send_command(mustek_dev,MDC_GETNOPICS,0x00,0x00,0x00,0);
+    sleep(1);
     mustek_mdc800_read(mustek_dev,pics,2);
     sleep(1);
     mustek_mdc800_read(mustek_dev,&check,1);  
@@ -583,7 +605,9 @@ int mustek_mdc800_number_of_pictures() {
 /* its not here yet */
 struct Image *mustek_mdc800_get_preview () 
 {
+#ifdef MUSTEK_DEBUG
   printf("mustek_mdc800_get_preview\n");
+#endif
   return(0);
 }
 
@@ -591,12 +615,20 @@ int mustek_mdc800_take_picture ()
 {
   int initPic = 0;
   int numPics = 0;
+  char pics[2];
+  unsigned char check;
 
+#ifdef MUSTEK_DEBUG
   printf("mustek_mdc800_take_picture\n");
+#endif
   initPic = mustek_mdc800_number_of_pictures();
   if (mustek_mdc800_open_camera(serial_port)) {
     sleep(1);
-    mustek_mdc800_send_command(mustek_dev,MDC_TAKEPICTURE,0,0,0,1);
+    mustek_mdc800_send_command(mustek_dev,MDC_TAKEPICTURE,0,0,0,0);
+    sleep(2);
+    mustek_mdc800_send_command(mustek_dev,MDC_GETNOPICS,0x00,0x00,0x00,0);
+    sleep(1);
+    mustek_mdc800_read(mustek_dev,pics,1);
     sleep(1);
     numPics = mustek_mdc800_number_of_pictures();
     if (numPics > initPic) {  /* picture taken ? */
@@ -614,7 +646,9 @@ int mustek_mdc800_delete_image (int picture_number) {
   int numPics = 0;
   int n1=0,n2=0,n3=0;
 
+#ifdef MUSTEK_DEBUG
   printf("mustek_mdc800_delete_image\n");
+#endif
   n1 = div(picture_number, 10).rem;
   n2 = div(div(picture_number, 10).quot,10).rem;
   n3 = div(div(picture_number, 10).quot,10).quot;
@@ -675,7 +709,9 @@ int mustek_mdc800_configure () {
 		GtkWidget *exp_cntr;
 	} Config;
 
+#ifdef MUSTEK_DEBUG
 	printf("mustek_mdc800_configure\n");
+#endif
 
 	info = malloc(2048);
 

@@ -4,6 +4,7 @@
 #include <stdio.h> 
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <fcntl.h>   
 #include <sys/stat.h> 
 #include <sys/types.h>
@@ -49,6 +50,21 @@ extern  GtkAccelGroup*  mainag;
 
 	char *filesel_cwd;
 
+void crash(int sig)
+{
+    char buddys[256];
+    sprintf(buddys,"bug-buddy --package=gphoto --package-ver=%s --pid=%d",VERSION, getppid());
+    fprintf(stdout,"gPhoto %s (built %s) process %d has crashed\n"
+	    "due to fatal errors.  Please send us a bug report!\n"
+	    "See http://gphoto.org/gphoto/bugs.html for details.\n",
+	    VERSION, __DATE__, getppid());
+    if (!system(buddys)) {
+	fprintf(stdout, "\nLaunching Gnome Bugbuddy...\n");
+        fprintf(stdout,"%s\n",buddys);
+    }
+    abort();
+}
+
 int main (int argc, char *argv[]) {
 
 	int has_rc=0;
@@ -69,6 +85,8 @@ int main (int argc, char *argv[]) {
 	char title[256];
 	char *envhome;
 
+	signal(SIGSEGV, crash);
+	
 	Thumbnails.next = NULL;
 	Images.next=NULL;
 

@@ -73,7 +73,12 @@ Module dependency graph:
         |           |             |            |
         V           |             V            V
         exif <-- libexif --> libexif-gtk --> gexif
-     
+         |          |
+	 +----+-----+
+              |
+              V
+          libmnote
+
 Footnotes:
   [1] - libexif is recommended for cameras using EXIF JPEG images
         (almost all cameras do that)

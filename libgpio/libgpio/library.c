@@ -12,13 +12,13 @@ int gpio_library_is_valid (char *filename) {
 
 	void *lh;
 
-	if (DLOPEN(lh, filename)==NULL) {
-		gpio_debug_printf("%s is not a library (%s) ", filename, DLERROR());
+	if (GP_DLOPEN(lh, filename)==NULL) {
+		gpio_debug_printf("%s is not a library (%s) ", filename, GP_DLERROR());
 		return (GPIO_ERROR);
 	}
 
 	gpio_debug_printf("%s is a library ", filename);
-	DLCLOSE(lh);
+	GP_DLCLOSE(lh);
 
 	return (GPIO_OK);
 }
@@ -31,15 +31,15 @@ int gpio_library_list_load(char *filename, int loaded[], gpio_device_info *list,
 	gpio_ptr_type lib_type;
 	int old_count = *count;
 
-	if (DLOPEN(lh, filename)==NULL)
+	if (GP_DLOPEN(lh, filename)==NULL)
 		return (GPIO_ERROR);
 
-	DLSYM(lib_type, lh, "gpio_library_type");
-	DLSYM(lib_list, lh, "gpio_library_list");
+	GP_DLSYM(lib_type, lh, "gpio_library_type");
+	GP_DLSYM(lib_list, lh, "gpio_library_list");
 
 	if ((!list) || (!lib_type)) {
-		gpio_debug_printf("%s ", DLERROR());
-		DLCLOSE(lh);
+		gpio_debug_printf("%s ", GP_DLERROR());
+		GP_DLCLOSE(lh);
 		return (GPIO_ERROR);
 	}
 
@@ -47,7 +47,7 @@ int gpio_library_list_load(char *filename, int loaded[], gpio_device_info *list,
 
 	if (loaded[type] == 1) {
 		gpio_debug_printf("%s (%i) already loaded ", filename, type);
-		DLCLOSE(lh);
+		GP_DLCLOSE(lh);
 		return (GPIO_ERROR);
 	} else {
 		loaded[type] = 1;
@@ -60,7 +60,7 @@ int gpio_library_list_load(char *filename, int loaded[], gpio_device_info *list,
 	for (x=old_count; x<(*count); x++)
 		strcpy(list[x].library_filename, filename);
 
-	DLCLOSE(lh);
+	GP_DLCLOSE(lh);
 	return (GPIO_OK);
 }
 
@@ -109,19 +109,19 @@ int gpio_library_load (gpio_device *device, gpio_device_type type) {
 	for (x=0; x<device_count; x++) {
 		if (device_list[x].type == type) {
 			/* Open the correct library */
-			DLOPEN(device->library_handle, device_list[x].library_filename);
+			GP_DLOPEN(device->library_handle, device_list[x].library_filename);
 			if (!device->library_handle) {
 				gpio_debug_printf (" %s %s ", device_list[x].library_filename,
-					DLERROR());
+					GP_DLERROR());
 				return (GPIO_ERROR);
 			}
 
 			/* Load the operations */
-			DLSYM(ops_func, device->library_handle, "gpio_library_operations");
+			GP_DLSYM(ops_func, device->library_handle, "gpio_library_operations");
 			if (!ops_func) {
 				gpio_debug_printf (" %s %s ", device_list[x].library_filename,
-					DLERROR());
-				DLCLOSE(device->library_handle);
+					GP_DLERROR());
+				GP_DLCLOSE(device->library_handle);
 				return (GPIO_ERROR);
 			}
 			device->ops = ops_func();
@@ -133,5 +133,5 @@ int gpio_library_load (gpio_device *device, gpio_device_type type) {
 
 int gpio_library_close (gpio_device *device) {
 
-	DLCLOSE(device->library_handle);
+	GP_DLCLOSE(device->library_handle);
 }

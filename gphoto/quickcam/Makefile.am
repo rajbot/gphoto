@@ -6,7 +6,6 @@ libgphoto_quickcam_la_SOURCES = qcam_gphoto.c qcam-Linux.c\
 	qcam_drv.c edge.c exposure.c histogram.c qcam_gfx.c scale.c \
 	qcam.h qcam_gfx.h
 
-# qcam-Linux.c/h and qcam-FreeBSD.c/h should not be here (included in the
-# qcam_drv.c file instead with ifdef's
+EXTRA_DIST = qcam-Linux.c qcam-Linux.h qcam-FreeBSD.c qcam-FreeBSD.h
 
 libgphoto_quickcam_la_LDFLAGS = -version-info 0:0:0

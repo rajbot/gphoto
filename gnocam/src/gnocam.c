@@ -236,13 +236,11 @@ int main (int argc, char *argv[])
 	/* Clean up the previews. */
 	for (i = g_list_length (preview_list) - 1; i >= 0; i--) preview_free (g_list_nth_data (preview_list, i));
 
-	/* Clean up the main tree. */
+	/* Clean up the main window. */
         for (i = g_list_length (main_tree->children) - 1; i >= 0; i--) camera_tree_item_remove (g_list_nth_data (main_tree->children, i));
-
-	/* Clean up (bonobo). */
-	//FIXME: Don't know how to clean up...
 	bonobo_object_unref (BONOBO_OBJECT (component));
 	bonobo_object_unref (BONOBO_OBJECT (container));
+	gtk_widget_destroy (window);
 
 	/* Clean up (gphoto). */
 	gp_exit ();

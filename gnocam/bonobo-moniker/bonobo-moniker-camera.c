@@ -55,6 +55,7 @@ camera_resolve (BonoboMoniker *moniker,
 
 		g_print ("Getting object...\n");
 		object = bonobo_get_object ("file:/tmp/x.jpg", "IDL:Bonobo/Control:1.0", ev);
+		g_free (real_url);
 		g_return_val_if_fail (ev->_major == CORBA_NO_EXCEPTION, CORBA_OBJECT_NIL);
 			
 		if  (object == CORBA_OBJECT_NIL) {

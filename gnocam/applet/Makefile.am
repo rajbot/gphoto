@@ -25,8 +25,6 @@ $(CORBA_GENERATED): $(top_srcdir)/idl/GnoCam.idl
 		-I`$(PKG_CONFIG) --variable=idldir bonobo-activation-2.0` \
 		$(top_srcdir)/idl/GnoCam.idl
 
-gnocam_applet_LDADD = $(APPLET_LIBS)
-
 serverdir       = $(libdir)/bonobo/servers
 server_in_files = GNOME_GnoCamApplet.server.in
 server_DATA     = $(server_in_files:.server.in=.server)

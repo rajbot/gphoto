@@ -1,6 +1,13 @@
 # $Id$
 #
 # $Log$
+# Revision 1.3  1999/05/31 18:32:26  ole
+# 1999-05-31  Ole Aamot  <oleaa@ifi.uio.no>
+#
+# 	* modified the "gnome-bugs" script, and added gphoto-bug
+# 	* added more supported models to camera.h
+# 	* removed some cruft from the FAQ
+#
 # Revision 1.2  1999/05/28 20:24:07  ole
 # Gallery themes now installs correctly.
 # Changed the URL for Help - FAQs entry.
@@ -114,6 +121,7 @@ gphoto:	${OBJS} ${LIBS} ${SH_LIBS}
 
 install:
 	cp gphoto $(BINDIR)
+	cp ../gphoto-bug $(BINDIR)
 	cp ../man/gphoto.1 $(MANDIR)/man1
 	mkdir -p $(GPHOTODIR)
 	mkdir -p $(GPHOTODIR)/drivers
@@ -136,6 +144,8 @@ install:
 	cp ../sony/libgphoto_sony_dscf1.so $(GPHOTODIR)/drivers
 
 uninstall:
+	rm -rf ~/.gphoto/
+	rm -f $(BINDIR)/gphoto-bug
 	rm -f $(BINDIR)/gphoto
 	rm -f $(BINDIR)/gphoto.bin
 	rm -f $(MANDIR)/man1/gphoto.1

@@ -1,5 +1,11 @@
-$Id$
+1999-05-31  Ole Aamot  <oleaa@ifi.uio.no>
 
+	* modified the "gnome-bugs" scripts, and added gphoto-bug
+	* added more supported models to camera.h
+	* removed some cruft from the FAQ
+
+(a lot of changes by scottf and others, but not yet added here)
+	
 1999-01-08  Scott Fritzinger  <scottf@scs.unr.edu>
 	
 	Here are the major changes to 0.2:

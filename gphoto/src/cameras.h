@@ -16,8 +16,11 @@ struct Model cameras[] = {
 	{"Agfa ePhoto 1680", &olympus},
 	{"Apple QuickTake 200", &olympus},
 	{"Apple QuickTake 150", &olympus},
-	{"Canon PowerShot 350", &olympus},
+/*  	{"Canon PowerShot 350", &olympus}, */
 	{"Casio QV-10", &casio_qv},
+	{"Casio QV-11", &casio_qv},
+	{"Casio QV-100", &casio_qv},
+	{"Casio QV-200", &casio_qv},
 	{"Chinon ES-1000", &olympus},
 	{"Epson PhotoPC 500", &olympus},
 	{"Epson PhotoPC 550 (unverified)", &olympus},

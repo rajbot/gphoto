@@ -83,13 +83,12 @@ compileinstall() {
     echo
     echo "##########################################################################"
     echo "# Installed everything into ${instroot}"
-    echo "# You may want to set the following variables to use the tools installed "
-    echo "# there:"
+    echo "# You may want to set the following variables to use the gphoto suite"
+    echo "# installed there:"
     echo "##########################################################################"
-    for var in PKG_CONFIG_PATH LD_LIBRARY_PATH PATH
-    do
-	echo "export $var=$(eval echo "\$$var")"
-    done
+    echo "export PATH=\"${instroot}/bin:${PATH}\""
+    echo "export LD_LIBRARY_PATH=\"${instroot}/lib:${LD_LIBRARY_PATH}\""
+    echo "export PKG_CONFIG_PATH=\"${instroot}/lib/pkgconfig:${PKG_CONFIG_PATH}\""
     echo "########################################################################"
 }
 

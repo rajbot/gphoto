@@ -15,6 +15,8 @@ libvfs_camera_la_SOURCES =\
 
 INCLUDES =\
  -I$(top_srcdir)\
+ -D_POSIX_PTHREAD_SEMANTICS\
+ $(GLIB_CFLAGS)\
  $(NULL)
 
 libvfs_camera_la_LIBADD =\
@@ -29,14 +31,16 @@ CFLAGS = @CFLAGS@\
  `gpio-config --cflags`\
  `gnome-config --cflags vfs`\
  `gconf-config --cflags`\
- `xml-config --cflags`
+ `xml-config --cflags`\
+ `glib-config --cflags`
 
 LDFLAGS =@LDFLAGS@\
  `gphoto2-config --libs`\
  `gpio-config --libs`\
  `gnome-config --libs vfs`\
  `gconf-config --libs`\
- `xml-config --libs`
+ `xml-config --libs`\
+ `glib-config --libs`
 
 modulesconfdir = $(sysconfdir)/vfs/modules
 modulesconf_DATA = camera-methods.conf

@@ -5,14 +5,16 @@
 #include <libgnomevfs/gnome-vfs.h>
 #include <libgnomevfs/gnome-vfs-private.h>
 #include <parser.h>
-#include "gphoto-extensions.h"
 #include "utils.h"
 
+/*************/
+/* Functions */
+/*************/
+
 Camera*
-camera_new_by_uri (GnomeVFSURI* uri, GnomeVFSResult* result)
+camera_new_by_uri (GnomeVFSURI* uri, GConfClient* client, GMutex* client_mutex, GnomeVFSResult* result)
 {
-        GConfClient*            client;
-        GConfValue*             value;
+        GConfValue*             value = NULL;
         gchar*                  xml;
         gchar*                  id = NULL;
         gchar*                  name= NULL;
@@ -24,54 +26,61 @@ camera_new_by_uri (GnomeVFSURI* uri, GnomeVFSResult* result)
         xmlNodePtr              node;
         GSList*                 list;
         Camera*                 camera;
+	CameraPortInfo		info;
+	gchar*			host;
 
         /* Does gconf know about the camera (host)? */
-	g_print ("    searching host...\n");
-	g_assert (client = gconf_client_get_default ());
-//	gconf_client_add_dir (client, "/apps/GnoCam", GCONF_CLIENT_PRELOAD_NONE, NULL);
-//	if (!(value = gconf_client_get (client, "/apps/GnoCam/cameras", NULL))) {
-//		gtk_object_unref (GTK_OBJECT (client));
-//		*result = GNOME_VFS_ERROR_HOST_NOT_FOUND;
-//		return (NULL);
-//	}
-//	g_assert (value->type == GCONF_VALUE_LIST);
-//	g_assert (gconf_value_get_list_type (value) == GCONF_VALUE_STRING);
-//	list = gconf_value_get_list (value);
-//	for (i = 0; i < g_slist_length (list); i++) {
-//	        value = g_slist_nth_data (list, i);
-//	        g_assert (value->type == GCONF_VALUE_STRING);
-//	        g_assert ((xml = g_strdup (gconf_value_get_string (value))));
-//	        if (!(doc = xmlParseMemory (xml, strlen (xml)))) continue;
-//	        g_assert (node = xmlDocGetRootElement (doc));
-//	        g_assert (id = xmlGetProp (node, "ID"));
-//	        g_assert (name = xmlGetProp (node, "Name"));
-//	        g_assert (model = xmlGetProp (node, "Model"));
-//	        g_assert (port = xmlGetProp (node, "Port"));
-//	        g_assert (speed = xmlGetProp (node, "Speed"));
-//	        if (strcmp (name, gnome_vfs_uri_get_host_name (uri)) == 0) break;
-//	}
-//	if (i == g_slist_length (list)) {
-//	        gtk_object_unref (GTK_OBJECT (client));
-//	        *result = GNOME_VFS_ERROR_HOST_NOT_FOUND;
-//	        return (NULL);
-//	}
-	gtk_object_unref (GTK_OBJECT (client));
+	g_mutex_lock (client_mutex);
+	value = gconf_client_get (client, "/apps/GnoCam/cameras", NULL);
+	g_mutex_unlock (client_mutex);
+	if (!value) {
+		*result = GNOME_VFS_ERROR_HOST_NOT_FOUND;
+		return (NULL);
+	}
+	g_assert (value->type == GCONF_VALUE_LIST);
+	g_assert (gconf_value_get_list_type (value) == GCONF_VALUE_STRING);
+	list = gconf_value_get_list (value);
+	host = gnome_vfs_unescape_string (gnome_vfs_uri_get_host_name (uri), NULL);
+	g_print ("  searching host (%s)\n", host);
+	for (i = 0; i < g_slist_length (list); i++) {
+	        value = g_slist_nth_data (list, i);
+	        g_assert (value->type == GCONF_VALUE_STRING);
+	        g_assert ((xml = g_strdup (gconf_value_get_string (value))));
+	        if (!(doc = xmlParseMemory (xml, strlen (xml)))) continue;
+	        g_assert (node = xmlDocGetRootElement (doc));
+	        g_assert (id = xmlGetProp (node, "ID"));
+	        g_assert (name = xmlGetProp (node, "Name"));
+	        g_assert (model = xmlGetProp (node, "Model"));
+	        g_assert (port = xmlGetProp (node, "Port"));
+	        g_assert (speed = xmlGetProp (node, "Speed"));
+	        if (!strcmp (name, host)) break;
+	}
+	g_free (host);
+	if (i == g_slist_length (list)) {
+	        *result = GNOME_VFS_ERROR_HOST_NOT_FOUND;
+	        return (NULL);
+	}
 
-        /* Connect to the camera (host). */
-	g_print ("    connecting to host...\n");
-//	if (!(camera = gp_camera_new_by_description (0, "MyCamera", "Directory Browse", "Serial Port 0", 0))) {
-	if (!(camera = gp_camera_new_by_description (0, "MyCamera", "HP PhotoSmart C30", "Serial Port 0", 0))) {
-//	if (!(camera = gp_camera_new_by_description (atoi (id), name, model, port, atoi (speed)))) {
-                *result = GNOME_VFS_ERROR_SERVICE_NOT_AVAILABLE;
-                return (NULL);
-        }
+        /* Connect to the camera (host). Beware of 'Directory Browse'.*/
+	*result = GNOME_VFS_ERROR_SERVICE_NOT_AVAILABLE;
+	if (!strcmp ("Directory Browse", model)) strcpy (info.path, "");
+	else {
+		for (i = 0; i < gp_port_count (); i++) {
+			if (gp_port_info (i, &info) != GP_OK) continue;
+			if (!strcmp (info.name, port)) break;
+		}
+		if ((i == gp_port_count ()) || (i < 0)) return (NULL);
+		info.speed = atoi (speed);
+	}
+	if (gp_camera_new_by_name (&camera, model) != GP_OK) return (NULL);
+	if (gp_camera_init (camera, &info) != GP_OK) return (NULL);
 
 	*result = GNOME_VFS_OK;
 	return (camera);
 }
 
 GnomeVFSMethodHandle*
-file_handle_new (GnomeVFSURI* uri, GnomeVFSResult* result)
+file_handle_new (GnomeVFSURI* uri, GConfClient* client, GMutex* client_mutex, GnomeVFSResult* result)
 {
         const gchar*            filename;
         gchar*                  dirname;
@@ -88,7 +97,7 @@ file_handle_new (GnomeVFSURI* uri, GnomeVFSResult* result)
 	}
 
 	/* Connect to the camera. */
-	if (!(camera = camera_new_by_uri (uri, result))) return (NULL);
+	if (!(camera = camera_new_by_uri (uri, client, client_mutex, result))) return (NULL);
 
 	/* Check if we've got the file. */
 	if (gp_camera_file_list (camera, &list, gnome_vfs_uri_extract_dirname (uri)) != GP_OK) {
@@ -135,7 +144,7 @@ file_handle_free (GnomeVFSMethodHandle* handle)
 }
 
 GnomeVFSMethodHandle*
-directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options, GnomeVFSResult* result)
+directory_handle_new (GnomeVFSURI* uri, GConfClient* client, GMutex* client_mutex, GnomeVFSFileInfoOptions options, GnomeVFSResult* result)
 {
 	Camera* 		camera;
 	directory_handle_t*	directory_handle;
@@ -151,7 +160,7 @@ directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options, GnomeVF
 	}
 
 	/* Connect to the camera. */
-	if (!(camera = camera_new_by_uri (uri, result))) return (NULL);
+	if (!(camera = camera_new_by_uri (uri, client, client_mutex, result))) return (NULL);
 
 	/* Get folder list. */
 	g_print ("  looking for folders in %s\n", gnome_vfs_uri_extract_dirname (uri));

@@ -5,8 +5,14 @@
 #include <libgnomevfs/gnome-vfs.h>
 #include <libgnomevfs/gnome-vfs-private.h>
 #include <parser.h>
-#include "gphoto-extensions.h"
 #include "utils.h"
+
+/********************/
+/* Static variables */
+/********************/
+
+static GConfClient* 	client = NULL;
+static GMutex*		client_mutex = NULL;
 
 /**************/
 /* Prototypes */
@@ -186,17 +192,39 @@ int gp_frontend_message (Camera* camera, char *message)
 GnomeVFSMethod*
 vfs_module_init (const gchar* method_name, const gchar* args)
 {
-	if (!gconf_is_initialized ()) gconf_init (0, NULL, NULL);
+	gchar*	argv[] = {"dummy"};
+	
+	/* GConf */
+	if (!gconf_is_initialized ()) gconf_init (1, argv, NULL);
+	client = gconf_client_get_default ();
+	gtk_object_ref (GTK_OBJECT (client));
+	gtk_object_sink (GTK_OBJECT (client));
+#ifdef G_THREADS_ENABLED
+	if (g_thread_supported ()) client_mutex = g_mutex_new ();
+	else client_mutex = NULL;
+#endif
+	
+	/* GPhoto */
 	gp_init (GP_DEBUG_NONE);
 	gp_frontend_register (NULL, NULL, gp_frontend_message, NULL, NULL);
+	
 	return &method;
 }
 
 void
 vfs_module_shutdown (GnomeVFSMethod* method)
 {
-	g_print ("vfs_module_shutdown\n");
+	/* GConf */
+	gtk_object_destroy (GTK_OBJECT (client));
+	gtk_object_unref (GTK_OBJECT (client));
+	client = NULL;
+#ifdef G_THREADS_ENABLED
+	if (g_thread_supported ()) g_mutex_free (client_mutex);
+#endif
+
+	/* GPhoto */
 	gp_exit ();
+	
 	return;
 }
 
@@ -211,7 +239,7 @@ static GnomeVFSResult do_open (
 	
 	g_print ("do_open\n");
 	
-	*handle = file_handle_new (uri, &result);
+	*handle = file_handle_new (uri, client, client_mutex, &result);
 	
 	return (result);
 }
@@ -322,7 +350,7 @@ static GnomeVFSResult do_open_directory (
 	
 	g_print ("CAMERA: do_open_directory (%s)\n", gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE));
 	
-	*handle = directory_handle_new (uri, options, &result);
+	*handle = directory_handle_new (uri, client, client_mutex, options, &result);
 	return (result);
 }
 
@@ -395,7 +423,7 @@ static GnomeVFSResult do_get_file_info (
 	g_print ("CAMERA: do_get_file_info (%s)\n", gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE));
 
 	/* Connect to the camera. */
-	if (!(camera = camera_new_by_uri (uri, &result))) return (result);
+	if (!(camera = camera_new_by_uri (uri, client, client_mutex, &result))) return (result);
 
 	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_NONE;
 	filename = (gchar*) gnome_vfs_uri_get_basename (uri);

@@ -18,11 +18,11 @@ typedef struct {
 /* Prototypes */
 /**************/
 
-Camera*	camera_new_by_uri (GnomeVFSURI* uri, GnomeVFSResult* result);
+Camera*	camera_new_by_uri (GnomeVFSURI* uri, GConfClient* client, GMutex* client_mutex, GnomeVFSResult* result);
 
-GnomeVFSMethodHandle*	directory_handle_new 	(GnomeVFSURI* uri, GnomeVFSFileInfoOptions options, GnomeVFSResult* result);
-GnomeVFSResult		directory_handle_free	(GnomeVFSMethodHandle* handle);
+GnomeVFSMethodHandle*	directory_handle_new (GnomeVFSURI* uri, GConfClient* client, GMutex* client_mutex, GnomeVFSFileInfoOptions options, GnomeVFSResult* result);
+GnomeVFSResult		directory_handle_free (GnomeVFSMethodHandle* handle);
 
-GnomeVFSMethodHandle*	file_handle_new		(GnomeVFSURI* uri, GnomeVFSResult* result);
-GnomeVFSResult		file_handle_free	(GnomeVFSMethodHandle* handle);
+GnomeVFSMethodHandle*	file_handle_new	(GnomeVFSURI* uri, GConfClient* client, GMutex* client_mutex, GnomeVFSResult* result);
+GnomeVFSResult		file_handle_free (GnomeVFSMethodHandle* handle);
 

@@ -20,7 +20,19 @@
 	fflush (stdout);\
 }G_STMT_END
 
+//Ok, we need to
 #define USE_LOCK
+//because ORBit is not thread safe. Michael Meeks answered:
+//
+//> I thought redirecting all request to a moniker could be the solution.
+//> One moniker, several apps. Indeed, this works if I serialize the
+//> requests in the module using a global mutex. If I just pass all
+//> requests to the moniker, something hangs.
+//
+//Sadly, you are probably discovering that ORBit-stable ( and bonobo
+//) are not thread safe in Gnome 1.4 - this is addressed in Gnome 2.0 with
+//ORBit 2.0 [ and some pending bonobo work ]. You can only make CORBA calls
+//[ and most bonobo calls ] from a single thread of execution.
 
 #ifdef USE_LOCK
 static GStaticMutex mutex = G_STATIC_MUTEX_INIT;

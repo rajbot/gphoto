@@ -1,5 +1,10 @@
 2001-05-29	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
+	* gnome-vfs-module/camera-method.c: Added a note about ORBit not 
+	being thread-safe.
+
+2001-05-29	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
 	* bonobo-storage-module/bonobo-storage-camera.c: If name of storage
 	is ".", return information about the storage itself. As we cannot
 	create folders, don't allow the opening of non-existant folders.

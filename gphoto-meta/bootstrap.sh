@@ -474,6 +474,23 @@ function makefiles {
 	    if [ -s "${tarball}" ]
 	    then
 		files="${files} $(basename ${tarball})"
+		if [ "$module" = "gphoto2-manual" ]
+		then
+		    case "${tarball}" in
+			*.bz2) ext=".bz2" ;;
+			*.gz)  ext=".gz" ;;
+			*)     ext="" ;;
+		    esac
+		    echo "ext=$ext"
+		    # add bz2 to dist if available, otherwise gz
+		    for tarball in "${distdir}/${module}-"[a-z]*.tar${ext}
+		    do
+			if [ -s "${tarball}" ]
+			then
+			    files="${files} $(basename ${tarball})"
+			fi
+		    done
+		fi
 		tarball=""
 		break
 	    fi

@@ -31,13 +31,14 @@ struct _GnoCamFileClass {
 };
 
 
-GtkType    	gnocam_file_get_type	(void);
-GnoCamFile*	gnocam_file_new		(Camera* camera, Bonobo_Storage storage, const gchar* path, BonoboControl* control, CORBA_Environment* ev);
+GtkType    		gnocam_file_get_type	(void);
+GnoCamFile*		gnocam_file_new		(Camera* camera, Bonobo_Storage storage, const gchar* path, BonoboControl* control, CORBA_Environment* ev);
 
-void 		gnocam_file_set_ui_container 	(GnoCamFile* file, Bonobo_UIContainer container);
-void		gnocam_file_unset_ui_container	(GnoCamFile* file);
+void 			gnocam_file_set_ui_container 	(GnoCamFile* file, Bonobo_UIContainer container);
+void			gnocam_file_unset_ui_container	(GnoCamFile* file);
+BonoboUIComponent*	gnocam_file_get_ui_component		(GnoCamFile* file);
 
-GtkWidget*	gnocam_file_get_widget		(GnoCamFile* file);
+GtkWidget*		gnocam_file_get_widget		(GnoCamFile* file);
 
 END_GNOME_DECLS
 

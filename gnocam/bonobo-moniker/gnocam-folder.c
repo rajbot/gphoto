@@ -24,6 +24,12 @@ struct _GnoCamFolderPrivate
 /* Our functions */
 /*****************/
 
+BonoboUIComponent*
+gnocam_folder_get_ui_component (GnoCamFolder* folder)
+{
+	return (folder->priv->component);
+}
+
 void
 gnocam_folder_set_ui_container (GnoCamFolder* folder, Bonobo_UIContainer container)
 {

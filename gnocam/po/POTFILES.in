@@ -1,12 +1,10 @@
 src/cameras.c
-src/capture.c
 src/file-operations.c
 src/frontend.c
 src/gnocam.c
 src/gnocam.glade
 src/preferences.c
 src/ui/gnocam-main.xml
-src/ui/gnocam-capture.xml
 bonobo-moniker/Bonobo_Moniker_camera.oaf.in
 bonobo-moniker/bonobo-moniker-camera.c
 bonobo-moniker/utils.c

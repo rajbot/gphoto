@@ -74,7 +74,7 @@ static unsigned int signals[LAST_SIGNAL] = { 0 };
 /* Prototypes */
 /**************/
 
-GdkPixbuf* scale_pixbuf (GdkPixbuf* pixbuf);
+static GdkPixbuf* scale_pixbuf (GdkPixbuf* pixbuf);
 
 /*******************************/
 /* Custom marshalling function */
@@ -307,7 +307,7 @@ table_drag_data_received (ETable* etable, int row, int col, GdkDragContext* cont
 /* Helper functions */
 /********************/
 
-GdkPixbuf*
+static GdkPixbuf*
 scale_pixbuf (GdkPixbuf* pixbuf)
 {
 	GdkPixbuf*	pixbuf_scaled;
@@ -365,10 +365,6 @@ insert_folders_and_files (GnoCamStorageView* storage_view, ETreePath* parent, co
 	}
 	
 }
-
-/*****************/
-/* Our functions */
-/*****************/
 
 /*******************/
 /* GtkObject stuff */

@@ -4,6 +4,7 @@ INCLUDES =\
  -I$(srcdir) -I$(top_srcdir)\
  -I$(top_builddir)\
  -I$(includedir)\
+ -DGNOCAM_DATADIR=\""$(datadir)"\"\
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
  -DGNOMELOCALEDIR=\""$(datadir)/locale"\"\
  $(EXTRA_GNOME_CFLAGS)\
@@ -28,6 +29,7 @@ bonobo_moniker_camera_SOURCES =\
  e-shell-constants.h\
  e-shell-folder-title-bar.h e-shell-folder-title-bar.c\
  e-title-bar.h e-title-bar.c\
+ gnocam-capture.h gnocam-capture.c\
  gnocam-control.h gnocam-control.c\
  gnocam-file.h gnocam-file.c\
  gnocam-folder.h gnocam-folder.c\

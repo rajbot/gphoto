@@ -24,6 +24,12 @@ struct _GnoCamFilePrivate
 /* Our functions */
 /*****************/
 
+BonoboUIComponent*
+gnocam_file_get_ui_component (GnoCamFile* file)
+{
+	return (file->priv->component);
+}
+
 void
 gnocam_file_set_ui_container (GnoCamFile* file, Bonobo_UIContainer container)
 {

@@ -63,25 +63,21 @@ camera_get_info (BonoboStream			*s,
 		fileinfostruct = fileinfo.file;
 
 	/* Content type */
-	if (mask & Bonobo_FIELD_CONTENT_TYPE) {
-		if (fileinfostruct.fields & GP_FILE_INFO_TYPE)
-			info->content_type = CORBA_string_dup (
-					fileinfostruct.type);
-		else
-			info->content_type = CORBA_string_dup (
-					"application/octet-stream");
-	}
+	if (fileinfostruct.fields & GP_FILE_INFO_TYPE)
+		info->content_type = CORBA_string_dup (fileinfostruct.type);
+	else
+		info->content_type = CORBA_string_dup (
+						"application/octet-stream");
 
 	/* Size */
-	if (mask & Bonobo_FIELD_SIZE)
-		if (fileinfostruct.fields & GP_FILE_INFO_SIZE)
-			if (fileinfostruct.size != stream->priv->size)
-				g_warning ("Size information differs: I have "
-					   "%i bytes in memory, gphoto2 "
-					   "tells me that the file is %i "
-					   "bytes big. I am using my value.",
-					   (int) stream->priv->size,
-					   (int) info->size);
+	if (fileinfostruct.fields & GP_FILE_INFO_SIZE)
+		if (fileinfostruct.size != stream->priv->size)
+			g_warning ("Size information differs: I have "
+				   "%i bytes in memory, gphoto2 "
+				   "tells me that the file is %i "
+				   "bytes big. I am using my value.",
+				   (int) stream->priv->size,
+				   (int) info->size);
 	info->size = stream->priv->size;
 
 	/* Name and type */
@@ -91,7 +87,9 @@ camera_get_info (BonoboStream			*s,
 	g_message ("    Information about the stream:");
 	g_message ("      Name: %s", info->name);
 	g_message ("      Type: %i", (gint) info->type);
-	g_message ("      Content type: %s", (gchar *) info->content_type);
+	g_message ("      Content type: %s (%s)",
+		   (gchar *) info->content_type,
+		   fileinfostruct.type);
 	g_message ("      Size: %i", (gint) info->size);
 	g_message ("... done.");
 

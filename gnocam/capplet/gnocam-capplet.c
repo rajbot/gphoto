@@ -7,7 +7,9 @@
 #include <gtk/gtkimage.h>
 #include <gtk/gtkhbox.h>
 #include <gtk/gtkvbox.h>
+#include <gtk/gtkvbbox.h>
 #include <gtk/gtktreeview.h>
+#include <gtk/gtktreeselection.h>
 #include <gtk/gtkliststore.h>
 #include <gtk/gtkcellrenderertext.h>
 #include <gtk/gtkbutton.h>
@@ -18,10 +20,7 @@
 
 enum
 {
-	COL_NUMBER = 0,
-	COL_MANUFACTURER,
-	COL_MODEL,
-	COL_PORT,
+	COL_NAME = 0,
 	COL_IS_EDITABLE,
 	NUM_COLS
 };
@@ -29,23 +28,22 @@ enum
 #define PARENT_TYPE GTK_TYPE_DIALOG
 static GtkDialogClass *parent_class = NULL;
 
-struct _GnoCamCappletPrivate
+struct _GnocamCappletPrivate
 {
-	GConfClient *client;
+	GConfClient *c;
 
-	GtkTreeModel *model;
-
-	GtkTreeIter last;
+	GtkTreeView *tv;
+	GtkListStore *s;
 };
 
 static void
 gnocam_capplet_destroy (GtkObject *object)
 {
-	GnoCamCapplet *capplet = GNOCAM_CAPPLET (object);
+	GnocamCapplet *capplet = GNOCAM_CAPPLET (object);
 
-	if (capplet->priv->client) {
-		g_object_unref (capplet->priv->client);
-		capplet->priv->client = NULL;
+	if (capplet->priv->c) {
+		g_object_unref (capplet->priv->c);
+		capplet->priv->c = NULL;
 	}
 
 	GTK_OBJECT_CLASS (parent_class)->destroy (object);
@@ -54,7 +52,7 @@ gnocam_capplet_destroy (GtkObject *object)
 static void
 gnocam_capplet_finalize (GObject *object)
 {
-	GnoCamCapplet *capplet = GNOCAM_CAPPLET (object);
+	GnocamCapplet *capplet = GNOCAM_CAPPLET (object);
 
 	g_free (capplet->priv);
 
@@ -79,9 +77,11 @@ gnocam_capplet_class_init (gpointer g_class, gpointer class_data)
 static void
 gnocam_capplet_init (GTypeInstance *instance, gpointer g_class)
 {
-	GnoCamCapplet *capplet = GNOCAM_CAPPLET (instance);
+	GnocamCapplet *c = GNOCAM_CAPPLET (instance);
 
-	capplet->priv = g_new0 (GnoCamCappletPrivate, 1);
+	c->priv = g_new0 (GnocamCappletPrivate, 1);
+	c->priv->s = gtk_list_store_new (NUM_COLS, G_TYPE_STRING,
+					 G_TYPE_BOOLEAN);
 }
 
 GType
@@ -93,241 +93,212 @@ gnocam_capplet_get_type (void)
                 GTypeInfo ti;
 
                 memset (&ti, 0, sizeof (GTypeInfo));
-                ti.class_size    = sizeof (GnoCamCappletClass);
+                ti.class_size    = sizeof (GnocamCappletClass);
                 ti.class_init    = gnocam_capplet_class_init;
-                ti.instance_size = sizeof (GnoCamCapplet);
+                ti.instance_size = sizeof (GnocamCapplet);
                 ti.instance_init = gnocam_capplet_init;
 
-                type = g_type_register_static (PARENT_TYPE, "GnoCamCapplet",
+                type = g_type_register_static (PARENT_TYPE, "GnocamCapplet",
                                                &ti, 0);
         }
 
         return (type);
 }
 
-static void
-on_ok_clicked (GtkButton *button, GnoCamCapplet *capplet)
-{
-	gtk_main_quit ();
-}
-
-static void
-gnocam_capplet_add_entry (GnoCamCapplet *capplet)
-{
-	guint n = 0;
-	gchar *k = NULL;
-
-	g_return_if_fail (GNOCAM_IS_CAPPLET (capplet));
-
-	while (1) {
-		k = g_strdup_printf ("/desktop/gnome/cameras/%i", n);
-		if (!gconf_client_dir_exists (capplet->priv->client, k, NULL))
-			break;
-		g_free (k);
-		n++;
-	}
-	g_free (k);
-
-	gtk_list_store_append (GTK_LIST_STORE (capplet->priv->model),
-			       &capplet->priv->last);
-	gtk_list_store_set (GTK_LIST_STORE (capplet->priv->model),
-		&capplet->priv->last, COL_IS_EDITABLE, TRUE,
-		COL_NUMBER, n, -1);
-}
-
 static gboolean
-gnocam_capplet_get_iter (GnoCamCapplet *capplet, guint n, GtkTreeIter *iter)
+gnocam_capplet_get_iter (GnocamCapplet *c, GtkTreeIter *iter,
+			 const gchar *name)
 {
-	GValue v = {0, };
-	guint m;
+	GtkTreeModel *m;
+	GValue v = {0,};
+	gboolean b;
 
-	/* Search the camera in the list. */
-	if (!gtk_tree_model_get_iter_first (capplet->priv->model, iter))
-		return FALSE;
-	while (1) {
-		gtk_tree_model_get_value (capplet->priv->model, iter,
-					  COL_NUMBER, &v);
-		m = g_value_get_uint (&v);
-		g_value_unset (&v);
-		if (n == m)
-			return TRUE;
-		if (!gtk_tree_model_iter_next (capplet->priv->model, iter)) {
-			return FALSE;
+	g_return_val_if_fail (GNOCAM_IS_CAPPLET (c), FALSE);
+	g_return_val_if_fail (name != NULL, FALSE);
+
+	m = GTK_TREE_MODEL (c->priv->s);
+	b = gtk_tree_model_get_iter_first (m, iter);
+	while (b) {
+		gtk_tree_model_get_value (m, iter, COL_NAME, &v);
+		if (!strcmp (name, g_value_get_string (&v))) {
+			g_value_unset (&v); return TRUE;
 		}
+		g_value_unset (&v); 
+		b = gtk_tree_model_iter_next (m, iter);
 	}
+	return FALSE;
+}
+
+static void
+on_close_clicked (GtkButton *button, GnocamCapplet *capplet)
+{
+	gtk_widget_destroy (GTK_WIDGET (capplet));
+}
+
+static void
+on_new_clicked (GtkButton *button, GnocamCapplet *c)
+{
+	gchar *name = NULL;
+	GSList *l;
+	GError *e = NULL;
+	guint i, j;
+	gchar *k, *ek = NULL;
+
+	g_return_if_fail (GNOCAM_IS_CAPPLET (c));
+
+	/* Ask gconf for existing directories */
+	l = gconf_client_all_dirs (c->priv->c, "/desktop/gnome/cameras", &e);
+	if (e) {
+		g_warning ("Could not read settings: %s", e->message);
+		g_error_free (e);
+		return;
+	}
+
+	/* Decide about a name for the new camera. */
+	for (i = 1; i++; ) {
+		name = g_strdup_printf (_("Camera %i"), i);
+		ek = gconf_escape_key (name, strlen (name)); g_free (name);
+		for (j = 0; j < g_slist_length (l); j++)
+			if (!strcmp (ek, g_basename (
+				(gchar *) g_slist_nth_data (l, j)))) break;
+		if (j == g_slist_length (l)) break;
+		g_free (ek);
+	}
+	for (i = 0; i < g_slist_length (l); i++)
+		g_free (g_slist_nth_data (l, i));
+	g_slist_free (l);
+
+	/* Tell gconf about the new camera. */
+	k = g_strdup_printf ("/desktop/gnome/cameras/%s/manufacturer", ek);
+	g_free (ek);
+	gconf_client_set_string (c->priv->c, k, "", NULL); g_free (k);
+	gconf_client_suggest_sync (c->priv->c, NULL);
 }
 
 static void
 notify_func (GConfClient *client, guint cnxn_id, GConfEntry *entry,
 	     gpointer user_data)
 {
-	GnoCamCapplet *capplet = GNOCAM_CAPPLET (user_data);
-	gchar *key;
-	const gchar *s;
-	guint n, m;
-	guint c = 0;
-	GValue v = {0, };
+	GnocamCapplet *c = GNOCAM_CAPPLET (user_data);
+	gchar *name, *k;
 	GtkTreeIter iter;
-	GConfValue *value;
-
-	key = g_strdup (gconf_entry_get_key (entry));
 
 	/* Which setting changed? */
-	s = strrchr (key, '/');
-	g_return_if_fail (s);
-	if (!strcmp (s + 1, "manufacturer"))
-		c = COL_MANUFACTURER;
-	else if (!strcmp (s + 1, "model"))
-		c = COL_MODEL;
-	else if (!strcmp (s + 1, "port"))
-		c = COL_PORT;
-	else if ((*(s + 1) >= '0') && (*(s + 1) <= '9')) {
-
-		/* A camera got removed. */
-		n = atoi (s + 1);
-		g_free (key);
-		if (!gnocam_capplet_get_iter (capplet, n, &iter)) {
-			g_warning ("Could not find camera %i in list!", n);
-			return;
+	if (!entry->value) {
+		name = gconf_unescape_key (
+			g_basename (gconf_entry_get_key (entry)),
+			strlen (g_basename (gconf_entry_get_key (entry))));
+		if (!gnocam_capplet_get_iter (c, &iter, name)) {
+			g_free (name); return;
 		}
-		gtk_list_store_remove (GTK_LIST_STORE (capplet->priv->model),
-				       &iter);
-		return;
-
+		gtk_list_store_remove (c->priv->s, &iter);
 	} else {
-		g_warning ("Unknown setting '%s'!", s + 1);
-		g_free (key);
-		return;
+		k = g_strdup (entry->key);
+		k[strlen (k) - strlen (g_basename (k)) - 1] = '\0';
+		name = gconf_unescape_key (g_basename (k),
+					   strlen (g_basename (k)));
+		g_free (k);
+		gtk_list_store_append (c->priv->s, &iter);
+		gtk_list_store_set (c->priv->s, &iter, COL_NAME, name, -1);
+		g_free (name);
 	}
-
-	/*
-	 * Figure out the number of the camera. Stupid GConf. Check that the
-	 * directory still exists.
-	 */
-	key[s - key] = '\0';
-	if (!gconf_client_dir_exists (capplet->priv->client, key, NULL)) {
-		g_free (key);
-		return;
-	}
-	if (!strrchr (key, '/')) {
-		g_warning ("Invalid setting '%s'!", key);
-		g_free (key);
-		return;
-	}
-	n = atoi (strrchr (key, '/') + 1);
-	g_free (key);
-	if (!gnocam_capplet_get_iter (capplet, n, &iter)) {
-		g_warning ("Could not find camera %i in list!");
-		return;
-	}
-
-	value = gconf_entry_get_value (entry);
-	gtk_list_store_set (GTK_LIST_STORE (capplet->priv->model), &iter,
-			    c, gconf_value_get_string (value), -1);
 }
 
 static void
-on_manufacturer_edited (GtkCellRendererText *cell, const gchar *path,
-			const gchar *new_text, GnoCamCapplet *capplet)
+gnocam_capplet_remove (GnocamCapplet *c, GtkTreeIter *iter)
 {
-	GtkTreeIter iter;
-	guint n;
 	GValue v = {0, };
-	gchar *k, *s;
+	gchar *ek, *k, *key;
+	
+	g_return_if_fail (GNOCAM_IS_CAPPLET (c));
 
-	g_return_if_fail (GNOCAM_IS_CAPPLET (capplet));
-
-	/* Last entry edited? Add a new empty line. */
-	gtk_tree_model_get_iter_from_string (capplet->priv->model, &iter, path);
-	if (!memcmp (&iter, &capplet->priv->last, sizeof (GtkTreeIter)))
-		gnocam_capplet_add_entry (capplet);
-
-	/* Pass the new setting to gconf */
-	gtk_tree_model_get_value (capplet->priv->model, &iter, COL_NUMBER, &v);
-	n = g_value_get_uint (&v);
+	gtk_tree_model_get_value (GTK_TREE_MODEL (c->priv->s), iter,
+				  COL_NAME, &v);
+	ek = gconf_escape_key (g_value_get_string (&v),
+			       strlen (g_value_get_string (&v)));
 	g_value_unset (&v);
-	k = g_strdup_printf ("/desktop/gnome/cameras/%i/manufacturer", n);
-	s = gconf_client_get_string (capplet->priv->client, k, NULL);
-	if (s && !strcmp (s, new_text)) {
-		g_free (s);
-		g_free (k);
-		return;
-	}       
-	g_free (s);
-	gconf_client_set_string (capplet->priv->client, k, new_text, NULL);
+	k = g_strdup_printf ("/desktop/gnome/cameras/%s", ek);
+	g_free (ek);
+	key = g_strdup_printf ("%s/manufacturer", k);
+	gconf_client_unset (c->priv->c, key, NULL); g_free (key);
+	key = g_strdup_printf ("%s/model", k);
+	gconf_client_unset (c->priv->c, key, NULL); g_free (key);
+	key = g_strdup_printf ("%s/port", k);
+	gconf_client_unset (c->priv->c, key, NULL); g_free (key);
+	gconf_client_unset (c->priv->c, k, NULL);
 	g_free (k);
 }
 
 static void
-on_model_edited (GtkCellRendererText *cell, const gchar *path,
-		 const gchar *new_text, GnoCamCapplet *capplet)
+on_name_edited (GtkCellRendererText *cell, const gchar *path,
+		const gchar *new_text, GnocamCapplet *c)
 {
 	GtkTreeIter iter;
-	GValue v = {0,};
-	guint n;
-	gchar *k, *s;
+	GValue v = {0, };
+	gchar *k, *key, *et;
+	gchar *manuf, *model, *port;
 
-	/* Pass the new setting to gconf */
-	gtk_tree_model_get_iter_from_string (capplet->priv->model, &iter, path);
-	gtk_tree_model_get_value (capplet->priv->model, &iter, COL_NUMBER, &v);
-	n = g_value_get_uint (&v);
-	g_value_unset (&v);
-	k = g_strdup_printf ("/desktop/gnome/cameras/%i/model", n);
-	s = gconf_client_get_string (capplet->priv->client, k, NULL);
-	if (s && !strcmp (s, new_text)) {
-		g_free (s);
-		g_free (k);
+	g_return_if_fail (GNOCAM_IS_CAPPLET (c));
+
+	/* Changed at all? */
+	gtk_tree_model_get_iter_from_string (GTK_TREE_MODEL (c->priv->s),
+					     &iter, path);
+	gtk_tree_model_get_value (GTK_TREE_MODEL (c->priv->s), &iter,
+				  COL_NAME, &v);
+	if (!strcmp (g_value_get_string (&v), new_text)) {
+		g_value_unset (&v);
 		return;
-	}       
-	g_free (s);
-	gconf_client_set_string (capplet->priv->client, k, new_text, NULL);
-	g_free (k);
-}
-		
-static void
-on_port_edited (GtkCellRendererText *cell, const gchar *path,
-		const gchar *new_text, GnoCamCapplet *capplet)
-{
-	GtkTreeIter iter;
-	GValue v = {0,};
-	guint n;
-	gchar *k, *s;
+	}
 
-	/* Pass the new setting to gconf */
-	gtk_tree_model_get_iter_from_string (capplet->priv->model, &iter, path);
-	gtk_tree_model_get_value (capplet->priv->model, &iter, COL_NUMBER, &v);
-	n = g_value_get_uint (&v);
-	g_value_unset (&v); 
-	k = g_strdup_printf ("/desktop/gnome/cameras/%i/port", n);
-	s = gconf_client_get_string (capplet->priv->client, k, NULL);
-	if (s && !strcmp (s, new_text)) {
-		g_free (s);
+	/* Make sure the name does not already exist. */
+	k = g_strdup_printf ("/desktop/gnome/cameras/%s", new_text);
+	if (gconf_client_dir_exists (c->priv->c, k, NULL)) {
+		g_warning ("There is already a camera with the name '%s'!",
+			   new_text);
+		g_value_unset (&v);
 		g_free (k);
 		return;
 	}
-	g_free (s);
-	gconf_client_set_string (capplet->priv->client, k, new_text, NULL);
 	g_free (k);
-}
 
-static void
-gnocam_capplet_remove_camera (GnoCamCapplet *capplet, guint n)
-{
-	gchar *k;
+	/* Remove the old settings. */
+	et = gconf_escape_key (g_value_get_string (&v),
+			       strlen (g_value_get_string (&v)));
+	g_value_unset (&v);
+	k = g_strdup_printf ("/desktop/gnome/cameras/%s", et);
+	key = g_strdup_printf ("%s/manufacturer", k);
+	manuf = gconf_client_get_string (c->priv->c, key, NULL);
+	gconf_client_unset (c->priv->c, key, NULL);
+	g_free (key);
+	key = g_strdup_printf ("%s/model", k);
+	model = gconf_client_get_string (c->priv->c, key, NULL);
+	gconf_client_unset (c->priv->c, key, NULL);
+	g_free (key);
+	key = g_strdup_printf ("%s/port", k);
+	port = gconf_client_get_string (c->priv->c, key, NULL);
+	gconf_client_unset (c->priv->c, key, NULL);
+	g_free (key);
+	gconf_client_unset (c->priv->c, k, NULL);
+	g_free (k);
 
-	g_return_if_fail (GNOCAM_IS_CAPPLET (capplet));
-
-	k = g_strdup_printf ("/desktop/gnome/cameras/%i/name", n);
-	gconf_client_unset (capplet->priv->client, k, NULL);
-	g_free (k);
-	k = g_strdup_printf ("/desktop/gnome/cameras/%i/model", n);
-	gconf_client_unset (capplet->priv->client, k, NULL);
-	g_free (k);
-	k = g_strdup_printf ("/desktop/gnome/cameras/%i/port", n);
-	gconf_client_unset (capplet->priv->client, k, NULL);
-	g_free (k);
-	k = g_strdup_printf ("/desktop/gnome/cameras/%i", n);
-	gconf_client_unset (capplet->priv->client, k, NULL);
+	/* Add the new settings */
+	k = g_strdup_printf ("/desktop/gnome/cameras/%s", et);
+	g_free (et);
+	if (manuf) {
+		key = g_strdup_printf ("%s/manufacturer", k);
+		gconf_client_set_string (c->priv->c, k, manuf, NULL);
+		g_free (key); g_free (manuf);
+	}
+	if (model) {
+		key = g_strdup_printf ("%s/model", k);
+		gconf_client_set_string (c->priv->c, k, model, NULL);
+		g_free (key); g_free (model);
+	}
+	if (port) {
+		key = g_strdup_printf ("%s/port", k);
+		gconf_client_set_string (c->priv->c, k, port, NULL);
+		g_free (key); g_free (port);
+	}
 	g_free (k);
 }
 
@@ -335,28 +306,27 @@ static void
 delete_foreach_func (GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter,
 		     gpointer data)
 {
-	GnoCamCapplet *capplet = GNOCAM_CAPPLET (data);
-	GValue v = {0, };
-	guint n;
-	gchar *k;
+	gnocam_capplet_remove (GNOCAM_CAPPLET (data), iter);
+}
 
-	gtk_tree_model_get_value (model, iter, COL_NUMBER, &v);
-	n = g_value_get_uint (&v);
-	g_value_unset (&v);
-	gnocam_capplet_remove_camera (capplet, n);
+static void
+gnocam_capplet_delete_selected (GnocamCapplet *c)
+{
+	GtkTreeSelection *s;
+
+	g_return_if_fail (GNOCAM_IS_CAPPLET (c));
+
+	s = gtk_tree_view_get_selection (c->priv->tv);
+	gtk_tree_selection_selected_foreach (s, delete_foreach_func, c);
 }
 
 static gboolean
 on_tree_view_key_press_event (GtkWidget *widget, GdkEventKey *event,
-			      GnoCamCapplet *capplet)
+			      GnocamCapplet *c)
 {
-	GtkTreeSelection *s;
-
 	switch (event->keyval) {
 	case GDK_Delete:
-		s = gtk_tree_view_get_selection (GTK_TREE_VIEW (widget));
-		gtk_tree_selection_selected_foreach (s, delete_foreach_func,
-						     capplet);
+		gnocam_capplet_delete_selected (c);
 		return TRUE;
 	default:
 		return FALSE;
@@ -365,7 +335,7 @@ on_tree_view_key_press_event (GtkWidget *widget, GdkEventKey *event,
 
 static gboolean
 on_tree_view_button_press_event (GtkWidget *widget, GdkEventButton *event,
-				 GnoCamCapplet *capplet)
+				 GnocamCapplet *capplet)
 {
 	if (event->button == 3) {
 		g_warning ("Implement popup!");
@@ -376,35 +346,66 @@ on_tree_view_button_press_event (GtkWidget *widget, GdkEventButton *event,
 }
 
 static void
-on_gtkam_toggled (GtkToggleButton *button, GnoCamCapplet *capplet)
+gnocam_capplet_load (GnocamCapplet *c)
 {
-	g_warning ("Not implemented!");
+	GtkTreeIter iter;
+	GSList *l;
+	GError *e = NULL;
+	guint i;
+	gchar *name;
+
+	g_return_if_fail (GNOCAM_IS_CAPPLET (c));
+
+	l = gconf_client_all_dirs (c->priv->c, "/desktop/gnome/cameras", &e);
+	if (e) {
+		g_warning ("Could not read settings: %s", e->message);
+		return;
+	}
+	gtk_list_store_clear (c->priv->s);
+	for (i = 0; i < g_slist_length (l); i++) {
+		gtk_list_store_append (c->priv->s, &iter);
+		name = gconf_unescape_key (
+			g_basename (g_slist_nth_data (l, i)),
+			strlen (g_basename (g_slist_nth_data (l, i))));
+		gtk_list_store_set (c->priv->s, &iter, COL_NAME, name,
+				    COL_IS_EDITABLE, TRUE, -1);
+		g_free (name);
+	}
+	for (i = 0; i < g_slist_length (l); i++)
+		g_free (g_slist_nth_data (l, i));
+	g_slist_free (l);
+	gtk_tree_view_columns_autosize (c->priv->tv);
+}
+
+static void
+on_edit_clicked (GtkButton *button, GnocamCapplet *c)
+{
+}
+
+static void
+on_remove_clicked (GtkButton *button, GnocamCapplet *c)
+{
+	gnocam_capplet_delete_selected (c);
 }
 
 GtkWidget*
 gnocam_capplet_new (GConfClient *client)
 {
-	GnoCamCapplet *capplet;
-	GtkWidget *hbox, *image, *vbox, *w;
-	GtkListStore *s;
-	GtkCellRenderer *c;
+	GnocamCapplet *c = gtk_type_new (GNOCAM_TYPE_CAPPLET);
+	GtkWidget *hbox, *image, *w, *b, *bbox;
+	GtkCellRenderer *r;
 	GtkTreeViewColumn *col;
-	gchar *k = NULL, *manufacturer, *model, *port;
-	guint n = 0;
-	GtkTreeIter iter;
-
-	capplet = gtk_type_new (GNOCAM_TYPE_CAPPLET);
 
 	/* Watch out for changes */
-	capplet->priv->client = client;
+	c->priv->c = client;
 	g_object_ref (client);
 	gconf_client_notify_add (client, "/desktop/gnome/cameras", notify_func,
-				 capplet, NULL, NULL);
+				 c, NULL, NULL);
 
 	/* Create a hbox */
-	hbox = gtk_hbox_new (FALSE, 10);
-	gtk_widget_show (hbox);
-	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (capplet)->vbox), hbox,
+	gtk_widget_show (hbox = gtk_hbox_new (FALSE, 5));
+	gtk_box_set_spacing (GTK_BOX (hbox), 5);
+	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (c)->vbox), hbox,
 			    TRUE, TRUE, 10);
 
 	/* Create the logo */
@@ -412,104 +413,50 @@ gnocam_capplet_new (GConfClient *client)
 	gtk_widget_show (image);
 	gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, FALSE, 0);
 
-	/* Create a vbox */
-	vbox = gtk_vbox_new (FALSE, 10);
-	gtk_widget_show (vbox);
-	gtk_box_pack_start (GTK_BOX (hbox), vbox, TRUE, TRUE, 0);
+	/* Create the buttons */
+	gtk_widget_show (bbox = gtk_vbutton_box_new ());
+	gtk_box_set_spacing (GTK_BOX (bbox), 5);
+	gtk_button_box_set_layout (GTK_BUTTON_BOX (bbox), GTK_BUTTONBOX_START);
+	gtk_box_pack_end (GTK_BOX (hbox), bbox, FALSE, FALSE, 0);
+	gtk_widget_show (b = gtk_button_new_with_label (_("_New")));
+	gtk_box_pack_start (GTK_BOX (bbox), b, FALSE, FALSE, 0);
+	g_signal_connect (b, "clicked", G_CALLBACK (on_new_clicked), c);
+	gtk_widget_show (b = gtk_button_new_with_label (_("_Edit")));
+	gtk_box_pack_start (GTK_BOX (bbox), b, FALSE, FALSE, 0);
+	g_signal_connect (b, "clicked", G_CALLBACK (on_edit_clicked), c);
+	gtk_widget_show (b = gtk_button_new_with_label (_("_Remove")));
+	gtk_box_pack_start (GTK_BOX (bbox), b, FALSE, FALSE, 0);
+	g_signal_connect (b, "clicked", G_CALLBACK (on_remove_clicked), c);
 
 	/* Create the table */
-	w = gtk_tree_view_new ();
-	gtk_widget_show (w);
-	gtk_box_pack_start (GTK_BOX (vbox), w, TRUE, TRUE, 0);
+	gtk_widget_show (w = gtk_tree_view_new ());
+	gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (w), FALSE);
+	gtk_box_pack_start (GTK_BOX (hbox), w, TRUE, TRUE, 0);
 	g_signal_connect (w, "button_press_event",
-		G_CALLBACK (on_tree_view_button_press_event), capplet);
+		G_CALLBACK (on_tree_view_button_press_event), c);
 	g_signal_connect (w, "key_press_event",
-		G_CALLBACK (on_tree_view_key_press_event), capplet);
+		G_CALLBACK (on_tree_view_key_press_event), c);
+	c->priv->tv = GTK_TREE_VIEW (w);
+	gtk_tree_view_set_model (GTK_TREE_VIEW (w),
+				 GTK_TREE_MODEL (c->priv->s));
+	gtk_tree_selection_set_mode (gtk_tree_view_get_selection (c->priv->tv),
+				     GTK_SELECTION_MULTIPLE);
 
-	/* Create the model for the table */
-	s = gtk_list_store_new (NUM_COLS, G_TYPE_UINT, G_TYPE_STRING,
-				G_TYPE_STRING,
-				G_TYPE_STRING, G_TYPE_BOOLEAN);
-	gtk_tree_view_set_model (GTK_TREE_VIEW (w), GTK_TREE_MODEL (s));
-	capplet->priv->model = GTK_TREE_MODEL (s);
+	/* Add the column for the name */
+	r = gtk_cell_renderer_text_new ();
+	col = gtk_tree_view_column_new_with_attributes (_("Name"), r,
+		"text", COL_NAME, "editable", COL_IS_EDITABLE, NULL);
+	gtk_tree_view_append_column (GTK_TREE_VIEW (w), col);
+	g_signal_connect (r, "edited", G_CALLBACK (on_name_edited), c);
+
+	/* Add the close-button. */
+	gtk_widget_show (b = gtk_button_new_from_stock (GTK_STOCK_CLOSE));
+	gtk_box_pack_end (GTK_BOX (GTK_DIALOG (c)->action_area), b,
+			  FALSE, FALSE, 0);
+	g_signal_connect (b, "clicked", G_CALLBACK (on_close_clicked), c);
 
 	/* Load the current settings. */
-	while (n < 10) {
-		k = g_strdup_printf ("/desktop/gnome/cameras/%i", n);
-		if (gconf_client_dir_exists (client, k, NULL)) {
-		    g_free (k);
-		    k = g_strdup_printf ("/desktop/gnome/cameras/"
-				         "%i/manufacturer", n);
-		    manufacturer = gconf_client_get_string (client, k, NULL);
-		    g_free (k);
-		    k = g_strdup_printf ("/desktop/gnome/cameras/%i/model", n);
-		    model = gconf_client_get_string (client, k, NULL);
-		    g_free (k);
-		    k = g_strdup_printf ("/desktop/gnome/cameras/%i/port", n);
-		    port = gconf_client_get_string (client, k, NULL);
-		    g_free (k);
-		    k = NULL;
-		    gtk_list_store_append (s, &iter);
-		    gtk_list_store_set (s, &iter, COL_IS_EDITABLE, TRUE,
-			COL_NUMBER, n, -1);
-		    if (manufacturer) {
-			    gtk_list_store_set (s, &iter, COL_MANUFACTURER,
-					        manufacturer, -1);
-			    g_free (manufacturer);
-		    }
-		    if (model) {
-			    gtk_list_store_set (s, &iter, COL_MODEL, model, -1);
-			    g_free (model);
-		    }
-		    if (port) {
-			    gtk_list_store_set (s, &iter, COL_PORT, port, -1);
-			    g_free (port);
-		    }
-		}
-		g_free (k);
-		k = NULL;
-		n++;
-	}
-	g_free (k);
+	gnocam_capplet_load (c);
 
-	/* Create an empty line so that users can add their camera. */
-	gnocam_capplet_add_entry (capplet);
-
-	/* Add the column for the manufacturer */
-	c = gtk_cell_renderer_text_new ();
-	col = gtk_tree_view_column_new_with_attributes (_("Manufacturer"), c,
-		"text", COL_MANUFACTURER, "editable", COL_IS_EDITABLE, NULL);
-	gtk_tree_view_append_column (GTK_TREE_VIEW (w), col);
-	g_signal_connect (c, "edited", G_CALLBACK (on_manufacturer_edited),
-			  capplet);
-
-	/* Add the column for the model */
-	c = gtk_cell_renderer_text_new ();
-	col = gtk_tree_view_column_new_with_attributes (_("Model"), c,
-		"text", COL_MODEL, "editable", COL_IS_EDITABLE, NULL);
-	gtk_tree_view_append_column (GTK_TREE_VIEW (w), col);
-	g_signal_connect (c, "edited", G_CALLBACK (on_model_edited), capplet);
-
-	/* Add the column for the port */
-	c = gtk_cell_renderer_text_new ();
-	col = gtk_tree_view_column_new_with_attributes (_("Port"), c,
-		"text", COL_PORT, "editable", COL_IS_EDITABLE, NULL);
-	gtk_tree_view_append_column (GTK_TREE_VIEW (w), col);
-	g_signal_connect (c, "edited", G_CALLBACK (on_port_edited), capplet);
-
-	/* Add the check button for gtkam's settings. */
-	w = gtk_check_button_new_with_label (_("Write settings for gtkam"));
-	gtk_widget_show (w);
-	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (capplet)->vbox), w,
-			    FALSE, FALSE, 0);
-	g_signal_connect (w, "toggled", G_CALLBACK (on_gtkam_toggled), capplet);
-
-	/* Add the ok-button. */
-	w = gtk_button_new_from_stock (GTK_STOCK_CLOSE);
-	gtk_widget_show (w);
-	gtk_box_pack_end (GTK_BOX (GTK_DIALOG (capplet)->action_area), w,
-			  FALSE, FALSE, 0);
-	g_signal_connect (w, "clicked", G_CALLBACK (on_ok_clicked), capplet);
-
-	return (GTK_WIDGET (capplet));
+	return (GTK_WIDGET (c));
 }

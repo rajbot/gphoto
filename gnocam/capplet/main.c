@@ -26,9 +26,9 @@ main (int argc, char** argv)
 			      GCONF_CLIENT_PRELOAD_ONELEVEL, NULL);
 
 	/* Create the capplet */
-	capplet = gnocam_capplet_new (client);
-	gtk_widget_show (capplet);
-	
+	gtk_widget_show (capplet = gnocam_capplet_new (client));
+	g_signal_connect (capplet, "destroy", G_CALLBACK (gtk_main_quit), NULL);
+
 	gtk_main ();
 
 	/* Clean up */

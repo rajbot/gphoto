@@ -1,7 +1,8 @@
 #ifndef GNOME_CAMERA_IDL
 #define GNOME_CAMERA_IDL
 
-#include <Bonobo.idl>
+#include <bonobo-activation-2.0/Bonobo_Unknown.idl>
+#include <bonobo-2.0/Bonobo_Control.idl>
 
 module GNOME {
 module C {
@@ -52,6 +53,13 @@ module C {
 		void rm_dir  (in ID id) raises (BadID, Error);
 	};
 
+	interface Preview : Bonobo::Control {
+
+		void refresh () raises (Error);
+		void start () raises (Error);
+		void stop () raises (Error);
+	};
+
 	interface Camera : Bonobo::Unknown {
 
 		readonly attribute string manufacturer;
@@ -59,7 +67,7 @@ module C {
 		readonly attribute Dir dir;
 		readonly attribute Bonobo::Control prefs;
 		readonly attribute Bonobo::Control capture;
-		readonly attribute Bonobo::Control preview;
+		readonly attribute Preview preview;
 	};
 
 	interface Mngr : Bonobo::Unknown {

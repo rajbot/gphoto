@@ -29,5 +29,6 @@
 # and are no official mailing lists!
 CVSROOT/        ${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} cvs-m@n-dimensional.de
 gphoto2/        ${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} prelim-cvs@n-dimensional.de 
+libgphoto2/     ${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} prelim-cvs@n-dimensional.de 
 gtkam/          ${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} prelim-cvs@n-dimensional.de
 gnocam/         ${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} prelim-cvs@n-dimensional.de

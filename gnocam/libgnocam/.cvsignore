@@ -1,0 +1,5 @@
+GnoCam*
+Makefile
+Makefile.in
+*.o
+libgnocam.a

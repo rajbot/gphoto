@@ -71,7 +71,7 @@ static struct {
 	{"Konica", "Q-M200"},
 	{"Hewlett Packard", "PhotoSmart"},
 	{"Hewlett Packard", "PhotoSmart C20"},
-	{"Hewlett Packard", "PhotoSmart C20"},
+	{"Hewlett Packard", "PhotoSmart C30"},
 	{"Hewlett Packard", "PhotoSmart C200"},
 };
 

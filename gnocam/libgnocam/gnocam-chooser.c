@@ -495,3 +495,18 @@ gnocam_chooser_new (void)
 
 	return c;
 }
+
+void
+gnocam_chooser_set_connect_auto (GnocamChooser *c, gboolean connect_auto)
+{
+	g_return_if_fail (GNOCAM_IS_CHOOSER (c));
+	g_warning ("Fixme!");
+}
+
+gboolean
+gnocam_chooser_get_connect_auto (GnocamChooser *c)
+{
+	g_return_val_if_fail (GNOCAM_IS_CHOOSER (c), FALSE);
+	g_warning ("Fixme!");
+	return FALSE;
+}

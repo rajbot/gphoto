@@ -37,4 +37,7 @@ gchar *gnocam_chooser_get_manufacturer (GnocamChooser *);
 void   gnocam_chooser_set_port (GnocamChooser *, const gchar *);
 gchar *gnocam_chooser_get_port (GnocamChooser *);
 
+void     gnocam_chooser_set_connect_auto (GnocamChooser *, gboolean);
+gboolean gnocam_chooser_get_connect_auto (GnocamChooser *);
+
 #endif /* __GNOCAM_CHOOSER_H__ */

@@ -2,6 +2,8 @@
 #include "knc-c-mngr.h"
 #include "knc-c-camera.h"
 
+#include <string.h>
+
 #include <gphoto2-port-info-list.h>
 
 #include <libknc/knc-utils.h>
@@ -15,48 +17,58 @@ struct _KncCMngrPriv {
 
 static GObjectClass *parent_class;
 
-static CORBA_string
-impl_get_port_name (PortableServer_Servant servant, GNOME_C_ID n,
-		    CORBA_Environment *ev)
-{
-	KncCMngr *m = KNC_C_MNGR (bonobo_object (servant));
-	GPPortInfo info;
-	unsigned int i, c;
-
-	for (i = c = 0; (i < gp_port_info_list_count (m->priv->il)) &&
-			(c <= n); i++) {
-		gp_port_info_list_get_info (m->priv->il, i, &info);
-		if (info.type == GP_PORT_SERIAL) c++;
-		if (n + 1 == c) return CORBA_string_dup (info.name);
-	}
-	return NULL;
-}
-
-static GNOME_C_Mngr_DeviceList *
+static GNOME_C_Mngr_ManufacturerList *
 impl_get_devices (PortableServer_Servant servant, CORBA_Environment *ev)
 {
 	KncCMngr *m = KNC_C_MNGR (bonobo_object (servant));
-	GNOME_C_Mngr_DeviceList *l;
-	unsigned int i, j, n;
+	GNOME_C_Mngr_ManufacturerList *l;
+	unsigned int i, j, k, n, o;
 	GPPortInfo info;
+	int c;
 
-	l = GNOME_C_Mngr_DeviceList__alloc ();
-	l->_length = knc_count_devices ();
-	l->_buffer = GNOME_C_Mngr_DeviceList_allocbuf (l->_length);
-	for (i = 0; i < l->_length; i++) {
-		l->_buffer[i].manufacturer = CORBA_string_dup (
-					knc_get_device_manufacturer (i));
-		l->_buffer[i].model = CORBA_string_dup (
-					knc_get_device_model (i));
-		for (j = n = 0; j < gp_port_info_list_count (m->priv->il); j++){
-			gp_port_info_list_get_info (m->priv->il, j, &info);
-			if (info.type == GP_PORT_SERIAL) n++;
+	l = GNOME_C_Mngr_ManufacturerList__alloc ();
+
+	/* List all manufacturers */
+	l->_buffer = GNOME_C_Mngr_ManufacturerList_allocbuf (
+						knc_count_devices ());
+	l->_length = 0;
+	for (i = 0; i < knc_count_devices (); i++) {
+	    for (j = 0; j < l->_length; j++)
+		if (!strcmp (l->_buffer[j].manufacturer,
+			     knc_get_device_manufacturer (i))) break;
+	    if (j == l->_length) {
+		l->_length++;
+		l->_buffer[j].manufacturer = CORBA_string_dup (
+				knc_get_device_manufacturer (i));
+		l->_buffer[j].models._length = 0;
+		l->_buffer[j].models._buffer =
+			GNOME_C_Mngr_ModelList_allocbuf (knc_count_devices ());
+
+		/* List all models */
+		for (k = 0; k < knc_count_devices (); k++) {
+		    if (strcmp (l->_buffer[j].manufacturer,
+			        knc_get_device_manufacturer (k))) continue;
+		    n = l->_buffer[j].models._length;
+		    l->_buffer[j].models._length++;
+		    l->_buffer[j].models._buffer[n].model =
+			    CORBA_string_dup (knc_get_device_model (k));
+
+		    /* List all serial ports */
+		    c = gp_port_info_list_count (m->priv->il);
+		    l->_buffer[j].models._buffer[n].ports._length = 0;
+		    l->_buffer[j].models._buffer[n].ports._buffer =
+			    CORBA_sequence_CORBA_string_allocbuf (MAX (c, 0));
+		    for (o = 0; o < MAX (c, 0); o++) {
+			gp_port_info_list_get_info (m->priv->il, o, &info);
+			if (info.type == GP_PORT_SERIAL) {
+			    l->_buffer[j].models._buffer[n].ports._buffer[
+				l->_buffer[j].models._buffer[n].ports._length] =
+					CORBA_string_dup (info.name);
+			    l->_buffer[j].models._buffer[n].ports._length++;
+			}
+		    }
 		}
-		l->_buffer[i].ports._length = n;
-		l->_buffer[i].ports._buffer = CORBA_sequence_CORBA_unsigned_long_allocbuf (
-			l->_buffer[i].ports._length);
-		for (j = 0; j < l->_buffer[i].ports._length; j++)
-			l->_buffer[i].ports._buffer[j] = j;
+	    }
 	}
 	CORBA_sequence_set_release (l, CORBA_TRUE);
 
@@ -64,30 +76,30 @@ impl_get_devices (PortableServer_Servant servant, CORBA_Environment *ev)
 }
 
 static GNOME_C_Camera
-impl_connect_to_device_at_port (PortableServer_Servant servant,
-		GNOME_C_ID d, GNOME_C_ID p, CORBA_Environment *ev)
+impl_connect (PortableServer_Servant servant, const CORBA_char *manufacturer,
+	      const CORBA_char *model, const CORBA_char *port, 
+	      CORBA_Environment *ev)
 {
 	KncCMngr *m = KNC_C_MNGR (bonobo_object (servant));
 	KncCCamera *c;
-	GPPort *port = NULL;
+	GPPort *p = NULL;
 	GPPortInfo info;
-	unsigned int i, n;
+	unsigned int i;
 
-	gp_port_new (&port);
-	for (i = n = 0; (i < gp_port_info_list_count (m->priv->il)) &&
-			(n <= p); i++) {
+	gp_port_new (&p);
+	for (i = 0; i < MAX (gp_port_info_list_count (m->priv->il), 0); i++) {
 		gp_port_info_list_get_info (m->priv->il, i, &info);
-		if (info.type == GP_PORT_SERIAL) n++;
-		if (p + 1 == n) {
-			gp_port_set_info (port, info);
-			c = knc_c_camera_new (knc_get_device_manufacturer (d),
-				knc_get_device_model (d), port, ev);
+		if (!strcmp (info.name, port)) {
+			gp_port_set_info (p, info);
+			c = knc_c_camera_new (manufacturer, model, p, ev);
 			if (BONOBO_EX (ev)) return CORBA_OBJECT_NIL;
 			return CORBA_Object_duplicate (BONOBO_OBJREF (c), ev);
 		}
 	}
-	gp_port_free (port);
-	return NULL;
+	gp_port_free (p);
+	
+	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_GNOME_C_Error, NULL);
+	return CORBA_OBJECT_NIL;
 }
 
 static void
@@ -110,8 +122,7 @@ knc_c_mngr_class_init (KncCMngrClass *klass)
 	parent_class = g_type_class_peek_parent (klass);
 
 	epv->get_devices = impl_get_devices;
-	epv->get_port_name = impl_get_port_name;
-	epv->connect_to_device_at_port = impl_connect_to_device_at_port;
+	epv->connect = impl_connect;
 
 	g_class->finalize = knc_c_mngr_finalize;
 }

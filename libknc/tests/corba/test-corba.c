@@ -8,9 +8,9 @@ main (int argc, char **argv)
 {
 	GNOME_C_Mngr m;
 	CORBA_Environment ev;
-	GNOME_C_Mngr_DeviceList *dl;
+	GNOME_C_Mngr_ManufacturerList *ml;
 	GNOME_C_IDList *l;
-	unsigned int i, j;
+	unsigned int i, j, k;
 	CORBA_string s;
 	GNOME_C_Camera c;
 	GNOME_C_Dir d;
@@ -26,41 +26,34 @@ main (int argc, char **argv)
 
 	CORBA_exception_init (&ev);
 
-	/* Count supported camera models */
-	dl = GNOME_C_Mngr_get_devices (m, &ev);
+	/* Count supported manufacturers */
+	ml = GNOME_C_Mngr_get_devices (m, &ev);
 	if (BONOBO_EX (&ev)) {
 		bonobo_object_release_unref (m, NULL);
-		g_warning ("Could not get list of devices: %s",
+		g_warning ("Could not get list of manufacturers: %s",
 			   bonobo_exception_get_text (&ev));
 		CORBA_exception_free (&ev);
 		return 1;
 	}
 
 	/* List them. */
-	g_message ("Listing %i supported devices...", dl->_length);
-	for (i = 0; i < dl->_length; i++) {
-		g_message ("%2i: '%s', '%s', %i port(s) supported", i,
-			   dl->_buffer[i].manufacturer,
-			   dl->_buffer[i].model, dl->_buffer[i].ports._length);
-		for (j = 0; j < dl->_buffer[i].ports._length; j++) {
-			s = GNOME_C_Mngr_get_port_name (m,
-				dl->_buffer[i].ports._buffer[j], &ev);
-			if (BONOBO_EX (&ev)) {
-				CORBA_free (dl);
-				bonobo_object_release_unref (m, NULL);
-				g_warning ("Could not get name of port %i: %s",
-					j + 1, bonobo_exception_get_text (&ev));
-				CORBA_exception_free (&ev);
-				return 1;
-			}
-			g_message ("      %2i: '%s'", j, s);
-			CORBA_free (s);
-		}
+	g_message ("Listing devices of %i manufacturers...", ml->_length);
+	for (i = 0; i < ml->_length; i++) {
+	    g_message ("%2i: '%s'", i, ml->_buffer[i].manufacturer);
+	    for (j = 0; j < ml->_buffer[i].models._length; j++) {
+		g_message ("  %2i: '%s'", j,
+			   ml->_buffer[i].models._buffer[j].model);
+		for (k = 0;
+		     k < ml->_buffer[i].models._buffer[j].ports._length; k++)
+			g_message ("    %2i: '%s'", k,
+			    ml->_buffer[i].models._buffer[j].ports._buffer[k]);
+	    }
 	}
-	CORBA_free (dl);
+	CORBA_free (ml);
 
 	/* Connect to camera */
-	c = GNOME_C_Mngr_connect_to_device_at_port (m, 0, 0, &ev);
+	c = GNOME_C_Mngr_connect (m, "Hewlett Packard", "PhotoSmart C30",
+				  "Serial Port 0", &ev);
 	bonobo_object_release_unref (m, NULL);
 	if (BONOBO_EX (&ev)) {
 		g_warning ("Could not connect to camera: %s",

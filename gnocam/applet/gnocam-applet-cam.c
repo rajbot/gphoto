@@ -21,6 +21,13 @@
 #define PARENT_TYPE GTK_TYPE_BUTTON
 static GtkButtonClass *parent_class;
 
+enum {
+	CHANGED,
+	LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = {0};
+
 struct _GnocamAppletCamPriv
 {
 	GtkItemFactory *factory;
@@ -33,7 +40,9 @@ struct _GnocamAppletCamPriv
 
 	guint size;
 
+	/* Settings */
 	gchar *manuf, *model, *port;
+	gboolean connect_auto;
 };
 
 static void
@@ -97,6 +106,11 @@ gnocam_applet_cam_class_init (gpointer g_class, gpointer class_data)
 	gobject_class->finalize = gnocam_applet_cam_finalize;
 
 	parent_class = g_type_class_peek_parent (g_class);
+
+	signals[CHANGED] = g_signal_new ("changed",
+		G_TYPE_FROM_CLASS (g_class), G_SIGNAL_RUN_FIRST,
+		G_STRUCT_OFFSET (GnocamAppletCamClass, changed), NULL, NULL,
+		g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
 
 GType
@@ -247,6 +261,8 @@ on_changed (GnocamChooser *chooser, GnocamAppletCam *c)
 	g_message ("Port: %s", c->priv->port);
 
 	if (b) gnocam_applet_cam_connect (c);
+
+	g_signal_emit (c, signals[CHANGED], 0);
 }
 
 static void
@@ -258,6 +274,13 @@ action_select_camera (gpointer callback_data, guint callback_action,
 
 	g_signal_connect (chooser, "changed", G_CALLBACK (on_changed), c);
 	gtk_widget_show (GTK_WIDGET (chooser));
+
+	g_signal_handlers_block_by_func (chooser, on_changed, c);
+	gnocam_chooser_set_manufacturer (chooser, c->priv->manuf);
+	gnocam_chooser_set_model (chooser, c->priv->model);
+	gnocam_chooser_set_port (chooser, c->priv->port);
+	gnocam_chooser_set_connect_auto (chooser, c->priv->connect_auto);
+	g_signal_handlers_unblock_by_func (chooser, on_changed, c);
 }
 
 static GtkItemFactoryEntry popup[] =
@@ -291,24 +314,31 @@ void
 gnocam_applet_cam_set_manufacturer (GnocamAppletCam *c, const gchar *m)
 {
 	g_return_if_fail (GNOCAM_IS_APPLET_CAM (c));
+	g_free (c->priv->manuf);
+	c->priv->manuf = g_strdup (m);
 }
 
 void
 gnocam_applet_cam_set_model (GnocamAppletCam *c, const gchar *m)
 {
 	g_return_if_fail (GNOCAM_IS_APPLET_CAM (c));
+	g_free (c->priv->model);
+	c->priv->model = g_strdup (m);
 }
 
 void
 gnocam_applet_cam_set_port (GnocamAppletCam *c, const gchar *m)
 {
 	g_return_if_fail (GNOCAM_IS_APPLET_CAM (c));
+	g_free (c->priv->port);
+	c->priv->port = g_strdup (m);
 }
 
 void
-gnocam_applet_cam_set_connect_auto (GnocamAppletCam *c, gboolean a)
+gnocam_applet_cam_set_connect_auto (GnocamAppletCam *c, gboolean connect_auto)
 {
 	g_return_if_fail (GNOCAM_IS_APPLET_CAM (c));
+	c->priv->connect_auto = connect_auto;
 }
 
 void
@@ -318,4 +348,32 @@ gnocam_applet_cam_set_size (GnocamAppletCam *c, guint size)
 
 	c->priv->size = size;
 	gnocam_applet_cam_update (c);
+}
+
+const gchar *
+gnocam_applet_cam_get_manufacturer (GnocamAppletCam *c)
+{
+	g_return_val_if_fail (GNOCAM_IS_APPLET_CAM (c), NULL);
+	return c->priv->manuf;
+}
+
+const gchar *
+gnocam_applet_cam_get_model (GnocamAppletCam *c)
+{
+	g_return_val_if_fail (GNOCAM_IS_APPLET_CAM (c), NULL);
+	return c->priv->model;
+}
+
+const gchar *
+gnocam_applet_cam_get_port (GnocamAppletCam *c)
+{
+	g_return_val_if_fail (GNOCAM_IS_APPLET_CAM (c), NULL);
+	return c->priv->port;
+}
+
+gboolean
+gnocam_applet_cam_get_connect_auto (GnocamAppletCam *c)
+{
+	g_return_val_if_fail (GNOCAM_IS_APPLET_CAM (c), FALSE);
+	return c->priv->connect_auto;
 }

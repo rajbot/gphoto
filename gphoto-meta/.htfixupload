@@ -35,6 +35,7 @@ do
 	chmod a+r "$new"
     fi
 done
+chmod 0644 *.tar.* bz2/*.tar.*
 
 chmod 0705 .
 

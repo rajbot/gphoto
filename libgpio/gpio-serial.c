@@ -55,7 +55,7 @@ static struct sgttyb term_old;
 
 /* Serial prototypes
    ------------------------------------------------------------------ */
-int 		gpio_serial_list(gpio_device_list *list);
+int 		gpio_serial_list(gpio_device_list *list, int *count);
 
 int 		gpio_serial_init(gpio_device *dev);
 int 		gpio_serial_exit(gpio_device *dev);
@@ -92,7 +92,9 @@ struct gpio_operations gpio_serial_operations =
 /* Serial API functions
    ------------------------------------------------------------------ */
 
-int gpio_serial_list (gpio_device_list *list) {
+int gpio_serial_list (gpio_device_list *list, int *count) {
+
+	
 
 }
 

@@ -84,7 +84,7 @@ typedef union {
 struct gpio_device;
 typedef struct gpio_device gpio_device;
 struct gpio_operations {
-	int (*list)	(gpio_device_list *);
+	int (*list)	(gpio_device_list *, int*);
 	int (*init)	(gpio_device *);
 	int (*exit)	(gpio_device *);
 	int (*open)	(gpio_device *);

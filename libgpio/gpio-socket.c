@@ -24,7 +24,7 @@
 
 /* socket prototypes
    --------------------------------------------------------------------- */
-int 		gpio_socket_list(gpio_device_list *list);
+int 		gpio_socket_list(gpio_device_list *list, int *count);
 
 int 		gpio_socket_init(gpio_device *dev);
 int 		gpio_socket_exit(gpio_device *dev);
@@ -59,7 +59,7 @@ struct gpio_operations gpio_socket_operations =
 
 /* socket API functions
    --------------------------------------------------------------------- */
-int gpio_socket_list(gpio_device_list *list) {
+int gpio_socket_list(gpio_device_list *list, int *count) {
 
 }
 

@@ -24,7 +24,7 @@
 
 /* Parallel prototypes
    --------------------------------------------------------------------- */
-int 		gpio_parallel_list(gpio_device_list *list);
+int 		gpio_parallel_list(gpio_device_list *list, int *count);
 
 int 		gpio_parallel_init(gpio_device *dev);
 int 		gpio_parallel_exit(gpio_device *dev);
@@ -59,7 +59,7 @@ struct gpio_operations gpio_parallel_operations =
 
 /* Parallel API functions
    --------------------------------------------------------------------- */
-int gpio_parallel_list(gpio_device_list *list) {
+int gpio_parallel_list(gpio_device_list *list, int *count) {
 
 }
 

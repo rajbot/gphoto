@@ -31,7 +31,7 @@
 
 #include "gpio.h"
 
-int gpio_usb_list(gpio_device_list *list) {
+int gpio_usb_list(gpio_device_list *list, int *count) {
 
 }
 

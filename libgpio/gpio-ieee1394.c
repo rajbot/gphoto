@@ -24,7 +24,7 @@
 
 /* IEEE1394 prototypes
    ------------------------------------------------------------------ */
-int 		gpio_ieee1394_list(gpio_device_list *list);
+int 		gpio_ieee1394_list(gpio_device_list *list, int *count);
 
 int 		gpio_ieee1394_init(gpio_device *dev);
 int 		gpio_ieee1394_exit(gpio_device *dev);
@@ -59,7 +59,7 @@ struct gpio_operations gpio_ieee1394_operations =
 
 /* IEEE1394 API functions
    ------------------------------------------------------------------ */
-int gpio_ieee1394_list(gpio_device_list *list) {
+int gpio_ieee1394_list(gpio_device_list *list, int *count) {
 
 }
 

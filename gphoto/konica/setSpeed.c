@@ -45,12 +45,14 @@ void qm100_setSpeed(int serialdev, int speed)
   cmd_speed[4]=(reg & 0xff);
   cmd_speed[5]=((reg>>8) & 0xff);
 
-  qm100_transmit(serialdev, cmd_speed, sizeof(cmd_speed));
+  qm100_transmit(serialdev, cmd_speed, sizeof(cmd_speed), &packet);
 
   cfsetispeed(&newt, speed);
   cfsetospeed(&newt, speed);
 
   if (tcsetattr(serialdev, TCSANOW, &newt) < 0) qm100_error(serialdev, "Serial speed change problem");
 
-  packet = qm100_transmit(serialdev, cmd_init, sizeof(cmd_init));
+  qm100_transmit(serialdev, cmd_init, sizeof(cmd_init), &packet);
 }
+
+

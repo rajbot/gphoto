@@ -35,6 +35,7 @@ void error_dialog(char *Error) {
         /*
            Standard, run-of-the-mill message box
         */
+
           
         GtkWidget *dialog, *label, *button;
 
@@ -274,4 +275,3 @@ METHODDEF(void) decom_term (j_decompress_ptr cinfo) {
 	return;
 }
 */
-

@@ -16,7 +16,7 @@ struct Image *qm100_saveThumb(int serialdev, char *filename, int pic)
 
   char success=1;
   char cmd_getthumb[QM100_GETTHUMB_LEN]=QM100_GETTHUMB;
-  qm100_packet_block packet;  
+  qm100_packet_block packet;
 
   cmd_getthumb[5] = (pic >> 8) & 0xff;
   cmd_getthumb[6] = (pic & 0xff);
@@ -24,7 +24,7 @@ struct Image *qm100_saveThumb(int serialdev, char *filename, int pic)
   qm100_attention(serialdev);
   qm100_sendPacket(serialdev, cmd_getthumb, sizeof(cmd_getthumb));
   qm100_getAck(serialdev);
-  packet = qm100_getPacket(serialdev);
+  qm100_getPacket(serialdev, &packet);
 
   
   if (packet.packet_len == 4)
@@ -39,13 +39,13 @@ struct Image *qm100_saveThumb(int serialdev, char *filename, int pic)
       while (packet.transmission_continues)
       {
 	qm100_continueTransmission(serialdev);
-	packet = qm100_getPacket(serialdev);
+	qm100_getPacket(serialdev, &packet);
 	write(jpgfile, packet.packet, packet.packet_len);
       }
       close(jpgfile);     
     }
   qm100_endTransmit(serialdev);
-	/* Scott was here :P */
+
   jpgfile = fopen(filename, "r");
   fseek(jpgfile, 0, SEEK_END);
   jpgfile_size = ftell(jpgfile);
@@ -55,7 +55,6 @@ struct Image *qm100_saveThumb(int serialdev, char *filename, int pic)
   strcpy(im->image_type, "jpg");
   im->image_size = (int)jpgfile_size;
   im->image_info_size = 0;
-	/* End of the scott hack */
   return (im);
 }
 

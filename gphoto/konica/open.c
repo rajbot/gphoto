@@ -34,10 +34,11 @@ int qm100_open(const char *devname)
   cfsetispeed(&newt, B9600);
 
   if (tcsetattr(serialdev, TCSANOW, &newt) < 0) qm100_error(serialdev, "Serial speed change problem");
-  packet = qm100_transmit(serialdev, cmd_init, sizeof(cmd_init));
+  qm100_transmit(serialdev, cmd_init, sizeof(cmd_init), &packet);
 
   return serialdev;
 }
+
 
 
 

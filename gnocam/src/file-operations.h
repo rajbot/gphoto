@@ -9,7 +9,6 @@ void download 	(GtkTreeItem* item, GnomeVFSURI* uri, gboolean preview);
 void delete	(GtkTreeItem* item);
 
 void camera_file_save (CameraFile* file, GnomeVFSURI* uri);
-void camera_file_save_as (CameraFile* file);
 
 
 

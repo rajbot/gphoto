@@ -249,69 +249,52 @@ camera_file_save (CameraFile* file, GnomeVFSURI* uri)
         GnomeVFSHandle*         handle;
         GnomeVFSFileSize        file_size;
 	gchar*			message;
-
-        g_return_if_fail (file);
-        g_return_if_fail (uri);
-
-	/* Save the file. */
-        if ((result = gnome_vfs_create_uri (&handle, uri, GNOME_VFS_OPEN_WRITE, FALSE, 0644)) != GNOME_VFS_OK) {
-                message = g_strdup_printf (
-			_("An error occurred while trying to open file '%s' for write access (%s)."), 
-			gnome_vfs_uri_get_basename (uri), 
-			gnome_vfs_result_to_string (result));
-		gnome_error_dialog_parented (message, main_window);
-		g_free (message);
-        } else {
-                if ((result = gnome_vfs_write (handle, file->data, file->size, &file_size)) != GNOME_VFS_OK) {
-                        message = g_strdup_printf (
-				_("An error occurred while trying to write into file '%s' (%s)."), 
-				gnome_vfs_uri_get_basename (uri),
-				gnome_vfs_result_to_string (result));
-			gnome_error_dialog_parented (message, main_window);
-			g_free (message);
-                }
-                if ((result = gnome_vfs_close (handle)) != GNOME_VFS_OK) {
-                        message = g_strdup_printf (
-				_("An error occurred while trying to close the file '%s' (%s)."), 
-				gnome_vfs_uri_get_basename (uri), 
-				gnome_vfs_result_to_string (result));
-			gnome_error_dialog_parented (message, main_window);
-			g_free (message);
-                }
-        }
-}
-
-void
-camera_file_save_as (CameraFile* file)
-{
+	GtkObject*		object;
 	GladeXML*		xml_fileselection;
-        GtkObject*              object;
 
         g_return_if_fail (file);
 
-        /* Pop up the file selection dialog. */
-        g_assert ((xml_fileselection = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "fileselection")) != NULL);
+	if (uri) {
+	
+		/* Save the file. */
+	        if ((result = gnome_vfs_create_uri (&handle, uri, GNOME_VFS_OPEN_WRITE, FALSE, 0644)) == GNOME_VFS_OK) {
+	                if ((result = gnome_vfs_write (handle, file->data, file->size, &file_size)) == GNOME_VFS_OK) result = gnome_vfs_close (handle);
+			else gnome_vfs_close (handle);
+	        }
 
-        /* Suggest the filename. */
-        gtk_file_selection_set_filename (GTK_FILE_SELECTION (glade_xml_get_widget (xml_fileselection, "fileselection")), file->name);
+		/* Report errors (if any). */
+		if (result != GNOME_VFS_OK) {
+			message = g_strdup_printf (_("Could not save file!\n(%s)"), gnome_vfs_result_to_string (result));
+			gnome_error_dialog_parented (message, main_window);
+			g_free (message);
+		}
+		
+	} else {
 
-        /* Store some data in the ok button. */
-        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_ok_button"))) != NULL);
-        gtk_object_set_data (object, "file", file);
-        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
-	gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_FILE_SAVE));
+	        /* Pop up the file selection dialog. */
+	        g_assert ((xml_fileselection = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "fileselection")) != NULL);
 
-        /* Store some data in the cancel button. */
-        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_cancel_button"))) != NULL);
-        gtk_object_set_data (object, "file", file);
-        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
-	gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_FILE_SAVE));
-
-        /* Connect the signals. */
-        glade_xml_signal_autoconnect (xml_fileselection);
-
-	/* The file is ours. */
-	gp_file_ref (file);
+	        /* Suggest the filename. */
+	        gtk_file_selection_set_filename (GTK_FILE_SELECTION (glade_xml_get_widget (xml_fileselection, "fileselection")), file->name);
+	
+	        /* Store some data in the ok button. */
+	        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_ok_button"))) != NULL);
+	        gtk_object_set_data (object, "file", file);
+	        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
+		gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_FILE_SAVE));
+	
+	        /* Store some data in the cancel button. */
+	        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_cancel_button"))) != NULL);
+	        gtk_object_set_data (object, "file", file);
+	        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
+		gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_FILE_SAVE));
+	
+	        /* Connect the signals. */
+	        glade_xml_signal_autoconnect (xml_fileselection);
+	
+		/* The file is ours. */
+		gp_file_ref (file);
+	}
 }
 
 void 

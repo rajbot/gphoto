@@ -122,7 +122,7 @@ preview_refresh (GtkWidget* preview)
 
         /* Capture. */
         if ((result = gp_camera_capture (camera, file, &info)) == GP_OK) {
-		if ((old_file = gtk_object_get_data (GTK_OBJECT (preview), "file"))) gp_file_free (old_file);
+		if ((old_file = gtk_object_get_data (GTK_OBJECT (preview), "file"))) gp_file_unref (old_file);
 		gtk_object_set_data (GTK_OBJECT (preview), "file", file);
 		
 		/* Init exception. */
@@ -166,18 +166,16 @@ preview_refresh (GtkWidget* preview)
 void
 preview_save (GtkWidget* preview)
 {
-	Camera*			camera;
 	CameraFile*		file;
 	GConfValue*		value;
 	gchar*			filename;
 	GnomeVFSURI*		uri;
 
-	g_assert ((preview));
-	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (preview), "camera")));
+	g_return_if_fail (preview);
 
         if ((file = gtk_object_get_data (GTK_OBJECT (preview), "file"))) {
-		g_assert ((value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL)));
-		g_assert (value->type == GCONF_VALUE_STRING);
+		g_return_if_fail ((value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL)));
+		g_return_if_fail (value->type == GCONF_VALUE_STRING);
 		filename = g_strdup_printf ("%s/%s", gconf_value_get_string (value), file->name);
 		uri = gnome_vfs_uri_new (filename);
 		g_free (filename);
@@ -188,16 +186,7 @@ preview_save (GtkWidget* preview)
 void
 preview_save_as (GtkWidget* preview)
 {
-	Camera*			camera;
-	CameraFile*		file;
-
-	g_assert ((preview));
-	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (preview), "camera")));
-
-	if ((file = gtk_object_get_data (GTK_OBJECT (preview), "file"))) {
-		gp_file_ref (file);
-		camera_file_save_as (file);
-	}
+	if (gtk_object_get_data (GTK_OBJECT (preview), "file")) camera_file_save (gtk_object_get_data (GTK_OBJECT (preview), "file"), NULL);
 }
 
 GtkWidget*

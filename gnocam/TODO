@@ -7,25 +7,13 @@ Drag & Drop:
 ------------
 - implement uploading
 - correctly implement drag (files/previews). Timeout issue?
-- use gnome-vfs
 
-Save:
+Else:
 -----
-- Save as not implemented. 
-- The whole save things should be recoded. gnome-vfs?
+- Camera properties not yet implemented.
+- Delete code is 2 times in callbacks.c. We should outsource the code. New file?
+- Save (...) should be implemented like save_as (...).
 
-PopUp Menus:
-------------
-- right-click on camera: take picture/delete, reread directory...
-
-GConf:
-------
-- preferences.c should use GConf, nothing else.
-
-eog:
-----
-- plugin for gphoto2 (ok, this has actually nothing to do with GnoCam :-)
-
-gnome-vfs:
-----------
-- camera-method anyone?
+Threads:
+--------
+- Put the time-consuming save stuff in threads. How do I do that?

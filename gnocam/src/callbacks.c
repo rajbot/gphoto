@@ -57,12 +57,28 @@ on_button_save_previews_clicked (GtkButton *button, gpointer user_data)
 void
 on_button_save_preview_as_clicked (GtkButton *button, gpointer user_data)
 {
-        GladeXML *xml;
+        GladeXML*	xml;
+	GtkCList*	clist;
+	GList*		selection;
+	gint		i;
+	gint		row;
+	Camera*		camera;
+	gchar*		path;
+	gchar*		filename;
 
-        xml = gtk_object_get_data (GTK_OBJECT (button), "xml");
-        g_assert (xml != NULL);
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (button), "xml")) != NULL);
+	g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
 
-	g_warning ("Not yet implemented!");
+	selection = g_list_first (clist->selection);
+	for (i = 0; i < g_list_length (selection); i++) {
+		row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
+		g_assert ((camera = gtk_clist_get_row_data (clist, row)) != NULL);
+		gtk_clist_get_text (clist, row, 1, &path);
+		path = g_strdup (path);
+		gtk_clist_get_text (clist, row, 2, &filename);
+		filename = g_strdup (filename);
+		save_as (xml, camera, path, filename, FALSE);
+	}
 }
 
 void
@@ -79,23 +95,79 @@ on_button_save_files_clicked (GtkButton *button, gpointer user_data)
 void
 on_button_save_file_as_clicked (GtkButton *button, gpointer user_data)
 {
-        GladeXML *xml;
+        GladeXML*       xml;
+        GtkCList*       clist;
+        GList*          selection;
+        gint            i;
+        gint            row;
+        Camera*         camera;
+        gchar*          path;
+        gchar*          filename;
 
-        xml = gtk_object_get_data (GTK_OBJECT (button), "xml");
-        g_assert (xml != NULL);
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (button), "xml")) != NULL);
+        g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
 
-	g_warning ("Not yet implemented!");
+        selection = g_list_first (clist->selection);
+        for (i = 0; i < g_list_length (selection); i++) {
+                row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
+                g_assert ((camera = gtk_clist_get_row_data (clist, row)) != NULL);
+                gtk_clist_get_text (clist, row, 1, &path);
+                path = g_strdup (path);
+                gtk_clist_get_text (clist, row, 2, &filename);
+                filename = g_strdup (filename);
+                save_as (xml, camera, path, filename, TRUE);
+        }
 }
 
 void
 on_button_delete_clicked (GtkButton *button, gpointer user_data)
 {
-	GladeXML *xml;
+	GladeXML*	xml;
+	GnomeApp*	app;
+	GList*		selection;
+	GtkCList*	clist;
+        Camera*         camera;
+        gint            row;
+        gint            reply;
+        gchar*          path;
+        gchar*          filename;
+        gchar*          message;
 
-	xml = gtk_object_get_data (GTK_OBJECT (button), "xml");
-	g_assert (xml != NULL);
+	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (button), "xml")) != NULL);
+	g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
+	g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
 
-	delete (xml);
+	/* Check which files have been selected. */
+	selection = g_list_first (clist->selection);
+
+	if (selection != NULL) {
+		if (g_list_length (selection) > 1)
+                        message = g_strdup_printf (_("Do you really want to delete the %i selected files?"), g_list_length (selection));
+                else
+                        message = g_strdup_printf (_("Do you really want to delete the selected file?"));
+                gnome_dialog_run_and_close (GNOME_DIALOG (gnome_app_question_modal (app, message, on_reply, xml)));
+                reply = GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (app), "reply"));
+                if (reply == GNOME_YES) {
+			while (selection != NULL) {
+				
+				/* Retrieve some data we need. */
+                                row = GPOINTER_TO_INT (selection->data);
+				g_assert ((camera = gtk_clist_get_row_data (clist, row)) != NULL);
+				gtk_clist_get_text (clist, row, 1, &path);
+				gtk_clist_get_text (clist, row, 2, &filename);
+					
+				/* Delete the file and update the file list. */
+				if (gp_camera_file_delete (camera, path, filename) == GP_OK) {
+					gtk_clist_remove (clist, row);
+				} else {
+					gnome_app_error (app, _("Could not delete file!"));
+					gtk_clist_unselect_row (clist, row, 0);
+				}
+
+				selection = g_list_first (clist->selection);
+			}
+		}
+	}
 }
 
 void
@@ -112,12 +184,28 @@ on_save_previews_activate (GtkMenuItem *menuitem, gpointer user_data)
 void
 on_save_preview_as_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
-	GladeXML *xml;
+        GladeXML*       xml;
+        GtkCList*       clist;
+        GList*          selection;
+        gint            i;
+        gint            row;
+        Camera*         camera;
+        gchar*          path;
+        gchar*          filename;
 
-	xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml");
-        g_assert (xml != NULL);
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml")) != NULL);
+        g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
 
-	g_warning ("Not yet implemented!");
+        selection = g_list_first (clist->selection);
+        for (i = 0; i < g_list_length (selection); i++) {
+                row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
+                g_assert ((camera = gtk_clist_get_row_data (clist, row)) != NULL);
+                gtk_clist_get_text (clist, row, 1, &path);
+                path = g_strdup (path);
+                gtk_clist_get_text (clist, row, 2, &filename);
+                filename = g_strdup (filename);
+                save_as (xml, camera, path, filename, FALSE);
+        }
 }
 
 void
@@ -134,23 +222,79 @@ on_save_files_activate (GtkMenuItem *menuitem, gpointer user_data)
 void
 on_save_file_as_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
-        GladeXML *xml;
+        GladeXML*       xml;
+        GtkCList*       clist;
+        GList*          selection;
+        gint            i;
+        gint            row;
+        Camera*         camera;
+        gchar*          path;
+        gchar*          filename;
 
-        xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml");
-        g_assert (xml != NULL);
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml")) != NULL);
+        g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
 
-	g_warning ("Not yet implemented!");
+        selection = g_list_first (clist->selection);
+        for (i = 0; i < g_list_length (selection); i++) {
+                row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
+                g_assert ((camera = gtk_clist_get_row_data (clist, row)) != NULL);
+                gtk_clist_get_text (clist, row, 1, &path);
+                path = g_strdup (path);
+                gtk_clist_get_text (clist, row, 2, &filename);
+                filename = g_strdup (filename);
+                save_as (xml, camera, path, filename, TRUE);
+        }
 }
 
 void
 on_delete_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
-	GladeXML *xml;
+        GladeXML*       xml;
+        GnomeApp*       app;
+        GList*          selection;
+        GtkCList*       clist;
+	Camera*		camera;
+	gint		row;
+	gint		reply;
+	gchar*		path;
+	gchar*		filename;
+	gchar*		message;
 
-        xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml");
-        g_assert (xml != NULL);
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml")) != NULL);
+        g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
+        g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
 
-	delete (xml);
+        /* Check which files have been selected. */
+        selection = g_list_first (clist->selection);
+
+        if (selection != NULL) {
+                if (g_list_length (selection) > 1)
+                        message = g_strdup_printf (_("Do you really want to delete the %i selected files?"), g_list_length (selection));
+                else
+                        message = g_strdup_printf (_("Do you really want to delete the selected file?"));
+                gnome_dialog_run_and_close (GNOME_DIALOG (gnome_app_question_modal (app, message, on_reply, xml)));
+                reply = GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (app), "reply"));
+                if (reply == GNOME_YES) {
+                        while (selection != NULL) {
+
+                                /* Retrieve some data we need. */
+                                row = GPOINTER_TO_INT (selection->data);
+                                g_assert ((camera = gtk_clist_get_row_data (clist, row)) != NULL);
+                                gtk_clist_get_text (clist, row, 1, &path);
+                                gtk_clist_get_text (clist, row, 2, &filename);
+
+                                /* Delete the file and update the file list. */
+                                if (gp_camera_file_delete (camera, path, filename) == GP_OK) {
+                                        gtk_clist_remove (clist, row);
+                                } else {
+                                        gnome_app_error (app, _("Could not delete file!"));
+                                        gtk_clist_unselect_row (clist, row, 0);
+                                }
+
+                                selection = g_list_first (clist->selection);
+                        }
+                }
+        }
 }
 
 void

@@ -164,9 +164,7 @@ on_new_clicked (GtkButton *button, GnocamCapplet *c)
 		if (j == g_slist_length (l)) break;
 		g_free (ek);
 	}
-	for (i = 0; i < g_slist_length (l); i++)
-		g_free (g_slist_nth_data (l, i));
-	g_slist_free (l);
+	g_slist_foreach (l, (GFunc) g_free, NULL); g_slist_free (l);
 
 	/* Tell gconf about the new camera. */
 	k = g_strdup_printf ("/desktop/gnome/cameras/%s/manufacturer", ek);
@@ -201,11 +199,13 @@ notify_func (GConfClient *client, guint cnxn_id, GConfEntry *entry,
 		gtk_list_store_append (c->priv->s, &iter);
 		gtk_list_store_set (c->priv->s, &iter, COL_NAME, name, -1);
 		g_free (name);
+		gtk_tree_selection_select_iter (
+			gtk_tree_view_get_selection (c->priv->tv), &iter);
 	}
 }
 
 static void
-gnocam_capplet_remove (GnocamCapplet *c, GtkTreeIter *iter)
+gnocam_capplet_delete (GnocamCapplet *c, GtkTreeIter *iter)
 {
 	GValue v = {0, };
 	gchar *ek, *k, *key;
@@ -214,6 +214,7 @@ gnocam_capplet_remove (GnocamCapplet *c, GtkTreeIter *iter)
 
 	gtk_tree_model_get_value (GTK_TREE_MODEL (c->priv->s), iter,
 				  COL_NAME, &v);
+	gtk_list_store_remove (c->priv->s, iter);
 	ek = gconf_escape_key (g_value_get_string (&v),
 			       strlen (g_value_get_string (&v)));
 	g_value_unset (&v);
@@ -227,6 +228,20 @@ gnocam_capplet_remove (GnocamCapplet *c, GtkTreeIter *iter)
 	gconf_client_unset (c->priv->c, key, NULL); g_free (key);
 	gconf_client_unset (c->priv->c, k, NULL);
 	g_free (k);
+	gconf_client_suggest_sync (c->priv->c, NULL);
+}
+
+static void
+gnocam_capplet_edit (GnocamCapplet *c, GtkTreeIter *iter)
+{
+	GValue v = {0, };
+
+	g_return_if_fail (GNOCAM_IS_CAPPLET (c));
+
+	gtk_tree_model_get_value (GTK_TREE_MODEL (c->priv->s), iter,
+				  COL_NAME, &v);
+	g_warning ("Implement editing of '%s'!", g_value_get_string (&v));
+	g_value_unset (&v);
 }
 
 static void
@@ -300,24 +315,51 @@ on_name_edited (GtkCellRendererText *cell, const gchar *path,
 		g_free (key); g_free (port);
 	}
 	g_free (k);
+	gconf_client_suggest_sync (c->priv->c, NULL);
 }
 
 static void
-delete_foreach_func (GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter,
-		     gpointer data)
+edit_foreach_func (GtkTreeModel *m, GtkTreePath *p, GtkTreeIter *iter,
+		   gpointer data)
 {
-	gnocam_capplet_remove (GNOCAM_CAPPLET (data), iter);
+	gnocam_capplet_edit (GNOCAM_CAPPLET (data), iter);
 }
 
 static void
 gnocam_capplet_delete_selected (GnocamCapplet *c)
 {
-	GtkTreeSelection *s;
+	GList *l, *lr = NULL;
+	guint i;
+	GtkTreeIter iter;
+	GtkTreeModel *m = NULL;
+	GtkTreePath *p;
 
 	g_return_if_fail (GNOCAM_IS_CAPPLET (c));
 
-	s = gtk_tree_view_get_selection (c->priv->tv);
-	gtk_tree_selection_selected_foreach (s, delete_foreach_func, c);
+	l = gtk_tree_selection_get_selected_rows (
+		gtk_tree_view_get_selection (c->priv->tv), &m);
+	for (i = 0; i < g_list_length (l); i++)
+		lr = g_list_append (lr, gtk_tree_row_reference_new (m,
+			(GtkTreePath *) g_list_nth_data (l, i)));
+	g_list_foreach (l, (GFunc) gtk_tree_path_free, NULL); g_list_free (l);
+	for (i = 0; i < g_list_length (lr); i++) {
+		p = gtk_tree_row_reference_get_path ((GtkTreeRowReference *)
+			g_list_nth_data (lr, i));
+		gtk_tree_model_get_iter (m, &iter, p);
+		gnocam_capplet_delete (c, &iter);
+	}
+	g_list_foreach (lr, (GFunc) gtk_tree_row_reference_free, NULL);
+	g_list_free (lr);
+}
+
+static void
+gnocam_capplet_edit_selected (GnocamCapplet *c)
+{
+	g_return_if_fail (GNOCAM_IS_CAPPLET (c));
+
+	gtk_tree_selection_selected_foreach (
+		gtk_tree_view_get_selection (c->priv->tv),
+		edit_foreach_func, c);
 }
 
 static gboolean
@@ -370,16 +412,18 @@ gnocam_capplet_load (GnocamCapplet *c)
 		gtk_list_store_set (c->priv->s, &iter, COL_NAME, name,
 				    COL_IS_EDITABLE, TRUE, -1);
 		g_free (name);
+		if (!i) gtk_tree_selection_select_iter (
+				gtk_tree_view_get_selection (c->priv->tv),
+				&iter);
 	}
-	for (i = 0; i < g_slist_length (l); i++)
-		g_free (g_slist_nth_data (l, i));
-	g_slist_free (l);
+	g_slist_foreach (l, (GFunc) g_free, NULL); g_slist_free (l);
 	gtk_tree_view_columns_autosize (c->priv->tv);
 }
 
 static void
 on_edit_clicked (GtkButton *button, GnocamCapplet *c)
 {
+	gnocam_capplet_edit_selected (c);
 }
 
 static void

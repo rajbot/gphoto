@@ -1,8 +1,11 @@
 /*
  * $Id$
  
- Fuji Camera library for the gphoto project, 1999 Matthew G. Martin
-  This routine works for DS-7 .  Don't know about any others.
+ Fuji Camera library for the gphoto project, (C) 2000 Matthew G. Martin
+  This routine works for Fuji DS-7 and DX-5,7,10 and MX-500,600,700,2700, 
+  Apple QuickTake 200,Samsung Kenox SSC-350N cameras and possibly others.
+
+ Preview and take_picture fixes contributed by Michael Smith.
 
   Reworked from the "fujiplay" package:
       * A program to control Fujifilm digital cameras, like
@@ -595,7 +598,7 @@ int init_serial (const char *devname)
         /* Attempt to open the serial device*/
         if (devfd<0) {
                 if (fuji_debug) 
-		        fprintf(stderr,"Fujilib:Opening Serial Device\n`");
+		        fprintf(stderr,"Fujilib:Opening Serial Device\n");
 
 		devfd = open(devname, O_RDWR|O_NOCTTY);
 
@@ -1047,6 +1050,7 @@ struct Image *fuji_get_preview (){
 };
 
 int fuji_take_picture (){
+   int pic;
 
    if (fuji_init()) return (-1);
 
@@ -1054,7 +1058,12 @@ int fuji_take_picture (){
     update_status("Cannot take picture (unsupported command)\n");
     return(0);
   }
-  return(  take_picture());
+
+  pic=take_picture();
+
+  reset_serial();
+
+  return pic;
 };
 
 char *fuji_summary() {

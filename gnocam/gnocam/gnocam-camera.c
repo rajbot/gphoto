@@ -166,8 +166,9 @@ on_capture_clicked (GnomeDialog *dialog, gint button_number, gpointer data)
 			g_free (txt);
 		} else {
 			arg = bonobo_arg_new (BONOBO_ARG_STRING);
-			BONOBO_ARG_SET_STRING (arg,
-				g_concat_dir_and_file (path.folder, path.name));
+			txt = g_concat_dir_and_file (path.folder, path.name);
+			g_message ("The picture is in '%s'.", txt);
+			BONOBO_ARG_SET_STRING (arg, txt);
 			bonobo_event_source_notify_listeners_full (
 					c->priv->event_source,
 					"GNOME/Camera", "CaptureImage",

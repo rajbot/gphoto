@@ -153,8 +153,8 @@ camera_tree_item_remove (GtkTreeItem* item)
 	/* Clean up. */
 	g_free (path);
 	if (filename) g_free (filename);
-	if ((file = gtk_object_get_data (GTK_OBJECT (item), "file"))) gp_file_free (file);
-	if ((file = gtk_object_get_data (GTK_OBJECT (item), "preview"))) gp_file_free (file);
+	if ((file = gtk_object_get_data (GTK_OBJECT (item), "file"))) gp_file_unref (file);
+	if ((file = gtk_object_get_data (GTK_OBJECT (item), "preview"))) gp_file_unref (file);
         gtk_container_remove (GTK_CONTAINER (tree), GTK_WIDGET (item));
 
 	/* Make sure the tree does not get lost. */

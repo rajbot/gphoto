@@ -250,3 +250,20 @@ gp_camera_unref (Camera* camera)
 	}
 }
 
+void
+gp_file_ref (CameraFile* file)
+{
+	file->ref_count++;
+}
+
+void
+gp_file_unref (CameraFile* file)
+{
+	g_assert (file->ref_count > 0);
+
+	file->ref_count--;
+	if (file->ref_count == 0) gp_file_free (file);
+}
+
+
+

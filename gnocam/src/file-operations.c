@@ -62,13 +62,17 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 void
 on_fileselection_cancel_button_clicked (GtkButton *button, gpointer user_data)
 {
+	CameraFile*	file;
 	GtkWidget*	widget;
 	Camera*		camera;
 
 	g_assert ((widget = GTK_WIDGET (gtk_object_get_data (GTK_OBJECT (button), "fileselection"))) != NULL);
 
 	/* Clean up. */
-	if (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (button), "save")) == 0) {
+	if (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (button), "save")) == 1) {
+		g_assert ((file = gtk_object_get_data (GTK_OBJECT (button), "file")) != NULL);
+		gp_file_unref (file);
+	} else {
 		g_assert ((camera = gtk_object_get_data (GTK_OBJECT (button), "camera")) != NULL);
 		gp_camera_unref (camera);
 	}
@@ -198,6 +202,9 @@ camera_file_save (CameraFile* file, gchar* filename)
                         dialog_information (_("An error occurred while trying to close the file '%s' (%s)."), filename, gnome_vfs_result_to_string (result));
                 }
         }
+
+	/* Clean up. */
+	gp_file_unref (file);
 }
 
 void
@@ -306,11 +313,13 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 		} else {
 			if (preview) gtk_object_set_data (GTK_OBJECT (item), "preview", file);
 			else gtk_object_set_data (GTK_OBJECT (item), "file", file);
+			gp_file_ref (file);
 		}
 	}
 
 	/* Save the file. */
 	if (file) {
+		gp_file_ref (file);
 		if (save_as) camera_file_save_as (file);
 		else camera_file_save (file, filename_user);
 	}
@@ -366,6 +375,9 @@ delete (GtkTreeItem* item)
 	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
 
 	if (gp_camera_file_delete (camera, path, filename) == GP_OK) camera_tree_item_remove (item);
-	else dialog_information (_("Could not delete '%s/%s'!"), path, filename);
+	else {
+		if (strcmp ("/", path) == 0) dialog_information (_("Could not delete '/%s'!"), filename);
+		else dialog_information (_("Could not delete '%s/%s'!"), path, filename);
+	}
 }
 

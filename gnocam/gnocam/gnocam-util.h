@@ -1,11 +1,8 @@
 #define CHECK_RESULT(result,ev)         G_STMT_START{			      \
 	gint	r;							      \
 									      \
-	r = result;							      \
-        if (!BONOBO_EX (ev) && (r <= 0)) {				      \
+	if (!BONOBO_EX (ev) && ((r = result) < 0)) {			      \
                 switch (r) {						      \
-                case GP_OK:                                                   \
-                        break;                                                \
                 case GP_ERROR_IO:                                             \
                         CORBA_exception_set (ev, CORBA_USER_EXCEPTION,        \
 					     ex_Bonobo_IOError, NULL);	      \

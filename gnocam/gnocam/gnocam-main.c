@@ -31,8 +31,9 @@ impl_GNOME_GnoCam_getCameraList (PortableServer_Servant servant,
 	GSList *l;
 	GNOME_GnoCam_CameraList *list;
 	int i;
-	
+
 	gnocam_main = GNOCAM_MAIN (bonobo_object_from_servant (servant));
+
 	l = gconf_client_get_list (gnocam_main->priv->client,
 				   "/apps/" PACKAGE "/cameras",
 				   GCONF_VALUE_STRING, NULL);
@@ -41,9 +42,10 @@ impl_GNOME_GnoCam_getCameraList (PortableServer_Servant servant,
 	list->_length = (g_slist_length (l) + 2) / 3;
 	list->_buffer = CORBA_sequence_CORBA_string_allocbuf (list->_length);
 	CORBA_sequence_set_release (list, TRUE);
-	
-	for (i = 0; i < g_slist_length (l); i += 3)
-		list->_buffer [i] = g_slist_nth_data (l, i);
+
+	for (i = 0; 3 * i < g_slist_length (l); i++)
+		list->_buffer [i] = CORBA_string_dup (g_slist_nth_data (l,
+									3 * i));
 
 	return (list);
 }

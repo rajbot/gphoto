@@ -165,7 +165,7 @@ camera_seek (BonoboStream* s, CORBA_long offset, Bonobo_Stream_SeekType whence, 
 static void
 camera_commit (BonoboStream* s, CORBA_Environment* ev)
 {
-	CameraFile *file;
+	CameraFile *file = NULL;
 	BonoboStreamCamera *stream;
 	
 	stream = BONOBO_STREAM_CAMERA (s);
@@ -263,11 +263,9 @@ bonobo_stream_camera_new (Camera            *camera,
     	BonoboObject	   *object;
 	BonoboStreamCamera *new;
 	Bonobo_Stream	    corba_new;
-	CameraList         *list;
-	CameraFile         *file;
-	gint i;
-	int count;
-	const char *name;
+	CameraFile         *file = NULL;
+	CameraFileInfo info;
+	int result;
 
 	g_message ("Creating new BonoboStreamCamera...");
 
@@ -290,37 +288,15 @@ bonobo_stream_camera_new (Camera            *camera,
         /* Does the requested file exist? */
         if (flags & Bonobo_Storage_FAILIFEXIST) {
 
-		CHECK_RESULT (gp_list_new (&list), ev);
-		if (BONOBO_EX (ev))
-			return (NULL);
-
-		count = gp_list_count (list);
-		CHECK_RESULT (count, ev);
-		if (BONOBO_EX (ev)) {
-			gp_list_free (list);
-			return (NULL);
-		}
-
-                for (i = 0; i < count; i++) {
-			CHECK_RESULT (gp_list_get_name (list, i, &name), ev);
-			if (BONOBO_EX (ev)) {
-				gp_list_free (list);
-				return (NULL);
-			}
-                        if (!strcmp (name, filename)) {
-				CHECK_RESULT (gp_list_free (list), ev);
-				if (BONOBO_EX (ev))
-					return (NULL);
-                                CORBA_exception_set (
-					ev, CORBA_USER_EXCEPTION, 
+		result = gp_camera_file_get_info (camera, dirname, filename,
+						  &info);
+		if (result == GP_OK)
+			CORBA_exception_set (ev, CORBA_USER_EXCEPTION,
 					ex_Bonobo_Storage_NameExists, NULL);
-                                return (NULL);
-                        }
-                }
-		
-		CHECK_RESULT (gp_list_free (list), ev);
+		else if (result != GP_ERROR_FILE_NOT_FOUND)
+			CHECK_RESULT (result, ev);
 		if (BONOBO_EX (ev))
-			return (NULL); 
+			return (NULL);
         }
 
         /* Get the file. */
@@ -334,9 +310,10 @@ bonobo_stream_camera_new (Camera            *camera,
 						dirname, filename, file), ev);
 		}
 	}
-	CHECK_RESULT (gp_file_unref (file), ev);
-	if (BONOBO_EX (ev))
+	if (BONOBO_EX (ev)) {
+		gp_file_unref (file);
 		return (NULL);
+	}
 
 	new = gtk_type_new (BONOBO_STREAM_CAMERA_TYPE);
 	new->priv->dirname = g_strdup (dirname); 

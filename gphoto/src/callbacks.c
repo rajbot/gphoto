@@ -408,9 +408,43 @@ void appendpic(gint picNum, gint thumbnail, gint fromCamera, char *fileName)
 	
 	GtkWidget *scrwin, *label;
 	GdkPixmap *pixmap;
+	GdkImlibImage *imlibimage;
 	struct Image *im;
 
 	struct ImageMembers *node = &Images;
+
+	if (fromCamera) {
+		if ((im = Camera->ops->get_picture(picNum, thumbnail))==NULL) {
+			sprintf(error, "Could not retrieve #%i", picNum);
+			error_dialog(error);
+			return;
+		}
+		imlibimage =  gdk_imlib_load_image_mem(im->image,
+				im->image_size);
+		free_image(im);
+		if (imlibimage) {
+			if (post_process) {
+				sprintf(imagename, "%s/gphoto-image-%03i.jpg",
+					gphotoDir, picNum);
+				gdk_imlib_save_image(imlibimage,
+					imagename, NULL);
+				gdk_imlib_kill_image(imlibimage);
+				sprintf(process, post_process_script, imagename);
+				system(process);
+				imlibimage = gdk_imlib_load_image(imagename);
+				remove(imagename);
+			}
+		}
+	 } else
+		imlibimage = gdk_imlib_load_image(fileName);
+
+	if (!imlibimage) {
+		sprintf(error, "Could not open #%i", picNum);
+		error_dialog(error);
+		return;
+	}
+
+	/* If everything went ok, then append it (BIG FIX!) -Scott */
 
 	while (node->next)
 		node = node->next;
@@ -418,36 +452,13 @@ void appendpic(gint picNum, gint thumbnail, gint fromCamera, char *fileName)
 	node->next = malloc(sizeof(struct ImageMembers));
 
 	node = node->next;
-	node->imlibimage = NULL;
+	node->imlibimage = imlibimage;
 	node->image = NULL;
 	node->button = NULL;
 	node->page = NULL;
 	node->label = NULL;
 	node->info = NULL;
 	node->next = NULL;
-
-	if (fromCamera) {
-		if ((im = Camera->ops->get_picture(picNum, thumbnail))==0) {
-			sprintf(error, "Could not retrieve #%i", picNum);
-			error_dialog(error);
-			return;
-		}
-		node->imlibimage =  gdk_imlib_load_image_mem(im->image,
-							im->image_size);
-		free_image(im);
-		if (post_process) {
-			sprintf(imagename, "%s/gphoto-image-%03i.jpg",
-				gphotoDir, picNum);
-			gdk_imlib_save_image(node->imlibimage,
-				imagename, NULL);
-			gdk_imlib_kill_image(node->imlibimage);
-			sprintf(process, post_process_script, imagename);
-			system(process);
-			node->imlibimage = gdk_imlib_load_image(imagename);
-			remove(imagename);
-		}
-	 } else
-		node->imlibimage = gdk_imlib_load_image(fileName);
 
 	w = node->imlibimage->rgb_width;
 	h = node->imlibimage->rgb_height;
@@ -1978,10 +1989,10 @@ void post_process_change(GtkWidget *widget, GtkWidget *win)
 		FALSE, FALSE, 0);
 
 	label = gtk_label_new(
-"\
+N_("\
 Note: gPhoto will replace \"%s\" in the script command-line\
 with the full path to the selected image. See the User's Manual\
-in the Help menu for more information. ");
+in the Help menu for more information. "));
 	gtk_widget_show(label);
 	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
@@ -1996,9 +2007,9 @@ in the Help menu for more information. ");
 	if ((strstr(gtk_entry_get_text(GTK_ENTRY(script)), "%s") == NULL)
 	   && GTK_TOGGLE_BUTTON(pp)->active) {
 		error_dialog(
-"Missing \"%s\" in the post-processing entry.\
+N_("Missing \"%s\" in the post-processing entry.\
 This is required so the post-processing program\
-knows where the image is located.");
+knows where the image is located."));
 		return;
 	}
 

@@ -98,7 +98,9 @@ main (int argc, char **argv)
 	fflush (stdout);
 	fprintf (stdout, "220-'/capture-image' in order to capture\r\n");
 	fflush (stdout);
-	fprintf (stdout, "220-an image.\r\n");
+	fprintf (stdout, "220-an image, in '/capture-preview' in order\r\n");
+	fflush (stdout);
+	fprintf (stdout, "220-to capture a preview.\r\n");
 	fflush (stdout);
 	fprintf (stdout, "220 FTP server ready.\r\n");
 	fflush (stdout);

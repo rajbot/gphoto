@@ -116,6 +116,7 @@ upload (Camera* camera, gchar* path, gchar* filename)
 		/* Read the data and upload the file. */
 		file = gp_file_new ();
 	        file->data = g_new (gchar, 1025);
+		strcpy (file->name, filename);
 	        uri = gnome_vfs_uri_new (filename);
 	        if ((result = gnome_vfs_open_uri (&handle, uri, GNOME_VFS_OPEN_READ)) != GNOME_VFS_OK) {
 	                dialog_information (_("An error occurred while trying to open file '%s' (%s)."), filename, gnome_vfs_result_to_string (result));

@@ -20,7 +20,7 @@ main (int argc, char** argv)
 	bind_textdomain_codeset (PACKAGE, "UTF-8");
 	textdomain (PACKAGE);
 
-	gnome_program_init ("camera-capplet", VERSION, LIBGNOMEUI_MODULE, argc,
+	gnome_program_init ("gnocam-capplet", VERSION, LIBGNOMEUI_MODULE, argc,
 		argv, GNOME_PARAM_APP_DATADIR, GNOCAM_DATADIR, NULL);
 
 	/* Get the gconf-client */

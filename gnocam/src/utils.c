@@ -2,7 +2,7 @@
 #include <config.h>
 #endif
 
-#include <glib.h>
+#include <gnome.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include "utils.h"
@@ -25,14 +25,14 @@ scale_pixbuf (GdkPixbuf* pixbuf)
 GdkPixbuf*
 util_pixbuf_folder (void)
 {
-	if (!g_file_exists ("/usr/share/pixmaps/gnome-folder.png")) return (NULL);
-	return (scale_pixbuf (gdk_pixbuf_new_from_file ("/usr/share/pixmaps/gnome-folder.png")));
+	if (!g_file_exists (IMAGEDIR "/gnome-folder.png")) return (NULL);
+	return (scale_pixbuf (gdk_pixbuf_new_from_file (IMAGEDIR "/gnome-folder.png")));
 }
 
 GdkPixbuf*
 util_pixbuf_file (void)
 {
-	if (!g_file_exists ("/usr/share/pixmaps/gnome-file-h.png")) return (NULL);
-	return (scale_pixbuf (gdk_pixbuf_new_from_file ("/usr/share/pixmaps/gnome-file-h.png")));
+	if (!g_file_exists (IMAGEDIR "/gnome-file-h.png")) return (NULL);
+	return (scale_pixbuf (gdk_pixbuf_new_from_file (IMAGEDIR "/gnome-file-h.png")));
 }
 

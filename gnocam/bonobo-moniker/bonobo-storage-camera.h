@@ -18,16 +18,23 @@ typedef struct _BonoboStorageCameraPrivate	BonoboStorageCameraPrivate;
 typedef struct _BonoboStorageCameraClass	BonoboStorageCameraClass;
 
 struct _BonoboStorageCamera {
-	BonoboStorage 			parent;
-	BonoboStorageCameraPrivate*	priv;
+	BonoboStorage 		    parent;
+	BonoboStorageCameraPrivate *priv;
 };
 
 struct _BonoboStorageCameraClass {
 	BonoboStorageClass 		parent_class;
 };
 
-GtkType         	bonobo_storage_camera_get_type 	(void);
-BonoboStorageCamera*	bonobo_storage_camera_new 	(Camera* camera, const gchar* path, Bonobo_Storage_OpenMode mode, CORBA_Environment* ev);
+GtkType              bonobo_storage_camera_get_type (void);
+BonoboStorageCamera *bonobo_storage_camera_new    (Camera *camera,
+						   const gchar *path,
+						   Bonobo_Storage_OpenMode mode,
+						   CORBA_Environment* ev);
+BonoboStorage        *bonobo_storage_camera_open  (const gchar *path,
+						   gint flags,
+						   gint mode,
+		                            	   CORBA_Environment *ev);
 
 END_GNOME_DECLS
 

@@ -8,7 +8,7 @@
 #include <bonobo/bonobo-exception.h>
 #include <gal/util/e-util.h>
 
-#include <gphoto-extensions.h>
+#include <libgnocam/gphoto-extensions.h>
 
 #define PARENT_TYPE BONOBO_STREAM_TYPE
 static BonoboStreamClass *bonobo_stream_camera_parent_class;
@@ -174,8 +174,6 @@ static void
 bonobo_stream_camera_init (BonoboStreamCamera* stream)
 {
 	stream->priv = g_new0 (BonoboStreamCameraPrivate, 1);
-
-	stream->priv->position = 0;
 }
 
 BonoboStream*
@@ -186,28 +184,31 @@ bonobo_stream_camera_open (const gchar* path, gint flags, gint mode, CORBA_Envir
 	gchar*			dirname;
 	gchar*			filename;
 
-	g_message ("Opening stream...");
-	g_message ("path=%s", path);
-	g_message ("flags=%i", flags);
-	g_message ("mode=%i", mode);
-
 	/* Create camera. */
 	CHECK_RESULT (gp_camera_new_from_gconf (&camera, path), ev);
-	if (BONOBO_EX (ev)) return (NULL);
+	if (BONOBO_EX (ev)) {
+		g_warning ("Could not find camera for '%s': %s", path,
+			   bonobo_exception_get_text (ev));
+		return (NULL);
+	}
 
 	if (!strncmp (path, "camera:", 7)) path += 7;
+	if (strncmp (path, "//", 2)) {
+		g_warning ("Missing '//' in URI!");
+		gp_camera_unref (camera);
+		return (NULL);
+	}
 	for (path += 2; *path != 0; path++) if (*path == '/') break;
 
 	filename = g_basename (path);
 	if (!strcmp (path + 1, filename)) dirname = g_strdup ("/");
 	else dirname = g_dirname (path);
+
 	new = bonobo_stream_camera_new (camera, dirname, filename, flags, ev);
+	gp_camera_unref (camera);
 	g_free (dirname);
-	if (BONOBO_EX (ev)) {
-	    	g_message ("Could not open stream!");
-		gp_camera_unref (camera);
+	if (BONOBO_EX (ev))
 		return (NULL);
-	}
 
 	return (BONOBO_STREAM (new));
 }
@@ -247,8 +248,11 @@ bonobo_stream_camera_new (Camera            *camera,
 	 * the filesystem struct of the driver. 
 	 */
 	CHECK_RESULT (gp_camera_folder_list_files (camera, dirname, &list), ev);
-	if (BONOBO_EX (ev))
+	if (BONOBO_EX (ev)) {
+		g_warning ("Couldn't get list of files: %s",
+			   bonobo_exception_get_text (ev));
 		return (NULL);
+	}
 
         /* Does the requested file exist? */
         if (flags & Bonobo_Storage_FAILIFEXIST) {
@@ -274,6 +278,9 @@ bonobo_stream_camera_new (Camera            *camera,
 						dirname, filename, file), ev);
 		}
 		if (BONOBO_EX (ev)) {
+			if (getenv ("DEBUG_GNOCAM"))
+				g_warning ("Could not get file: %s",
+					   bonobo_exception_get_text (ev));
 			gp_file_unref (file);
 			return (NULL);
 		}

@@ -8,4 +8,4 @@ noinst_PROGRAMS =\
 test_vfs_module_SOURCE = test-vfs-module.c
 test_vfs_module_LDADD =\
  $(VFS_LIBS)\
- $(BONOBO_LIBS)
+ $(EXTRA_GNOME_LIBS)

@@ -36,6 +36,7 @@
 #include <gal/e-table/e-tree-memory-callbacks.h>
 #include <gal/e-table/e-cell-tree.h>
 #include <gal/e-table/e-cell-text.h>
+#include <bonobo/bonobo-exception.h>
 
 #include "utils.h"
 

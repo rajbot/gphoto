@@ -1,7 +1,17 @@
 #include <config.h>
+#include <gphoto2.h>
 #include <bonobo/bonobo-moniker-extender.h>
+#include <bonobo/bonobo-generic-factory.h>
+#include <bonobo/bonobo-moniker-simple.h>
+#include <bonobo/bonobo-exception.h>
+#include <bonobo/bonobo-main.h>
+#include <bonobo/bonobo-context.h>
+#include <stdlib.h>
 
 #include "bonobo-moniker-camera.h"
+
+#include "bonobo-storage-camera.h"
+#include "bonobo-stream-camera.h"
 
 static Bonobo_Unknown
 camera_resolve (BonoboMoniker 		    *moniker, 
@@ -26,8 +36,7 @@ camera_resolve (BonoboMoniker 		    *moniker,
 		if (getenv ("DEBUG_GNOCAM"))
 			g_message ("Trying to get stream (rw)...");
 		mode = Bonobo_Storage_READ | Bonobo_Storage_WRITE | comp_mode;
-		stream = bonobo_stream_open_full ("camera", name, mode,
-						  0644, &tmp_ev);
+		stream = bonobo_stream_camera_open (name, mode, 0644, &tmp_ev);
 		if (BONOBO_EX (&tmp_ev)) {
 			g_warning ("Could not get stream: %s",
 				   bonobo_exception_get_text (&tmp_ev));
@@ -37,8 +46,8 @@ camera_resolve (BonoboMoniker 		    *moniker,
 			if (getenv ("DEBUG_GNOCAM"))
 				g_message ("Trying to get stream (r)...");
 			mode = Bonobo_Storage_READ | comp_mode;
-			stream = bonobo_stream_open_full ("camera", name, mode,
-							  0644, ev);
+			stream = bonobo_stream_camera_open (name, mode,
+							    0644, ev);
 			if (BONOBO_EX (ev)) {
 				g_warning ("Could not get stream: %s", 
 					   bonobo_exception_get_text (ev));
@@ -56,8 +65,7 @@ camera_resolve (BonoboMoniker 		    *moniker,
 		BonoboStorage* storage;
 
 		mode = Bonobo_Storage_READ | Bonobo_Storage_WRITE;
-		storage = bonobo_storage_open_full ("camera", name, mode,
-						    0644, ev);
+		storage = bonobo_storage_camera_open (name, mode, 0644, ev);
 		if (BONOBO_EX (ev)) {
 			g_warning ("Could not get storage: %s", 
 				   bonobo_exception_get_text (ev));
@@ -73,7 +81,7 @@ camera_resolve (BonoboMoniker 		    *moniker,
 }
 
 static BonoboObject *
-bonobo_moniker_camera_factory (BonoboGenericFactory *this, void* data)
+bonobo_moniker_camera_factory (BonoboGenericFactory *this, gpointer data)
 {
 	return BONOBO_OBJECT (bonobo_moniker_simple_new ("camera:", 
 		    					 camera_resolve));

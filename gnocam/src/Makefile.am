@@ -1,16 +1,12 @@
 
 INCLUDES = \
- -I$(top_srcdir)/libgnocam\
  -DGNOME_LOCALEDIR=\""$(datadir)/locale"\"\
  -DGNOCAM_DATADIR=\""$(datadir)"\"\
  -DIMAGEDIR=\""$(datadir)/pixmaps"\"\
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
- -DGNOME\
+ $(EXTRA_GNOME_CFLAGS)\
  $(GCONF_CFLAGS)\
- $(EXTRA_WARNING_CFLAGS)\
- $(GAL_CFLAGS)\
- $(GPHOTO_CFLAGS)\
- $(BONOBO_CFLAGS)
+ $(GPHOTO_CFLAGS)
 
 bin_PROGRAMS = gnocam
 
@@ -34,16 +30,14 @@ gnocam_SOURCES =\
 gnocam_LDFLAGS =\
  $(GPHOTO2_LIBS)\
  $(GPIO_LIBS)\
- $(BONOBO_LIBS)
+ $(EXTRA_GNOME_LIBS)\
+ $(GCONF_LIBS)
 
 iconsdir = $(datadir)/images/$(PACKAGE)
 
 gnocam_LDADD =\
  $(INTLLIBS)\
- $(GAL_LIBS)\
- $(GCONF_LIBS)\
  $(GPHOTO_LIBS)\
  ../libgnocam/libgnocam.la\
- ../libgnocam/libgnocam-bonobo.la\
- ../bonobo-storage-module/libstorage_camera.la
+ ../bonobo-moniker/libbonobo-storage-camera.la
 

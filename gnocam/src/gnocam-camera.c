@@ -29,8 +29,9 @@
 #include <config.h>
 #endif
 
-#include <gphoto-extensions.h>
-#include <bonobo-extensions.h>
+#include <libgnocam/gphoto-extensions.h>
+#include <bonobo-moniker/bonobo-storage-camera.h>
+
 #include "gnocam-camera.h"
 
 #include <gal/util/e-util.h>
@@ -724,14 +725,13 @@ gnocam_camera_new (const gchar* url, BonoboUIContainer* container, GConfClient* 
 	GnoCamCamera*		new;
 	gint			position;
 	Camera*			camera;
-	BonoboStorage*		storage;
+	BonoboStorageCamera*	storage;
 	Bonobo_Storage_OpenMode	mode;
 	GtkWidget*		label;
 
-	g_return_val_if_fail (url, NULL);
-	g_return_val_if_fail (ev, NULL);
-	g_return_val_if_fail (BONOBO_IS_UI_CONTAINER (container), NULL);
-	g_return_val_if_fail (GCONF_IS_CLIENT (client), NULL);
+	bonobo_return_val_if_fail (url, NULL, ev);
+	bonobo_return_val_if_fail (BONOBO_IS_UI_CONTAINER (container),NULL, ev);
+	bonobo_return_val_if_fail (GCONF_IS_CLIENT (client), NULL, ev);
 
 	/* Try to get a camera */
 	CHECK_RESULT (gp_camera_new_from_gconf (&camera, url), ev);
@@ -740,10 +740,12 @@ gnocam_camera_new (const gchar* url, BonoboUIContainer* container, GConfClient* 
 	
 	/* Try to get a storage */
 	mode = Bonobo_Storage_READ;
-	if (gconf_client_get_bool (client, "/apps/" PACKAGE "/preview", NULL) && (camera->abilities->file_operations & GP_FILE_OPERATION_PREVIEW)) 
+	if (gconf_client_get_bool (client, "/apps/" PACKAGE "/preview", NULL) &&
+	    (camera->abilities->file_operations & GP_FILE_OPERATION_PREVIEW)) 
 		mode |= Bonobo_Storage_COMPRESSED;
-	if (camera->abilities->file_operations & GP_FOLDER_OPERATION_PUT_FILE) mode |= Bonobo_Storage_WRITE;
-	storage = bonobo_storage_open_full_with_data ("camera", url, mode, 0664, ev, camera);
+	if (camera->abilities->file_operations & GP_FOLDER_OPERATION_PUT_FILE)
+		mode |= Bonobo_Storage_WRITE;
+	storage = bonobo_storage_camera_new (camera, "/", mode, ev);
 	if (BONOBO_EX (ev)) {
 		gp_camera_unref (camera);
 		return (NULL);
@@ -758,7 +760,7 @@ gnocam_camera_new (const gchar* url, BonoboUIContainer* container, GConfClient* 
 	gp_camera_ref (new->priv->camera = camera);
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
 	new->priv->configuration = NULL;
-	new->priv->storage = storage;
+	new->priv->storage = BONOBO_STORAGE (storage);
 	new->priv->container = container;
 	new->priv->hash_table = g_hash_table_new (g_str_hash, g_str_equal);
 
@@ -791,9 +793,14 @@ gnocam_camera_new (const gchar* url, BonoboUIContainer* container, GConfClient* 
 	e_paned_pack1 (E_PANED (new->priv->hpaned), new->priv->storage_view_vbox, FALSE, FALSE);
 	
 	/* Create the title for the storage view */
-	gtk_widget_show (new->priv->storage_view_title_bar = e_title_bar_new (_("Contents")));
-	gtk_box_pack_start (GTK_BOX (new->priv->storage_view_vbox), new->priv->storage_view_title_bar, FALSE, FALSE, 0);
-	gtk_signal_connect (GTK_OBJECT (new->priv->storage_view_title_bar), "button_clicked", GTK_SIGNAL_FUNC (on_storage_view_title_bar_button_clicked), new);
+	new->priv->storage_view_title_bar = e_title_bar_new (_("Contents"));
+	gtk_widget_show (new->priv->storage_view_title_bar);
+	gtk_box_pack_start (GTK_BOX (new->priv->storage_view_vbox),
+			    new->priv->storage_view_title_bar, FALSE, FALSE, 0);
+	gtk_signal_connect (GTK_OBJECT (new->priv->storage_view_title_bar),
+		"button_clicked",
+		GTK_SIGNAL_FUNC (on_storage_view_title_bar_button_clicked),
+		new);
 
 	/* Create the storage view */
 	new->priv->storage_view = gnocam_storage_view_new (new);
@@ -804,7 +811,8 @@ gnocam_camera_new (const gchar* url, BonoboUIContainer* container, GConfClient* 
 
         /* Create the menu */
 	new->priv->component = bonobo_ui_component_new (PACKAGE "Camera");
-	bonobo_ui_component_set_container (new->priv->component, BONOBO_OBJREF (container));
+	bonobo_ui_component_set_container (new->priv->component,
+					   BONOBO_OBJREF (container));
 	create_menu (new);
 
 	/* Set default settings */
@@ -830,7 +838,8 @@ gnocam_camera_destroy (GtkObject* object)
 
 	gtk_object_unref (GTK_OBJECT (camera->priv->client));
 
-	if (camera->priv->configuration) gp_widget_unref (camera->priv->configuration);
+	if (camera->priv->configuration) 
+		gp_widget_unref (camera->priv->configuration);
 	gp_camera_unref (camera->priv->camera);
 
 	g_hash_table_destroy (camera->priv->hash_table);
@@ -857,12 +866,12 @@ gnocam_camera_class_init (GnoCamCameraClass* klass)
 	object_class->destroy = gnocam_camera_destroy;
 
         signals [FOLDER_UPDATED] = gtk_signal_new ("folder_updated",
-                                        GTK_RUN_FIRST,
-                                        object_class->type,
-                                        GTK_SIGNAL_OFFSET (GnoCamCameraClass, folder_updated),
-                                        gtk_marshal_NONE__STRING,
-                                        GTK_TYPE_NONE, 1,
-                                        GTK_TYPE_STRING);
+			GTK_RUN_FIRST,
+                        object_class->type,
+                        GTK_SIGNAL_OFFSET (GnoCamCameraClass, folder_updated),
+                        gtk_marshal_NONE__STRING,
+                        GTK_TYPE_NONE, 1,
+                        GTK_TYPE_STRING);
 
         gtk_object_class_add_signals (object_class, signals, LAST_SIGNAL);
 

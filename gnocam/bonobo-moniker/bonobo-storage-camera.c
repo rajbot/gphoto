@@ -13,10 +13,9 @@
 
 #include "bonobo-storage-camera.h"
 
-#include <bonobo/bonobo-storage-plugin.h>
 #include <bonobo/bonobo-exception.h>
 
-#include <gphoto-extensions.h>
+#include <libgnocam/gphoto-extensions.h>
 
 #include "bonobo-stream-camera.h"
 
@@ -260,7 +259,7 @@ camera_list_contents (BonoboStorage *s, const CORBA_char *name,
 	return (list);
 }
 
-static BonoboStorage *
+BonoboStorage *
 bonobo_storage_camera_open (const gchar *path, gint flags, gint mode, 
 		            CORBA_Environment *ev)
 {
@@ -302,14 +301,17 @@ camera_open_storage (BonoboStorage *s, const CORBA_char *name,
 
 	storage = BONOBO_STORAGE_CAMERA (s);
 
-	if (!strcmp (storage->priv->path, "/")) path_new = g_strconcat ("/", name, NULL);
-	else path_new = g_strdup_printf ("%s/%s", storage->priv->path, name);
+	if (!strcmp (storage->priv->path, "/"))
+		path_new = g_strconcat ("/", name, NULL);
+	else 
+		path_new = g_strdup_printf ("%s/%s", storage->priv->path, name);
 
 	/* Create the storage. */
-	new = bonobo_storage_camera_new (storage->priv->camera, path_new, mode, ev);
+	new = bonobo_storage_camera_new (storage->priv->camera, path_new,
+					 mode, ev);
 	g_free (path_new);
-	if (BONOBO_EX (ev)) return (NULL);
-	g_return_val_if_fail (new, NULL);
+	if (BONOBO_EX (ev))
+		return (NULL);
 	
 	return (BONOBO_STORAGE (new));
 }
@@ -439,23 +441,4 @@ bonobo_storage_camera_init (BonoboStorageCamera* storage)
 }
 
 BONOBO_X_TYPE_FUNC (BonoboStorageCamera, PARENT_TYPE, bonobo_storage_camera); 
-
-gint 
-init_storage_plugin (StoragePlugin *plugin)
-{
-	g_return_val_if_fail (plugin != NULL, -1);
-
-	plugin->name = "camera";
-	plugin->description = "Gnome Digital Camera Driver";
-	plugin->version = BONOBO_STORAGE_VERSION;
-	
-	plugin->storage_open = bonobo_storage_camera_open; 
-	plugin->stream_open  = bonobo_stream_camera_open; 
-
-	/* Init GPhoto */
-	gp_init (GP_DEBUG_NONE);
-	gp_frontend_register (NULL, NULL, NULL, NULL, NULL);
-
-	return 0;
-}
 

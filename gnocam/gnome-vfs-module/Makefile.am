@@ -7,11 +7,12 @@ libvfs_camera_la_SOURCES = camera-method.c
 
 INCLUDES =\
  $(VFS_CFLAGS)\
+ $(EXTRA_GNOME_CFLAGS)\
  $(BONOBO_CFLAGS)
 
 libvfs_camera_la_LIBADD =\
  $(VFS_LIBS)\
- $(BONOBO_LIBS)
+ $(EXTRA_GNOME_LIBS)
 
 libvfs_camera_la_LDFLAGS = -export_dynamic -avoid-version
 

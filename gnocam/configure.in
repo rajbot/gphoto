@@ -61,10 +61,6 @@ if gnome-config --libs bonobo > /dev/null 2>&1; then
     vers=`gnome-config --modversion bonobo | sed -e 's/^bonobo-//' | awk -F. '{ printf "%d", $1 * 1000 + $2;}'`
         if test "$vers" -ge 37; then
             AC_MSG_RESULT(found)
-	    BONOBO_LIBS="`gnome-config --libs bonobo bonobox bonobox_print`"
-	    BONOBO_CFLAGS="`gnome-config --cflags bonobo bonobox bonobox_print`"
-	    AC_SUBST(BONOBO_LIBS)
-	    AC_SUBST(BONOBO_CFLAGS)
         else
             AC_MSG_ERROR([
 *** You need at least bonobo-0.37 for this version of ${PACKAGE}. 
@@ -87,10 +83,6 @@ if gnome-config --libs gal > /dev/null 2>&1; then
         awk 'BEGIN { FS = "."; } { print $1 * 1000000 + $2 * 10000 + $3 * 100 + $4;}'`
     if test "$vers" -ge 70000; then
         AC_MSG_RESULT(found)
-	GAL_LIBS="`gnome-config --libs gal`"
-	GAL_CFLAGS="`gnome-config --cflags gal`"
-	AC_SUBST(GAL_LIBS)
-	AC_SUBST(GAL_CFLAGS)
     else
         AC_MSG_ERROR([
 *** You need at least GAL 0.7.0.0 for this version of ${PACKAGE}.
@@ -129,8 +121,6 @@ if gnome-config --libs print > /dev/null 2>&1; then
     vers=`gnome-config --modversion print | sed -e "s/gnome-print-//" | awk 'BEGIN { FS = "."; } { print $1 * 1000 + $2;}'`
     if test "$vers" -ge 16; then
         AC_MSG_RESULT(found)
-	PRINT_LIBS="`gnome-config --libs print`"
-	AC_SUBST(PRINT_LIBS)
     else
     	AC_MSG_ERROR([
 *** You need at least gnome-print 0.16 for this version of ${PACKAGE}.
@@ -168,8 +158,8 @@ dnl ******************************
 AC_MSG_CHECKING(for gconf)
 if gconf-config --version > /dev/null 2>&1; then 
 	AC_MSG_RESULT(found)
-	GCONF_CFLAGS="`gconf-config --cflags gconf-gtk`" 
-	GCONF_LIBS="`gconf-config --libs gconf-gtk`"
+	GCONF_CFLAGS="`gconf-config --cflags`"
+	GCONF_LIBS="`gconf-config --libs`"
 	AC_SUBST(GCONF_CFLAGS)
 	AC_SUBST(GCONF_LIBS)
 else
@@ -178,6 +168,11 @@ else
 *** Get the latest version from http://www.gnome.org.
 *** Mirrors can be found at http://www.gnome.org/mirrors.])
 fi
+
+EXTRA_GNOME_CFLAGS="`gnome-config --cflags bonobo bonobox bonobox_print gconf print gal`"
+EXTRA_GNOME_LIBS="`gnome-config --libs bonobo bonobox bonobox_print gconf print gal`"
+AC_SUBST(EXTRA_GNOME_CFLAGS)
+AC_SUBST(EXTRA_GNOME_LIBS)
 
 dnl *********************************************
 dnl Keep the code clean - make all warnings fatal
@@ -201,10 +196,6 @@ GPHOTO_LIBS="`gphoto2-config --libs` `gphoto2-port-config --cflags`"
 AC_SUBST(GPHOTO_CFLAGS)
 AC_SUBST(GPHOTO_LIBS)
 
-AC_SUBST(CFLAGS)
-AC_SUBST(CPPFLAGS)
-AC_SUBST(LDFLAGS)
-
 dnl *********
 dnl Makefiles
 dnl *********
@@ -212,13 +203,11 @@ AC_OUTPUT([
 gnocam.spec
 Makefile
 art/Makefile
-idl/Makefile
 intl/Makefile
 macros/Makefile
 po/Makefile.in
 src/Makefile
 bonobo-moniker/Makefile
-bonobo-storage-module/Makefile
 capplet/Makefile
 gnome-vfs-module/Makefile
 libgnocam/Makefile

@@ -34,43 +34,46 @@ struct _GnoCamMainPrivate {
 	gint			item;
 };
 
-#define GNOCAM_MAIN_UI														\
-"<Root>"															\
-"  <menu>"															\
-"    <submenu name=\"File\" _label=\"_File\">"											\
-"      <placeholder name=\"FileOperations\"/>"											\
-"      <placeholder name=\"Print\" delimit=\"top\"/>"										\
-"      <placeholder name=\"System\" delimit=\"top\">"                                                                           \
-"        <menuitem name=\"Close\" verb=\"\" _label=\"_Close\" pixtype=\"stock\" pixname=\"Close\" accel=\"*Control*w\"/>"       \
-"      </placeholder>"                                                                                                          \
-"    </submenu>"														\
-"    <placeholder name=\"Folder\"/>"												\
-"    <placeholder name=\"Camera\"/>"												\
-"    <submenu name=\"Edit\" _label=\"_Edit\">"											\
-"       <placeholder/>"														\
-"       <menuitem name=\"BonoboCustomize\" verb=\"\" _label=\"Customi_ze...\" pos=\"bottom\"/>"					\
-"    </submenu>"														\
-"    <placeholder name=\"Edit\"/>"												\
-"    <submenu name=\"View\" _label=\"_View\">"											\
-"      <placeholder name=\"Preview\" pos=\"top\"/>"										\
-"    </submenu>"														\
-"    <submenu name=\"Settings\" _label=\"_Settings\">"										\
-"      <menuitem name=\"Preferences\" verb=\"\" _label=\"_Preferences\" pixtype=\"stock\" pixname=\"Preferences\"/>"		\
-"    </submenu>"														\
-"    <submenu name=\"Help\" _label=\"_Help\">"											\
-"      <menuitem name=\"About\" verb=\"\" _label=\"_About\" pixtype=\"stock\" pixname=\"About\"/>"				\
-"    </submenu>"														\
-"  </menu>"															\
-"  <status>"															\
-"    <item name=\"main\"/>"													\
-"  </status>"															\
+#define GNOCAM_MAIN_UI \
+"<Root>"\
+"  <menu>"\
+"    <submenu name=\"File\" _label=\"_File\">"\
+"      <placeholder name=\"FileOperations\"/>"\
+"      <placeholder name=\"PrintOperations\" delimit=\"top\"/>"\
+"      <placeholder name=\"System\" delimit=\"top\">"\
+"        <menuitem name=\"Close\" verb=\"\" _label=\"_Close\""\
+"		   pixtype=\"stock\" pixname=\"Close\" accel=\"*Control*w\"/>"\
+"      </placeholder>"\
+"    </submenu>"\
+"    <placeholder name=\"Folder\"/>"\
+"    <placeholder name=\"Camera\"/>"\
+"    <submenu name=\"Edit\" _label=\"_Edit\">"\
+"       <placeholder/>"\
+"       <menuitem name=\"BonoboCustomize\" verb=\"\" _label=\"Customi_ze...\""\
+"                 pos=\"bottom\"/>"\
+"    </submenu>"\
+"    <placeholder name=\"Edit\"/>"\
+"    <submenu name=\"View\" _label=\"_View\">"\
+"      <placeholder name=\"Preview\" pos=\"top\"/>"\
+"    </submenu>"\
+"    <submenu name=\"Settings\" _label=\"_Settings\">"\
+"      <menuitem name=\"Preferences\" verb=\"\" _label=\"_Preferences\""\
+"		 pixtype=\"stock\" pixname=\"Preferences\"/>"\
+"    </submenu>"\
+"    <submenu name=\"Help\" _label=\"_Help\">"\
+"      <menuitem name=\"About\" verb=\"\" _label=\"_About\""\
+"                pixtype=\"stock\" pixname=\"About\"/>"\
+"    </submenu>"\
+"  </menu>"\
+"  <status>"\
+"    <item name=\"main\"/>"\
+"  </status>"\
 "</Root>"
 
 /**************/
 /* Prototypes */
 /**************/
 
-static void 	on_preferences_activate 	(BonoboUIComponent* component, gpointer user_data, const gchar* path);
 static void	on_about_activate		(BonoboUIComponent* component, gpointer user_data, const gchar* path);
 static void	on_close_activate		(BonoboUIComponent* component, gpointer user_data, const gchar* path);
 
@@ -113,6 +116,18 @@ create_camera (gpointer user_data)
 
 	return (FALSE);
 }
+
+static void
+on_preferences_activate (BonoboUIComponent* component, gpointer user_data, const gchar* path)
+{
+	GnoCamMain*     m;
+
+	m = GNOCAM_MAIN (user_data);
+
+	gtk_widget_show (gnocam_preferences_new (GTK_WINDOW (m),
+						 m->priv->client));
+}
+
 
 static gint
 create_menu (gpointer user_data)
@@ -217,16 +232,6 @@ on_about_activate (BonoboUIComponent* component, gpointer user_data, const gchar
 	const gchar*	copyright = NULL;
 	
 	gtk_widget_show (gnome_about_new (PACKAGE, VERSION, copyright, authors, comments, NULL));
-}
-
-static void
-on_preferences_activate (BonoboUIComponent* component, gpointer user_data, const gchar* path)
-{
-	GnoCamMain*	m;
-
-	m = GNOCAM_MAIN (user_data);
-	
-	gtk_widget_show (gnocam_preferences_new (GTK_WINDOW (m), m->priv->client));
 }
 
 static void

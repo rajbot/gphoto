@@ -1,3 +1,13 @@
+2001-07-13	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
+	* Makefile.am: Don't enter SUBDIRS idl and bonobo-storage-module.
+	* configure.in: Make the whole stuff compiling faster by moving all
+	compiler/linker flags into GNOME_EXTRA_*.
+	* bonobo-storage-module/*: Moved to bonobo-moniker/* as there won't be
+	storage modules in bonobo2.
+	* bonoob-moniker/*: New home of bonobo-storage-camera.
+	* (...)
+
 2001-07-06	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
 	Do "export DEBUG_GNOCAM=1" in order to get the debugging stuff.

@@ -486,6 +486,11 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 		/* Connect the signals. */
 		glade_xml_signal_autoconnect (xml_page);
 
+		/* This is because libglade takes the GNOME default for the toolbar style. We don't want that. */
+		gtk_toolbar_set_style (GTK_TOOLBAR (glade_xml_get_widget (xml_page, "toolbar_close")), GTK_TOOLBAR_ICONS);
+		gtk_toolbar_set_style (GTK_TOOLBAR (glade_xml_get_widget (xml_page, "toolbar_save")), GTK_TOOLBAR_ICONS);
+		gtk_toolbar_set_style (GTK_TOOLBAR (glade_xml_get_widget (xml_page, "toolbar_zoom")), GTK_TOOLBAR_ICONS);
+
 		/* Do we already have the preview? */
 		if (!(file = gtk_object_get_data (GTK_OBJECT (item), "preview"))) {
 			file = gp_file_new ();

@@ -40,7 +40,7 @@ cmd() {
     fi
 }
 
-if [ "$cvsmodulelistsource" -nt "$cvsmodulelist" ]
+if [ ! -f "$cvsmodulelist" ] || [ "$cvsmodulelistsource" -nt "$cvsmodulelist" ]
 then
     echo "Re-creating $cvsmodulelist from $cvsmodulelistsource"
     grep -v '^#' < "$cvsmodulelistsource" | grep -v "^$" > "$cvsmodulelist"

@@ -18,7 +18,7 @@ while :
 do
     case "$1" in
 	--update) parm_update="true" ;;
-	--tools)  parm_tools="true" ;;
+	--tools)  parm_tools="true"  ;;
 	--help)   cat<<EOF
 Usage: $this [OPTION]...
 Bootstrap the gphoto-meta package, i.e. download and build distribution 
@@ -67,6 +67,11 @@ function installautotools {
 
     while read tool action URL restofline
     do
+	case "$URL" in
+	    http://*) ;;
+	    ftp://*)  ;;
+	    *)        continue ;;
+	esac
 	local tarball
 	tarball="${downloads}/$(basename "$URL")"
 	if test -f "$tarball"
@@ -91,7 +96,7 @@ function installautotools {
 		ext=".tar.gz"
 		;;
 	    *.tar.bz2)
-		cmd bzip2 -z -c "$tarball" | tar xvf -
+		cmd bzip2 -d -c "$tarball" | cmd tar xvf -
 		ext=".tar.bz2"
 		;;
 	    *)
@@ -103,7 +108,7 @@ function installautotools {
 	cmd cd "${toolsrc}/${base}"
 	cmd ./configure --prefix="${toolroot}"
 	cmd make install
-    done < build-tool-list
+    done < ${buildtoollist}
 }
 
 
@@ -124,30 +129,31 @@ function checktools {
     echo "##### Checking for presence of tools..."
     while read tool action restofline
     do
-	if "$tool" --version < /dev/null | grep -i $tool > /dev/null
+	output=$("$tool" --version < /dev/null)
+	if [ $? -eq 0 ]
 	then
-	    echo "    # $tool found."
-	else
-	    echo "    # $tool not found."
-	    if test "$action" = "fatal" || ( test "$action" = "autocnd" && test "$autoinstall" = "true" )
+	    if [ "$tool" = "pkg-config" ] || echo "$output" | grep -i "$tool" > /dev/null
 	    then
-		echo "    # $tool is absolutely required, so we're aborting."
-		exit 2
-	    elif [ "$action" = "auto" ]
-	    then
-		echo "    # $tool is required, so we're installing the autosuite first."
-		autoinstall="true"
-	    else
-		echo "##### Illegal action. Internal error."
-		exit 225
+		echo "    # $tool found."
+		continue
 	    fi
 	fi
-    done < build-tool-list
+	echo "    # $tool not found."
+	if test "$action" = "fatal" || ( test "$action" = "autocnd" && test "$autoinstall" = "true" )
+	then
+	    echo "    # $tool is absolutely required, so we're aborting."
+	    exit 2
+	elif [ "$action" = "auto" ]
+	then
+	    echo "    # $tool is required, so we're installing the autosuite first."
+	    autoinstall="true"
+	else
+	    echo "##### Illegal action. Internal error."
+	    exit 225
+	fi
+    done < ${buildtoollist}
 
-    if "${parm_tools}"
-    then
-	true
-    elif "${autoinstall}"
+    if "${parm_tools}" || "${autoinstall}"
     then
 	installautotools
     fi
@@ -423,6 +429,8 @@ else
 	echo "bzip2 not found."
 	compression="gz"
 fi
+sed -e "s/\\\${compression}/${compression}/g" < build-tool-list > build-tool-list.boot
+buildtoollist="build-tool-list.boot"
 
 checktools || die
 cvslogin || die

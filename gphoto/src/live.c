@@ -12,6 +12,7 @@
 extern struct Model *Camera;
 
 int live_video_mode = 0;
+int live_continue = 1;
 
 void live_snapshot(GtkWidget *dialog) {
 
@@ -40,6 +41,15 @@ void live_snapshot(GtkWidget *dialog) {
 	update_status(N_("Done."));
 }
 
+void live_close_window (GtkWidget *button, GtkWidget *dialog) {
+
+	if (live_video_mode) {
+		live_continue = 0;
+		return;
+	}
+	gtk_widget_destroy(dialog);
+}
+
 void live_video (GtkWidget *button, GtkWidget *dialog) {
 
 	if (!GTK_TOGGLE_BUTTON(button)->active) {
@@ -47,11 +57,13 @@ void live_video (GtkWidget *button, GtkWidget *dialog) {
 		return;
 	}
 	live_video_mode = 1;
-	while (live_video_mode) {
+	while ((live_video_mode)&&(live_continue)) {
 		while (gtk_events_pending())
 			gtk_main_iteration();
 		live_snapshot(dialog);
 	}
+	if (!live_continue)
+		gtk_widget_destroy(dialog);
 }
 
 void live_main () {
@@ -101,25 +113,29 @@ void live_main () {
 	gtk_widget_show(cbutton);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
 				  cbutton);
+        gtk_signal_connect(GTK_OBJECT(cbutton), "clicked",
+                           GTK_SIGNAL_FUNC(live_close_window),
+                           dialog); 
 
-        gtk_signal_connect_object(GTK_OBJECT(cbutton), "clicked",
-                           GTK_SIGNAL_FUNC(gtk_widget_destroy),
-                           GTK_OBJECT(dialog)); 
         if ((im = Camera->ops->get_preview()) == 0) {
 	        error_dialog("Could not get preview");
 		return;
 	}
-	imlibimage = gdk_imlib_load_image_mem(im->image, im->image_size);
-	free(im->image);
-	free(im);
-	w = imlibimage->rgb_width;
-        h = imlibimage->rgb_height;
-        gdk_imlib_render(imlibimage, w, h);
-        pixmap = gdk_imlib_move_image(imlibimage);
-	gpixmap = gtk_pixmap_new(pixmap, NULL);
-	gtk_widget_show(gpixmap);
-	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-                                  gpixmap);
+	if (im) {
+		imlibimage = gdk_imlib_load_image_mem(im->image, im->image_size);
+		if (imlibimage) {
+			free(im->image);
+			free(im);
+			w = imlibimage->rgb_width;
+		        h = imlibimage->rgb_height;
+		        gdk_imlib_render(imlibimage, w, h);
+		        pixmap = gdk_imlib_move_image(imlibimage);
+			gpixmap = gtk_pixmap_new(pixmap, NULL);
+			gtk_widget_show(gpixmap);
+			gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+	                         gpixmap);
+		}
+	}
 	gtk_widget_show(dialog);
 	update_status(N_("Done."));
 }

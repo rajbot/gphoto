@@ -43,4 +43,5 @@ rm -rf $RPM_BUILD_ROOT
 %{prefix}/share/gphoto/drivers/*
 %{prefix}/share/gphoto/gallery/Default/*
 %{prefix}/share/gphoto/gallery/RedNGray/*
+%{prefix}/share/gphoto/gallery/CSStheme/*
 

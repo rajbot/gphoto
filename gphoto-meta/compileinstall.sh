@@ -89,8 +89,9 @@ compileinstall() {
 	    base="$(basename ${tarball} .tar.gz)"
 	    base="$(basename ${base} .tar.bz2)"
 	    base="$(basename ${base} -broken)"
-	    if read dir < "${base}/installed-yet"
+	    if [ -f "${base}/installed-yet" ]
 	    then
+		read dir < "${base}/installed-yet"
 		if [ "$dir" = "${instroot}" ]
 		then
 		    echo "##### ${base} has already been installed to ${dir}."

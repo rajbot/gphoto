@@ -44,7 +44,8 @@ struct _GnocamAppletCamPriv
 	GtkImage *image;
 
 	/* Dialogs */
-	GtkWidget *prefs, *chooser;
+	GtkWidget *prefs;
+	GnocamChooser *chooser;
 
 	GdkPixbuf *p_connected;
 	GdkPixbuf *p_disconnected;
@@ -208,58 +209,6 @@ gnocam_applet_cam_connect (GnocamAppletCam *c)
 }
 
 static void
-on_changed (GnocamChooser *chooser, GnocamAppletCam *c)
-{
-	gboolean b = (c->priv->camera != CORBA_OBJECT_NIL);
-
-	if (b) gnocam_applet_cam_disconnect (c);
-
-	g_free (c->priv->manuf);
-	g_free (c->priv->model);
-	g_free (c->priv->port);
-
-	c->priv->manuf = gnocam_chooser_get_manufacturer (chooser);
-	c->priv->model = gnocam_chooser_get_model (chooser);
-	c->priv->port  = gnocam_chooser_get_port (chooser);
-	c->priv->connect_auto = gnocam_chooser_get_connect_auto (chooser);
-
-	if (b) gnocam_applet_cam_connect (c);
-
-	g_signal_emit (c, signals[CHANGED], 0);
-}
-
-static void
-action_select_camera (gpointer callback_data, guint callback_action, 
-		      GtkWidget *w)
-{
-	GnocamAppletCam *c = GNOCAM_APPLET_CAM (callback_data);
-
-	if (c->priv->chooser) {
-		gtk_window_present (GTK_WINDOW (c->priv->chooser));
-		return;
-	}
-
-	c->priv->chooser = gnocam_chooser_new ();
-	if (c->priv->manuf)
-	    gnocam_chooser_set_manufacturer (c->priv->chooser, c->priv->manuf);
-	else c->priv->manuf = gnocam_chooser_get_manufacturer (
-							c->priv->chooser);
-	if (c->priv->model)
-		gnocam_chooser_set_model (c->priv->chooser, c->priv->model);
-	else c->priv->model = gnocam_chooser_get_model (c->priv->chooser);
-	if (c->priv->port)
-		gnocam_chooser_set_port (c->priv->chooser, c->priv->port);
-	else c->priv->port = gnocam_chooser_get_port (c->priv->chooser);
-	gnocam_chooser_set_connect_auto (c->priv->chooser,
-					 c->priv->connect_auto);
-	g_signal_connect (c->priv->chooser, "changed",
-			  G_CALLBACK (on_changed), c);
-	g_signal_connect (c->priv->chooser, "destroy",
-			  G_CALLBACK (on_chooser_destroy), c);
-	gtk_widget_show (GTK_WIDGET (c->priv->chooser));
-}
-
-static void
 on_close_clicked (GtkButton *button, GtkWidget *win)
 {
 	gtk_widget_destroy (GTK_WIDGET (win));
@@ -268,6 +217,8 @@ on_close_clicked (GtkButton *button, GtkWidget *win)
 static void
 on_prefs_destroy (GtkObject *o, GnocamAppletCam *c)
 {
+	g_return_if_fail (GNOCAM_IS_APPLET_CAM (c));
+
 	c->priv->prefs = NULL;
 }
 
@@ -295,7 +246,7 @@ action_settings (gpointer callback_data, guint callback_action, GtkWidget *w)
 	CORBA_exception_free (&ev);
 	c->priv->prefs = bonobo_window_new ("Preferences", _("Preferences"));
 	g_signal_connect (c->priv->prefs, "destroy",
-		G_CALLBACK (on_prefs_destroy), p);
+		G_CALLBACK (on_prefs_destroy), c);
 	gtk_widget_show (vbox = gtk_vbox_new (FALSE, 5));
 	bonobo_window_set_contents (BONOBO_WINDOW (c->priv->prefs), vbox);
 	
@@ -326,7 +277,6 @@ static GtkItemFactoryEntry popup[] =
 {
 	{"/_Connect", NULL, action_connect, 0, "<CheckItem>"},
 	{"/_Settings", NULL, action_settings, 0, "<Item>"},
-	{"/S_elect camera", NULL, action_select_camera, 0, "<Item>"},
 };
 
 GnocamAppletCam *

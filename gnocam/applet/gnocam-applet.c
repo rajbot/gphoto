@@ -116,46 +116,49 @@ on_changed (GnocamAppletCam *c, GnocamApplet *a)
 static void
 gnocam_applet_load_preferences (GnocamApplet *a)
 {
-	gchar *key;
 	GConfClient *client;
-	gchar *s;
+	gchar *s, *name, *k, *key;
+	const gchar *b;
 	guint i;
 	GnocamAppletCam *c;
+	GSList *l;
 
 	g_return_if_fail (GNOCAM_IS_APPLET (a));
 
-	key = panel_applet_get_preferences_key (a->priv->applet);
 	client = gconf_client_get_default ();
-	if (key && gconf_client_dir_exists (client, key, NULL)) {
-	    for (i = 1; ; i++) {
-		s = g_strdup_printf ("%s/%i", key, i);
-		if (gconf_client_dir_exists (client, s, NULL)) {
-		    c = gnocam_applet_cam_new (
-				    panel_applet_get_size (a->priv->applet));
-		    g_signal_connect (c, "changed",
-				      G_CALLBACK (on_changed), a);
-		    a->priv->cameras = g_list_append (a->priv->cameras, c);
-		    g_object_set_data (G_OBJECT (c), "number",
-				       GINT_TO_POINTER (i));
-		    gnocam_applet_cam_set_manufacturer (c,
-			panel_applet_gconf_get_string (a->priv->applet,
-						       "manufacturer", NULL));
-		    gnocam_applet_cam_set_model (c,
-			panel_applet_gconf_get_string (a->priv->applet,
-						       "model", NULL));
-		    gnocam_applet_cam_set_port (c,
-			panel_applet_gconf_get_string (a->priv->applet,
-						       "port", NULL));
-		    gnocam_applet_cam_set_connect_auto (c,
-			panel_applet_gconf_get_bool (a->priv->applet,
-						     "connect_auto", NULL));
-		    gtk_box_pack_start (a->priv->box, GTK_WIDGET (c),
-				        FALSE, FALSE, 0);
-		}
-		g_free (s);
-	    }
+	l = gconf_client_all_dirs (client, "/desktop/gnome/cameras", NULL);
+	for (i = 0; i < g_slist_length (l); i++) {
+
+		/* Create the widget */
+		c = gnocam_applet_cam_new (
+				panel_applet_get_size (a->priv->applet));
+		g_signal_connect (c, "changed", G_CALLBACK (on_changed), a);
+		a->priv->cameras = g_list_append (a->priv->cameras, c);
+		gtk_box_pack_start (a->priv->box, GTK_WIDGET (c),
+				    FALSE, FALSE, 0);
+
+		/* Load the preferences into the widget. */
+		key = g_slist_nth_data (l, i);
+		b = g_basename (key);
+		name = gconf_unescape_key (b, strlen (b));
+		g_object_set_data_full (G_OBJECT (c), "name", name, 
+			(GDestroyNotify) g_free);
+		k = g_strdup_printf ("%s/manufacturer", key);
+		s = gconf_client_get_string (client, k, NULL);
+		gnocam_applet_cam_set_manufacturer (c, s);
+		g_free (s); g_free (k);
+		k = g_strdup_printf ("%s/model", key);
+		s = gconf_client_get_string (client, k, NULL);
+		gnocam_applet_cam_set_model (c, s);
+		g_free (s); g_free (k);
+		k = g_strdup_printf ("%s/port", key);
+		s = gconf_client_get_string (client, k, NULL);
+		gnocam_applet_cam_set_port (c, s);
+		g_free (s); g_free (k);
+		k = g_strdup_printf ("%s/connect_auto", key);
+		gnocam_applet_cam_set_connect_auto (c,
+				gconf_client_get_bool (client, k, NULL));
 	}
-	g_free (key);
 	g_object_unref (client);
 }
 

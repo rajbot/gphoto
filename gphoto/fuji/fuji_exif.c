@@ -80,7 +80,12 @@ unsigned char *fuji_exif_convert(exifparser *exifdat){
   };
 
   /* Skip to TIFF image data */
-  if(exifdat->ifdcnt<2) return(NULL); /* Things don't look right...*/
+  if(exifdat->ifdcnt<2) {
+    if (fuji_debug) {
+      fprintf(stderr,"Too few ifds, doesn't look right. Giving up\n");
+    };
+    return(NULL); /* Things don't look right...*/
+  };
 
   if (fuji_debug) printf("New Offset is %d bytes\n",offset);
 
@@ -97,7 +102,7 @@ unsigned char *fuji_exif_convert(exifparser *exifdat){
 
   tmp=getintval(exifimg,EXIF_StripOffsets); /*imagedata start*/
   if (tmp==-1) {
-    printf("Split one\n");
+    fprintf(stderr,"fuji_exif: Tiff data not found, skipping\n");
     return(NULL);
   };
   imagedata=exifdat->data+tmp;

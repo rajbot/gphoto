@@ -50,8 +50,20 @@ main(int argc, char** argv){
 
   struct exif_parser exifdat;
 
-  fd=fopen(argv[1],"r");
-  printf("Parsing %s:\n",argv[1]);
+  i=1;
+
+  while ((i<argc)&&(argv[i][0]=='-')) {
+    if (!strncmp(argv[i],"-d",2)) fuji_debug=exif_debug=1;
+    i++;
+  };
+
+  if (argc<=i){
+    printf("usage: gphoto-exifdump [-debug] exiffilename\n");
+    exit(1);
+  };
+
+  fd=fopen(argv[i],"r");
+  printf("Parsing %s:\n",argv[i]);
   if (!fd) return(0);
 
   fread(tmpbuff,1,12,fd);

@@ -30,6 +30,8 @@
               nowhere near everything is parsed correctly
 */
 
+int exif_debug=0;
+
 extern unsigned char *fuji_exif_mem_convert(exifparser *exifdat);
 
 static struct tagarray{
@@ -148,6 +150,23 @@ long lilend(unsigned char *data, int size){
   return(total);
 };
 
+/* Convert signed Intel-Endian number, 
+   this should be generalized for both types*/
+long slilend(unsigned char *data, int size){
+  long total;
+  long unsigned mask=1<<(size*8-1);
+
+  total=0;
+  for (--size;size>=0;size--){
+    total<<=8;
+    total+=data[size];
+  };
+
+  if (total&mask) total-=mask;
+
+  return(total);
+};
+
 /*
   Point tagnum and data to the tag name and value strings of
   IFD ifdnum, TAG tagnum1
@@ -155,16 +174,17 @@ long lilend(unsigned char *data, int size){
 int togphotostr(exifparser *exifdata,int ifdnum,int tagnum, char** tagnam,char** data){
   unsigned char* thistag;
   unsigned char* thedata;
-  int i,tag,numtags,tagtype,count,typelen,tmp1,tmp2;
+  int i,j,tag,numtags,tagtype,count,typelen,tmp1,tmp2;
   char tmpstr[256];
 
+  tmpstr[0]=0; /* clear the string, just to be sure */
   *tagnam=*data=NULL;
   thistag=exifdata->ifds[ifdnum]+tagnum*12+2;
   tag=lilend(thistag,2);          /* tag identifier */
   *tagnam=strdup(tagname(tag));
   tagtype=lilend(thistag+2,2);    /* tag type */
   count = lilend(thistag+4, 4);   /* how many */
-  typelen=exif_sizetab[tagtype-1];/* length of this type */
+  typelen=exif_sizetab[tagtype];/* length of this type */
   
   thedata=thistag+8;
   if (count*typelen > 4)   /* find it in a data block elsewhere */
@@ -175,18 +195,20 @@ int togphotostr(exifparser *exifdata,int ifdnum,int tagnum, char** tagnam,char**
     strncpy(tmpstr,thedata,count);
     tmpstr[count]='\0';
   }
-  else if ((tagtype==5)||(tagtype==10)) {/* Fractional */
-    tmp1=lilend(thedata,4);
-    tmp2=lilend(thedata+4,4);
-    sprintf(tmpstr,"%f",(tmp2==0)?0:(1.0*tmp1/tmp2));
-  }
-  else
-    sprintf(tmpstr,"%d",lilend(thedata,typelen));
+  else for (j=0;j<count;j++) {
 
+    if ((tagtype==5)||(tagtype==10)) {/* Fractional */
+      tmp1=slilend(thedata+j*typelen,4);
+      tmp2=slilend(thedata+4+j*typelen,4);
+      sprintf(tmpstr+strlen(tmpstr),"%.3g ",(tmp2==0)?0:(1.0*tmp1/tmp2));
+    }
+    else
+      sprintf(tmpstr+strlen(tmpstr),"%d ",lilend(thedata+j*typelen,typelen));
+  };
   *data=strdup(tmpstr);
-#ifdef EXIF_DEBUG
-  printf("Got %s = %s\n",*tagnam,*data);
-#endif
+  
+  if (exif_debug) printf("Got %s = %s\n",*tagnam,*data);
+
   return(0);
 };
 
@@ -198,9 +220,8 @@ int getintval(unsigned char *data, int tagnum){
   int numtags,i,tag,tagtype;
 
   numtags=lilend(data,2);
-#ifdef EXIF_DEBUG
-   printf("getval:%d tags\n",numtags);
-#endif
+
+  if (exif_debug)  printf("getval:%d tags\n",numtags);
 
  i=-1;
  do{
@@ -240,7 +261,7 @@ char *tagname(int tagnum){
 };
 
 int dump_ifd(int ifdnum,exifparser *exifdata,char **allpars){
-  int i,tag,numtags,tagtype,count,typelen, value,tmp1,tmp2;
+  int i,j,tag,numtags,tagtype,count,typelen, value,tmp1,tmp2;
   char tmpstr[256];
   unsigned char* thistag;
   unsigned char* thedata;
@@ -253,13 +274,17 @@ int dump_ifd(int ifdnum,exifparser *exifdata,char **allpars){
     numtags=lilend(thisisd,2);
     printf("has %d tags ----------------------\n",numtags);
     for (i=0;i<numtags;i++){
-      thistag=thisisd+i*12+2;
+
+      thistag=thisisd+i*12+2;   /* pointer to data for this tag */
 
       tag=lilend(thistag,2);          /* tag identifier */
       tagtype=lilend(thistag+2,2);    /* tag type */
       count = lilend(thistag+4, 4);   /* how many */
-      typelen=exif_sizetab[tagtype-1];/* length of this type */
+      typelen=exif_sizetab[tagtype];/* length of this type */
 
+      if (exif_debug) printf("(%dX) ",count);
+
+      thedata=thistag+8;
       if (count*typelen > 4)   /* find it in a data block elsewhere */
 	thedata = exifdata->data+lilend(thistag+8, 4);
 
@@ -267,19 +292,25 @@ int dump_ifd(int ifdnum,exifparser *exifdata,char **allpars){
 
       if (tagtype==2) {
 	/* Do an ASCII tag */
-	strncpy(tmpstr,thedata,count+1);
-	tmpstr[count+1]='\0';
-	printf("%s",tmpstr);
-      }  else if ((tagtype==5)||(tagtype==10)) {/* Fractional */
-	tmp1=lilend(thedata,4);
-	tmp2=lilend(thedata+4,4);
-	printf("%d/%d=%f",tmp1,tmp2,(tmp2==0)?0:(1.0*tmp1/tmp2));
-      }
-      else {
-         value =lilend(thistag+8,typelen);
-         printf("%d",value);
+	  strncpy(tmpstr,thedata,count+1);
+	  tmpstr[count+1]='\0';
+	  printf("'%s'",tmpstr);
+	} 
+      else for (j=0;j<count;j++) {
+
+	if ((tagtype==5)||(tagtype==10)) {/* Fractional */
+	  tmp1=slilend(thedata+j*typelen,4);
+	  tmp2=slilend(thedata+4+j*typelen,4);
+	      printf("%d/%d=%.3g ",tmp1,tmp2,(tmp2==0)?0:(1.0*tmp1/tmp2));
+	}
+	else {
+	  value =lilend(thedata+j*typelen,typelen);
+	  printf("%d ",value);
+	};
+	
       };
-      printf("\n");
+
+      printf("\n"); /*end of this tag */
 
 /* Print SubIfd tags */
       if ( tag == 0x8769 ) {
@@ -380,9 +411,9 @@ void setval(unsigned char *data,int tagind,long newval){
 
 long next_ifd(unsigned char *exif,int num){
   int offset=(exif[num]+(exif[num+1]<<8))*12+num+2;
-#ifdef EXIF_DEBUG
-   printf("nifd,offset=%d\n",offset);
-#endif
+
+  if (exif_debug) printf("nifd,offset=%d\n",offset);
+
   return(lilend(exif+offset,4));
 };
 

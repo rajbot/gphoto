@@ -19,6 +19,7 @@ typedef struct exif_parser{
   int preparsed,endian;
 } exifparser;
 
+extern int exif_debug; /* Non-zero for debug messages */
 
 /*
 Parse an exif header, return size of the rest of the file

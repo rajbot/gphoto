@@ -1,5 +1,11 @@
+configure
+config.cache
+config.h
+config.log
 config.status
+stamp-h.in
 stamp-h
 gnocam.spec
 Makefile
+Makefile.in
 

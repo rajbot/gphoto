@@ -42,18 +42,18 @@ set | grep '^parm_'
 ########################################################################
 # don't rely on external true and false
 
-function true() {
+function true {
     return 0
 }
 
-function false() {
+function false {
     return 1
 }
 
 ########################################################################
 # installautotools - download, build and locally install build tools
 
-function installautotools() {
+function installautotools {
     local tool URL restofline
 
     cmd mkdir -p "${downloads}" "${toolroot}" "${toolsrc}"
@@ -110,7 +110,7 @@ EOF
 ########################################################################
 # checktools - check for necessary tools to be installed
 
-function checktools() {
+function checktools {
     local action tool restofline
     local autoinstall=false
 
@@ -210,7 +210,7 @@ EOF
 ########################################################################
 # cvslogin - initialize stuff (CVS logins, etc)
 
-function cvslogin() {
+function cvslogin {
     local module releasetag CVSROOT restofline
     while read module releasetag CVSROOT restofline
     do 
@@ -230,7 +230,7 @@ function cvslogin() {
 ########################################################################
 # getsources - get software sources from CVS into ${cvsorig}/MODULE
 
-function getsources() {
+function getsources {
     echo "##### Getting software from CVS"
     cmd mkdir -p "${cvsorig}"
     cmd cd "${cvsorig}"
@@ -285,7 +285,7 @@ function getsources() {
 ########################################################################
 # builddist - build distribution tarball for all MODULEs
 
-function builddist() {
+function builddist {
     local PKG_CONFIG_PATH="${distroot}/lib/pkgconfig:${PKG_CONFIG_PATH}"
     local LD_LIBRARY_PATH="${distroot}/lib:${LD_LIBRARY_PATH}"
     local PATH="${distroot}/bin:${PATH}"
@@ -396,7 +396,7 @@ function builddist() {
 ########################################################################
 # makefiles - create Makefile.am files
 
-function makefiles() {
+function makefiles {
     cmd cd "${distdir}"
     local files=""
     while read module restofline
@@ -425,7 +425,7 @@ EOF
 ########################################################################
 # main program
 
-function die() {
+function die {
     echo "$this: Fatal error. Dying."
     exit 13
 }

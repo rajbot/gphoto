@@ -246,6 +246,30 @@ resolution_test ()
 	philips_getresolution(&size);
 	printf ( "set to %x, (%d)\n", size, rtn );
 	sleep (3);
+
+	printf ( "  Setting resolution to 5 (???)..." );
+	rtn = philips_setresolution(5);
+	philips_getresolution(&size);
+	printf ( "set to %x, (%d)\n", size, rtn );
+	sleep (3);
+
+	printf ( "  Setting resolution to 6 (???)..." );
+	rtn = philips_setresolution(6);
+	philips_getresolution(&size);
+	printf ( "set to %x, (%d)\n", size, rtn );
+	sleep (3);
+
+	printf ( "  Setting resolution to 7 (???)..." );
+	rtn = philips_setresolution(7);
+	philips_getresolution(&size);
+	printf ( "set to %x, (%d)\n", size, rtn );
+	sleep (3);
+
+	printf ( "  Setting resolution to 8 (???)..." );
+	rtn = philips_setresolution(8);
+	philips_getresolution(&size);
+	printf ( "set to %x, (%d)\n", size, rtn );
+	sleep (3);
 }
 
 
@@ -262,7 +286,7 @@ record_mode_test ()
 	printf ( "set to %x, (%d)\n", size, rtn );
 	sleep (2);
 
-	printf ( "  Setting record mode to 2 (???)..." );
+	printf ( "  Setting record mode to 2 (multi-shot [RDC-5000 only])..." );
 	rtn = philips_setrecordmode(2);
 	philips_getrecordmode(&size);
 	printf ( "set to %x, (%d)\n", size, rtn );
@@ -314,6 +338,18 @@ flash_test ()
 
 	printf ( "  Setting flash to 2 (on)..." );
 	rtn = philips_setflash(2);
+	philips_getflash(&size);
+	printf ( "set to %x, (%d)\n", size, rtn );
+	sleep (2);
+
+	printf ( "  Setting flash to 3 (???)..." );
+	rtn = philips_setflash(3);
+	philips_getflash(&size);
+	printf ( "set to %x, (%d)\n", size, rtn );
+	sleep (2);
+
+	printf ( "  Setting flash to 4 (???)..." );
+	rtn = philips_setflash(4);
 	philips_getflash(&size);
 	printf ( "set to %x, (%d)\n", size, rtn );
 	sleep (2);

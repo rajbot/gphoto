@@ -56,27 +56,19 @@ on_view_mode_activate (GtkWidget* widget, gpointer user_data)
 }
 
 void
-on_about_activate (GtkWidget* widget, gpointer user_data)
+on_about_activate (BonoboUIComponent* component, gpointer user_data, const gchar* path)
 {
 	g_return_if_fail (glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "about"));
 }
 
 void
-on_gnocam_manual_activate (GtkWidget* widget, gpointer user_data)
+on_gnocam_manual_activate (BonoboUIComponent* component, gpointer user_data, const gchar* path)
 {
-        gchar*  manualfile;
+	gchar*	tmp;
 
-        if ((manualfile = gnome_help_file_find_file ("gnocam", "index.html"))) {
-                gchar* url = g_strconcat ("file:", manualfile, NULL);
-                gnome_help_goto (NULL, url);
-                g_free (url);
-                g_free (manualfile);
-        } else {
-                gnome_error_dialog_parented (
-                        "Could not find the manual for " PACKAGE ". "
-                        "Check if it has been installed correctly in "
-                        "$PREFIX/share/gnome/help/gnocam.", main_window);
-        }
+	tmp = g_strdup_printf ("ghelp:%s/%s", GNOCAM_HELPDIR, (gchar*) user_data);
+	gnome_url_show (tmp);
+	g_free (tmp);
 }
 
 void 
@@ -130,7 +122,7 @@ int main (int argc, char *argv[])
 		BONOBO_UI_UNSAFE_VERB ("Exit", gtk_main_quit),
 		BONOBO_UI_UNSAFE_VERB ("Preferences", preferences),
 		BONOBO_UI_UNSAFE_VERB ("About", on_about_activate),
-		BONOBO_UI_UNSAFE_VERB ("Manual", on_gnocam_manual_activate),
+		BONOBO_UI_UNSAFE_VERB_DATA ("Manual", on_gnocam_manual_activate, "index.html"),
 		BONOBO_UI_UNSAFE_VERB ("SavePreviews", on_save_previews_activate),
 		BONOBO_UI_UNSAFE_VERB ("SavePreviewsAs", on_save_previews_as_activate),
 		BONOBO_UI_UNSAFE_VERB ("SaveFiles", on_save_files_activate),

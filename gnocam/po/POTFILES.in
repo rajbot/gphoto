@@ -4,10 +4,8 @@ src/frontend.c
 src/gnocam.c
 src/gnocam.glade
 src/gphoto-extensions.c
-src/notification.c
 src/preferences.c
 src/preview.c
-src/properties.c
 src/utils.c
 src/ui/gnocam-main.xml
 src/ui/gnocam-preview.xml

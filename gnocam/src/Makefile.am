@@ -2,11 +2,13 @@
 SUBDIRS = ui
 
 gladedir = $(datadir)/$(PACKAGE)/
+helpdir = $(datadir)/gnome/help/$(PACKAGE)/C
 
 INCLUDES = \
  -DGNOME_LOCALEDIR=\""$(datadir)/locale"\"\
  -DLOCALEDIR=\"$(datadir)/locale\"\
  -DGNOCAM_GLADEDIR=\""$(gladedir)"\"\
+ -DGNOCAM_HELPDIR=\""$(helpdir)"\"\
  $(GNOME_INCLUDEDIR)\
  -I$(top_srcdir)/src\
  -I$(includedir)/src

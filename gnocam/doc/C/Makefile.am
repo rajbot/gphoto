@@ -1,4 +1,4 @@
-gnocam_helpdir = $(datadir)/gnome/help/gnocam/C
+gnocam_helpdir = $(datadir)/gnome/help/$(PACKAGE)/C
 
 EXTRA_DIST = \
 	gnocam-manual.sgml

@@ -194,7 +194,7 @@ preview_new (Camera* camera)
 		BONOBO_UI_UNSAFE_VERB ("Close", on_preview_close_activate),
 		BONOBO_UI_UNSAFE_VERB ("Exit", gtk_main_quit),
 		BONOBO_UI_UNSAFE_VERB ("Preferences", preferences),
-		BONOBO_UI_UNSAFE_VERB ("Manual", on_gnocam_manual_activate),
+		BONOBO_UI_UNSAFE_VERB_DATA ("Manual", on_gnocam_manual_activate, "index.html"),
 		BONOBO_UI_UNSAFE_VERB ("About", on_about_activate),
 		BONOBO_UI_VERB_END};
 	gchar*			tmp;

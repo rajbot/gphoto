@@ -936,10 +936,10 @@ char *fuji_description() {
 "Fuji DS-7
 Matthew G. Martin
 Based on fujiplay by
-Thierry Bousch <bousch@topo.math.u-psud.fr>
+Thierry Bousch<bousch@topo.math.u-psud.fr>
 
-Known to work with Fuji DS-7 camera, but may
-support other Fuji cameras.");
+Known to work with Fuji DS-7 camera, but 
+may support other Fuji cameras.");
 }
 
 struct _Camera fuji = {fuji_initialize,

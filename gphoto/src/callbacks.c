@@ -471,13 +471,20 @@ void port_dialog() {
 	gtk_entry_set_text(GTK_ENTRY(GTK_COMBO(combo)->entry),
 		camera_model);
 	gtk_entry_set_editable(GTK_ENTRY(GTK_COMBO(combo)->entry),FALSE);
+	
+	label = gtk_label_new(" ");
+	gtk_widget_show(label);
+	gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
 	description = gtk_label_new("");
 	gtk_widget_show(description);
-	gtk_box_pack_start(GTK_BOX(vbox), description, FALSE, FALSE, 0);
+	gtk_label_set_justify(GTK_LABEL(description), GTK_JUSTIFY_LEFT);
+	gtk_box_pack_start(GTK_BOX(vbox), description, FALSE, TRUE, 0);
 	gtk_signal_connect(GTK_OBJECT(GTK_COMBO(combo)->entry),
 		"changed", GTK_SIGNAL_FUNC(port_dialog_update), 
 		(gpointer)description);
+
+	port_dialog_update(GTK_COMBO(combo)->entry, description);
 
 	vseparator = gtk_vseparator_new();
 	gtk_widget_show(vseparator);
@@ -538,12 +545,6 @@ void port_dialog() {
         gtk_box_pack_start(GTK_BOX(vbox), port3, FALSE, FALSE, 0);
         gtk_box_pack_start(GTK_BOX(vbox), other, FALSE, FALSE, 0);
         gtk_box_pack_start(GTK_BOX(vbox), ent_other, FALSE, FALSE, 0);
-
-	toggle = gtk_toggle_button_new();
-	gtk_widget_show(toggle);
-	gtk_widget_hide(toggle);
-	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
-                           toggle, FALSE, FALSE, 0);
 
         button = gtk_button_new_with_label("Save");
         gtk_widget_show(button);

@@ -556,7 +556,9 @@ char *kodak_dc210_summary()
 char *kodak_dc210_description() 
 {
 
-  return("Kodak DC210 support by Brian Hirt <bhirt@berkhirt.com>.");
+  return(
+"Kodak DC210 support
+by Brian Hirt <bhirt@berkhirt.com>.");
 }
 
 

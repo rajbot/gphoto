@@ -598,10 +598,7 @@ char *oly_description() {
 Scott Fritzinger <scottf@unr.edu>
 using the photoPC library by
 Eugene Crosser <crosser@average.org>
-http://www.average.org/digicam
-
-All gPhoto functions work properly with
-this library.");
+http://www.average.org/digicam");
 }
 
 /* Declare the camera function pointers */

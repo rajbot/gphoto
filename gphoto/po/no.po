@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gphoto 0.4.3\n"
-"POT-Creation-Date: 2000-04-10 23:53+0200\n"
+"POT-Creation-Date: 2000-04-29 08:03+0200\n"
 "PO-Revision-Date: 2000-04-11 10:12+02:00\n"
 "Last-Translator: Kjartan Maraas <kmaraas@online.no>\n"
 "Language-Team: Norwegian <no@li.org>\n"
@@ -126,7 +126,9 @@ msgstr "Kamera modell:"
 msgid ""
 "\n"
 "gPhoto user(s) that reported this model:\n"
-msgstr "\ngPhoto bruker(e) som har rapportert denne modellen:\n"
+msgstr ""
+"\n"
+"gPhoto bruker(e) som har rapportert denne modellen:\n"
 
 #: src/callbacks.c:613
 msgid "Port:"
@@ -175,7 +177,10 @@ msgid ""
 "Version Information-------------------Current Version: %sNew features all "
 "over the place. Please seethe ChangeLog for more information.As always, "
 "report bugs gphoto-devel@gphoto.orgThanx much."
-msgstr "Versjonsinformasjon-------------------Denne versjon: %sNye funksjoner over det hele. Vennligst se ChangeLog for mer informasjon. Som alltid, rapporter feil til gphoto-devel@gphoto.org. Takk så mye."
+msgstr ""
+"Versjonsinformasjon-------------------Denne versjon: %sNye funksjoner over "
+"det hele. Vennligst se ChangeLog for mer informasjon. Som alltid, rapporter "
+"feil til gphoto-devel@gphoto.org. Takk så mye."
 
 #: src/callbacks.c:818
 msgid "User's Manual"
@@ -207,6 +212,16 @@ msgid ""
 "SoftwareFoundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.See "
 "http://www.gnu.org for more details on the GNU project."
 msgstr ""
+"This program is free software; you can redistribute it and/or modifyit under "
+"the terms of the GNU General Public License as published bythe Free Software "
+"Foundation; either version 2 of the License, or(at your option) any later "
+"version.This program is distributed in the hope that it will be useful,but "
+"WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or "
+"FITNESS FOR A PARTICULAR PURPOSE.  See theGNU General Public License for "
+"more details.You should have received a copy of the GNU General Public "
+"Licensealong with this program; if not, write to the Free "
+"SoftwareFoundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.See "
+"http://www.gnu.org for more details on the GNU project."
 
 #: src/callbacks.c:895
 #, c-format
@@ -426,7 +441,9 @@ msgstr "gPhoto %s (%s) - GNU applikasjon for digitale kamera\n"
 msgid ""
 "Copyright (C) 1998-2000 Scott Fritzinger <scottf@unr.edu>\n"
 "\n"
-msgstr "Copyright (C) 1998-2000 Scott Fritzinger <scottf@unr.edu>\n\n"
+msgstr ""
+"Copyright (C) 1998-2000 Scott Fritzinger <scottf@unr.edu>\n"
+"\n"
 
 #: src/commandline.c:28 src/main.c:134
 msgid "Usage: gphoto [-h] [-c] [-n] [-s # filename] [-t # filename]\n"
@@ -438,167 +455,175 @@ msgstr "                 [-d #] [-p filnavn] [-l filnavn]\n"
 
 #: src/commandline.c:30
 msgid "\t-h                    display this help screen\n"
-msgstr "-h                      vis denne hjelpteksten\n"
+msgstr "\t-h                    vis denne hjelpteksten\n"
 
 #: src/commandline.c:31
 msgid "\t-c                    display camera summary\n"
-msgstr ""
+msgstr "\t-c                    vis kamerasammendrag\n"
 
 #: src/commandline.c:32
 msgid "\t-n                    display the # of pictures\n"
-msgstr ""
+msgstr "\t-n                    vis antall bilder\n"
 
 #: src/commandline.c:33
 msgid "\t-s # filename         save image # as filename\n"
-msgstr ""
+msgstr "\t-s # filnavn          lagre bilde # som filnavn\n"
 
 #: src/commandline.c:35
 msgid "\t-t # filename         save thumbnail # as filename\n"
-msgstr ""
+msgstr "\t-t # filnavn          lagre miniatyr # som filnavn\n"
 
 #: src/commandline.c:37
 msgid "\t-d #                  delete image # from camera\n"
-msgstr ""
+msgstr "\t-d #                  slett bilde # fra kamera\n"
 
 #: src/commandline.c:39
 msgid "\t-p filename           take picture and save as filename\n"
-msgstr ""
+msgstr "\t-p filnavn            ta bilde og lagre det som filnavn\n"
 
 #: src/commandline.c:41
 msgid ""
 "\t-l filename           save live preview as filename\n"
 "\n"
 msgstr ""
+"\t-l filnavn             lagre sanntidsforhåndsvisning som filnavn\n"
+"\n"
 
 #: src/commandline.c:43
 msgid "gPhoto is free GNU software; you can redistribute it and/or\n"
-msgstr ""
+msgstr "gPhoto er fri GNU programvare; du kan redistribuere den og/eller\n"
 
 #: src/commandline.c:45
 msgid "modify it under the terms of the GNU General Public License \n"
-msgstr ""
+msgstr "endre den under betingelsene gitt i GNU General Public License \n"
 
 #: src/commandline.c:47
 msgid "as published by the Free Software Foundation; either version \n"
-msgstr ""
+msgstr "som publisert av Free Software Foundation; enten versjon \n"
 
 #: src/commandline.c:49
 msgid "2 of the License, or any later version.  Visit gphoto/COPYING\n"
-msgstr ""
+msgstr "2 av lisensen, eller enhver senere versjon. Les gphoto/COPYING\n"
 
 #: src/commandline.c:51
 msgid ""
 "in the source distribution to read the GNU GPL license terms.\n"
 "\n"
 msgstr ""
+"i kildekoden for å lese betingelsene i GNU GPL lisensen.\n"
+"\n"
 
 #: src/commandline.c:53
 msgid "Report bugs and camera success to gphoto-devel@gphoto.org.\n"
-msgstr ""
+msgstr "Rapportér feil ok kamerasuksess til gphoto-devel@gphoto.org.\n"
 
 #: src/commandline.c:55
 msgid "See http://www.gphoto.org for the latest news and updates.\n"
-msgstr ""
+msgstr "Se på http://www.gphoto.org for de siste nyhetene og oppdateringene.\n"
 
 #: src/commandline.c:73
 #, c-format
 msgid "%i\n"
-msgstr ""
+msgstr "%i\n"
 
 #: src/commandline.c:78 src/commandline.c:103 src/commandline.c:132
 msgid "ERROR: could not get image.\n"
-msgstr ""
+msgstr "FEIL: kunne ikke hente bilde.\n"
 
 #: src/commandline.c:85 src/commandline.c:110 src/commandline.c:139
 #: src/commandline.c:195
 msgid "ERROR: could not save image.\n"
-msgstr ""
+msgstr "FEIL: kunne ikke lagre bilde.\n"
 
 #: src/commandline.c:87
 msgid "ERROR: 'filename' not specified.\n"
-msgstr ""
+msgstr "FEIL: 'filnavn' er ikke spesifisert.\n"
 
 #: src/commandline.c:115 src/commandline.c:144
 msgid "ERROR: '#' and 'filename' not specified.\n"
-msgstr ""
+msgstr "FEIL: '#' og 'filnavn' er ikke spesifisert.\n"
 
 #: src/commandline.c:154
 msgid "ERROR: Could not delete image.\n"
-msgstr ""
+msgstr "FEIL: Kunne ikke slette bilde.\n"
 
 #: src/commandline.c:162
 msgid "ERROR: '#' not specified.\n"
-msgstr ""
+msgstr "FEIL: '#' er ikke spesifisert.\n"
 
 #: src/commandline.c:169
 msgid "ERROR: filename not specified.\n"
-msgstr ""
+msgstr "FEIL: filnavn er ikke spesifisert.\n"
 
 #: src/commandline.c:172
 msgid "Taking picture...\n"
-msgstr ""
+msgstr "Tar bilde...\n"
 
 #: src/commandline.c:178
 msgid "ERROR: could not take the picture.\n"
-msgstr ""
+msgstr "FEIL: kunne ikke ta bildet.\n"
 
 #: src/commandline.c:182
 #, c-format
 msgid "Saving the new image (# %i) as %s: "
-msgstr ""
+msgstr "Lagrer det nye bildet (# %i) som %s: "
 
 #: src/commandline.c:187
 msgid ""
 "\n"
 "ERROR: could not get image.\n"
 msgstr ""
+"\n"
+"FEIL: kunne ikke hente bilde.\n"
 
 #: src/developer_dialog.c:136
 #, c-format
 msgid "gPhoto release %s was brought to you by"
-msgstr ""
+msgstr "gPhoto versjon %s er sluppet av"
 
 #: src/developer_dialog.c:199
 msgid "Web Page"
-msgstr ""
+msgstr "Webside"
 
 #: src/developer_dialog.c:206
 msgid "Previous"
-msgstr ""
+msgstr "Forrige"
 
 #: src/developer_dialog.c:214
 msgid "Next"
-msgstr ""
+msgstr "Neste"
 
 #: src/developer_dialog.c:222 src/img_edit.c:1436 src/live.c:100
 msgid "Close"
-msgstr ""
+msgstr "Lukk"
 
 #: src/developer_dialog.c:291
 msgid ""
 "The gPhoto AUTHORS file appears to be missing!\n"
 "\t      There should be a file called "
 msgstr ""
+"gPhoto's AUTHORS fil ser ut til å mangle!\n"
+"\t      Det skal være en fil kalt "
 
 #: src/gallery.c:212
 msgid "Select an Output Directory..."
-msgstr ""
+msgstr "Velg en katalog for ut-data..."
 
 #: src/gallery.c:310
 msgid "Gallery Name:"
-msgstr ""
+msgstr "Gallerinavn:"
 
 #: src/gallery.c:323
 msgid "Theme:"
-msgstr ""
+msgstr "Tema:"
 
 #: src/gallery.c:382
 msgid "Output Directory:"
-msgstr ""
+msgstr "Ut-data katalog:"
 
 #: src/gallery.c:393
 msgid "Change..."
-msgstr ""
+msgstr "Endre..."
 
 #. i made this
 #. * it should make extra buttons for shtml, table borders, and
@@ -606,230 +631,232 @@ msgstr ""
 #.
 #: src/gallery.c:403
 msgid "Export file as *.shtml?"
-msgstr ""
+msgstr "Eksportér fil som *.shtml?"
 
 #: src/gallery.c:407
 msgid "Set table border width to zero for thumbnails?"
-msgstr ""
+msgstr "Sett tabellkantens bredde til null for miniatyrer?"
 
 #: src/gallery.c:411
 msgid "Set image border width to zero? (so you don't see the link colors...)"
-msgstr ""
+msgstr "Sett bildekantens bredde til null? (slik at du ikke ser fargen på lenkene...)"
 
 #: src/gallery.c:421
 msgid "Create"
-msgstr ""
+msgstr "Opprett"
 
 #: src/gallery.c:444
 msgid "You must select a theme!"
-msgstr ""
+msgstr "Du må velge et tema!"
 
 #. Get the current thumbnail
 #: src/gallery.c:532
 #, c-format
 msgid "Getting Thumbnail #%i..."
-msgstr ""
+msgstr "Henter miniatyr #%i..."
 
 #: src/gallery.c:538 src/gallery.c:568
 msgid "Not Available"
-msgstr ""
+msgstr "Ikke tilgjengelig"
 
 #: src/gallery.c:541
 #, c-format
 msgid "<a href=\"picture-%03i.html\">Click Me<\\/a>"
-msgstr ""
+msgstr "<a href=\"bilde-%03i.html\">Klikk meg<\\/a>"
 
 #: src/gallery.c:548
 #, c-format
 msgid "thumbnail-%03i.%s"
-msgstr ""
+msgstr "miniatyr-%03i.%s"
 
 #. Get the current image
 #: src/gallery.c:562
 #, c-format
 msgid "Getting Image #%i..."
-msgstr ""
+msgstr "Henter bilde #%i..."
 
 #: src/gallery.c:572
 #, c-format
 msgid "<img alt=\"%03i\" src=\"picture-%03i.%s\">"
-msgstr ""
+msgstr "<img alt=\"%03i\" src=\"bilde-%03i.%s\">"
 
 #: src/gallery.c:574
 #, c-format
 msgid "picture-%03i.%s"
-msgstr ""
+msgstr "bilde-%03i.%s"
 
 #: src/gallery.c:590 src/gallery.c:595
 #, c-format
 msgid "picture-%03i.html"
-msgstr ""
+msgstr "bilde-%03i.html"
 
 #: src/gallery.c:607
 #, c-format
 msgid "%spicture-%03i.html"
-msgstr ""
+msgstr "%sbilde-%03i.html"
 
 #: src/gallery.c:630
 #, c-format
 msgid "Loaded file:%s%s in %s"
-msgstr ""
+msgstr "Lastet fil:%s%s i %s"
 
 #: src/gallery.c:633
 #, c-format
 msgid "Gallery saved in: %s"
-msgstr ""
+msgstr "Galleri lagret i: %s"
 
 #: src/img_edit.c:1125
 msgid "Color Adjustment"
-msgstr ""
+msgstr "Fargejustering"
 
 #: src/img_edit.c:1126
 msgid "gPhoto - Color Adjustment"
-msgstr ""
+msgstr "gPhoto - Fargejustering"
 
 #: src/img_edit.c:1141
 msgid "Colour Settings"
-msgstr ""
+msgstr "Fargeinnstillinger"
 
 #: src/img_edit.c:1247
 msgid "Gray Controls"
-msgstr ""
+msgstr "Grå-kontroller"
 
 #: src/img_edit.c:1287
 msgid "Red Controls"
-msgstr ""
+msgstr "Rød-kontroller"
 
 #: src/img_edit.c:1327
 msgid "Green Controls"
-msgstr ""
+msgstr "Grønn-kontroller"
 
 #: src/img_edit.c:1367
 msgid "Blue Controls"
-msgstr ""
+msgstr "Blå-kontroller"
 
 #: src/img_edit.c:1408
 msgid "Colour Modifications:"
-msgstr ""
+msgstr "Fargeendringer:"
 
 #: src/img_edit.c:1415
 msgid "Apply"
-msgstr ""
+msgstr "Bruk"
 
 #: src/img_edit.c:1419
 msgid "Keep"
-msgstr ""
+msgstr "Behold"
 
 #: src/img_edit.c:1423
 msgid "Reset"
-msgstr ""
+msgstr "Nullstill"
 
 #: src/img_edit.c:1424 src/img_edit.c:1425
 msgid "Reset all the color changes to normal values"
-msgstr ""
+msgstr "Nullstill alle fargeendringer til normale verdier"
 
 #: src/img_edit.c:1427
 msgid "Always Apply"
-msgstr ""
+msgstr "Bruk alltid"
 
 #: src/live.c:28 src/live.c:68
 msgid "Getting live image..."
-msgstr ""
+msgstr "Henter sanntidsbilde..."
 
 #: src/live.c:30 src/live.c:109
 msgid "Could not get preview"
-msgstr ""
+msgstr "Kunne ikke hente forhåndsvisning"
 
 #: src/live.c:70
 msgid "Live Camera!"
-msgstr ""
+msgstr "Kamera i sanntid!"
 
 #: src/live.c:77
 msgid "Update Picture"
-msgstr ""
+msgstr "Oppdatér bilde"
 
 #: src/live.c:84
 msgid "Take Picture"
-msgstr ""
+msgstr "Ta bilde"
 
 #: src/main.c:62
 msgid ""
 "\n"
 "Launching Gnome Bugbuddy...\n"
 msgstr ""
+"\n"
+"Starter GNOME Bug-buddy...\n"
 
 #: src/main.c:152
 #, c-format
 msgid "gPhoto %s - the GNU digital camera application"
-msgstr ""
+msgstr "gPhoto %s - GNU applikasjon for digitale kamera"
 
 #: src/main.c:190
 msgid "Image Index"
-msgstr ""
+msgstr "Bildeindeks"
 
 #: src/toolbar.c:90
 msgid "Open Image"
-msgstr ""
+msgstr "Åpne bilde"
 
 #: src/toolbar.c:92
 msgid "Save Opened Image(s)"
-msgstr ""
+msgstr "Lagre åpnede bilde(r)"
 
 #: src/toolbar.c:94
 msgid "Print Image"
-msgstr ""
+msgstr "Skriv ut bilde"
 
 #: src/toolbar.c:96
 msgid "Close Image"
-msgstr ""
+msgstr "Lukk bilde"
 
 #: src/toolbar.c:99
 msgid "Previous page"
-msgstr ""
+msgstr "Forrige side"
 
 #: src/toolbar.c:101
 msgid "Next page"
-msgstr ""
+msgstr "Neste side"
 
 #: src/toolbar.c:104
 msgid "Download Thumbnail Index"
-msgstr ""
+msgstr "Last ned miniatyrindeks"
 
 #: src/toolbar.c:106
 msgid "Download Empty Index"
-msgstr ""
+msgstr "Last ned tom indeks"
 
 #: src/toolbar.c:108
 msgid "Download Selected Images"
-msgstr ""
+msgstr "Last ned valgte bilder"
 
 #: src/toolbar.c:110
 msgid "Delete Selected Images"
-msgstr ""
+msgstr "Slett valgte bilder"
 
 #: src/toolbar.c:113
 msgid "Halt Download"
-msgstr ""
+msgstr "Stopp nedlasting"
 
 #: src/toolbar.c:117
 msgid "Rotate Clockwise"
-msgstr ""
+msgstr "Rotér med klokken"
 
 #: src/toolbar.c:119
 msgid "Rotate Counter-Clockwise"
-msgstr ""
+msgstr "Rotér mot klokken"
 
 #: src/toolbar.c:121
 msgid "Flip Horizontal"
-msgstr ""
+msgstr "Vend horisontalt"
 
 #: src/toolbar.c:123
 msgid "Flip Vertical"
-msgstr ""
+msgstr "Vend vertikalt"
 
 #: src/toolbar.c:128 src/toolbar.c:130
 msgid "Colors"
-msgstr ""
+msgstr "Farger"
 
 #.
 #. browse_button = add_to_toolbar(mainWin, N_("HTML Gallery"), web_browse_xpm,
@@ -840,33 +867,33 @@ msgstr ""
 #.
 #: src/toolbar.c:141
 msgid "Camera Configuration"
-msgstr ""
+msgstr "Kamerakonfigurasjon"
 
 #: src/toolbar.c:144
 msgid "Help"
-msgstr ""
+msgstr "Hjelp"
 
 #: src/toolbar.c:146
 msgid "Exit gPhoto"
-msgstr ""
+msgstr "Avslutt gPhoto"
 
 #: src/util.c:56
 msgid "gPhoto Message"
-msgstr ""
+msgstr "gPhoto melding"
 
 #: src/util.c:127
 msgid "Confirm"
-msgstr ""
+msgstr "Bekreft"
 
 #: src/util.c:166
 #, c-format
 msgid "File %s exists. Overwrite?"
-msgstr ""
+msgstr "Filen %s eksisterer. Overskriv?"
 
 #: src/util.c:349
 msgid "load_image_mem: could not load image\n"
-msgstr ""
+msgstr "load_image_mem: kunne ikke laste bilde\n"
 
 #: src/util.c:472
 msgid "Fork failed. Exiting. \n"
-msgstr ""
+msgstr "Fork feilet. Avslutter. \n"

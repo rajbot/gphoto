@@ -1,0 +1,42 @@
+Driver for Mustek MDC 800 cameras by Pedro Caria <pmiguel@maquina.com>.
+
+Status of 27.09.1999:
+
+ Well the thing works, some minor timming problems wich no longer
+influence the workings, have a configuration interface with the following
+options:
+      Image Quality
+      Flash Mode (sorry still no red-eye, i'm loking for the proper
+                   widget)
+      Exposure settings
+      Light Source
+      Exposure Mode
+      Auto-Off
+      Menu Display (useless, I think)
+      Storage-Source
+      LCD ON/OFF
+
+mustek_mdc800_initialize
+ Implemented, opens the port locks the controls on the camera (is there a
+way to unlock them before exiting ?)
+mustek_mdc800_get_picture
+ Been there done that.
+mustek_mdc800_get_preview
+ return(0); /* sorry */
+mustek_mdc800_delete_image
+ Done, probably still some bugs lurking.
+mustek_mdc800_take_picture
+ Done.              
+mustek_mdc800_number_of_pictures
+ Yep
+mustek_mdc800_configure
+ Yes
+mustek_mdc800_summary
+ Not Yet what is this thing for ?
+mustek_mdc800_description
+ Yes
+
+Base code was done in a few hours and gphoto integration was done in
+2 days, very simple coding for gphoto and you get to see the results 
+right away.
+

@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(src/gallery.c)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(gphoto, 0.3.6-pre)
+AM_INIT_AUTOMAKE(gphoto, 0.3.7)
 AM_MAINTAINER_MODE
 
 dnl Checks for programs.
@@ -71,7 +71,7 @@ AC_SUBST(gallerydir)
 
 AC_OUTPUT(canon/Makefile casio/Makefile fuji/Makefile kodak/Makefile \
 	konica/Makefile philips/Makefile photopc/Makefile ricoh/Makefile \
-	nikon/Makefile kodak_generic/Makefile sony/Makefile directory/Makefile \
-	src/Makefile src/icons/Makefile gallery/Makefile minolta/Makefile \
-	gallery/Default/Makefile gallery/RedNGray/Makefile \
+	mustek/Makefile nikon/Makefile kodak_generic/Makefile sony/Makefile \
+	directory/Makefile src/Makefile src/icons/Makefile gallery/Makefile \
+	gallery/Default/Makefile gallery/RedNGray/Makefile minolta/Makefile \
 	gallery/CSStheme/Makefile man/Makefile Makefile gphoto.spec)

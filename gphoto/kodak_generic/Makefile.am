@@ -1,6 +1,6 @@
 drivers_LTLIBRARIES = libgphoto_kodak_generic.la
 
-CFLAGS = -Wall @GTK_CFLAGS@
+CFLAGS = -Wall @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@ 
 
 libgphoto_kodak_generic_la_SOURCES = \
    state_machine.c state_machine.h \

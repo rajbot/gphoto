@@ -1,6 +1,6 @@
 drivers_LTLIBRARIES = libgphoto_sony_dscf1.la
 
-CFLAGS = @GTK_CFLAGS@
+CFLAGS = @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@ 
 
 libgphoto_sony_dscf1_la_SOURCES = tty.c command.c getuint.c \
 	chotplay.c dsc_f1.c \

@@ -14,9 +14,13 @@
 
 /*
 	$Log$
-	Revision 1.1  1999/05/27 18:32:05  scottf
-	Initial revision
+	Revision 1.2  1999/06/13 23:40:37  scottf
+	added update_progress functionality to the photopc library.
+		(GUI won't freeze now :)
 
+	Revision 1.1.1.1  1999/05/27 18:32:05  scottf
+	gPhoto- digital camera utility
+	
 	Revision 1.2  1999/04/30 07:14:14  scottf
 	minor changes to remove compilation warnings. prepping for release.
 	
@@ -58,6 +62,8 @@
 
 #include "eph_io.h"
 #include "eph_priv.h"
+#include "../src/gphoto.h"
+#include "../src/util.h"
 #include <stdio.h>
 
 #define TMPBUF_SIZE (2048)
@@ -236,6 +242,9 @@ int eph_getvar(eph_iob *iob,int reg,char **buffer,off_t *bufsize) {
 	char *ptr;
 	char *tmpbuf=NULL;
 	size_t tmpbufsize=0;
+	int oldbufsize;
+
+	oldbufsize = (int)*bufsize;
 
 	if ((buffer == NULL) && (iob->storecb == NULL)) {
 		eph_error(iob,ERR_BADARGS,
@@ -261,6 +270,10 @@ writeagain:
 	if ((rc=eph_writecmd(iob,buf,2))) return rc;
 	index=0;
 readagain:
+	if (reg == 0x0e)
+		/* gPhoto Call */
+		update_progress((float)index/(float)oldbufsize);
+
 	if (buffer) { /* read to memory reallocating it */
 		if (((*bufsize) - index) < 2048) {
 			if (iob->debug)
@@ -325,5 +338,7 @@ readagain:
 	if (count >= RETRIES)
 		eph_error(iob,ERR_EXCESSIVE_RETRY,
 				"excessive retries on getvar");
+	if (reg == 0x0e)
+		update_progress(0);
 	return rc;
 }

@@ -19,6 +19,7 @@ extern GtkAccelGroup*  mainag;
 
 
 int	  picCounter;		/* Whenever gPhoto needs a #	*/
+extern int 	  command_line_mode;
 char      *gphotoDir;		/* gPhoto directory		*/
 char	  serial_port[20];	/* Serial port			*/
 char	  camera_model[100];	/* Currently selected cam model */

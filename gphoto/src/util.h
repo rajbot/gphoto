@@ -11,6 +11,8 @@
 extern GtkWidget *status_bar;
 extern GtkWidget *progress;
 
+int command_line_mode;
+
 void update_status(char *newStatus);
         /*
                 displays whatever is in string "newStatus" in the

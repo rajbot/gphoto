@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+extern int command_line_mode;
+
 /* Read in gdk_imlib_load_image_mem for note
 struct decom_JPEG_error_mgr {
 	struct jpeg_error_mgr pub;
@@ -47,6 +49,9 @@ void update_progress(float percentage) {
                 of the main window
         */
 
+	if (command_line_mode)
+		return;
+	
         gtk_progress_bar_update(GTK_PROGRESS_BAR(progress), percentage);
         while (gtk_events_pending())
                 gtk_main_iteration();

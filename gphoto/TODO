@@ -1,171 +1,70 @@
-<!-- run ./autogen.sh first to view this file in plain text -->
 
-<h3>
 The gPhoto roadmap
-</h3>
 
-<p>
 Odd number version are development versions only. They are not 
 stable releases. All stable release will use even number versions.
-</p>
 
-<p>
-<b>
 gPhoto 0.4
-</b>
-<ul>
-<li>
-   - Camera support for:
-   <ul>
-     <li>
+   - Camera support for: 				(DONE)
      Agfa ePhoto (370, 780, 1280, 1680)
-     </li>
-     <li>
      Casio QV (10, 11, 100, 200)
-     </li>
-     <li>
      Epson PhotoPC (500, 600, 700)
-     </li>
-     <li>
      Fuji (DS-7, DX-5)
-     </li>
-     <li>
      Hewlett Packard (C20, C30)
-     </li>
-     <li>
      Kodak Digital Science (20, 25)
-     </li>
-     <li>
      Kodak Digital Science (240)
-     </li>
-     <li>
      Konica (Q-M100, Q-M100V)
-     </li>
-     <li>
      Nikon CoolPix (900, 900S, 950)
-     </li>
-     <li>
      Olympus Camedia (D-220L, D-320L, D-340L, C-400, C-410, D-500L,
      D-600L, C-820L, C-830L, C-840L, C-900 Zoom, C-1000L, C-1400L)
-     </li>
-     <li>
      Philips ESP, ESP2 (2, 50, 60, 70, 80)
-     </li>
-     <li>
      Polaroid PDC (640)
-     </li>
-     <li>
      Ricoh RDC (4300)
-     </li>
-     <li>
      Ricoh RDC (300Z)
-     </li>
-     <li>
      Sanyo VPC (G210, G250)
-     </li>
-     <li>
      Sony DSC (F1Hi)
-     </li>
-   </ul>
-</li><li>
-   - Ability to save unaltered image from camera.
-</li><li>
+   - Ability to save unaltered image from camera. 	(DONE)
    - Summary function in all camera libraries
-</li><li>
    - Description function in all camera libraries
-</li><li>
-   - Autoconf/configure 
-</li><li>
-   - Camera libraries built as shared libraries
-</li><li>
-   - GTK 1.2 
-</li><li>
-   - Toolbar icons
-</li><li>
-   - HTML gallery updates/changes
-</li><li>
-   - Empty thumbnails
-</li><li>
-   - Batch saves
-</li><li>
-   - RPM spec files
-</li><li>
-   - Updated Manual
-</li><li>
-   - Better error checking
-</li></ul>
+   - Autoconf/configure 				(DONE)
+   - Camera libraries built as shared libraries 	(DONE)
+   - GTK 1.2 						(DONE)
+   - Toolbar icons 					(DONE)
+   - HTML gallery updates/changes 			(75%)
+   - Empty thumbnails 					(DONE)
+   - Batch saves 					(DONE)
+   - RPM spec files 					(DONE)
+   - Updated Manual					(75%)
+   - Better error checking 				(50%)
 
-<p><b>
 gPhoto 0.6
-</b>
-<ul>
-<li>
    - Camera support for:
-        <camera list here>
-</li><li>
    - Asynchronous I/O
-</li><li>
    - Common serial I/O library
-</li><li>
    - Progress Bar / status display
-</li><li>
-   - Image post processing
-</li><li>
+   - Image post processing				(DONE)
    - Make gdk_imlib_load_image_mem really do in memory conversions
-</li><li>
    - XML gallery
-</li><li>
    - Message handling
-</li><li>
    - Developer's Manual
-</li><li>
    - Updated User's Manual
-</li></ul>
 
-<p>
-<b>
 gPhoto 0.8
-</b>
-<ul>
-<li>
    - Camera support for:
-        <camera list here>
-</li><li>
    - Dynamic loading of libraries
-</li><li>
    - CORBA
-</li><li>
    - Photo Album 
-</li></ul>
 
-<p>
-<b>
 gPhoto 1.0
-</b>
-<ul>
-<li>
    - Camera support for:
-        <camera list here>
-</li><li>
+     75% of the digital cameras out there (BOLD STATEMENT BY SCOTT :)
    - Updated Developer's Manual
-</li><li>
    - Updated User's Manual
-</li></ul>
 
-<p><b>
 Non-version related
-</b>
-<ul>
-<li>
    - Gnome version
-</li><li>
    - Tcl Interpreter
-</li><li>
    - Camera interface specs
-</li><li>
    - Vendor contact / support
-</li></ul>
 
-<p>Please contribute to this list by mailing the <a href=mailto:gphoto-devel@gphoto.org>gphoto-devel@gphoto.org</a> <a
-href=lists.php3>mailinglist</a>.</p>
 

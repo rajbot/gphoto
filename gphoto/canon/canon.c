@@ -13,7 +13,8 @@
  *
  * OWS 990925 Changed canon_get_picture and canon_number_of_pictures to
  *            work with A5. 
- *
+ * 
+ * OWS 991202 Included old 0.3.6pre code so it works for A5.
  *
  ****************************************************************************/
 
@@ -59,6 +60,7 @@ static int cached_dir = 0;
 static struct psa50_dir *cached_tree;
 static int cached_images;
 
+static char **cached_paths; /* only used by A5 */
 
 static void clear_readiness(void)
 {
@@ -111,6 +113,46 @@ static int is_image(const char *name)
     return !strcmp(pos,".JPG");
 }
 
+/* This function is only used by A5 */
+
+static int recurse(const char *name)
+{
+    struct psa50_dir *dir,*walk;
+    char buffer[300]; /* longest path, etc. */
+    int count,curr;
+
+    dir = psa50_list_directory(name);
+    if (!dir) return 1; /* assume it's empty @@@ */
+    count = 0;
+    for (walk = dir; walk->name; walk++)
+	if (walk->size && is_image(walk->name)) count++;
+    cached_paths = realloc(cached_paths,sizeof(char *)*(cached_images+count+1));
+    memset(cached_paths+cached_images+1,0,sizeof(char *)*count);
+    if (!cached_paths) {
+	perror("realloc");
+	return 0;
+    }
+    curr = cached_images;
+    cached_images += count;
+    for (walk = dir; walk->name; walk++) {
+	sprintf(buffer,"%s\\%s",name,walk->name);
+	if (!walk->size) {
+	    if (!recurse(buffer)) return 0;
+	}
+	else {
+	    if (!is_image(walk->name)) continue;
+	    curr++;
+	    cached_paths[curr] = strdup(buffer);
+	    if (!cached_paths[curr]) {
+		perror("strdup");
+		return 0;
+	    }
+	}
+    }
+    free(dir);
+    return 1;
+}
+
 
 static int comp_dir(const void *a,const void *b)
 {
@@ -118,6 +160,8 @@ static int comp_dir(const void *a,const void *b)
       ((const struct psa50_dir *) b)->name);
 }
 
+
+/* This function is only used by A50 */
 
 static struct psa50_dir *dir_tree(const char *path)
 {
@@ -152,10 +196,20 @@ static int update_dir_cache(void)
     if (!update_disk_cache()) return 0;
     if (!check_readiness()) return 0;
     cached_images = 0;
-    cached_tree = dir_tree(cached_drive);
-    if (!cached_tree) return 0;
-    cached_dir = 1;
-    return 1;
+    if (A5) {
+      if (recurse(cached_drive)) {
+	cached_dir = 1;
+	return 1;
+      }
+      clear_dir_cache();
+      return 0;
+    }
+    else { /* A50 camera */
+      cached_tree = dir_tree(cached_drive);
+      if (!cached_tree) return 0;
+      cached_dir = 1;
+      return 1;
+    }
 }
 
 
@@ -361,6 +415,30 @@ static struct Image *canon_get_picture(int picture_number, int thumbnail)
       if (thumbnail) picture_number+=1;
       D(printf("Picture number %d\n",picture_number));
 
+      clear_readiness();
+      image = malloc(sizeof(*image));
+      if (!image) {
+	perror("malloc");
+	return NULL;
+      }
+      memset(image,0,sizeof(*image));
+      strcpy(image->image_type,"jpg");
+      if (!picture_number || picture_number > cached_images) {
+	update_status("Invalid index");
+	free(image);
+	return NULL;
+      }
+      update_status(cached_paths[picture_number]);
+      if (!check_readiness()) {
+	free(image);
+	return NULL;
+      }
+      image->image = psa50_get_file(cached_paths[picture_number],
+				    &image->image_size);
+      if (image->image) return image;
+      free(image);
+      return NULL;
+      
     } else /* For A50 or others */
       if (thumbnail) return NULL;
 

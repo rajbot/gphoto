@@ -12,13 +12,13 @@ INCLUDES = \
  -I$(includedir)/src
 
 CFLAGS = @CFLAGS@\
- `gnome-config --cflags libglade gdk_pixbuf gnomeui vfs xml gtkhtml bonobox`\
+ `gnome-config --cflags libglade gdk_pixbuf gnomeui vfs xml bonobox`\
  `gconf-config --cflags gconf gconf-gtk`\
  `gphoto2-config --cflags`\
  `gpio-config --cflags` 
 
 LDFLAGS = @LDFLAGS@\
- `gnome-config --libs libglade gdk_pixbuf gnomeui vfs xml gtkhtml bonobox`\
+ `gnome-config --libs libglade gdk_pixbuf gnomeui vfs xml bonobox`\
  `gconf-config --libs gconf gconf-gtk`
 
 bin_PROGRAMS = gnocam
@@ -48,12 +48,4 @@ gnocam_LDADD =\
  $(INTLLIBS)
 
 EXTRA_DIST = $(glade_DATA)
-
-BUILT_SOURCES =\
- libglade-i18n.c
-
-libglade-i18n.c: gnocam.glade
-	libglade-xgettext -c -o libglade-i18n.c gnocam.glade
-
-CLEANFILES += libglade-i18n.c
 

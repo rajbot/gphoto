@@ -5,5 +5,5 @@ Makefile
 *.gmo
 GnoCam.pot
 cat-id-tbl.c
-
+tmp
 

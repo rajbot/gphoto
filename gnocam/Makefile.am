@@ -18,12 +18,11 @@ EXTRA_DIST =\
  README\
  THANKS\
  TODO\
- gnocam.spec.in\
  gnocam.desktop\
  autogen.sh\
- xml-i18n-merge\
- xml-i18n-update\
- xml-i18n-extract
+ xml-i18n-merge.in\
+ xml-i18n-update.in\
+ xml-i18n-extract.in
 
 Graphicsdir = $(datadir)/gnome/apps/Graphics
 Graphics_DATA = gnocam.desktop

@@ -1,5 +1,12 @@
 2001-07-31	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
+	* configure.in:
+	* gnocam/Makefile.am:
+	* capplet/Makefile.am: Fix "make distcheck".
+	* gnocam.spec.in: Removed.
+
+2001-07-31	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
 	* gnocam/gnocam-camera-selector.c: Make UI nicer. Fix error message.
 	* libgnocam/gnocam-capplet-model.c: Don't loop forever if table is
 	changed.

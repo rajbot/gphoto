@@ -1,7 +1,7 @@
-AC_INIT(src/gnocam.c)
+AC_INIT(gnocam/main.c)
 AC_PREREQ(2.12)
 
-AM_INIT_AUTOMAKE(GnoCam, 0.10)
+AM_INIT_AUTOMAKE(GnoCam, 0.11)
 AM_CONFIG_HEADER(config.h)
 
 AM_MAINTAINER_MODE
@@ -28,7 +28,6 @@ GNOME_INIT
 AM_PATH_GTK(1.2.7)
 GNOME_COMPILE_WARNINGS
 GNOME_X_CHECKS
-GNOME_XML_CHECK
 
 dnl Add the languages which your application supports here.
 ALL_LINGUAS=""
@@ -188,7 +187,6 @@ dnl *********
 dnl Makefiles
 dnl *********
 AC_OUTPUT([
-gnocam.spec
 Makefile
 art/Makefile
 intl/Makefile

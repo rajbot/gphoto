@@ -4,7 +4,7 @@ INCLUDES = \
  -DIMAGEDIR=\"$(prefix)/share/pixmaps\"\
  -DGNOME_LOCALEDIR=\""$(datadir)/locale"\"\
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
- -I../libgnocam\
+ -I$(top_srcdir)/libgnocam\
  $(GCONF_CFLAGS)\
  $(CAPPLET_CFLAGS)\
  $(EXTRA_GNOME_CFLAGS)\
@@ -17,7 +17,7 @@ camera_capplet_SOURCES =\
  main.c
 
 camera_capplet_LDADD =\
- ../libgnocam/libgnocam.a\
+ $(top_builddir)/libgnocam/libgnocam.a\
  $(CAPPLET_LIBS)\
  $(GCONF_LIBS)\
  $(EXTRA_GNOME_LIBS)\

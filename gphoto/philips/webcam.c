@@ -62,6 +62,7 @@ char	*argv[];
 
 	char	serial_port[128];
 	char	filename[2048];
+	char	name[20];
 	int		flash = 0;         /* automatic */
 	int		exposure = 0xff;   /* automatic */
 	int		white = 0;         /* automatic */
@@ -144,7 +145,7 @@ char	*argv[];
 	rtn = philips_getpictsize ( picture_number, &size );
 	if ( ! rtn ) {
 		picData = (char *)malloc ( size );
-		rtn = philips_getpict ( picture_number, picData );
+		rtn = philips_getpict ( picture_number, picData, name );
 
 		if ( ! rtn ) {
 			if ( (fp = fopen ( filename, "w" )) != NULL ) {

@@ -104,7 +104,7 @@ int interrupted = 0;
 int pending_input = 0;
 struct pict_info *pinfo = NULL;
 
-#define FUJI_MAXBUF_DEFAULT 8000000
+#define FUJI_MAXBUF_DEFAULT 2000000
 
 unsigned char answer[5000];
 static char *fuji_buffer;

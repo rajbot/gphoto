@@ -66,8 +66,11 @@ int pics_to_file(int tfd, int mask, int low_res, char *base_name, char **list)
 			/*
 			 *	Save COMET (raw) file
 			 */
-	
+#ifndef sun
 			asprintf(&list[i], base_name, i + 1, COMET_EXT);
+#else
+#warning Beware, the kodak library is not fully supported on Solaris
+#endif
 			if (!list[i]) {
 				if (!quiet) {
 					perror("asprintf");

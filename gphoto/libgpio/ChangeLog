@@ -1,0 +1,11 @@
+2000-01-07  Ole Aamot  <oka@ifi.uio.no>
+
+	* Added USB patch from Johannes Erdfelt <jerdfelt@valinux.com> 
+
+1999-12-28  Ole Aamot  <oka@ifi.uio.no>
+
+	* libgpio.spec.in: added
+
+1999-12-27  Ole Aamot  <oka@ifi.uio.no>
+
+	* Added auto* build scripts.

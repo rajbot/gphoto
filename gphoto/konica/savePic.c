@@ -4,17 +4,15 @@
  * savePic - retrieve and save a single image                          *
  *                                                                     *
  *---------------------------------------------------------------------*/
-void qm100_savePic(int serialdev, char *filename, int pic, 
+void qm100_savePic(int serialdev, char *filename, int pic,
                    void (*progress)(void))
 {
   int jpgfile;
   char success=1;
   char cmd[]=QM100_GETPIC;
-  qm100_packet_block packet;  
-
+  qm100_packet_block packet;
   cmd[5] = (pic >> 8) & 0xff;
   cmd[6] = (pic & 0xff);
-
   /*-------------------------------------------------------------------*
    *                                                                   *
    * Send the command, and get the first response packet.              *

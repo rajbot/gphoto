@@ -16,7 +16,7 @@
 
 
 int
-write_file(buf, len, outfp)
+casio_write_file(buf, len, outfp)
      u_char	*buf;
      int	len;
      FILE	*outfp;
@@ -27,7 +27,7 @@ write_file(buf, len, outfp)
   while( len > i) {
     l = ( (len - i) < BUFSIZ) ? (len -i) : BUFSIZ;
     if(fwrite(&buf[i], sizeof(u_char), l, outfp) != l){
-      perror("write_file");
+      perror("casio_write_file");
       return(-1);
     };
     i = i + l;
@@ -37,7 +37,7 @@ write_file(buf, len, outfp)
 
 #ifdef USEWORKFILE
 int
-write_file_file(filename, len, skip, outfp)
+casio_write_file_file(filename, len, skip, outfp)
      char	*filename;
      long	len;
      long	skip;
@@ -62,7 +62,7 @@ write_file_file(filename, len, skip, outfp)
     l = ( (len - i) < BUFSIZ) ? (len -i) : BUFSIZ;
     fread(buf, sizeof(u_char), l, fp);
     if(fwrite(buf, sizeof(u_char), l, outfp) != l){
-      perror("write_file_file");
+      perror("casio_write_file_file");
       fclose(fp);
       return(-1);
     }
@@ -90,32 +90,32 @@ write_jpeg(buf, outfp)
   vsize = get_u_short(buf + 6);
   i = i + 8;
   
-  if(write_file(soi, sizeof(soi), outfp) == -1) return(-1);
-  if(write_file(app0, sizeof(app0), outfp) == -1) return(-1);
-  if(write_file(dqt0, sizeof(dqt0), outfp) == -1) return(-1);
-  if(write_file(&buf[i], 64, outfp) == -1) return(-1);
+  if(casio_write_file(soi, sizeof(soi), outfp) == -1) return(-1);
+  if(casio_write_file(app0, sizeof(app0), outfp) == -1) return(-1);
+  if(casio_write_file(dqt0, sizeof(dqt0), outfp) == -1) return(-1);
+  if(casio_write_file(&buf[i], 64, outfp) == -1) return(-1);
   i = i + 64;
 
-  if(write_file(dqt1, sizeof(dqt1), outfp) == -1) return(-1);
-  if(write_file(&buf[i], 64, outfp) == -1) return(-1);
+  if(casio_write_file(dqt1, sizeof(dqt1), outfp) == -1) return(-1);
+  if(casio_write_file(&buf[i], 64, outfp) == -1) return(-1);
   i = i + 64;
 
-  if(write_file(sof, sizeof(sof), outfp) == -1) return(-1);
-  if(write_file(dht, sizeof(dht), outfp) == -1) return(-1);
+  if(casio_write_file(sof, sizeof(sof), outfp) == -1) return(-1);
+  if(casio_write_file(dht, sizeof(dht), outfp) == -1) return(-1);
 
-  if(write_file(sos_y, sizeof(sos_y), outfp) == -1) return(-1);
-  if(write_file(&buf[i], ysize, outfp) == -1) return(-1);
+  if(casio_write_file(sos_y, sizeof(sos_y), outfp) == -1) return(-1);
+  if(casio_write_file(&buf[i], ysize, outfp) == -1) return(-1);
   i = i + ysize;
   
-  if(write_file(sos_u, sizeof(sos_u), outfp) == -1) return(-1);
-  if(write_file(&buf[i], usize, outfp) == -1) return(-1);
+  if(casio_write_file(sos_u, sizeof(sos_u), outfp) == -1) return(-1);
+  if(casio_write_file(&buf[i], usize, outfp) == -1) return(-1);
   i = i + usize;
 
-  if(write_file(sos_v, sizeof(sos_v), outfp) == -1) return(-1);
-  if(write_file(&buf[i], vsize, outfp) == -1) return(-1);
+  if(casio_write_file(sos_v, sizeof(sos_v), outfp) == -1) return(-1);
+  if(casio_write_file(&buf[i], vsize, outfp) == -1) return(-1);
   i = i + vsize;
 
-  if(write_file(eoi, sizeof(eoi), outfp) == -1) return(-1);
+  if(casio_write_file(eoi, sizeof(eoi), outfp) == -1) return(-1);
 
   return(i);
   
@@ -217,25 +217,25 @@ write_jpeg_fine(filename, outfp)
   size = get_u_int(buf + 4);
 
   i = i + 8;
-  if(write_file(soi, sizeof(soi), outfp) == -1) return(-1);
-  if(write_file(app_f, sizeof(app_f), outfp) == -1) return(-1);
-  if(write_file(dqt_f, sizeof(dqt_f), outfp) == -1) return(-1);
+  if(casio_write_file(soi, sizeof(soi), outfp) == -1) return(-1);
+  if(casio_write_file(app_f, sizeof(app_f), outfp) == -1) return(-1);
+  if(casio_write_file(dqt_f, sizeof(dqt_f), outfp) == -1) return(-1);
 
-  if(write_file(&buf[i], 64, outfp) == -1) return(-1);
+  if(casio_write_file(&buf[i], 64, outfp) == -1) return(-1);
   i = i + 64;
-  if(write_file(&c, 1, outfp) == -1) return(-1);
-  if(write_file(&buf[i], 64, outfp) == -1) return(-1);
+  if(casio_write_file(&c, 1, outfp) == -1) return(-1);
+  if(casio_write_file(&buf[i], 64, outfp) == -1) return(-1);
   i = i + 64;
-  if(write_file(sof_f, sizeof(sof_f), outfp) == -1) return(-1);
+  if(casio_write_file(sof_f, sizeof(sof_f), outfp) == -1) return(-1);
 
-  if(write_file(dht_f, sizeof(dht_f), outfp) == -1) return(-1);
+  if(casio_write_file(dht_f, sizeof(dht_f), outfp) == -1) return(-1);
   
-  if(write_file(sos_f, sizeof(sos_f), outfp) == -1) return(-1);
+  if(casio_write_file(sos_f, sizeof(sos_f), outfp) == -1) return(-1);
 
   /* skip 136 byte */
-  if(write_file_file(filename, size, 136, outfp) == -1) return(-1);
+  if(casio_write_file_file(filename, size, 136, outfp) == -1) return(-1);
 
-  if(write_file(eoi, sizeof(eoi), outfp) == -1) return(-1);
+  if(casio_write_file(eoi, sizeof(eoi), outfp) == -1) return(-1);
 
   return(i);
   
@@ -252,23 +252,23 @@ write_jpeg_fine(buf, outfp)
   
   size = get_u_int(buf + 4);
   i = i + 8;
-  if(write_file(soi, sizeof(soi), outfp) == -1) return(-1);
-  if(write_file(app_f, sizeof(app_f), outfp) == -1) return(-1);
-  if(write_file(dqt_f, sizeof(dqt_f), outfp) == -1) return(-1);
+  if(casio_write_file(soi, sizeof(soi), outfp) == -1) return(-1);
+  if(casio_write_file(app_f, sizeof(app_f), outfp) == -1) return(-1);
+  if(casio_write_file(dqt_f, sizeof(dqt_f), outfp) == -1) return(-1);
 
-  if(write_file(&buf[i], 64, outfp) == -1) return(-1);
+  if(casio_write_file(&buf[i], 64, outfp) == -1) return(-1);
   i = i + 64;
-  if(write_file(&c, 1, outfp) == -1) return(-1);
-  if(write_file(&buf[i], 64, outfp) == -1) return(-1);
+  if(casio_write_file(&c, 1, outfp) == -1) return(-1);
+  if(casio_write_file(&buf[i], 64, outfp) == -1) return(-1);
   i = i + 64;
-  if(write_file(sof_f, sizeof(sof_f), outfp) == -1) return(-1);
+  if(casio_write_file(sof_f, sizeof(sof_f), outfp) == -1) return(-1);
 
-  if(write_file(dht_f, sizeof(dht_f), outfp) == -1) return(-1);
+  if(casio_write_file(dht_f, sizeof(dht_f), outfp) == -1) return(-1);
   
-  if(write_file(sos_f, sizeof(sos_f), outfp) == -1) return(-1);
-  if(write_file(&buf[i], size, outfp) == -1) return(-1);
+  if(casio_write_file(sos_f, sizeof(sos_f), outfp) == -1) return(-1);
+  if(casio_write_file(&buf[i], size, outfp) == -1) return(-1);
 
-  if(write_file(eoi, sizeof(eoi), outfp) == -1) return(-1);
+  if(casio_write_file(eoi, sizeof(eoi), outfp) == -1) return(-1);
 
   return(i);
   

@@ -6,7 +6,6 @@ NOTE2:	All digits in protocol description are displayed in hexadecimal.
 	(for example, "1B" means escape char, "41" means "A")
 
 Packet construction overview
-============================
 	Packet flow looks like as follows.  Items in [] denotes a packet,
 	i.e. [dat] means data packet.
 
@@ -75,7 +74,6 @@ Negative acknowledge packet
 	10 15
 
 Commands
-========
 	For simplicity, we omit details of crc packets.
 
     31 00 00 00: connect to the camera
@@ -158,5 +156,4 @@ Commands
 		XXX selective retransmission possible???
 
 Retransmission
-==============
 	Unknown.

@@ -28,11 +28,11 @@
 /* Build the Menu --------------------------------------------
    ----------------------------------------------------------- */
 #ifdef  GTK_HAVE_FEATURES_1_1_0
-GtkAccelGroup*  mainag;
+GtkAccelGroup *mainag;
 #endif
 
-void menu_select (gpointer data, guint action, GtkWidget *widget) {
-
+void menu_select(gpointer data, guint action, GtkWidget *widget)
+{
 /* use this until we can adapt the other callbacks to what the item
  * factory expects for arguments.
  * just note this is temporary. :) 
@@ -128,7 +128,6 @@ void menu_select (gpointer data, guint action, GtkWidget *widget) {
 			break;
 		case 32: /* Open Directory */
 			set_camera("Browse Directory");
-			strcpy(camera_model, "Browse Directory");
 			makeindex(1);
 			break;
 		case 33: /* Online News */
@@ -224,26 +223,30 @@ GtkItemFactoryEntry menu_items[] = {
 	{"/Camera/Delete/All Images",			        NULL, menu_select,	47},
 	{"/Camera/_Live Preview!",				NULL, menu_select,	26},
 	{"/Camera/_Take Picture",				NULL, menu_select,	21},
-	{"/_View",						NULL, 0,                0,"<Branch>"},
-	{"/View/_Index page",				  "<alt>i", menu_select,	46},
-	{"/View/_Next page",				  "<alt>n", menu_select,	44},
-	{"/View/_Previous page",	       	          "<alt>p", menu_select,	45},
-	{"/_Image",						NULL, 0,		0, "<Branch>"},
-	{"/Image/_Size",					NULL, 0,		0, "<Branch>"},
-	{"/Image/Size/Scale _Half",				NULL, menu_select,	10},
-	{"/Image/Size/Scale _Double",				NULL, menu_select,	11},
-	{"/Image/Size/_Scale",					NULL, menu_select,	12},
-	{"/_Image/_Orientation",					NULL, 0,		0, "<Branch>"},
-	{"/Image/Orientation/Rotate Clockwise", 			NULL, menu_select,	6},
-	{"/Image/Orientation/Rotate Counter-Clockwise", 		NULL, menu_select,	7},
-	{"/Image/Orientation/sep2",					NULL, 0,		0, "<Separator>"},
-	{"/Image/Orientation/Flip Horizontal", 			NULL, menu_select,	8},
-	{"/Image/Orientation/Flip Vertical", 			        NULL, menu_select,	9},
-	{"/Image/_Color Balance",				NULL, menu_select,	43},
+
+	{"/_Edit",						NULL, 0,		0, "<Branch>"},
+	{"/Edit/_Size",					        NULL, 0,		0, "<Branch>"},
+	{"/Edit/Size/Scale _Half",				NULL, menu_select,	10},
+	{"/Edit/Size/Scale _Double",				NULL, menu_select,	11},
+	{"/Edit/Size/_Scale",					NULL, menu_select,	12},
+	{"/Edit/sep2",						NULL, 0,		0, "<Separator>"},
+	{"/Edit/_Color Balance",				NULL, menu_select,	43},
+
+	{"/_Go",						NULL, 0,                0,"<Branch>"},
+	{"/Go/_Index page",				  "<alt>i", menu_select,	46},
+	{"/Go/_Next page",				  "<alt>n", menu_select,	44},
+	{"/Go/_Previous page",			          "<alt>p", menu_select,	45},
 	{"/_Select",						NULL, 0,                0,"<Branch>"},
        	{"/Select/_All images",				  "<shift>a", menu_select,	13},
 	{"/Select/_Inverse",			          "<shift>i", menu_select,	14},
 	{"/Select/_None",			 	  "<shift>n", menu_select,	15},
+
+	{"/_Orientation",					NULL, 0,		0, "<Branch>"},
+	{"/Orientation/Rotate Clockwise", 			NULL, menu_select,	6},
+	{"/Orientation/Rotate Counter-Clockwise", 		NULL, menu_select,	7},
+	{"/Orientation/sep2",					NULL, 0,		0, "<Separator>"},
+	{"/Orientation/Flip Horizontal", 			NULL, menu_select,	8},
+	{"/Orientation/Flip Vertical", 			        NULL, menu_select,	9},
 	{"/Configu_re",						NULL, 0,		0, "<Branch>"},
 	{"/Configure/_Select Port-Camera Model",		NULL, menu_select,	23},
 	{"/Configure/_Configure Camera...",			NULL, menu_select,	24},
@@ -267,12 +270,12 @@ GtkItemFactoryEntry menu_items[] = {
 	{"/Help/www.gphoto.org/Feed_back",		        NULL, menu_select,	42},
 };
 
-void create_menu (GtkWidget *menu_bar) {
-
+void create_menu(GtkWidget *menu_bar)
+{
 	GtkItemFactory *item_factory;
 	int menu_items_size = sizeof(menu_items) / sizeof (menu_items[0]);
 
-	mainag=gtk_accel_group_new();
+	mainag = gtk_accel_group_new();
 
 	item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<gp>", mainag);
 	gtk_item_factory_create_items(item_factory, menu_items_size, menu_items, NULL);

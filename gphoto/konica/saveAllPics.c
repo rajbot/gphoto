@@ -9,7 +9,6 @@ void qm100_saveAllPics()
 {
   int pic=1, counter=1, total=PICTURE_COUNT, gap=0, ret;
   char filename[64]="test.jpg";
-
   while (counter <= total)
     {
       printf("Saving picture %d of %d to %s\n", counter, total, filename);

@@ -1,0 +1,64 @@
+%define ver      @VERSION@
+%define rel      1
+%define prefix   /usr
+
+Summary: Portable I/O library
+Name: libgpio
+Version: %ver
+Release: %rel
+Copyright: LGPL
+Group: X11/Libraries
+Source: ftp://ftp.gphoto.org/projects/gphoto/pub/tar/libgpio/libgpio-%{ver}.tar.gz
+BuildRoot: /var/tmp/libgpio-%{PACKAGE_VERSION}-root
+URL: http://www.gphoto.org/
+Docdir: %{prefix}/doc
+
+%description
+The benefit to using this library would be that all communications can be
+done quickly and without worry for device specific functions; all devices 
+are abstracted to a point, allowing you to read/write to a device using
+the same interface. For example, you can set all the options on the serial
+port easily, and then read/write to that device. Additionally, you could
+easily switch over to a USB device, and read/write without having to learn
+the USB internals.
+
+%package devel
+Summary: Libraries, includes, etc to develop applications using libgpio
+Group: X11/Libraries
+Requires: libgpio
+
+%description devel
+Libraries, include files, etc you need to develop applications with libgpio.
+
+%prep
+%setup
+
+%build
+CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%prefix
+make
+
+%install
+rm -rf $RPM_BUILD_ROOT
+
+make prefix=$RPM_BUILD_ROOT%{prefix} install
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%post -p /sbin/ldconfig
+
+%postun -p /sbin/ldconfig
+
+%files
+%defattr(-, root, root)
+
+%doc AUTHORS ChangeLog NEWS README COPYING COPYING.LIB TODO
+%{prefix}/lib/lib*.so.*
+%{prefix}/bin/gpio-config
+
+%files devel
+%defattr(-, root, root)
+
+%{prefix}/lib/lib*.so
+%{prefix}/lib/*a
+%{prefix}/include/*

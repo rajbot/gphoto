@@ -7,7 +7,6 @@
 
 
 GENERAL
-=======
 
 This document tries to describe the protocol that is observed in the
 serial communication between the Canon Powershot 350 and A5 (Zoom) cameras
@@ -31,7 +30,6 @@ Please inform me if there are notable differences in the A5 protocol.
 
 
 PACKETS
-=======
 
 After (and also during) initialization, communication between camera and
 computer is organized in 300-byte packets. All packets start with 0xC0 and
@@ -50,7 +48,6 @@ don't know if that specific value is required.
 
 
 COMMUNICATION STRUCTURE
-=======================
 
 The communication is organized as follows:
 
@@ -71,7 +68,6 @@ and 2 of a "ping" command.
 
 
 PACKET STRUCTURES
-=================
 
 In the following, a large number of packets will be described. The 0xC0
 header byte will be omitted. In the diagrams, all numbers are in hex,
@@ -487,7 +483,6 @@ this moment.
 
 
 INITIALIZATION
-==============
 
 Below is the initialization procedure that the M$Win driver uses. Most
 numbers are in hex.
@@ -594,7 +589,6 @@ then 64 and 65 with count=01).
 
 
 MORE COMMUNICATION
-==================
 
 After initialization, the following communication takes place:
 
@@ -653,7 +647,6 @@ When the driver is exitted, a "turn off" command is sent.
 
 
 DIRECTORY ENTRIES
-=================
 
 The directory information (as sent over the serial link) has 21=0x15 bytes
 of information per file. Example entry (numbers in hex):
@@ -683,7 +676,6 @@ kernel modules recognize it as an `ide' card.
 
 
 JPG FILE
-========
 
 The header of all JPG files has some interesting fields. Example:
 
@@ -731,7 +723,6 @@ are three quality modes for the AUT files (recording-time choice), "Fine",
 
 
 CONTACT INFORMATION
-===================
 
 I'm reachable preferably as <costar@panic.et.tudelft.nl>. If that
 shouldn't work, try <J.A.Bezemer@ITS.TUDelft.NL> or else <mcbzmr@dds.nl>. 

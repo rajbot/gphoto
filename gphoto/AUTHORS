@@ -7,6 +7,13 @@ Fujitsu chipset library
 Eugene Crosser <crosser@average.org>
 Fujitsu chipset protocol
 
+Matt Martin <matt.martin@ieee.org>
+Fuji DS-7 library
+Bug fixing and GUI features
+
+Mike Labriola <mdlabriola@mindless.com> 
+Extra HTML gallery export options 
+ 
 Werner Almesberger <almesber@lrc.di.epfl.ch>
 Canon A50 library
 
@@ -75,14 +82,29 @@ FreeBSD 3.2 patches
 Gus Hartmann <hartmann@cs.wisc.edu>
 Minolta Dimage V library
 
+Mark Davies <mdavies@dial.pipex.com>
+Sony DSC-F55E library
+
+Michael McCormack <mccormac@aals27.alcatel.com.au>
+Nikon CoolPix 600 library
+
 Henning Zabel <henning@uni-paderborn.de>
 New Mustek MDC 800 library
 
 Pedro Caria <pmiguel@maquina.com>
 Original Mustek MDC 800 library
 
-Michael McCormack <mccormac@aals27.alcatel.com.au>
-Nikon CoolPix 600 library
+Philippe Marzouk <bullmali@afribone.net.ml>
+Canon thumbnail and deletion support
+
+Edouard Lafargue <lafargue@oslo.geco-prakla.slb.com>
+Canon camera detection, fixes, configuration dialog
+
+Del Simmons <del@gphoto.org>
+Kodak DC20/25 library
+
+TimeCop <timecop@japan.co.jp>
+Enhanced Kodak DC21x support
 
 Bob Paauwe <bpaauwe@bobsplace.com>
 Philips ESP 80 library
@@ -98,8 +120,9 @@ Samsung Digimax 800k library
 M. Adam Kendall <joker@penguinpub.com>
 Sony DSC-F1 library
 
-Mark Davies <mdavies@dial.pipex.com>
-Sony DSC-F55E library
+Rasmus Andersen <rasmus@diku.dk>
+X independent CLI invocation
+Bug fixing
 
 Beat Christen <spiff@longstreet.ch>
 Toshiba PDR M1 library
@@ -122,6 +145,9 @@ Orientation Icons
 Ole Aamot <ole@gnu.org>
 Mailinglists, web, FAQ, bug fixing
 
+Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr>
+Olympus C3030Z USB support
+
 If you feel left out, then please
 add yourself to the file "AUTHORS",
 or mail <gphoto-devel@gphoto.org>!
@@ -137,4 +163,3 @@ place to start in procuring talents.
 Often it takes nothing more than open
 access to the technical details and a
 camera or two for testing/development.
-

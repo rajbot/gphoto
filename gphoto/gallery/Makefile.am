@@ -1,1 +1,2 @@
-SUBDIRS = Default RedNGray CSStheme
+SUBDIRS = Default RedNGray CSStheme CSSjimmac
+

@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <sys/dir.h>
 #include <dirent.h>
 #ifdef __FreeBSD__
 #else
@@ -256,9 +255,16 @@ void save_image (char *filename, struct Image *im) {
 	}
 	else
 	{
+#ifdef sun
 		snprintf(errormsg,1024,
-"The image couldn't be saved to %s because of the following error: \
+"The image couldn't be saved to %s because of the following error:
+ %s",filename,strerror(errno));
+
+#else
+		snprintf(errormsg,1024,
+"The image couldn't be saved to %s because of the following error: 
  %s",filename,sys_errlist[errno]);
+#endif
 		error_dialog(errormsg);
 	}
 }

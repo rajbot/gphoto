@@ -17,12 +17,29 @@
 
 /*
 	$Log$
-	Revision 1.1  1999/05/27 18:32:06  scottf
-	Initial revision
+	Revision 1.2  2000/08/24 05:04:27  scottf
+	adding language support
 
-	Revision 1.1.1.1  1999/01/07 15:04:02  del
-	Imported 0.2 sources
+	Revision 1.1.1.1.2.2  2000/07/09 21:40:14  bellet
+	2000-07-09  Fabrice Bellet  <Fabrice.Bellet@creatis.insa-lyon.fr>
 	
+		* photopc/eph_io.c : Fixed the ugly packet reading procedure
+		previously using a huge buffer in the heap.
+		* src/main.c : gpio_usb_init() is called in gpio_new().
+		* photopc/photopc-usb.c : gpio_usb_find_device() is
+		called after gpio_new().
+	
+	Revision 1.1.1.1.2.1  2000/07/05 11:07:49  ole
+	Preliminary support for the Olympus C3030-Zoom USB by
+	Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr>.
+	(http://lists.styx.net/archives/public/gphoto-devel/2000-July/003858.html)
+	
+	Revision 2.7  1999/01/17 09:50:55  crosser
+	increase WRT*DELAYs
+
+	Revision 2.6  1998/12/06 08:40:34  crosser
+	chnage iniitimeout for Nikon
+
 	Revision 2.5  1998/10/18 13:18:27  crosser
 	Put RCS logs and I.D. into the source
 
@@ -68,7 +85,7 @@
 #define EODTIMEOUT     1100000L
 #define CMDTIMEOUT    15000000L
 #else
-#define INITTIMEOUT    1000000L
+#define INITTIMEOUT    3000000L
 #define DATATIMEOUT     200000L
 #define BIGDATATIMEOUT 1500000L
 #define ACKTIMEOUT      400000L
@@ -77,10 +94,19 @@
 #define CMDTIMEOUT    15000000L
 #endif
 
+/* Bruce and others say that adding 1ms delay before all writes is good.
+   I think that they should rather be fine-tuned. */
+#if 1
+#define WRTPKTDELAY       1250L
+#define WRTCMDDELAY       1250L
+#define WRTPRMDELAY       1500L
+#define WRTDELAY          2000L
+#else
 #define WRTPKTDELAY        250L
 #define WRTCMDDELAY        250L
 #define WRTPRMDELAY        500L
 #define WRTDELAY          1000L
+#endif
 #define SPEEDCHGDELAY   100000L
 
 #define SKIPNULS           200
@@ -123,7 +149,7 @@ int eph_waiteot(eph_iob *iob);
 int eph_writepkt(eph_iob *iob,int typ,int seq,char *data,size_t length);
 int eph_writecmd(eph_iob *iob,char *data,size_t length);
 int eph_writeicmd(eph_iob *iob,char *data,size_t length);
-int eph_readpkt(eph_iob *iob,eph_pkthdr *pkthdr,char *buf,size_t *length,long timeout_usec);
+int eph_readpkt(eph_iob *iob,eph_pkthdr *pkthdr,unsigned char *buf,size_t *length,long timeout_usec);
 
 int eph_setispeed(eph_iob *iob,long val);
 

@@ -4,3 +4,4 @@ Makefile
 *.lo
 .libs
 *.la
+minolta-dump

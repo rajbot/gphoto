@@ -40,20 +40,43 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
- * Revision 1.24  2000/03/24 12:28:28  ole
- * More markups for i18n support.
+ * Revision 1.25  2000/08/24 05:04:28  scottf
+ * adding language support
  *
- * Revision 1.23  2000/03/23 23:18:02  ole
- * Misc. i18n modifications
+ * Revision 1.18.2.7  2000/07/06 18:08:15  bellet
+ * 2000-07-06  Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr>
  *
- * Revision 1.22  2000/03/06 21:23:06  ole
- * Released 0.4.3.
+ * 	* src/callbacks.c: Fixed the problem with notebook page removal.
+ * 	* src/gallery.c: Fixed the crash with HTML gallery export.
+ * 	* src/live.c: Fixed the crash with live preview.
  *
- * Revision 1.21  1999/11/24 11:51:48  ole
- * typo
+ * Note : works when compiling without optimization, because of gpio_usb_init()
+ * without parameter in main().
  *
- * Revision 1.20  1999/11/23 11:17:29  ole
- * Path fix by Jae <jgangemi@ccf.rutgers.edu>
+ * Revision 1.18.2.6  2000/03/10 16:16:10  scottf
+ * applied edourd's solaris patch.
+ *
+ * Revision 1.18.2.5  2000/02/24 19:50:24  scottf
+ * added Johannes'
+ *  and Hubert's patches
+ *
+ * Revision 1.18.2.4  1999/12/04 10:16:00  gdr
+ * Merge of changes to 0.4 version from main branch
+ *
+ * Revision 1.18.2.3  1999/11/21 16:33:39  ole
+ * Fixes from HEAD
+ *
+ * Revision 1.18.2.2  1999/11/04 04:41:58  ole
+ * Changed hard coded path (/usr/local/share/gphoto/gallery) to
+ * Makefile variable (GALLERYDIR).
+ *
+ * Revision 1.18.2.1  1999/10/19 11:05:09  ole
+ * Mike Labriola <mdlabriola@mindless.com> made a couple
+ * changes to the html gallery option
+ *
+ * - added a checkbutton to save as index.shtml for ssi
+ * - added a checkbutton to set table border width to 0
+ * - added a checkbutton to set image border width to 0
  *
  * Revision 1.19  1999/11/20 16:28:43  ole
  * Merged back changes
@@ -178,14 +201,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>  
-#include <sys/dir.h>
+#include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 extern GtkWidget *index_window;
 /* extern GtkWidget *browse_button; */
 
 extern struct ImageMembers Thumbnails;
 extern struct ImageMembers Images;
-extern struct _Camera *Camera;
+extern struct Model *Camera;
 extern char   *filesel_cwd;
 
 /* initialize some tags */
@@ -228,6 +254,68 @@ void gallery_change_dir(GtkWidget *widget, GtkWidget *label) {
 	gtk_widget_destroy(filesel);
 }
 
+
+static char * gallery_escape_sed_param (char * param)
+   /*
+     make an escape param for sed (ie '/' are changed to '\/')
+     returned string is malloc'ed.
+    */
+{
+   char * esc_param;
+   size_t len;
+   int i, c;
+      
+   len = strlen (param);
+   c = 0;
+   for (i = 0; i < len; i++) 
+   {
+      if (param [i] == '/') 
+      {
+         c++;
+      }
+   }
+   esc_param = (char *) malloc (sizeof (char) * (len + c + 1));
+   strcpy (esc_param, param);
+   for (i = 0; i < len + c; i++) 
+   {
+      if (esc_param [i] == '/') 
+      {
+         memmove (esc_param + i + 1, esc_param +  i, len + 1 - i);
+         esc_param [i] = '\\';
+         i ++;
+      }
+   }
+
+   return esc_param;
+}
+
+
+static char * gallery_make_sed_command (char * command, char * param1, char * param2) 
+   /* 
+      make sed command. Handle escape and other things.
+      command is malloc and should be freed after 
+   */
+{
+   
+   char * the_command;
+   char * esc_param1;
+   char * esc_param2;
+   size_t len;
+   
+   esc_param1 = gallery_escape_sed_param (param1);
+   esc_param2 = gallery_escape_sed_param (param2);
+
+   len = strlen (command) + 4 + strlen (esc_param1) + strlen (esc_param2);
+   the_command = (char *) malloc (sizeof (char) * (len + 1));
+   snprintf (the_command, len + 1, "%s/%s/%s/;", command, esc_param1, esc_param2);
+
+   free (esc_param1);
+   free (esc_param2);
+   
+   return the_command;
+}
+
+
 void gallery_parse_tags(char *dest, char *source) {
 
 	/* Returns 0 if it could not create destination file.
@@ -235,24 +323,83 @@ void gallery_parse_tags(char *dest, char *source) {
 	 */
 
 	char fname[1024];
+        char * cmd1, *cmd2, *cmd3, *cmd4, *cmd5, *cmd6,
+           *cmd7, *cmd8, *cmd9, *cmd10, *cmd11;
+        pid_t pid;
+        const char *argv [5];
+        
+        cmd1 = gallery_make_sed_command ("s", "#GALLERY_NAME#", gallery_name);
+        cmd2 = gallery_make_sed_command ("s", "#GALLERY_INDEX#", gallery_index);
+        cmd3 = gallery_make_sed_command ("s", "#DATE#", date);
+        cmd4 = gallery_make_sed_command ("s", "#THUMBNAIL#", thumbnail);
+        cmd5 = gallery_make_sed_command ("s", "#THUMBNAIL_FILENAME#", thumbnail_filename);
+        cmd6 = gallery_make_sed_command ("s", "#THUMBNAIL_NUMBER#", thumbnail_number);
+        cmd7 = gallery_make_sed_command ("s", "#PICTURE#", picture);
+        cmd8 = gallery_make_sed_command ("s", "#PICTURE_FILENAME#", picture_filename);
+        cmd9 = gallery_make_sed_command ("s", "#PICTURE_NUMBER#", picture_number);
+        cmd10 = gallery_make_sed_command ("s", "#PICTURE_NEXT#", picture_next);
+        cmd11 = gallery_make_sed_command ("s", "#PICTURE_PREVIOUS#", picture_previous);
 
-	sprintf(fname,
-"sed 's/#GALLERY_NAME#/%s/; \
-s/#GALLERY_INDEX#/%s/; \
-s/#DATE#/%s/; \
-s/#THUMBNAIL#/%s/; \
-s/#THUMBNAIL_FILENAME#/%s/; \
-s/#THUMBNAIL_NUMBER#/%s/; \
-s/#PICTURE#/%s/; \
-s/#PICTURE_FILENAME#/%s/; \
-s/#PICTURE_NUMBER#/%s/; \
-s/#PICTURE_NEXT#/%s/; \
-s/#PICTURE_PREVIOUS#/%s/;' %s >> %s",
-gallery_name, gallery_index, date, thumbnail, thumbnail_filename,
-thumbnail_number, picture, picture_filename, picture_number,
-picture_next, picture_previous, source, dest);
+	snprintf(fname, sizeof (fname),
+                "%s %s %s %s %s %s %s %s %s %s %s", cmd1, cmd2, cmd3, cmd4, 
+                 cmd5, cmd6, cmd7, cmd8, cmd9, cmd10, cmd11);
 
-	system(fname);
+        free (cmd1);
+        free (cmd2);
+        free (cmd3);
+        free (cmd4);
+        free (cmd5);
+        free (cmd6);
+        free (cmd7);
+        free (cmd8);
+        free (cmd9);
+        free (cmd10);
+        free (cmd11);
+        
+        
+        argv[0] = strdup ("sed");
+        argv[1] = strdup ("-e");
+        argv[2] = strdup (fname);
+        argv[3] = strdup (source);
+        argv[4] = NULL;
+        
+        
+        pid = fork ();
+        if (pid == 0) 
+        {
+           int d;
+           int fd;
+           
+           fd = open (dest, O_CREAT | O_APPEND | O_WRONLY);
+           if (fd < 0) 
+           {
+              perror ("open");
+              exit (1);
+           }
+
+           if (dup2 (fd, 1) < 0)
+           {
+              perror ("dup2");
+           }
+           if (close (fd) < 0)
+           {
+              perror ("close");
+           }
+           
+           execvp (argv [0], argv);
+           perror ("exec");
+           exit (1);
+        }
+        else if (pid == -1)
+        {
+           perror ("fork");
+        }
+        else 
+        {
+           int status;
+
+           wait (&status);
+        }
 }
 
 void gallery_main() {
@@ -400,15 +547,15 @@ Then, re-run the HTML Gallery.");
 	 * it should make extra buttons for shtml, table borders, and 
 	 * image borders
 	 */	
-	shtml = gtk_check_button_new_with_label(N_("Export file as *.shtml?"));
+	shtml = gtk_check_button_new_with_label("Export file as *.shtml?");
 	gtk_widget_show(shtml);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), shtml, FALSE, FALSE, 0);
 	
-	table_border = gtk_check_button_new_with_label(N_("Set table border width to zero for thumbnails?"));
+	table_border = gtk_check_button_new_with_label("Set table border width to zero for thumbnails?");
 	gtk_widget_show(table_border);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table_border, FALSE, FALSE, 0);
         
-	image_border = gtk_check_button_new_with_label(N_("Set image border width to zero? (so you don't see the link colors...)"));
+	image_border = gtk_check_button_new_with_label("Set image border width to zero? (so you don't see the link colors...)");
         gtk_widget_show(image_border);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), image_border, FALSE, FALSE, 0); 
 
@@ -483,7 +630,7 @@ Then, re-run the HTML Gallery.");
 	date[24] = '\0';
  	sprintf(outputdir,"%s",
 		(char*)gtk_object_get_data(GTK_OBJECT(dirlabel),"dir"));
-	
+
 	//jae
 	sprintf(filename, "%s/%s/",GALLERYDIR,theme);
 	dir = opendir(filename);
@@ -531,21 +678,21 @@ Then, re-run the HTML Gallery.");
 		/* Get the current thumbnail */
 			sprintf(cp, N_("Getting Thumbnail #%i..."), j+1);
 			update_status(cp);
-			if ((im = (*Camera->get_picture)(j+1, 1))==0) {
-				sprintf(error, N_("Could not retrieve #%i"),
+			if ((im = Camera->ops->get_picture(j+1, 1))==0) {
+				sprintf(error, "Could not retrieve #%i",
 					j+1);
 				error_dialog(error);
-				sprintf(thumbnail, N_("Not Available"));
+				sprintf(thumbnail, "Not Available");
 				//jae
 				sprintf(thumbnail,
-		N_("<a href=\"picture-%03i.html\">Click Me<\\/a>"),i+1);
-  				sprintf(thumbnail_filename, "");
+		"<a href=\"picture-%03i.html\">Click Me</a>",i+1);
+				sprintf(thumbnail_filename, "");
 				sprintf(thumbnail_number, "%03i", i+1);
 			} else {
 				sprintf(thumbnail, 
-	"<a href=\"picture-%03i.html\"><img alt=\"%03i\" src=\"thumbnail-%03i.%s\" border=\"%s\"><\\/a>",
+	"<a href=\"picture-%03i.html\"><img alt=\"%03i\" src=\"thumbnail-%03i.%s\" border=\"%s\"></a>",
 					i+1, i+1, i+1, im->image_type, image_border_width);
-				sprintf(thumbnail_filename, N_("thumbnail-%03i.%s"),
+				sprintf(thumbnail_filename, "thumbnail-%03i.%s",
 					i+1, im->image_type);
 				sprintf(thumbnail_number, "%03i", i+1);
 				sprintf(filename2, "%s%s", outputdir,
@@ -562,8 +709,8 @@ Then, re-run the HTML Gallery.");
 			sprintf(cp, N_("Getting Image #%i..."), j+1);
 			update_status(cp);
 			
-			if ((im = (*Camera->get_picture)(j+1, 0))==0) {
-				sprintf(error, N_("Could not retrieve #%i"), j+1);
+			if ((im = Camera->ops->get_picture(j+1, 0))==0) {
+				sprintf(error, "Could not retrieve #%i", j+1);
 				error_dialog(error);
 				sprintf(picture, N_("Not Available"));
 				sprintf(picture_filename, "");
@@ -627,7 +774,7 @@ Then, re-run the HTML Gallery.");
 	sprintf(filename2,"%s/%s/index_bottom.html",GALLERYDIR,theme);
 	gallery_parse_tags(filename, filename2);
 	if (GTK_TOGGLE_BUTTON(netscape)->active) {
-		sprintf(statmsg, N_("Loaded file:%s%s in %s"), filesel_cwd, output_filename, BROWSER);
+		sprintf(statmsg, "Loaded file:%s%s in %s", filesel_cwd, output_filename, BROWSER);
 		browse_gallery();}
 	   else {
 		sprintf(statmsg, N_("Gallery saved in: %s"), outputdir);
@@ -636,3 +783,4 @@ Then, re-run the HTML Gallery.");
 		gtk_widget_destroy(dialog);
 	update_status(statmsg);
 }
+

@@ -1,3 +1,6 @@
+#ifndef LINT
+static char *rcsid="$Id$";
+#endif
 
 /*
 	Copyright (c) 1997,1998 Eugene G. Crosser
@@ -14,15 +17,29 @@
 
 /*
 	$Log$
-	Revision 1.1  1999/05/27 18:32:06  scottf
-	Initial revision
+	Revision 1.2  2000/08/24 05:04:27  scottf
+	adding language support
 
-	Revision 1.2  1999/04/30 07:14:14  scottf
-	minor changes to remove compilation warnings. prepping for release.
+	Revision 1.1.1.1.2.1  2000/07/05 11:07:49  ole
+	Preliminary support for the Olympus C3030-Zoom USB by
+	Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr>.
+	(http://lists.styx.net/archives/public/gphoto-devel/2000-July/003858.html)
 	
-	Revision 1.1.1.1  1999/01/07 15:04:02  del
-	Imported 0.2 sources
+	Revision 2.7  1999/12/11 14:10:15  crosser
+	Support sgtty terminal control
+	Proper "fake speed" handling (needed two values)
 	
+	Revision 2.6  1999/08/01 21:36:54  crosser
+	Modify source to suit ansi2knr
+	(I hate the style that ansi2knr requires but you don't expect me
+	to write another smarter ansi2knr implementation, right?)
+
+	Revision 2.5  1999/07/28 19:58:59  crosser
+	reorder includes
+
+	Revision 2.4  1999/03/06 13:37:08  crosser
+	Convert to autoconf-style
+
 	Revision 2.3  1998/10/18 13:18:27  crosser
 	Put RCS logs and I.D. into the source
 
@@ -40,30 +57,42 @@
 	
 */
 
-#include "eph_io.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+#ifdef STDC_HEADERS
 #include <stdlib.h>
 #include <string.h>
+#endif
 #include <stdio.h>
+#include "eph_io.h"
 
-static void deferrorcb(int errcode,char *errstr) {
-	return;
-	// fprintf(stderr,"Error %d: %s\n",errcode,errstr);
+static void
+deferrorcb(int errcode,char *errstr)
+{
+	fprintf(stderr,"Error %d: %s\n",errcode,errstr);
 }
 
-static void *defrealloccb(void *old,size_t length) {
+static void *
+defrealloccb(void *old,size_t length)
+{
 	if (old) return realloc(old,length);
 	else return malloc(length);
 }
 
-static void defruncb(off_t count) {
+static void
+defruncb(off_t count)
+{
 	return;
 }
 
-eph_iob *eph_new(void (*errorcb)(int errcode,char *errstr),
+eph_iob *
+eph_new(void (*errorcb)(int errcode,char *errstr),
 		void *(*realloccb)(void *old,size_t length),
 		void (*runcb)(off_t count),
 		int (*storecb)(char *data,size_t size),
-		int debug) {
+		int debug)
+{
 	eph_iob *iob;
 
 	iob=(eph_iob *)malloc(sizeof(eph_iob));
@@ -83,15 +112,23 @@ eph_iob *eph_new(void (*errorcb)(int errcode,char *errstr),
 	memset((char*)&iob->savetimeouts,0,sizeof(iob->savetimeouts));
 #elif defined(UNIX)
 	iob->fd=-1;
+#if defined(USE_TERMIOS)
 	memset((char*)&iob->savetios,0,sizeof(iob->savetios));
+#elif defined(USE_SGTTY)
+	memset((char*)&iob->savesgtty,0,sizeof(iob->savesgtty));
+#elif defined(USE_TERMIO)
+	memset((char*)&iob->savetio,0,sizeof(iob->savetio));
+#endif
 #elif defined(DOS)
 	iob->fd=-1;
 #else
-#error "platform not defined"
+ # error "platform not defined"
 #endif
 	return iob;
 }
 
-void eph_free(eph_iob *iob) {
+void
+eph_free(eph_iob *iob)
+{
 	free(iob);
 }

@@ -3,17 +3,143 @@
 #include <time.h>
 #include <unistd.h>
 #include "eph_io.h"
+#include "olympus.h"
+#include "photopc-usb.h"
 #include "../src/gphoto.h"
 
 /* Olympus Camera Functions ----------------------------------
    ----------------------------------------------------------- */
 
+/*
+ * (2jul2000) Adam Fritzler (mid@auk.cx): Upgraded to latest
+ * version of photopc (3.04) and added in the descend function
+ * from there in order to get this working on my C-2500L.
+ */
+
 eph_iob   *iob;                /* Olympus/photoPC io-buffer    */
+struct olympus_device *gpdev;
 
 int oly_initialize () {
 
-        iob = eph_new(NULL, NULL, NULL, NULL, 0);
+	iob = eph_new(NULL, NULL, NULL, NULL, 0);
 	return 1;
+}
+
+#define MAXPATH 256
+
+/*
+ * xchdir, descend, and nonempty are from photopc 3.04.  Modified
+ * for the context.  Cameras not supporting folders should not
+ * reach this code, but should still work if they do. -mid 
+ */
+static int xchdir(eph_iob *iob,char *where, int have_folders)
+{
+      char path[MAXPATH],*p;
+
+      if (!have_folders)
+	      return -1;
+      
+      strncpy(path,where,sizeof(path)-1);
+      path[sizeof(path)-1]='\0';
+      for (p=path;*p;p++) if (*p == '/') *p='\\';
+      if (path[0] == '\\') {
+	      if (eph_setvar(iob,84,"\\",1)) {
+		      fprintf(stderr,"could not chdir to \"\\\"\n");
+		      return -1;
+	      }
+      }
+      for (p=strtok(path,"\\");p;p=strtok(NULL,"\\")) {
+	      if (eph_setvar(iob,84,p,strlen(p))) {
+		      fprintf(stderr,"could not chdir to \"%s\"\n",p);
+		      return -1;
+	      }
+      }
+      return 0;
+}
+
+static int descend(eph_iob *iob,int depth,char *root,int(*each)(eph_iob *iob,char *path), int have_folders)
+{
+      long nfolders=0L,i;
+      off_t f_size;
+      char *folder,*p;
+      char path[MAXPATH];
+      int rc;
+      int blah;
+
+      if (!have_folders) return (*each)(iob,root);
+
+      if (depth > 10) {
+	      fprintf(stderr,"cannot be that deep (%d), error!\n",depth);
+	      return -1;
+      }
+      if (xchdir(iob,root,have_folders)) {
+	      fprintf(stderr,"chdir to \"%s\" failed\n",root);
+	      return -1;
+      }
+
+      if ((rc=(*each)(iob,root)) != 0)
+	      return rc;
+
+      eph_getint(iob,83,&nfolders);
+
+      if (nfolders == 0L) return 0;
+
+      folder=(char*)malloc(2048);
+      f_size=2048;
+      path[sizeof(path)-1]='\0';
+      for (i=1;i<=nfolders;i++) {
+	      eph_setint(iob,83,i);
+	      eph_getvar(iob,84,&folder,&f_size);
+
+	      strncpy(path,root,sizeof(path)-2);
+	      if (path[strlen(path)-1] != '\\')
+		      strncat(path,"\\",sizeof(path)-2);
+	      strncat(path,folder,sizeof(path)-2);
+	      for (p=path+strlen(path)-1;(*p == ' ') && (p > path);p--)
+		      *p='\0';
+	      if ((rc=descend(iob,depth+1,path,each,have_folders))) {
+		      free(folder);
+		      return rc;
+	      }
+	      if (xchdir(iob,root,have_folders)) {
+		      fprintf(stderr,"restore dir to \"%s\"
+failed\n",root);
+		      return -1;
+	      }
+      }
+      free(folder);
+
+      return 0;
+}
+
+static int
+nonempty(eph_iob *iob,char *path)
+{
+      unsigned long result;
+
+      if (eph_getint(iob,10,&result)) {
+	      return -1;
+      }
+      if (result) {
+	      return 1;
+      } else return 0;
+}
+
+int oly_init2(eph_iob *iob)
+{
+	long ret;
+	int rc;
+
+	if (eph_getint(iob,1,&ret)) return -1;
+	
+      eph_setnullint(iob,83);
+      
+      if (!eph_setvar(iob,84,"\\",1)) {
+	      if (descend(iob, 0, "\\", nonempty, 1) < 0)
+		      return -1;
+	}
+
+      return 0;
 }
 
 int oly_open_camera () {
@@ -22,10 +148,21 @@ int oly_open_camera () {
 
 	long ltemp;
 
-        if (eph_open(iob, serial_port, 115200) == -1)
-		return (0);
-	/* sleep(1); */
-        eph_getint(iob, 35, &ltemp);
+	if (camera_type == GPHOTO_CAMERA_USB) {
+		char *info;
+		long info_size;
+
+		gpdev = olympus_usb_open();
+		if (!gpdev)
+			return (0);
+		info_size=16;
+		info=malloc(info_size);
+	} else {
+		if (eph_open(iob, serial_port, 115200, 0, 0) == -1)
+			return (0);
+	}
+
+	oly_init2(iob);
 	return (1);
 }
 
@@ -33,7 +170,10 @@ void oly_close_camera() {
 
 	/* Close the camera */
 
-	eph_close(iob, 0);
+	if (camera_type == GPHOTO_CAMERA_USB)
+		olympus_usb_close(gpdev);
+	else
+		eph_close(iob, 0);
 }
 
 int oly_number_of_pictures () {
@@ -41,7 +181,7 @@ int oly_number_of_pictures () {
 	long num_pictures_taken = 0;
 
 	if (oly_open_camera() == 0)
-                return (0);
+		return (0);
 
 	sleep(1);
 	eph_getint(iob, 0x0a, &num_pictures_taken);
@@ -55,7 +195,7 @@ int oly_take_picture () {
 	char zero = 0;
 
 	if (oly_open_camera() == 0)
-                return (0);
+		return (0);
 
 	eph_action(iob,2,&zero,1);
 	oly_close_camera();
@@ -72,10 +212,10 @@ struct Image *oly_get_picture (int picNum, int thumbnail) {
 	*/
 
 
-        long thumbLength, picLength, Size;
-        char *picData;
+	long thumbLength, picLength, Size;
+	char *picData;
 	char tempName[1024];
-        long picSize;
+	long picSize;
 	int pid;
 	struct Image *im = NULL;
 
@@ -84,23 +224,23 @@ struct Image *oly_get_picture (int picNum, int thumbnail) {
 			return(im);
 	}
 
-        eph_setint(iob, 4, (long)picNum);
-        eph_getint(iob, 0x0d, &thumbLength);
-        eph_getint(iob, 0x0c, &picLength);
+	eph_setint(iob, 4, (long)picNum);
+	eph_getint(iob, 0x0d, &thumbLength);
+	eph_getint(iob, 0x0c, &picLength);
 
 	if (thumbnail)
 		Size = thumbLength;
 	   else 
 		Size = thumbLength + picLength;
-        Size = ((Size-1)/2048+2)*2048;
+	Size = ((Size-1)/2048+2)*2048;
 
-        picData = malloc(Size);
+	picData = malloc(Size);
 	picSize = Size;
 
 	if (thumbnail)
-	        eph_getvar(iob, 0x0f, &picData, &picSize);
+		eph_getvar(iob, 0x0f, &picData, &picSize);
 	   else
-	        eph_getvar(iob, 0x0e, &picData, &picSize);
+		eph_getvar(iob, 0x0e, &picData, &picSize);
 	pid = getpid();
 	if (thumbnail)
 		sprintf(tempName, "%s/gphoto-thumb-%i-%i.jpg",
@@ -149,21 +289,21 @@ int oly_configure () {
 
 	struct ConfigValues {
 		GtkWidget *cam_id;
-	        GtkWidget *qual_std;
+		GtkWidget *qual_std;
 		GtkWidget *qual_high;
 		/* GtkWidget *qual_best; */
-	        GtkWidget *lcd;
-	        GtkWidget *docked;	
+		GtkWidget *lcd;
+		GtkWidget *docked;	
 		GtkWidget *undocked;
-	        GtkWidget *lens_mac;
+		GtkWidget *lens_mac;
 		GtkWidget *lens_norm;
-	        GtkWidget *flash_auto;
+		GtkWidget *flash_auto;
 		GtkWidget *flash_red;
 		GtkWidget *flash_force;
 		GtkWidget *flash_none;
-	        GtkWidget *date_yymmdd;
+		GtkWidget *date_yymmdd;
 	 	GtkWidget *date_ddmmhh;
-	        GtkWidget *clk_comp;
+		GtkWidget *clk_comp;
 		GtkWidget *clk_none;
 	} Config;
 
@@ -406,11 +546,11 @@ int oly_configure () {
 	/* WOW that was a lot of code... now connect some stuff... */
 
 	oly_close_camera();
-        toggle = gtk_toggle_button_new();
+	toggle = gtk_toggle_button_new();
 	gtk_widget_show(toggle);
 	gtk_widget_hide(toggle);
-        gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
-                           toggle, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
+			   toggle, TRUE, TRUE, 0);
 
 	save_button = gtk_button_new_with_label("Save");
 	gtk_widget_show(save_button);
@@ -520,7 +660,7 @@ int oly_delete_image (int picNum) {
 	char z=0;
 
 	if (oly_open_camera() == 0)
-                return 0;
+		return 0;
 
 	eph_setint(iob,4,(long)picNum);
 	sleep(2);

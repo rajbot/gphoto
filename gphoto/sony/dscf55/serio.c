@@ -28,6 +28,12 @@
 
 #include "serio.h"
 
+#if defined(OS2)
+#  include <i86.h>
+#  define	usleep(a)	delay((a/1000))
+#endif
+
+
 static int dscf55_fd;
 static struct	termios local;
 static struct	termios master;
@@ -50,6 +56,37 @@ int cfmakeraw(struct termios *termios_p)
 }
 #endif
 #endif
+
+/***************************************************************
+*
+*
+*/
+int TransferRateID(int baud)
+{
+	int r = 0;
+
+	switch (baud)
+	{
+		case B115200:
+		 	r = 4;
+			break;
+		case B57600:
+			r = 3;
+			break;	/* FIXME ??? */
+		case B38400:
+			r = 2;
+			break;	/* works on sun */
+		case B19200:
+			r = 1;
+			break;	/* works on sun */
+		default:
+			case B9600:
+			r = 0; break;	/* works on sun */
+	}
+
+	return r;
+}
+
 
 /***************************************************************
 *
@@ -135,7 +172,7 @@ int dscSetSpeed(int speed)
 *
 *
 */
-int Read(unsigned char *buffer, int *length)
+int extRead(unsigned char *buffer, int *length)
 {
 	int len = read(dscf55_fd, buffer, *length);
 
@@ -178,7 +215,7 @@ int ReadCommByte(unsigned char *byte)
 *
 *
 */
-int Write(unsigned char *buffer, int length)
+int extWrite(unsigned char *buffer, int length)
 {
 	int bytecount;
 
@@ -227,5 +264,4 @@ void DumpData(unsigned char *buffer, int length)
 
 	fflush(stdout);
 }
-
 

@@ -7,4 +7,3 @@ struct Image *konica_qm100_get_preview (void);
 int konica_qm100_configure (void);
 char *konica_qm100_summary(void);
 char *konica_qm100_description(void);
-

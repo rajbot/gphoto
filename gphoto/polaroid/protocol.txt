@@ -1,0 +1,110 @@
+Serial Protocol information for a Polaroid PDC-700 digital camera
+
+Note: This information was gathered by monitoring serial port communications
+ while using the bundled software to transfer images. I have not contacted
+ Polaroid to request any information about the camera (I figured they
+ wouldn't have any), so they should probably be contacted before putting this
+ code into a production version of gPhoto.
+
+The info:
+
+On power on, the camera comes up at 9600 baud.
+
+Data gets transmitted to/from the camera in packets.
+
+All packets start with the byte 0x40.
+
+The next two bytes form a count of the remaining number of bytes in the
+packet. For packets being sent to the camera, the high byte is first.
+For packets being sent by the camera, the low byte is first.
+
+The remaining number of bytes (as defined by the previous field) include
+the commands, responses, and/or data.
+
+In summary, the packets look similar to the following:
+
+0x40 size1 size2 <size number of bytes of data>
+
+The data within the packet starts with a command/response code and ends in
+a checksum. The checksum is equal to the truncated sum of all other bytes of
+data.
+
+The response codes sent by the camera are equal to 0x80 plus the
+corresponding command code.
+
+The following describes the information about data transfers to/from the
+camera that I have been able to observe by monitoring the serial port
+while using the bundled software.
+
+0x01: Get camera's attention, used when initializing the camera
+0x81 0x01: Response from camera indicating that it's there
+0x02: Get camera information
+0x82 camera_information: Camera information
+ camera_information: ???
+0x04 baud_rate_code: Change baud rate
+ baud_rate_code:
+  0x00: 9600
+  0x01: 19200
+  0x02: 38400
+  0x03: 57600
+0x84 0x01: Acknowledgement of change baud rate command
+ Baud rate does not change until after this response is sent
+0x05 pnum1 pnum2: Get picture information
+ pnum1 is low byte of picture number
+ pnum2 is high byte of picture number
+0x85 picture_information: Picture information
+ picture_information: Information about the requested picture
+  byte 0-2: ???
+  byte 3: low byte of picture number
+  byte 4: high byte of picture number
+  bytes 5-8: file size of picture, low byte first
+  byte 9: is 1 if a flash was used when the picture was taken
+  bytes 10-18: ???
+  bytes 19-22: file size of thumbnail, low byte first
+0x06 sub_cmd: Get picture thumbnail
+ sub_cmd:
+  0x00 tnum1 thum2: Initiate thumbnail transfer sequence request
+   tnum1 is low byte of thumbnail number
+   tnum2 is high byte of thumbnail number
+  0x01 num: Continue thumbnail transfer sequence request/acknowledgement
+   num is the sequence number from the last sequence transferred
+  0x02 num: Terminate thumbnail transfer sequence acknowledgement
+   num is the sequence number from the last sequence transferred
+0x86 thumbnail_response: Transfer of a portion of the thumbnail
+ thumbnail_response:
+  0x01 sequence_number <data>: Transmission of a part of thumbnail
+   sequence_number is used for sending back to camera
+   The data makes up a JPEG file of the thumbnail
+  0x02 sequence_number <data>: Transmission of last part of thumbnail
+   sequence_number is used for sending back to camera
+   The data makes up a JPEG file of the thumbnail
+0x07 sub_cmd: Get picture
+ sub_cmd:
+  0x00 tnum1 thum2: Initiate picture transfer sequence request
+   tnum1 is low byte of picture number
+   tnum2 is high byte of picture number
+  0x01 num: Continue picture transfer sequence request/acknowledgement
+   num is the sequence number from the last sequence transferred
+  0x02 num: Terminate picture transfer sequence acknowledgement
+   num is the sequence number from the last sequence transferred
+0x87 picture_response: Transfer of a portion of the picture
+ picture_response:
+  0x01 sequence_number <data>: Transmission of a part of picture
+   sequence_number is used for sending back to camera
+   The data makes up a JPEG file of the picture
+  0x02 sequence_number <data>: Transmission of last part of picture
+   sequence_number is used for sending back to camera
+   The data makes up a JPEG file of the picture
+
+ToDo:
+
+Codes not yet documented:
+erase image
+...
+
+Rename "poloroid" to "Polaroid" for everything
+
+
+Document last updated 5/17/00
+Ryan Lantzer
+rlantzer@umr.edu

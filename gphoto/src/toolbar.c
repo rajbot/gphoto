@@ -7,27 +7,27 @@
 /* The toolbar xpm icons */
 
 /*  #include "batch_save.xpm" */
-#include "icons/close_image.xpm"
-#include "icons/colors.xpm"
-#include "icons/configure.xpm"
-#include "icons/delete_images.xpm"
-#include "icons/exit.xpm"
-#include "icons/fliph.xpm"
-#include "icons/flipv.xpm"
-#include "icons/get_index.xpm"
-#include "icons/get_index_empty.xpm"
-#include "icons/get_selected_images.xpm"
-#include "icons/help.xpm"
-#include "icons/left_arrow.xpm"
-#include "icons/mail_image.xpm"
-#include "icons/open_image.xpm"
-#include "icons/print_image.xpm"
-#include "icons/resize.xpm"
-#include "icons/right_arrow.xpm"
-#include "icons/rotc.xpm"
-#include "icons/rotcc.xpm"
-#include "icons/save_current_image.xpm"
-#include "icons/stop.xpm"
+#include "close_image.xpm"
+#include "colors.xpm"
+#include "configure.xpm"
+#include "delete_images.xpm"
+#include "exit.xpm"
+#include "fliph.xpm"
+#include "flipv.xpm"
+#include "get_index.xpm"
+#include "get_index_empty.xpm"
+#include "get_selected_images.xpm"
+#include "help.xpm"
+#include "left_arrow.xpm"
+#include "mail_image.xpm"
+#include "open_image.xpm"
+#include "print_image.xpm"
+#include "resize.xpm"
+#include "right_arrow.xpm"
+#include "rotc.xpm"
+#include "rotcc.xpm"
+#include "save_current_image.xpm"
+#include "stop.xpm"
 
 /* #include "web_browse.xpm"   */
 /* #include "take_picture.xpm" */
@@ -96,21 +96,21 @@ void create_toolbar (GtkWidget *box, GtkWidget *mainWin) {
   add_to_toolbar(mainWin, N_("Close Image"), delete_images_xpm,
                  GTK_SIGNAL_FUNC(closepic), "c", box, 1);  
   add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1);
-  add_to_toolbar(mainWin, N_("Previous page"), left_arrow_xpm,
+  add_to_toolbar(mainWin, "Previous page", left_arrow_xpm,
 		 GTK_SIGNAL_FUNC(prev_page), "i", box, 1);
-  add_to_toolbar(mainWin, N_("Next page"), right_arrow_xpm,
+  add_to_toolbar(mainWin, "Next page", right_arrow_xpm,
 		 GTK_SIGNAL_FUNC(next_page), "i", box, 1);
   add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1);
-  add_to_toolbar(mainWin, N_("Download Thumbnail Index"), get_index_xpm,
+  add_to_toolbar(mainWin, "Download Thumbnail Index", get_index_xpm,
                  GTK_SIGNAL_FUNC(getindex), NULL, box, 1);
-  add_to_toolbar(mainWin, N_("Download Empty Index"), get_index_empty_xpm,
+  add_to_toolbar(mainWin, "Download Empty Index", get_index_empty_xpm,
                  GTK_SIGNAL_FUNC(getindex_empty), NULL, box, 1);
-  add_to_toolbar(mainWin, N_("Download Selected Images"), get_selected_images_xpm,
+  add_to_toolbar(mainWin, "Download Selected Images", get_selected_images_xpm,
 		 GTK_SIGNAL_FUNC(getpics), "i", box, 1);
-  add_to_toolbar(mainWin, N_("Delete Selected Images"), close_image_xpm, 
+  add_to_toolbar(mainWin, "Delete Selected Images", close_image_xpm, 
                  GTK_SIGNAL_FUNC(del_dialog), NULL, box, 1);
   add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1);
-  stop_button = add_to_toolbar(mainWin, N_("Halt Download"), stop_xpm,
+  stop_button = add_to_toolbar(mainWin, "Halt Download", stop_xpm,
                  GTK_SIGNAL_FUNC(halt_action), NULL, box, 1);
   deactivate_button(stop_button);
   add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1);

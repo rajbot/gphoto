@@ -2,7 +2,7 @@
 %define rel	1
 %define prefix	/usr
 
-Summary: gPhoto - the GNU Digital Still Camera Program
+Summary: gPhoto - Digital Camera Software
 Name: gphoto        
 Version: %ver
 Release: %rel
@@ -12,14 +12,15 @@ Source: ftp://ftp.gphoto.org/projects/gphoto/pub/tar/gphoto/stable/gphoto-%{ver}
 BuildRoot: /var/tmp/gphoto-root
 URL: http://www.gphoto.org/
 Docdir: %{prefix}/doc
-Requires: gtk+ >= 1.2.3
-Requires: imlib >= 1.9.4
+Requires: gtk+ >= 1.2.0
+Requires: libusb >= 0.1
+Requires: libgpio >= 0.0.2
 
 %description
-gPhoto is part of the GNU project - and is an universal, free
-GTK+ application and library framework that lets you download
-images from several different digital camera models, and from
-the local harddrive, and generate HTML albums.
+gPhoto is an universal, free application and library framework 
+that lets you download images from several different digital 
+camera models, and from the local harddrive, and generate HTML
+albums.
 
 %prep
 %setup -q
@@ -42,7 +43,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc AUTHORS COPYING FAQ MANUAL NEWS README THANKS THEMES ChangeLog
 %{prefix}/man/man1/gphoto.1
 %{prefix}/bin/*
-%{prefix}/lib/*
+%{prefix}/lib/gphoto/*
 %{prefix}/share/gphoto/doc/*
 %{prefix}/share/gphoto/gallery/Default/*
 %{prefix}/share/gphoto/gallery/RedNGray/*

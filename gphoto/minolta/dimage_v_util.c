@@ -1,65 +1,55 @@
 #include "dimage_v.h"
 
 /* Open the device, then perform all the serial magic on it, if applicable. */
-int dimage_v_open(char* dimage_v_device)
+gpio_device *dimage_v_open(char* dimage_v_device)
 {
-	int fd=-1, errorlen=0;
-	char *errormsg, *buffer;
+	gpio_device *dev;
+	gpio_device_settings conf;
+	int port_len=0;
 
-    #ifdef BSD
-    fd = open(dimage_v_device, O_RDWR|O_NOCTTY);
-    #else
-    fd = open(dimage_v_device, O_RDWR|O_NOCTTY|O_SYNC);
-    #endif
-    if (fd < 0)
-	{
-		errormsg=strerror(errno);
-		errorlen=strlen(errormsg) + 28;
-		if ((buffer=malloc(errorlen))==NULL)
-		{
-			error_dialog("Couldn't allocate memory for better diagnostic!");
-			return -1;
-		}
 
-		snprintf(buffer, errorlen -1, "Dimage V: cannot open device:\n%s\n", errormsg);
-		error_dialog(buffer);
-		free(buffer);
-        return -1;
-    }
-    if (tcgetattr(fd, &oldt) < 0)
-    {
-		errormsg=strerror(errno);
-		errorlen=strlen(errormsg) + 28;
-		if ((buffer=malloc(errorlen))==NULL)
-		{
-			error_dialog("Couldn't allocate memory for better diagnostic!");
-			return -1;
-		}
+	dev = gpio_new(GPIO_DEVICE_SERIAL);
+	conf.serial.speed = 38400;
+	conf.serial.bits = 8;
+	conf.serial.parity = 0;
+	conf.serial.stopbits = 1;
+	port_len = strlen(dimage_v_device);
+	if ( port_len >= 128 ) {
+		error_dialog("Absurdly long device path!");
+		return NULL;
+	}
+	strncpy(conf.serial.port, dimage_v_device, port_len + 1);
 
-		snprintf(buffer, errorlen -1, "Dimage V: cannot set serial port:\n%s\n", errormsg);
-		error_dialog(buffer);
-		free(buffer);
-        return -1;
-    }
-	
-    newt = oldt;
-    newt.c_iflag |= (PARMRK|INPCK);
-    newt.c_iflag &= ~(BRKINT|IGNBRK|IGNPAR|ISTRIP|INLCR|IGNCR|ICRNL|IXON|IXOFF);
-	newt.c_oflag &= ~(OPOST);
-    newt.c_cflag |= (CLOCAL|CREAD|CS8);
-    newt.c_cflag &= ~(CSTOPB|HUPCL);
-    newt.c_lflag &= ~(ECHO|ECHOE|ECHOK|ECHONL|ICANON|ISIG|NOFLSH|TOSTOP);
-    newt.c_cc[VMIN] = 0;
-    newt.c_cc[VTIME] = 1;
-    cfsetispeed(&newt, B38400);
-    if (tcsetattr(fd, TCSANOW, &newt) < 0)
-    {
-        perror("dimage_v_open::tcsetattr");
-		return -1;
-    }
-	
-	return fd;
+	/* set the serial device configuration */
+	gpio_set_settings(dev, conf); 
+	gpio_set_timeout(dev, 500);
+
+	if ( gpio_open(dev) == GPIO_OK ) {
+		return dev;
+	} else {	
+		return NULL;
+	}	
 }
+
+unsigned char dimage_v_read_byte(gpio_device *dev)
+{
+	unsigned char value;
+	if ( gpio_read(dev, &value, 1) != 1 ) {
+		return GPIO_ERROR;
+	} else {
+		return value;
+	}	
+}
+
+int dimage_v_send_byte(gpio_device *dev, unsigned char value)
+{
+	if ( gpio_write(dev, &value, 1) != 1 ) {
+		return GPIO_ERROR;
+	} else {
+		return GPIO_OK;
+	}	
+}
+
 
 /* Minolta's packets are wrong more often than not. Bastards!
 return 0 if not a valid packet, non-zero if valid. */
@@ -105,58 +95,32 @@ int dimage_v_verify_packet(dimage_v_buffer* packet)
 	}
 }
 
-unsigned char dimage_v_read_byte(int dimage_v_fd)
+int dimage_v_write_packet(dimage_v_buffer* packet, gpio_device *dev)
 {
-	unsigned char buffer=0;
-	int tries=0;
-
-	for (tries=0; tries < MAX_BAD_READS; tries++)
-	{
-		if ((read(dimage_v_fd, &buffer, 1))>0)
-		{
-			return buffer;
-		}
-		usleep(100);
-	}
-	return CAN;
-}
-
-int dimage_v_send_byte(int dimage_v_fd, unsigned char data)
-{
-	while( write(dimage_v_fd, &data, 1) < 1)
-	{
-		usleep(100);
-	}
-	return 0;
-}
-
-int dimage_v_write_packet(dimage_v_buffer* packet, int dimage_v_fd)
-{
-	int written=0, lastwritten=0;
+	int written=0;
 
 	if (packet == NULL)
 	{
-		perror("dimage_v_write_packet::unable to allocate packet");
+		perror("dimage_v_write_packet::unable to write null packet");
 		return 1;
 	}
 
-	for (lastwritten = written = 0; written < packet->length ; written += write(dimage_v_fd , packet->contents + written, packet->length - written))
-	{
-		if (written < lastwritten)
-		{
-			perror("dimage_v_write_packet::write failed");
-			return 1;
-		}
-	}
-	
-	return 0;
+	written = gpio_write(dev, packet->contents, packet->length);
+	if ( ( written == GPIO_ERROR ) || ( written != packet->length ) ) {
+		return GPIO_ERROR;
+	} else {
+		return GPIO_OK;
+	}	
 }
 
-dimage_v_buffer* dimage_v_read_packet(int dimage_v_fd, int started)
+
+#if EXPIRIMENTAL_READ_PACKET
+
+dimage_v_buffer* dimage_v_read_packet(gpio_device *dev, int started)
 {
 	dimage_v_buffer* packet;
 	unsigned char header[4], extra_byte, buffer[1024];
-	int numread=0, totalread=0, i=0, lefttoread=0, last_ff=0, no_read=0;
+	int numread=0, totalread=0, i=0, lefttoread=0, num_ffs=0, total_useful_read=0;
 
 	if ((packet=malloc(sizeof(dimage_v_buffer)))==NULL)
 	{
@@ -168,35 +132,19 @@ dimage_v_buffer* dimage_v_read_packet(int dimage_v_fd, int started)
 	{
 		/* We already got the first byte - just make it valid. */
 		header[0]=STX;
-		while (totalread < 3)
-		{
-			numread=read(dimage_v_fd, (header + totalread + 1), (3 - totalread));
-			if (numread >= 0 )
-			{
-				totalread+=numread;
-			}
-			else
-			{
-				perror("dimage_v_read_packet::read error");
-				return NULL;
-			}
+		numread = gpio_read(dev, ( header + 1 ) , 3);
+		if ( ( numread == GPIO_ERROR ) || ( numread != 3 ) ) {
+			perror("dimage_v_read_packet::failed to read packet header");
+			return NULL;
 		}
 	}
 	else
 	{
 		/* Read the first four bytes to determine how long the packet is. */
-		while (totalread < 4)
-		{
-			numread=read(dimage_v_fd, (header + totalread), (4 - totalread));
-			if (numread >= 0 )
-			{
-				totalread+=numread;
-			}
-			else
-			{
-				perror("dimage_v_read_packet::read error");
-				return NULL;
-			}
+		numread = gpio_read(dev, header, 4);
+		if ( ( numread == GPIO_ERROR ) || ( numread != 4 ) ) {
+			perror("dimage_v_read_packet::failed to read packet header");
+			return NULL;
 		}
 	}
 
@@ -204,22 +152,96 @@ dimage_v_buffer* dimage_v_read_packet(int dimage_v_fd, int started)
 	packet->length += header[2] * 256;
 	packet->length += header[3];
 
-	/* Now alloc packet->contents including an extra buffer.  Thanks Minolta! */
-	if ((packet->contents = ( malloc((packet->length)+ 24)))==NULL)
+	/* Now alloc packet->contents including an extra byte or two. */
+	if ((packet->contents = ( malloc((packet->length)+ 2)))==NULL)
 	{
 		perror("dimage_v_read_packet::unable to allocate packet->contents");
-		return 0;
+		return NULL;
 	}
 
 	/* Copy over the first four bytes, then start reading the rest. */
-	for (i = 0 ; i < 4 ; i++)
-	{
-		packet->contents[i]=header[i];
+	memcpy(packet->contents, header, 4);
+
+	totalread = 4;
+
+	/* Just to clarify: totalread is the actual number of bytes read.
+						numread is the number read on the last pass.
+	*/					
+
+	while ( totalread < packet->length ) {
+		numread = gpio_read(dev, packet->contents + totalread, ( packet->length ) - totalread);
+		if ( numread != GPIO_ERROR ) {
+			totalread+=numread;
+		} else {
+			fprintf(stderr, "Got GPIO_ERROR reading\n");
+			fflush(stderr);
+			usleep(1000);
+		}
+
 	}
+
+	if (dimage_v_verify_packet(packet)==0)
+	{
+		/* Maybe I can get rid of this soon... */
+		fprintf(stderr, "Got a bad packet after reading:\n--> packet->length == %d\totalread == %d\n", packet->length, totalread);
+		fflush(stderr);
+	}
+	dimage_v_dump_packet(packet);
+	return packet;
+}
+
+#else /* EXPIRIMENTAL_READ_PACKET */
+
+dimage_v_buffer* dimage_v_read_packet(gpio_device *dev, int started)
+{
+	dimage_v_buffer* packet;
+	unsigned char header[4], extra_byte, buffer[1024];
+	int numread=0, totalread=0, i=0, lefttoread=0, last_ff=0, no_read=0, num_ffs=0;
+
+	if ((packet=malloc(sizeof(dimage_v_buffer)))==NULL)
+	{
+		perror("dimage_v_read_packet::unable to allocate packet");
+		return NULL;
+	}
+
+	if (started != 0)
+	{
+		/* We already got the first byte - just make it valid. */
+		header[0]=STX;
+		numread = gpio_read(dev, ( header + 1 ) , 3);
+		if ( ( numread == GPIO_ERROR ) || ( numread != 3 ) ) {
+			perror("dimage_v_read_packet::failed to read packet header");
+			return NULL;
+		}
+	}
+	else
+	{
+		/* Read the first four bytes to determine how long the packet is. */
+		numread = gpio_read(dev, header, 4);
+		if ( ( numread == GPIO_ERROR ) || ( numread != 4 ) ) {
+			perror("dimage_v_read_packet::failed to read packet header");
+			return NULL;
+		}
+	}
+
+	packet->length = 0;
+	packet->length += header[2] * 256;
+	packet->length += header[3];
+
+	/* Now alloc packet->contents including an extra buffer. Thanks Minolta! */
+	if ((packet->contents = ( malloc((packet->length)+ 24)))==NULL)
+	{
+		perror("dimage_v_read_packet::unable to allocate packet->contents");
+		return NULL;
+	}
+
+	/* Copy over the first four bytes, then start reading the rest. */
+	memcpy(packet->contents, header, 4);
 
 	last_ff=0;
 	totalread=4;
-	while (numread=read(dimage_v_fd, &extra_byte, 1))
+
+	while ( ( numread = gpio_read(dev, &extra_byte, 1)) != GPIO_ERROR )
 	{
 		switch (extra_byte)
 		{
@@ -243,9 +265,10 @@ dimage_v_buffer* dimage_v_read_packet(int dimage_v_fd, int started)
 
 	while (dimage_v_verify_packet(packet)==0)
 	{
+		/* Maybe I can get rid of this soon... */
 		fprintf(stderr, "Got a bad packet after reading:\n--> packet->length == %d\ttotalread == %d\n", packet->length, totalread);
 		fflush(stderr);
-		numread=read(dimage_v_fd, &extra_byte, 1);
+		numread = gpio_read(dev, &extra_byte, 1);
 		if (numread == 0)
 		{
 			no_read++;
@@ -265,8 +288,10 @@ dimage_v_buffer* dimage_v_read_packet(int dimage_v_fd, int started)
 		}
 		
 	}
+	dimage_v_dump_packet(packet);
 	return packet;
 }
+#endif
 
 dimage_v_buffer* dimage_v_make_packet(unsigned char* payload, int payload_length, int seq)
 {
@@ -379,15 +404,16 @@ dimage_v_buffer* dimage_v_strip_packet(dimage_v_buffer* packet)
 		payload->contents[i]=packet->contents[i+4];
 	}
 
-
 	return payload;
 }
 
 char* dimage_v_write_picture_to_file(int picture_number)
 {
+	gpio_device *dev;
+
 	char *tmpfile;
 	FILE* imagefile;
-	int dimage_v_fd=-1, total_packets=0, packets_gotten=0;
+	int total_packets=0, packets_gotten=0;
 	unsigned char tmp=0, get_cmd[3]="\x04\x00\x00";
 	dimage_v_buffer *packet, *payload;
 
@@ -409,7 +435,7 @@ char* dimage_v_write_picture_to_file(int picture_number)
 		return NULL;
 	}
 
-	if ((dimage_v_fd=dimage_v_open(serial_port))<0)
+	if ((dev = dimage_v_open(serial_port)) == NULL)
 	{
 		error_dialog("Unable to access serial_port");
 		return NULL;
@@ -419,41 +445,42 @@ char* dimage_v_write_picture_to_file(int picture_number)
 
 	/* Find out what we're set to now. */
 	packet=dimage_v_make_packet("\x09", 1, 0);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	packet=dimage_v_read_packet(dimage_v_fd,0);
+
+	while (dimage_v_read_byte(dev)!=ACK);
+	packet=dimage_v_read_packet(dev,0);
 	payload=dimage_v_strip_packet(packet);
 	dimage_v_delete_packet(packet);
-	dimage_v_send_byte(dimage_v_fd, EOT);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
 	usleep(100);
 
 	/* Now enter host mode */
 	packet=dimage_v_make_packet("\x08", 1, 0);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	while (dimage_v_read_byte(dev)!=ACK);
 	payload->contents[0]=payload->contents[0] | 0x80;
 	payload->contents[8]= 0x00;
 	packet=dimage_v_make_packet(payload->contents, payload->length, 1);
-	dimage_v_write_packet(packet, dimage_v_fd);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	dimage_v_send_byte(dimage_v_fd, EOT);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	dimage_v_write_packet(packet, dev);
+	while (dimage_v_read_byte(dev)!=ACK);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
 
 	packet=dimage_v_make_packet("\x08", 1, 0);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	while (dimage_v_read_byte(dev)!=ACK);
 	payload->contents[0]=payload->contents[0] | 0x80;
 	payload->contents[8]= 0x81;
 	packet=dimage_v_make_packet(payload->contents, payload->length, 1);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	dimage_v_send_byte(dimage_v_fd, EOT);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	while (dimage_v_read_byte(dev)!=ACK);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
 
 	update_status("Entered host mode(tm)");
 
@@ -463,8 +490,8 @@ char* dimage_v_write_picture_to_file(int picture_number)
 	get_cmd[2]=(picture_number%256);
 
 	packet=dimage_v_make_packet(get_cmd, 3, 0);
-	dimage_v_write_packet(packet, dimage_v_fd);
-	switch(dimage_v_read_byte(dimage_v_fd))
+	dimage_v_write_packet(packet, dev);
+	switch(dimage_v_read_byte(dev))
 	{
 		case ACK:
 			update_status("Recieved ACK");
@@ -479,7 +506,7 @@ char* dimage_v_write_picture_to_file(int picture_number)
 	dimage_v_delete_packet(packet);
 
 
-	packet=dimage_v_read_packet(dimage_v_fd, 0);
+	packet=dimage_v_read_packet(dev, 0);
 	payload=dimage_v_strip_packet(packet);
 	total_packets=payload->contents[0];
 	fprintf(stderr, "Payload length is %d, total packets should be %d\n", payload->length, payload->contents[0]);
@@ -499,25 +526,25 @@ char* dimage_v_write_picture_to_file(int picture_number)
 
 	for (packets_gotten=1; packets_gotten < total_packets; packets_gotten++)
 	{
-		dimage_v_send_byte(dimage_v_fd, ACK);
-		while((tmp=dimage_v_read_byte(dimage_v_fd))!=STX)
+		dimage_v_send_byte(dev, ACK);
+		while((tmp=dimage_v_read_byte(dev))!=STX)
 		{
 			fprintf(stderr, "Missed a byte... %02x\n", tmp);
 			fflush(stderr);
 		}
 
-		packet = dimage_v_read_packet(dimage_v_fd, 1);
+		packet = dimage_v_read_packet(dev, 1);
 		payload = dimage_v_strip_packet(packet);
-		update_progress(100.0 * ( packets_gotten /  total_packets));
+		update_progress((100.0 * packets_gotten) / ( 1.0 * total_packets));
 		fwrite(payload->contents, 1, payload->length, imagefile);
 		fflush(imagefile);
-		gdk_flush();
+/*		gdk_flush();*/
 		dimage_v_delete_packet(packet);
 		dimage_v_delete_packet(payload);
 	}
-	dimage_v_send_byte(dimage_v_fd, EOT);
+	dimage_v_send_byte(dev, EOT);
 	fprintf(stderr, "Sent the EOT\n");
-	while((tmp=dimage_v_read_byte(dimage_v_fd))!=ACK){fprintf(stderr, "Waiting for an ACK\n");};
+	while((tmp=dimage_v_read_byte(dev))!=ACK){fprintf(stderr, "Waiting for an ACK\n");};
 	fprintf(stderr, "Got the ACK. CLose up shop.\n");
 
 	/* Now that the whole file is written, close it, and load the image. */
@@ -529,30 +556,45 @@ char* dimage_v_write_picture_to_file(int picture_number)
 
 	/* Now leave host mode. */
 	packet=dimage_v_make_packet("\x09", 1, 0);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	packet=dimage_v_read_packet(dimage_v_fd,0);
+	while (dimage_v_read_byte(dev)!=ACK);
+	packet=dimage_v_read_packet(dev,0);
 	payload=dimage_v_strip_packet(packet);
 	dimage_v_delete_packet(packet);
-	dimage_v_send_byte(dimage_v_fd, EOT);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
 	usleep(100);
 
 	/* Now enter host mode */
 	packet=dimage_v_make_packet("\x08", 1, 0);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	while (dimage_v_read_byte(dev)!=ACK);
 	payload->contents[0]=payload->contents[0] - 0x80;
 	payload->contents[8]= 0x00;
 	packet=dimage_v_make_packet(payload->contents, payload->length, 1);
-	dimage_v_write_packet(packet, dimage_v_fd);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	dimage_v_send_byte(dimage_v_fd, EOT);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	tcsetattr(dimage_v_fd, TCSANOW, &oldt);
-	close(dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
+	while (dimage_v_read_byte(dev)!=ACK);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
+
+	gpio_close(dev);
+	gpio_free(dev);
 
 	return tmpfile;
+}
+
+void dimage_v_dump_packet(dimage_v_buffer* packet) {
+#ifdef DIMAGE_V_DEBUG
+	int i=0;
+
+	fprintf(debug, "packet->length == %d\n");
+	for ( i = 0 ; i < packet->length ; i++ ) {
+		fprintf(debug, "%02x ", packet->contents[i]);
+	}
+
+	fprintf(debug, "\n\n");
+	fflush(debug);
+#endif
 }

@@ -10,6 +10,12 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #ifdef HAVE_SYS_PARAM_H
+#if defined(MAX)
+#undef MAX
+#endif
+#if defined(MIN)
+#undef MIN
+#endif
 #include <sys/param.h>
 #endif
 #include <termios.h>
@@ -18,7 +24,6 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
-
 #include "defs.h"
 #include "configDialog.h"
 #include "close.h"
@@ -36,12 +41,11 @@
 #include "takePic.h"
 #include "transmission.h"
 #include "rcutil.h"
-
 #ifdef DEFINE_GLOBALS
-#define  XTRN 
+#define  XTRN
 #else
 #define  XTRN extern
-#endif 
+#endif
 XTRN QM100_CONFIGDATA qm100_configData;
 XTRN FILE    *qm100_trace;
 XTRN char     qm100_errmsg[128];
@@ -59,12 +63,3 @@ XTRN struct   termios oldt;
 XTRN double   qm100_percent;
 XTRN double   qm100_percentIncr;
 #endif
-
-
-
-
-
-
-
-
-

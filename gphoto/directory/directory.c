@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/dir.h>
+#include <dirent.h>
 #include <unistd.h>
 #include "../src/gphoto.h"
 #include "../src/util.h"

@@ -1,3 +1,6 @@
+#ifndef LINT
+static char *rcsid="$Id$";
+#endif
 
 /*
 	Copyright (c) 1997,1998 Eugene G. Crosser
@@ -14,15 +17,38 @@
 
 /*
 	$Log$
-	Revision 1.1  1999/05/27 18:32:06  scottf
-	Initial revision
+	Revision 1.2  2000/08/24 05:04:27  scottf
+	adding language support
 
-	Revision 1.2  1999/04/30 07:14:14  scottf
-	minor changes to remove compilation warnings. prepping for release.
+	Revision 1.1.1.1.2.1  2000/07/05 11:07:49  ole
+	Preliminary support for the Olympus C3030-Zoom USB by
+	Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr>.
+	(http://lists.styx.net/archives/public/gphoto-devel/2000-July/003858.html)
 	
-	Revision 1.1.1.1  1999/01/07 15:04:02  del
-	Imported 0.2 sources
+	Revision 2.21  1999/12/13 23:26:52  crosser
+	Fix minor bugs in sgtty support, reported to work now.
 	
+	Revision 2.20  1999/12/11 14:10:15  crosser
+	Support sgtty terminal control
+	Proper "fake speed" handling (needed two values)
+	
+	Revision 2.19  1999/12/01 21:41:23  crosser
+	add "pseudo" speed
+	
+	Revision 2.18  1999/08/01 21:36:54  crosser
+	Modify source to suit ansi2knr
+	(I hate the style that ansi2knr requires but you don't expect me
+	to write another smarter ansi2knr implementation, right?)
+
+	Revision 2.17  1999/03/06 13:37:08  crosser
+	Convert to autoconf-style
+
+	Revision 2.16  1999/02/10 22:09:36  crosser
+	strerror needs string.h with glibc2
+
+	Revision 2.15  1998/12/20 21:49:38  crosser
+	move flushinput to more proper place
+
 	Revision 2.14  1998/10/18 13:18:27  crosser
 	Put RCS logs and I.D. into the source
 
@@ -84,23 +110,33 @@
 	
 */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "eph_io.h"
 #include "eph_priv.h"
 #include <sys/types.h>
 #if defined(MSWINDOWS)
 #include "usleep.h"
 #elif defined(UNIX)
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <termios.h>
 #elif defined(DOS)
 #include "comio.h"
 #include "usleep.h"
 #else
-#error platform not defined
+ # error platform not defined
 #endif
 #include <stdio.h>
+#ifdef STDC_HEADERS
 #include <stdlib.h>
+#include <string.h>
+#endif
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif
 #include <errno.h>
 
 #ifdef MSWINDOWS
@@ -109,28 +145,31 @@
 #define ERRNO errno
 #endif
 
+#define DEFSPEED 19200
+
 #if defined(MSWINDOWS)
 
-#define DEFSPEED 19200
 #define CLOSE CloseHandle
 
 #elif defined(UNIX)
 
-#define DEFSPEED EXTA
 #define CLOSE close
 
 #elif defined(DOS)
 
-#define DEFSPEED 19200
 #define CLOSE(x)  ttclose()
 
-void exit_cleanup(void) {
+void
+exit_cleanup(void)
+{
 	ttclose();
 }
 
 #define ABORT 0
 
-int c_break(void) {
+int
+c_break(void)
+{
 	printf("\naborting program...%c\n", 7);
 	ttclose();
 	exit(255);	/* will call any exit handlers */
@@ -138,69 +177,134 @@ int c_break(void) {
 }
 
 #else
-#error platform not defined
+ # error platform not defined
 #endif
 
-int eph_open(eph_iob *iob,char *devname,long speed) {
+#ifdef UNIX
+speed_t
+speed2flag(long ttspeed)
+{
+	speed_t tspeed;
+
+	switch (ttspeed) {
+	case 50:
+		tspeed=B50;
+		break;
+	case 75:
+		tspeed=B75;
+		break;
+	case 150:
+		tspeed=B150;
+		break;
+	case 300:
+		tspeed=B300;
+		break;
+	case 600:
+		tspeed=B600;
+		break;
+	case 1200:
+		tspeed=B1200;
+		break;
+	case 2400:
+		tspeed=B2400;
+		break;
+	case 4800:
+		tspeed=B4800;
+		break;
+	case 9600:
+		tspeed=B9600;
+		break;
+	case 19200:
+#ifdef B19200
+		tspeed=B19200;
+#else
+		tspeed=EXTA;
+#endif
+		break;
+	case 38400:
+#ifdef B38400
+		tspeed=B38400;
+#else
+		tspeed=EXTB;
+#endif
+		break;
+	case 57600:
+#ifdef B57600
+		tspeed=B57600;
+#else
+		tspeed=(speed_t)-1;
+#endif
+		break;
+	case 115200:
+#ifdef B115200
+		tspeed=B115200;
+#else
+		tspeed=(speed_t)-1;
+#endif
+		break;
+	default:
+		tspeed=(speed_t)-1;
+		break;
+	}
+	return tspeed;
+}
+#endif /* UNIX */
+
+int
+eph_open(eph_iob *iob,char *devname,long speed,long defttspeed,long ttspeed)
+{
 #if defined(MSWINDOWS)
 	DCB dcb = { 0 };
 	char commtext[80];
 #elif defined(UNIX)
+#if defined(USE_TERMIOS)
 	struct termios tios;
-	speed_t tspeed;
+#elif defined(USE_SGTTY)
+	struct sgttyb sgtty;
+#elif defined(USE_TERMIO)
+	struct termio tio;
+#endif
+	speed_t tspeed; /* representation of speed sutable for termios */
+	speed_t deftspeed;
 #elif defined(DOS)
 	int port;
 #else
-#error platform not defined
+ # error platform not defined
 #endif
-	long ephspeed;
+	long ephspeed; /* representation of speed sutable for camera command */
 	int rc;
 	int count=0;
 
+	/* speed is real, tell it to the camera.  ttspeed is what you have
+	   to tell to the serial driver to make it set real speed */
+
 	if (speed == 0) speed=MAX_SPEED;
+	if (ttspeed == 0) ttspeed=speed;
+	if (defttspeed == 0) defttspeed=DEFSPEED;
 
 	switch (speed) {
-	case 9600:
-#ifdef UNIX
-		tspeed=B9600;
-#endif
-		ephspeed=1;	break;
-	case 19200:
-#ifdef UNIX
-		tspeed=EXTA;
-#endif
-		ephspeed=2;	break;
-	case 38400:
-#ifdef UNIX
-		tspeed=EXTB;
-#endif
-		ephspeed=3;	break;
-	case 57600:
-#ifdef UNIX
-#ifdef B57600
-		tspeed=B57600;
-#else
-		eph_error(iob,ERR_BADSPEED,"specified speed %ld unsupported",
-									speed);
-		return -1;
-#endif
-#endif
-		ephspeed=4;	break;
-	case 115200:
-#ifdef UNIX
-#ifdef B115200
-		tspeed=B115200;
-#else
-		eph_error(iob,ERR_BADSPEED,"specified speed %ld unsupported",
-									speed);
-		return -1;
-#endif
-#endif
-		ephspeed=5;	break;
+	case 9600:	ephspeed=1;	break;
+	case 19200:	ephspeed=2;	break;
+	case 38400:	ephspeed=3;	break;
+	case 57600:	ephspeed=4;	break;
+	case 115200:	ephspeed=5;	break;
 	default:
 		eph_error(iob,ERR_BADSPEED,"specified speed %ld invalid",speed);
 		return -1;
 	}
+
+#if defined(UNIX)
+	if ((tspeed=speed2flag(ttspeed)) == (speed_t)-1) {
+		eph_error(iob,ERR_BADSPEED,"specified speed %ld unsupported",
+				ttspeed);
+		return -1;
+	}
+	if ((deftspeed=speed2flag(defttspeed)) == (speed_t)-1) {
+		eph_error(iob,ERR_BADSPEED,"specified speed %ld unsupported",
+				defttspeed);
+		return -1;
+	}
+#endif /* UNIX */
 
 	iob->timeout=DATATIMEOUT+((2048000000L)/speed)*10;
 	if (iob->debug) printf("set timeout to %lu\n",DATATIMEOUT+iob->timeout);
@@ -241,11 +345,11 @@ int eph_open(eph_iob *iob,char *devname,long speed) {
 #endif
 	if ((iob->fd=open(devname,O_RDWR | O_NDELAY)) < 0) {
 #else
-#error platform not defined
+ # error platform not defined
 #endif
-/*		if (strlen(devname) < 400)
-eph_error(iob,ERRNO,"open %s error %s",devname,strerror(ERRNO));
-*/
+		if (strlen(devname) < 400) /* we have 512 byte buffer there */
+			eph_error(iob,ERRNO,"open %s error %s",
+						devname,strerror(ERRNO));
 		return -1;
 	}
 
@@ -283,15 +387,16 @@ eph_error(iob,ERRNO,"open %s error %s",devname,strerror(ERRNO));
 	iob->worktimeouts.WriteTotalTimeoutMultiplier=0;
 	iob->worktimeouts.WriteTotalTimeoutConstant=0;
 	if (!SetCommTimeouts(iob->fd, &iob->worktimeouts)) {
-/*eph_error(iob,ERRNO,"SetCommTimeouts initial attr error %s",strerror(ERRNO));*/
+		eph_error(iob,ERRNO,"SetCommTimeouts initial attr error %s",
+					strerror(ERRNO));
 		CLOSE(iob->fd);
 		return -1;
 	}
 
 #elif defined(UNIX)
-
+#if defined(USE_TERMIOS)
 	if (tcgetattr(iob->fd,&tios) < 0) {
-/*eph_error(iob,ERRNO,"tcgetattr error %s",strerror(ERRNO));*/
+		eph_error(iob,ERRNO,"tcgetattr error %s",strerror(ERRNO));
 		close(iob->fd);
 		return -1;
 	}
@@ -303,8 +408,8 @@ eph_error(iob,ERRNO,"open %s error %s",devname,strerror(ERRNO));
 	tios.c_oflag=0;
 	tios.c_lflag=0;
 #endif
-	cfsetospeed(&tios,DEFSPEED);
-	cfsetispeed(&tios,DEFSPEED);
+	cfsetospeed(&tios,deftspeed);
+	cfsetispeed(&tios,deftspeed);
 #ifdef USE_VMIN_AND_VTIME
 	tios.c_cc[VMIN]=127;
 	tios.c_cc[VTIME]=1;
@@ -329,14 +434,42 @@ eph_error(iob,ERRNO,"open %s error %s",devname,strerror(ERRNO));
 	tios.c_iflag&=~INPCK;
 	tios.c_iflag|=IGNBRK;
 	if (tcsetattr(iob->fd,TCSANOW,&tios)) {
-/*eph_error(iob,ERRNO,"tcsetattr initial attr error %s", strerror(ERRNO));*/
+		eph_error(iob,ERRNO,"tcsetattr initial attr error %s",
+					strerror(ERRNO));
 		close(iob->fd);
 		return -1;
 	}
+#elif defined(USE_SGTTY)
+	if (ioctl(iob->fd, TIOCGETP, &sgtty) < 0) {
+		eph_error(iob,ERRNO,"ioctl/TIOCGETP error %s",strerror(ERRNO));
+		close(iob->fd);
+		return -1;
+	}
+	memcpy(&iob->savesgtty,&sgtty,sizeof(sgtty));
+	sgtty.sg_ispeed = deftspeed;
+	sgtty.sg_ospeed = deftspeed;
+	sgtty.sg_erase = 0;
+	sgtty.sg_kill = 0;
+	sgtty.sg_flags = RAW;
+	if (ioctl(iob->fd, TIOCSETN, &sgtty) < 0) {
+		eph_error(iob,ERRNO,"ioctl/TIOCSETN initial attr error %s",
+					strerror(ERRNO));
+		close(iob->fd);
+		return -1;
+	}
+#elif defined(USE_TERMIO)
+ # error "termio not supported"
+#endif /* terminal control selection */
 
 #endif /* MSWINDOWS/UNIX; do nothing for DOS */
 
 	do {
+		if (eph_flushinput(iob)) {
+			eph_error(iob,ERRNO,"error flushing input: %s",
+					strerror(ERRNO));
+			CLOSE(iob->fd);
+			return -1;
+		}
 		eph_writeinit(iob);
 		rc=eph_waitsig(iob);
 		if (rc) usleep(3000000L);
@@ -346,45 +479,64 @@ eph_error(iob,ERRNO,"open %s error %s",devname,strerror(ERRNO));
 		return -1;
 	}
 
-	if (eph_flushinput(iob)) {
-/*eph_error(iob,ERRNO,"error flushing input: %s",strerror(ERRNO));*/
-		CLOSE(iob->fd);
-		return -1;
-	}
-
 	if (eph_setispeed(iob,ephspeed)) {
-/*eph_error(iob,ERRNO,"could not switch camera speed %d: %s",ephspeed,strerror(ERRNO));*/
+		eph_error(iob,ERRNO,"could not switch camera speed %d: %s",
+				ephspeed,strerror(ERRNO));
 		CLOSE(iob->fd);
 		return -1;
 	}
 
 #if defined(MSWINDOWS)
-	dcb.BaudRate = speed;
+	dcb.BaudRate = ttspeed;
 	if (!SetCommState(iob->fd, &dcb)) {
-/*eph_error(iob,ERRNO,"SetCommState working attr error %s", strerror(ERRNO));*/
-#elif defined(UNIX)
-	cfsetospeed(&tios,tspeed);
-	cfsetispeed(&tios,tspeed);
-	if (tcsetattr(iob->fd,TCSANOW,&tios)) {
-/*eph_error(iob,ERRNO,"tcsetattr working attr error %s",strerror(ERRNO));*/
-#elif defined(DOS)
-	ttclose();
-	TTinit(port, speed);
-	if (ttopen()) {
-		errno = 0;
-/*eph_error(iob,ERRNO,"dobaud set working attr error %s",strerror(ERRNO));*/
-#else
-#error platform not defined
-#endif
+		eph_error(iob,ERRNO,"SetCommState working attr error %s",
+					strerror(ERRNO));
 		CLOSE(iob->fd);
 		return -1;
 	}
+#elif defined(UNIX)
+#if defined(USE_TERMIOS)
+	cfsetospeed(&tios,tspeed);
+	cfsetispeed(&tios,tspeed);
+	if (tcsetattr(iob->fd,TCSANOW,&tios)) {
+		eph_error(iob,ERRNO,"tcsetattr working attr error %s",
+					strerror(ERRNO));
+		close(iob->fd);
+		return -1;
+	}
+#elif defined(USE_SGTTY)
+	sgtty.sg_ispeed = tspeed;
+	sgtty.sg_ospeed = tspeed;
+	if (ioctl(iob->fd, TIOCSETN, &sgtty)) {
+		eph_error(iob,ERRNO,"ioctl/TIOCSETN cound not reset attr: %s",
+					strerror(ERRNO));
+		close(iob->fd);
+		return -1;
+	}
+#elif defined(USE_TERMIO)
+ # error "termio not supported"
+#endif
+#elif defined(DOS)
+	ttclose();
+	TTinit(port, ttspeed);
+	if (ttopen()) {
+		errno = 0;
+		eph_error(iob,ERRNO,"dobaud set working attr error %s",
+					strerror(ERRNO));
+		CLOSE(iob->fd);
+		return -1;
+	}
+#else
+ # error platform not defined
+#endif
 
 	usleep(SPEEDCHGDELAY);
 	return 0;
 }
 
-int eph_close(eph_iob *iob,int switchoff) {
+int
+eph_close(eph_iob *iob,int switchoff)
+{
 
 	if (switchoff) {
 		char zero=0;
@@ -397,17 +549,24 @@ int eph_close(eph_iob *iob,int switchoff) {
 	}
 
 #if defined(MSWINDOWS)
-/*
 	if (!SetCommState(iob->fd, &iob->savedcb))
-eph_error(iob,ERRNO,"SetCommState reset attr error %s",strerror(ERRNO));
+		eph_error(iob,ERRNO,"SetCommState reset attr error %s",
+					strerror(ERRNO));
 	if (!SetCommTimeouts(iob->fd, &iob->savetimeouts))
 		eph_error(iob,ERRNO,"SetCommTimeouts reset attr error %s",
 					strerror(ERRNO));
-*/
 #elif defined(UNIX)
-	if (tcsetattr(iob->fd,TCSANOW,&iob->savetios)) {
-/*eph_error(iob,ERRNO,"tcsetattr cound not reset attr: %s",strerror(ERRNO));*/
-	}
+#if defined(USE_TERMIOS)
+	if (tcsetattr(iob->fd,TCSANOW,&iob->savetios))
+		eph_error(iob,ERRNO,"tcsetattr cound not reset attr: %s",
+					strerror(ERRNO));
+#elif defined(USE_SGTTY)
+	if (ioctl(iob->fd, TIOCSETN, &iob->savesgtty))
+		eph_error(iob,ERRNO,"tcsetattr cound not reset attr: %s",
+					strerror(ERRNO));
+#elif defined(USE_TERMIO)
+ # error "termio not supported"
+#endif
 #endif /* MSWINDOWS/UNIX; do nothing for DOS */
 
 	return CLOSE(iob->fd);

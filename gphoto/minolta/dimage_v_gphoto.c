@@ -88,11 +88,12 @@ struct Image *dimage_v_get_preview()
 
 int dimage_v_delete_image(int picture_number)
 {
+	gpio_device *dev;
 	int dimage_v_fd=-1;
 	unsigned char tmp=0, del_cmd[3]="\x05\x00\x00";
 	dimage_v_buffer *packet, *payload;
 
-	if ((dimage_v_fd=dimage_v_open(serial_port))<0)
+	if ((dev=dimage_v_open(serial_port))<0)
 	{
 		error_dialog("Unable to access serial_port");
 		return 0;
@@ -102,40 +103,40 @@ int dimage_v_delete_image(int picture_number)
 
 	/* Find out what we're set to now. */
 	packet=dimage_v_make_packet("\x09", 1, 0);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	packet=dimage_v_read_packet(dimage_v_fd,0);
+	while (dimage_v_read_byte(dev)!=ACK);
+	packet=dimage_v_read_packet(dev,0);
 	payload=dimage_v_strip_packet(packet);
 	dimage_v_delete_packet(packet);
-	dimage_v_send_byte(dimage_v_fd, EOT);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
 	usleep(100);
 
 	/* Now enter host mode */
 	packet=dimage_v_make_packet("\x08", 1, 0);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	while (dimage_v_read_byte(dev)!=ACK);
 	payload->contents[0]= 0x82;
 	payload->contents[8]= 0x00;
 	packet=dimage_v_make_packet(payload->contents, payload->length, 1);
-	dimage_v_write_packet(packet, dimage_v_fd);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	dimage_v_send_byte(dimage_v_fd, EOT);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	dimage_v_write_packet(packet, dev);
+	while (dimage_v_read_byte(dev)!=ACK);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
 
 	packet=dimage_v_make_packet("\x08", 1, 0);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	while (dimage_v_read_byte(dev)!=ACK);
 	payload->contents[8]= 0x81;
 	packet=dimage_v_make_packet(payload->contents, payload->length, 1);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	dimage_v_send_byte(dimage_v_fd, EOT);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	while (dimage_v_read_byte(dev)!=ACK);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
 
 	fprintf(stderr, "We've entered host mode(tm)\n");
 	fflush(stderr);
@@ -149,8 +150,8 @@ int dimage_v_delete_image(int picture_number)
 	fflush(stderr);
 
 	packet=dimage_v_make_packet(del_cmd, 3, 0);
-	dimage_v_write_packet(packet, dimage_v_fd);
-	switch(dimage_v_read_byte(dimage_v_fd))
+	dimage_v_write_packet(packet, dev);
+	switch(dimage_v_read_byte(dev))
 	{
 		case ACK:
 			fprintf(stderr,"Got the ACK.\n");
@@ -164,54 +165,56 @@ int dimage_v_delete_image(int picture_number)
 
 	dimage_v_delete_packet(packet);
 
-	packet=dimage_v_read_packet(dimage_v_fd, 0);
+	packet=dimage_v_read_packet(dev, 0);
 	payload=dimage_v_strip_packet(packet);
 	dimage_v_delete_packet(packet);
 	dimage_v_delete_packet(payload);
 
-	dimage_v_send_byte(dimage_v_fd, EOT);
+	dimage_v_send_byte(dev, EOT);
 	fprintf(stderr, "Sent the EOT\n");
-	while((tmp=dimage_v_read_byte(dimage_v_fd))!=ACK){fprintf(stderr, "Waiting for an ACK\n");};
+	while((tmp=dimage_v_read_byte(dev))!=ACK){fprintf(stderr, "Waiting for an ACK\n");};
 	fprintf(stderr, "Got the ACK. CLose up shop.\n");
 
 	/* Now leave host mode. */
 	packet=dimage_v_make_packet("\x09", 1, 0);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	packet=dimage_v_read_packet(dimage_v_fd,0);
+	while (dimage_v_read_byte(dev)!=ACK);
+	packet=dimage_v_read_packet(dev,0);
 	payload=dimage_v_strip_packet(packet);
 	dimage_v_delete_packet(packet);
-	dimage_v_send_byte(dimage_v_fd, EOT);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
 	usleep(100);
 
 	/* Now leave host mode */
 	packet=dimage_v_make_packet("\x08", 1, 0);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	while (dimage_v_read_byte(dev)!=ACK);
 	payload->contents[0]=payload->contents[0] - 0x80;
 	payload->contents[8]= 0x00;
 	packet=dimage_v_make_packet(payload->contents, payload->length, 1);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(payload);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	dimage_v_send_byte(dimage_v_fd, EOT);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	tcsetattr(dimage_v_fd, TCSANOW, &oldt);
-	close(dimage_v_fd);
+	while (dimage_v_read_byte(dev)!=ACK);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
+
+	gpio_close(dev);
+	gpio_free(dev);
 
 	return 1;
 }
 
 int dimage_v_take_picture()
 {
+	gpio_device *dev;
 	int dimage_v_fd=-1;
 	dimage_v_buffer *packet, *payload;
 
-	if ((dimage_v_fd=dimage_v_open(serial_port))<0)
+	if ((dev = dimage_v_open(serial_port))<0)
 	{
 		error_dialog("Unable to access serial_port");
 		return 0;
@@ -219,41 +222,41 @@ int dimage_v_take_picture()
 
 	/* Find out what we're set to now. */
 	packet=dimage_v_make_packet("\x09", 1, 0);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	packet=dimage_v_read_packet(dimage_v_fd,0);
+	while (dimage_v_read_byte(dev)!=ACK);
+	packet=dimage_v_read_packet(dev,0);
 	payload=dimage_v_strip_packet(packet);
 	dimage_v_delete_packet(packet);
-	dimage_v_send_byte(dimage_v_fd, EOT);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
 	usleep(100);
 
 	/* Now enter host mode */
 	packet=dimage_v_make_packet("\x08", 1, 0);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	while (dimage_v_read_byte(dev)!=ACK);
 	payload->contents[0]=payload->contents[0] | 0x80;
 	payload->contents[8]= 0x00;
 	packet=dimage_v_make_packet(payload->contents, payload->length, 1);
-	dimage_v_write_packet(packet, dimage_v_fd);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	dimage_v_send_byte(dimage_v_fd, EOT);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	dimage_v_write_packet(packet, dev);
+	while (dimage_v_read_byte(dev)!=ACK);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
 
 	packet=dimage_v_make_packet("\x08", 1, 0);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	while (dimage_v_read_byte(dev)!=ACK);
 	payload->contents[0]=payload->contents[0] | 0x80;
 	payload->contents[8]= 0x81;
 	packet=dimage_v_make_packet(payload->contents, payload->length, 1);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	dimage_v_send_byte(dimage_v_fd, EOT);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	while (dimage_v_read_byte(dev)!=ACK);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
 
 	update_status("We've entered host mode(tm)");
 
@@ -261,40 +264,42 @@ int dimage_v_take_picture()
 	fprintf(stderr, "We're leaving host mode(tm)\n");
 	fflush(stderr);
 
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	packet=dimage_v_read_packet(dimage_v_fd,0);
+	while (dimage_v_read_byte(dev)!=ACK);
+	packet=dimage_v_read_packet(dev,0);
 	payload=dimage_v_strip_packet(packet);
 	dimage_v_delete_packet(packet);
-	dimage_v_send_byte(dimage_v_fd, EOT);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
 	usleep(100);
 
 	packet=dimage_v_make_packet("\x08", 1, 0);
-	dimage_v_write_packet(packet, dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
+	while (dimage_v_read_byte(dev)!=ACK);
 	payload->contents[0]=payload->contents[0] - 0x80;
 	payload->contents[8]= 0x00;
 	packet=dimage_v_make_packet(payload->contents, payload->length, 1);
-	dimage_v_write_packet(packet, dimage_v_fd);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	dimage_v_send_byte(dimage_v_fd, EOT);
-	while (dimage_v_read_byte(dimage_v_fd)!=ACK);
-	tcsetattr(dimage_v_fd, TCSANOW, &oldt);
-	close(dimage_v_fd);
+	dimage_v_write_packet(packet, dev);
+	while (dimage_v_read_byte(dev)!=ACK);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
+
+	gpio_close(dev);
+	gpio_free(dev);
 
 	return 0;
 }
 
 int dimage_v_number_of_pictures()
 {
+	gpio_device *dev;
 	int minoltafd=0, numpics=0;
 	unsigned char response=0;
 	dimage_v_buffer *packet, *payload;
 
-	if ((minoltafd=dimage_v_open(serial_port))< 0)
+	if ((dev = dimage_v_open(serial_port))< 0)
 	{
 		fprintf(stderr, "dimage_v_number_of_pictures::unable to open serial_port");
 		return 0;
@@ -306,8 +311,8 @@ int dimage_v_number_of_pictures()
 		return 0;
 	}
 
-	dimage_v_write_packet(packet, minoltafd);
-	response = dimage_v_read_byte(minoltafd);
+	dimage_v_write_packet(packet, dev);
+	response = dimage_v_read_byte(dev);
 	/* This might not need to be a switch now, but someday ... */
 	switch (response)
 	{
@@ -320,9 +325,9 @@ int dimage_v_number_of_pictures()
 	}
 
 	dimage_v_delete_packet(packet);
-	packet=dimage_v_read_packet(minoltafd, 0);
-	dimage_v_send_byte(minoltafd, EOT);
-	while (dimage_v_read_byte(minoltafd)!=ACK);
+	packet=dimage_v_read_packet(dev, 0);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
 
 	payload=dimage_v_strip_packet(packet);
 	dimage_v_delete_packet(packet);
@@ -334,32 +339,33 @@ int dimage_v_number_of_pictures()
 
 	/* Now leave host mode. */
 	packet=dimage_v_make_packet("\x09", 1, 0);
-	dimage_v_write_packet(packet, minoltafd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(minoltafd)!=ACK);
-	packet=dimage_v_read_packet(minoltafd,0);
+	while (dimage_v_read_byte(dev)!=ACK);
+	packet=dimage_v_read_packet(dev,0);
 	payload=dimage_v_strip_packet(packet);
 	dimage_v_delete_packet(packet);
-	dimage_v_send_byte(minoltafd, EOT);
-	while (dimage_v_read_byte(minoltafd)!=ACK);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
 	usleep(100);
 
 	/* Now leave host mode */
 	packet=dimage_v_make_packet("\x08", 1, 0);
-	dimage_v_write_packet(packet, minoltafd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(minoltafd)!=ACK);
+	while (dimage_v_read_byte(dev)!=ACK);
 	payload->contents[0]=payload->contents[0] - 0x80;
 	payload->contents[8]= 0x00;
 	packet=dimage_v_make_packet(payload->contents, payload->length, 1);
-	dimage_v_write_packet(packet, minoltafd);
+	dimage_v_write_packet(packet, dev);
 	dimage_v_delete_packet(payload);
 	dimage_v_delete_packet(packet);
-	while (dimage_v_read_byte(minoltafd)!=ACK);
-	dimage_v_send_byte(minoltafd, EOT);
-	while (dimage_v_read_byte(minoltafd)!=ACK);
-	tcsetattr(minoltafd, TCSANOW, &oldt);
-	close(minoltafd);
+	while (dimage_v_read_byte(dev)!=ACK);
+	dimage_v_send_byte(dev, EOT);
+	while (dimage_v_read_byte(dev)!=ACK);
+
+	gpio_close(dev);
+	gpio_free(dev);
 
 	return numpics;
 }

@@ -1,17 +1,15 @@
 #define DEFINE_GLOBALS
 #include "qm100.h"
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * transmit - send a command packet, and read the response             *
  *            packet.                                                  *
  *                                                                     *
  *---------------------------------------------------------------------*/
-int qm100_transmit(int serialdev, unsigned char *cmd, int cmd_len, 
+int qm100_transmit(int serialdev, unsigned char *cmd, int cmd_len,
                    qm100_packet_block *packet, char *title)
 {
-   
-   if (qm100_trace) 
+   if (qm100_trace)
       fprintf(qm100_trace, "Beginning operation: %s\n", title);
    qm100_attention(serialdev);
    qm100_sendPacket(serialdev, cmd, cmd_len);
@@ -21,7 +19,6 @@ int qm100_transmit(int serialdev, unsigned char *cmd, int cmd_len,
       qm100_endTransmit(serialdev, title);
    return (1);
 }
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * attention - get camera's permission to send a command packet.       *
@@ -32,7 +29,6 @@ void qm100_attention(int serialdev)
    char c;
    qm100_packet_block packet;
    int  limit;
-   
   restart:
    /*------------------------------------------------------------------*
     *                                                                  *
@@ -40,15 +36,14 @@ void qm100_attention(int serialdev)
     * Retry this up to 100 time, at 10ms intervals.                    *
     *                                                                  *
     *------------------------------------------------------------------*/
-   limit = 100;  
-   do 
+   limit = 100;
+   do
       {
       qm100_writeByte(serialdev, SIO_ENQ);
       c=qm100_readTimedByte(serialdev);
       } while (c == 0 && --limit >0);
    if (c)
       c=qm100_readByte(serialdev);
-
    switch (c)
       {
       case  SIO_ENQ:
@@ -64,7 +59,7 @@ void qm100_attention(int serialdev)
             {
             qm100_getPacket(serialdev, &packet);  // get his data
             qm100_writeByte(serialdev, SIO_ACK);  // and acknowledge
-            qm100_readByte(serialdev);            // should be eot   
+            qm100_readByte(serialdev);            // should be eot
             }
          goto restart;
       case  SIO_EOT:
@@ -96,7 +91,6 @@ void qm100_attention(int serialdev)
    if (qm100_trace)
       fprintf(qm100_trace, "Attention acknowledged by camera\n");
 }
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * sendPacket - send command packet to the camera, escaping/encoding   *
@@ -110,7 +104,6 @@ void qm100_sendPacket(int serialdev, unsigned char *cmd, int cmd_len)
    unsigned char packet_sum=0;
    unsigned packet_pos=0, cmd_pos=0, esc_lookup=0;
    int data;
-   
    /*------------------------------------------------------------------*
     *                                                                  *
     * Initialize translate table for escape/encoding                   *
@@ -123,7 +116,6 @@ void qm100_sendPacket(int serialdev, unsigned char *cmd, int cmd_len)
    esc_list[0x06] = 0xf9;
    esc_list[0x11] = 0xee;
    esc_list[0x1b] = 0xe4;
-   
    /*------------------------------------------------------------------*
     *                                                                  *
     * Build packet header, consisting of SIO_STX, followed by 2-byte   *
@@ -133,7 +125,6 @@ void qm100_sendPacket(int serialdev, unsigned char *cmd, int cmd_len)
    memset(&packet, 0, sizeof(packet));
    packet[packet_pos]=SIO_STX;
    packet_pos++;
-   
    esc_lookup = esc_list[ (cmd_len & 0xff) ];
    packet_sum+=(cmd_len & 0xff);
    if (esc_lookup)
@@ -148,7 +139,6 @@ void qm100_sendPacket(int serialdev, unsigned char *cmd, int cmd_len)
       packet[packet_pos]=(cmd_len & 0xff);
       packet_pos++;
       }
-   
    esc_lookup = esc_list[((cmd_len>>8) & 0xff)];
    packet_sum+=((cmd_len>>8) & 0xff);
    if (esc_lookup)
@@ -173,7 +163,6 @@ void qm100_sendPacket(int serialdev, unsigned char *cmd, int cmd_len)
       data=cmd[cmd_pos];
       cmd_pos++;
       packet_sum+=data;
-      
       esc_lookup = esc_list[data];
       if (esc_lookup)
          {
@@ -187,7 +176,6 @@ void qm100_sendPacket(int serialdev, unsigned char *cmd, int cmd_len)
          packet[packet_pos]=data;
          packet_pos++;
          }
-      
       }
    /*------------------------------------------------------------------*
     *                                                                  *
@@ -199,7 +187,6 @@ void qm100_sendPacket(int serialdev, unsigned char *cmd, int cmd_len)
    packet_pos++;
    packet_sum += SIO_ETX;
    packet_sum = packet_sum & 0xff;
-   
    esc_lookup = esc_list[packet_sum];
    if (esc_lookup)
       {
@@ -213,18 +200,16 @@ void qm100_sendPacket(int serialdev, unsigned char *cmd, int cmd_len)
       packet[packet_pos]=packet_sum;
       packet_pos++;
       }
-   
    /*------------------------------------------------------------------*
     *                                                                  *
     * Send the encoded packet to the camera.                           *
     *                                                                  *
     *------------------------------------------------------------------*/
-   if (qm100_trace) 
+   if (qm100_trace)
       dump(qm100_trace, "Send Packet", packet, packet_pos);
-   if ((write(serialdev, packet, packet_pos)) < packet_pos) 
+   if ((write(serialdev, packet, packet_pos)) < packet_pos)
       qm100_error(serialdev, "Cannot write to device", errno);
 }
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * getAck - Read and verify acknowledgement from camera, discarding    *
@@ -237,12 +222,10 @@ void qm100_getAck(int serialdev)
 {
    char c;
    unsigned  retries=0;
-   
    c=qm100_readByte(serialdev);
    if (c != SIO_ACK)
       qm100_error(serialdev, "Acknowledgement Failed", 0);
    qm100_writeByte(serialdev, (char) SIO_EOT);
-   
    while(c != SIO_ENQ)
       {
       retries++;
@@ -250,10 +233,8 @@ void qm100_getAck(int serialdev)
       }
    if (retries > 2)
       printf("%u unexpected bytes discarded\n", retries-1);
-   
    qm100_writeByte(serialdev, SIO_ACK);
 }
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * packetError - send packet error message to stdout,                  *
@@ -272,7 +253,6 @@ static void packetError(char *msg, int retry, int pktcnt)
       fflush(qm100_trace);
       }
 }
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * getPacket - receive a packet from the camera.                       *
@@ -306,7 +286,6 @@ int qm100_getPacket(int serialdev, qm100_packet_block *packet)
    short len, pos=0;
    int  retries=0;
    static int pktcnt = 0;
-   
    ++pktcnt;
   restart:
    ++retries;
@@ -344,7 +323,7 @@ int qm100_getPacket(int serialdev, qm100_packet_block *packet)
       pos++;
       sum+=c;
       }
-   if (qm100_trace) 
+   if (qm100_trace)
       dump(qm100_trace, "Receive Packet", packet->packet, packet->packet_len);
    /*------------------------------------------------------------------*
     *                                                                  *
@@ -365,7 +344,7 @@ int qm100_getPacket(int serialdev, qm100_packet_block *packet)
    sum+=c;
    sum=(sum & 0xff);
    qm100_sum=qm100_readCodedByte(serialdev);
-   if (qm100_sum != sum) 
+   if (qm100_sum != sum)
       {
       packetError("Transmission checksum error", retries, pktcnt);
       goto restart;
@@ -378,7 +357,6 @@ int qm100_getPacket(int serialdev, qm100_packet_block *packet)
    qm100_writeByte(serialdev, SIO_ACK);
    return 0;
 }
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * endTransmission - read and verify end of transmission from the      *
@@ -389,12 +367,11 @@ void qm100_endTransmit(int serialdev, char *title)
 {
    char c;
    c=qm100_readByte(serialdev);
-   if (c != SIO_EOT) 
+   if (c != SIO_EOT)
       qm100_error(serialdev, "End of Transmission Failed", 0);
    if (qm100_trace)
       fprintf(qm100_trace, "End transmission for %s\n", title);
 }
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * continueTransmission - tell camera to resume transmission.          *
@@ -407,18 +384,16 @@ void qm100_endTransmit(int serialdev, char *title)
 void qm100_continueTransmission(int serialdev, char *title)
 {
    char c;
-   
    if (qm100_trace)
       fprintf(qm100_trace, "Continue transmission for %s\n", title);
    c=qm100_readByte(serialdev);
-   if (c != SIO_EOT) 
+   if (c != SIO_EOT)
       qm100_error(serialdev, "Unexpected response to continue Transmission", 0);
    c=qm100_readByte(serialdev);
-   if (c != SIO_ENQ) 
+   if (c != SIO_ENQ)
       qm100_error(serialdev, "Unexpected response to continue Transmission", 0);
    qm100_writeByte(serialdev, SIO_ACK);
 }
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * getRealPicNum - return camera's internal number for a picture.      *
@@ -432,7 +407,6 @@ int qm100_getRealPicNum(int serialdev, int picNum)
 {
    qm100_packet_block packet;
    int realPicNum;
-   
    qm100_getPicInfo(serialdev, picNum, &packet);
    if (packet.packet_len == 0x3ff)
       sscanf(PICNUM, "%d", &realPicNum);       // hpc20
@@ -442,7 +416,6 @@ int qm100_getRealPicNum(int serialdev, int picNum)
       qm100_error(serialdev,"Unexpected packet length in response to getPicInfo",0);
    return (realPicNum);
 }
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * qm100_getCommandTermination - get command acknowledgement           *
@@ -470,7 +443,6 @@ void  qm100_getCommandTermination(int serialdev)
 {
    qm100_packet_block packet;
    char c;
-      
    c = qm100_readByte(serialdev);
    if (c != SIO_ENQ)
       qm100_error(serialdev,
@@ -478,7 +450,6 @@ void  qm100_getCommandTermination(int serialdev)
    qm100_writeByte(serialdev, SIO_ACK);
    qm100_getPacket(serialdev, &packet);
 }
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * setTransmitSpeed - determine baudrate and pacing values from        *
@@ -488,12 +459,10 @@ void  qm100_getCommandTermination(int serialdev)
 void  qm100_setTransmitSpeed(void)
 {
    char *sp;
-   
    sp = qm100_getKeyword("SPEED", DEFAULT_SPEED);
    while (qm100_transmitSpeed == 0)
       {
       unsigned l;
-      
       if (!sp)
          sp = DEFAULT_SPEED;
       l = strlen(sp);
@@ -514,7 +483,6 @@ void  qm100_setTransmitSpeed(void)
          sp = NULL;
          }
       }
-
    sp = qm100_getKeyword("PACING", DEFAULT_PACING);
    while (qm100_sendPacing == 0)
       {

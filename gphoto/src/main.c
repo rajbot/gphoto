@@ -42,9 +42,9 @@ extern  GtkAccelGroup*  mainag;
 	char	   post_process_script[1024]; /* Full path/filename	*/
 	GtkWidget *post_process_pixmap; /* Post process pixmap		*/
 
-	GtkAccelGroup*  mainag;
+	GtkAccelGroup *mainag;
 
-	struct _Camera  *Camera;
+struct Model *Camera = NULL;
 	struct ImageMembers Images;
 	struct ImageMembers Thumbnails;
 
@@ -52,21 +52,26 @@ extern  GtkAccelGroup*  mainag;
 
 void crash(int sig)
 {
-    char buddys[256];
-    sprintf(buddys,"bug-buddy --package=gphoto --package-ver=%s --pid=%d",VERSION, getpid());
-    fprintf(stdout,"gPhoto %s (built %s) process %d has crashed\n"
-	    "due to fatal errors.  Please send us a bug report!\n"
-	    "See $INSTALLPREFIX/doc/gphoto-%s/BUGS or\nhttp://gphoto.org/gphoto/bugs.html for details.\n",
-	    VERSION, __DATE__, getpid(), VERSION);
-    if (!system(buddys)) {
-	fprintf(stdout, N_("\nLaunching Gnome Bugbuddy...\n"));
-        fprintf(stdout,"%s\n",buddys);
-    }
-    abort();
+	char buddys[256];
+
+	sprintf(buddys,"bug-buddy --package=gphoto --package-ver=%s --pid=%d",VERSION, getpid());
+	fprintf(stdout,"gPhoto %s (built %s) process %d has crashed\n"
+		"due to fatal errors.  Please send us a bug report!\n"
+		"See $INSTALLPREFIX/doc/gphoto-%s/BUGS or\nhttp://gphoto.org/gphoto/bugs.html for details.\n",
+		VERSION, __DATE__, getpid(), VERSION);
+	if (!system(buddys)) {
+		fprintf(stdout, "\nLaunching Gnome Bugbuddy...\n");
+		fprintf(stdout,"%s\n",buddys);
+	}
+	abort();
 }
 
-int main (int argc, char *argv[]) {
+#ifdef sun
+char *__progname;
+#endif
 
+int main(int argc, char *argv[])
+{
 	int has_rc=0;
 
 	GtkWidget *mainWin;
@@ -85,22 +90,31 @@ int main (int argc, char *argv[]) {
 	char title[256];
 	char *envhome;
 
+#ifdef ENABLE_NLS
+        bindtextdomain (PACKAGE, PACKAGE_LOCALE_DIR);
+        textdomain (PACKAGE);
+#endif
+
 	signal(SIGSEGV, crash);
-	
+
+#ifdef sun
+	__progname = argv[0];
+#endif
+
 	Thumbnails.next = NULL;
 	Images.next=NULL;
 
 	/* Set the priority (taken from PhotoPC photopc.c) */
 #ifdef linux
-        if (geteuid() == 0) {
-                struct sched_param sp;
-                int rc,minp,maxp;
+	if (geteuid() == 0) {
+		struct sched_param sp;
+		int rc,minp,maxp;
 
-                minp=sched_get_priority_min(SCHED_FIFO);
-                maxp=sched_get_priority_max(SCHED_FIFO);
-                sp.sched_priority=minp+(maxp-minp)/2;
-                if ((rc=sched_setscheduler(0,SCHED_FIFO,&sp)) == -1)
-                        fprintf(stderr,"failed to set priority\n");
+		minp=sched_get_priority_min(SCHED_FIFO);
+		maxp=sched_get_priority_max(SCHED_FIFO);
+		sp.sched_priority=minp+(maxp-minp)/2;
+		if ((rc=sched_setscheduler(0,SCHED_FIFO,&sp)) == -1)
+			fprintf(stderr,"failed to set priority\n");
 	}
 #endif
 
@@ -118,10 +132,9 @@ int main (int argc, char *argv[]) {
 	
 	/* Command line mode anyone? ----------------------------- */
 	if (argc > 1) {
-	    command_line_mode = 1;
-	    has_rc = load_config();
-	    set_camera(camera_model);
-	    command_line(argc, argv);
+		command_line_mode = 1;
+		has_rc = load_config();
+		command_line(argc, argv);
 	} else
 	    command_line_mode = 0;
 
@@ -140,19 +153,18 @@ int main (int argc, char *argv[]) {
 #endif
 	gtk_widget_push_visual(gdk_imlib_get_visual());
 	gtk_widget_push_colormap(gdk_imlib_get_colormap());
-	
+
 	library_name = gtk_label_new("");
-	
+
 	has_rc = load_config();
-	set_camera(camera_model);
 
 	/* set up the main window -------------------------------- */
-	mainWin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-	gtk_container_border_width (GTK_CONTAINER(mainWin), 0);
-	sprintf(title, N_("gPhoto %s - the GNU digital camera application"), VERSION);
-	gtk_window_set_title (GTK_WINDOW(mainWin), title);
-	gtk_signal_connect (GTK_OBJECT(mainWin), "delete_event",
-			    GTK_SIGNAL_FUNC(delete_event), NULL);
+	mainWin = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_container_border_width(GTK_CONTAINER(mainWin), 0);
+	sprintf(title, "gPhoto %s - the GNU digital camera application", VERSION);
+	gtk_window_set_title(GTK_WINDOW(mainWin), title);
+	gtk_signal_connect(GTK_OBJECT(mainWin), "delete_event",
+			   GTK_SIGNAL_FUNC(delete_event), NULL);
 	gtk_widget_set_usize(mainWin, 730, 480);
 	gtk_widget_realize(mainWin);
 
@@ -175,10 +187,10 @@ int main (int argc, char *argv[]) {
 	gtk_widget_show(index_page);
 	index_window = gtk_scrolled_window_new(NULL,NULL);
         index_vp=gtk_viewport_new(NULL,NULL);
-        gtk_container_add(GTK_CONTAINER(index_window),index_vp);
+        gtk_container_add(GTK_CONTAINER(index_window), index_vp);
         gtk_widget_show(index_vp);
 	gtk_widget_show(index_window);
-	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(index_window),
+	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(index_window),
 					GTK_POLICY_AUTOMATIC,
 					GTK_POLICY_AUTOMATIC);
 	gtk_table_attach_defaults(GTK_TABLE(index_page),index_window,0,1,0,1);
@@ -198,10 +210,8 @@ int main (int argc, char *argv[]) {
 	gtk_widget_show(status_bar);
 	gtk_label_set_justify(GTK_LABEL(status_bar), GTK_JUSTIFY_LEFT);	
 	gtk_box_pack_start(GTK_BOX(sbox), status_bar, FALSE, FALSE, 0);
-	update_status("Select \"Camera->Get Index\" to preview images.");
+	update_status("Select \"Camera->Download Index->Thumbnails\" to begin.");	progress = gtk_progress_bar_new();
 
-
-	progress = gtk_progress_bar_new();
 	gtk_widget_show(progress);
 	gtk_box_pack_end(GTK_BOX(sbox), progress, FALSE, FALSE, 0);
 
@@ -266,8 +276,8 @@ int main (int argc, char *argv[]) {
 			 GTK_FILL|GTK_EXPAND, GTK_FILL, 0 , 0);
 
 	index_table = gtk_hbox_new(FALSE, 0);
-        gtk_widget_show(index_table);
-       gtk_container_add( GTK_CONTAINER(index_vp), index_table); 
+	gtk_widget_show(index_table);
+	gtk_container_add( GTK_CONTAINER(index_vp), index_table); 
 
 	gtk_box_pack_start(GTK_BOX(index_table), gpixmap, TRUE, FALSE, 0);
 
@@ -275,12 +285,12 @@ int main (int argc, char *argv[]) {
 	gtk_widget_show(mainWin);
 	if (!has_rc) {
 		/* put anything here to do on the first run */
-	  developer_dialog_create();
-	  error_dialog(
-"Could not load config file.\
-Resetting to defaults.\
-Click on \"Select Port-Camera Model\"\
-in the Configure menu to set your\
+		developer_dialog_create();
+		error_dialog(
+"Could not load config file.
+Resetting to defaults.
+Click on \"Select Port-Camera Model\"
+in the Configure menu to set your
 camera model and serial port");
 	}
 	gtk_main();

@@ -26,6 +26,7 @@
 #include "main.h"
 #include "util.h"
 #include "callbacks.h"
+#include <gpio.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -43,14 +44,14 @@ static gint okAction;
 
 extern struct ImageMembers Thumbnails;
 extern struct ImageMembers Images;
-extern struct _Camera *Camera;
+extern struct Model *Camera;
 extern struct Model cameras[];
 extern GtkWidget *library_name;
 extern GtkWidget *notebook;
 extern GtkWidget *stop_button;
 
-extern char	  camera_model[];
-extern char	  serial_port[];
+extern int	camera_type;
+extern char	serial_port[];
 
 extern gint	  post_process;
 extern char	  post_process_script[];
@@ -61,8 +62,8 @@ extern GtkWidget *index_table;
 extern char 	 *filesel_cwd;
 
 /* Search the image_info tags for "name", return its value (string) */
-char* find_tag(struct Image *im, char* name) {
-
+char *find_tag(struct Image *im, char *name)
+{
 	int i;
 
 	if (im==NULL) return(NULL);
@@ -72,161 +73,172 @@ char* find_tag(struct Image *im, char* name) {
 		if (!strncmp((im->image_info)[i],name,100))
 			return((im->image_info)[i+1]);
 
-	return(NULL); /* Nothing Found */
-};
+	if (!im || !im->image_info)
+		return NULL;
+	
+	for (i = 0; i < im->image_info_size; i+=2)
+		if (!strncmp((im->image_info)[i], name, 100))
+			return (im->image_info)[i+1];
 
-void index_page () {
-    gtk_notebook_set_page (GTK_NOTEBOOK(notebook), 0);
+	return NULL;	/* Nothing Found */
 }
 
-void next_page () {
-    gtk_notebook_next_page (GTK_NOTEBOOK(notebook));
+void index_page(void)
+{
+    gtk_notebook_set_page(GTK_NOTEBOOK(notebook), 0);
 }
 
-void prev_page () {
-    gtk_notebook_prev_page (GTK_NOTEBOOK(notebook));
+void next_page(void)
+{
+    gtk_notebook_next_page(GTK_NOTEBOOK(notebook));
 }
 
-void set_camera (char *model) {
+void prev_page(void)
+{
+    gtk_notebook_prev_page(GTK_NOTEBOOK(notebook));
+}
 
-	int i=0;
+void set_camera(char *model)
+{
+	int i;
 
-	while (strlen(cameras[i].name) > 0) {
-		if (strcmp(model, cameras[i].name) == 0) {
+	for (i = 0; cameras[i].name; i++) {
+		if (strcmp(model, cameras[i].name))
+			continue;
 
-		    if (!command_line_mode)
+		if (!command_line_mode)
 			gtk_label_set(GTK_LABEL(library_name),
 				      cameras[i].name);
+		else 
+			printf("set_camera: %s\n", cameras[i].name);
+		    
+		Camera = &cameras[i];
 
-		    Camera = cameras[i].library;
-
-		    if ((*Camera->initialize)() != 0) {
+		if (Camera->ops->initialize() != 0)
 			return;
-		    }
-		}
-		i++;
 	}
 }
 
-void configure_call() {
-
-	if ((*Camera->configure)() == 0)
-	 	error_dialog(N_("No configuration options."));
+void configure_call(void)
+{
+	if (Camera->ops->configure() == 0)
+	 	error_dialog("No configuration options.");
 }
 
-void mail_image_call() {
-	error_dialog(N_("Mail image needs to be implemented!"));
+void mail_image_call(void)
+{
+	error_dialog("Mail image needs to be implemented!");
 }
 
-void takepicture_call() {
-
+void takepicture_call(void)
+{
 	char status[256];
 	int picNum;
 
-	update_status(N_("Taking picture..."));
+	update_status("Taking picture...");
 	
-	picNum = (*Camera->take_picture)();
+	picNum = Camera->ops->take_picture();
 
-	if (picNum == 0) {
-	    error_dialog (N_("Could not take a picture."));
-	    return;
+	if (!picNum) {
+		error_dialog("Could not take a picture.");
+		return;
 	}
 	    
 	appendpic(picNum, 0, TRUE, NULL);
-	sprintf(status, N_("New picture is #%03i"), picNum);
-	gtk_notebook_set_page (GTK_NOTEBOOK(notebook), picNum);
+	sprintf(status, "New picture is #%03i", picNum);
+	gtk_notebook_set_page(GTK_NOTEBOOK(notebook), picNum);
 	update_status(status);
 }
 
-void format (GtkWidget *dialog, GtkObject *button) {
-
-        gint no_pics, i;
-        char error[32];
-
-	no_pics = (*Camera->number_of_pictures)();
-	i = no_pics;
-
-        gtk_widget_hide(dialog);
-        update_status(N_("Deleting ALL pictures."));
-
-	/* empty camera memory... */
-
-        while (i) {
-	    (*Camera->delete_picture)(i);
-	    remove_thumbnail(i);
-	    i--;
-	    sprintf(error, N_("Deleting %i...\n"), i);
-	    update_status(error);
-	    update_progress((float)i/(float)no_pics);
-	}
-	update_status (N_("Deleted all images."));
-	update_progress(0);
-        gtk_widget_destroy(dialog);
-}
-
-void del_pics (GtkWidget *dialog, GtkObject *button) {
-
-        gint i=1;
+void format(GtkWidget *dialog, GtkObject *button)
+{
+	gint current, no_pics, i;
 	char error[32];
 
-        struct ImageMembers *node = &Thumbnails;
+	no_pics = Camera->ops->number_of_pictures();
+	i = no_pics;
 
-        gtk_widget_hide(dialog);
-        update_status(N_("Deleting selected pictures..."));
+	gtk_widget_hide(dialog);
+	update_status("Deleting ALL pictures.");
 
-        /* delete from camera... */
-        node = node->next;  /* Point at first thumbnail */
-        while (node != NULL) {
-            	if (GTK_TOGGLE_BUTTON(node->button)->active) {
-			node = node->next;
-                	if ((*Camera->delete_picture)(i) != 0) {
-				remove_thumbnail(i);
-        	        	i--;}
-			   else {
-				sprintf(error, 
-				"Could not delete #%i", i);
-				error_dialog(error);
-			}}
-		   else {
-			node = node->next;
+	/* empty camera memory... */
+	while (i) {
+		if (Camera->ops->delete_picture(i) != 0) {	
+			remove_thumbnail(i);
+			sprintf(error, "Deleting %i...\n", i);
+			update_status(error);
+			update_progress((float)i/(float)no_pics);
+		} else  {
+			sprintf(error, "Could not delete #%i\n", i);
+			error_dialog(error);
 		}
-		i++;
-        }
-        gtk_widget_destroy(dialog);
-        update_status(N_("Done."));
+		i--;
+	}
+	update_status("Deleted all images.");
+	update_progress(0);
+	gtk_widget_destroy(dialog);
 }
 
-void del_dialog (int type) {
+void del_pics(GtkWidget *dialog, GtkObject *button)
+{
+	int i = 1;
+	char error[32];
+	struct ImageMembers *node = &Thumbnails;
 
+	gtk_widget_hide(dialog);
+	update_status("Deleting selected pictures...");
+
+	/* delete from camera... */
+	node = node->next;  /* Point at first thumbnail */
+	while (node != NULL) {
+		if (GTK_TOGGLE_BUTTON(node->button)->active) {
+			node = node->next;
+			if (Camera->ops->delete_picture(i) != 0) {
+				remove_thumbnail(i);
+				i--;
+			} else {
+				sprintf(error, "Could not delete #%i", i);
+				error_dialog(error);
+			}
+		} else
+			node = node->next;
+
+		i++;
+	}
+	gtk_widget_destroy(dialog);
+	update_status("Done.");
+}
+
+void del_dialog(int type)
+{
 	/*
 	   Shows the delete confirmation dialog
 	   type == 1: all
 	   type == 0; selected
 	*/
-
 	int nothing_selected = 1;
 	GtkWidget *dialog, *button, *label;
 
-	if (type==0) {
-	    struct ImageMembers *node = &Thumbnails;
-	    while (node->next != NULL) {
-		node = node->next;
-		if (GTK_TOGGLE_BUTTON(node->button)->active)
-		    nothing_selected = 0;
-	    }
-	    if (nothing_selected) {
-		update_status(N_("Nothing selected to be deleted."));
-		return;
-	    }
+	if (!type) {
+		struct ImageMembers *node = &Thumbnails;
+
+		while (node->next != NULL) {
+			node = node->next;
+			if (GTK_TOGGLE_BUTTON(node->button)->active)
+				nothing_selected = 0;
+		}
+		if (nothing_selected) {
+			update_status("Nothing selected to be deleted.");
+			return;
+		}
 	}
 
 	dialog = gtk_dialog_new();
 	
-	if (type==0) {
-	    label = gtk_label_new(N_("Are you sure you want to DELETE the selected images?"));
-	} else if (type==1) {
-	    label = gtk_label_new(N_("Are you sure you want to DELETE all the images from memory?"));
-	}
+	if (!type)
+	    label = gtk_label_new("Are you sure you want to DELETE the selected images?");
+	else if (type == 1)
+	    label = gtk_label_new("Are you sure you want to DELETE all the images from memory?");
 
 	gtk_widget_show(label);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
@@ -235,12 +247,12 @@ void del_dialog (int type) {
 	button = gtk_button_new_with_label(N_("Yes"));
 	gtk_widget_show(button);
 	
-	if (type==0) {
-	    gtk_signal_connect_object(GTK_OBJECT(button), "clicked", 
+	if (!type) {
+		gtk_signal_connect_object(GTK_OBJECT(button), "clicked", 
 				      GTK_SIGNAL_FUNC(del_pics), 
 				      GTK_OBJECT(dialog));
-	} else if (type==1) {
-	    gtk_signal_connect_object(GTK_OBJECT(button), "clicked", 
+	} else if (type == 1) {
+		gtk_signal_connect_object(GTK_OBJECT(button), "clicked", 
 				      GTK_SIGNAL_FUNC(format), 
 				      GTK_OBJECT(dialog));
 	}
@@ -259,32 +271,30 @@ void del_dialog (int type) {
 	gtk_widget_show(dialog);
 }
 
-void savepictodisk (gint picNum, gint thumbnail, char *prefix) {
-
+void savepictodisk(gint picNum, gint thumbnail, char *prefix)
+{
 	/* Saves picture (thumbnail == 0) or thumbnail (thumbnail == 1)
 	 * #picNum to disk as prefix.(returned image extension)
 	 */
-
 	struct Image *im = NULL; 
 	char fname[1024], error[32], process[1024];
-
-#if 0
 	struct ImageMembers *node = &Images;
 
 	if (!thumbnail) {
-	    while(node!=NULL && node->info!=NULL &&
-		  atoi(node->info)!=picNum)  /*should be strtol. RAA*/
-		node = node->next;
-	    sprintf(fname, "%s.%s", prefix, "jpg");
-	    if (node != NULL && node->info!=NULL) { /*A match was found*/
-		gdk_imlib_save_image(node->imlibimage, fname, NULL);
-		return;
-	    }
-	}
-#endif
+		/* should be strtol. RAA */
+		while (node && node->info && atoi(node->info) != picNum)
+			node = node->next;
 
-	if ((im = (*Camera->get_picture)(picNum, thumbnail)) == 0) {
-		sprintf(error, N_("Could not save #%i"), picNum);
+		sprintf(fname, "%s.%s", prefix, "jpg");
+		if (node != NULL  && node->imlibimage != NULL) {
+			/* A match was found */
+			gdk_imlib_save_image(node->imlibimage, fname, NULL);
+			return;
+		}
+	}
+
+	if ((im = Camera->ops->get_picture(picNum, thumbnail)) == 0) {
+		sprintf(error, "Could not save #%i", picNum);
 		error_dialog(error);
 		return;
 	}
@@ -301,8 +311,8 @@ void savepictodisk (gint picNum, gint thumbnail, char *prefix) {
 
 char saveselectedtodisk_dir[1024];
 
-void saveselectedtodisk (GtkWidget *widget, char *type) {
-
+void saveselectedtodisk(GtkWidget *widget, char *type)
+{
 	/* Odd workaround:
 	 * if type == "tn" (thumbnails/no directory needed)
 	 * or type == "in" (images/no directory needed)
@@ -313,7 +323,6 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 	 * if type == "t", selected thumbnails are saved.
 	 * if type == "i", selected images are saved.
 	 */
-
 	int i = 0, pic = 1;
 	char fname[1024];
 	char status[32];
@@ -362,20 +371,20 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 		gtk_widget_destroy(filesel);
 	}
 
-	while (node->next != NULL) {
-                node = node->next; i++;
-                if (GTK_TOGGLE_BUTTON(node->button)->active) {
+	while (node->next) {
+		node = node->next; i++;
+		if (GTK_TOGGLE_BUTTON(node->button)->active) {
 			if ((strcmp("i", type)==0)||(strcmp("in", type)==0)) {
-				sprintf(status, N_("Saving Image #%03i..."), i);
+				sprintf(status, "Saving Image #%03i...", i);
 				update_status(status);
 				sprintf(fname, "%s-%03i",
-					saveselectedtodisk_dir, i);
-				savepictodisk(i, 0, fname); }
-			   else {
-				sprintf(status, N_("Saving Thumbnail #%03i..."), i);
+					saveselectedtodisk_dir, pic);
+				savepictodisk(i, 0, fname);
+			} else {
+				sprintf(status, "Saving Thumbnail #%03i...", i);
 				update_status(status);
-				sprintf(fname, N_("%s-thumbnail-%03i"),
-					saveselectedtodisk_dir, i);
+				sprintf(fname, "%s-thumbnail-%03i",
+					saveselectedtodisk_dir, pic);
 				savepictodisk(i, 1, fname);
 			}
 			pic++;
@@ -385,8 +394,8 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 	update_status(fname);
 }
 
-void appendpic (gint picNum, gint thumbnail, gint fromCamera, char *fileName) {
-
+void appendpic(gint picNum, gint thumbnail, gint fromCamera, char *fileName)
+{
 	int w, h;
 	char fname[15], error[32], process[1024],
 	     imagename[1024],*openName;
@@ -397,7 +406,7 @@ void appendpic (gint picNum, gint thumbnail, gint fromCamera, char *fileName) {
 
 	struct ImageMembers *node = &Images;
 
-	while (node->next != NULL)
+	while (node->next)
 		node = node->next;
 
 	node->next = malloc(sizeof(struct ImageMembers));
@@ -412,8 +421,8 @@ void appendpic (gint picNum, gint thumbnail, gint fromCamera, char *fileName) {
 	node->next = NULL;
 
 	if (fromCamera) {
-		if ((im = (*Camera->get_picture)(picNum, thumbnail))==0) {
-			sprintf(error, N_("Could not retrieve #%i"), picNum);
+		if ((im = Camera->ops->get_picture(picNum, thumbnail))==0) {
+			sprintf(error, "Could not retrieve #%i", picNum);
 			error_dialog(error);
 			return;
 		}
@@ -421,7 +430,7 @@ void appendpic (gint picNum, gint thumbnail, gint fromCamera, char *fileName) {
 							im->image_size);
 		free_image(im);
 		if (post_process) {
-			sprintf(imagename, N_("%s/gphoto-image-%03i.jpg"),
+			sprintf(imagename, "%s/gphoto-image-%03i.jpg",
 				gphotoDir, picNum);
 			gdk_imlib_save_image(node->imlibimage,
 				imagename, NULL);
@@ -433,11 +442,12 @@ void appendpic (gint picNum, gint thumbnail, gint fromCamera, char *fileName) {
 		}
 	 } else
 		node->imlibimage = gdk_imlib_load_image(fileName);
+
 	w = node->imlibimage->rgb_width;
-        h = node->imlibimage->rgb_height;
-        gdk_imlib_render(node->imlibimage, w, h);
-        pixmap = gdk_imlib_move_image(node->imlibimage);
-        node->image = gtk_pixmap_new(pixmap, NULL);
+	h = node->imlibimage->rgb_height;
+	gdk_imlib_render(node->imlibimage, w, h);
+	pixmap = gdk_imlib_move_image(node->imlibimage);
+	node->image = gtk_pixmap_new(pixmap, NULL);
 	gtk_widget_show(node->image);
 
 	/* Append to notebook -------------------------------- */
@@ -445,17 +455,16 @@ void appendpic (gint picNum, gint thumbnail, gint fromCamera, char *fileName) {
 	node->info = strdup(fname);
 	if (fromCamera) {
 		sprintf(fname, "%03i", picNum);
-		label = gtk_label_new(fname);}
-	   else {
+		label = gtk_label_new(fname);
+	} else {
 		openName = strrchr(fileName, (int)'/');
 		label = gtk_label_new(&openName[1]);
 	}
-        node->page = gtk_vbox_new(FALSE,0);
+	node->page = gtk_vbox_new(FALSE,0);
 	gtk_widget_show(node->page);
-        gtk_notebook_append_page (GTK_NOTEBOOK(notebook), node->page,
-                                  label);
-        scrwin = gtk_scrolled_window_new(NULL,NULL);
-        gtk_widget_show(scrwin);
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), node->page, label);
+	scrwin = gtk_scrolled_window_new(NULL,NULL);
+	gtk_widget_show(scrwin);
 	gtk_container_add(GTK_CONTAINER(node->page), scrwin);
 
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrwin),
@@ -465,190 +474,321 @@ void appendpic (gint picNum, gint thumbnail, gint fromCamera, char *fileName) {
 /* GTK Functions ---------------------------------------------
    ----------------------------------------------------------- */
 
-void destroy (GtkWidget *widget, gpointer data) {
-
-        gtk_main_quit ();
+void destroy(GtkWidget *widget, gpointer data)
+{
+	gtk_main_quit();
 }
 
-gint delete_event (GtkWidget *widget, GdkEvent *event, gpointer data) {
-
-        destroy(widget, data);
-        return (FALSE);
+gint delete_event (GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	destroy(widget, data);
+	return FALSE;
 }
 
 
 /* Callbacks -------------------------------------------------
    ----------------------------------------------------------- */
 
-void port_dialog_tester(GtkWidget *entry, GtkWidget *label) {
-  int i=0;
-  char model[60];
-  
-  sprintf (model, "%s", gtk_entry_get_text(GTK_ENTRY(entry)));
-  while (strlen(cameras[i].name) > 0) {
-    if (strcmp(model, cameras[i].name) == 0) { 
-      gtk_label_set_text(GTK_LABEL(label),
-			 cameras[i].tester);
-      return;
-    } 
-    i++;
-  }
-}
-
-void port_dialog_update(GtkWidget *entry, GtkWidget *label) {
-
-	int i=0;
+void port_dialog_update(GtkWidget *entry, GtkWidget *label)
+{
+	int i;
 	char model[60];
 
 	sprintf(model, "%s", gtk_entry_get_text(GTK_ENTRY(entry)));
 
-	while (strlen(cameras[i].name) > 0) {
-                if (strcmp(model, cameras[i].name) == 0) {
-		       gtk_label_set_text(GTK_LABEL(label),
-					   (*cameras[i].library->description)());
+	for (i = 0; cameras[i].name; i++) {
+		if (strcmp(model, cameras[i].name) == 0) {
+			gtk_label_set_text(GTK_LABEL(label),
+				cameras[i].ops->description());
 			return;
-                }
-		i++;
-        }
-
+		}
+	}
 }
 
-void port_dialog() {
+char detected_camera[1024];
 
-	GtkWidget *dialog, *label, *button, *cbutton, *betalabel;
-	GtkWidget *port0, *port1, *port2, *port3, *other, *ent_other, *tester;
-	GtkWidget *hbox, *vbox, *vseparator, *hseparator;
+void detected_select_row(GtkWidget *clist, gint row, gint column,
+	GdkEventButton *event, gpointer data)
+{
+	char *text;
+
+	gtk_clist_get_text(GTK_CLIST(clist), row, column, &text);
+	strcpy(detected_camera, text);
+}
+
+void detected_unselect_row(GtkWidget *clist, gint row, gint column,
+	GdkEventButton *event, gpointer data)
+{
+	strcpy(detected_camera, "");
+}
+
+void port_dialog(void)
+{
+	GtkWidget *dialog, *mainhbox;
+
+	GtkWidget *label, *vbox, *scrwin, *notebook;
+
+	GtkWidget *detectedbox, *detected, *scrolled_window;
+	GtkWidget *detectedlist, *listitem;
+
+	GtkWidget *choosebox, *choose;
+	GtkWidget *topportbox, *midportbox, *bottomportbox;
+	GtkWidget *port0, *port1, *port2, *port3, *other, *ent_other;
 	GtkWidget *combo, *description;
-	GSList *group;
-	GList *list;
+
+	GtkWidget *button, *cbutton;
+
+	GSList *listgroup, *portgroup;
+	GList *cam_list;
 
 	char serial_port_prefix[20], tempstring[20], status[128];
 	char *camera_selected;
-	int i=0;
+	int i, count;
 	int sd = -1;
 
-#ifdef linux
-        sprintf(serial_port_prefix, "/dev/ttyS");
-#elif defined(BSD)
-        sprintf(serial_port_prefix, "/dev/tty0");
-#else
-        sprintf(serial_port_prefix, "/dev/tty0");
+#ifdef GPIO_USB
+	struct usb_bus *bus;
+	struct usb_device *dev;
 #endif
 
+#ifdef linux
+	sprintf(serial_port_prefix, "/dev/ttyS");
+#elif defined(__FreeBSD__) || defined(__NetBSD__)
+	sprintf(serial_port_prefix, "/dev/tty0");
+#elif defined(sun)
+        sprintf(serial_port_prefix, "/dev/ttya");
+#else
+	sprintf(serial_port_prefix, "/dev/tty0");
+#endif
+
+	/*
+	 * Main window
+	 */
 	dialog = gtk_dialog_new();
-	gtk_window_set_title(GTK_WINDOW(dialog), N_("Select model/port..."));
-	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
+	gtk_window_set_title(GTK_WINDOW(dialog), "Choose a Camera");
+	gtk_window_set_position(GTK_WINDOW(dialog), GTK_WIN_POS_CENTER);
 	gtk_container_border_width(GTK_CONTAINER(dialog), 5);
-	gtk_widget_set_usize(dialog, 450, 300);
+	gtk_widget_set_usize(dialog, 360, 360);
 
-	/* Box going across the dialog... */
-	hbox = gtk_hbox_new(FALSE, 5);
-	gtk_widget_show(hbox);
-	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),hbox);
+	/* Vertical box to store the 2 boxes side by side */
+	notebook = gtk_notebook_new();
+	gtk_widget_show(notebook);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), notebook,
+		TRUE, TRUE, 0);
+/*
+	mainhbox = gtk_hbox_new(FALSE, 5);
+	gtk_widget_show(mainhbox);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), mainhbox,
+		TRUE, TRUE, 0);
+*/
+	/*
+	 * Detected camera section
+	 */
 
-	/* For the camera selection... */
+	/* Vertical box to store label and list */
+	label = gtk_label_new("Detected Cameras");
+	gtk_widget_show(label);
+
 	vbox = gtk_vbox_new(FALSE, 0);
 	gtk_widget_show(vbox);
-	gtk_box_pack_start_defaults(GTK_BOX(hbox), vbox);
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
 
-	label = gtk_label_new(N_("Camera Model:"));
+	/* Button to select between detected/choose */
+/*
+	detected = gtk_radio_button_new(NULL);
+	gtk_widget_show(detected);
+	listgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(detected));
+	gtk_box_pack_start(GTK_BOX(vbox), detected, FALSE, FALSE, 0);
+*/
+
+	label = gtk_label_new("Detected Cameras");
+	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
 	gtk_widget_show(label);
-        gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
-	list = NULL;
+	/* this is the scrolled window to put the GtkList widget inside */
+	scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+	gtk_widget_set_usize(scrolled_window, 250, 150);
+	gtk_container_add(GTK_CONTAINER(vbox), scrolled_window);
+	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
+			GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);  
+	gtk_widget_show(scrolled_window);
+
+	strcpy(detected_camera, "");
+
+	detectedlist = gtk_clist_new(1);
+	gtk_widget_show(detectedlist);
+	gtk_container_add(GTK_CONTAINER(scrolled_window), detectedlist);
+	gtk_clist_set_shadow_type(GTK_CLIST(detectedlist), GTK_SHADOW_IN);
+	gtk_clist_set_column_width(GTK_CLIST(detectedlist), 0, 10);
+	gtk_clist_set_selection_mode(GTK_CLIST(detectedlist),
+		GTK_SELECTION_SINGLE);
+
+	gtk_signal_connect(GTK_OBJECT(detectedlist), "select_row",
+		GTK_SIGNAL_FUNC(detected_select_row), NULL);
+
+	gtk_signal_connect(GTK_OBJECT(detectedlist), "unselect_row",
+		GTK_SIGNAL_FUNC(detected_unselect_row), NULL);
+
+	count = 0;
+#ifdef GPIO_USB
+	for (bus = usb_busses; bus; bus = bus->next) {
+		for (dev = bus->devices; dev; dev = dev->next) {
+			for (i = 0; cameras[i].name; i++) {
+				if ((dev->descriptor.idVendor == 0) &&
+				    (dev->descriptor.idProduct == 0))
+					continue;
+
+				if ((dev->descriptor.idVendor == cameras[i].idVendor) &&
+				    (dev->descriptor.idProduct == cameras[i].idProduct)) {
+					gtk_clist_append(GTK_CLIST(detectedlist), &cameras[i].name);
+					count++;
+				}
+			}
+		}
+	}
+
+/*  	if (!count) { */
+/*  		gtk_widget_set_sensitive(detected, FALSE); */
+/*  		gtk_widget_set_sensitive(detectedlist, FALSE); */
+/*  		gtk_widget_set_sensitive(scrolled_window, FALSE); */
+/*  	} */
+#endif
+
+	/*
+	 * Select a camera manually
+	 */
+
+	/* Button to select between detected/choose */
+/*
+	choose = gtk_radio_button_new(listgroup);
+	gtk_widget_show(choose);
+	listgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(choose));
+	gtk_box_pack_start(GTK_BOX(choosebox), choose, FALSE, FALSE, 0);
+
+	if (!count)
+		gtk_button_clicked(GTK_BUTTON(choose));
+*/
+
+	/* Vertical box to store label, combo, description and portboxes */
+	label = gtk_label_new("Manually Select a Camera");
+	gtk_widget_show(label);
+
+	vbox = gtk_vbox_new(FALSE, 0);
+	gtk_widget_show(vbox);
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
+
+	label = gtk_label_new("Select a Camera");
+	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
+	gtk_widget_show(label);
+	gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+
+	cam_list = NULL;
 	combo = gtk_combo_new();
 	gtk_widget_show(combo);	
 	gtk_box_pack_start(GTK_BOX(vbox), combo, FALSE, FALSE, 0);
 
-	i=0;
-	while (strlen(cameras[i].name) > 0) {
-		list = g_list_append(list, cameras[i].name);
-		i++;
-	}
-	gtk_combo_set_popdown_strings(GTK_COMBO(combo), list);
-	gtk_entry_set_text(GTK_ENTRY(GTK_COMBO(combo)->entry),
-		camera_model);
-	gtk_entry_set_editable(GTK_ENTRY(GTK_COMBO(combo)->entry),FALSE);
+	for (i = 0; cameras[i].name; i++)
+		cam_list = g_list_append(cam_list, cameras[i].name);
+
+	gtk_combo_set_popdown_strings(GTK_COMBO(combo), cam_list);
+	if (Camera)
+		gtk_entry_set_text(GTK_ENTRY(GTK_COMBO(combo)->entry),
+			Camera->name);
+	gtk_entry_set_editable(GTK_ENTRY(GTK_COMBO(combo)->entry), FALSE);
 	
 	label = gtk_label_new(" ");
 	gtk_widget_show(label);
 	gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
-	description = gtk_label_new("");
+	label = gtk_label_new("Library Description");
+	gtk_widget_show(label);
+	gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+
+
+	description = gtk_label_new(" ");
 	gtk_widget_show(description);
 	gtk_label_set_justify(GTK_LABEL(description), GTK_JUSTIFY_LEFT);
-	gtk_box_pack_start(GTK_BOX(vbox), description, FALSE, TRUE, 0);
 	gtk_signal_connect(GTK_OBJECT(GTK_COMBO(combo)->entry),
 		"changed", GTK_SIGNAL_FUNC(port_dialog_update), 
 		(gpointer)description);
 
+	scrwin = gtk_scrolled_window_new(NULL, NULL);
+        gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrwin),
+                                                GTK_POLICY_AUTOMATIC,
+                                                GTK_POLICY_AUTOMATIC);
+        gtk_widget_show(scrwin);
+        gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrwin),
+                                                description);
+	gtk_box_pack_start(GTK_BOX(vbox), scrwin, TRUE, TRUE, 0);
+
 	port_dialog_update(GTK_COMBO(combo)->entry, description);
 
-	betalabel = gtk_label_new(N_("\ngPhoto user(s) that reported this model:\n"));
-	gtk_label_set_justify(GTK_LABEL(betalabel), GTK_JUSTIFY_LEFT);
-	gtk_widget_show(betalabel);
-	
- 	gtk_box_pack_start(GTK_BOX(vbox), betalabel, FALSE, TRUE, 0);
 
-	tester = gtk_label_new ("");
-	gtk_widget_show(tester);
-	gtk_label_set_justify(GTK_LABEL(tester), GTK_JUSTIFY_LEFT);
-	gtk_signal_connect(GTK_OBJECT(GTK_COMBO(combo)->entry),
-		"changed", GTK_SIGNAL_FUNC(port_dialog_tester), 
-		(gpointer)tester);
-
- 	gtk_box_pack_start(GTK_BOX(vbox), tester, FALSE, TRUE, 0);
-
-	port_dialog_tester(GTK_COMBO(combo)->entry, tester);
-
-	vseparator = gtk_vseparator_new();
-	gtk_widget_show(vseparator);
-	gtk_box_pack_start(GTK_BOX(hbox), vseparator, FALSE, FALSE, 0);
-
-	vbox = gtk_vbox_new(FALSE, 0);
-	gtk_widget_show(vbox);
-	gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
-
-	group = NULL;
-	label = gtk_label_new(N_("Port:"));
+	label = gtk_label_new(" ");
 	gtk_widget_show(label);
+	gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+
+	bottomportbox = gtk_hbox_new(TRUE, 0);
+	gtk_widget_show(bottomportbox);
+	gtk_box_pack_end(GTK_BOX(vbox), bottomportbox, FALSE, TRUE, 0);
+
+	midportbox = gtk_hbox_new(TRUE, 0);
+	gtk_widget_show(midportbox);
+	gtk_box_pack_end(GTK_BOX(vbox), midportbox, FALSE, TRUE, 0);
+
+	topportbox = gtk_hbox_new(TRUE, 0);
+	gtk_widget_show(topportbox);
+	gtk_box_pack_end(GTK_BOX(vbox), topportbox, FALSE, TRUE, 0);
+
+	label = gtk_label_new("Select a Port");
+	gtk_widget_show(label);
+	gtk_box_pack_end(GTK_BOX(vbox), label, FALSE, TRUE, 0);
+
+
+	portgroup = NULL;
 #ifdef __NetBSD__
 	port0 = gtk_radio_button_new_with_label(NULL, "/dev/tty00 (COM1)");
 #else   
 	port0 = gtk_radio_button_new_with_label(NULL, "/dev/ttyS0 (COM1)");
 #endif
-        gtk_widget_show(port0);
-	gtk_button_clicked(GTK_BUTTON(port0));
-        group = gtk_radio_button_group(GTK_RADIO_BUTTON(port0));
+	gtk_widget_show(port0);
+	portgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(port0));
 #ifdef __NetBSD__
-        port1 = gtk_radio_button_new_with_label(group, "/dev/tty01 (COM2)");
+	port1 = gtk_radio_button_new_with_label(portgroup, "/dev/tty01 (COM2)");
 #else   
-        port1 = gtk_radio_button_new_with_label(group, "/dev/ttyS1 (COM2)");
+	port1 = gtk_radio_button_new_with_label(portgroup, "/dev/ttyS1 (COM2)");
 #endif
-        gtk_widget_show(port1);
-        group = gtk_radio_button_group(GTK_RADIO_BUTTON(port1));
+	gtk_widget_show(port1);
+	portgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(port1));
 #ifdef __NetBSD__
-        port2 = gtk_radio_button_new_with_label(group, "/dev/tty02 (COM3)");
+	port2 = gtk_radio_button_new_with_label(portgroup, "/dev/tty02 (COM3)");
 #else   
-        port2 = gtk_radio_button_new_with_label(group, "/dev/ttyS2 (COM3)");
+	port2 = gtk_radio_button_new_with_label(portgroup, "/dev/ttyS2 (COM3)");
 #endif
-        gtk_widget_show(port2);
-        group = gtk_radio_button_group(GTK_RADIO_BUTTON(port2));
+	gtk_widget_show(port2);
+	portgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(port2));
 #ifdef __NetBSD__
-        port3 = gtk_radio_button_new_with_label(group, "/dev/tty03 (COM4)");
+	port3 = gtk_radio_button_new_with_label(portgroup, "/dev/tty03 (COM4)");
 #else   
-        port3 = gtk_radio_button_new_with_label(group, "/dev/ttyS3 (COM4)");
+	port3 = gtk_radio_button_new_with_label(portgroup, "/dev/ttyS3 (COM4)");
 #endif
-        gtk_widget_show(port3);
-        group = gtk_radio_button_group(GTK_RADIO_BUTTON(port3));
-        other = gtk_radio_button_new_with_label(group, "other");
-        gtk_widget_show(other);
+	gtk_widget_show(port3);
+	portgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(port3));
+
+	other = gtk_radio_button_new_with_label(portgroup, "Other:");
+	gtk_widget_show(other);
+	portgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(other));
 
 	ent_other = gtk_entry_new();
 	gtk_widget_show(ent_other);
 
-	if (strncmp(serial_port_prefix, serial_port, 9) == 0) {
-		switch (serial_port[9]) {
+	switch (camera_type) {
+	case GPHOTO_CAMERA_NONE:
+		break;
+	case GPHOTO_CAMERA_SERIAL:
+		if (!strncmp(serial_port_prefix, serial_port, 9)) {
+			switch (serial_port[9]) {
 			case '0':
 				gtk_button_clicked(GTK_BUTTON(port0));
 				break;
@@ -663,96 +803,125 @@ void port_dialog() {
 				break;
 			default:
 				break;
-		}
-	} else {
- 		gtk_button_clicked(GTK_BUTTON(other));
+			}
+		} else
 		gtk_entry_set_text(GTK_ENTRY(ent_other), serial_port);
+		gtk_notebook_set_page(GTK_NOTEBOOK(notebook), 1);
+		break;
+#ifdef GPIO_USB
+	case GPHOTO_CAMERA_USB:
+		if (count)
+			gtk_notebook_set_page(GTK_NOTEBOOK(notebook), 0);
+		break;
+#endif
 	}
 
-        gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
-        gtk_box_pack_start(GTK_BOX(vbox), port0, FALSE, FALSE, 0);
-        gtk_box_pack_start(GTK_BOX(vbox), port1, FALSE, FALSE, 0);
-        gtk_box_pack_start(GTK_BOX(vbox), port2, FALSE, FALSE, 0);
-        gtk_box_pack_start(GTK_BOX(vbox), port3, FALSE, FALSE, 0);
-        gtk_box_pack_start(GTK_BOX(vbox), other, FALSE, FALSE, 0);
-        gtk_box_pack_start(GTK_BOX(vbox), ent_other, FALSE, FALSE, 0);
+/*	gtk_box_pack_start(GTK_BOX(choosebox), label, FALSE, FALSE, 0); */
+	gtk_box_pack_start(GTK_BOX(topportbox), port0, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(midportbox), port1, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(topportbox), port2, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(midportbox), port3, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(bottomportbox), other, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(bottomportbox), ent_other, FALSE, FALSE, 0);
 
-/*  	gtk_box_pack_start(GTK_BOX(vbox), betalabel, FALSE, FALSE, 0); */
-/*  	gtk_box_pack_start(GTK_BOX(vbox), tester, FALSE, FALSE, 0); */
+	button = gtk_button_new_with_label("Save");
+	gtk_widget_show(button);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
+				button, TRUE, TRUE, 0);
 
-        button = gtk_button_new_with_label(N_("Save"));
-        gtk_widget_show(button);
-        gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
-                           button, TRUE, TRUE, 0);
-
-        cbutton = gtk_button_new_with_label(N_("Cancel"));
-        gtk_widget_show(cbutton);
-        gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
-                           cbutton, TRUE, TRUE, 0);
+	cbutton = gtk_button_new_with_label("Cancel");
+	gtk_widget_show(cbutton);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
+				cbutton, TRUE, TRUE, 0);
 
 	if (wait_for_hide(dialog, button, cbutton) == 0)
 		return;
 
-	camera_selected = gtk_entry_get_text(
-		GTK_ENTRY(GTK_COMBO(combo)->entry));
-	strcpy(camera_model, camera_selected);
-	set_camera(camera_model);
+#ifdef GPIO_USB
+	if (gtk_notebook_current_page(GTK_NOTEBOOK(notebook)) == 0) {
+		camera_type = GPHOTO_CAMERA_USB;
+		printf("[%s] selected\n", detected_camera);
+		set_camera(detected_camera);
+	} else  {
+#endif
+		camera_type = GPHOTO_CAMERA_SERIAL;
+		camera_selected = gtk_entry_get_text(
+			GTK_ENTRY(GTK_COMBO(combo)->entry));
+		set_camera(camera_selected);
 
-	if (GTK_WIDGET_STATE(port0) == GTK_STATE_ACTIVE) {
-		sprintf(tempstring, "%s0", serial_port_prefix);
-		strcpy(serial_port, tempstring);
+		if (GTK_WIDGET_STATE(port0) == GTK_STATE_ACTIVE) {
+			sprintf(tempstring, "%s0", serial_port_prefix);
+			strcpy(serial_port, tempstring);
+		} else if (GTK_WIDGET_STATE(port1) == GTK_STATE_ACTIVE) {
+			sprintf(tempstring, "%s1", serial_port_prefix);
+			strcpy(serial_port, tempstring);
+		} else if (GTK_WIDGET_STATE(port2) == GTK_STATE_ACTIVE) {
+			sprintf(tempstring, "%s2", serial_port_prefix);
+			strcpy(serial_port, tempstring);
+		} else if (GTK_WIDGET_STATE(port3) == GTK_STATE_ACTIVE) {
+			sprintf(tempstring, "%s3", serial_port_prefix);
+			strcpy(serial_port, tempstring);
+		} else if (GTK_WIDGET_STATE(other) == GTK_STATE_ACTIVE) {
+			sprintf(tempstring, "%s",
+				gtk_entry_get_text(GTK_ENTRY(ent_other)));
+			strcpy(serial_port, tempstring);
+		}
+#ifdef GPIO_USB
 	}
-	if (GTK_WIDGET_STATE(port1) == GTK_STATE_ACTIVE) {
-		sprintf(tempstring, "%s1", serial_port_prefix);
-		strcpy(serial_port, tempstring);
+
+	if (camera_type == GPHOTO_CAMERA_SERIAL) {
+#endif
+		sd = open(serial_port, O_RDWR, 0);
+		if (sd < 0) {
+			sprintf(status, "Error: failed to open %s",serial_port);
+			update_status(status);
+			message_window("Missing Serial Device Permissions",
+					"Please check the permissions "
+					"(see the manual).", GTK_JUSTIFY_FILL);
+		} else {
+			sprintf(status, "Opened %s.", serial_port);
+			update_status(status);
+			save_config();
+		}
+		close(sd);
+#ifdef GPIO_USB
+	} else {
+		save_config();
+		serial_port[0] = 0;
 	}
-	if (GTK_WIDGET_STATE(port2) == GTK_STATE_ACTIVE) {
-		sprintf(tempstring, "%s2", serial_port_prefix);
-		strcpy(serial_port, tempstring);
-	}
-	if (GTK_WIDGET_STATE(port3) == GTK_STATE_ACTIVE) {
-		sprintf(tempstring, "%s3", serial_port_prefix);
-		strcpy(serial_port, tempstring);
-	}
-	if (GTK_WIDGET_STATE(other) == GTK_STATE_ACTIVE) {
-		sprintf(tempstring, "%s",
-			gtk_entry_get_text(GTK_ENTRY(ent_other)));
-		strcpy(serial_port, tempstring);
-	}
-	
-	if (( sd = open (serial_port, O_RDWR, 0) ) < 0) {
-		
-		sprintf(status, N_("Error: failed to open %s"), serial_port);
-		update_status(status);
-		message_window (N_("Missing Serial Device Permissions"),
-				N_("Please check the permissions (see the manual)."), GTK_JUSTIFY_FILL);
-	} 
-	else {
-		sprintf (status, N_("Opened %s."), serial_port);
-		update_status (status);
-		save_config ();
-	}
-	close(sd);
+#endif
 	gtk_widget_destroy(dialog);
 }
 
-gint load_config() {
-
+int load_config(void)
+{
 	char fname[1024];
 	FILE *conf;
 
-        sprintf(fname, "%s/gphotorc", gphotoDir);
-        if ((conf = fopen(fname, "r"))) {
-		fgets(fname, 100, conf);
-		strncpy(serial_port, fname, strlen(fname)-1);
-		fgets(fname, 100, conf);
-		strncpy(camera_model, fname, strlen(fname)-1);
-		fgets(fname, 100, conf);
-		strncpy(post_process_script, fname, strlen(fname)-1);
+	char *stripcrlf(char *string)
+	{
+		while (string[strlen(string) - 1] == '\n')
+			string[strlen(string) - 1] = 0;
+
+		return string;
+	}
+
+	sprintf(fname, "%s/gphotorc", gphotoDir);
+	if (conf = fopen(fname, "r")) {
+		char config_camera[1025] = "";
+
+		if (fgets(fname, sizeof(fname) - 1, conf))
+			strcpy(serial_port, stripcrlf(fname));
+		if (fgets(fname, sizeof(fname) - 1, conf))
+			strcpy(config_camera, stripcrlf(fname));
+		if (fgets(fname, sizeof(fname) - 1, conf))
+			strcpy(post_process_script, stripcrlf(fname));
+		if (fgets(fname, sizeof(fname) - 1, conf))
+			camera_type = atoi(stripcrlf(fname));
 		fclose(conf);
-		if (strcmp(camera_model, post_process_script) == 0)
-			sprintf(post_process_script, "");
-		return (1);
+
+		set_camera(config_camera);
+		return 1;
 	}
 
 	/* reset to defaults, and save */
@@ -761,52 +930,45 @@ gint load_config() {
 #else   
 	sprintf(serial_port, "/dev/ttyS0");
 #endif
-	sprintf(camera_model, "Browse Directory");
 	sprintf(post_process_script, "");
+	camera_type = GPHOTO_CAMERA_NONE;
 	save_config();
-	return (0);
+	return 0;
 }
 
-void save_config() {
-
+void save_config(void)
+{
 	char gphotorc[1024];
 	FILE *conf;
 
 	sprintf(gphotorc, "%s/gphotorc", gphotoDir);
 	if ((conf = fopen(gphotorc, "w"))) {
 		fprintf(conf, "%s\n", serial_port);
-		fprintf(conf, "%s\n", camera_model);
+		if (Camera)
+			fprintf(conf, "%s\n", Camera->name);
+		else
+			fprintf(conf, "\n");
 		fprintf(conf, "%s\n", post_process_script);
+		fprintf(conf, "%d\n", camera_type);
 		fclose(conf);
 		return;
 	}
 	if (!command_line_mode)
-	    error_dialog (N_("Could not open $HOME/.gphoto/gphotorc for writing."));
+		error_dialog("Could not open $HOME/.gphoto/gphotorc for writing.");
 	else
-	    fprintf(stderr, N_("Could not open $HOME/.gphoto/gphotorc for writing.\n"));
+		fprintf(stderr, "Could not open $HOME/.gphoto/gphotorc for writing.\n");
 }
 
-void version_dialog() {
-    char msg[1024];
-
-	sprintf(msg, N_("Version Information\
--------------------\
-\
-Current Version: %s\
-\
-New features all over the place. Please see\
-the ChangeLog for more information.\
-\
-As always, report bugs gphoto-devel@gphoto.org\
-\
-Thanx much.\
-"), VERSION);
+void version_dialog(void)
+{
+	char msg[1024];
+	sprintf(msg, N_("Version Information\n-------------------\nCurrent Version: %s\nAs always, report bugs to \ngphoto-devel@gphoto.net"), VERSION);
 
 	error_dialog(msg);
 }
-	
-void usersmanual_dialog() {
 
+void usersmanual_dialog(void)
+{
 	GtkWidget *dialog, *label, *scrwin, *button;
 	FILE *manual;
 	int manual_size;
@@ -831,81 +993,80 @@ void usersmanual_dialog() {
 		manual_beginning = strstr(manual_text, "----------");
 		strcpy(manual_text, manual_beginning);
 		label = gtk_label_new(strdup(manual_text));
-		free(manual_text);}
-	   else {
-		sprintf(error, N_("Could not open:\n%s"), manual_filename);
+		free(manual_text);
+	} else {
+		sprintf(error, "Could not open:\n%s", manual_filename);
 		gtk_label_new(error);
 	}
 
 	gtk_widget_show(label);
 	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
 	scrwin = gtk_scrolled_window_new(NULL, NULL);
-	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(scrwin),
-                                        GTK_POLICY_AUTOMATIC,
-                                        GTK_POLICY_AUTOMATIC);
- 	gtk_widget_show(scrwin);
+	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrwin),
+						GTK_POLICY_AUTOMATIC,
+						GTK_POLICY_AUTOMATIC);
+	gtk_widget_show(scrwin);
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrwin),
-					      label);
+						label);
 
 	gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),scrwin);
 
-        button = gtk_button_new_with_label(N_("OK"));
+	button = gtk_button_new_with_label("OK");
 	gtk_widget_show(button);
-        GTK_WIDGET_SET_FLAGS (button, GTK_CAN_DEFAULT);
-        gtk_signal_connect_object(GTK_OBJECT(button), "clicked",
-                            GTK_SIGNAL_FUNC(gtk_widget_destroy),
-                            GTK_OBJECT(dialog));
-        gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
-                           button, TRUE, TRUE, 0);	
+	GTK_WIDGET_SET_FLAGS (button, GTK_CAN_DEFAULT);
+	gtk_signal_connect_object(GTK_OBJECT(button), "clicked",
+				GTK_SIGNAL_FUNC(gtk_widget_destroy),
+				GTK_OBJECT(dialog));
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
+				button, TRUE, TRUE, 0);	
 	gtk_widget_show(dialog);
 	gtk_widget_grab_default(button);
 }
 
-void faq_dialog() {
-   error_dialog(
-"Please visit http://www.gphoto.org/help.php3 \
-for the current FAQ list.");
+void faq_dialog(void)
+{
+	error_dialog("Please visit http://www.gphoto.org/help.php3\n" \
+			"for the current FAQ list.");
 }
   
-void show_license() {
-   
-  error_dialog(N_("\
-This program is free software; you can redistribute it and/or modify\
-it under the terms of the GNU General Public License as published by\
-the Free Software Foundation; either version 2 of the License, or\
-(at your option) any later version.\
-\
-This program is distributed in the hope that it will be useful,\
-but WITHOUT ANY WARRANTY; without even the implied warranty of\
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\
-GNU General Public License for more details.\
-\
-You should have received a copy of the GNU General Public License\
-along with this program; if not, write to the Free Software\
-Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.\
-\
-See http://www.gnu.org for more details on the GNU project.")); 
+void show_license(void)
+{
+	error_dialog("
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+See http://www.gnu.org for more details on the GNU project."); 
 }
 
 /* used until callback is implemented */
-void menu_selected (gchar *toPrint) {
-
+void menu_selected(gchar *toPrint)
+{
 	char Error[1024];
-	
-	sprintf(Error, N_("%s is not yet implemented"), toPrint);
+
+	sprintf(Error, "%s is not yet implemented", toPrint);
 	error_dialog(Error);
 }
 
-void remove_thumbnail (int i) {
-
-	int x=0;
+void remove_thumbnail(int i)
+{
+	int x;
 	struct ImageMembers *node = &Thumbnails;
 	struct ImageMembers *prev = node;
 
-	while (x < i) {
+	for (x = 0; x < i; x++) {
 		prev = node;
 		node = node->next;
-		x++;
 	}
 
 	if (node) {
@@ -915,121 +1076,121 @@ void remove_thumbnail (int i) {
 }
 
 /* Place a thumbnail into the index at location corresponding to node */
-void insert_thumbnail(struct ImageMembers *node) {
-  char status[256], error[32];
-  GdkPixmap *pixmap;
-  GdkImlibImage *scaledImage;
-  GtkWidget *vbox;
-  GtkTooltips *tooltip;
-  /*  char *thumbname;*/
-  gint i=0, x;
-  gint w, h;
-  struct ImageMembers *other=&Thumbnails;
-  struct Image *im;
-  double aspectRatio;
-  GString *tag;
+void insert_thumbnail(struct ImageMembers *node)
+{
+	char status[256], error[32];
+	GdkPixmap *pixmap;
+	GdkImlibImage *scaledImage;
+	GtkWidget *vbox;
+	GtkTooltips *tooltip;
+	int i, x;
+	int w, h;
+	struct ImageMembers *other=&Thumbnails;
+	struct Image *im;
+	double aspectRatio;
+	GString *tag;
 
+	/* maybe this info should be part of the imageinfo structure */
+	/* Find node in the list */
+	for (i = 0; other && other != node; i++)
+		other = other->next;
 
-  /* maybe this info should be part of the imageinfo structure */
-  while ((other!=node)&&(other!=NULL)){ // Find node in the list
-    i++;
-    other=other->next;
-  };
+	if (!other)	/* didn't find node in the list of thumbs */
+		return;
 
-  if (other==NULL) return;  /* didn't find node in the list of thumbs */
+	/* If the thumbnail is already there, then just load the image */
+	if (node->image && node->imlibimage) {
+		appendpic(i, 0, TRUE, NULL);
+		return;
+	}
 
-  /* If the thumbnail is already there, then just load the image*/
-  if ((node->image!=NULL) && (node->imlibimage!=NULL)) {
-	appendpic(i, 0, TRUE, NULL);
-	return;
-  }
+	sprintf(status, "Getting thumbnail %i...", i);
+	update_status(status);
 
-  sprintf(status, N_("Getting thumbnail %i..."), i);
-  update_status(status);
+	if ((im = Camera->ops->get_picture(i, 1))==0) {
+		sprintf(error, "Could not retrieve #%i", i);
+		error_dialog(error);
+		return;
+	}
 
-  if ((im = (*Camera->get_picture)(i, 1))==0) {
-	sprintf(error, N_("Could not retrieve #%i"), i);
-	error_dialog(error);
-	return;
-  }
-
-  tag=g_string_new("");
-  g_string_sprintf(tag, N_("Picture #%i\n"), i); 
-  for (x=0; x<im->image_info_size; x+=2) {
-	g_string_sprintfa(tag,
-		"%s:%s\n",im->image_info[x],im->image_info[x+1]);
-  }
+	tag=g_string_new("");
+	g_string_sprintf(tag, "Picture #%i\n", i); 
+	for (x=0; x<im->image_info_size; x+=2) {
+		g_string_sprintfa(tag,
+			"%s:%s\n",im->image_info[x],im->image_info[x+1]);
+	}
   
-  tooltip = gtk_tooltips_new();
-  gtk_tooltips_set_tip(tooltip,node->button,tag->str, NULL);
+	tooltip = gtk_tooltips_new();
+	gtk_tooltips_set_tip(tooltip,node->button,tag->str, NULL);
 
-  node->imlibimage = gdk_imlib_load_image_mem(im->image, im->image_size);
+	node->imlibimage = gdk_imlib_load_image_mem(im->image, im->image_size);
 
-  free_image (im);
+	free_image (im);
 
-  w = node->imlibimage->rgb_width; 
-  h = node->imlibimage->rgb_height;
-  gdk_imlib_render(node->imlibimage, w, h);
+	w = node->imlibimage->rgb_width; 
+	h = node->imlibimage->rgb_height;
+	gdk_imlib_render(node->imlibimage, w, h);
 
-  /* Scale thumbnail to button size. Max height is 60. Max width is 80 so
-   * adjust dimensions while preserving aspect ratio.
-   */
-  aspectRatio = h/w; 
-  if (aspectRatio > 0.75) {
-     /* Thumbnail is tall. Adjust height to 60. Width will be < 80. */
-     w = (gint)(60.0 * w / h);
-     h = 60;
-  } else {
-     /* Thumbnail is wide. Adjust width to 80. Height will be < 60. */
-     h = (gint)(80.0 * h / w);
-     w = 80;
-  }
-  scaledImage = gdk_imlib_clone_scaled_image(node->imlibimage,w,h);
-  gdk_imlib_kill_image(node->imlibimage);
-  node->imlibimage = scaledImage;
-  w = node->imlibimage->rgb_width;
-  h = node->imlibimage->rgb_height;
-  gdk_imlib_render(node->imlibimage, w, h);
-  pixmap = gdk_imlib_move_image(node->imlibimage);
-  node->image = gtk_pixmap_new(pixmap, NULL);  
-  gtk_widget_show(node->image);
+	/* Scale thumbnail to button size. Max height is 60. Max width is 80 so
+	 * adjust dimensions while preserving aspect ratio.
+	 */
+	aspectRatio = h/w; 
+	if (aspectRatio > 0.75) {
+		/* Thumbnail is tall. Adjust height to 60. Width will be < 80. */
+		w = (gint)(60.0 * w / h);
+		h = 60;
+	} else {
+		/* Thumbnail is wide. Adjust width to 80. Height will be < 60. */
+		h = (gint)(80.0 * h / w);
+		w = 80;
+	}
+	scaledImage = gdk_imlib_clone_scaled_image(node->imlibimage,w,h);
+	/* gdk_imlib_kill_image(node->imlibimage); */
+	node->imlibimage = scaledImage;
+	w = node->imlibimage->rgb_width;
+	h = node->imlibimage->rgb_height;
+	gdk_imlib_render(node->imlibimage, w, h);
+	pixmap = gdk_imlib_move_image(node->imlibimage);
+	node->image = gtk_pixmap_new(pixmap, NULL);  
+	gtk_widget_show(node->image);
 
-  /* this approach is a little dangerous...*/
-  vbox=gtk_container_children(GTK_CONTAINER(node->button))->data;
-  gtk_container_add(GTK_CONTAINER(vbox), 
+	/* this approach is a little dangerous...*/
+	vbox = gtk_container_children(GTK_CONTAINER(node->button))->data;
+	gtk_container_add(GTK_CONTAINER(vbox), 
 		    node->image);
-
- };
+}
 
 /* intercept mouse click on a thumbnail button */
-gint thumb_click( GtkWidget *widget,GdkEventButton *event,gpointer   callback_data ) {
-        if (callback_data==NULL) return(FALSE);
+int thumb_click(GtkWidget *widget, GdkEventButton *event, gpointer callback_data)
+{
+	if (callback_data)
+		return FALSE;
 
-	/* Double click will (re)-load the thumbnail*/
-	if (event->type==GDK_2BUTTON_PRESS){
-	  insert_thumbnail((struct ImageMembers *)callback_data);
-	  return(TRUE);
-	};
+	/* Double click will (re)-load the thumbnail */
+	if (event->type == GDK_2BUTTON_PRESS) {
+		insert_thumbnail((struct ImageMembers *)callback_data);
+		return TRUE;
+	}
 
-	return(FALSE);
- };
+	return FALSE;
+}
+
+extern void activate_button(GtkWidget *cur_button);
+extern void deactivate_button(GtkWidget *cur_button);
 
 /* 
    get index of images and place in main page table 
         calling with getthumbs==0  makes a set of blank buttons
 	                      !=0  downloads the thumbs for each
 */
-void makeindex (gint getthumbs) {
-
-	gint i;
-	gint num_pictures_taken;
+void makeindex(gint getthumbs)
+{
+	int i;
+	int num_pictures_taken;
 	char status[256];
 
 	GtkStyle *style;
 	GtkWidget *vbox;
-
-	extern void activate_button(GtkWidget *cur_button);
-	extern void deactivate_button(GtkWidget *cur_button);
 
 	struct ImageMembers *node = &Thumbnails;
 
@@ -1038,16 +1199,15 @@ void makeindex (gint getthumbs) {
 	while (Thumbnails.next != NULL)
 		remove_thumbnail(1);
 
-	if (index_table != NULL) {
+	if (index_table)
 		gtk_widget_destroy(index_table);
-	}
 
 	index_table = gtk_table_new(100,6,FALSE);
         gtk_widget_show(index_table);
         gtk_container_add(GTK_CONTAINER(index_vp), index_table);
 
-	num_pictures_taken = (*Camera->number_of_pictures)();
-fprintf(stderr, N_("num_pictures_taken is %d\n"), num_pictures_taken);
+	num_pictures_taken = Camera->ops->number_of_pictures();
+fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
 	if (num_pictures_taken == -1) {
 		error_dialog(N_("Could not get the number of pictures"));
 		return;
@@ -1055,7 +1215,7 @@ fprintf(stderr, N_("num_pictures_taken is %d\n"), num_pictures_taken);
 
 	okAction = 1;
 	activate_button(stop_button);
-	for (i=1; i<=num_pictures_taken; i++) {
+	for (i = 0; i < num_pictures_taken; i++) {
 		if (!okAction) {
 			deactivate_button(stop_button);
 			update_progress(0);
@@ -1076,20 +1236,19 @@ fprintf(stderr, N_("num_pictures_taken is %d\n"), num_pictures_taken);
 		gtk_widget_show(node->button);
 
 		/* make a label for the thumbnail */
-		sprintf(status, "%03i", i);
+		sprintf(status, "%03i", i + 1);
 		node->info=strdup(status);
 		node->label=gtk_label_new(node->info);
 		gtk_widget_show(node->label);
 
 		/* gtk_widget_set_rc_style(node->button);*/
-		style = gtk_style_copy(
-		  gtk_widget_get_style(node->button));
-		style->bg[GTK_STATE_ACTIVE].green=0;
-		style->bg[GTK_STATE_ACTIVE].blue=0;
+		style = gtk_style_copy(gtk_widget_get_style(node->button));
+		style->bg[GTK_STATE_ACTIVE].green = 0;
+		style->bg[GTK_STATE_ACTIVE].blue = 0;
 		gtk_widget_set_style(node->button, style);
 
 		vbox = gtk_vbox_new(FALSE, 0);
-		gtk_container_border_width(GTK_CONTAINER(vbox),3);
+		gtk_container_border_width(GTK_CONTAINER(vbox), 3);
 		gtk_widget_set_usize(vbox, 87, 78);
 
 		gtk_widget_show(vbox);
@@ -1103,7 +1262,8 @@ fprintf(stderr, N_("num_pictures_taken is %d\n"), num_pictures_taken);
 		node->image=NULL;
 		node->imlibimage=NULL;
 
-		if (getthumbs) insert_thumbnail(node);
+		if (getthumbs)
+			insert_thumbnail(node);
 
 		gtk_signal_connect(GTK_OBJECT(node->button), 
 				   "button_press_event",
@@ -1112,9 +1272,9 @@ fprintf(stderr, N_("num_pictures_taken is %d\n"), num_pictures_taken);
 
 		gtk_table_attach(GTK_TABLE(index_table),
 				 node->button,
-				 (i-1)%6,(i-1)%6+1,(i-1)/6,(i-1)/6+1,
+				 i%6,i%6+1,i/6,i/6+1,
 				 GTK_FILL,GTK_FILL,5,5);
-		update_progress((float)i/(float)num_pictures_taken);
+		update_progress((float)i/(float)(num_pictures_taken - 1));
 	}
 	deactivate_button(stop_button);
 	update_progress(0);
@@ -1122,39 +1282,38 @@ fprintf(stderr, N_("num_pictures_taken is %d\n"), num_pictures_taken);
 }
 
 /* get index of images and place in main page table */
-void getindex () {
-  makeindex(1);
+void getindex(void)
+{
+	makeindex(1);
 }
 
 /* get empty index of images and place in main page table */
-void getindex_empty () {
-  makeindex(0);
+void getindex_empty(void)
+{
+	makeindex(0);
 }
 
-void halt_action() {
-
+void halt_action(void)
+{
 	okAction = 0;
 }
 
 /* get selected pictures */
-void getpics (char *pictype) {
-
+void getpics(char *pictype)
+{
 	char status[256];
 	gint i=0;
 	gint x=0, y=0;	
 
-	extern void activate_button(GtkWidget *cur_button);
-        extern void deactivate_button(GtkWidget *cur_button);
-
 	struct ImageMembers *node = &Thumbnails;
 	
-	while (node->next != NULL) {	
-		node=node->next;
+	while (node->next) {	
+		node = node->next;
 		if (GTK_TOGGLE_BUTTON(node->button)->active)
 			x++;
 	}
-	if (x == 0) {
-		update_status(N_("Nothing selected for download."));
+	if (!x) {
+		update_status("Nothing selected for download.");
 		return;
 	}
 
@@ -1162,20 +1321,21 @@ void getpics (char *pictype) {
 	update_progress(0);
 	okAction = 1;
 	activate_button(stop_button);
-	while (node->next != NULL && okAction) {
-		node = node->next; i++;
+	while (node->next && okAction) {
+		node = node->next;
+		i++;
 		if (GTK_TOGGLE_BUTTON(node->button)->active) {
 			y++;
 			if ((strcmp("i", pictype) == 0) ||
 			    (strcmp("ti", pictype) == 0)) {
-				sprintf(status, N_("Getting Image #%03i..."), i);
+				sprintf(status, "Getting Image #%03i...", i);
 				update_status(status);
 				appendpic(i, 0, TRUE, NULL);
 			}
 			if ((strcmp("t", pictype) == 0) ||
 			    (strcmp("ti", pictype) == 0)) {			
 				appendpic(i, 1, TRUE, NULL);
-				sprintf(status, N_("Getting Thumbnail #%03i..."), i);
+				sprintf(status, "Getting Thumbnail #%03i...", i);
 				update_status(status);
 			}
 			gtk_toggle_button_set_state(
@@ -1184,45 +1344,42 @@ void getpics (char *pictype) {
 			update_progress((float)y/(float)x);
 		}
 	}
+
 	if (okAction)
-		update_status(N_("Done downloading."));
-	   else
-		update_status(N_("Download halted."));
+		update_status("Done downloading.");
+	else
+		update_status("Download halted.");
 	deactivate_button(stop_button);
 	update_progress(0);
 }
 
-void remove_image(int i) {
-
-	gint x=0;
+void remove_image(int i)
+{
+	int x=0;
 
 	struct ImageMembers *node = &Images;
 	struct ImageMembers *prev = node;
 
-
-	while (x < i) {
+	for (; x < i; x++) {
 		prev = node;
 		node = node->next;
-		x++;
 	}
 
 	prev->next = node->next;
 	free_imagemembers(node);
 }
 
-void closepic () {
-
+void closepic(void)
+{
 	int currentPage;
 
-	currentPage = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
-
-	if (currentPage != 0) {
+	currentPage = gtk_notebook_current_page(GTK_NOTEBOOK(notebook));
+	if (currentPage)
 		remove_image(currentPage);
-	}
 }
 
-void save_opened_image (int i, char *filename) {
-
+void save_opened_image(int i, char *filename)
+{
 	int x=0;
 
 	struct ImageMembers *node = &Images;
@@ -1230,10 +1387,8 @@ void save_opened_image (int i, char *filename) {
 	if (!confirm_overwrite(filename))
 		return;
 
-	while (x < i) {
+	for (; x < i; x++)
 		node = node->next;
-		x++;
-	}
 	
 	if (gdk_imlib_save_image(node->imlibimage,filename, NULL) == 0) {
 		error_dialog(
@@ -1247,8 +1402,8 @@ void save_opened_image (int i, char *filename) {
 
 GtkWidget *save_dialog_filew;
 
-void save_dialog_update(GtkWidget *button, GtkWidget *label) {
-
+void save_dialog_update(GtkWidget *button, GtkWidget *label)
+{
 	GList *child;
 
 	child = gtk_container_children(
@@ -1258,25 +1413,25 @@ void save_dialog_update(GtkWidget *button, GtkWidget *label) {
         	GTK_CONTAINER(child->next->next->data));
 
 	if (GTK_TOGGLE_BUTTON(button)->active) {
-        	gtk_widget_hide(GTK_WIDGET(child->next->data));
+		gtk_widget_hide(GTK_WIDGET(child->next->data));
 		gtk_label_set_text(GTK_LABEL(label), 
-		"Save all opened images (enter the filename prefix below)");}
-	   else {
-        	gtk_widget_show(GTK_WIDGET(child->next->data));
-		gtk_label_set_text(GTK_LABEL(label),N_("Save all opened images"));
+		"Save all opened images (enter the filename prefix below)");
+	} else {
+		gtk_widget_show(GTK_WIDGET(child->next->data));
+		gtk_label_set_text(GTK_LABEL(label),"Save all opened images");
 	}
 }
 
-void save_dialog (GtkWidget *widget, gpointer data) {
-
+void save_dialog(GtkWidget *widget, gpointer data)
+{
 	GtkWidget *saveall_checkbutton;
-	int currentPic, x=0;
+	int currentPic, i;
 	char filename[1024];
 
 	sprintf(filename, "%s/*.*", filesel_cwd);
 
-	save_dialog_filew = gtk_file_selection_new (N_("Save Image(s)..."));
-	gtk_window_set_position (GTK_WINDOW (save_dialog_filew),GTK_WIN_POS_CENTER);
+	save_dialog_filew = gtk_file_selection_new("Save Image(s)...");
+	gtk_window_set_position(GTK_WINDOW(save_dialog_filew), GTK_WIN_POS_CENTER);
         gtk_file_selection_set_filename(GTK_FILE_SELECTION(save_dialog_filew), 
 		filename);
 	saveall_checkbutton = gtk_check_button_new_with_label(
@@ -1295,7 +1450,7 @@ void save_dialog (GtkWidget *widget, gpointer data) {
 		return;
 
 	currentPic = gtk_notebook_current_page(GTK_NOTEBOOK(notebook));
-	if ((currentPic == 0) && 
+	if ((!currentPic) &&
 	   (!GTK_TOGGLE_BUTTON(saveall_checkbutton)->active)) {
 		update_status(N_("Saving the index is not yet supported"));
 		return;
@@ -1307,23 +1462,23 @@ void save_dialog (GtkWidget *widget, gpointer data) {
 		return;
 	}
 
-	x=1;
-	while (gtk_notebook_get_nth_page(GTK_NOTEBOOK(notebook),x)!=NULL){
+	i = 1;
+	while (gtk_notebook_get_nth_page(GTK_NOTEBOOK(notebook), i) != NULL){
 		sprintf(filename, "%s-%03i.jpg",
 			gtk_file_selection_get_filename(
-			GTK_FILE_SELECTION(save_dialog_filew)), x);
-		save_opened_image(x, filename);
-		x++;
+			GTK_FILE_SELECTION(save_dialog_filew)), i);
+		save_opened_image(i, filename);
+		i++;
 	}
 	gtk_widget_destroy(save_dialog_filew);
 }
 
-void open_dialog (GtkWidget *widget, gpointer data) {
-
+void open_dialog(GtkWidget *widget, gpointer data)
+{
 	GtkWidget *filew;
 
-	filew = gtk_file_selection_new (N_("Open Image..."));
-	gtk_window_set_position (GTK_WINDOW (filew),
+	filew = gtk_file_selection_new("Open Image...");
+	gtk_window_set_position(GTK_WINDOW(filew),
 		GTK_WIN_POS_CENTER);
 	gtk_file_selection_set_filename(GTK_FILE_SELECTION
 		(filew), filesel_cwd);
@@ -1336,17 +1491,17 @@ void open_dialog (GtkWidget *widget, gpointer data) {
 	gtk_widget_destroy(filew);
 }
 
-void print_pic () {
-
-	int currentPic, pid, x=0;
+void print_pic(void)
+{
+	int i, currentPic, pid;
 	char command[1024], fname[1024];
 	struct ImageMembers *node = &Images;
 
 	GtkWidget *dialog, *label, *entry, *hbox, *okbutton, *cancelbutton;
 
 	currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
-	if (currentPic == 0) {
-		update_status(N_("Can't print the index yet."));
+	if (!currentPic) {
+		update_status("Can't print the index yet.");
 		return;
 	}
 
@@ -1397,10 +1552,8 @@ void print_pic () {
 	if (wait_for_hide(dialog, okbutton, cancelbutton) == 0)
 		return;
 
-	while (x < currentPic) {
+	for (i = 0; i < currentPic; i++)
 		node = node->next;
-		x++;
-	}
 
 	pid = getpid();
 	sprintf(fname, "%s/gphoto-%i-%03i.jpg", gphotoDir, pid, currentPic);
@@ -1415,54 +1568,53 @@ void print_pic () {
 	gtk_widget_destroy(dialog);
 }
 
-void select_all() {
-
+void select_all(void)
+{
 	struct ImageMembers *node = &Thumbnails;
 
-	while (node->next != NULL) {
+	while (node->next) {
 		node = node->next;
 		if (!GTK_TOGGLE_BUTTON(node->button)->active)
-		gtk_button_clicked(GTK_BUTTON(node->button));
+			gtk_button_clicked(GTK_BUTTON(node->button));
 	}
 }
 
-void select_inverse() {
-
+void select_inverse(void)
+{
 	struct ImageMembers *node = &Thumbnails;
 
-	while (node->next != NULL) {
+	while (node->next) {
 		node = node->next;
 		gtk_button_clicked(GTK_BUTTON(node->button));
 	}
 }
 
-void select_none() {
-
+void select_none(void)
+{
 	struct ImageMembers *node = &Thumbnails;
 
-	while (node->next != NULL) {
+	while (node->next) {
 		node = node->next;
 		if (GTK_TOGGLE_BUTTON(node->button)->active)
-		  gtk_button_clicked(GTK_BUTTON(node->button));
+			gtk_button_clicked(GTK_BUTTON(node->button));
 	}
 }
 
-void color_dialog() {
-	int i=0,currentPic;
+void color_dialog(void)
+{
+	int i, currentPic;
 	struct ImageMembers *node = &Images;
 
 	extern GtkWidget *img_edit_new(struct ImageMembers *n);
 
-	currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
-	if (currentPic == 0) {
-	  update_status(N_("Can't modify the index colors."));
-	  return;
+	currentPic = gtk_notebook_current_page(GTK_NOTEBOOK(notebook));
+	if (!currentPic) {
+		update_status("Can't modify the index colors.");
+		return;
 	}
 
-	while (i < currentPic) {
+	for (i = 0; i < currentPic; i++)
                 node = node->next;
-                i++;
-        }
 
 	gtk_widget_show(GTK_WIDGET(img_edit_new(node)));
 }
@@ -1472,8 +1624,8 @@ GtkWidget *resize_dialog_width, *resize_dialog_height,
 char	  resize_dialog_w[10], resize_dialog_h[10];
 guint	  resize_dialog_width_handler,resize_dialog_height_handler;
 
-void resize_dialog_update(GtkWidget *entry) {
-
+void resize_dialog_update(GtkWidget *entry)
+{
 	char newentry[12];
 	int oldw, neww, oldh, newh, newvalue;
 	
@@ -1492,8 +1644,8 @@ void resize_dialog_update(GtkWidget *entry) {
 
 	if (entry == resize_dialog_width) {
 		/* update height */
-		newvalue = neww*oldh/oldw;
-		if (newvalue == 0)
+		newvalue = neww * oldh / oldw;
+		if (!newvalue)
 			newvalue = 1;
 		sprintf(newentry, "%i", newvalue);
 		gtk_entry_set_text(GTK_ENTRY(resize_dialog_height),
@@ -1502,8 +1654,8 @@ void resize_dialog_update(GtkWidget *entry) {
 
 	if (entry == resize_dialog_height) {
 		/* update width */
-		newvalue = newh*oldw/oldh;
-		if (newvalue == 0)
+		newvalue = newh * oldw / oldh;
+		if (!newvalue)
 			newvalue = 1;
 		sprintf(newentry, "%i", newvalue);
 		gtk_entry_set_text(GTK_ENTRY(resize_dialog_width),
@@ -1516,9 +1668,9 @@ void resize_dialog_update(GtkWidget *entry) {
 		resize_dialog_height_handler);
 }
 
-void resize_dialog() {
-
-	int i=0, w, h, currentPic;
+void resize_dialog(void)
+{
+	int i, w, h, currentPic;
 	char *dimension;
 
 	GtkWidget *dialog, *rbutton, *button;
@@ -1530,15 +1682,13 @@ void resize_dialog() {
 	struct ImageMembers *node = &Images;
 
 	currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
-	if (currentPic == 0) {
-	  update_status(N_("Can't scale the index."));
-	  return;
+	if (!currentPic) {
+		update_status("Can't scale the index.");
+		return;
 	}
 
-	while (i < currentPic) {
-                node = node->next;
-                i++;
-        }
+	for (i = 0; i < currentPic; i++)
+		node = node->next;
 
 	dialog = gtk_dialog_new();
 	gtk_window_set_title(GTK_WINDOW(dialog), N_("Resize Image..."));
@@ -1546,8 +1696,7 @@ void resize_dialog() {
 
 	hbox = gtk_hbox_new(FALSE, 5);
 	gtk_widget_show(hbox);
-	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-                                    hbox);
+	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
 
 	label = gtk_label_new(N_("Width:"));
 	gtk_widget_show(label);
@@ -1566,11 +1715,10 @@ void resize_dialog() {
 		GTK_OBJECT(resize_dialog_width));
 	gtk_box_pack_start_defaults(GTK_BOX(hbox),resize_dialog_width);
 
-
 	hbox = gtk_hbox_new(FALSE, 5);
 	gtk_widget_show(hbox);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-                                    hbox);
+				hbox);
 		
 	label = gtk_label_new(N_("Height:"));
 	gtk_widget_show(label);
@@ -1595,7 +1743,7 @@ void resize_dialog() {
 	gtk_toggle_button_set_active(
 		GTK_TOGGLE_BUTTON(resize_dialog_constrain), TRUE);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-                                    resize_dialog_constrain);
+				resize_dialog_constrain);
 
 	rbutton = gtk_button_new_with_label(N_("Resize"));
 	gtk_widget_show(rbutton);
@@ -1612,40 +1760,40 @@ void resize_dialog() {
 		return;
 	/* ------------------------------------- */
 
-        dimension = gtk_entry_get_text(GTK_ENTRY(resize_dialog_width));
-	if (strlen(dimension) == 0)
+	dimension = gtk_entry_get_text(GTK_ENTRY(resize_dialog_width));
+	if (!strlen(dimension))
 		return;
-        w = atoi(dimension);
-        dimension = gtk_entry_get_text(GTK_ENTRY(resize_dialog_height));
-	if (strlen(dimension) == 0)
+	w = atoi(dimension);
+	dimension = gtk_entry_get_text(GTK_ENTRY(resize_dialog_height));
+	if (!strlen(dimension))
 		return;
-        h = atoi(dimension);
+	h = atoi(dimension);
 
-        scaledImage = gdk_imlib_clone_scaled_image(node->imlibimage,w,h);
-        gdk_imlib_kill_image(node->imlibimage);
+	scaledImage = gdk_imlib_clone_scaled_image(node->imlibimage,w,h);
+	gdk_imlib_kill_image(node->imlibimage);
 
-        node->imlibimage = scaledImage;
-        w = node->imlibimage->rgb_width;
-        h = node->imlibimage->rgb_height;
-        gdk_imlib_render(node->imlibimage, w, h);
-        pixmap = gdk_imlib_move_image(node->imlibimage);
-        gtk_widget_hide(node->image);
-        gtk_pixmap_set(GTK_PIXMAP(node->image), pixmap, NULL);
-        gtk_widget_show(node->image);
+	node->imlibimage = scaledImage;
+	w = node->imlibimage->rgb_width;
+	h = node->imlibimage->rgb_height;
+	gdk_imlib_render(node->imlibimage, w, h);
+	pixmap = gdk_imlib_move_image(node->imlibimage);
+	gtk_widget_hide(node->image);
+	gtk_pixmap_set(GTK_PIXMAP(node->image), pixmap, NULL);
+	gtk_widget_show(node->image);
 	gtk_widget_destroy(dialog);
 }
 
-void manip_pic (gchar *Option) {
-
+void manip_pic(gchar *Option)
+{
 	int i=0, currentPic, w, h;
 	struct ImageMembers *node = &Images;
 
 	GdkPixmap *pixmap;
 	
-	currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
-	if (currentPic == 0) {
-	  update_status(N_("Can't manipulate the index."));
-	  return;
+	currentPic = gtk_notebook_current_page(GTK_NOTEBOOK(notebook));
+	if (!currentPic) {
+		update_status("Can't manipulate the index.");
+		return;
 	}
 	while (i < currentPic) {
 		node = node->next;
@@ -1670,115 +1818,127 @@ void manip_pic (gchar *Option) {
 		default:
 			break;
 	}
-        w = node->imlibimage->rgb_width;
-        h = node->imlibimage->rgb_height;
-        gdk_imlib_render(node->imlibimage, w, h);
-        pixmap = gdk_imlib_move_image(node->imlibimage);
+	w = node->imlibimage->rgb_width;
+	h = node->imlibimage->rgb_height;
+	gdk_imlib_render(node->imlibimage, w, h);
+	pixmap = gdk_imlib_move_image(node->imlibimage);
 	gtk_widget_hide(node->image);
 	gtk_pixmap_set(GTK_PIXMAP(node->image), pixmap, NULL);
 	gtk_widget_show(node->image);
 }
 
-void summary_dialog() {
-  message_window ( "Camera Summary", (*Camera->summary)(), GTK_JUSTIFY_FILL );
+void summary_dialog(void)
+{
+	message_window("Camera Summary", Camera->ops->summary(), GTK_JUSTIFY_FILL);
 }
 
-void scale (int factor) { /* Decreases image size by factor n % */
+/* Decreases image size by factor n % */
+void scale(int factor)
+{
+	int i=0, currentPic;
+	int w, h;
+/*
+	char w_size[10], h_size[10];
+*/
+	GdkImlibImage *scaledImage;
+	GdkPixmap *pixmap;
 
-  gint i=0, currentPic;
-  gint w, h;
-  char w_size[10], h_size[10];
-  GdkImlibImage *scaledImage;
-  GdkPixmap *pixmap;
-  
-  struct ImageMembers *node = &Images;
+	struct ImageMembers *node = &Images;
 
-  w = h = 0;
+	w = h = 0;
 
-  currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
-  if (currentPic == 0) {
-    update_status(N_("Can't scale the index!"));
-    return;
-  }
+	currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
+	if (!currentPic) {
+		update_status("Can't scale the index!");
+		return;
+	}
   
-  while (i < currentPic) {
-    node = node->next;
-    i++;
-  }
+	while (i < currentPic) {
+		node = node->next;
+		i++;
+	}
   
-  sprintf(w_size, "%i", node->imlibimage->rgb_width);
-  sprintf(h_size, "%i", node->imlibimage->rgb_height);
+	/* Why is this done? -jerdfelt */
+/*
+	sprintf(w_size, "%i", node->imlibimage->rgb_width);
+	sprintf(h_size, "%i", node->imlibimage->rgb_height);
 
-  w = atoi(w_size);
-  h = atoi(h_size);
+	w = atoi(w_size);
+	h = atoi(h_size);
+*/
+	w = node->imlibimage->rgb_width;
+	h = node->imlibimage->rgb_height;
   
-  w = (w * factor)/100;
-  h = (h * factor)/100;
+	w = (w * factor)/100;
+	h = (h * factor)/100;
   
-  scaledImage = gdk_imlib_clone_scaled_image(node->imlibimage,w,h);
-  gdk_imlib_kill_image(node->imlibimage);
+	scaledImage = gdk_imlib_clone_scaled_image(node->imlibimage,w,h);
+	gdk_imlib_kill_image(node->imlibimage);
   
-  node->imlibimage = scaledImage;
-  w = node->imlibimage->rgb_width;
-  h = node->imlibimage->rgb_height;
-  gdk_imlib_render(node->imlibimage, w, h);
-  pixmap = gdk_imlib_move_image(node->imlibimage);
-  gtk_widget_hide(node->image);
-  gtk_pixmap_set(GTK_PIXMAP(node->image), pixmap, NULL);
-  gtk_widget_show(node->image);
-  update_status(N_("Done."));
+	node->imlibimage = scaledImage;
+	w = node->imlibimage->rgb_width;
+	h = node->imlibimage->rgb_height;
+	gdk_imlib_render(node->imlibimage, w, h);
+	pixmap = gdk_imlib_move_image(node->imlibimage);
+	gtk_widget_hide(node->image);
+	gtk_pixmap_set(GTK_PIXMAP(node->image), pixmap, NULL);
+	gtk_widget_show(node->image);
+	update_status("Done.");
 }
  
-void scale_half () { /* Scales image size by 50% */
-  update_status(N_("Scaling image by 50%..."));
-  scale (50);
+/* Scales image size by 50% */
+void scale_half(void)
+{
+	update_status("Scaling image by 50%...");
+	scale(50);
 }
 
-void scale_double () { /* Scales image size by 200% */
-  update_status(N_("Scaling image by 200%..."));
-  scale (200);
+/* Scales image size by 200% */
+void scale_double(void)
+{
+	update_status("Scaling image by 200%...");
+	scale(200);
 }
 
-void save_images (gpointer data, guint action, GtkWidget *widget) {
-
+void save_images (gpointer data, guint action, GtkWidget *widget)
+{
 	saveselectedtodisk(widget, "i");
 }
 
-void open_images (gpointer data, guint action, GtkWidget *widget) {
-
+void open_images(gpointer data, guint action, GtkWidget *widget)
+{
 	getpics("i");
 }
 
-void save_thumbs (gpointer data, guint action, GtkWidget *widget) {
-
+void save_thumbs(gpointer data, guint action, GtkWidget *widget)
+{
 	saveselectedtodisk(widget, "t");
 }
 
-void open_thumbs (gpointer data, guint action, GtkWidget *widget) {
-
+void open_thumbs(gpointer data, guint action, GtkWidget *widget)
+{
 	getpics("t");
 }
 
-void save_both (gpointer data, guint action, GtkWidget *widget) {
-
+void save_both (gpointer data, guint action, GtkWidget *widget)
+{
 	saveselectedtodisk(widget, "ti");
-		/* don't prompt for directory when saving images */
+	/* don't prompt for directory when saving images */
 }
 
-void open_both (gpointer data, guint action, GtkWidget *widget) {
-
+void open_both(gpointer data, guint action, GtkWidget *widget)
+{
 	getpics("ti");
 }
 
 
-void post_process_change (GtkWidget *widget, GtkWidget *win) {
-
+void post_process_change(GtkWidget *widget, GtkWidget *win)
+{
 	GtkWidget *dialog, *ok, *cancel, *label, *pp, *script;
 
 	GdkPixmap *pixmap;
 	GdkBitmap *bitmap;
 	GtkStyle *style;
-
 
 	dialog = gtk_dialog_new();
 	gtk_window_set_title(GTK_WINDOW(dialog), N_("Post-Processing Options")); 
@@ -1857,58 +2017,72 @@ knows where the image is located.");
 	gtk_widget_destroy(dialog);
 }
 
-void browse_gallery() {
-        char *buf;
-        buf = malloc(256);
-        snprintf(buf, 256, "file:%sindex.html", filesel_cwd);
-        url_send_browser (buf);
-        free (buf);
+void browse_gallery(void)
+{
+	char *buf;
+
+	buf = malloc(256);
+	snprintf(buf, 256, "file:%sindex.html", filesel_cwd);
+	url_send_browser(buf);
+	free(buf);
 }
 
-void browse_help() {
-        url_send_browser (N_("http://www.gphoto.org/help.php3"));
+void browse_help(void)
+{
+	url_send_browser("http://www.gphoto.org/help.php3");
 }
 
-void browse_gphoto() {
-        url_send_browser (N_("http://www.gphoto.org/"));
+void browse_gphoto(void)
+{
+	url_send_browser("http://www.gphoto.org/");
 }
 
-void browse_feedback() {
-        url_send_browser (N_("http://www.gphoto.org/feedback.php3"));
+void browse_feedback(void)
+{
+	url_send_browser("http://www.gphoto.org/feedback.php3");
 }
 
-void browse_news() {
-        url_send_browser (N_("http://www.gphoto.org/news.php3"));
+void browse_news(void)
+{
+	url_send_browser("http://www.gphoto.org/news.php3");
 }
 
-void browse_download() {
-        url_send_browser (N_("http://www.gphoto.org/download.php3"));
+void browse_download(void)
+{
+	url_send_browser("http://www.gphoto.org/download.php3");
 }
 
-void browse_cameras() {
-        url_send_browser (N_("http://www.gphoto.org/cameras.php3"));
+void browse_cameras(void)
+{
+	url_send_browser("http://www.gphoto.org/cameras.php3");
 }
 
-void browse_supporting() {
-        url_send_browser (N_("http://www.gphoto.org/supporting.php3"));
+void browse_supporting(void)
+{
+	url_send_browser("http://www.gphoto.org/supporting.php3");
 }
 
-void browse_discussion() {
-        url_send_browser (N_("http://www.gphoto.org/lists.php3"));
+void browse_discussion(void)
+{
+	url_send_browser("http://www.gphoto.org/lists.php3");
 }
 
-void browse_team() {
-        url_send_browser (N_("http://www.gphoto.org/team.php3"));
+void browse_team(void)
+{
+	url_send_browser("http://www.gphoto.org/team.php3");
 }
 
-void browse_themes() {
-        url_send_browser (N_("http://www.gphoto.org/themes.php3"));
+void browse_themes(void)
+{
+	url_send_browser("http://www.gphoto.org/themes.php3");
 }
 
-void browse_links() {
-        url_send_browser (N_("http://www.gphoto.org/links.php3"));
+void browse_links(void)
+{
+	url_send_browser("http://www.gphoto.org/links.php3");
 }
 
-void browse_todo() {
-        url_send_browser (N_("http://www.gphoto.org/todo.php3"));
+void browse_todo(void)
+{
+	url_send_browser("http://www.gphoto.org/todo.php3");
 }

@@ -23,7 +23,6 @@ related to internationalization, you should tell about the version of
 `intl/VERSION' file, in internationalized packages.
 
 One advise in advance
-=====================
 
    If you want to exploit the full power of internationalization, you
 should configure it using
@@ -45,7 +44,6 @@ you have installed a recent copy of the GNU gettext package with the
 included `libintl'.
 
 INSTALL Matters
-===============
 
    Some packages are "localizable" when properly installed; the
 programs they contain can be made to speak your own native language.
@@ -106,7 +104,6 @@ may be set, prior to configuration, to limit the installed set.
 codes, stating which languages are allowed.
 
 Using This Package
-==================
 
    As a user, if your language has been installed for this package, you
 only have to set the `LANG' environment variable to the appropriate
@@ -128,7 +125,6 @@ when Swedish is not available.  This is easily accomplished by setting
 `LANGUAGE' to `sv:de' while leaving `LANG' to `sv'.
 
 Translating Teams
-=================
 
    For the Free Translation Project to be a success, we need interested
 people who like their own language and write it well, and who are also
@@ -170,7 +166,6 @@ the terminology in use.  Proven linguistic skill are praised more than
 programming skill, here.
 
 Available Packages
-==================
 
    Languages are not equally supported in all packages.  The following
 matrix shows the current state of internationalization, as of December

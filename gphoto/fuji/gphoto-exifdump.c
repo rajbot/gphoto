@@ -53,7 +53,7 @@ main(int argc, char** argv){
   i=1;
 
   while ((i<argc)&&(argv[i][0]=='-')) {
-    if (!strncmp(argv[i],"-d",2)) fuji_debug=exif_debug=1;
+    if (!strncmp(argv[i],"-d",2)) fuji_debug=fuji_exif_debug=1;
     i++;
   };
 

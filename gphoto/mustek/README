@@ -1,52 +1,35 @@
-Driver for Mustek MDC 800 cameras by Pedro Caria <pmiguel@maquina.com>.
+Driver for Mustek MDC 800 cameras by Henning Zabel <henning@uni-paderborn.de>
 
-01.10.1999:
+The driver supports the rs232 and the USB interface of the
+Mustek MDC800 Digital Camera. It implements all function
+to download pictures, view their thumbnails or delete them.
+It is also possible to take photos with the library.
+In the GUI of this driver you can select some preferences 
+for this.
 
-ok, corrected the bug sent to [gphoto-devel] by Don Cockman
-<don@hauraki.co.uk>
+On rs232 it is possible to use every supported Baudrate. The
+Baudrate is selectable in the GUI.
 
-"Taking photos reports 'memory full' problem, but still works OK"
+History :
 
-and wraped the debug messages around MUSTEK_DEBUG.
+10.01.2000 The Library was ported to the ne iolib. It uses also
+           the USB Interfave from Johannes Erdfeld. This makes it
+			  unneccessary to have a special Kernelmodul for the 
+			  Mustek.
+			  In camera.h there is added a new entry, so you can select
+			  wether you want to use USB or rs232. This is needed
+			  because the iolib does not support autodetection for this.
 
+19.11.1999 Autoprobe of the Baudrate when starting (opening) this
+           driver was added. This makes it possible to reopen the
+			  camera after an error, when the camera has been set
+			  to another baudrate than 57k.
+			  Automatic command retry has moved from rs232 to io, now
+			  it also touches usb.
 
-Status of 27.09.1999:
+17.11.1999 Rewrite of the GUI: Some useless Function where deleted.
+           The GUI now uses ComboBoxes.
+			  Added support to select Baudrate of the camera in the GUI.
 
- Well the thing works, some minor timming problems wich no longer
-influence the workings, have a configuration interface with the following
-options:
-      Image Quality
-      Flash Mode (sorry still no red-eye, i'm loking for the proper
-                   widget)
-      Exposure settings
-      Light Source
-      Exposure Mode
-      Auto-Off
-      Menu Display (useless, I think)
-      Storage-Source
-      LCD ON/OFF
-
-mustek_mdc800_initialize
- Implemented, opens the port locks the controls on the camera (is there a
-way to unlock them before exiting ?)
-mustek_mdc800_get_picture
- Been there done that.
-mustek_mdc800_get_preview
- return(0); /* sorry */
-mustek_mdc800_delete_image
- Done, probably still some bugs lurking.
-mustek_mdc800_take_picture
- Done.              
-mustek_mdc800_number_of_pictures
- Yep
-mustek_mdc800_configure
- Yes
-mustek_mdc800_summary
- Not Yet what is this thing for ?
-mustek_mdc800_description
- Yes
-
-Base code was done in a few hours and gphoto integration was done in
-2 days, very simple coding for gphoto and you get to see the results 
-right away.
-
+07.11.1999 This lib was posted to gphoto, after adapting the GUI
+           from the earlier driver.

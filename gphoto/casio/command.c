@@ -658,7 +658,7 @@ casio_qv_download_picture(sdcInfo info, int picture_number,
 	    return(NULL);
 	}
     } else if (vga == 2) {
-	if (write_file(buf, len, picFP) == -1) {
+	if (casio_write_file(buf, len, picFP) == -1) {
 	    fclose(picFP);
 	    return(NULL);
 	}

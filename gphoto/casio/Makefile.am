@@ -1,6 +1,6 @@
 drivers_LTLIBRARIES = libgphoto_casio_qv.la
 
-CFLAGS = @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@
+CFLAGS = @CFLAGS@ @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@
 
 libgphoto_casio_qv_la_SOURCES = getuint.c ppm.c jpeg.c printMsg.c sdComm.c \
 	configure.c config_handler.c qv_io.c command.c casio_qv.c \

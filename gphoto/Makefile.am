@@ -1,51 +1,19 @@
 ## Process this file with automake to generate a GNU Makefile
 
-CFLAGS = -O2 -Wall
+SUBDIRS = intl po libgpio barbie canon casio digita dimera directory fuji gallery jd11 kodak \
+kodak_generic konica konica_qmxxx man minolta mustek nikon \
+philips photopc polaroid ricoh samsung sony src
 
-SUBDIRS = canon \
-	casio \
-	directory \
-	fuji \
-	gallery \
-	intl \
-	kodak \
-	kodak_generic \
-	konica \
-	konica_qmxxx \
-	man \
-	minolta \
-	mustek \
-	nikon \
-	philips \
-	photopc \
-	po \
-	ricoh \
-	samsung \
-	sony \
-	src
+CFLAGS= @CFLAGS@ -I../libgpio -I../../libgpio -I../../../libgpio 
+LDFLAGS= @LDFLAGS@ -L../libgpio -L./libgpio -lgpio
 
 gphotodocdir = $(datadir)/gphoto/doc
 
 gphotodoc_DATA = AUTHORS MANUAL
 
-EXTRA_DIST = $(gphotodoc_DATA) \
-	CONTACTS \
-	COPYING \
-	ChangeLog \
-	FAQ \
-	INSTALL \
-	NEWS \
-	NEWS_0_4_0 \
-	NEWS_0_4_1 \
-	NEWS_0_4_2 \
-	PROGRAMMERS \
-	README \
-	THANKS \
-	THEMES \
-	TODO \
-	configure \
-	gphoto.desktop \
-	gphoto.spec 
+EXTRA_DIST = $(gphotodoc_DATA) NEWS README THEMES TODO COPYING THANKS \
+	ChangeLog FAQ INSTALL PROGRAMMERS gphoto.spec configure \
+	gphoto.desktop
 
 sysdir = $(datadir)/gnome/apps/Graphics
 sys_DATA = gphoto.desktop

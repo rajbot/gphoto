@@ -16,14 +16,12 @@
  *      Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "config.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef HAVE_SYS_PARAM_H
-#include <sys/param.h>
-#endif
+#ifdef __FreeBSD__
 #include <sys/types.h>
+#endif
 #include <netinet/in.h>
 
 #include "kodak_generic.h"

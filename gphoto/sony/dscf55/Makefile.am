@@ -17,3 +17,5 @@ CFLAGS = @CFLAGS@ @GTK_CFLAGS@
 libgphoto_sony_dscf55_la_SOURCES = $(rs)
 
 libgphoto_sony_dscf55_la_LDFLAGS = -version-info 0:0:0
+
+EXTRA_DIST = serio.h rsony.c serio.c config.c config.h

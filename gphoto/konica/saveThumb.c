@@ -11,10 +11,8 @@ void qm100_saveThumb(int serialdev, char *filename, int pic, void (*progress)(vo
    char cmd[]=QM100_GETTHUMB;
    qm100_packet_block packet;
    int blocks=1;
-   
    cmd[5] = (pic >> 8) & 0xff;
    cmd[6] = (pic & 0xff);
-
    /*------------------------------------------------------------------*
     *                                                                  *
     * Send the command and receive the first (and possibly only) data  *
@@ -42,7 +40,7 @@ void qm100_saveThumb(int serialdev, char *filename, int pic, void (*progress)(vo
          qm100_getPacket(serialdev, &packet);
          write(jpgfile, packet.packet, packet.packet_len);
          }
-      close(jpgfile);     
+      close(jpgfile);
       }
    /*------------------------------------------------------------------*
     *                                                                  *

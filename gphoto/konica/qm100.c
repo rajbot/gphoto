@@ -1,5 +1,4 @@
 #include "qm100.h"
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * qm100.c - command line interface for Konica QM100 and               *
@@ -17,11 +16,9 @@ static int   qm100_killPic;
 static int   qm100_format;
 static int   qm100_getPic;
 static int   qm100_getThumb;
-
 void progress(void)
 {
    static int dots = 0;
-   
    fprintf(stderr, "\b%c", cycle[dots]);
    fflush(stderr);
    if (++dots >= sizeof(cycle)-1)
@@ -60,7 +57,6 @@ void usage(void)
    printf("\t  QM100_TRACE=fname - trace camera activity to fname\n");
    printf("\t  QM100_TRACE_BYTES - trace low-level camera I/O\n");
 }
-
 int main(int argc, char *argv[])
 {
    int   c;
@@ -70,7 +66,6 @@ int main(int argc, char *argv[])
    int   operation=0;
    qm100_packet_block packet;
    QM100_CAMERA_INFO  cinfo;
-   
    /*------------------------------------------------------------------*
     *                                                                  *
     * Extract parameters from ~/.gphoto/konicarc,  and from the        *
@@ -88,7 +83,6 @@ int main(int argc, char *argv[])
          case 'C':
             qm100_configureDialog();
             return 0;
-
          case 'b':
             {
             char tval[64];
@@ -96,70 +90,56 @@ int main(int argc, char *argv[])
             putenv(tval);
             break;
             }
-
          case 'p':
             strcpy(cameraName, optarg);
             break;
-            
          case 'i':
             operation=c;
             sscanf(optarg,"%d",&infoPic);
             break;
-
          case 'a':
             operation=c;
             qm100_getPic = -1;
             break;
-            
          case 'T':
             operation=c;
             break;
-            
          case 'I':
             operation=c;
             break;
-
          case 's':
             qm100_showStatus=1;
             operation=c;
             break;
-	 
          case 'e':
             sscanf(optarg,"%d",&qm100_killPic);
             operation=c;
             break;
-	  
          case 'f':
             qm100_format=1;
             operation=c;
             break;
-
          case 'd':
             qm100_date=1;
             operation=c;
             break;
-	  
          case 'D':
             qm100_date=2;
             operation=c;
             break;
-	  
          case 'g':
             sscanf(optarg,"%d",&qm100_getPic);
             operation=c;
             break;
-	  
          case 't':
             qm100_getThumb = 1;
             operation=c;
             break;
-
          default:
             usage();
             exit(0);
          }
       }
-   
    /*------------------------------------------------------------------*
     *                                                                  *
     * Perform requested camera operations.                             *
@@ -198,7 +178,6 @@ int main(int argc, char *argv[])
             {
             int i;
             char filename[40];
-            
             for (i=1; i<=qm100_pictureCount; i++)
                {
                qm100_getPic = qm100_getRealPicNum(serialdev, i);
@@ -220,12 +199,11 @@ int main(int argc, char *argv[])
          case 'I':
             {
             char cmd[]=QM100_GETID;
-            
             qm100_transmit(serialdev, cmd, sizeof(cmd), &packet, "GetID");
             dump(stdout, "Camera ID", packet.packet, packet.packet_len);
             break;
             }
-         case 's':       
+         case 's':
             printf("Camera:             %s\n", cinfo.name);
             printf("Product Id:         %-4.4s\n", cinfo.product);
             printf("Serial #:           %-10.10s\n", cinfo.serial);
@@ -241,7 +219,6 @@ int main(int argc, char *argv[])
             {
             int i;
             char filename[40];
-            
             for (i=1; i<=qm100_pictureCount; i++)
                {
                qm100_getThumb = qm100_getRealPicNum(serialdev, i);

@@ -1,4 +1,4 @@
-OPTS = -O -DHAVE_TERMIOS_H=1
+OPTS = -O -Wall -DHAVE_TERMIOS_H=1
 CFLAGS = -I/usr/lib/glib/include
 OBJS = philips_io.o 
 GOBJS = philips_io.o gphoto_philips.o gphoto_philips_config.o

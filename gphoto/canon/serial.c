@@ -21,8 +21,19 @@
 #include <sys/ioctl.h>
 
 #include "util.h"
+#include "psa50.h"
+#include "../src/gphoto.h"
 
-#define D(c) c
+/****  new stuff ********/
+#include <gpio.h>
+extern struct Model *Camera;  
+int gpio_usb_find_device(int idvendor, int idproduct, struct usb_device **device);
+int gpio_usb_msg_write(gpio_device *dev, int value, char *bytes, int size);
+int gpio_usb_msg_read(gpio_device *dev, int value, char *bytes, int size);
+int gpio_usb_read(gpio_device *dev, char *bytes, int size);
+int gpio_usb_write(gpio_device *dev, char *bytes, int size);
+/*******  new stuff *********/
+
 
 /****************************************************************************
  *
@@ -30,18 +41,16 @@
  *
  ****************************************************************************/
 
-static struct termios oldtio, newtio;
-static int fd;
+gpio_device *iodev;
+gpio_device_settings settings;
 
 
 void serial_flush_input(void)
 {
-    if (tcflush(fd,TCIFLUSH) < 0) perror("tciflush");
 }
 
 void serial_flush_output(void)
 {
-    if (tcflush(fd,TCOFLUSH) < 0) perror("tcoflush");
 }
 
 /*****************************************************************************
@@ -60,14 +69,10 @@ void serial_flush_output(void)
 int canon_serial_change_speed(int speed)
 {
          /* set speed */
-    cfsetospeed(&newtio, speed);
-    cfsetispeed(&newtio, speed);
+  gpio_get_settings(iodev, &settings);
+  settings.serial.speed = speed;
+  gpio_set_settings(iodev, settings);
 
-    if (0 > tcsetattr(fd, TCSANOW, &newtio))
-    {
-        perror("canon_serial_change_speed(): tcsetattr()");
-        return 0;
-    }
 	usleep(70000);
 
     return 1;
@@ -88,13 +93,7 @@ int canon_serial_change_speed(int speed)
  ****************************************************************************/
 int canon_serial_get_cts(void)
 {
-  int j;
-
-  if (ioctl(fd, TIOCMGET, &j) < 0) {
-    perror("Getting hardware status bits");
-  }
-
-  return (j & TIOCM_CTS);
+	return gpio_get_pin(iodev,PIN_CTS);
 }
 
 
@@ -102,7 +101,7 @@ int canon_serial_get_cts(void)
  *
  * canon_serial_init
  *
- * Initializes the given serial device.
+ * Initializes the given serial or USB device.
  *
  * devname - the name of the device to open 
  *
@@ -113,71 +112,99 @@ int canon_serial_get_cts(void)
 
 int canon_serial_init(const char *devname)
 {
+#ifdef GPIO_USB
+    char msg[65536];
+    char mem;
+    char buffer[65536];
+    gpio_device_settings settings;
+    struct usb_device *udev;
+#endif
+
+    debug_message("Initializing the camera.\n");
+
+  switch (canon_comm_method) {
+  case CANON_USB:
+#ifdef GPIO_USB
+    
+    if (gpio_usb_find_device(Camera->idVendor,
+			     Camera->idProduct, &udev)) {
+      printf("found '%s' @ %s/%s\n", Camera->name,
+	     udev->bus->dirname, udev->filename);
+    }
+    else
+      {
+	printf("Found no camera!\n");
+	exit(1);
+      }
+    iodev = gpio_new(GPIO_DEVICE_USB);
+    if (!iodev)
+      {
+	 return -1; 
+      }
+      
+    
+    settings.usb.udev = udev;
+
+	settings.usb.inep = 0x81;
+	settings.usb.outep = 0x02;
+	settings.usb.config = 1;
+	settings.usb.interface = 0;
+	settings.usb.altsetting = 0;
+
+	/*	canon_send = canon_usb_send;
+		canon_read = canon_usb_read; */
+
+	gpio_set_settings(iodev, settings);
+	if (gpio_open(iodev) < 0) {
+	  fprintf(stderr,"Camera used by other USB device!\n");
+	  exit(1);
+	  /* return -1; */
+	}
+
+	gpio_usb_msg_read(iodev,0x55,msg,1);
+	//	fprintf(stderr,"%c\n",msg[0]);
+	gpio_usb_msg_read(iodev,0x1,msg,0x58);
+	gpio_usb_msg_write(iodev,0x11,msg+0x48,0x10);
+	gpio_read(iodev, buffer, 0x44);
+	//	fprintf(stderr,"Antal b: %x\n",buffer[0]);
+	if (buffer[0]==0x54)
+	  gpio_read(iodev, buffer, 0x40);
+	return 0;
+	/* #else
+	   return -1;*/ 
+#else
+	fprintf(stderr,"This computer does not support USB, please try to select 'RS-232'\n"
+		       " in the configuration panel (Configure/Configure camera...).\n");
+	return -1;
+#endif
+	break;
+  case CANON_SERIAL_RS232:
+  default:
+    
     if (!devname)
-    {
+      {
 	fprintf(stderr, "INVALID device string (NULL)\n");
 	return -1;
-    }
-
-    D(printf("canon_init_serial(): devname %s\n", devname));
-
-    #ifdef __FreeBSD__
-    fd = open(devname, O_RDWR | O_NOCTTY | O_NONBLOCK);
-    #else
-    fd = open(devname, O_RDWR | O_NOCTTY | O_SYNC | O_NONBLOCK);
-    #endif 
-    if (fd < 0)
-    {
-	perror(devname);
+      }
+    
+    debug_message("canon_init_serial(): Using serial port on %s\n", devname);
+    
+    iodev = gpio_new(GPIO_DEVICE_SERIAL);
+    
+    strcpy(settings.serial.port, devname);
+    settings.serial.speed = 9600;
+    settings.serial.bits = 8;
+    settings.serial.parity = 0;
+    settings.serial.stopbits = 1;
+    
+    gpio_set_settings(iodev, settings); /* Sets the serial device name */
+    if ( gpio_open(iodev) == GPIO_ERROR) {	/* open the device */
+      perror("Unable to open the serial port");
 	return -1;
     }
-
-    if (0 > tcgetattr(fd, &oldtio))
-    {
-	perror("canon_init_serial(): tcgetattr()");
-	close(fd);
-	return -1;
-    }
-
-    newtio = oldtio;
-    newtio.c_cflag = (newtio.c_cflag & ~CSIZE) | CS8;
-
-    /* Set into raw, no echo mode */
-    #if defined(__FreeBSD__) || defined(__NetBSD__)
-    newtio.c_iflag &= ~(IGNBRK | IGNCR | INLCR | ICRNL | 
-			IXANY | IXON | IXOFF | INPCK | ISTRIP);
-    #else
-    newtio.c_iflag &= ~(IGNBRK | IGNCR | INLCR | ICRNL | IUCLC |
-			IXANY | IXON | IXOFF | INPCK | ISTRIP);
-    #endif
-    newtio.c_iflag |= (BRKINT | IGNPAR);
-    newtio.c_oflag &= ~OPOST;
-    newtio.c_lflag &= ~(ICANON | ISIG | ECHO | ECHONL | ECHOE | 
-			ECHOK | IEXTEN);
-    newtio.c_cflag &= ~(CRTSCTS | PARENB | PARODD);
-    newtio.c_cflag |= CLOCAL | CREAD;
-    newtio.c_cc[VMIN] = 1;
-    newtio.c_cc[VTIME] = 0;
-
-    /* set speed */
-    cfsetospeed(&newtio, B9600);
-    cfsetispeed(&newtio, B9600);
-
-    if (0 > tcsetattr(fd, TCSANOW, &newtio))
-    {
-	perror("canon_init_serial(): tcsetattr()");
-	close(fd);
-	return -1;
-    }
-
-    if (fcntl(fd,F_SETFL,0) < 0) { /* clear O_NONBLOCK */
-	perror("fcntl F_SETFL");
-	return -1;
-    }
-
-    serial_flush_input();
 
     return 0;
+  }
 }
 
 /*****************************************************************************
@@ -193,15 +220,10 @@ int canon_serial_init(const char *devname)
 
 int canon_serial_restore()
 {
-    int rc = 0;
 
-    if (0 > tcsetattr(fd, TCSANOW, &oldtio))
-    {
-	perror("canon_restore_serial(): tcsetattr()");
-    }
-    close(fd);
+    gpio_close(iodev);
 
-    return rc;
+    return 0;
 }
 
 /*****************************************************************************
@@ -212,32 +234,38 @@ int canon_serial_restore()
  *
  * buf   - the raw data buffer to send
  * len   - the length of the buffer
+ * sleep - time in usec to wait between characters
  *
  * Returns 0 on success, -1 on error.
  *
  ****************************************************************************/
 
-int canon_serial_send(const unsigned char *buf, int len)
+int canon_serial_send(const unsigned char *buf, int len, int sleep)
 {
-    D(dump_hex("canon_serial_send()", buf, len));
+	int i;
+    dump_hex("canon_serial_send()", buf, len);
 
-    while (len > 0)
-    {
-	int sent = write(fd, buf, len);
-
-	if (sent < 0)
-	{
-	    if (EINTR == errno)
-	    {
-		continue;
-	    }
-	    perror("serial_send");
-	    return -1;
-	}
-	len -= sent;
-	buf += sent;
+    if (sleep>0) {
+      for(i=0;i<len;i++) {
+    	gpio_write(iodev,buf,1);
+	buf++;
+	usleep(sleep);
+      }
     }
+    else {
+      gpio_write(iodev,buf,len);
+    }
+    
     return 0;
+}
+
+
+/**
+ * Sets the timeout, in miliseconds.
+ */
+void serial_set_timeout(int to)
+{
+  gpio_set_timeout(iodev,to);
 }
 
 /*****************************************************************************
@@ -251,22 +279,12 @@ int canon_serial_send(const unsigned char *buf, int len)
  * Returns the byte on success, -1 on error.
  *
  ****************************************************************************/
-
-int to_secs = 1;
-void serial_set_timeout(int to)
-{
-  to_secs = to;
-}
-
 int canon_serial_get_byte()
 {
     static unsigned char cache[512];
     static unsigned char *cachep = cache;
     static unsigned char *cachee = cache;
-
-    int rc;
-    fd_set readfs;
-    struct timeval timeout;
+    int recv;
 
     /* if still data in cache, get it */
     if (cachep < cachee)
@@ -274,31 +292,10 @@ int canon_serial_get_byte()
 	return (int) *cachep++;
     }
 
-    /* otherwise read from device */
-    FD_ZERO(&readfs);
-    FD_SET(fd, &readfs);
 
-    /* set the timout; initial detection works with 0.9-1.04 sec */
-    timeout.tv_sec = to_secs;
-    timeout.tv_usec = 0;
-
-    rc = select(fd + 1, &readfs, NULL, NULL, &timeout);
-
-    if (0 == rc)
-    {
-	D(fprintf(stderr, "###### canon_serial_get_byte(): recv timeout #############################\n"));
+    recv = gpio_read(iodev, cache, 1);
+    if (recv == GPIO_ERROR || recv == GPIO_TIMEOUT)
 	return -1;
-    }
-    if (rc < 0)
-    {
-	D(fprintf(stderr, "canon_serial_get_byte(): recv error\n"));
-	return -1;
-    }
-
-    if (FD_ISSET(fd, &readfs))
-    {
-	int recv = read(fd, cache, sizeof(cache));
-
 	cachep = cache;
 	cachee = cache + recv;
 
@@ -306,7 +303,7 @@ int canon_serial_get_byte()
 	{
 	    return (int) *cachep++;
 	}
-    }
+    
     return -1;
 }
 

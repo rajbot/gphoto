@@ -9,7 +9,7 @@
 	Live Camera! 
 */
 
-extern struct _Camera *Camera;
+extern struct Model *Camera;
 
 int live_video_mode = 0;
 
@@ -25,9 +25,9 @@ void live_snapshot(GtkWidget *dialog) {
                         GTK_CONTAINER(GTK_DIALOG(dialog)->vbox));
 	GtkWidget *gpixmap = GTK_WIDGET(child->data);
 
-	update_status(N_("Getting live image..."));
-        if ((im = (*Camera->get_preview)()) == 0) {
-		error_dialog(N_("Could not get preview"));
+	update_status("Getting live image...");
+        if ((im = Camera->ops->get_preview()) == 0) {
+		error_dialog("Could not get preview");
 		return;
 	}
 	imlibimage = gdk_imlib_load_image_mem(im->image, im->image_size);
@@ -74,14 +74,14 @@ void live_main () {
 	gtk_widget_show(hbox);
 	gtk_box_pack_end_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),hbox);
 
-	ubutton = gtk_button_new_with_label(N_("Update Picture"));
+	ubutton = gtk_button_new_with_label("Update Picture");
 	gtk_widget_show(ubutton);
 	gtk_box_pack_start_defaults(GTK_BOX(hbox),ubutton);
         gtk_signal_connect_object(GTK_OBJECT(ubutton), "clicked",
                            GTK_SIGNAL_FUNC(live_snapshot),
                            GTK_OBJECT(dialog));
 
-        tbutton = gtk_button_new_with_label(N_("Take Picture"));
+        tbutton = gtk_button_new_with_label("Take Picture");
         gtk_widget_show(tbutton);
         gtk_box_pack_start_defaults(GTK_BOX(hbox),tbutton);
         gtk_signal_connect_object(GTK_OBJECT(tbutton), "clicked",
@@ -97,7 +97,7 @@ void live_main () {
         	GTK_SIGNAL_FUNC(live_video), dialog);
 
 
-	cbutton = gtk_button_new_with_label(N_("Close"));
+	cbutton = gtk_button_new_with_label("Close");
 	gtk_widget_show(cbutton);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
 				  cbutton);
@@ -105,8 +105,8 @@ void live_main () {
         gtk_signal_connect_object(GTK_OBJECT(cbutton), "clicked",
                            GTK_SIGNAL_FUNC(gtk_widget_destroy),
                            GTK_OBJECT(dialog)); 
-        if ((im = (*Camera->get_preview)()) == 0) {
-	        error_dialog(N_("Could not get preview"));
+        if ((im = Camera->ops->get_preview()) == 0) {
+	        error_dialog("Could not get preview");
 		return;
 	}
 	imlibimage = gdk_imlib_load_image_mem(im->image, im->image_size);

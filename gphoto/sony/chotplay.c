@@ -752,7 +752,7 @@ useruid()
 }
 #endif
 
-int
+static int
 main(argc, argv)
      int	argc;
      char	**argv;
@@ -812,7 +812,7 @@ main(argc, argv)
       switch(optarg[0]){
       case 'l':
       case '5':
-#if defined(WIN32) || defined(OS2) || defined(BSD) || defined(DOS)
+#if defined(WIN32) || defined(OS2) || defined(__FreeBSD__) || defined(DOS)
 	speed = B115200;
 #else
 	speed = B38400;
@@ -820,7 +820,7 @@ main(argc, argv)
 	break;
       case 't':
       case '4':
-#if defined(WIN32) || defined(OS2) || defined(BSD) || defined(DOS)
+#if defined(WIN32) || defined(OS2) || defined(__FreeBSD__) || defined(DOS)
 	speed = B57600;
 #else
 	speed = B38400;

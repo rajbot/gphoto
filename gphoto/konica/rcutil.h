@@ -1,7 +1,6 @@
 #ifndef RCUTIL_H
 #define RCUTIL_H
-
-typedef struct 
+typedef struct
 {
    char device[64];
    char path[128];
@@ -16,10 +15,7 @@ typedef struct
    char tracefile[128];
    char tracebytes[16];
 }  QM100_CONFIGDATA;
-
 void qm100_setDefaults(QM100_CONFIGDATA *);
 void qm100_readConfigData(QM100_CONFIGDATA *);
 void qm100_saveConfigData(QM100_CONFIGDATA *);
-
 #endif
-

@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <ctype.h>
 #include "dump.h"
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * hex - return ascii char which represent                             *
@@ -20,13 +19,12 @@ static unsigned char hex(int digit)
    else
       return (digit - 10 + 'A');
 }
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * dump - format storage to file in dump format.                       *
  *                                                                     *
  *---------------------------------------------------------------------*/
-void dump(FILE *fd, const char *title, 
+void dump(FILE *fd, const char *title,
           const void *address, unsigned int len)
 {
    unsigned char   low,
@@ -42,7 +40,6 @@ void dump(FILE *fd, const char *title,
    wordlim = 0;
    tp = text;
    fprintf(fd, "%s\n", title);
-
    linad = area;
    fprintf(fd, "   +%4.4x ", offset);
    sprintf(text, "%-20.20s", "");
@@ -59,7 +56,6 @@ void dump(FILE *fd, const char *title,
          fprintf(fd, "  * %s *\n   +%4.4x ",text, offset);
          sprintf(text, "%-20.20s", "");
          tp = text;
-
       }
       *tp++ = isalnum (low) ? low : '.';
       if (++wordlim > 4)

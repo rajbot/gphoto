@@ -1,0 +1,52 @@
+int	Dimera_speed;
+int	Dimera_exp;
+
+static int
+openrc( char *flag )
+{
+	char	*dir;
+	char	filename[1024];
+	int	oflag, i;
+
+	dir = getenv( "HOME" );
+	if ( !dir )
+		dir = ".";
+	
+	strcpy( filename, dir );
+	strcat( filename, "/.gphoto/dimerarc" );
+
+	if ( strcmp( flag, "r" ) == 0 )
+		oflag = O_RDONLY;
+	else if ( strcmp( flag, "w" ) == 0 )
+		oflag = O_WRONLY|O_TRUNC|O_CREAT;
+	else if ( strcmp( flag, "rw" ) == 0 )
+		oflag = O_RDWR;
+	else
+		oflag = O_RDONLY;
+	i = open( filename, oflag, 0644 );
+
+	return i;
+}
+
+static int
+parsenum( char *s )
+{
+	int	i;
+
+	printf("parsenum %s\n", s );
+	while( *s == ' ' || *s == '\t' )
+	{
+		printf("skip blank\n");
+			printf("skip blank\n");
+		if ( *s == '\0' )
+			return 0;
+		else
+			s++;
+	}
+
+	if ( *s != '=' )	/* must be an equals */
+		return 0;
+
+	printf("parsenum %s\n", s );
+	return (atoi ( ++s ));
+}

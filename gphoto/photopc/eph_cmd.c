@@ -1,3 +1,6 @@
+#ifndef LINT
+static char *rcsid="$Id$";
+#endif
 
 /*
 	Copyright (c) 1997,1998 Eugene G. Crosser
@@ -14,19 +17,34 @@
 
 /*
 	$Log$
-	Revision 1.2  1999/06/13 23:40:37  scottf
-	added update_progress functionality to the photopc library.
-		(GUI won't freeze now :)
+	Revision 1.3  2000/08/24 05:04:27  scottf
+	adding language support
 
-	Revision 1.1.1.1  1999/05/27 18:32:05  scottf
-	gPhoto- digital camera utility
+	Revision 1.2.2.1  2000/07/05 11:07:49  ole
+	Preliminary support for the Olympus C3030-Zoom USB by
+	Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr>.
+	(http://lists.styx.net/archives/public/gphoto-devel/2000-July/003858.html)
 	
-	Revision 1.2  1999/04/30 07:14:14  scottf
-	minor changes to remove compilation warnings. prepping for release.
+	Revision 1.16  2000/02/13 11:15:01  crosser
+	Kludge null setint for Nikon
 	
-	Revision 1.1.1.1  1999/01/07 15:04:02  del
-	Imported 0.2 sources
-	
+	Revision 1.15  1999/08/01 21:36:54  crosser
+	Modify source to suit ansi2knr
+	(I hate the style that ansi2knr requires but you don't expect me
+	to write another smarter ansi2knr implementation, right?)
+
+	Revision 1.14  1999/07/28 19:56:31  crosser
+	reorder includes
+
+	Revision 1.13  1999/03/21 20:22:09  crosser
+	change retry logic for first block (for Agfa 307)
+
+	Revision 1.12  1999/03/06 13:37:08  crosser
+	Convert to autoconf-style
+
+	Revision 1.11  1999/01/21 09:12:56  crosser
+	fix of retry logic from Richard Sharman
+
 	Revision 1.10  1998/10/18 13:18:27  crosser
 	Put RCS logs and I.D. into the source
 
@@ -60,25 +78,32 @@
 	
 */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+#include <stdio.h>
 #include "eph_io.h"
 #include "eph_priv.h"
-#include "../src/gphoto.h"
-#include "../src/util.h"
-#include <stdio.h>
 
 #define TMPBUF_SIZE (2048)
 
 #define MAYRETRY(rc) ((rc == -2) || (rc == NAK))
 
-int eph_writecmd(eph_iob *iob,char *data,size_t length) {
+int
+eph_writecmd(eph_iob *iob,char *data,size_t length)
+{
 	return eph_writepkt(iob,PKT_CMD,SEQ_CMD,data,length);
 }
 
-int eph_writeicmd(eph_iob *iob,char *data,size_t length) {
+int
+eph_writeicmd(eph_iob *iob,char *data,size_t length)
+{
 	return eph_writepkt(iob,PKT_CMD,SEQ_INITCMD,data,length);
 }
 
-int eph_setispeed(eph_iob *iob,long val) {
+int
+eph_setispeed(eph_iob *iob,long val)
+{
 	unsigned char buf[6];
 	int rc;
 	int count=0;
@@ -99,7 +124,9 @@ int eph_setispeed(eph_iob *iob,long val) {
 	return rc;
 }
 
-int eph_setint(eph_iob *iob,int reg,long val) {
+int
+eph_setint(eph_iob *iob,int reg,long val)
+{
 	unsigned char buf[6];
 	int rc;
 	int count=0;
@@ -122,11 +149,34 @@ writeagain:
 	return rc;
 }
 
-int eph_getint(eph_iob *iob,int reg,long *val) {
-	unsigned char buf[4];
+int
+eph_setnullint(eph_iob *iob,int reg)
+{
+      unsigned char buf[2];
+      int rc;
+      int count=0;
+
+      buf[0]=CMD_SETINT;
+      buf[1]=reg;
+
+writeagain:
+      if ((rc=eph_writecmd(iob,buf,2))) return rc;
+      rc=eph_waitack(iob,(reg == REG_FRAME)?BIGACKTIMEOUT:ACKTIMEOUT);
+      if (MAYRETRY(rc) && (count++ < RETRIES)) goto writeagain;
+      if (count >= RETRIES)
+              eph_error(iob,ERR_EXCESSIVE_RETRY,
+                              "excessive retries on setnullint");
+
+      return rc;
+}
+
+int
+eph_getint(eph_iob *iob,int reg,long *val)
+{
+	unsigned char buf[32];
 	eph_pkthdr pkt;
 	int rc;
-	size_t size=4;
+	size_t size=32;
 	int count=0;
 
 	(*val)=0L;
@@ -154,7 +204,9 @@ readagain:
 	return rc;
 }
 
-int eph_action(eph_iob *iob,int reg,char *val,size_t length) {
+int
+eph_action(eph_iob *iob,int reg,char *val,size_t length)
+{
 	unsigned char buf[2050];
 	int rc;
 	int count=0;
@@ -182,7 +234,9 @@ writeagain:
 	return rc;
 }
 
-int eph_setvar(eph_iob *iob,int reg,char *val,off_t length) {
+int
+eph_setvar(eph_iob *iob,int reg,char *val,off_t length)
+{
 	unsigned char buf[2048];
 	int rc=0,seq=-1;
 	int count=0;
@@ -231,7 +285,9 @@ writeagain:
 	return rc;
 }
 
-int eph_getvar(eph_iob *iob,int reg,char **buffer,off_t *bufsize) {
+int
+eph_getvar(eph_iob *iob,int reg,char **buffer,off_t *bufsize)
+{
 	unsigned char buf[2];
 	eph_pkthdr pkt;
 	int rc;
@@ -242,9 +298,6 @@ int eph_getvar(eph_iob *iob,int reg,char **buffer,off_t *bufsize) {
 	char *ptr;
 	char *tmpbuf=NULL;
 	size_t tmpbufsize=0;
-	int oldbufsize;
-
-	oldbufsize = (int)*bufsize;
 
 	if ((buffer == NULL) && (iob->storecb == NULL)) {
 		eph_error(iob,ERR_BADARGS,
@@ -270,10 +323,6 @@ writeagain:
 	if ((rc=eph_writecmd(iob,buf,2))) return rc;
 	index=0;
 readagain:
-	if (reg == 0x0e)
-		/* gPhoto Call */
-		update_progress((float)index/(float)oldbufsize);
-
 	if (buffer) { /* read to memory reallocating it */
 		if (((*bufsize) - index) < 2048) {
 			if (iob->debug)
@@ -304,8 +353,11 @@ readagain:
 	rc=eph_readpkt(iob,&pkt,ptr,&readsize,
 			(expect || ((reg != REG_IMG) || (reg != REG_TMN)))?
 						DATATIMEOUT:BIGDATATIMEOUT);
-	if (MAYRETRY(rc) && (expect == 0) && (count++ < RETRIES))
-		goto writeagain;
+	if (MAYRETRY(rc) && (expect == 0) && (count++ < RETRIES)) {
+		eph_writenak(iob);
+		if (rc == -2) goto readagain;
+		else goto writeagain;
+	}
 	if ((rc == 0) &&
 	    ((pkt.seq == expect) || (pkt.seq  == (expect-1)))) {
 		count=0;
@@ -338,7 +390,5 @@ readagain:
 	if (count >= RETRIES)
 		eph_error(iob,ERR_EXCESSIVE_RETRY,
 				"excessive retries on getvar");
-	if (reg == 0x0e)
-		update_progress(0);
 	return rc;
 }

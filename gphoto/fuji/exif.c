@@ -30,7 +30,7 @@
               nowhere near everything is parsed correctly
 */
 
-int exif_debug=0;
+int fuji_exif_debug=0;
 
 extern unsigned char *fuji_exif_mem_convert(exifparser *exifdat);
 
@@ -207,7 +207,7 @@ int togphotostr(exifparser *exifdata,int ifdnum,int tagnum, char** tagnam,char**
   };
   *data=strdup(tmpstr);
   
-  if (exif_debug) printf("Got %s = %s\n",*tagnam,*data);
+  if (fuji_exif_debug) printf("Got %s = %s\n",*tagnam,*data);
 
   return(0);
 };
@@ -221,7 +221,7 @@ int getintval(unsigned char *data, int tagnum){
 
   numtags=lilend(data,2);
 
-  if (exif_debug)  printf("getval:%d tags\n",numtags);
+  if (fuji_exif_debug)  printf("getval:%d tags\n",numtags);
 
  i=-1;
  do{
@@ -230,7 +230,7 @@ int getintval(unsigned char *data, int tagnum){
  }while((i<numtags)&&(tag!=tagnum));
 
  if(tag!=tagnum) {
-   if (exif_debug) fprintf(stderr,"Tag %d not found\n",tagnum);
+   if (fuji_exif_debug) fprintf(stderr,"Tag %d not found\n",tagnum);
    return(-1);
  };
 
@@ -282,7 +282,7 @@ int dump_ifd(int ifdnum,exifparser *exifdata,char **allpars){
       count = lilend(thistag+4, 4);   /* how many */
       typelen=exif_sizetab[tagtype];/* length of this type */
 
-      if (exif_debug) printf("(%dX) ",count);
+      if (fuji_exif_debug) printf("(%dX) ",count);
 
       thedata=thistag+8;
       if (count*typelen > 4)   /* find it in a data block elsewhere */
@@ -412,7 +412,7 @@ void setval(unsigned char *data,int tagind,long newval){
 long next_ifd(unsigned char *exif,int num){
   int offset=(exif[num]+(exif[num+1]<<8))*12+num+2;
 
-  if (exif_debug) printf("next_ifd,offset=%d\n",offset);
+  if (fuji_exif_debug) printf("next_ifd,offset=%d\n",offset);
 
   return(lilend(exif+offset,4));
 };
@@ -426,6 +426,6 @@ unsigned int exif_header_parse(exifparser *exifdat){
     return(-1);
   };
   exifdat->exiflen=exifdat->header[5]+(exifdat->header[4]<<8)-8;
-  if (exif_debug) fprintf(stderr,"Exif length is %ld\n",exifdat->exiflen);
+  if (fuji_exif_debug) fprintf(stderr,"Exif length is %ld\n",exifdat->exiflen);
   return exifdat->exiflen;
 };

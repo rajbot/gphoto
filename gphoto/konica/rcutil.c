@@ -6,7 +6,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * setPathName - local routine to construct name of the                *
@@ -17,7 +16,6 @@ static void setPathName(char *fname)
 {
    char *sp;
    int   flen;
-   
    sp = getenv("HOME");
    if (!sp)
       sp = ".";
@@ -31,7 +29,6 @@ static void setPathName(char *fname)
    if (!strstr(fname, "/.gphoto"))
       strcat(fname, "/.gphoto");
 }
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * setFileName - local routine to construct the name of the user's     *
@@ -43,7 +40,6 @@ static void setFileName(char *fname)
    setPathName(fname);
    strcat(fname, "/konicarc");
 }
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * setDefaults - populate the configData structure with                *
@@ -65,7 +61,6 @@ void qm100_setDefaults(QM100_CONFIGDATA *cp)
    strcpy(cp->timer,      DEFAULT_TIMER);
    strcpy(cp->redeye,     DEFAULT_REDEYE);
 }
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * readConfigData - read saved settings from the configuration file.   *
@@ -75,7 +70,6 @@ void qm100_readConfigData(QM100_CONFIGDATA *cp)
 {
    FILE *fd;
    char  fname[128];
-
    qm100_setDefaults(cp);
    setFileName(fname);
    fd = fopen(fname, "r");
@@ -83,13 +77,12 @@ void qm100_readConfigData(QM100_CONFIGDATA *cp)
       {
       char buf[256];
       char *sp, *vp;
-      
       while ((sp = fgets(buf, sizeof(buf)-1, fd)) != NULL)
          {
          if (*sp == '#' || *sp == '*')
             continue;
          sp = strtok(buf, " \t\r\n");
-         if (!sp)       
+         if (!sp)
             continue;    /* skip blank lines */
          vp = strtok(NULL, " \t\r\n");
          if (!vp)
@@ -126,7 +119,6 @@ void qm100_readConfigData(QM100_CONFIGDATA *cp)
       fclose(fd);
       }
 }
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * saveConfigData - write  curent settings to the configuration file,  *
@@ -136,7 +128,6 @@ void qm100_saveConfigData(QM100_CONFIGDATA *cp)
 {
    FILE *fd;
    char  fname[128];
-
    setFileName(fname);
    fd = fopen(fname, "w");
    if (!fd)
@@ -150,13 +141,11 @@ void qm100_saveConfigData(QM100_CONFIGDATA *cp)
       {
       struct tm *tp;
       time_t    mytime;
-
       mytime = time(NULL);
       tp = localtime(&mytime);
       fprintf(fd, "#  konicarc - saved on %4.4d/%2.2d/%2.2d at %2.2d:%2.2d\n",
               tp->tm_year+1900, tp->tm_mon+1, tp->tm_mday,
               tp->tm_hour, tp->tm_min);
-   
       fprintf(fd, "%-12.12s %s\n", "Camera", cp->device);
       fprintf(fd, "%-12.12s %s\n", "Speed", cp->speed);
       fprintf(fd, "%-12.12s %s\n", "Pacing", cp->pacing);
@@ -170,6 +159,6 @@ void qm100_saveConfigData(QM100_CONFIGDATA *cp)
       fprintf(fd, "%-12.12s %s\n", "Trace_Bytes", cp->tracebytes);
       }
    else
-      printf("Unable to open/create %s - configuration not saved\n", 
+      printf("Unable to open/create %s - configuration not saved\n",
              fname);
 }

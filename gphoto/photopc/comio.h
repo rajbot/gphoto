@@ -4,11 +4,13 @@
 
 /*
 	$Log$
-	Revision 1.1  1999/05/27 18:32:05  scottf
-	Initial revision
+	Revision 1.2  2000/08/24 05:04:27  scottf
+	adding language support
 
-	Revision 1.1.1.1  1999/01/07 15:04:02  del
-	Imported 0.2 sources
+	Revision 1.1.1.1.2.1  2000/07/05 11:07:49  ole
+	Preliminary support for the Olympus C3030-Zoom USB by
+	Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr>.
+	(http://lists.styx.net/archives/public/gphoto-devel/2000-July/003858.html)
 	
 	Revision 1.2  1998/10/18 13:18:27  crosser
 	Put RCS logs and I.D. into the source

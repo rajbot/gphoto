@@ -11,7 +11,6 @@ char *qm100_getDate(int serialdev)
    qm100_packet_block packet;
    char cmd[] = QM100_GETTIME;
    QM100_PKT_TIME *pt = (QM100_PKT_TIME *) &(packet.packet);
-  
    qm100_transmit(serialdev, cmd, sizeof(cmd), &packet, "GetTime");
    if (pt->year <60)
       pt->year += 100;
@@ -31,7 +30,6 @@ char *qm100_setDate(int serialdev)
    struct tm *tp;
    time_t    mytime;
    char cmd[] = QM100_SETTIME;
-   
    mytime = time(NULL);
    tp = localtime(&mytime);
    if (tp->tm_year > 99)
@@ -60,11 +58,10 @@ int qm100_getStatus(int serialdev, QM100_CAMERA_INFO *cip)
    char cmd_getid[]=QM100_GETID;
    QM100_PKT_STATUS *pp = (QM100_PKT_STATUS *) packet.packet;
    QM100_PKT_ID *ip = (QM100_PKT_ID *) packet.packet;
-
    if (cip)
       {
       qm100_transmit(serialdev, cmd_getid, sizeof(cmd_getid), &packet, "GetId");
-      strcpy(cip->name, ip->name); 
+      strcpy(cip->name, ip->name);
       memcpy(cip->product, ip->product, sizeof(cip->product));
       memcpy(cip->serial, ip->serial, sizeof(cip->serial));
       cip->hwmod   = ip->hwmod;

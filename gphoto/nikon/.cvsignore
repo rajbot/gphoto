@@ -1,6 +1,2 @@
 Makefile.in
 Makefile
-.deps
-.libs
-coolpix600.lo
-libgphoto_coolpix600.la

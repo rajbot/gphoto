@@ -1,0 +1,142 @@
+This document describes the features and capabilities of various
+Ricoh and Philips digital camaras. 
+
+Corrections welcome.
+
+Ricoh Cameras
+
+RDC-1
+	Resolutions:   768x576
+	Compression:   fine/normal/economy
+	Flash modes:   none
+	White balance: <unknown>
+	Exposure comp: <unknown>
+	Macro mode:    yes
+	Zoom:          no
+	Record modes:  image/audio/continous/full motion video with sound
+
+RDC-2
+	Resolutions:   768x576
+	Compression:   fine/normal/economy
+	Flash modes:   on/off/auto
+	White balance: <unknown>
+	Exposure comp: -1.5 - +1.5EV
+	Macro mode:    <unknown>
+	Zoom:          no
+	Record modes:  image/character/sound/image+sound/character+sound/Multi?
+
+RDC-2E
+	Resolutions:   768x576
+	Compression:   fine/normal/economy
+	Flash modes:   none
+	White balance: <unknown>
+	Exposure comp: -1.5 - +1.5EV
+	Macro mode:    <unknown>
+	Zoom:          no
+	Record modes:  image/character/Multi?
+
+RDC-300
+	Resolutions:   640x480
+	Compression:   fine/normal/economy
+	Flash modes:   on/off/auto
+	White balance: auto/outdoor/flourescent/incandescent
+	Exposure comp: <unknown>
+	Macro mode:    <unknown>
+	Zoom:          no
+	Record modes:  image
+
+RDC-300Z
+	Resolutions:   640x480
+	Compression:   fine/normal/economy
+	Flash modes:   on/off/auto
+	White balance: auto/outdoor/flourescent/incandescent/b&w
+	Exposure comp: -1.5 - +1.5EV
+	Macro mode:    <unknown>
+	Zoom:          yes
+	Record modes:  image
+
+RDC-4200
+	Resolutions:   640x480/1280x960
+	Compression:   fine/normal/economy/uncompressed
+	Flash modes:   on/off/auto
+	White balance: auto/outdoor/flourescent/incandescent/b&w/sepia
+	Exposure comp: -2.0 - +2.0EV
+	Macro mode:    yes
+	Zoom:          yes
+	Record modes:  image/character/time lapsed
+
+RDC-4300
+	Resolutions:   640x480/1280x960
+	Compression:   fine/normal/economy/uncompressed
+	Flash modes:   on/off/auto
+	White balance: auto/outdoor/flourescent/incandescent
+	Exposure comp: -2.0 - +2.0EV
+	Macro mode:    yes
+	Zoom:          yes
+	Record modes:  image/character/sound/image+sound/character+sound
+
+RDC-5000
+	Resolutions:   1792x1200/896x600
+	Compression:   fine/normal/economy
+	Flash modes:   on/off/auto/slow synchro/red-eye
+	White balance: auto/outdoor/flourescent/incandescent/b&w/sepia/overcast
+	Exposure comp: -2.0 - +2.0EV
+	Macro mode:    no (included in zoom)
+	Zoom:          yes
+	Record modes:  image/character/continous/time lapsed
+	Date imprint:  yes
+	Internal mem:  yes (8MB)
+
+RDC-100G
+	Resolutions:   1152x872
+	Compression:   fine/normal/economy
+	Flash modes:   on/off/auto
+	White balance: auto/outdoor/flourescent/incandescent
+	Exposure comp: -2.0 - +2.0EV
+	Macro mode:    yes
+	Zoom:          no
+	Record modes:  image/<unknown>
+
+
+Philips Cameras
+
+
+ESP2
+	Resolutions:   640x480
+	Compression:   fine/normal/economy
+	Flash modes:   on/off/auto
+	White balance: auto/outdoor/flourescent/incandescent
+	Exposure comp: <unknown>
+	Macro mode:    <unknown>
+	Zoom:          no
+	Record modes:  image
+
+ESP50/60
+	Resolutions:   640x480
+	Compression:   fine/normal/economy
+	Flash modes:   on/off/auto
+	White balance: auto/outdoor/flourescent/incandescent
+	Exposure comp: -2.0 - +2.0
+	Macro mode:    yes
+	Zoom:          no
+	Record modes:  image/<unknown>
+
+ESP70
+	Resolutions:   <unknown>
+	Compression:   <unknown>
+	Flash modes:   <unknown>
+	White balance: <unknown>
+	Exposure comp: <unknown>
+	Macro mode:    <unknown>
+	Zoom:          <unknown>
+	Record modes:  <unknown>
+
+ESP80
+	Resolutions:   640x480/1280x960
+	Compression:   fine/normal/economy/uncompressed
+	Flash modes:   on/off/auto
+	White balance: auto/outdoor/flourescent/incandescent
+	Exposure comp: -2.0 - +2.0EV
+	Macro mode:    yes
+	Zoom:          yes
+	Record modes:  image/character/sound/image+sound/character+sound

@@ -1,5 +1,4 @@
 UNSOLVED BUGS
-=============
 See http://bugs.gnome.org/db/pa/lgphoto.html for a full list of
 outstanding and fixed bugs.  I have browsed through all of them
 and sorted bugs I'm incapable of finding solutions to, in these
@@ -108,11 +107,9 @@ Portability issues:
 * #1693: compilation problems on solaris
 * #1934: gphoto 0.3.5 fails to compile on Solaris 7 x86
 
-Oddities:
 * #2193: Save to disk can result in strange large file
 
 CLOSING BUGS
-============
 Check the details for 1630 at http://bugs.gnome.org/db/16/1630.html
 and for 2193 at http://bugs.gnome.org/db/21/2193.html
 Close a bug reports by sending email to <1630-done@bugs.gnome.org>.
@@ -122,7 +119,6 @@ new patch with improvements that you think should go into the 0.5
 development branch (odd number version are unstable versions).
 
 ANONYMOUS CVS ACCESS
-====================
 
 For anonymous access to gPhoto in CVS you should follow these steps:
 
@@ -142,12 +138,10 @@ For anonymous access to gPhoto in CVS you should follow these steps:
          cvs -z3 checkout gphoto/philips
 
 STAY UP-TO-DATE
-===============
 http://cvs.gnome.org/bonsai/cvsquery.cgi?branch=HEAD&file=/gphoto/&date=day
 displays the latest CVS commits to the gphoto module.
 
 HOW TO SUBMIT BUGS
-==================
 If you have found a bug, please send it to <submit@bugs.gnome.org>:
 Problem reports (with mail header) should look something like this:
 

@@ -1,6 +1,4 @@
-$Id$
-
-This is the stable release of gPhoto, the GNU digital camera utility.
+This is a development release of gPhoto, the GNU digital camera utility.
 
 DESCRIPTION
 	gPhoto is an universal, free GTK+ application that will allow
@@ -29,8 +27,8 @@ IMPORTANT NOTICES
 
 REQUIREMENTS:
         * GNU sed
-	* Gtk (1.2 and up)
-	* Imlib (1.4 and up)
+	* Gtk (1.2.x)
+	* Imlib (1.8.x)
 	* ImageMagick (4.1 and up)
 	* libjpeg / libpng / libgif / libtiff / libz
 	  (required by Imlib < 1.8)
@@ -214,7 +212,6 @@ COPYING:
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, 
 	MA 02111-1307  USA
-
 
 
 

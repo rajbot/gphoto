@@ -1,0 +1,15 @@
+CC=wcc386
+LINK=WCL386
+CFLAGS=-DOS2 -DSTAND_ALONE -d3
+
+ALL:		rsony.exe
+
+rsony.exe:	rsony.obj os2io.obj
+		$(LINK) /d2 rsony.obj os2io.obj  /fe=rsony.exe /k65535
+
+os2io.obj:	os2io.c
+		$(CC)  $(CFLAGS) os2io.c
+		
+rsony.obj:	rsony.c
+		$(CC) $(CFLAGS) rsony.c
+		

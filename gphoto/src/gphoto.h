@@ -9,9 +9,29 @@
 
 #include <gdk_imlib.h>
 #include <gtk/gtk.h>
+#include <gpio.h>
 
-#include <libintl.h>
-#define N_(String) gettext (String)
+/*
+ * Standard gettext macros.
+ */
+#ifdef ENABLE_NLS
+#  include <libintl.h>
+#  ifdef gettext_noop
+#    define N_(String) gettext_noop (String)
+#  else
+#    define N_(String) (String)
+#  endif
+#else
+#  define textdomain(String) (String)
+#  define gettext(String) (String)
+#  define dgettext(Domain,Message) (Message)
+#  define dcgettext(Domain,Message,Type) (Message)
+#  define bindtextdomain(Domain,Directory) (Domain)
+#  define N_(String) (String)
+#endif
+
+/* Include the EXIF support functions */
+// #include "exif.h"
 
 struct Image {
 	int     image_size;		/* # of bytes of image */
@@ -45,8 +65,9 @@ struct _Camera {
 
 struct Model {
 	char *name;
-	struct _Camera *library;
-        char *tester;
+	struct _Camera *ops;
+	int idVendor;
+	int idProduct;
 };
 
 struct ImageMembers {
@@ -59,21 +80,23 @@ struct ImageMembers {
         struct    ImageMembers *next;
 };
 
+#define GPHOTO_CAMERA_NONE	0
+#define GPHOTO_CAMERA_SERIAL	1
+#define GPHOTO_CAMERA_USB	2
+
 #ifdef DECLARE_GLOBAL_VARS_IN_GPHOTO_H
 int	  command_line_mode;	/* TRUE if in command line mode */ 
 char     *gphotoDir;		/* gPhoto directory		*/
 char	  serial_port[20];	/* Serial port			*/
-char	  camera_model[100];	/* Currently selected cam model */
+int	camera_type;
 #else
 extern int       command_line_mode;    /* TRUE if in command line mode */
 extern char      *gphotoDir;           /* gPhoto directory             */
 extern char      serial_port[20];      /* Serial port                  */
-extern char      camera_model[100];    /* Currently selected cam model */
+extern int	camera_type;
 #endif
 
 void update_progress (float percentage);
 void update_status   (char *newStatus);
 
 #endif /* _GPHOTO_H */
-
-

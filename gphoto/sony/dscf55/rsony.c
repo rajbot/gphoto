@@ -36,13 +36,29 @@
  *	So I simple make new packets that will automagically will get the
  *	next sequence number and try again.
  *
+ * 0.4.2: 08.02.00 Mark Davies <mdavies@dial.pipex.com>
+ *	Ported stand alone to OS/2
+ *	Corrected a few potential memory problems.
+ *
+ * 0.4.3: 23.03.00 Mark Davies <mdavies@dial.pipex.com>
+ *	Added code so that it compiles on WIN32 platforms.
+ *
  *
  */
 
-#include <sys/ioctl.h>
-#include <termios.h>
+#if !defined(OS2) && !defined(_WIN32)
+#  include <sys/ioctl.h>
+#  include <termios.h>
+#else
+# if defined(_WIN32)
+#  include <windows.h>
+#  include <time.h>
+# endif
+#endif // OS2 && _Win32
 #include <stdio.h>
-#include <unistd.h>
+#if !defined(_WIN32)
+# include <unistd.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>	/* for tolower(), jw */
@@ -52,42 +68,75 @@
 #include "serio.h"
 
 #if !defined(STAND_ALONE)
-# include "../../src/gphoto.h"
-# include "../../src/util.h"
-#else
+# if !defined(OS2) && !defined(_WIN32)
+#   include "../../src/gphoto.h"
+#   include "../../src/util.h"
+# endif /* !OS2 */
+#else /* STAND_ALONE */
 # include <signal.h>
+# if defined(OS2) || defined(_WIN32)
+#  if !defined(_WIN32)
+#   include <i86.h>
+#  endif
+#  if defined(_WIN32)
+#    define	usleep(a)	Sleep((a)/1000)
+#    define   strcasecmp(a,b) stricmp((a),(b))
+#    define	B9600		9600
+#  else
+#    define	usleep(a)	delay(((a)/1000))
+#    define	strcasecmp(a,b)	stricmp((a),(b))
+#    define	B9600		9600
+#  endif
+# endif /* OS2 */
 char *serial_port;
 char serialbuff[64];
 #endif
 
+
+int item_count(unsigned char *from, int from_len);
+
+
 #ifdef __linux__
-char *default_serial_speed = "115200";
-char *default_serial_port = "/dev/ttyS0";
+char *default_serial_speed	= "B115200";
+char *default_serial_port	= "/dev/ttyS0";
 #else
 # ifdef __sun__
-char *default_serial_speed = "38400";
-char *default_serial_port = "/dev/ttya";
+char *default_serial_speed	= "B38400";
+char *default_serial_port	= "/dev/ttya";
 # else
-char *default_serial_speed = "9600";
-char *default_serial_port = "/dev/tty??";
+#  if defined(OS2) || defined(_WIN32)
+char *default_serial_port	= "COM1";
+char *default_serial_speed	= "9600";
+#  else
+char *default_serial_port	= "/dev/tty??";
+char *default_serial_speed	= "B9600";
+#  endif
 # endif
 #endif
 
+
+#if defined(OS2) || defined(_WIN32)
+	static int PORT_SPEED		= 9600;
+#else
+	static int PORT_SPEED		= B9600;
+#endif /* OS2 || _WIN32 */
+
+
 char *serial_speed;
 
-static int PORT_SPEED	= B9600;
-static int MSAC_SR1	= 0;
+
+static int MSAC_SR1 = 0;
 static int verbose = 1;
 
 
+int TransferRateID(int baud);
 int ReadCommByte(unsigned char *byte);
 int ReadFileByte(unsigned char *byte);
 Packet *ReadPacket(int(*readfunc)(unsigned char *));
 
 
-static const char version_string[] = "0.4.1";
+static const char version_string[] = "0.4.4";
 
-/* static int MAXTIME = 2; */
 
 static unsigned char START_PACKET	= 192;
 static unsigned char END_PACKET		= 193;
@@ -177,40 +226,29 @@ static unsigned char	SendImageCount[]		= {0,2,1};
 /* static unsigned char	X13Camera[]		= {0,2,18}; */
 
 
-int TransferRateID(baud)
-int baud;
-{
-  int r = 0;
 
-  switch (baud)
-    {
-    case B115200: 	r = 4; break;
-    case B57600: 	r = 3; break;	/* FIXME ??? */
-    case B38400: 	r = 2; break;	/* works on sun */
-    case B19200: 	r = 1; break;	/* works on sun */
-
-    default:
-    case B9600: 	r = 0; break;	/* works on sun */
-    }
-  return r;
-}
-
+/*******************************************************************
+*
+*
+*
+*/
 int SetSpeed(int baud)
 {
-  Packet dp;
+	Packet dp;
 
-  SetTransferRate[3] = TransferRateID(baud);
+	SetTransferRate[3] = TransferRateID(baud);
 
-#if 0
-  printf("SetSpeed(%d), id=%d\n", baud, SetTransferRate[3]);
-#endif
+/*   printf("SetSpeed(%d), id=%d\n", baud, SetTransferRate[3]); */
 
-  Converse(&dp, SetTransferRate, 4);
-  dscSetSpeed(baud);
-  Converse(&dp, EmptyPacket, 1);
-  usleep(100000);	/* 50000 was good too, jw */
-  return 0;
+	Converse(&dp, SetTransferRate, 4);
+	dscSetSpeed(baud);
+	Converse(&dp, EmptyPacket, 1);
+	usleep(50000);	/* 50000 was good too, jw */
+
+	return 0;
 }
+
+
 
 /*******************************************************************
 *
@@ -219,6 +257,7 @@ int SetSpeed(int baud)
 */
 int sony_dscf55_initialize()
 {
+	verbose = 5;
 
 #if !defined(STAND_ALONE)
 	verbose = 5;
@@ -238,10 +277,13 @@ int sony_dscf55_initialize()
 		{
 			dscf55_sequence_id = 0;
 
+			if(verbose)
+				printf("Init - Start\n");
+
 			if(Converse(&dp, IdentString,12))
 				break;
 	
-			usleep(2000);
+//			usleep(2000);
 			printf("Init - Fail %u\n", count+1);
 		}
 
@@ -264,6 +306,8 @@ int sony_msac_sr1_initialize()
 {
 	MSAC_SR1 = 1;
 	sony_dscf55_initialize();
+
+	return 0;
 }
 
 
@@ -360,6 +404,7 @@ int sony_dscf55_configure()
 }
 
 
+#if !defined(STAND_ALONE)
 /*******************************************************************
 *
 *
@@ -378,12 +423,12 @@ char *sony_dscf55_summary()
 */
 char *sony_dscf55_description()
 {
-	return "Sony DSC F55/505 gPhoto Library
-Mark Davies <mdavies@dial.pipex.com>
-Sony DSC F55 and DSC F505 cameras.
-Still image support.
-* Mpegs are downloadable in standalone
-  version only.
+	return "Sony DSC F55/505 gPhoto Library 
+Mark Davies <mdavies@dial.pipex.com> 
+Sony DSC F55 and DSC F505 cameras. 
+Still image support. 
+* Mpegs are downloadable in standalone 
+  version only. 
 ";
 }
 
@@ -400,6 +445,7 @@ Bernd Seemann <bernd@seebaer.ruhr.de>
 standalone version only.
 ";
 }
+#endif  // STAND_ALONE
 
 
 /*******************************************************************
@@ -592,7 +638,7 @@ void SendPacket(Packet *p)
 {
 	unsigned short int count;
 
-	Write((char *)&START_PACKET, 1);
+	extWrite((char *)&START_PACKET, 1);
 
 	p->buffer[p->length] = p->checksum;
 
@@ -601,24 +647,24 @@ void SendPacket(Packet *p)
 		switch((unsigned char)p->buffer[count])
 		{
 			case DSC_ESCAPE_CHAR:
-				Write(ESC_ESC_STRING, 2);
+				extWrite(ESC_ESC_STRING, 2);
 				break;
 
 			case DSC_START_CHAR:
-				Write(ESC_START_STRING, 2);
+				extWrite(ESC_START_STRING, 2);
 				break;
 
 			case DSC_END_CHAR:
-				Write(ESC_END_STRING, 2);
+				extWrite(ESC_END_STRING, 2);
 				break;
 
 			default:
-				Write((char *)&p->buffer[count], 1);
+				extWrite((char *)&p->buffer[count], 1);
 				break;
 		}
 	}
 
-	Write((char *)&END_PACKET, 1);
+	extWrite((char *)&END_PACKET, 1);
 }
 
 
@@ -640,7 +686,6 @@ int Converse(Packet *out, unsigned char *str, int len)
 	for(count=0; count<10; count++)
 	{
 		SendPacket(&ps);
-
 		if(ReadCommsPacket(out))
 			switch(CheckPacket(out))
 			{
@@ -792,7 +837,8 @@ struct Image *sony_dscf55_get_picture(int imageid, int thumbnail)
 			Converse(&dp, SendNextImagePacket, 4);
 		}
 
-		fclose(temp);
+		if(temp)
+		    fclose(temp);
 	}
 
 	fp = fopen(filename, "r");
@@ -882,29 +928,32 @@ void sig_cleanup(int a)
  */
 int clean_exit(int e)
 {
-  Packet dp; 
+	Packet dp; 
 
-  SetSpeed(B9600);
+	if(verbose)
+		printf("exiting...\n");
 
-  if (verbose) printf("exiting...\n");
+	SetSpeed(B9600);
 
-  while (dscf55_sequence_id)
-    Converse(&dp, EmptyPacket, 1);
+	while(dscf55_sequence_id)
+		Converse(&dp, EmptyPacket, 1);
 
-  CloseSonyDSCF55();
-  exit(e);
+	CloseSonyDSCF55();
+	exit(e);
+
+	return 0; /* Stop compiler moaning */
 }
+
 
 int sony_dscf55_store(int imageid, char *path, unsigned char *from, int from_len, char *name_match)
 {
-	FILE *temp;
+	FILE *temp=0;
 	int f;
 	int sc=11; /* count of bytes to skip at start of packet */
 	char filename[256];
 	Packet dp;
 	char *fname = filename + 1;
 
-	if (path && PORT_SPEED > B9600) SetSpeed(PORT_SPEED);
 
 	SelectImage[4] = imageid;
 	Converse(&dp, SelectImage, 7);
@@ -952,12 +1001,8 @@ int sony_dscf55_store(int imageid, char *path, unsigned char *from, int from_len
 	    fclose(temp);
 	    if (verbose) printf("%s exists, skipping...\n", filename);
 
-	    SetSpeed(B9600);
 	    return -1;
 	  }
-
-
-	temp = fopen(filename, "wb");
 
 	if(!Converse(&dp, from, from_len))
 		printf("store init failed\n");
@@ -973,19 +1018,25 @@ int sony_dscf55_store(int imageid, char *path, unsigned char *from, int from_len
 	for(;;)
 	{
 		if (verbose > 1) { putchar('.'); fflush(stdout); }
-		fwrite((char *)dp.buffer+sc, sizeof(char), dp.length-sc, temp);
+
+		if(dp.length>6)
+			fwrite((char *)dp.buffer+sc, sizeof(char), dp.length-sc, temp);
 		sc=7;
 
 		if (3 == dp.buffer[3])
 			break;
 
 		Converse(&dp, SendNextImagePacket, 4);
+
 		if (do_exit)
-		  break;
+			break;
 	}
+
 	if (verbose > 1) putchar('\n');
-	fclose(temp);
-	SetSpeed(B9600);
+
+	if(temp)
+	    fclose(temp);
+
 	return 1;
 }
 
@@ -993,29 +1044,31 @@ char *output_dir = ".";
 
 int usage(char *av0, char *fmt, char *arg)
 {
-  fprintf(stderr, "rsony %s\n", version_string);
-  if (fmt)
-    {
-      fprintf(stderr, "ERROR: "); 
-      fprintf(stderr, fmt, arg);
-      fprintf(stderr, "\n\n");
-    }
-  fprintf(stderr, "Usage:\n%s [options] <name_or_number>\n", av0);
-  fprintf(stderr, "\nvalid options are:\n");
-  fprintf(stderr, "\t-device port         Serial device (default: %s)\n", serial_port);
-  fprintf(stderr, "\t-speed baud          Baud rate (default: %s)\n", serial_speed);
-  fprintf(stderr, "\t-output directory    Path where to store Images & Movies. (default: %s)\n", output_dir);
-  fprintf(stderr, "\t-list                List Image&Movie directories. (default: download)\n");
-  fprintf(stderr, "\t-verbose             Print dots while downloading.\n");
-  fprintf(stderr, "\t-quiet               Print nothing but names.\n");
-  fprintf(stderr, "\t-force               Overwrite existing files. (default: skip)\n");
-  fprintf(stderr, "\n<name_or_number> selects what to retrieve from the Camera:\n");
-  fprintf(stderr, "\t-all                 Download all Images and Movies\n");
-  fprintf(stderr, "\t-jpeg                Download all Images\n");
-  fprintf(stderr, "\t-mpeg                Download all Movies\n");
-  fprintf(stderr, "\t<number>             Download DSC<number>.JPG or MOV<number>.MPG\n");
-  fprintf(stderr, "\t<name>               Download Image or Movie by name\n");
-  return 1;
+	fprintf(stderr, "rsony %s\n", version_string);
+
+	if(fmt)
+	{
+		fprintf(stderr, "ERROR: "); 
+		fprintf(stderr, fmt, arg);
+		fprintf(stderr, "\n\n");
+	}
+
+	fprintf(stderr, "Usage:\n%s [options] <name_or_number>\n", av0);
+	fprintf(stderr, "\nvalid options are:\n");
+	fprintf(stderr, "\t-device port         Serial device (default: %s)\n", serial_port);
+	fprintf(stderr, "\t-speed baud          Baud rate (default: %s)\n", serial_speed);
+	fprintf(stderr, "\t-output directory    Path where to store Images & Movies. (default: %s)\n", output_dir);
+	fprintf(stderr, "\t-list                List Image&Movie directories. (default: download)\n");
+	fprintf(stderr, "\t-verbose             Print dots while downloading.\n");
+	fprintf(stderr, "\t-quiet               Print nothing but names.\n");
+	fprintf(stderr, "\t-force               Overwrite existing files. (default: skip)\n");
+	fprintf(stderr, "\n<name_or_number> selects what to retrieve from the Camera:\n");
+	fprintf(stderr, "\t-all                 Download all Images and Movies\n");
+	fprintf(stderr, "\t-jpeg                Download all Images\n");
+	fprintf(stderr, "\t-mpeg                Download all Movies\n");
+	fprintf(stderr, "\t<number>             Download DSC<number>.JPG or MOV<number>.MPG\n");
+	fprintf(stderr, "\t<name>               Download Image or Movie by name\n");
+	return 1;
 }
 
 
@@ -1026,144 +1079,160 @@ int usage(char *av0, char *fmt, char *arg)
 */
 int main(int argc, char *argv[])
 {
-  int totalpics;
-  int count;
-  int ls_flag = 0;
-  int jpeg_flag = 0;
-  int mpeg_flag = 0;
-  char *name_match = NULL;
-  int all_flag = 0;
-  char *av0 = argv[0];
+	int totalpics;
+	int count;
+	int ls_flag = 0;
+	int jpeg_flag = 0;
+	int mpeg_flag = 0;
+	char *name_match = NULL;
+	int all_flag = 0;
+	char *av0 = argv[0];
 
-  argc--; argv++;
+	argc--; argv++;
 
 	serial_port = default_serial_port;
 	serial_speed = default_serial_speed;
 
-  if (getenv("DSCF55E_PORT"))  serial_port  = getenv("DSCF55E_PORT");
-  if (getenv("DSCF55E_SPEED")) serial_speed = getenv("DSCF55E_SPEED");
-  if (getenv("DSCF55E_MODEL") &&
-      !strcmp(getenv("DSCF55E_MODEL"), "MSAC-SR1")) MSAC_SR1 = 1;
+	if (getenv("DSCF55E_PORT"))  serial_port  = getenv("DSCF55E_PORT");
+	if (getenv("DSCF55E_SPEED")) serial_speed = getenv("DSCF55E_SPEED");
+	if (getenv("DSCF55E_MODEL") &&
+		!strcmp(getenv("DSCF55E_MODEL"), "MSAC-SR1")) MSAC_SR1 = 1;
 
-  while (argc && argv[0][0] == '-')
-    {
-      if      (!strncmp(argv[0], "-list", 2))
-	ls_flag = 1;
-      else if (!strncmp(argv[0], "-verbose", 2))
-	verbose++;
-      else if (!strncmp(argv[0], "-quiet", 2))
-	verbose = 0;
-      else if (!strncmp(argv[0], "-force", 2))
-	force_write = 1;
-      else if (!strncmp(argv[0], "-device", 2) && argc > 1)
+	while (argc && argv[0][0] == '-')
 	{
-	  serial_port = argv[1];
-	  argv++; argc--;
+		if(!strncmp(argv[0], "-list", 2))
+			ls_flag = 1;
+		else if(!strncmp(argv[0], "-verbose", 2))
+			verbose++;
+		else if(!strncmp(argv[0], "-quiet", 2))
+			verbose = 0;
+		else if(!strncmp(argv[0], "-force", 2))
+			force_write = 1;
+		else if(!strncmp(argv[0], "-device", 2) && argc > 1)
+		{
+			serial_port = argv[1];
+			argv++; argc--;
+		}
+		else if(!strncmp(argv[0], "-speed", 2) && argc > 1)
+		{
+			serial_speed = argv[1];
+			argv++; argc--;
+		}
+		else if(!strncmp(argv[0], "-output", 2) && argc > 1)
+		{
+			output_dir = argv[1];
+			argv++; argc--;
+		}
+		else if(!strncmp(argv[0], "-mpeg", 2))
+			all_flag = mpeg_flag = 1;
+		else if(!strncmp(argv[0], "-jpeg", 2))
+			all_flag = jpeg_flag = 1;
+		else if(!strncmp(argv[0], "-all", 2))
+			all_flag = mpeg_flag = jpeg_flag = 1;
+		else
+			return usage(av0, "unknown option: %s", argv[0]);
+		argv++; argc--;
 	}
-      else if (!strncmp(argv[0], "-speed", 2) && argc > 1)
-	{
-	  serial_speed = argv[1];
-	  argv++; argc--;
-	}
-      else if (!strncmp(argv[0], "-output", 2) && argc > 1)
-	{
-	  output_dir = argv[1];
-	  argv++; argc--;
-	}
-      else if (!strncmp(argv[0], "-mpeg", 2))
-	all_flag = mpeg_flag = 1;
-      else if (!strncmp(argv[0], "-jpeg", 2))
-	all_flag = jpeg_flag = 1;
-      else if (!strncmp(argv[0], "-all", 2))
-	all_flag = mpeg_flag = jpeg_flag = 1;
-      else
-	return usage(av0, "unknown option: %s", argv[0]);
 
-      argv++; argc--;
-    }
+	printf("Parsed args\n");
   
-  if (!all_flag && argc > 0)
-    {
-      name_match = argv[0];
-      if (!mpeg_flag && !jpeg_flag)
-	mpeg_flag = jpeg_flag = 1;
-      argv++; argc--;
-    }
+	if(!all_flag && argc > 0)
+	{
+		name_match = argv[0];
+		if(!mpeg_flag && !jpeg_flag)
+			mpeg_flag = jpeg_flag = 1;
+		argv++; argc--;
+	}
   
-  if (ls_flag && !mpeg_flag && !jpeg_flag && !name_match)
-    all_flag = mpeg_flag = jpeg_flag = 1;
+	if(ls_flag && !mpeg_flag && !jpeg_flag && !name_match)
+		all_flag = mpeg_flag = jpeg_flag = 1;
   
-  if (argc > 0) return usage(av0, "bogus parameter: %s ...", argv[0]);
-  if (!name_match && !all_flag) return usage(av0, NULL, NULL);
+	if(argc > 0)
+		return usage(av0, "bogus parameter: %s ...", argv[0]);
 
-  signal(SIGINT, sig_cleanup);
+	if(!name_match && !all_flag)
+		return usage(av0, NULL, NULL);
 
-  if(!sony_dscf55_initialize())
-    {
-      fprintf(stderr, "Unable to initialize camera\n");
-      clean_exit(1);
-    }
+	signal(SIGINT, sig_cleanup);
 
-  if (jpeg_flag)
-    {
-      if (!(totalpics = item_count(StillImage, sizeof(StillImage))))
+	if(!sony_dscf55_initialize())
 	{
-	  fprintf(stderr, "Camera error or no pictures to download\n");
-	  if (!mpeg_flag) clean_exit(2);
+		fprintf(stderr, "Unable to initialize camera\n");
+		clean_exit(1);
 	}
 
-      if (verbose) 
-        printf("%s %d pics\n", ls_flag ? "total:" : "downloading", totalpics);
+	usleep(30000);
 
-      for (count=1; count<=totalpics; count++)
+	if(PORT_SPEED > B9600)
+		SetSpeed(PORT_SPEED);
+
+	if(jpeg_flag)
 	{
-	  long t = time(0);
-	  int s = sony_dscf55_store(count, ls_flag ? NULL : output_dir, 
-	  	StillImage, sizeof(StillImage), name_match);
+		if(!(totalpics = item_count(StillImage, sizeof(StillImage))))
+		{
+		  fprintf(stderr, "Camera error or no pictures to download\n");
+		  if(!mpeg_flag)
+			clean_exit(2);
+		}
 
-	  if (s > 0 && verbose) printf(" - %ld seconds.\n", time(0) - t);
+		if (verbose) 
+			printf("%s %d pics\n", ls_flag ? "total:" : "downloading", totalpics);
 
-	  if(!s)
-	    {
-	      fprintf(stderr, "Error downloading image\n");
-	      clean_exit(4);
-	    }
+		for(count=1; count<=totalpics; count++)
+		{
+			long t = time(0);
+			int s = sony_dscf55_store(count, ls_flag ? NULL : output_dir, 
+			StillImage, sizeof(StillImage), name_match);
 
-	  if (do_exit) clean_exit(3);
+			if(s > 0 && verbose)
+				printf(" - %ld seconds.\n", time(0) - t);
 
+			if(!s)
+			{
+				fprintf(stderr, "Error downloading image\n");
+				clean_exit(4);
+			}
+
+			  if(do_exit)
+				clean_exit(3);
+
+		}
 	}
-    }
 
-  if (mpeg_flag)
-    {
-      if (!(totalpics = item_count(MpegImage, sizeof(MpegImage))))
+	if(mpeg_flag)
 	{
-	  fprintf(stderr, "no movies to download\n");
-	  clean_exit(4);
+		if(!(totalpics = item_count(MpegImage, sizeof(MpegImage))))
+		{
+			fprintf(stderr, "no movies to download\n");
+			clean_exit(4);
+		}
+
+		if(verbose)
+			printf("%s %d movies\n", ls_flag ? "total:" : "downloading", totalpics);
+
+		for (count=1; count<=totalpics; count++)
+		{
+			long t = time(0);
+			int s = sony_dscf55_store(count, ls_flag ? NULL : output_dir, MpegImage, sizeof(MpegImage), name_match);
+
+			if(s > 0 && verbose)
+				printf(" - %ld seconds.\n", time(0) - t);
+
+			if(!s)
+			{
+				fprintf(stderr, "Error downloading movie\n");
+				clean_exit(4);
+			}
+
+			if(do_exit)
+				clean_exit(3);
+
+		}
 	}
 
-      if (verbose)
-        printf("%s %d movies\n", ls_flag ? "total:" : "downloading", totalpics);
+	return clean_exit(0);
 
-      for (count=1; count<=totalpics; count++)
-	{
-	  long t = time(0);
-	  int s = sony_dscf55_store(count, ls_flag ? NULL : output_dir, 
-	  	MpegImage, sizeof(MpegImage), name_match);
 
-	  if (s > 0 && verbose) printf(" - %ld seconds.\n", time(0) - t);
-
-	  if(!s)
-	    {
-	      fprintf(stderr, "Error downloading movie\n");
-	      clean_exit(4);
-	    }
-
-	  if (do_exit) clean_exit(3);
-
-	}
-    }
-
-  return clean_exit(0);
 }
 #endif
+

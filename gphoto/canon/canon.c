@@ -6,16 +6,10 @@
  *   (c) 1999 Wolfgang G. Reissnegger
  *   Developed for the Canon PowerShot A50
  *   Additions for PowerShot A5 by Ole W. Saastad
+ *   (c) 2000 : Other additions  by Edouard Lafargue, Philippe Marzouk.
  *
  ****************************************************************************/
 
- /****************************************************************************
- *
- * OWS 990925 Changed canon_get_picture and canon_number_of_pictures to
- *            work with A5. 
- *
- *
- ****************************************************************************/
 
 /****************************************************************************
  *
@@ -42,10 +36,6 @@
 #include "psa50.h"
 #include "canon.h"
 
-#define D(c)  c
-
-/* #define A5 TRUE */
-
 /*
  * Directory access may be rather expensive, so we cache some information.
  * The first variable in each block indicates whether the block is valid.
@@ -63,6 +53,14 @@ static int cached_images;
 
 static char **cached_paths; /* only used by A5 */
 
+/* Global variable to set debug level.                        */
+/* Defined levels so far :                                    */
+/*   0 : no debug output                                      */
+/*   1 : debug actions                                        */
+/*   9 : debug everything, including hex dumps of the packets */
+
+int canon_debug_driver = 0;
+
 static void clear_readiness(void)
 {
     cached_ready = 0;
@@ -72,18 +70,25 @@ static int check_readiness(void)
 {
     if (cached_ready) return 1;
     if (psa50_ready()) {
-       D(printf("Camera type:  %d\n",camera.model));
-       cached_ready = 1;
-       return 1;
+      debug_message("Camera type:  %d\n",camera.model);
+      cached_ready = 1;
+      return 1;
     }
     update_status("Camera unavailable");
     return 0;
 }
 
-static void switch_camera_off()
+static void switch_camera_off(void)
 {
   psa50_off();
   clear_readiness();
+}
+
+int canon_get_batt_status(int *pwr_status, int *pwr_source) {
+  if (!check_readiness())
+    return -1;
+
+  return psa50_get_battery(pwr_status, pwr_source);
 }
 
 static void canon_set_owner(GtkWidget *win,GtkWidget *owner)
@@ -92,7 +97,7 @@ static void canon_set_owner(GtkWidget *win,GtkWidget *owner)
 
     update_status("Setting owner name.");
     entry = gtk_entry_get_text(GTK_ENTRY(owner));
-    fprintf(stderr,"New owner name: %s\n",entry);
+    debug_message("New owner name: %s\n",entry);
     psa50_set_owner_name(entry);
 }
 
@@ -231,8 +236,41 @@ static void clear_dir_cache(void)
 }
 
 
+/* A5 only: sort THB_ and AUT_ into their proper arrangement. */
+static int compare_a5_paths (const void * p1, const void * p2)
+{
+  const char * s1 = *((const char **)p1);
+  const char * s2 = *((const char **)p2);
+  const char * ptr, * base1, * base2;
+  int n1 = 0, n2 = 0;
+
+  printf("Comparing %s to %s\n", s1, s2);
+
+  ptr = strrchr(s1, '_');
+  if (ptr)
+    n1 = strtol(ptr+1, 0, 10);
+  ptr = strrchr(s2, '_');
+  if (ptr)
+    n2 = strtol(ptr+1, 0, 10);
+
+  printf("Numbers are %d and %d\n", n1, n2);
+  
+  if (n1 < n2)
+    return -1;
+  else if (n1 > n2)
+    return 1;
+  else {
+    base1 = strrchr(s1, '\\');
+    base2 = strrchr(s2, '\\');
+    printf("Base 1 is %s and base 2 is %s\n", base1, base2);
+    return strcmp(base1, base2);
+  }
+}
+
+
 static int update_dir_cache(void)
 {
+    int i;
     if (cached_dir) return 1;
     if (!update_disk_cache()) return 0;
     if (!check_readiness()) return 0;
@@ -241,6 +279,15 @@ static int update_dir_cache(void)
     case CANON_PS_A5:
     case CANON_PS_A5_ZOOM:
       if (recurse(cached_drive)) {
+	printf("Before sort:\n");
+	for (i = 1; i < cached_images; i++) {
+	  printf("%d: %s\n", i, cached_paths[i]);
+	}
+	qsort(cached_paths+1, cached_images, sizeof(char *), compare_a5_paths);
+	printf("After sort:\n");
+	for (i = 1; i < cached_images; i++) {
+	  printf("%d: %s\n", i, cached_paths[i]);
+	}
 	cached_dir = 1;
 	return 1;
       }
@@ -345,10 +392,30 @@ static void cb_select(GtkItem *item,struct psa50_dir *entry)
     }
     size = write(fd,file,length);
     if (size < 0) perror("write");
-    else if (size < length) fprintf(stderr,"short write: %d/%d\n",size,length);
+    else if (size < length) debug_message("short write: %d/%d\n",size,length);
     if (close(fd) < 0) perror("close");
     free(file);
     update_status("File saved");
+}
+
+static int get_all(struct psa50_dir *entry) {
+
+  if (  entry->is_file) {
+    cb_select(NULL, entry);
+    return 1;
+  }
+  entry = entry->user;
+  if (!entry) return 1;
+  for (; entry->name; entry++)
+    if (!get_all(entry)) return 0;
+  return 1; 
+
+}
+
+static void cb_get_all(GtkItem *item) {
+  
+  get_all(cached_tree);
+
 }
 
 
@@ -389,6 +456,60 @@ static void cb_clear(GtkWidget *widget,GtkWidget *window)
     cached_dir = 0;
 }
 
+
+/**
+ * Save current driver setup into a settings file (~/.gphoto/powershotrc)
+ */
+void save_rcfile(void) {
+  char  fname[128];
+  FILE *fd;
+
+  setFileName(fname);
+  fd = fopen(fname, "w");
+  if (!fd) {
+    char cmd[140];
+    setPathName(fname);
+    sprintf(cmd, "mkdir %s", fname);
+    system(cmd);
+    setFileName(fname);
+    fd = fopen(fname, "w");
+  }
+  if (fd) {
+    struct tm *tp;
+    time_t    mytime;
+    char *speed;
+    mytime = time(NULL);
+    tp = localtime(&mytime);
+    fprintf(fd, "#  Canon Powershot configuration - saved on %4.4d/%2.2d/%2.2d at %2.2d:%2.2d\n\n",
+	    tp->tm_year+1900, tp->tm_mon+1, tp->tm_mday,
+	    tp->tm_hour, tp->tm_min);
+    switch (camera.speed) {
+    case 19200:
+      speed = "19200"; break;
+    case 38400:
+      speed = "38400"; break;
+    case 57600:
+      speed = "57600"; break;
+    case 115200:
+      speed = "115200"; break;
+    default:
+      speed = "9600";
+    }
+    fprintf(fd, "# Serial port speed\n");
+    fprintf(fd, "%-12.12s %s\n", "Speed", speed);
+    fprintf(fd, "\n\n# Debug level:\n"
+	        "# 0: no debug at all\n"
+	        "# 1: debug functions\n"
+   	        "# 9: debug everything, including hex. dumps of packets\n\n");
+    fprintf(fd, "%-12.12s %i\n", "Debug", canon_debug_driver);
+    
+    fclose(fd);
+    update_status("Saved configuration");
+  } else
+    debug_message("Unable to open/create %s - configuration not saved\n",
+	   fname);
+}
+
 /**
  * Configuration dialog for Canon cameras.
  *
@@ -411,18 +532,19 @@ static int canon_configure(void)
   //    GtkWidget *window,*box,*scrolled_win,*tree,*clear,*done;
   GtkWidget *dialog, *hbox, *vbox, *label, *tree, *vseparator;
   GtkWidget *file_list, *button, *cbutton, *clear,*set_button;
-  GtkWidget *combo, *swoff, *sync;
-  GtkWidget *owner_entry;
+  GtkWidget *combo, *swoff, *sync, *linkCombo;
+  GtkWidget *owner_entry, *ga;
   GList *list;
 
   char cam_model[80];
   char cam_date[34];
+  char firmwrev[48];
+  char power_stats[48];
   struct tm *camtm;
   time_t camtime;
   char *csp;
+  int pwr_status, pwr_source;
 
-  FILE *fd;
-  char  fname[128];
 
 
   // First create the dialog window, with title, position and size:
@@ -430,7 +552,7 @@ static int canon_configure(void)
   gtk_window_set_title(GTK_WINDOW(dialog), "Camera Setup");
   gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
   gtk_container_border_width(GTK_CONTAINER(dialog), 5);
-  gtk_widget_set_usize(dialog, 450, 300);
+  gtk_widget_set_usize(dialog, 500, 350);
 
 
   /* Box going across the dialog... */
@@ -473,6 +595,16 @@ static int canon_configure(void)
   gtk_widget_show(clear);
   gtk_box_pack_start(GTK_BOX(vbox),clear,FALSE,FALSE,5);
 
+  ga = gtk_button_new_with_label("Get All");
+  if (!ga) {
+    gtk_widget_destroy(dialog);
+    return 0;
+  }
+  
+  gtk_signal_connect(GTK_OBJECT(ga),"clicked",GTK_SIGNAL_FUNC(cb_get_all),
+                    dialog);
+  gtk_widget_show(ga);
+  gtk_box_pack_start(GTK_BOX(vbox),ga,FALSE,FALSE,5);
 
   /* Create the tree object that will hold the directory
    * contents, and fill it.
@@ -509,8 +641,7 @@ static int canon_configure(void)
   gtk_widget_show(label);
 
   /**
-   * Get the owner name, and put it in a label. In a next version
-   * we'll be able to edit it as well.
+   * Get the owner name, and put it in a text field.
    */
   hbox = gtk_hbox_new(FALSE, 2);
   gtk_widget_show(hbox);
@@ -550,12 +681,46 @@ static int canon_configure(void)
   gtk_widget_show(label);
   gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 1);
 
-  label = gtk_label_new("Firmware revision: unknown");
+  sprintf(firmwrev,"Firmware revision: %i.%i.%i.%i",
+	  camera.firmwrev[3],camera.firmwrev[2],
+	  camera.firmwrev[1],camera.firmwrev[0] );
+  label = gtk_label_new(firmwrev);
   gtk_misc_set_alignment (GTK_MISC (label), 0, 0);
   gtk_widget_show(label);
   gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 1);
 
-  label = gtk_label_new("Battery status: unknown");
+
+  if (cached_ready) {
+    strcpy(power_stats,"Power: ");
+    canon_get_batt_status(&pwr_status,&pwr_source);
+    switch (pwr_source) {
+    case CAMERA_ON_AC:
+      strcat(power_stats, "AC adapter ");
+      break;
+    case CAMERA_ON_BATTERY:
+	strcat(power_stats, "on battery ");
+	break;
+    default:
+	sprintf(power_stats,"Power: unknown (%i",pwr_source);
+	break;
+    }
+    switch (pwr_status) {
+	char cde[16];
+    case CAMERA_POWER_OK:
+      strcat(power_stats, "(power OK)");
+      break;
+    case CAMERA_POWER_BAD:
+	strcat(power_stats, "(power low)");
+	break;
+    default:
+	sprintf(cde," - %i)",pwr_status);
+	strcat(power_stats,cde);
+	break;
+    }
+  }
+  else
+    strcpy(power_stats,"Power: camera unavailable");
+  label = gtk_label_new(power_stats);
   gtk_misc_set_alignment (GTK_MISC (label), 0, 0);
   gtk_widget_show(label);
   gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 1);
@@ -569,9 +734,9 @@ static int canon_configure(void)
    */
 
   /* Make a small horizontal box for speed selection: */
-  hbox = gtk_hbox_new(FALSE, 5);
+  hbox = gtk_hbox_new(FALSE, 2);
   gtk_widget_show(hbox);
-  gtk_box_pack_start(GTK_BOX(vbox),hbox,FALSE,FALSE,0);
+  gtk_box_pack_start(GTK_BOX(vbox),hbox,FALSE,FALSE,5);
 
   label = gtk_label_new("Speed: ");
   gtk_widget_show(label);
@@ -581,7 +746,7 @@ static int canon_configure(void)
   list = NULL;
   combo = gtk_combo_new();
   gtk_widget_show(combo);
-  gtk_box_pack_start(GTK_BOX(hbox), combo, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(hbox), combo, FALSE, FALSE, 1);
 
   list = g_list_append(list, "9600");
   list = g_list_append(list, "19200");
@@ -591,21 +756,19 @@ static int canon_configure(void)
 
   gtk_combo_set_popdown_strings(GTK_COMBO(combo), list);
   switch (camera.speed) {
-  case B9600: csp = "9600"; break;
-  case B19200: csp = "19200"; break;
-  case B38400: csp = "38400"; break;
-  case B57600: csp = "57600"; break;
-  case B115200: csp = "115200"; break;
+  case 9600: csp = "9600"; break;
+  case 19200: csp = "19200"; break;
+  case 38400: csp = "38400"; break;
+  case 57600: csp = "57600"; break;
+  case 115200: csp = "115200"; break;
   default: csp = "Choose speed";
   }
   gtk_entry_set_text(GTK_ENTRY(GTK_COMBO(combo)->entry),
                     csp);
   gtk_entry_set_editable(GTK_ENTRY(GTK_COMBO(combo)->entry),FALSE);
 
-  label = gtk_label_new(" ");
-  gtk_widget_show(label);
-  gtk_box_pack_start(GTK_BOX(vbox), label, TRUE, FALSE, 1);
 
+  // SYNCH TIME Button
 
   sync = gtk_button_new_with_label("Synchronize Camera Time");
   gtk_widget_show(sync);
@@ -641,52 +804,17 @@ static int canon_configure(void)
    */
   csp = gtk_entry_get_text(GTK_ENTRY(GTK_COMBO(combo)->entry));
   if (strncmp(csp, "115200", 6) == 0)
-    camera.speed = B115200;
+    camera.speed = 115200;
   else if (strncmp(csp, "57600", 5) == 0)
-    camera.speed = B57600;
+    camera.speed = 57600;
   else if (strncmp(csp, "38400", 5) == 0)
-    camera.speed = B38400;
+    camera.speed = 38400;
   else if (strncmp(csp, "19200", 5) == 0)
-    camera.speed = B19200;
+    camera.speed = 19200;
   else
-    camera.speed = B9600;
-  setFileName(fname);
-  fd = fopen(fname, "w");
-  if (!fd) {
-    char cmd[140];
-    setPathName(fname);
-    sprintf(cmd, "mkdir %s", fname);
-    system(cmd);
-    setFileName(fname);
-    fd = fopen(fname, "w");
-  }
-  if (fd) {
-    struct tm *tp;
-    time_t    mytime;
-    char *speed;
-    mytime = time(NULL);
-    tp = localtime(&mytime);
-    fprintf(fd, "#  Canon Powershot configuration - saved on %4.4d/%2.2d/%2.2d at %2.2d:%2.2d\n",
-           tp->tm_year+1900, tp->tm_mon+1, tp->tm_mday,
-           tp->tm_hour, tp->tm_min);
-    switch (camera.speed) {
-    case B19200:
-      speed = "19200"; break;
-    case B38400:
-      speed = "38400"; break;
-    case B57600:
-      speed = "57600"; break;
-    case B115200:
-      speed = "115200"; break;
-    default:
-      speed = "9600";
-    }
-    fprintf(fd, "%-12.12s %s\n", "Speed", speed);
-    fclose(fd);
-    update_status("Saved configuration");
-  } else
-    printf("Unable to open/create %s - configuration not saved\n",
-          fname);
+    camera.speed = 9600;
+
+  save_rcfile();
 
   return 1;
 
@@ -694,7 +822,7 @@ static int canon_configure(void)
 
 /****************************************************************************/
 
-static int _pick_nth(struct psa50_dir *tree, int n, char *path) {          
+static int _pick_nth(struct psa50_dir *tree, int n, char *path, char *attr) {          
                                                                            
   int i=0;                                                                 
                                                                            
@@ -702,22 +830,24 @@ static int _pick_nth(struct psa50_dir *tree, int n, char *path) {
     return 0;                                                              
                                                                            
   path = strchr(path, 0);                                                  
-  *path = '\\';                                                            
+  *path = '\\';
                                                                            
   while (i<n && tree->name) {                                              
-    strcpy(path+1, tree->name);                                            
-    if (is_image(tree->name))                                              
-      i++;                                                                 
-    else if (!tree->is_file)                                               
-      i += _pick_nth(tree->user, n-i, path);                               
-    tree++;                                                                
+    strcpy(path+1, tree->name);
+    if (is_image(tree->name)) {
+      *attr = tree->attrs;
+      i++;
+    } else if (!tree->is_file)
+      i += _pick_nth(tree->user, n-i, path, attr);
+    tree++;
   }                                                                        
   return i;                                                                
 }                                                                          
 
-static void pick_nth(int n,char *path)
+
+static void pick_nth(int n,char *path, char *attr)
 {
-    (void) _pick_nth(cached_tree,n,path);
+    (void) _pick_nth(cached_tree,n,path,attr);
 }
 
 
@@ -728,13 +858,15 @@ static struct Image *canon_get_picture(int picture_number, int thumbnail)
 {
     struct Image *image;
     char path[300];
-    int Size;
+    char attribs;
+    char file[300], dir[300];
+    int Size,j;
     void *ptr;
 
 	
-	if (!check_readiness()) {
-	    return NULL;
-      }
+    if (!check_readiness()) {
+      return NULL;
+    }
 
     switch (camera.model) {
     case CANON_PS_A5:
@@ -742,7 +874,7 @@ static struct Image *canon_get_picture(int picture_number, int thumbnail)
 
       picture_number=picture_number*2-1;
       if (thumbnail) picture_number+=1;
-      D(printf("Picture number %d\n",picture_number));
+      debug_message("Picture number %d\n",picture_number);
 
       image = malloc(sizeof(*image));
       if (!image) {
@@ -768,57 +900,67 @@ static struct Image *canon_get_picture(int picture_number, int thumbnail)
       return NULL;
       break;
     default:
-	/* For A50 or others */
-    /* clear_readiness(); */
-    if (!update_dir_cache()) {
+      /* For A50 or others */
+      /* clear_readiness(); */
+      if (!update_dir_cache()) {
 	update_status("Could not obtain directory listing");
 	return 0;
-    }
-    image = malloc(sizeof(*image));
-    if (!image) {
+      }
+      image = malloc(sizeof(*image));
+      if (!image) {
 	perror("malloc");
 	return NULL;
-    }
-    memset(image,0,sizeof(*image));
-    strcpy(image->image_type,"jpg");
-    if (!picture_number || picture_number > cached_images) {
+      }
+      memset(image,0,sizeof(*image));
+      strcpy(image->image_type,"jpg");
+      if (!picture_number || picture_number > cached_images) {
 	update_status("Invalid index");
 	free(image);
 	if (command_line_mode==1)
-		psa50_end(); 
-	return NULL;
-    }
-    strcpy(path,cached_drive);
-    pick_nth(picture_number,path);
-    update_status(path);
-    if (!check_readiness()) {
-	free(image);
-	return NULL;
-    }
-    if (thumbnail) {
-      ptr=image;
-      if ( (image->image = psa50_get_thumbnail(path,&image->image_size)) == NULL) {
-	if (command_line_mode == 1)
-		psa50_end(); 
-	free(ptr);
+	  psa50_end(); 
 	return NULL;
       }
-      /* we count the byte returned until the end of the jpeg data
-	 which is FF D9 */
-      for(Size=1;Size<image->image_size;Size++)
-	if(image->image[Size]==JPEG_END) {
-	  if(image->image[Size-1]==JPEG_ESC) break;
+      strcpy(path,cached_drive);
+      attribs = 0;
+      pick_nth(picture_number,path,&attribs);
+      update_status(path);
+      if (!check_readiness()) {
+	free(image);
+	return NULL;
+      }
+      if (thumbnail) {
+	ptr=image;
+	if ( (image->image = psa50_get_thumbnail(path,&image->image_size)) == NULL) {
+	  if (command_line_mode == 1)
+	    psa50_end(); 
+	  free(ptr);
+	  return NULL;
 	}
-      image->image_size = Size+1; 
-    }
-    else {
-      image->image = psa50_get_file(path,&image->image_size);
-    }
-    if (command_line_mode==1) 
-      psa50_end(); 
-    if (image->image) return image;
-    free(image);
-    return NULL;
+	/* we count the byte returned until the end of the jpeg data
+	   which is FF D9 */
+	for(Size=1;Size<image->image_size;Size++)
+	  if(image->image[Size]==JPEG_END) {
+	    if(image->image[Size-1]==JPEG_ESC) break;
+	  }
+	image->image_size = Size+1; 
+      }
+      else {
+	image->image = psa50_get_file(path,&image->image_size);
+	debug_message("We now have to set the \"downloaded\" flag on the  picture\n");
+	j = strrchr(path, '\\') - path;
+	strncpy(dir,path,j);
+	dir[j]='\0';
+	strcpy(file, path+j+1);
+	debug_message("The old file attributes were: %#x\n",attribs);
+	attribs = attribs & 0xdf; // 0xdf = !0x20
+	psa50_set_file_attributes(file,dir,attribs);
+      }
+      if (command_line_mode==1) 
+	psa50_end(); 
+      if (image->image) return image;
+      //if(receive_error==FATAL_ERROR) clear_readiness();
+      free(image);
+      return NULL;
       break;
     }
 }
@@ -854,9 +996,9 @@ static int canon_initialize(void)
   char fname[1024];
   FILE *conf;
 
-  D(printf("canon_initialize()\n"));
+  fprintf(stderr,"canon_initialize()\n");
  /* Default speed */
-  camera.speed = B9600;
+  camera.speed = 9600;
 
   setFileName(fname);
   if ((conf = fopen(fname, "r"))) {
@@ -877,20 +1019,63 @@ static int canon_initialize(void)
          }
        if (strcasecmp(sp, "Speed") == 0) {
          if (strncmp(vp, "115200", 6) == 0)
-           camera.speed = B115200;
+           camera.speed = 115200;
          else if (strncmp(vp, "57600", 5) == 0)
-           camera.speed = B57600;
+           camera.speed = 57600;
          else if (strncmp(vp, "38400", 5) == 0)
-           camera.speed = B38400;
+           camera.speed = 38400;
          else if (strncmp(vp, "19200", 5) == 0)
-           camera.speed = B19200;
+           camera.speed = 19200;
          else if (strncmp(vp, "9600", 5) == 0)
-           camera.speed = B9600;
+           camera.speed = 9600;
+       }
+
+       /* This is just an option in the file, that's why we initialize
+	  the variable before */
+       if (strcasecmp(sp, "Debug") == 0) {
+	 if (strncmp(vp,"0",1) == 0)
+	   canon_debug_driver = 0;
+	 if (strncmp(vp,"1",1) == 0)
+	   canon_debug_driver = 1;
+	 if (strncmp(vp,"1",1) == 0)
+	   canon_debug_driver = 1;
+	 if (strncmp(vp,"2",1) == 0)
+	   canon_debug_driver = 2;
+	 if (strncmp(vp,"3",1) == 0)
+	   canon_debug_driver = 3;
+	 if (strncmp(vp,"4",1) == 0)
+	   canon_debug_driver = 4;
+	 if (strncmp(vp,"5",1) == 0)
+	   canon_debug_driver = 5;
+	 if (strncmp(vp,"6",1) == 0)
+	   canon_debug_driver = 6;
+	 if (strncmp(vp,"7",1) == 0)
+	   canon_debug_driver = 7;
+	 if (strncmp(vp,"8",1) == 0)
+	   canon_debug_driver = 8;
+	 if (strncmp(vp,"9",1) == 0)
+	   canon_debug_driver = 9;
+	 fprintf(stderr,"Debug level: %i\n",canon_debug_driver);
        }
       }
     fclose(conf);
   }
-  fprintf(stderr,"Camera transmission speed : %i\n", camera.speed);
+
+  switch (camera_type) { // camera_type is a gphoto global variable
+  case GPHOTO_CAMERA_USB:
+      debug_message("GPhoto tells us tha we should use a USB link.\n");
+      canon_comm_method = CANON_USB;
+      break;
+  case GPHOTO_CAMERA_SERIAL:
+  default:
+      debug_message("GPhoto tells us tha we should use a RS232 link.\n");
+      canon_comm_method = CANON_SERIAL_RS232;
+      break;
+  }
+
+  if (canon_comm_method == CANON_SERIAL_RS232)
+      debug_message("Camera transmission speed : %i\n", camera.speed);
+
   return !canon_serial_init(serial_port);
 }
 
@@ -969,16 +1154,16 @@ static char *canon_description(void)
 
 static int canon_delete_image(int picture_number)
 { 
-	char path[300];
-	char file[300], dir[300];
-	int j;
-
-	/*clear_readiness();*/
-	if (!check_readiness()) {
-		return 0;
-	}
-	if (!(camera.model == CANON_PS_A5 ||
-	  camera.model == CANON_PS_A5_ZOOM)) { /* this is tested only on powershot A50 */
+  char path[300];
+  char file[300], dir[300], atrs;
+  int j;
+  
+  /*clear_readiness();*/
+  if (!check_readiness()) {
+    return 0;
+  }
+  if (!(camera.model == CANON_PS_A5 ||
+	camera.model == CANON_PS_A5_ZOOM)) { /* this is tested only on powershot A50 */
     
     if (!update_dir_cache()) {
       update_status("Could not obtain directory listing");
@@ -990,9 +1175,10 @@ static int canon_delete_image(int picture_number)
       return 0;
     }
     strcpy(path,cached_drive);
-    pick_nth(picture_number,path);
+    atrs=0;
+    pick_nth(picture_number,path,&atrs);
     update_status(path);
-
+    
     j = strrchr(path, '\\') - path;
     strncpy(dir,path,j);
     dir[j]='\0';

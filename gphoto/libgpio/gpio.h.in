@@ -1,0 +1,218 @@
+#ifndef GPIO_H
+#define GPIO_H
+
+#if @GPIO_USB@
+#define GPIO_USB
+#endif
+
+#ifdef GPIO_USB
+#include <usb.h>
+#endif
+
+#ifndef TRUE
+#define TRUE (0==0)
+#endif
+
+#ifndef FALSE
+#define FALSE (1==0)
+#endif
+
+/* Defines and enums
+   -------------------------------------------------------------- */
+
+#define GPIO_MAX_BUF_LEN 4096 		/* max length of receive buffer */
+
+
+#define GPIO_OK		0
+#define	GPIO_ERROR	-1		/* IO return codes */
+#define GPIO_TIMEOUT	-2
+
+#define PIN_RTS 0
+#define PIN_DTR 1
+#define PIN_CTS 2  
+#define PIN_DSR 3
+#define PIN_CD  4
+#define PIN_RING 5
+
+
+/* Specify the types of devices */
+typedef enum {
+	GPIO_DEVICE_SERIAL,
+	GPIO_DEVICE_USB,
+	GPIO_DEVICE_PARALLEL,	/* <- Not supported yet */
+	GPIO_DEVICE_1394, 	/* <- Wishful thinking */
+} gpio_device_type;
+
+/* Device specific settings
+   -------------------------------------------------------------- */
+
+/* Serial port specific settings */
+typedef struct {
+	char port[128];
+	int  speed;
+	int  bits;
+	int  parity;
+	int  stopbits;
+} gpio_serial_settings;
+
+#ifdef GPIO_USB
+/* USB port specific settings */
+typedef struct {
+	struct usb_device *udev;
+	int  inep;
+	int  outep;
+	int  config;
+	int  interface;
+	int  altsetting;
+} gpio_usb_settings;
+#endif
+
+/* Put the settings together in a union */
+typedef union {
+	gpio_serial_settings	serial;
+#ifdef GPIO_USB
+	gpio_usb_settings 	usb;
+#endif
+} gpio_device_settings;
+
+/* Device struct
+   -------------------------------------------------------------- */
+struct gpio_device;
+typedef struct gpio_device gpio_device;
+struct gpio_operations {
+	int (*init)	(gpio_device *);
+	int (*open)	(gpio_device *);
+	int (*close)	(gpio_device *);
+	int (*read)	(gpio_device *, char *, int);
+	int (*write)	(gpio_device *, char *, int);
+	int (*update) (gpio_device *);
+
+        /* for serial and parallel devices */
+        int (*get_pin)  (gpio_device *, int);
+        int (*set_pin)  (gpio_device *, int, int);
+
+};
+
+/* Specify the device information */
+struct gpio_device {
+	/* This struct is available via wrappers. don't modify 
+	   directly. */
+        gpio_device_type type;
+
+	struct gpio_operations *ops;
+
+	gpio_device_settings settings;
+	gpio_device_settings settings_pending;
+
+	gpio_device_settings settings_saved;
+
+	int device_fd;
+	void *device_handle;
+	int timeout; /* in milli seconds */
+};
+
+
+/* gpio Core functions
+   -------------------------------------------------------------- */
+
+gpio_device *gpio_new		(gpio_device_type type);
+		/* Create a new device of type "type"
+			return values:
+				  successful: valid gpio_device struct
+				unsuccessful: GPIO_ERROR
+		*/
+
+	int gpio_free      	(gpio_device *dev);
+		/* Frees an IO device from memory
+			return values:
+				  successful: GPIO_OK
+				unsuccessful: GPIO_ERROR
+		*/
+
+
+	int gpio_open       	(gpio_device *dev);
+		/* Open the device for reading and writing
+			return values:
+				  successful: GPIO_OK
+				unsuccessful: GPIO_ERROR
+		*/
+
+	int gpio_close      	(gpio_device *dev);
+		/* Close the device to prevent reading and writing
+			return values:
+				  successful: GPIO_OK
+				unsuccessful: GPIO_ERROR
+		*/
+
+       int gpio_set_timeout 	(gpio_device *dev, int millisec_timeout);
+		/* Sets the read/write timeout
+				  successful: GPIO_OK
+				unsuccessful: GPIO_ERROR
+		*/
+
+       int gpio_get_timeout 	(gpio_device *dev, int *millisec_timeout);
+		/* Sets the read/write timeout
+				  successful: GPIO_OK
+				unsuccessful: GPIO_ERROR
+		*/
+
+       int gpio_set_settings 	(gpio_device *dev, 
+				 gpio_device_settings settings);
+		/* Sets the settings
+				  successful: GPIO_OK
+				unsuccessful: GPIO_ERRO
+		*/
+
+
+       int gpio_get_settings 	(gpio_device *dev, 
+				 gpio_device_settings *settings);
+		/* Returns settings in "settings"
+				  successful: GPIO_OK
+				unsuccessful: GPIO_ERROR
+		*/
+
+       int gpio_write 		(gpio_device *dev, char *bytes, int size);
+		/* Writes "bytes" of size "size" to the device
+			return values:
+				  successful: GPIO_OK
+				unsuccessful: GPIO_ERROR
+		*/
+
+       int gpio_read		(gpio_device *dev, char *bytes, int size);
+		/* Reads "size" bytes in to "bytes" from the device
+			return values:
+				  successful: number of bytes read
+				unsuccessful: GPIO_ERROR
+		*/
+
+
+        int gpio_get_pin   (gpio_device *dev, int pin); 
+                /* Give the status of pin from dev
+                        pin values:
+                                 see PIN_ constants in the various .h files
+                        return values:
+                                  successful: status
+                                unsuccessful: GPIO_ERROR
+                */
+
+        int gpio_set_pin   (gpio_device *dev, int pin, int level);
+                /* set the status of pin from dev to level
+                        pin values:
+                                 see PIN_ constants in the various .h files
+                        level values:
+                                        0 for off
+                                        1 for on
+                        return values:
+                                  successful: status
+                                unsuccessful: GPIO_ERROR
+                */
+
+
+/* External device-specific structs
+   -------------------------------------------------------------- */
+extern struct gpio_operations gpio_serial_operations;
+#ifdef GPIO_USB
+extern struct gpio_operations gpio_usb_operations;
+#endif
+
+#endif

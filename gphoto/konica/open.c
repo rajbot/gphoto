@@ -1,5 +1,4 @@
 #include "qm100.h"
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * getKeyword - get value for a keyword/variable, from                 *
@@ -17,7 +16,6 @@ char *qm100_getKeyword(char *key, char *dflt)
    char        *sp=NULL;
    static char  buf[256];
    QM100_CONFIGDATA *cp = & qm100_configData;
-   
    sprintf(buf, "QM100_%s", key);
    sp = getenv(buf);
    if (!sp)
@@ -49,7 +47,6 @@ char *qm100_getKeyword(char *key, char *dflt)
       }
    return sp;
 }
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * setTrace - set tracing options from environment and/or              *
@@ -65,7 +62,6 @@ void qm100_setTrace(void)
 {
    char *fname;
    char tname[128];
-   
    fname = qm100_getKeyword("TRACE", "off");
    if (!qm100_trace && fname &&
        strcasecmp(fname, "off") != 0  &&
@@ -84,12 +80,10 @@ void qm100_setTrace(void)
          qm100_trace = fopen(tname, "w");
          }
       }
-   
    fname = qm100_getKeyword("TRACE_BYTES", "off");
    if (qm100_trace && fname && strcasecmp(fname, "off") != 0)
       qm100_showBytes = 1;
 }
-
 /*---------------------------------------------------------------------*
  *                                                                     *
  * open  - prepare serial port for use, and send initialization        *
@@ -101,31 +95,25 @@ int qm100_open(const char *devname)
   int serialdev;
   qm100_packet_block packet;
   char cmd[]=QM100_INIT;
-
   serialdev = open(devname, O_RDWR | O_NOCTTY);
-  if (serialdev <= 0) 
+  if (serialdev <= 0)
      {
      char tmsg[100];
      sprintf(tmsg, "Unable to open serial device %s", devname);
      qm100_error(serialdev, tmsg, errno);
      }
-  
-  if (tcgetattr(serialdev, &oldt) < 0) 
+  if (tcgetattr(serialdev, &oldt) < 0)
      qm100_error(serialdev, "Unable to get serial device attributes", errno);
-
   memcpy((char *)&newt,(char *)&oldt, sizeof(struct termios));
   newt.c_cflag |= CS8 | HUPCL;
   newt.c_iflag &= ~(IGNBRK|BRKINT|IGNPAR|PARMRK|INPCK|ISTRIP|INLCR);
   newt.c_iflag &= ~(IGNCR|ICRNL|IXON|IXOFF|IXANY|IMAXBEL);
-  
   newt.c_oflag &= ~(OPOST);
   newt.c_lflag &= ~(ISIG|ICANON);
   newt.c_cc[VMIN] = 1;
   newt.c_cc[VTIME] = 0;
-
   cfsetospeed(&newt, B9600);
   cfsetispeed(&newt, B9600);
-
   if (tcsetattr(serialdev, TCSANOW, &newt) < 0)
      qm100_error(serialdev, "Unable to set serial device attributes", errno);
   qm100_transmit(serialdev, cmd, sizeof(cmd), &packet, "Open");

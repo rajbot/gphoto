@@ -1,6 +1,6 @@
 drivers_LTLIBRARIES = libgphoto_philips.la
 
-CFLAGS = @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@ -DGPHOTO
+CFLAGS = @CFLAGS@ @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@ -DGPHOTO
 
 libgphoto_philips_la_SOURCES = philips_io.c gphoto_philips.c \
         gphoto_philips_cfg.c \

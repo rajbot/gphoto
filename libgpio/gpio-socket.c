@@ -64,7 +64,8 @@ int gpio_socket_list(gpio_device_info *list, int *count) {
         list[*count].type = GPIO_DEVICE_SOCKET;
         strcpy(list[*count].name, "TCP/IP Socket");
         strcpy(list[*count].path, "socket");
-
+	list[*count].argument_needed = 1;
+	strcpy(list[*count].argument_description, "host");
         *count += 1;
 
         return (GPIO_OK);

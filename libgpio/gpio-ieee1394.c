@@ -64,7 +64,7 @@ int gpio_ieee1394_list(gpio_device_info *list, int *count) {
         list[*count].type = GPIO_DEVICE_IEEE1394;
         strcpy(list[*count].name, "IEEE1394 (Firewire(tm))");
         strcpy(list[*count].path, "ieee1394");
-
+	list[*count].argument_needed = 0;
         *count += 1;
 
         return (GPIO_OK);

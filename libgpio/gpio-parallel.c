@@ -89,6 +89,7 @@ int gpio_parallel_list(gpio_device_info *list, int *count) {
                         strcpy(list[*count].path, buf);
                         sprintf(buf, "Parallel Port %i", x);
                         strcpy(list[*count].name, buf);
+			list[*count].argument_needed = 0;
                         *count += 1;
                 }
         }

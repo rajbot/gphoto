@@ -64,6 +64,10 @@ typedef struct {
 	gpio_device_type type;
 	char name[64];
 	char path[64];
+
+	int  argument_needed;
+	char argument_description[128];
+	char argument[128];
 } gpio_device_info;
 
 /* Put the settings together in a union */

@@ -36,7 +36,7 @@ int gpio_usb_list(gpio_device_info *list, int *count) {
 	list[*count].type = GPIO_DEVICE_USB;
 	strcpy(list[*count].name, "Universal Serial Bus");
 	strcpy(list[*count].path, "usb");
-
+	list[*count].argument_needed = 0;
 	*count += 1;
 
 	return (GPIO_OK);

@@ -945,14 +945,20 @@ bugout:
 };
 
 int fuji_delete_image (int picture_number){
-  char picname[100];
+  int err_status;
+
+  if (fuji_init())
+    return (-1);
+
   if (!has_cmd[19]) {
     return(0);
   };
-  /*  if (get_picture_info(picture_number,picname)) return(-1);
-      return(delete_pic (picname));*/
+
+  err_status = del_frame(picture_number);
+  reset_serial();
+
   /* Warning, does the index need to be re-counted after each delete?*/
-  return(del_frame(picture_number));
+  return(!err_status);
 };
 
 int fuji_number_of_pictures (){

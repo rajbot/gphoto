@@ -1,0 +1,832 @@
+\input texinfo  @c -*-texinfo-*-
+@setfilename gphoto-users.info
+@settitle GPHOTO
+@setchapternewpage on
+@paragraphindent 2
+@iftex
+@finalout
+@end iftex
+@include version.texi
+
+@c Unify all our little indices for now.
+@c @defcodeindex sc
+@c @syncodeindex sc cp
+@c @syncodeindex fn cp
+@c @syncodeindex vr cp
+@c @syncodeindex tp cp
+@c @syncodeindex pg cp
+
+@ifinfo
+
+@dircategory Utilities
+@direntry
+* gPhoto::                 digital camera application
+@end direntry
+
+This file documents gPhoto, the GNU digital camera application.
+
+Copyright @copyright{} 1999 Scott Fritzinger (@email{scottf@@unr.edu})
+and Ole Aamot (@email{ole@@gnu.org})
+
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+
+@ignore
+Permission is granted to process this file through TeX and print the
+results, provided the printed document carries a copying permission
+notice identical to this one except for the removal of this paragraph
+(this paragraph not being relevant to the printed manual).
+
+@end ignore
+
+Permission is granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided also that
+the entire resulting derived work is distributed under the terms of a
+permission notice identical to this one.
+
+Permission is granted to copy and distribute translations of this manual
+into another language, under the above conditions for modified versions.
+@end ifinfo
+
+@settitle The gPhoto User's Manual
+@titlepage
+@title The gPhoto User's Manual
+@subtitle The GNU digital camera application
+
+@finalout
+@author by Scott Fritzinger (scottf@@unr.edu)
+@author texinfo by Ole Aamot (ole@@gnu.org)
+
+For gPhoto version @value{VERSION}
+
+Created: @value{CREATED}
+
+Updated: @value{UPDATED}
+
+PDF format: @uref{http://www.gphoto.org/documentation/users.pdf}
+
+DVI format: @uref{http://www.gphoto.org/documentation/users.dvi}
+
+WWW format: @uref{http://www.gphoto.org/documentation/users.html}
+
+@page
+
+@vskip 0pt plus 1filll
+Copyright @copyright{} 1999 Scott Fritzinger (@email{scottf@@unr.edu})
+and Ole Aamot (@email{ole@@gnu.org})
+
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+
+Permission is granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided also that
+the entire resulting derived work is distributed under the terms of a
+permission notice identical to this one.
+
+Permission is granted to copy and distribute translations of this manual
+into another language, under the above conditions for modified versions.
+@end titlepage
+
+@ifinfo
+
+@node Top, Introduction, Index, (dir)
+
+@top gPhoto
+
+This file documents gPhoto, the GNU digital camera application.  This 
+edition of the documentation was last updated for version @value{VERSION} 
+of gPhoto.
+
+@menu
+* Introduction::                Introducing gPhoto
+* Setting up gPhoto::           How to configure gPhoto for your camera.
+* Using the Camera::            Turning your pc into a digital platform.
+* Directory Browsing::          Using gPhoto with existing photo files.
+* Editing Images::              Modifying images.
+* Post-Processing::             Retouching images after downloading.
+* Saving Opened Images::        Storing images to media.
+* Printing Pictures::           Outputting images to raster devices.
+* Plug-Ins::                    Using camera plugins.
+* Command-line Mode::           Using the command-line mode
+* More Information::            Looking for more information?  Look here.
+* Copying::                     GNU General Public License, version 2.
+* Index::                       Keywords, concepts, functions, and files.
+
+@detailmenu
+ --- The Detailed Node Listing ---
+
+Introduction
+
+* Audience::                    The people for whom this manual is written.
+* Features::                    Reasons to install and use gPhoto.
+* Overview::                    Basic gPhoto functionality and design.
+* History::                     How gPhoto was born.
+
+Setting up gPhoto
+
+* Binary Distributions::        Obtaining ready-to-run distributions.
+* Compiling::                   Building gPhoto from its source code.
+* Configuring::                 Setting up gPhoto with your camera.
+
+Using the Camera
+
+* Getting a Thumbnail Index::   Reviewing images in the camera memory.
+* Downloading Pictures::  Transferring images to the computer.
+* Deleting Pictures from the Camera::  Erasing from the camera memory.
+* Taking a Picture through gPhoto:: Shooting and downloading a snapshot.
+* Configuring your Camera::     Setting camera preferences.
+* Getting a Summary of your Camera:: Describing details and camera status.
+
+Directory Browsing
+
+Editing Images
+* Image Orientation::           Rotating images.
+* Image Dimension::             Scaling images.
+
+Post-Processing
+
+Saving Opened Images
+
+Printing Pictures
+
+Plug-Ins
+
+* Live Camera!::                Previewing live and shooting images.
+* HTML Gallery::                Generating photo galleries for Web.
+
+Command-line Mode
+
+Copying
+
+@end detailmenu
+@end menu
+
+@end ifinfo
+
+@node Introduction, Audience, Top, Top
+@chapter Introduction
+
+gPhoto is an universal, free GTK+ application that will allow
+downloading, saving, and manipulation of images from several 
+different digital camera models, or from the local harddrive.
+
+gPhoto has a basic command line interface, which is handy,
+if you want to set up a web camera, and use gphoto in a 
+script, e.g. with Perl/PHP.  
+
+gPhoto sports a new HTML engine, that let's you create your
+gallery "themes" (HTML with special tags), and publish images 
+to the web.  A directory browse mode has also been implemented.
+
+gPhoto supports a wide array of digital camera models.  
+Visit @uref{http://www.gphoto.org/cameras.php3} for an updated list.
+
+@menu
+* Audience::                    The people for whom this manual is written.
+* Features::                    Reasons to install and use gPhoto.
+* Overview::                    Basic gPhoto functionality and design.
+* History::                     How gPhoto was born.
+@end menu
+
+@node Audience, Features, Introduction, Introduction
+@section Audience
+
+This manual is designed to be useful to everybody who is interested in
+using gPhoto.  If you are programmer, check the Programmer's Manual at
+@uref{http://www.gphoto.org/documentation/programmers.html}
+
+If you are an end-user, and you are looking for help on running gPhoto, 
+the first few chapters of this manual describe the essential parts of 
+installing, starting up, and using gPhoto.
+
+If you need help with a specific camera library, the best way is to contact 
+the library developer or send electronic mail to @email{gphoto-devel@@gphoto.org}.
+
+@node Features, Overview, Audience, Introduction
+@section Features
+
+gPhoto is not the most advanced camera utility known to the 
+planet (yet), but it does have a number of enticing features:
+
+@table @asis
+@item it's free software
+Anybody can use, modify, and redistribute it under the terms of the GNU
+General Public License (@pxref{Copying}).  gPhoto is one part of the GNU
+project, which aims to write a free operating system licensed under the GPL.
+
+@item it's compatible
+gPhoto provides the familiar GUI and CLI-based user environments.  For 
+all intents and purposes, gPhoto is a very modern photo application.
+
+@item it is built to survive
+Unlike other popular camera software, gPhoto has an open structure that 
+allows it to evolve without compromising its design.
+This structure will help camera libraries undergo major redesign, GUI
+application and modifications without having to be entirely rewritten.
+
+@item it's extensible
+gPhoto is an attractive platform for learning how to become a library
+developer or for implementing new ideas in digital photo technology.
+
+@item it's stable
+It is possible to develop and test new gPhoto library components 
+without restarting the application (not even accidentally).
+
+@item it exists
+gPhoto is real software that works Right Now.  It is not a research
+project or a proposal.  You don't have to wait at all before you can
+start using and developing it.
+@end table
+
+@node Overview, History, Features, Introduction
+@section Overview
+
+The gPhoto project is the easiest way for Digital Camera Companies to support 
+potential customers who don't use other supported,
+proprietary operating systems from Microsoft and Apple.
+
+gPhoto runs on several Unix-like platforms, including most Linux-based variants 
+of the free GNU system, distributed and supported
+commercially by free software vendors like RedHat Software, Inc., and fund-raised 
+by the Free Software Foundation, Inc.
+
+Today, Linux-based variants of the free GNU system, using the kernel Linux 
+developed by Linus Torvalds, are in widespread use. There are
+estimated to be over 10 million users of such systems today.
+
+The developers working on the project are happy to help companies who wish to 
+extend their markets to cover new areas. 
+
+Emailing the developer mailing list (@email{gphoto-devel@@gphoto.org}) is a 
+good place to start in procuring our talents. Often it takes nothing more than 
+open access to the technical details and a camera or two for testing and development.
+
+Kodak and Minolta both provide specifications openly for their cameras meaning drivers 
+for them can be written openly.
+
+Konica has recently started work on a GPL application which Phill Hugo <phill@@gnu.org> 
+will incorporate into gPhoto extending the current Konica driver.
+
+It is always a great help for potential camera customers to pressure companies into 
+support our work BEFORE you give them your money.
+
+Many companies simply don't have time to look at the issues involved unless there 
+is an financial incentive to do so. The more open we can make them, the better gPhoto 
+can be and the more enjoyment you'll get from your camera.
+
+The distributed file @file{CONTACTS} contains a list of company members who you can write to 
+asking for GPL drivers or open specifications.  Visit the file @file{LETTER} for a template.
+
+@node History, Setting up gPhoto, Overview, Introduction
+@section History
+
+@table @asis
+@item November 1998
+Scott Fritzinger starts writing gtkam from scratch, a GTK+ utility for Eugene Crosser's photopc library.
+
+@item November 05, 1998
+Ole Aamot announces the "GNU Photo" project. (See @uref{http://lwn.net/1998/1112/gnuphoto.html})
+
+@item November 11, 1998
+"GNU Photo" merges with Scott Fritzinger's "gtkam" application, to produce gPhoto, the ultimate, 
+GPL'ed application for digital still cameras, working out off Scott's code-base.
+
+@item November 12, 1998 
+Richard Stallman <rms@@gnu.org> gives his blessings to the project and suggests that a command 
+line interface would be useful.
+
+@item November 24, 1998
+A pre-release version (0.0.1) of gPhoto is released.
+
+Supported options: 
+* Preview / Thumbnail index 
+* Download / Save images 
+* Delete pictures from camera 
+* Format conversion (save as any format that imlib supports.) 
+* Printing 
+* Camera Configuration
+
+@item November 24, 1998
+
+Del Simmons <del@@freespeech.com> joins the gPhoto development team,
+and starts working on the Kodak DC20/25 driver.
+
+@item November 26, 1998
+Matt Martin <matt.martin@@ieee.org> joins the team, starts working 
+on the Fuji DS-7 compatible driver and helps fixing various bugs.
+
+@item December 8, 1998
+Jim Thompson <jim.thompson@@pobox.com> announces the Digita project,
+an effort to write gPhoto compatible drivers for Kodak DC 220/260.
+
+@item December 16, 1998
+Scott Fritzinger announces the gPhoto Developer's Release 0.1.0.
+
+@item December 17, 1998
+0.1.1-DR is announced.
+
+@item December 20, 1998
+Clifford Wright <cliff@@snipe444.org> announces the RDC-300Z driver
+and submits a dozen of bug fixes, and patches for compiling gPhoto 
+on NetBSD.
+
+@item December 25, 1998
+Scott announces that the HTML gallery plugin is almost completed.
+
+@item December 29, 1998
+Jim Thompson <jim.thompson@@pobox.com> and his team announces 
+OpenDIS 0.0.1.
+
+@item January 1999
+The @uref{http://www.gphoto.org} domain is up and working by
+Torfinn Nome <torfinn@@nome.no> at @uref{http://styx.net}, who 
+provides server facilities free of charge.
+gPhoto now compiles with gtk 1.1, and supports GTK themes.
+
+@item February 1999
+@uref{http://www.gphoto.org/php3/199902.php3}
+
+@item March 1999
+@uref{http://www.gphoto.org/php3/199903.php3}
+
+@item April 1999
+@uref{http://www.gphoto.org/php3/199904.php3}
+
+@item May 1999
+@uref{http://www.gphoto.org/php3/199905.php3}
+
+@item June 1999
+@uref{http://www.gphoto.org/php3/199906.php3}
+
+@item July 1999
+@uref{http://www.gphoto.org/php3/199907.php3}
+
+@item August 1999
+@uref{http://www.gphoto.org/php3/199907.php3}
+
+@item September 1999
+@uref{http://www.gphoto.org/php3/199909.php3}
+gPhoto 0.4.0
+
+@item October 1999
+@uref{http://www.gphoto.org/php3/199910.php3}
+
+@item November 1999
+gPhoto 0.4.1
+
+@end table
+
+@node Setting up gPhoto, Binary Distributions, History, Top
+@chapter Setting up gPhoto
+
+Before you can use gPhoto with your digital camera on your 
+favorite machine, you'll need to install its components.  
+Currently, gPhoto runs on Intel i386-compatible architectures 
+(such as the Pentium).
+
+If you have an unsupported camera or a different architecture, you 
+will not be able to run gPhoto until all the required libraries or
+the program itself have been ported to the desired platform.
+
+Protocol sniffing is an involved process which requires some 
+considerable skills, and is not recommended for the faint-of-heart.  
+If you have the talent and desire to write a new library or do a 
+port, contact @email{gphoto-devel@@gphoto.org} in order to coordinate
+the effort.
+
+@menu
+* Binary Distributions::        Obtaining ready-to-run distributions.
+* Compiling::                   Building gPhoto from its source code.
+* Configuring::                 Setting up gPhoto with your camera.
+@end menu
+
+@node Binary Distributions, Compiling, Setting up gPhoto, Setting up gPhoto
+@section Binary Distributions
+
+By far the easiest and best way to install gPhoto is to obtain the
+binary distribution.  Even if you plan on recompiling gPhoto itself,
+it is best to start off with an already-working application so that
+you can run the stable version for production work, and still test 
+the development version.
+
+gPhoto development sources are committed to the @file{gphoto}
+module, in GNOME CVS, see @uref{http://cvs.gnome.org} for details.
+
+Odd number version are development versions only. They are not stable
+releases. All stable release will use even number versions. 
+
+You can get gPhoto from a friend under the conditions allowed by 
+the GNU GPL (@pxref{Copying}).
+
+You can also FTP the complete gPhoto source code from your closest GNOME
+software mirror, or @uref{ftp://ftp.gphoto.org/projects/gphoto/pub/}.
+The binary distribution is available in a subdirectory, called 
+@file{@var{n.m}}, where @var{n.m} is the version of gPhoto 
+that this release corresponds to (@value{VERSION} at the time of
+this writing).
+
+The format of the binary distribution is prone to change, so this manual
+does not describe in details of how to install it.  The @file{README}
+file and @file{INSTALL} distributed with the binary distribution gives 
+you complete and the most recent instructions.
+
+After you follow all the appropriate instructions, you will have a 
+working gPhoto program.  If you have used other camera utility before,
+gPhoto should look quite familiar.
+
+Have fun!
+
+If gPhoto is your first introduction to GNOME and GNU/Linux systems,
+perhaps you want to learn more in order to be able to use the environment.
+
+If you have no friends who are already running GNU and Linux, you can find
+some useful starting points at the Linux kernel, and GNU project web
+sites @uref{http://www.kernel.org} and @uref{http://www.gnu.org/}.
+
+You can also send email to @email{gphoto@@gphoto.org}, to contact
+fellow gPhoto users and developers @email{gphoto-devel@@gphoto.org}.  
+You can join both these mailing lists by sending a request to 
+@email{gphoto-devel-request@@gphoto.org}.
+
+@node Compiling
+@section Compiling
+
+You can go through and build and install gPhoto in its source directory:
+
+@file{./configure}
+
+@file{make}
+
+@file{make install}
+
+@node Configuring, Using the Camera, Compiling, Setting up gPhoto
+@section Configuring
+When you run @file{gphoto} the first time, you will be given a dialog to
+select a serial port, and a camera model. Choose a camera, and the correct
+serial port, and then click "save" to then save the information. If you
+need to change the settings later, go to the "Configure" menu, and choose
+"Select Port-Camera Model".
+
+@node Using the Camera, Getting a Thumbnail Index, Configuring, Top
+@chapter Using the Camera
+
+@menu
+* Getting a Thumbnail Index::   Reviewing images in the camera memory
+* Downloading Pictures::  Transferring images to the computer
+* Deleting Pictures from the Camera::  Erasing from the camera memory
+* Taking a Picture through gPhoto:: Shooting and downloading a snapshot
+* Configuring your Camera::     Setting camera preferences
+* Getting a Summary of your Camera:: Describing details and camera status
+@end menu
+
+@node Getting a Thumbnail Index, Downloading Pictures, Using the Camera, Top
+@section Getting a Thumbnail Index
+
+The thumbnail index is a "preview" of what is on the camera.
+It lets you select which images to download. In gPhoto, it
+is possible to get two different types of an index:
+
+@subsection Thumbnails
+Picture previews show up in the index.
+This lets you see the available pictures right
+away, and select which images to download by
+clicking on the thumbnail.
+
+@subsection No Thumbnails
+This is a LOT faster than getting an index with
+thumbnails, and especially handy if you want
+to get a few pictures. A button is provided in the
+index for each picture on the camera, but there is
+no thumbnail shown. To view the thumbnail, 
+double-click on the empty button. You can choose
+images to download even if there is no thumbnail
+by just clicking on the button to select it.
+
+These options are available in the Camera menu, under "Download Index"
+and also as buttons in the toolbar.
+
+@node Downloading Pictures, Deleting Pictures from the Camera, Getting a Thumbnail Index, Using the Camera
+@section Downloading Pictures
+
+Once you have selected which pictures to download in the index,
+you can then actually download the images and/or thumbnails
+two different ways.
+
+@subsection Open in Window
+This will load the selected pictures in the gPhoto
+window. You can then alter them, or save them as
+a different format. A note to the professional
+photographers: this will not preserve the EXIF
+tags in the image file.
+
+@subsection Save to disk
+This takes the pictures you have selected and
+saves them directly to disk. You will be prompted
+for a directory to save the images to, as well
+as a "filename prefix". The prefix is a word or
+two that might describe the images, which is 
+then appended with the number of the picture.
+
+For exampel: if you selected pictures 1 and 2 to
+be saved to disk, and you entered a prefix of
+@file{MyCat}, then the images would be saved as
+@file{MyCat-001.jpg} and @file{MyCat-002.jpg}.
+(the extension depends on the camera library)
+	
+It is possible to save the pictures, and/or the thumbnails as
+well, in case you want to create an index of your images using
+the thumbnails. These options are available in the "Camera"
+menu, under "Download Selected". The "Images" menu from there only
+saves the images; the "thumbnails" menu only saves the thumbnails,
+and the "Both" menu saves both the thumbnails AND the images.
+
+@node Deleting Pictures from the Camera, Taking a Picture through gPhoto, Downloading Pictures, Using the Camera
+@section Deleting Pictures from the Camera
+
+To delete pictures from the camera, you will need to get
+an index, and then select the pictures you want to delete.
+In the "Camera" menu, select "Delete Selected Images". You
+will then be prompted to confirm whether you want to delete
+the pictures. There is also a toolbar button to delete the
+selected images.
+
+Please note: some cameras do not allow pictures to be deleted
+by a remote program. You will be given an error window if 
+deleting images is not supported.
+
+@node Taking a Picture through gPhoto, Configuring your Camera, Deleting Pictures from the Camera, Using the Camera
+@section Taking a Picture through gPhoto
+
+In the "Camera" menu, you can select "Take Picture" to have
+gPhoto tell your camera to take a picture. 
+
+Please note: some cameras do not allow pictures to be taken
+by a remote program. You will be given an error window if 
+taking a picture is not supported.
+
+@node Configuring your Camera, Getting a Summary of your Camera, Taking a Picture through gPhoto, Using the Camera
+@section Configuring your Camera
+
+From the "Configure" menu, you can select "Configure Camera"
+to set various values and options on your camera. This
+is very dependent on the camera library, and will result
+in different options for different cameras.
+
+@node Getting a Summary of your Camera, Directory Browsing, Configuring your Camera, Using the Camera
+@section Getting a Summary of your Camera
+
+A summary of your camera will give you a brief description
+of the state of your camera. 
+
+For example, it might display
+the number of pictures taken, the number of pictures remaining,
+the battery status, or any other information that could be
+obtained. This function is very dependent on the camera library
+and therefore different cameras will return different
+pieces of information.
+
+@node Directory Browsing, Editing Images, Getting a Summary of your Camera, Top
+@chapter Directory Browsing
+
+It is now possible in gPhoto to browse entire directories of images. In
+the "File" menu, select "Open Directory...". You can then select the
+directory to open within gPhoto. You will then see an index of the images
+in that directory.
+
+The important thing to note is that the directory browsing mode works the
+same as getting pictures from the camera. You select the images you want
+to open in the index, then select an option from "Download Selected" under the
+camera menu, or from the toolbar, to open the selected images in the
+directory. You can open a different directory by selecting "Download Index"
+from the "Camera" menu or toolbar as well.
+
+All of the same functionality that you have with the camera options are
+present in the directory browse mode, with the exception of 
+"Take Picture", "Delete -> Selected Images", and "Camera - Live Preview!" 
+(Note that the HTML Gallery Export generator will work!).
+
+@node Editing Images, Image Orientation, Directory Browsing, Top
+@chapter Editing Images
+
+To edit an image, you need to first have the image opened in gPhoto.
+This can be done either by getting pictures from the camera and
+selecting "Open in window", or by opening images from the "Open" option in 
+the "File" menu 
+
+Under the "Edit" menu, you will see two different options to edit opened
+images.
+
+@menu
+* Image Orientation::           Rotating images.
+* Image Dimension::             Scaling images.
+@end menu
+
+@node Image Orientation, Image Dimension, Editing Images, Top
+@section Image Orientation
+
+Options for rotating (clockwise, counter-clockwise),
+and flipping (horizontal, vertical).
+
+@node Image Dimension, Post-Processing, Image Orientation, Editing Images
+@section Image Dimension
+
+Options for scaling. You can either use the quick
+scaling to half or double size, or just click on
+"Scale" to specify your own size. In the scaling
+dialog, you can enter the desired width and height,
+and choose to maintain the aspect ratio (length and
+width proportions) by selecting "Constrain Proportions".
+
+Toolbar buttons exist for all but two (double/half scaling) of the above
+editing options.
+
+@node Post-Processing, Saving Opened Images, Image Dimension, Top
+@chapter Post-Processing
+
+Post-processing lets you extend gPhoto's manipulation and processing
+abilities. If post-processing is enabled, then after each image is
+downloaded, a specified script is run to work on the image. Rotation,
+resizing, gamma correction, and anything else you imagine can be
+automatically performed on each image after it is retrieved from the
+camera, but before it is opened in gPhoto or saved to disk.
+
+Click on "Post-Process" at the bottom of the main gPhoto window to bring
+up the post-processing dialog. You can turn on or off post-processing by
+clicking the "Enable Post-Processing". In the text box, you can type in
+the command-line to run for each downloaded image with "%s" representing
+the name of the image.
+
+Example: If you have a pre-written script in @file{/usr/local/bin} that takes
+the degrees to rotate and the image path/name as arguments, you
+could use this as a post-process command line to rotate all
+downloaded images by 90 degrees:
+
+@file{/usr/local/bin/rotate 90 %s}
+
+(when executed, the %s will be replaced by the full path and name
+of the image).
+
+Tip: ImageMagick is already installed on your system if you have gPhoto
+running. It contains a host of useful tools for image manipulation, and
+most notably @file{mogrify}. Type @file{man mogrify} at the 
+prompt for more information. You can do pretty much anything with this 
+tool, including time/date stamp, resizing, cropping, etc.
+
+Note to post-processing script authors: the script will need to work on
+the image IN PLACE because gPhoto will open the same image after the
+post-processing script has exited if "Open in window" is selected.
+
+@menu
+@end menu
+
+@node Saving Opened Images, Printing Pictures, Post-Processing, Top
+@chapter Saving Opened Images
+
+You can choose to save one or all of the opened images. Under the "File"
+menu, select "Save Opened Image(s)". There is also a toolbar icon.
+
+In the dialog, choose a directory to save the image(s) in.
+
+If you only want to save the image you are currently viewing, 
+choose "Save all opened images", and type in the full filename to save
+the current image as. You can use different file extensions to specify
+different file formats, meaning if you want to save the image as a GIF,
+give it the ".gif" extension; for JPEG, use the ".jpg" extension; and so
+on.
+
+If you want to save ALL the opened images, select "Save all
+opened images", and type in a filename prefix to give all the opened
+images. Again, when the images are saved, the prefix is appended with an
+image number, and a ".jpg" extension. 
+
+For example: a filename prefix of
+@file{MyCat} for 2 opened images would save the pictures as 
+@file{MyCat-001.jpg} and @file{MyCat-002.jpg}.
+
+@node Printing Pictures, Plug-Ins, Saving Opened Images, Top
+@chapter Printing Pictures
+
+Printing pictures is rather straight-forward. Have the image you want to
+print opened in gPhoto, and select "Print" from the "File" menu. There is
+also a toolbar icon for this.
+
+In the "Print Image" dialog, you can specify the command to give 
+@file{lpr} to print the image. The name of a temporary file will 
+be appended to the end
+of the command, so use of the @file{-r} flag to remove the file 
+after printing
+is probably desired. If that flag is not present, you will have a spare
+picture in your @file{$HOME/.gphoto} directory. Options to give 
+@file{lpr} could include specifying which spool to print to, as 
+well as any other @file{lpr} flags you could need.
+
+The workings of @file{lpr} are outside the scope of this document. The default
+print command that you are given should work fine on most systems given
+that @file{lpr} is working properly. For more information on @file{lpr}, 
+and other linux-related printing questions, please read the @file{PRINTING-HOWTO}.
+
+@node Plug-Ins, Live Camera!, Printing Pictures, Top
+@chapter Plug-Ins
+
+Currently, there are 2 plug-ins included in gPhoto:
+
+@menu
+* Live Camera!::                Previewing live and shooting images.
+* HTML Gallery::                Generating photo galleries for Web.
+@end menu
+
+@node Live Camera!, HTML Gallery, Plug-Ins, Top
+@section Live Camera!
+
+This allows you to see what your camera currently
+sees. It also provides a button to take a picture
+in case you like what you see.
+
+@node HTML Gallery, Command-line Mode, Live Camera!, Plug-Ins
+@section HTML Gallery
+
+You can export Web galleries from the selected images
+in the index. In the HTML gallery dialog, you can enter
+a 'Gallery Name' is a title for the gallery. You will then
+need to select a theme. The current gPhoto distribution
+contains three gallery 'themes' which are used as
+templates when creating your gallery. Finally, you just
+need to select a directory to save all the images and
+pages in. For an example gallery, head to
+@uref{http://www.gphoto.org/webserver}
+(which shows an example of the very nice CSSTheme theme)
+
+For more information on creating your OWN gallery themes,
+please visit @uref{http://www.gphoto.org/docs.php3} and
+view the "HTML Gallery engine specs".
+
+@node Command-line Mode, More Information, HTML Gallery, Top
+@chapter Command-line Mode
+
+The command-line mode allows you to script gPhoto to perform common
+functions from a shell script. Once thing to note though is that
+gPhoto will still need X running in order to retrieve the images.
+Also, the directory browse mode and camera configuration will not
+work due to the high amount of input needed to do either of those
+tasks.
+
+Below is a list of the available options, as well as some examples.
+
+@example
+Usage: gphoto [-@var{h}] [-@var{n}] [-@var{s} # @file{filename}] [-@var{t} # @file{filename}]
+              [-@var{d} #] [-@var{l} @file{filename}]
+     -@var{n}                      display the # of pictures
+     -@var{s} # @file{filename}         save image # as @file{filename}
+     -@var{t} # @file{filename}         save thumbnail # as @file{filename}
+     -@var{d} #                    delete image # from camera
+     -@var{l} @file{filename}           save live preview as @file{filename}
+     -@var{h}                      display this help screen
+
+- Save image number 2 as @file{/www/images/tree.jpg}
+
+@file{gphoto -s 2 /www/images/tree.jpg}
+ 
+- Save image and thumbnail number 5 as @file{car.jpg} and @file{car-thumb.jpg}
+
+@file{gphoto -s 5 car.jpg -t 5 car-thumb.jpg}
+ 
+- Save image 10 as @file{guinea-pig.jpg} and then delete it
+          
+@file{gphoto -s 10 guinea-pig.jpg -d 10}
+
+- Save a live preview as @file{pretty-boy.jpg}
+          
+@file{gphoto -l pretty-boy.jpg}
+@end example
+ 
+It would be quite easy to write shell scripts to perform all of the
+functions you would need from a digital camera application. If you write
+any scripts that you find useful, consider sending them to
+@email{gphoto@@gphoto.org}  for others to use.
+
+@node More Information, Copying, Command-line Mode, Top
+@chapter More Information
+
+The first place you look for any information regarding gPhoto should be
+the gPhoto web site at @uref{http://www.gphoto.org}
+
+E-mail support can be obtained by mailing @email{gphoto@@gphoto.org}
+This is a mailing list which you can subscribe to. Head to
+@uref{http://www.gphoto.org/lists.php3} and subscribe to the gphoto list.
+
+Send Changes and Corrections to Scott Fritzinger (@email{scottf@@unr.edu}).
+
+@node Copying, Index, More Information, Top
+@unnumbered Index
+@include gpl.texi
+
+@node Index, Top, Copying, Top
+
+@c @printindex cp
+
+@summarycontents
+@contents
+
+@bye

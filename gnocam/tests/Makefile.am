@@ -4,7 +4,12 @@ INCLUDES =\
 
 noinst_PROGRAMS =\
  test-vfs-module\
- test-gnocam
+ test-gnocam\
+ test-moniker
+
+test_moniker_SOURCE = test-moniker.c
+test_moniker_LDADD =\
+ $(EXTRA_GNOME_LIBS)
 
 test_vfs_module_SOURCE = test-vfs-module.c
 test_vfs_module_LDADD =\

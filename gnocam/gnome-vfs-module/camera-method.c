@@ -25,7 +25,7 @@
 }G_STMT_END
 
 //Ok, we need to
-#define USE_LOCK
+//#define USE_LOCK
 //because ORBit is not thread safe. Michael Meeks answered:
 //
 //> I thought redirecting all request to a moniker could be the solution.

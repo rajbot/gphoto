@@ -2,7 +2,8 @@ GnoCam*
 Makefile
 Makefile.in
 *.o
-bonobo-moniker-camera
 Bonobo_Moniker_camera.oaf
+Bonobo_Moniker_camera.oaf.in
+libmoniker_camera.la
 .libs
 .deps

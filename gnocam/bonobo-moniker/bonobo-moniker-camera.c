@@ -1,14 +1,12 @@
-#include <config.h>
 #include <bonobo/bonobo-moniker-extender.h>
+#include <bonobo/bonobo-shlib-factory.h>
 #include <bonobo/bonobo-generic-factory.h>
 #include <bonobo/bonobo-moniker-simple.h>
 #include <bonobo/bonobo-exception.h>
 #include <bonobo/bonobo-main.h>
 #include <bonobo/bonobo-context.h>
-#include <stdlib.h>
 
 #include "GnoCam.h"
-#include "bonobo-moniker-camera.h"
 
 static Bonobo_Unknown
 camera_resolve (BonoboMoniker 		    *moniker, 
@@ -127,8 +125,10 @@ camera_resolve (BonoboMoniker 		    *moniker,
 static BonoboObject *
 bonobo_moniker_camera_factory (BonoboGenericFactory *this, gpointer data)
 {
+	g_message ("Hello!");
+	g_message ("This is the bonobo_moniker_camera_factory!");
 	return BONOBO_OBJECT (bonobo_moniker_simple_new ("camera:", 
 		    					 camera_resolve));
 }
 
-BONOBO_OAF_FACTORY ("OAFIID:Bonobo_Moniker_camera_Factory", "camera-moniker", VERSION, bonobo_moniker_camera_factory, NULL)
+BONOBO_OAF_SHLIB_FACTORY ("OAFIID:Bonobo_Moniker_camera_Factory", "camera-moniker", bonobo_moniker_camera_factory, NULL)

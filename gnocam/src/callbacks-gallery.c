@@ -50,12 +50,6 @@ void on_editor_drag_data_received (GtkWidget* widget, GdkDragContext* context, g
 	gchar*			buffer;
 	gint			buffer_size;
 
-	/***********************************************************************/
-	/* This is an ugly hack. I have _no_ idea how to edit a bonobo_stream. */
-	/* And, it's ugly code. I wrote it only to show you that it works.     */
-	/* Rewrite it. Do it. Now!                                             */
-	/***********************************************************************/
-
 	/* Preliminary stuff. */
 	CORBA_exception_init (&ev);
 	g_assert ((client = bonobo_widget_get_server (BONOBO_WIDGET (widget))));

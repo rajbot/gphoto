@@ -5,7 +5,6 @@
 #include <gconf/gconf-client.h>
 #include <parser.h>
 #include "preferences.h"
-#include "callbacks.h"
 #include "gnocam.h"
 
 /********************/

@@ -13,11 +13,11 @@
 #include <gdk-pixbuf/gdk-pixbuf-loader.h>
 #include <parser.h>
 #include "gphoto-extensions.h"
-#include "callbacks.h"
 #include "gnocam.h"
 #include "cameras.h"
 #include "information.h"
 #include "file-operations.h"
+#include "frontend.h"
 
 /**********************/
 /* External Variables */
@@ -30,6 +30,16 @@ extern GConfClient*	client;
 /* Prototypes */
 /**************/
 
+gboolean on_tree_item_camera_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data);
+gboolean on_tree_item_file_button_press_event   (GtkWidget *widget, GdkEventButton *event, gpointer user_data);
+gboolean on_tree_item_folder_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data);
+
+void on_tree_item_expand        (GtkTreeItem* tree_item, gpointer user_data);
+void on_tree_item_collapse      (GtkTreeItem* tree_item, gpointer user_data);
+
+void on_tree_item_deselect      (GtkTreeItem* item, gpointer user_data);
+void on_tree_item_select        (GtkTreeItem* item, gpointer user_data);
+
 void on_drag_data_received                      (GtkWidget* widget, GdkDragContext* context, gint x, gint y, GtkSelectionData* selection_data, guint info, guint time);
 void on_camera_tree_file_drag_data_get          (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data);
 void on_camera_tree_folder_drag_data_get        (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data);
@@ -37,6 +47,233 @@ void on_camera_tree_folder_drag_data_get        (GtkWidget* widget, GdkDragConte
 /*************/
 /* Callbacks */
 /*************/
+
+gboolean
+on_tree_item_file_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+{
+        GladeXML*       xml_popup;
+        Camera*         camera;
+        gchar*          path;
+        gchar*          filename;
+
+        g_assert (event != NULL);
+        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (widget), "camera")) != NULL);
+        g_assert ((filename = gtk_object_get_data (GTK_OBJECT (widget), "filename")) != NULL);
+        g_assert ((path = gtk_object_get_data (GTK_OBJECT (widget), "path")) != NULL);
+
+        /* Did the user right-click? */
+        if (event->button == 3) {
+
+                /* Create the dialog. */
+                g_assert ((xml_popup = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "camera_tree_popup_file")) != NULL);
+
+                /* Store some data. */
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_preview")), "item", widget);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_preview_as")), "item", widget);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_file")), "item", widget);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_file_as")), "item", widget);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_delete")), "item", widget);
+
+                /* Connect the signals. */
+                glade_xml_signal_autoconnect (xml_popup);
+
+                /* Pop up the dialog. */
+                gtk_menu_popup (GTK_MENU (glade_xml_get_widget (xml_popup, "camera_tree_popup_file")), NULL, NULL, NULL, NULL, event->button, event->time);
+
+                return (TRUE);
+
+        } else return (FALSE);
+}
+
+gboolean
+on_tree_item_folder_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+{
+        GladeXML*       xml_popup;
+        Camera*         camera;
+        gchar*          path;
+
+        g_assert (event != NULL);
+        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (widget), "camera")) != NULL);
+        g_assert ((path = gtk_object_get_data (GTK_OBJECT (widget), "path")) != NULL);
+
+        /* Did the user right-click? */
+        if (event->button == 3) {
+
+                /* Create the dialog. */
+                g_assert ((xml_popup = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "camera_tree_popup_folder")) != NULL);
+
+                /* Store some data. */
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_folder_upload_file")), "item", widget);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_folder_refresh")), "item", widget);
+
+                /* Connect the signals. */
+                glade_xml_signal_autoconnect (xml_popup);
+
+                /* Pop up the dialog. */
+                gtk_menu_popup (GTK_MENU (glade_xml_get_widget (xml_popup, "camera_tree_popup_folder")), NULL, NULL, NULL, NULL, event->button, event->time);
+
+                return (TRUE);
+
+        } else return (FALSE);
+}
+
+gboolean
+on_tree_item_camera_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+{
+        GladeXML*       xml_popup;
+        Camera*         camera;
+        gchar*          path;
+
+        g_assert (event != NULL);
+        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (widget), "camera")) != NULL);
+        g_assert ((path = gtk_object_get_data (GTK_OBJECT (widget), "path")) != NULL);
+
+        /* Did the user right-click? */
+        if (event->button == 3) {
+
+                /* Create the dialog. */
+                g_assert ((xml_popup = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "camera_tree_popup_camera")) != NULL);
+
+                /* Store some data. */
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_video")), "item", widget);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_image")), "item", widget);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_preview")), "item", widget);
+                gtk_object_set_data  (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_manual")), "camera", camera);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_properties")), "camera", camera);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_upload_file")), "item", widget);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_refresh")), "item", widget);
+
+                /* Connect the signals. */
+                glade_xml_signal_autoconnect (xml_popup);
+
+                /* Pop up the dialog. */
+                gtk_menu_popup (GTK_MENU (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera")), NULL, NULL, NULL, NULL, event->button, event->time);
+
+                return (TRUE);
+
+        } else return (FALSE);
+}
+
+void
+on_tree_item_expand (GtkTreeItem* tree_item, gpointer user_data)
+{
+        if (!gtk_object_get_data (GTK_OBJECT (tree_item), "populated")) camera_tree_folder_populate (tree_item);
+}
+
+void
+on_tree_item_collapse (GtkTreeItem* tree_item, gpointer user_data)
+{
+        /* We currently don't do anything here. */
+}
+
+void
+on_tree_item_select (GtkTreeItem* item, gpointer user_data)
+{
+        GladeXML*               xml_page = NULL;
+        GtkNotebook*            notebook;
+        gchar*                  filename;
+        gchar*                  path;
+        gchar*                  count;
+        GtkWidget*              page;
+        GtkWidget*              label;
+        CameraFile*             file;
+        Camera*                 camera;
+        CameraText              cameratext;
+        GtkPixmap*              pixmap;
+
+        g_assert ((notebook = GTK_NOTEBOOK (glade_xml_get_widget (xml, "notebook_files"))) != NULL);
+        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
+        g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
+        g_assert (gtk_object_get_data (GTK_OBJECT (item), "page") == NULL);
+
+        /* Folder or file? */
+        if ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) {
+
+                /* We've got a file. */
+                g_assert ((xml_page = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "table_file")) != NULL);
+                g_assert ((page = glade_xml_get_widget (xml_page, "table_file")) != NULL);
+                g_assert ((pixmap = GTK_PIXMAP (glade_xml_get_widget (xml_page, "pixmap_preview"))) != NULL);
+                gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_page, "entry_filename")), filename);
+
+                /* Store some data. */
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_zoom_in")), "pixmap", pixmap);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_zoom_out")), "pixmap", pixmap);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_zoom_1")), "pixmap", pixmap);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_zoom_fit")), "pixmap", pixmap);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_close_page")), "item", item);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_save_file")), "item", item);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_save_file_as")), "item", item);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_save_preview")), "item", item);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_save_preview_as")), "item", item);
+
+                /* Connect the signals. */
+                glade_xml_signal_autoconnect (xml_page);
+
+                /* This is because libglade takes the GNOME default for the toolbar style. We don't want that. */
+                gtk_toolbar_set_style (GTK_TOOLBAR (glade_xml_get_widget (xml_page, "toolbar_close")), GTK_TOOLBAR_ICONS);
+                gtk_toolbar_set_style (GTK_TOOLBAR (glade_xml_get_widget (xml_page, "toolbar_save")), GTK_TOOLBAR_ICONS);
+                gtk_toolbar_set_style (GTK_TOOLBAR (glade_xml_get_widget (xml_page, "toolbar_zoom")), GTK_TOOLBAR_ICONS);
+
+                /* Do we already have the preview? */
+                if (!(file = gtk_object_get_data (GTK_OBJECT (item), "preview"))) {
+                        file = gp_file_new ();
+                        if (gp_camera_file_get_preview (camera, file, path, filename) != GP_OK) {
+                                if (strcmp ("/", path) == 0) dialog_information (_("Could not get preview of file '/%s' from the camera!"), filename);
+                                else dialog_information (_("Could not get preview of file '%s/%s' from the camera!"), path, filename);
+                                gp_file_free (file);
+                                file = NULL;
+                        } else {
+                                gtk_object_set_data (GTK_OBJECT (item), "preview", file);
+                        }
+                        gp_frontend_progress (camera, NULL, 0.0);
+                }
+
+                pixmap_set (GTK_PIXMAP (glade_xml_get_widget (xml_page, "pixmap_preview")), file);
+                label = gtk_label_new (filename);
+
+        } else {
+
+                /* We've got a folder. */
+                if (strcmp ("/", path) == 0) {
+
+                        /* This is the root folder. */
+                        g_assert ((xml_page = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "table_camera")) != NULL);
+                        g_assert ((page = glade_xml_get_widget (xml_page, "table_camera")) != NULL);
+                        if (gp_camera_summary (camera, &cameratext) != GP_OK) strcpy ("?", (gchar*) &cameratext);
+                        gnome_less_show_string (GNOME_LESS (glade_xml_get_widget (xml_page, "less")), (gchar*) &cameratext);
+                } else {
+
+                        /* This is a non-root folder. */
+                        g_assert ((xml_page = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "table_folder")) != NULL);
+                        g_assert ((page = glade_xml_get_widget (xml_page, "table_folder")) != NULL);
+                }
+                count = g_strdup_printf ("%i", GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (item), "folder_list_count")));
+                gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_page, "entry_folders")), count);
+                g_free (count);
+                count = g_strdup_printf ("%i", GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (item), "file_list_count")));
+                gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_page, "entry_files")), count);
+                g_free (count);
+                label = gtk_label_new (path);
+        }
+
+        /* Common for all pages. */
+        gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_page, "entry_camera")), ((frontend_data_t*) camera->frontend_data)->name);
+        gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_page, "entry_path")), "/");
+        gtk_notebook_append_page (notebook, page, label);
+        gtk_notebook_set_page (notebook, gtk_notebook_page_num (notebook, page));
+        gtk_object_set_data (GTK_OBJECT (item), "xml_page", xml_page);
+}
+
+void
+on_tree_item_deselect (GtkTreeItem* item, gpointer user_data)
+{
+        GladeXML*       xml_page;
+
+        if ((xml_page = gtk_object_get_data (GTK_OBJECT (item), "xml_page"))) {
+                gtk_object_set_data (GTK_OBJECT (item), "xml_page", NULL);
+                page_remove (xml_page);
+        }
+}
 
 void
 on_camera_tree_file_drag_data_get (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data)

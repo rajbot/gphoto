@@ -145,14 +145,21 @@ struct Image *philips_get_picture (int picNum, int thumbnail) {
 			return ( NULL );
 			}
 		
-		thumbData = philips_processThumb ( picData, &Size );
-		free ( picData );
-
-		image->image = thumbData;
 		image->image_size = Size;
 		image->image_info = NULL;
 		image->image_info_size = 0;
-		strcpy ( image->image_type, "pgm" );
+
+		if ( cameraid != 5000 ) { /* thumbnail format unknown, guess */
+			thumbData = philips_processThumb ( picData, &Size );
+			free ( picData );
+
+			image->image = thumbData;
+			strcpy ( image->image_type, "pgm" );
+			}
+		else {   /* RCD-5000 uses JPEG thumbnails */
+			image->image = picData;
+			strcpy ( image->image_type, "jpg" );
+			}
 		}
 	
 	else { /* Not a thumbnail */

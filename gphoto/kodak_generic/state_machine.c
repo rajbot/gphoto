@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <sys/time.h>
 #include <errno.h>
+#include <string.h>
 
 #include "kodak_generic.h"
 #include "state_machine.h"
@@ -52,12 +53,39 @@ state_machine_construct
       return NULL;
    }
 
+   self->initial_baud = template->baud_rate;
+   self->device = strdup(template->device);
+
    self->is_usb = FALSE;
    state_machine_set_baud(self, template->baud_rate);
 
+   self->driver_init = template->driver_init;
    template->driver_init(self);
 
    return self;
+}
+
+void
+state_machine_reinitialize
+(
+   STATE_MACHINE_INSTANCE *self
+)
+{
+   close(self->fd);
+
+   self->fd = open(self->device, O_RDWR|O_NDELAY);
+   if (self->fd == -1)
+   {
+      perror("state_machine_construct: open");
+      free(self);
+      return;
+   }
+
+   self->is_usb = FALSE;
+
+   state_machine_set_baud(self, self->initial_baud);
+
+   self->driver_init(self);
 }
 
 /******************************************************************************
@@ -424,6 +452,10 @@ state_machine_assert_break
    {
       return;
    }
+
+#ifdef SM_DEBUG
+   printf ("state_machine_assert_break\n");
+#endif
 
    /* Assert break for between 0.25 and 0.5 seconds */
    tcsendbreak(self->fd, 0);

@@ -43,6 +43,10 @@ typedef struct
 
 typedef struct
 {
+   unsigned char *device;
+   int initial_baud;
+   void (*driver_init)(void *);
+
    int fd;
    int baud;
    int is_usb;
@@ -75,5 +79,6 @@ void state_machine_set_baud (STATE_MACHINE_INSTANCE *, int);
 void state_machine_program (STATE_MACHINE_INSTANCE *, STATE_MACHINE_PROGRAM *);
 BOOLEAN state_machine_run (STATE_MACHINE_INSTANCE *);
 void state_machine_assert_break (STATE_MACHINE_INSTANCE *);
+void state_machine_reinitialize (STATE_MACHINE_INSTANCE *);
 
 #endif /* STATE_MACHINE_H */

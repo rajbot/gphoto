@@ -134,19 +134,21 @@ gf_conn_write (GFConn *conn, const char *buf, unsigned int len)
 	}
 
 	/* Write the buffer. */
-	if (conn->len) {
+	while (conn->len) {
 		w1 = gf_conn_write_now (conn, conn->buf, conn->len);
 		if (w1 < 0)
 			return (w1);
 		memmove (conn->buf, conn->buf + w1, conn->len - w1);
-		conn->len = w1;
+		conn->len -= w1;
 	}
 
 	/* Write the data. */
-	if (len) {
+	while (len) {
 		w2 = gf_conn_write_now (conn, buf, len);
 		if (w2 < 0)
 			return (w2);
+		buf += w2;
+		len -= w2;
 	}
 
 	syslog (LOG_INFO, "Wrote %i byte(s).", w1 + w2);

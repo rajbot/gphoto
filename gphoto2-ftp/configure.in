@@ -1,5 +1,6 @@
-AC_PREREQ(2.50)
-AC_INIT(gphoto2-ftp/gphoto2-ftp.c)
+AC_PREREQ(2.54)
+AC_INIT
+AC_CONFIG_SRCDIR([gphoto2-ftp/gphoto2-ftp.c])
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(gphoto2-ftp,1.0)
 AM_MAINTAINER_MODE
@@ -52,7 +53,8 @@ LDFLAGS="$LDFLAGS -g -Wall"
 AC_SUBST(CFLAGS)
 AC_SUBST(LDFLAGS)
 
-AC_OUTPUT([
+AC_CONFIG_FILES([
 Makefile
 gphoto2-ftp/Makefile
 ])
+AC_OUTPUT

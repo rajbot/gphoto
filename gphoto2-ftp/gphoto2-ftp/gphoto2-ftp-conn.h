@@ -27,7 +27,7 @@ typedef struct _GFConn GFConn;
 struct _GFConn {
 	int idletime;
 	int fd;
-	char buf[1024];
+	char buf[262144];
 	unsigned int len;
 };
 

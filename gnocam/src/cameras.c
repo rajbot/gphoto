@@ -155,16 +155,22 @@ void
 on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 {
 	GtkWidget*		widget;
+	gchar*			url;
 
 	g_return_if_fail (item);
 	g_return_if_fail (main_paned);
+	g_return_if_fail (url = gtk_object_get_data (GTK_OBJECT (item), "url"));
 
 	/* If there is an old viewer, destroy it. */
 	if (main_paned->child2) gtk_container_remove (GTK_CONTAINER (main_paned), main_paned->child2);
 
 	/* Display! */
-	gtk_widget_show (widget = bonobo_widget_new_control (gtk_object_get_data (GTK_OBJECT (item), "url"), corba_container));
-	e_paned_pack2 (main_paned, widget, TRUE, TRUE);
+	if (!(widget = bonobo_widget_new_control (url, corba_container))) {
+		g_warning (_("Could not get widget to show the item '%s'!"), url);
+	} else {
+		gtk_widget_show (widget);
+		e_paned_pack2 (main_paned, widget, TRUE, TRUE);
+	}
 }
 
 void

@@ -147,7 +147,7 @@ gnocam_control_finalize (GtkObject *object)
 printf ("BEGIN: gnocam_control_finalize\n");
 
         if (control->priv) {
-		if (control->priv->vbox) gtk_widget_unref (control->priv->vbox);
+		if (control->priv->vbox) gtk_widget_destroy (control->priv->vbox);
 		control->priv->vbox = NULL;
 		g_free (control->priv);
 		control->priv = NULL;
@@ -162,14 +162,7 @@ printf ("END: gnocam_control_finalize\n");
 static void
 gnocam_control_destroy (GtkObject *object)
 {
-        GnoCamControl *control = GNOCAM_CONTROL (object);
-
-printf ("BEGIN: gnocam_control_destroy\n");
-
         GTK_OBJECT_CLASS (gnocam_control_parent_class)->destroy (object);
-	
-printf ("END: gnocam_control_destroy\n");
-
 }
 
 static void

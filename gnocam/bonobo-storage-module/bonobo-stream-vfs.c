@@ -95,7 +95,8 @@ vfs_set_info (BonoboStream                   *stream,
 	      CORBA_Environment              *ev)
 {
 	g_warning ("FIXME: set_info: a curious and not yet implemented API");
-	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
+	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, 
+			     ex_Bonobo_Stream_NotSupported, NULL);
 }
 
 static void
@@ -382,33 +383,38 @@ bonobo_stream_create (GnomeVFSHandle *handle)
  * @path.  
  */
 BonoboStream *
-bonobo_stream_vfs_open (const char* path, gint flags, gint mode, CORBA_Environment * ev)
+bonobo_stream_vfs_open (const char *path, gint flags, gint mode,
+			CORBA_Environment *ev)
 {
-	GnomeVFSResult		result;
-	GnomeVFSHandle*		handle;
-	GnomeVFSOpenMode 	vfs_mode = GNOME_VFS_OPEN_NONE;
+	GnomeVFSResult   result;
+	GnomeVFSHandle  *handle;
+	GnomeVFSOpenMode vfs_mode = GNOME_VFS_OPEN_NONE;
 
 	g_return_val_if_fail (path != NULL, NULL);
 
-	if (flags == Bonobo_Storage_READ)
+	if (mode == Bonobo_Storage_READ)
 		vfs_mode |= GNOME_VFS_OPEN_READ;
 
-	else if (flags == Bonobo_Storage_WRITE)
+	else if (mode == Bonobo_Storage_WRITE)
 		vfs_mode |= GNOME_VFS_OPEN_WRITE;
 	
 	else {
-		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, 
+				     ex_Bonobo_Stream_NotSupported, NULL);
 		return (NULL);
 	}
 	
 	result = gnome_vfs_open (&handle, path, vfs_mode);
-	if (vfs_mode & GNOME_VFS_OPEN_WRITE && result == GNOME_VFS_ERROR_NOT_FOUND)
-		result = gnome_vfs_create (&handle, path, vfs_mode, FALSE, S_IRUSR | S_IWUSR);
+	if (vfs_mode & GNOME_VFS_OPEN_WRITE &&
+	    result == GNOME_VFS_ERROR_NOT_FOUND)
+		result = gnome_vfs_create (&handle, path, vfs_mode,
+					   FALSE, S_IRUSR | S_IWUSR);
 	
 	if (result != GNOME_VFS_OK) {
-		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, 
+				     ex_Bonobo_Stream_NotSupported, NULL);
 		return NULL;
 	}
 
-	return (bonobo_stream_create (handle));
+	return bonobo_stream_create (handle);
 }

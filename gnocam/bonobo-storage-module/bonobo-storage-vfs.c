@@ -51,7 +51,7 @@ vfs_open_stream (BonoboStorage *storage, const CORBA_char *path,
 	char *full;
 
 	full = g_concat_dir_and_file (storage_vfs->path, path);
-	stream = bonobo_stream_vfs_open (full, mode, 0664, ev);
+	stream = bonobo_stream_vfs_open (full, 0664, mode, ev);
 	g_free (full);
 
 	return stream;

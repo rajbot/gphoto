@@ -1,3 +1,8 @@
+2003-01-27  Lutz Mller <lutz@users.sourceforge.net>
+
+	* capplet/*: Get it somewhat working. GConf is no pleasure to work
+	  with.
+
 2002-12-14  Lutz Müller <lutz@users.sourceforge.net>
 
 	* gnome-vfs-module: First pieces of code.

@@ -1,12 +1,13 @@
 INCLUDES = 					\
- -I$(top_srcdir)/gnocam				\
+ -I$(top_srcdir)				\
  -DIMAGEDIR=\"$(prefix)/share/pixmaps\"		\
  -DGNOME_LOCALEDIR=\""$(datadir)/locale"\"	\
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
  $(GNOCAM_CAPPLET_CFLAGS)
 
 bin_PROGRAMS=camera-capplet
-camera_capplet_LDADD = $(GNOCAM_CAPPLET_LIBS)
+camera_capplet_LDADD = $(top_builddir)/libgnocam/libgnocam.la	\
+	$(GNOCAM_CAPPLET_LIBS)
 camera_capplet_SOURCES = gnocam-capplet.c gnocam-capplet.h main.c
 
 @INTLTOOL_DESKTOP_RULE@

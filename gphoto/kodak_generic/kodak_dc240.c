@@ -19,6 +19,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <netinet/in.h>
 
 #include "kodak_generic.h"
 #include "state_machine.h"
@@ -29,8 +30,16 @@
 * Preprocessor Defines
 ==============================================================================*/
 
-#define HPBS_MIN     512
-#define HPBS_MAX     16384
+/* NOTE: These are really the data size, not the Host Packet Buffer Size
+ * (HPBS) used in the protocol -- packet framing bytes are omitted.
+ */
+#define HPBS_MIN     0x0200           /* minimum data size */
+#define HPBS_MAX     0x8000           /* maximum data size */
+
+/* Currently getting USB data overruns on larger packets; not yet clear why.
+ * Workaround: keep packet size under 8K.
+ */
+#define HPBS_USB_MAX 0x1FF0
 
 /*==============================================================================
 * Type definitions
@@ -65,6 +74,12 @@ typedef struct
    unsigned char strobe_status;
    unsigned char padding[256 - 11];
 } STATUS_PACKET_TYPE;
+
+typedef struct
+{
+   BOOLEAN valid;
+   unsigned char *filename;
+} PICTURE_FILENAME_PACKET_TYPE;
 
 typedef struct
 {
@@ -115,8 +130,14 @@ static CC_RESPONSE_TYPE kdc240_get_picture_info_read(
    PICTURE_INFO_PACKET_TYPE *, unsigned char *);
 
 static struct Image *kdc240_get_preview(void);
+
 static int kdc240_delete_picture(int);
+static unsigned char *kdc240_delete_picture_tx_filename (
+   DIRECTORY_PACKET_TYPE *);
+
 static int kdc240_take_picture(void);
+static CC_RESPONSE_TYPE kdc240_take_picture_read (
+   PICTURE_FILENAME_PACKET_TYPE *, unsigned char *);
 
 static int kdc240_number_of_pictures(void);
 static unsigned char *kdc240_number_of_pictures_tx_filename (
@@ -197,6 +218,12 @@ kdc240_post_initialize
 
    /* Fire up the camera */
    kdc240_restart();
+
+   /* maximize USB packet sizes */
+   if (mach->is_usb)
+   {
+      kdc240_set_hpbs(HPBS_USB_MAX);
+   }
 }
 
 /*******************************************************************************
@@ -298,9 +325,25 @@ kdc240_get_picture
 
    if (thumbnail)
    {
+      int saved_hpbs = hpbs;
+    
       buffer.size = picture_index[picture].thumbnail_size;
+
+      /* Optimize HPBS for thumbnail retrieval */
+      if (hpbs > buffer.size && buffer.size > HPBS_MIN)
+      {
+         kdc240_set_hpbs (buffer.size);
+         cc_struct.rx_packet_size = buffer.size;
+      }
+
+      /*
+       * NOTE: DC-{50,120} have a different thumbnail command.
+       * NOTE: DC-{200,210} don't support format 2 (JPG) here.
+       */
       kdc240_complex_command(&cc_struct, KODAK_CAMERA_DC240,
          CMD_READ_THUMBNAIL, 2);
+
+      kdc240_set_hpbs (saved_hpbs);
    }
    else
    {
@@ -385,7 +428,11 @@ kdc240_get_picture_read
    memcpy(buffer->rx_buffer + buffer->rx_bytes, packet, bytes_to_copy);
    buffer->rx_bytes += bytes_to_copy;
 
+#ifdef READ_DEBUG
    printf ("kdc240_get_picture_read: read %d bytes\n", buffer->rx_bytes);
+#endif
+
+   update_progress((float)buffer->rx_bytes / buffer->size);
 
    return retval;
 }
@@ -405,11 +452,14 @@ kdc240_get_picture_info
       256, (void *)kdc240_get_picture_info_read,
    };
 
+#ifdef PICTURE_INFO_DEBUG
    printf ("kdc240_get_picture_info: filename %s\n", picture->filename);
+#endif
 
    buffer.valid = FALSE;
    buffer.filename = kdc240_create_filename(picture->filename, 0, 0);
    
+   /* NOTE:  DC-{50,120} don't support this command. */
    kdc240_complex_command(&cc_struct, KODAK_CAMERA_DC240, CMD_READ_PIC_INFO);
 
    if (buffer.valid)
@@ -428,8 +478,10 @@ kdc240_get_picture_info
 
       picture->valid = TRUE;
 
+#ifdef PICTURE_INFO_DEBUG
       printf ("        thumbnail size: %ld\n", picture->thumbnail_size);
       printf ("        picture size:   %ld\n", picture->picture_size);
+#endif
    }
 }
 
@@ -469,6 +521,14 @@ kdc240_get_preview
    void
 )
 {
+   struct Image *image;
+   int picture;
+
+   picture = kdc240_take_picture();
+   image = kdc240_get_picture(picture, 0);
+   kdc240_delete_picture(picture);
+
+   return image;
 }
 
 /*******************************************************************************
@@ -482,6 +542,67 @@ kdc240_delete_picture
    int picture
 )
 {
+   DIRECTORY_PACKET_TYPE buffer;
+   CC_STRUCT_TYPE cc_struct = 
+   {
+      (int)&buffer,
+      58,  (void *)kdc240_delete_picture_tx_filename,
+      0,   NULL
+   };
+
+   /* If we haven't retrieved the index yet, do that first. */
+   if (picture_index == NULL)
+   {
+      kdc240_number_of_pictures();
+   }
+
+   /* Make sure that the picture number is present in the camera. */
+   if (picture > number_of_pictures)
+   {
+      return GPHOTO_FAIL;
+   }
+
+   /* gphoto uses a one-based index, turn it into a zero-based one. */
+   picture--;
+
+   kdc240_open_card();
+
+   /* Get picture information if we haven't already */
+   if (!picture_index[picture].valid)
+   {
+      kdc240_get_picture_info(&picture_index[picture]);
+      if (!picture_index[picture].valid)
+      {
+         kdc240_close_card();
+         return GPHOTO_FAIL;
+      }
+   }
+   
+   buffer.valid = FALSE;
+   buffer.rx_bytes = 0;
+   buffer.rx_buffer = NULL;
+   buffer.filename = kdc240_create_filename(picture_index[picture].filename,
+      0, 0);
+
+   kdc240_complex_command(&cc_struct, KODAK_CAMERA_DC240, CMD_DELETE_FILE);
+
+   free(buffer.filename);
+
+   kdc240_close_card();
+
+   /* Re-sync the picture number mappings */
+   kdc240_number_of_pictures();
+
+   return GPHOTO_SUCCESS;
+}
+
+static unsigned char *
+kdc240_delete_picture_tx_filename
+(
+   DIRECTORY_PACKET_TYPE *buffer
+)
+{
+   return buffer->filename;
 }
 
 /*******************************************************************************
@@ -495,6 +616,66 @@ kdc240_take_picture
    void
 )
 {
+   int i;
+
+   PICTURE_FILENAME_PACKET_TYPE buffer = { FALSE, NULL };
+   CC_STRUCT_TYPE cc_struct = 
+   {
+      (int)&buffer,
+      0, NULL,
+      256, (void *)kdc240_take_picture_read,
+   };
+
+   /* Take the picture */
+   kdc240_command(KODAK_CAMERA_DC240, CMD_TAKE_PICTURE);
+
+   /* Read the filename */
+   kdc240_complex_command(&cc_struct, KODAK_CAMERA_DC240, CMD_SEND_LAST_PIC);
+
+   if (buffer.valid == FALSE)
+   {
+      printf ("kdc240_take_picture: unable to determine filename of last picture!\n");
+      return 0;
+   }
+   
+   printf ("kdc240_take_picture: filename %s\n", buffer.filename);
+
+   /* Re-sync the picture number mappings */
+   kdc240_number_of_pictures();
+
+   for (i = 0; i < number_of_pictures; i++)
+   {
+      printf ("kdc240_take_picture: directory entry %d = %s\n", i, picture_index[i].filename);
+      if (strcmp(picture_index[i].filename, buffer.filename) == 0)
+      {
+         free(buffer.filename);
+         return i + 1;
+      }
+   }
+
+   free(buffer.filename);
+   return 0;
+}
+
+static CC_RESPONSE_TYPE
+kdc240_take_picture_read
+(
+   PICTURE_FILENAME_PACKET_TYPE *buffer,
+   unsigned char *packet
+)
+{
+   if (packet != NULL)
+   {
+      buffer->filename = (unsigned char *)malloc(256);
+
+      if (buffer->filename != NULL)
+      {
+         buffer->valid = TRUE;
+         memcpy(buffer->filename, packet, 256);
+      }
+   }
+
+   return CC_RESPONSE_LAST_PACKET;
 }
 
 /*******************************************************************************
@@ -564,7 +745,9 @@ kdc240_number_of_pictures
              memcpy (t->filename + strlen(t->filename),
                 buffer.rx_buffer->entries[i].filename + 8, 3);
 
+#ifdef DIRECTORY_DEBUG
              printf ("    Entry %d: %s\n", i, t->filename);
+#endif
          }
       }
    }
@@ -688,21 +871,33 @@ kdc240_summary
       strcat (summary_buf, "Camera is a Kodak Digital Science ");
       switch (buffer.camera_type)
       {
+         case 1:
+            strcat (summary_buf, "DC50\n");
+            break;
+
+         case 2:
+            strcat (summary_buf, "DC120\n");
+            break;
+
          case 3:
-             strcat (summary_buf, "DC200\n");
-             break;
+            strcat (summary_buf, "DC200\n");
+            break;
 
          case 4:
-             strcat (summary_buf, "DC210\n");
-             break;
+            strcat (summary_buf, "DC210\n");
+            break;
 
          case 5:
-             strcat (summary_buf, "DC240\n");
-             break;
+            strcat (summary_buf, "DC240\n");
+            break;
+
+         case 6:
+            strcat (summary_buf, "DC280\n");
+            break;
 
          default:
-             strcat (summary_buf, "(unknown)\n");
-             break;
+            strcat (summary_buf, "(unknown)\n");
+            break;
       }
 
       strcat (summary_buf,"Firmware version: ");
@@ -712,37 +907,47 @@ kdc240_summary
       strcat (summary_buf,"Battery status: ");
       switch (buffer.battery_status)
       {
-          case 0:
-              strcat (summary_buf, "OK\n");
-              break;
+         case 0:
+            strcat (summary_buf, "OK\n");
+            break;
 
-          case 1:
-              strcat (summary_buf, "Weak\n");
-              break;
+         case 1:
+            strcat (summary_buf, "Weak\n");
+            break;
 
-          case 2:
-              strcat (summary_buf, "Empty\n");
-              break;
+         case 2:
+            strcat (summary_buf, "Empty\n");
+            break;
 
-          default:
-              strcat (summary_buf, "(error)\n");
-              break;
+         default:
+            strcat (summary_buf, "(error)\n");
+            break;
       }
 
       strcat (summary_buf,"AC Adapter status: ");
       switch (buffer.adapter_flag)
       {
-          case 0:
-              strcat (summary_buf, "not connected\n");
-              break;
+         case 0:
+            strcat (summary_buf, "not connected\n");
+            break;
 
-          case 1:
-              strcat (summary_buf, "connected\n");
-              break;
+         case 1:
+            strcat (summary_buf, "connected\n");
+            break;
 
-          default:
-              strcat (summary_buf, "(error)\n");
-              break;
+         default:
+            strcat (summary_buf, "(error)\n");
+            break;
+      }
+
+      strcat (summary_buf,"Connection: ");
+      if (machine->is_usb)
+      {
+         strcat (summary_buf,"USB\n");
+      }
+      else
+      {
+         strcat (summary_buf,"Serial\n");
       }
 
       return summary_buf;
@@ -807,32 +1012,44 @@ kdc240_get_reasonable_hpbs
    void
 )
 {
-   if (hpbs == HPBS_MIN && num_errors > 0)
+   int new_hpbs = hpbs;
+
+   /* HPBS for USB is fixed */
+   if (machine->is_usb)
    {
-      /* Do nothing, we can't lower HPBS any more */
+      new_hpbs = HPBS_USB_MAX;
    }
-   else if (num_errors > 0)
-   {
-      /* Lower HPBS */
-      hpbs = (HPBS_MIN + hpbs) >> 1;
-   }
+
+   /* For serial, we attempt to base the HPBS on the error rate */
    else
    {
-      /* Raise HPBS */
-      hpbs = (HPBS_MAX + hpbs) >> 1;
+      if (hpbs == HPBS_MIN && num_errors > 0)
+      {
+         /* Do nothing, we can't lower HPBS any more */
+      }
+      else if (num_errors > 0)
+      {
+         /* Lower HPBS */
+         new_hpbs = (HPBS_MIN + hpbs) >> 1;
+      }
+      else
+      {
+         /* Raise HPBS */
+         new_hpbs = (HPBS_MAX + hpbs) >> 1;
+      }
+
+      /* Error check the resulting HPBS before sending to camera */
+      if (new_hpbs > HPBS_MAX)
+      {
+         new_hpbs = HPBS_MAX;
+      }
+      else if (new_hpbs < HPBS_MIN)
+      {
+         new_hpbs = HPBS_MIN;
+      }
    }
 
-   /* Error check the resulting HPBS before sending to camera */
-   if (hpbs > HPBS_MAX)
-   {
-      hpbs = HPBS_MAX;
-   }
-   else if (hpbs < HPBS_MIN)
-   {
-      hpbs = HPBS_MIN;
-   }
-
-   return hpbs;
+   return new_hpbs;
 }
 
 static void
@@ -841,8 +1058,20 @@ kdc240_set_hpbs
    int new_hpbs
 )
 {
+   /* If the HPBS hasn't changed, don't bother writing to the camera. */
+   if (new_hpbs == hpbs)
+   {
+      return;
+   }
+
+   /* NOTE: DC-{50,120,200,210} have fixed HPBS */
    kdc240_command(KODAK_CAMERA_DC240, CMD_SET_HPBS, new_hpbs + 2);
-   printf ("kdc240_set_hpbs: hpbs set to %d\n", new_hpbs);
+
+#ifdef HPBS_DEBUG
+   printf ("kdc240_set_hpbs: hpbs set to %d\n", new_hpbs + 2);
+#endif
+
+   hpbs = new_hpbs;
 }
 
 static unsigned char *

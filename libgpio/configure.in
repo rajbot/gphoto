@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(gpio.c)
+AC_INIT(libgpio/gpio.c)
 AM_CONFIG_HEADER(config.h)
 
 LIBGPIO_MAJOR_VERSION=0
@@ -54,19 +54,18 @@ GPIO_LIBDIR='-L${libdir}'
 GPIO_INCLUDEDIR='-I${includedir}'
 GPIO_LIBS="-lgpio"
 
-dnl
-dnl Extra flags
-dnl
-GPIO_CFLAGS=""
+dnl Compile in serial support
+IOLIB_SUBDIRS="serial"
+IOLIB_LDFLAGS="-Lserial -lgpio_serial"
+IOLIB_CFLAGS="-DGPIO_SERIAL"
 
+dnl Compile in usb support
 AC_PATH_PROG(LIBUSB_CONFIG,libusb-config)
 if test -n "${LIBUSB_CONFIG}"; then
-  CFLAGS="$CFLAGS `$LIBUSB_CONFIG --cflags`"
-  GPIO_CFLAGS="$GPIO_CFLAGS `$LIBUSB_CONFIG --cflags`"
-  LIBS="$LIBS `$LIBUSB_CONFIG --libs`"
-  GPIO_USB=1
+  IOLIB_SUBDIRS="$IOLIB_SUBDIRS usb"
+  IOLIB_LDFLAGS="$IOLIB_LDFLAGS -Lusb -lgpio_usb"
+  IOLIB_CFLAGS="$IOLIB_CFLAGS -DGPIO_USB"
 else
-  GPIO_USB=0
   AC_MSG_WARN([
 
 *** You need Johannes Erdfelt's libusb library for USB support
@@ -74,23 +73,45 @@ else
 ])
 fi
 
-GPIO_NETWORK=1
-AM_CONDITIONAL(GPIO_NETWORK, test $GPIO_NETWORK = "1")
-AC_SUBST(GPIO_NETWORK)
+dnl Compile in parallel support 
+GPIO_PARALLEL=0
+if test "$GPIO_PARALLEL" = "1"; then
+	IOLIB_SUBDIRS="$IOLIB_SUBDIRS parallel"
+	IOLIB_CFLAGS="$IOLIB_CFLAGS -DGPIO_PARALLEL"
+	IOLIB_LDFLAGS="$IOLIB_LDFLAGS -Lparallel -lgpio_parallel"
+fi
 
-AM_CONDITIONAL(GPIO_USB, test $GPIO_USB = "1")
-AC_SUBST(GPIO_USB)
+dnl Compile in network support 
+GPIO_NETWORK=0
+if test "$GPIO_NETWORK" = "1"; then
+	IOLIB_SUBDIRS="$IOLIB_SUBDIRS network"
+	IOLIB_CFLAGS="$IOLIB_CFLAGS -DGPIO_NETWORK"
+	IOLIB_LDFLAGS="$IOLIB_LDFLAGS -Lnetwork -lgpio_network"
+fi
 
+dnl Compile in firewire (oops, i said the word) support 
 GPIO_IEEE1394=0
-AM_CONDITIONAL(GPIO_IEEE1394, test $GPIO_IEEE1394 = "1")
-AC_SUBST(GPIO_IEEE1394)
-
-
-AC_SUBST(CFLAGS)
-AC_SUBST(GPIO_CFLAGS)
+if test "$GPIO_IEEE1394" = "1"; then
+	IOLIB_SUBDIRS="$IOLIB_SUBDIRS ieee1394"
+	IOLIB_CFLAGS="$IOLIB_CFLAGS -DGPIO_IEEE1394"
+	IOLIB_LDFLAGS="$IOLIB_LDFLAGS -Lieee1394 -lgpio_ieee1394"
+fi
 
 AC_SUBST(GPIO_LIBDIR)
 AC_SUBST(GPIO_LIBS)
 AC_SUBST(GPIO_INCLUDEDIR)
+AC_SUBST(IOLIB_SUBDIRS)
+AC_SUBST(IOLIB_LDFLAGS)
+AC_SUBST(IOLIB_CFLAGS)
 
-AC_OUTPUT(libgpio.spec Makefile gpio-config gpio.h)
+AC_OUTPUT( \
+libgpio.spec \
+Makefile \
+libgpio/Makefile \
+serial/Makefile \
+parallel/Makefile \
+usb/Makefile \
+ieee1394/Makefile \
+network/Makefile \
+include/Makefile \
+gpio-config)

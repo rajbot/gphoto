@@ -42,24 +42,38 @@ int 		gpio_network_update (gpio_device *dev);
 
 int 		gpio_network_set_baudrate(gpio_device *dev);
 
-struct gpio_operations gpio_network_operations =
-{
-	gpio_network_list,
-        gpio_network_init,
-	gpio_network_exit,
-        gpio_network_open,
-        gpio_network_close,
-        gpio_network_read,
-        gpio_network_write,
-        gpio_network_get_pin,
-	gpio_network_set_pin,
-        gpio_network_update
-};
-
-
-/* Network API functions
+/* Dynamic library functions
    --------------------------------------------------------------------- */
-int gpio_network_list(gpio_device_info *list, int *count) {
+
+gpio_device_type gpio_library_type () {
+
+        return (GPIO_DEVICE_NETWORK);
+}
+
+gpio_operations *gpio_library_operations () {
+
+        gpio_operations *ops;
+
+	ops = (gpio_operations*)malloc(sizeof(gpio_operations));
+        memset(ops, 0, sizeof(gpio_operations));
+
+        ops->init   = gpio_network_init;
+        ops->exit   = gpio_network_exit;
+        ops->open   = gpio_network_open;
+        ops->close  = gpio_network_close;
+        ops->read   = gpio_network_read;
+        ops->write  = gpio_network_write;
+        ops->update = gpio_network_update;
+        ops->get_pin = NULL;
+        ops->set_pin = NULL;
+        ops->clear_halt = NULL;
+        ops->msg_write  = NULL;
+        ops->msg_read   = NULL;
+
+        return (ops);
+}
+
+int gpio_library_list(gpio_device_info *list, int *count) {
 
         list[*count].type = GPIO_DEVICE_NETWORK;
         strcpy(list[*count].name, "Network connection");
@@ -70,6 +84,9 @@ int gpio_network_list(gpio_device_info *list, int *count) {
 
         return (GPIO_OK);
 }
+
+/* Network API functions
+   --------------------------------------------------------------------- */
 
 int gpio_network_init(gpio_device *dev) {
 

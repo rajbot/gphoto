@@ -23,13 +23,13 @@ lib: ..\lib\libgpio.a
 ..\obj\gpio.o: gpio.c
   @$(CC) -o $@ $** $(CCFLAGS)
 
-..\obj\gpio-serial.o: gpio-serial.c
+..\obj\gpio-serial.o: serial/unix.c
   @$(CC) -o $@ $** $(CCFLAGS)
 
-..\obj\gpio-parallel.o: gpio-parallel.c
+..\obj\gpio-parallel.o: parallel/linux-raw.c
   @$(CC) -o $@ $** $(CCFLAGS)
 
-..\obj\gpio-network.o: gpio-network.c
+..\obj\gpio-network.o: network/bsdsocket.c
   @$(CC) -o $@ $** $(CCFLAGS)
 
 ..\lib\libgpio.a: ..\obj\gpio.o ..\obj\gpio-serial.o ..\obj\gpio-parallel.o ..\obj\gpio-network.o

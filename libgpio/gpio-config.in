@@ -53,7 +53,7 @@ while test $# -gt 0; do
 	;;
 
     --cflags)
-       	echo -I${includedir}/gpio @GPIO_INCLUDEDIR@ @GPIO_CFLAGS@
+       	echo -I${includedir}/gpio @GPIO_INCLUDEDIR@ @IOLIB_CFLAGS@
        	;;
 
     --libs)

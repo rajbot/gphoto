@@ -14,7 +14,7 @@
    License, or (at your option) any later version.
 
    The GPIO Library is distributed in the hope that it will be useful,
-)   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
    Library General Public License for more details.
 
@@ -24,37 +24,43 @@
    Boston, MA 02111-1307, USA.
  */
 
+#include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "gpio.h"
 
 gpio_device_info device_list[256];
-static int	 device_count;
+int		 device_count;
+
+/* Toggle to turn on/off debugging */
+int		 device_debug=0;
+
+void gpio_debug_printf (char *format, ...) {
+
+        va_list         pvar;
+
+        if (device_debug) {
+                fprintf(stderr, "gpio: ");
+                va_start(pvar, format);
+                vfprintf(stderr, format, pvar);
+                va_end(pvar);
+                fprintf(stderr, "\n");
+        }
+}
 
 /*
-   Core IO library functions
+   Required library functions
    ----------------------------------------------------------------
  */
 
-int gpio_init(void)
+int gpio_init()
 {
+	gpio_operations *ops;
 	/* Enumerate all the available devices */
 	device_count = 0;
 
-	gpio_serial_operations.list(device_list, &device_count);
-	gpio_parallel_operations.list(device_list, &device_count);
-#ifdef GPIO_NETWORK
-	gpio_network_operations.list(device_list, &device_count);
-#endif
-#ifdef GPIO_USB
-	gpio_usb_operations.list(device_list, &device_count);
-#endif
-#ifdef GPIO_IEEE1394
-	gpio_ieee1394_operations.list(device_list, &device_count);
-#endif
-
-	return GPIO_OK;
+	return (gpio_library_list(device_list, &device_count));
 }
 
 int gpio_get_device_count(void)
@@ -82,12 +88,17 @@ gpio_device *gpio_new(gpio_device_type type)
 		return NULL;
 	}
 
+	if (gpio_library_load(dev, type)) {
+		/* whoops! that type of device isn't supported */
+		free(dev);
+		return NULL;
+	}
+
 	dev->type = type;
 	dev->device_fd = 0;
 
 	switch (dev->type) {
 	case GPIO_DEVICE_SERIAL:
-		dev->ops = &gpio_serial_operations;
 		sprintf(buf, GPIO_SERIAL_PREFIX, GPIO_SERIAL_RANGE_LOW);
 	        strcpy(settings.serial.port, buf);
 		/* set some defaults */
@@ -99,26 +110,17 @@ gpio_device *gpio_new(gpio_device_type type)
 		gpio_set_timeout(dev, 5000);
 		break;
 	case GPIO_DEVICE_PARALLEL:
-		dev->ops = &gpio_parallel_operations;
 		sprintf(buf, GPIO_SERIAL_PREFIX, GPIO_SERIAL_RANGE_LOW);
 	        strcpy(settings.parallel.port, buf);
 		break;
-#ifdef GPIO_NETWORK
 	case GPIO_DEVICE_NETWORK:
-		dev->ops = &gpio_network_operations;
 		gpio_set_timeout(dev, 50000);
 		break;
-#endif
-#ifdef GPIO_USB
 	case GPIO_DEVICE_USB:
-		dev->ops = &gpio_usb_operations;
 		gpio_set_timeout(dev, 5000);
 		break;
-#endif
-#ifdef GPIO_IEEE1394
 	case GPIO_DEVICE_IEEE1394:
 		break;
-#endif
 	default:
 		// ERROR!
 		break;
@@ -127,57 +129,6 @@ gpio_device *gpio_new(gpio_device_type type)
 	dev->ops->init(dev);
 
 	return (dev);
-}
-
-gpio_device *gpio_new_by_number(int device_number)
-{
-	gpio_device *dev;
-
-	if (device_number >= device_count)
-		return (NULL);
-
-	dev = gpio_new(device_list[device_number].type);
-
-	/* apply the enumerated device settings */
-	switch (dev->type) {
-	case GPIO_DEVICE_SERIAL:
-	        strcpy(dev->settings.serial.port, device_list[device_number].path);
-		break;
-
-	case GPIO_DEVICE_PARALLEL:
-	        strcpy(dev->settings.parallel.port, device_list[device_number].path);
-		break;
-
-	case GPIO_DEVICE_NETWORK:
-		/* uhhh. don't do anything */
-		break;
-#ifdef GPIO_USB
-	case GPIO_DEVICE_USB:
-		/* set endpoints? or what? */
-		break;
-#endif
-#ifdef GPIO_IEEE1394
-	case GPIO_DEVICE_IEEE1394:
-		break;
-#endif
-	default:
-		// ERROR!
-		break;
-	}
-	return (dev);
-}
-
-gpio_device *gpio_new_by_path(char *path)
-{
-	int x=0;
-
-	while (x<device_count) {
-		if (strcmp(device_list[x].path, path)==0)
-			return(gpio_new_by_number(x));
-		x++;
-	}
-
-	return (NULL);
 }
 
 int gpio_open(gpio_device *dev)
@@ -220,6 +171,8 @@ int gpio_free(gpio_device *dev)
 {
 	int retval = dev->ops->exit(dev);	
 
+	gpio_library_close(dev);
+
 	free(dev);
 
 	return GPIO_OK;
@@ -237,18 +190,6 @@ int gpio_read(gpio_device *dev, char *bytes, int size)
 	 */
 {
 	return dev->ops->read(dev, bytes, size);
-}
-
-int gpio_get_pin(gpio_device *dev, int pin)
-{
-	/* Give the status of pin from dev */
-	return dev->ops->get_pin(dev, pin);
-}
-
-int gpio_set_pin(gpio_device *dev, int pin, int level)
-{
-	/* Set the status of pin from dev to level */
-	return dev->ops->set_pin(dev, pin, level);
 }
 
 int gpio_set_timeout(gpio_device *dev, int millisec_timeout)
@@ -278,3 +219,59 @@ int gpio_get_settings(gpio_device *dev, gpio_device_settings * settings)
 	return GPIO_OK;
 }
 
+/* Serial and Parallel-specific functions */
+/* ------------------------------------------------------------------ */
+
+int gpio_get_pin(gpio_device *dev, int pin)
+{
+	if (!dev->ops->get_pin)
+		return (GPIO_ERROR);
+
+	return (dev->ops->get_pin(dev, pin));
+}
+
+int gpio_set_pin(gpio_device *dev, int pin, int level)
+{
+	if (!dev->ops->get_pin)
+		return (GPIO_ERROR);
+
+	return (dev->ops->set_pin(dev, pin, level));
+}
+
+
+/* USB-specific functions */
+/* ------------------------------------------------------------------ */
+
+#ifdef GPIO_USB
+
+int gpio_usb_find_device (gpio_device * dev, int idvendor, int idproduct)
+{
+	if (!dev->ops->find_device)
+		return (GPIO_ERROR);
+
+	return (dev->ops->find_device(dev, idvendor, idproduct));
+}
+int gpio_usb_clear_halt (gpio_device * dev)
+{
+	if (!dev->ops->clear_halt)
+		return (GPIO_ERROR);
+
+	return (dev->ops->clear_halt(dev));
+}
+
+int gpio_usb_msg_write (gpio_device * dev, int value, char *bytes, int size)
+{
+	if (!dev->ops->msg_write)
+		return (GPIO_ERROR);
+
+	return (dev->ops->msg_write(dev, value, bytes, size));
+}
+
+int gpio_usb_msg_read (gpio_device * dev, int value, char *bytes, int size)
+{
+	if (!dev->ops->msg_read)
+		return (GPIO_ERROR);
+
+	return (dev->ops->msg_read(dev, value, bytes, size));
+}
+#endif

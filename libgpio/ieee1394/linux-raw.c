@@ -43,23 +43,32 @@ int 		gpio_ieee1394_update (gpio_device *dev);
 int 		gpio_ieee1394_set_baudrate(gpio_device *dev);
 
 
-struct gpio_operations gpio_ieee1394_operations =
-{
-	gpio_ieee1394_list,
-        gpio_ieee1394_init,
-	gpio_ieee1394_exit,
-        gpio_ieee1394_open,
-        gpio_ieee1394_close,
-        gpio_ieee1394_read,
-        gpio_ieee1394_write,
-        gpio_ieee1394_get_pin,
-		gpio_iee1394_set_pin,
-        gpio_ieee1394_update
-};
-
-/* IEEE1394 API functions
+/* Dynamic library functions
    ------------------------------------------------------------------ */
-int gpio_ieee1394_list(gpio_device_info *list, int *count) {
+
+gpio_device_type gpio_library_type () {
+
+	return (GPIO_DEVICE_IEEE1394);
+}
+
+gpio_operations *gpio_library_operations () {
+
+	gpio_operations *ops;
+
+        ops = (gpio_operations*)malloc(sizeof(gpio_operations));
+        memset(ops, 0, sizeof(gpio_operations));
+
+        ops->init   = gpio_ieee1394_init;
+	ops->exit   = gpio_ieee1394_exit;
+        ops->open   = gpio_ieee1394_open;
+        ops->close  = gpio_ieee1394_close;
+        ops->read   = gpio_ieee1394_read;
+        ops->write  = gpio_ieee1394_write;
+        ops->update = gpio_ieee1394_update;
+	return (ops);
+}
+
+int gpio_library_list(gpio_device_info *list, int *count) {
 
         list[*count].type = GPIO_DEVICE_IEEE1394;
         strcpy(list[*count].name, "IEEE1394 (Firewire(tm))");
@@ -70,6 +79,9 @@ int gpio_ieee1394_list(gpio_device_info *list, int *count) {
         return (GPIO_OK);
 
 }
+
+/* IEEE1394 API functions
+   ------------------------------------------------------------------ */
 
 int gpio_ieee1394_init(gpio_device *dev) {
 

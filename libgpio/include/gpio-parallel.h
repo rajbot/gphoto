@@ -1,8 +1,6 @@
 #ifndef _GPIO_PARALLEL_H_
 #define _GPIO_PARALLEL_H_
 
-#define GPIO_PARALLEL
-
 /* PARALLEL port prefix for enumeration */
 
 /* Linux */
@@ -73,6 +71,5 @@ typedef struct {
 extern struct gpio_operations gpio_parallel_operations;
 
 #endif /* _GPIO_PARALLEL_H_ */
-
 
 

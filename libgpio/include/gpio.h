@@ -8,18 +8,12 @@
 
 #include "gpio-serial.h"
 
+#ifdef GPIO_PARALLEL
 #include "gpio-parallel.h"
+#endif
 
-#if @GPIO_NETWORK@
+#ifdef GPIO_NETWORK
 #include "gpio-network.h"
-#endif
-
-#if @GPIO_USB@
-#define GPIO_USB
-#endif
-
-#if @GPIO_IEEE1394@
-#define GPIO_IEEE1394
 #endif
 
 #ifdef GPIO_USB
@@ -67,16 +61,22 @@ typedef struct {
 	gpio_device_type type;
 	char name[64];
 	char path[64];
-
+	
+	/* not used yet */
 	int  argument_needed;
 	char argument_description[128];
 	char argument[128];
+
+	/* don't touch */
+	char library_filename[1024];
 } gpio_device_info;
 
 /* Put the settings together in a union */
 typedef union {
 	gpio_serial_settings	serial;
+#ifdef GPIO_PARALLEL
 	gpio_parallel_settings	parallel;
+#endif
 #ifdef GPIO_NETWORK
 	gpio_network_settings	network;
 #endif
@@ -93,17 +93,32 @@ typedef union {
 struct gpio_device;
 typedef struct gpio_device gpio_device;
 struct gpio_operations {
-	int (*list)	(gpio_device_info *, int*);
 	int (*init)	(gpio_device *);
 	int (*exit)	(gpio_device *);
 	int (*open)	(gpio_device *);
 	int (*close)	(gpio_device *);
 	int (*read)	(gpio_device *, char *, int);
 	int (*write)	(gpio_device *, char *, int);
+	int (*update)   (gpio_device *);
+
+	/* for serial and parallel devices */
 	int (*get_pin)	(gpio_device *, int);
 	int (*set_pin)	(gpio_device *, int, int);
-	int (*update)   (gpio_device *);
+
+#ifdef GPIO_USB
+	/* for USB devices */
+	int (*find_device)(gpio_device * dev, int idvendor, int idproduct);
+	int (*clear_halt) (gpio_device * dev);
+	int (*msg_write)  (gpio_device * dev, int value, char *bytes, int size);
+	int (*msg_read)   (gpio_device * dev, int value, char *bytes, int size);
+#endif
 };
+typedef struct gpio_operations gpio_operations;
+
+/* Function pointers for the dynamic libraries */
+typedef int		 (*gpio_ptr_type) 	();
+typedef int 		 (*gpio_ptr_list) 	(gpio_device_info*, int *);
+typedef gpio_operations* (*gpio_ptr_operations) ();
 
 /* Specify the device information */
 struct gpio_device {
@@ -111,7 +126,7 @@ struct gpio_device {
 	   directly. */
         gpio_device_type type;
 
-	struct gpio_operations *ops;
+	gpio_operations *ops;
 
 	gpio_device_settings settings;
 	gpio_device_settings settings_pending;
@@ -121,26 +136,36 @@ struct gpio_device {
 	int device_fd;
 	void *device_handle;
 	int timeout; /* in milli seconds */
+
+	void *library_handle;
+
+#ifdef GPIO_USB
+	struct usb_device *usb_device;
+#endif
+
 };
 
 /* gpio Core functions
    -------------------------------------------------------------- */
 
+	void gpio_debug_printf (char *format, ...);
+		/* issues debugging messages */
+
 	int gpio_init		();
-		/* Initializes the library
+		/* Initializes the library.
 			return values:
 				  successful: GPIO_OK
 				unsuccessful: GPIO_ERROR
 		*/
 
-int	     gpio_get_device_count ();
+	int gpio_get_device_count ();
 		/* Get a count of available devices
 			return values:
 				  successful: valid gpio_device_list struct
 				unsuccessful: GPIO_ERROR
 		*/
 
-int	     gpio_get_device_info (int device_number, gpio_device_info *info);
+	int gpio_get_device_info (int device_number, gpio_device_info *info);
 		/* Get information about a device
 			return values:
 				  successful: valid gpio_device_list struct
@@ -149,21 +174,6 @@ int	     gpio_get_device_info (int device_number, gpio_device_info *info);
 
 gpio_device *gpio_new		(gpio_device_type type);
 		/* Create a new device of type "type"
-			return values:
-				  successful: valid gpio_device struct
-				unsuccessful: GPIO_ERROR
-		*/
-
-gpio_device *gpio_new_by_number (int device_number);
-		/* Create a new device from the enumerate device listing
-			return values:
-				  successful: valid gpio_device struct
-				unsuccessful: GPIO_ERROR
-		*/
-
-
-gpio_device *gpio_new_by_port (char *device_port);
-		/* Create a new device from the enumerate device listing
 			return values:
 				  successful: valid gpio_device struct
 				unsuccessful: GPIO_ERROR
@@ -232,17 +242,20 @@ gpio_device *gpio_new_by_port (char *device_port);
 				unsuccessful: GPIO_ERROR
 		*/
 
-		int gpio_get_pin   (gpio_device *dev, int pin);
+
+/* Serial and Parallel specific functions
+   -------------------------------------------------------------- */
+
+	int gpio_get_pin   (gpio_device *dev, int pin);
 		/* Give the status of pin from dev
 			pin values:
 				 see PIN_ constants in the various .h files	
 			return values:
 				  successful: status
 				unsuccessful: GPIO_ERROR
-		not implemented for USB (useful?)
 		*/
 
-		int gpio_set_pin   (gpio_device *dev, int pin, int level);
+	int gpio_set_pin   (gpio_device *dev, int pin, int level);
 		/* set the status of pin from dev to level
 			pin values:
 				 see PIN_ constants in the various .h files	
@@ -252,7 +265,16 @@ gpio_device *gpio_new_by_port (char *device_port);
 			return values:
 				  successful: status
 				unsuccessful: GPIO_ERROR
-		not implemented for USB (useful?)
 		*/
+
+/* USB specific functions
+   -------------------------------------------------------------- */
+#ifdef GPIO_USB
+	/* must port libusb to other platforms for this to drop-in */
+	int gpio_usb_find_device (gpio_device * dev, int idvendor, int idproduct);
+	int gpio_usb_clear_halt  (gpio_device * dev);
+	int gpio_usb_msg_write   (gpio_device * dev, int value, char *bytes, int size);
+	int gpio_usb_msg_read    (gpio_device * dev, int value, char *bytes, int size);
+#endif
 
 #endif /* _GPIO_H_ */

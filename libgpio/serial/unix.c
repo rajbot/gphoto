@@ -47,6 +47,7 @@
 #include <sgtty.h>
 #endif
 
+#include "gpio-serial.h"
 #include "gpio.h"
 
 #ifdef HAVE_TERMIOS_H
@@ -57,8 +58,6 @@ static struct sgttyb term_old;
 
 /* Serial prototypes
    ------------------------------------------------------------------ */
-int 		gpio_serial_list(gpio_device_info *list, int *count);
-
 int 		gpio_serial_init(gpio_device *dev);
 int 		gpio_serial_exit(gpio_device *dev);
 
@@ -77,24 +76,35 @@ int 		gpio_serial_update (gpio_device *dev);
 int 		gpio_serial_set_baudrate(gpio_device *dev);
 static speed_t 	gpio_serial_baudconv(int rate);
 
-struct gpio_operations gpio_serial_operations =
-{
-	gpio_serial_list,
-	gpio_serial_init,
-	gpio_serial_exit,
-	gpio_serial_open,
-	gpio_serial_close,
-	gpio_serial_read,
-	gpio_serial_write,
-	gpio_serial_get_pin,
-	gpio_serial_set_pin,
-	gpio_serial_update
-};
+/* Dynamic library functions
+   --------------------------------------------------------------------- */
 
-/* Serial API functions
-   ------------------------------------------------------------------ */
+gpio_device_type gpio_library_type () {
 
-int gpio_serial_list (gpio_device_info *list, int *count) {
+        return (GPIO_DEVICE_SERIAL);
+}
+
+gpio_operations *gpio_library_operations () {
+
+        gpio_operations *ops;
+
+        ops = (gpio_operations*)malloc(sizeof(gpio_operations));
+	memset(ops, 0, sizeof(gpio_operations));
+
+        ops->init   = gpio_serial_init;
+        ops->exit   = gpio_serial_exit;
+        ops->open   = gpio_serial_open;
+        ops->close  = gpio_serial_close;
+        ops->read   = gpio_serial_read;
+        ops->write  = gpio_serial_write;
+        ops->update = gpio_serial_update;
+        ops->get_pin = gpio_serial_get_pin;
+        ops->set_pin = gpio_serial_set_pin;
+
+        return (ops);
+}
+
+int gpio_library_list (gpio_device_info *list, int *count) {
 
 	
 	char buf[1024], prefix[1024];
@@ -144,6 +154,9 @@ int gpio_serial_list (gpio_device_info *list, int *count) {
 
 	return (GPIO_OK);
 }
+
+/* Serial API functions
+   ------------------------------------------------------------------ */
 
 int gpio_serial_init (gpio_device *dev) {
 	/* save previous setttings in to dev->settings_saved */

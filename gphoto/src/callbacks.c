@@ -32,6 +32,7 @@
 #include "post_processing_off.xpm"
 
 char filesel_cwd[1024];
+static int okDownload;
 
 extern struct ImageInfo Thumbnails;
 extern struct ImageInfo Images;
@@ -1051,12 +1052,19 @@ void getindex_empty () {
   makeindex(0);
 }
 
+void halt_download() {
+
+	okDownload = 0;
+}
+
 /* get selected pictures */
 void getpics (char *pictype) {
 
 	char status[256];
 	int i=0;
 	int x=0, y=0;	
+	extern activate_stop_button();
+        extern deactivate_stop_button();
 
 	struct ImageInfo *node = &Thumbnails;
 	
@@ -1072,7 +1080,9 @@ void getpics (char *pictype) {
 
 	node = &Thumbnails;
 	update_progress(0);
-	while (node->next != NULL) {
+	okDownload = 1;
+	activate_stop_button();
+	while (node->next != NULL && okDownload) {
 		node = node->next; i++;
 		if (GTK_TOGGLE_BUTTON(node->button)->active) {
 			y++;
@@ -1094,7 +1104,11 @@ void getpics (char *pictype) {
 			update_progress((float)y/(float)x);
 		}
 	}
-	update_status("Done downloading.");
+	if (okDownload)
+		update_status("Done downloading.");
+	   else
+		update_status("Download halted.");
+	deactivate_stop_button();
 	update_progress(0);
 }
 

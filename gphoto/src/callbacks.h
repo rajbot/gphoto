@@ -25,6 +25,7 @@ void insert_thumbnail(struct ImageInfo *node);
 void makeindex (int getthumbs);
 void getindex ();
 void getindex_empty ();
+void halt_download();
 void getpics (char *type);
 void remove_image(int i);
 void closepic ();

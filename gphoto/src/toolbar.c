@@ -23,8 +23,11 @@
 #include "rotcc.xpm"
 #include "save_current_image.xpm"
 #include "take_picture.xpm"
+#include "stop.xpm"
 
-void add_to_toolbar (GtkWidget *mainWin, gchar *tooltipText, 
+static GtkWidget *stop_button = NULL;
+
+GtkWidget *add_to_toolbar (GtkWidget *mainWin, gchar *tooltipText, 
 		     gchar ** xpmIcon, GtkSignalFunc f, gpointer data,
 		     GtkWidget *box, int Beginning) {
   
@@ -55,7 +58,16 @@ void add_to_toolbar (GtkWidget *mainWin, gchar *tooltipText,
     gtk_box_pack_start(GTK_BOX(box), button, FALSE, FALSE, 0);
   else
     gtk_box_pack_end(GTK_BOX(box), button, FALSE, FALSE, 0);
+  return (button);
 }
+
+void deactivate_stop_button() {
+	gtk_widget_set_sensitive(GTK_WIDGET(stop_button), FALSE);
+}
+
+void activate_stop_button() {
+	gtk_widget_set_sensitive(GTK_WIDGET(stop_button), TRUE);
+ }
 
 void create_toolbar (GtkWidget *box, GtkWidget *mainWin) {
 
@@ -74,6 +86,9 @@ void create_toolbar (GtkWidget *box, GtkWidget *mainWin) {
                  GTK_SIGNAL_FUNC(getindex_empty), NULL, box, 1);
   add_to_toolbar(mainWin, "Get Selected Images", get_selected_images_xpm,  
                  GTK_SIGNAL_FUNC(getpics), "i", box, 1);
+  stop_button = add_to_toolbar(mainWin, "Halt Download", stop_xpm,
+                 GTK_SIGNAL_FUNC(halt_download), NULL, box, 1);
+  deactivate_stop_button();
   add_to_toolbar(mainWin, "Take picture", take_picture_xpm,
                  GTK_SIGNAL_FUNC(takepicture_call), NULL, box, 1);
   add_to_toolbar(mainWin, "Delete Selected Images", close_image_xpm, 

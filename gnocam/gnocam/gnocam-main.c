@@ -1,4 +1,4 @@
-#include <config.h>
+#include "config.h"
 #include "gnocam-main.h"
 
 #include <string.h>

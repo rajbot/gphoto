@@ -1,4 +1,4 @@
-#include <config.h>
+#include "config.h"
 #include <gphoto2.h>
 #include <libgnome/gnome-defs.h>
 #include <libgnomevfs/gnome-vfs-context.h>

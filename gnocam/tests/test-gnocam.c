@@ -1,4 +1,4 @@
-#include <config.h>
+#include "config.h"
 
 #include <bonobo-activation/bonobo-activation-activate.h>
 

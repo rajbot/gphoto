@@ -1,4 +1,4 @@
-#include <config.h>
+#include "config.h"
 
 #include <libgnome/gnome-program.h>
 #include <libgnomeui/gnome-ui-init.h>

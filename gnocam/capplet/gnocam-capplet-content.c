@@ -1,4 +1,4 @@
-#include <config.h>
+#include "config.h"
 #include <gphoto2.h>
 #include "gnocam-capplet-content.h"
 

@@ -1,4 +1,4 @@
-#include <config.h>
+#include "config.h"
 
 #include <gphoto2.h>
 #include <liboaf/liboaf.h>

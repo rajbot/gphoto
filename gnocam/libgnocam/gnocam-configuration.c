@@ -20,7 +20,7 @@
  * Authors:
  *   Lutz Müller <urc8@rz.uni-karlsruhe.de>
  */
-#include <config.h>
+#include "config.h"
 #include "gnocam-configuration.h"
 
 #include <string.h>

@@ -1,4 +1,4 @@
-#include <config.h>
+#include "config.h"
 #include "gnocam-camera-selector.h"
 
 #include <gal/util/e-util.h>

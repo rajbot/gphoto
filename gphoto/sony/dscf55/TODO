@@ -12,7 +12,10 @@ Add conf file processing
 
 Implement high speed (115k) transfer		Done.
 
-Add ability to download MPEG files.
+Add ability to download MPEG files.		Done (For standalone)
 
-Tidy source code.
+Check whether we really need two different
+drivers for the Serial Port Adapter.
+
+Tidy source code.				Ongoing
 

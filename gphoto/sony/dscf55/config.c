@@ -29,58 +29,31 @@
 #include "serio.h"
 
 
-
-
 /***************************************************************
 **
 **
 */
-int ConfigDSCF55Speed()
+int ConfigDSCF55Speed(char *spd_buf, int verbose)
 {
-	int speed = B9600;
-	char *spd_buf;
+  int speed = B9600;
 
-	spd_buf = getenv("DSCF55E_SPEED");
+/* printf("%s\n", spd_buf); */
 
-	if(spd_buf)
-	{
-		printf("%s\n", spd_buf);
+  if (*spd_buf == 'B') spd_buf++;
+  if      (!strcmp(spd_buf, "115200")) speed = B115200;
+#if defined(B76800)
+  else if (!strcmp(spd_buf,  "76800")) speed = B76800;
+#endif
+  else if (!strcmp(spd_buf,  "57600")) speed = B57600;
+  else if (!strcmp(spd_buf,  "38400")) speed = B38400;
+  else if (!strcmp(spd_buf,  "19200")) speed = B19200;
+  else if (!strcmp(spd_buf,   "9600")) speed = B9600;
 
-		switch((char)*spd_buf)
-		{
-			case '1':
-				speed = B115200;
-				break;
-			case '9':
-			default:
-				speed = B9600;
-				break;
-		}
-	}
+  if (verbose > 1) printf("Speed set to %u (%s bps)\n", speed, spd_buf);
 
-	fprintf(stderr, "Speed set to %u\n", speed);
-
-	return speed;
+  return speed;
 }
 
-
-
-/***************************************************************
-**
-**
-*/
-int ConfigDSCF55Port(char *serialbuf, int maxlen)
-{
-	char *port_buf = getenv("DSCF55E_PORT");
-
-	if(!port_buf)
-		return FALSE;
-
-	strncpy(serialbuf, port_buf, maxlen);
-	fprintf(stderr, "Port set to %s\n", serialbuf);
-
-	return TRUE;
-}
 
 
 

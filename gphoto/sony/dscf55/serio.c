@@ -34,6 +34,22 @@ static struct	termios master;
 
 
 
+#ifndef __linux__
+#ifdef __sun__
+int cfmakeraw(struct termios *termios_p)
+{
+
+  /* code taken from Redhat 2.0.37 Manual, jw */
+  termios_p->c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+  termios_p->c_oflag &= ~OPOST;
+  termios_p->c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+  termios_p->c_cflag &= ~(CSIZE|PARENB);
+  termios_p->c_cflag |= CS8;
+
+  return 0;
+}
+#endif
+#endif
 
 /***************************************************************
 *
@@ -99,8 +115,11 @@ int dscSetSpeed(int speed)
 	switch(speed)
 	{
 		case B115200:
-			cfsetispeed(&local, B115200);
-			cfsetospeed(&local, B115200);
+    		case B57600:
+		case B38400:
+		case B19200:
+			cfsetispeed(&local, speed);
+			cfsetospeed(&local, speed);
 			break;
 		default:
 			cfsetispeed(&local, B9600);
@@ -136,12 +155,22 @@ int Read(unsigned char *buffer, int *length)
 */
 int ReadCommByte(unsigned char *byte)
 {
-	int len = read(dscf55_fd, byte, 1);
+  static unsigned char buf[256];
+  static int bytes_read = 0;
+  static int bytes_returned = 0;
 
-	if(len < 0)
-		perror("Read failed\n");
+  if (bytes_returned < bytes_read)
+    {
+      *byte = buf[bytes_returned++];
+      return 1;
+    }
 
-	return len;
+  if ((bytes_read = read(dscf55_fd, buf, sizeof(buf))) < 0)
+    perror("ReadCommByte failed\n");
+
+  bytes_returned = 0;
+  if (bytes_read) *byte = buf[bytes_returned++];
+  return (bytes_read > 0) ? 1 : bytes_read;
 }
 
 

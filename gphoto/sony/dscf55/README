@@ -1,5 +1,7 @@
 
 This directory contains a driver for the Sony DSC-F55E camera.
+The driver supports the Serial Port Adaptor MSAC-SR1 too (tested
+with Memory Sticks used by a DCR-PC100).
 The driver currently manages still images only.
 
 
@@ -22,6 +24,11 @@ To select 115200 baud set a shell variable as below.
 	$ export DSCF55E_SPEED=115200
 
 This is used in both the standalone and library versions.
+
+To use the MSAC-SR1 and Memory Sticks used by the DCR-PC100 set a
+shell variable as below.
+
+ 	$ export DSCF55E_MODEL=MSAC_SR1
 
 The export command is used with bash, other shells have their own method of 
 setting variables, refer to the help for your shell.

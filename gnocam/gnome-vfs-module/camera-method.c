@@ -130,8 +130,10 @@ printf ("Could not initialize camera!\n");
 static void
 unref_camera (Camera *camera)
 {
+#if 0
 	CamerasEntry *entry;
 	GSList *sl;
+#endif
 
 printf ("Unrefing camera with ref_count = %i...\n", camera->ref_count);
 	gp_camera_unref (camera);

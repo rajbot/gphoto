@@ -70,5 +70,6 @@ gpioConf.sh: gpioConf.sh.in Makefile
 	sed -e 's?\@GPIO_LIBDIR\@?$(GPIO_LIBDIR)?g' \
 	    -e 's?\@GPIO_INCLUDEDIR\@?$(GPIO_INCLUDEDIR)?g' \
 	    -e 's?\@GPIO_LIBS\@?$(GPIO_LIBS)?g' \
+	    -e 's?\@LIBGPIO_VERSION\@?$(LIBGPIO_VERSION)?g' \
 	      < $(srcdir)/gpioConf.sh.in > gpioConf.tmp \
 	  && mv gpioConf.tmp gpioConf.sh

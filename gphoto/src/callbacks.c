@@ -370,9 +370,11 @@ void saveselectedtodisk(GtkWidget *widget, char *type)
 		filesel_dir = gtk_file_selection_get_filename(
 				GTK_FILE_SELECTION(filesel));
 		filesel_prefix = gtk_entry_get_text(GTK_ENTRY(entry));
-		if (filesel_prefix==NULL) filesel_prefix="Image";
-		sprintf(saveselectedtodisk_dir, "%s%s", filesel_dir,
-			filesel_prefix);
+		if (filesel_prefix==NULL) filesel_prefix="photo";
+		if (strlen(filesel_prefix)==0)
+			sprintf(saveselectedtodisk_dir, "%sphoto", filesel_dir);
+		   else 
+			sprintf(saveselectedtodisk_dir, "%s%s", filesel_dir,filesel_prefix);
 	        sprintf(filesel_cwd, "%s", filesel_dir);
 		gtk_widget_destroy(filesel);
 	}
@@ -1143,6 +1145,12 @@ void insert_thumbnail(struct ImageMembers *node)
 
 	free_image (im);
 
+	if (!node->imlibimage) {
+		sprintf(error, "Could not open #%i", i);
+		error_dialog(error);
+		return;
+	}
+
 	w = node->imlibimage->rgb_width; 
 	h = node->imlibimage->rgb_height;
 	gdk_imlib_render(node->imlibimage, w, h);
@@ -1688,6 +1696,7 @@ void resize_dialog(void)
 {
 	int i, w, h, currentPic;
 	char *dimension;
+	char error[128];
 
 	GtkWidget *dialog, *rbutton, *button;
 	GtkWidget *label, *hbox;
@@ -1786,6 +1795,13 @@ void resize_dialog(void)
 	h = atoi(dimension);
 
 	scaledImage = gdk_imlib_clone_scaled_image(node->imlibimage,w,h);
+	if (!scaledImage) {
+		sprintf(error, "Could not scale the image", i);
+		error_dialog(error);
+		gtk_widget_destroy(dialog);
+		return;
+	}
+
 	gdk_imlib_kill_image(node->imlibimage);
 
 	node->imlibimage = scaledImage;
@@ -1851,6 +1867,7 @@ void summary_dialog(void)
 /* Decreases image size by factor n % */
 void scale(int factor)
 {
+	char error[128];
 	int i=0, currentPic;
 	int w, h;
 /*
@@ -1889,6 +1906,12 @@ void scale(int factor)
 	h = (h * factor)/100;
   
 	scaledImage = gdk_imlib_clone_scaled_image(node->imlibimage,w,h);
+	if (!scaledImage) {
+		sprintf(error, "Could not scale the image", i);
+		error_dialog(error);
+		return;
+	}
+	
 	gdk_imlib_kill_image(node->imlibimage);
   
 	node->imlibimage = scaledImage;

@@ -1,6 +1,9 @@
 #include <config.h>
 #include <gnome.h>
 #include <glade/glade.h>
+#include <gconf/gconf-client.h>
+#include <gphoto2.h>
+#include "cameras.h"
 
 #ifdef GNOCAM_USES_GTKHTML
 

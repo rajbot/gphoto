@@ -14,6 +14,11 @@ installs into dist-root/.
 Unfortunately, (due to usage of pkgconfig), we have to install
 libgphoto2 before gtkam or gphoto2 will even configure.
 
+You may want to run bootstrap.sh using at, if you want to avoid having
+to press enter for each gettextize invocation:
+
+	echo $PWD/bootstrap.sh | at now
+
 
 2. run compileinstall.sh
 ========================
@@ -41,3 +46,11 @@ name, the revision to download and some options describing how to
 process it.
 
 [ ... to be continued ... ]
+
+
+========================================================================
+What is still missing?
+========================================================================
+
+- install autoconf, automake, gettext, libtool, pkg-config in adequate
+  versions before building anything

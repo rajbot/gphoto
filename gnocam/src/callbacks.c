@@ -25,6 +25,11 @@ extern GConfClient*	client;
 /* Prototypes                                                                 */
 /******************************************************************************/
 
+void on_button_save_preview_clicked 	(GtkButton* button, gpointer user_data);
+void on_button_save_preview_as_clicked 	(GtkButton* button, gpointer user_data);
+void on_button_save_file_clicked	(GtkButton* button, gpointer user_data);
+void on_button_save_file_as_clicked 	(GtkButton* button, gpointer user_data);
+
 void on_button_save_previews_clicked 	(GtkButton* button, gpointer user_data);
 void on_button_save_previews_as_clicked	(GtkButton* button, gpointer user_data);
 void on_button_save_files_clicked 	(GtkButton* button, gpointer user_data);
@@ -56,6 +61,8 @@ void on_camera_tree_popup_folder_refresh_activate	(GtkMenuItem* menuitem, gpoint
 
 void on_duration_reply (gchar *string, gpointer user_data);
 
+void on_button_rotate_clicked (GtkButton* button, gpointer user_data);
+
 void on_app_preview_close_activate 	(GtkMenuItem* menuitem, gpointer user_data);
 void on_app_preview_exit_activate 	(GtkMenuItem* menuitem, gpointer user_data);
 void on_app_preview_save_activate 	(GtkMenuItem* menuitem, gpointer user_data);
@@ -69,6 +76,30 @@ void on_app_preview_button_save_as_clicked 	(GtkButton* button, gpointer user_da
 /**************/
 /* Callbacks. */
 /**************/
+
+void
+on_button_save_preview_clicked (GtkButton* button, gpointer user_data)
+{
+	save (GTK_TREE_ITEM (user_data), TRUE, FALSE, FALSE);
+}
+
+void
+on_button_save_preview_as_clicked (GtkButton* button, gpointer user_data)
+{
+        save (GTK_TREE_ITEM (user_data), TRUE, TRUE, FALSE);
+}
+
+void
+on_button_save_file_clicked (GtkButton* button, gpointer user_data)
+{
+        save (GTK_TREE_ITEM (user_data), FALSE, FALSE, FALSE);
+}
+
+void
+on_button_save_file_as_clicked (GtkButton* button, gpointer user_data)
+{
+        save (GTK_TREE_ITEM (user_data), FALSE, TRUE, FALSE);
+}
 
 void
 on_button_save_previews_clicked (GtkButton *button, gpointer user_data)
@@ -320,6 +351,9 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 	GtkWidget*		window;
 	GtkWidget*		viewport;
 	GtkWidget*		hbox;
+	GtkWidget*		vbox;
+	GtkWidget*		toolbar;
+	GtkWidget*		button;
 	CameraFile*		file;
 	Camera*			camera;
 	GdkPixbuf*		pixbuf;
@@ -353,9 +387,75 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
                 g_free (text);
 
                 /* Widget for preview. */
+		vbox = gtk_vbox_new (FALSE, 5);
+		gtk_container_add (GTK_CONTAINER (hbox), vbox);
+		toolbar = gtk_toolbar_new (GTK_ORIENTATION_HORIZONTAL, GTK_TOOLBAR_BOTH);
+		gtk_box_pack_start (GTK_BOX (vbox), toolbar, TRUE, TRUE, 0);
+		button = gtk_toolbar_append_element (
+			GTK_TOOLBAR (toolbar), 
+			GTK_TOOLBAR_CHILD_BUTTON, 
+			NULL, 
+			NULL,
+			"Rotate Left", 
+			NULL, 
+			gnome_stock_pixmap_widget (glade_xml_get_widget (xml, "app"), GNOME_STOCK_PIXMAP_REDO), 
+			GTK_SIGNAL_FUNC (on_button_rotate_clicked), 
+			GINT_TO_POINTER (0));
+		gtk_object_set_data (GTK_OBJECT (button), "item", item);
+		button = gtk_toolbar_append_element (
+                        GTK_TOOLBAR (toolbar), 
+                        GTK_TOOLBAR_CHILD_BUTTON, 
+                        NULL,
+			NULL, 
+                        "Rotate Right", 
+                        NULL, 
+                        gnome_stock_pixmap_widget (glade_xml_get_widget (xml, "app"), GNOME_STOCK_PIXMAP_UNDO), 
+                        GTK_SIGNAL_FUNC (on_button_rotate_clicked), 
+                        GINT_TO_POINTER (1));
+		gtk_object_set_data (GTK_OBJECT (button), "item", item);
+		button = gtk_toolbar_append_element (
+                        GTK_TOOLBAR (toolbar),
+                        GTK_TOOLBAR_CHILD_BUTTON,
+                        NULL,
+			NULL,
+                        "Save Preview",
+                        NULL,
+                        gnome_stock_pixmap_widget (glade_xml_get_widget (xml, "app"), GNOME_STOCK_PIXMAP_SAVE),
+                        GTK_SIGNAL_FUNC (on_button_save_preview_clicked),
+			item);
+		button = gtk_toolbar_append_element (
+                        GTK_TOOLBAR (toolbar),
+                        GTK_TOOLBAR_CHILD_BUTTON,
+                        NULL,
+			NULL,
+                        "Save Preview As",
+			NULL,
+			gnome_stock_pixmap_widget (glade_xml_get_widget (xml, "app"), GNOME_STOCK_PIXMAP_SAVE_AS),
+			GTK_SIGNAL_FUNC (on_button_save_preview_as_clicked),
+                        item);
+		button = gtk_toolbar_append_element (
+                        GTK_TOOLBAR (toolbar),
+                        GTK_TOOLBAR_CHILD_BUTTON,
+                        NULL,
+			NULL,
+			"Save File",
+			NULL,
+			gnome_stock_pixmap_widget (glade_xml_get_widget (xml, "app"), GNOME_STOCK_PIXMAP_SAVE),
+			GTK_SIGNAL_FUNC (on_button_save_file_clicked),
+			item);
+		button = gtk_toolbar_append_element (
+                        GTK_TOOLBAR (toolbar),
+                        GTK_TOOLBAR_CHILD_BUTTON,
+                        NULL,
+			NULL,
+                        "Save File As",
+                        NULL,
+                        gnome_stock_pixmap_widget (glade_xml_get_widget (xml, "app"), GNOME_STOCK_PIXMAP_SAVE_AS),
+			GTK_SIGNAL_FUNC (on_button_save_file_as_clicked),
+			item);
                 window = gtk_scrolled_window_new (NULL, NULL);
                 gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (window), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-		gtk_box_pack_start (GTK_BOX (hbox), window, TRUE, TRUE, 0);
+		gtk_box_pack_start (GTK_BOX (vbox), window, TRUE, TRUE, 0);
                 viewport = gtk_viewport_new (NULL, NULL);
                 gtk_container_add (GTK_CONTAINER (window), viewport);
 
@@ -379,8 +479,8 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 			/* Create a fake pixmap. */
 			pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 1, 1);
 			gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 127);
-			gdk_pixbuf_unref (pixbuf);
 	                widget = gtk_pixmap_new (pixmap, bitmap);
+			gtk_object_set_data (GTK_OBJECT (widget), "pixbuf", pixbuf);
 	                gtk_container_add (GTK_CONTAINER (viewport), widget);
 			gtk_object_set_data (GTK_OBJECT (item), "pixmap", widget);
 
@@ -576,6 +676,30 @@ on_capture_video_activate (GtkMenuItem* menuitem, gpointer user_data)
 
 	/* Ask for duration. */
 	gnome_app_request_string (app, _("How long should the video be (in seconds)?"), on_duration_reply, camera);
+}
+
+void
+on_button_rotate_clicked (GtkButton* button, gpointer user_data)
+{
+	GtkTreeItem*	item;
+	GtkPixmap*	widget;
+	GdkPixbuf*	pixbuf;
+	GdkPixbuf*	pixbuf_old;
+	GdkPixmap*	pixmap;
+	GdkBitmap*	bitmap;
+
+//FIXME: Where is gdk_pixbuf_rotate? Not implemented. 
+	dialog_information (_("Not yet implemented!"));
+	g_assert ((item = gtk_object_get_data (GTK_OBJECT (button), "item")) != NULL);
+	if ((widget = gtk_object_get_data (GTK_OBJECT (item), "pixmap"))) {
+		g_assert ((pixbuf = gtk_object_get_data (GTK_OBJECT (widget), "pixbuf")) != NULL);
+		pixbuf_old = pixbuf;
+//		if (user_data) pixbuf = gdk_pixbuf_rotate (pixbuf, 95.0);
+//		else pixbuf = gdk_pixbuf_rotate (pixbuf, -95.0);
+//		gdk_pixbuf_unref (pixbuf);
+//		gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 127);
+//		gtk_pixmap_set (GTK_PIXMAP (widget), pixmap, bitmap);
+	}
 }
 
 /************************/

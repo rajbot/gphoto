@@ -1,18 +1,30 @@
-@XML_I18N_MERGE_DESKTOP_RULE@
+if HAVE_GNOCAM
+GNOCAM_DIR = idl gnocam bonobo-moniker
+endif
 
-SUBDIRS =\
- art\
- macros\
- idl\
- libgnocam\
- applet\
- capplet\
- bonobo-moniker\
- gnome-vfs-module\
- gnocam\
- tests\
- intl\
- po
+if HAVE_CAPPLET
+CAPPLET_DIR = capplet
+endif
+
+if HAVE_APPLET
+APPLET_DIR = applet
+endif
+
+if HAVE_VFS_MODULE
+VFS_MODULE_DIR = gnome-vfs-module
+endif
+
+SUBDIRS =			\
+ 	art			\
+	macros			\
+	libgnocam		\
+	$(CAPPLET_DIR)		\
+	$(APPLET_DIR)		\
+	$(VFS_MODULE_DIR)	\
+	$(GNOCAM_DIR)		\
+	tests			\
+	intl			\
+	po
 
 EXTRA_DIST =\
  AUTHORS\

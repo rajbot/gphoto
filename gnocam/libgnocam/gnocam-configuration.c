@@ -20,8 +20,10 @@
  * Authors:
  *   Lutz Müller <urc8@rz.uni-karlsruhe.de>
  */
-
+#include <config.h>
 #include "gnocam-configuration.h"
+
+#include <string.h>
 
 #include <gal/util/e-util.h>
 #include <gtk/gtkradiobutton.h>

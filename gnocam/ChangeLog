@@ -1,3 +1,8 @@
+2002-03-10  Lutz Müller <lutz@users.sourceforge.net>
+
+	* configure.in: Fix warnings.
+	* libgnocam/gnocam-configuration.c: Fix headers.
+
 2002-01-15  Lutz Müller <lutz@users.sourceforge.net>
 
 	Updated for API changes in gphoto2.

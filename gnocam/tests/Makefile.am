@@ -3,9 +3,13 @@ INCLUDES =\
  $(EXTRA_GNOME_CFLAGS)\
  -DG_LOG_DOMAIN=\"gnocam-test\"
 
+if HAVE_GNOCAM
+GNOCAM_PROGS=test-gnocam
+endif
+
 noinst_PROGRAMS =\
  test-vfs-module\
- test-gnocam\
+ $(GNOCAM_PROGS)\
  test-moniker
 
 test_moniker_SOURCE = test-moniker.c
@@ -17,6 +21,7 @@ test_vfs_module_LDADD =\
  $(VFS_LIBS)\
  $(EXTRA_GNOME_LIBS)
 
+if HAVE_GNOCAM
 CORBA_GENERATED =\
  GnoCam.h\
  GnoCam-common.c\
@@ -31,6 +36,7 @@ test_gnocam_LDADD =\
 
 $(CORBA_GENERATED): $(top_srcdir)/idl/GnoCam.idl
 	$(ORBIT_IDL) $(top_srcdir)/idl/GnoCam.idl `$(GNOME_CONFIG) --cflags idl`
+endif
 
 BUILT_SOURCES=$(CORBA_GENERATED)
 CLEANFILES=$(BUILT_SOURCES)

@@ -4,6 +4,10 @@ AC_PREREQ(2.12)
 AM_INIT_AUTOMAKE(GnoCam, 0.13)
 AM_CONFIG_HEADER(config.h)
 
+AC_ISC_POSIX
+AC_PROG_CC
+AC_STDC_HEADERS
+
 AM_MAINTAINER_MODE
 AM_ACLOCAL_INCLUDE(macros)
 AM_PROG_XML_I18N_TOOLS
@@ -13,10 +17,6 @@ dnl Initialize libtool
 dnl ******************
 AM_DISABLE_STATIC
 AM_PROG_LIBTOOL
-
-AC_ISC_POSIX
-AC_PROG_CC
-AC_STDC_HEADERS
 
 dnl The following is a hack to get GnoCam to build on gettext-0.10.35 
 dnl systems - BUILD_INCLUDED_LIBINTL is set only in gettext-0.10.37 which is
@@ -77,7 +77,7 @@ if $try_gnocam; then
 		AC_MSG_RESULT(not found)
 	fi
 fi
-AM_CONDITIONAL(GNOCAM, $have_gnocam)
+AM_CONDITIONAL(HAVE_GNOCAM, $have_gnocam)
 
 dnl ****************
 dnl GNOME vfs-module
@@ -94,8 +94,8 @@ if $try_vfs_module; then
 	AC_MSG_CHECKING(for vfs)
 	if gnome-config --libs vfs > /dev/null 2>&1; then
 		AC_MSG_RESULT(found)
-		VFS_LIBS="`gnome-config --libs vfs` `gphoto2-config --libs`"
-		VFS_CFLAGS="`gnome-config --cflags vfs` `gphoto2-config --cflags`"
+		VFS_LIBS="`gnome-config --libs gnome vfs` `gphoto2-config --libs`"
+		VFS_CFLAGS="`gnome-config --cflags gnome vfs` `gphoto2-config --cflags`"
 		AC_SUBST(VFS_LIBS)
 		AC_SUBST(VFS_CFLAGS)
 		vfs_module_msg=yes
@@ -104,7 +104,7 @@ if $try_vfs_module; then
 		AC_MSG_RESULT(not found)
 	fi
 fi
-AM_CONDITIONAL(VFS_MODULE, $have_vfs_module)
+AM_CONDITIONAL(HAVE_VFS_MODULE, $have_vfs_module)
 
 dnl ******************************
 dnl Capplet
@@ -131,7 +131,7 @@ if $try_capplet; then
 		AC_MSG_RESULT(not found)
 	fi
 fi
-AM_CONDITIONAL(CAPPLET, $have_capplet)
+AM_CONDITIONAL(HAVE_CAPPLET, $have_capplet)
 
 dnl ******************************
 dnl Applet
@@ -158,7 +158,7 @@ if $try_applet; then
 		AC_MSG_RESULT(not found)
 	fi
 fi
-AM_CONDITIONAL(APPLET, $have_applet)
+AM_CONDITIONAL(HAVE_APPLET, $have_applet)
 
 EXTRA_GNOME_CFLAGS="`gnome-config --cflags oaf bonobo bonobox bonobox_print print gal gnome gnomeui oaf bonobo_conf`"
 EXTRA_GNOME_LIBS="`gnome-config --libs oaf bonobo bonobox bonobox_print print gal gnome gnomeui oaf bonobo_conf`"

@@ -4,9 +4,7 @@ INCLUDES =\
  $(GPHOTO_CFLAGS)
 
 oafdir=$(datadir)/oaf
-if GNOCAM
 oaf_DATA=Bonobo_Moniker_camera.oaf
-endif
 
 Bonobo_Moniker_camera.oaf: $(srcdir)/Bonobo_Moniker_camera.oaf.in $(top_builddir)/config.status
 	sed -e "s|\@MONIKER_LIBDIR\@|$(monikerdir)|" \
@@ -21,15 +19,9 @@ CORBA_GENERATED =\
  GnoCam-skels.c
 
 monikerdir = $(libdir)/bonobo/monikers
-if GNOCAM
 moniker_LTLIBRARIES=libmoniker_camera.la
-else
-moniker_LTLIBRARIES=
-endif
 
-libmoniker_camera_la_SOURCES =\
- $(CORBA_GENERATED)\
- bonobo-moniker-camera.c
+libmoniker_camera_la_SOURCES = $(CORBA_GENERATED) bonobo-moniker-camera.c
 libmoniker_camera_la_LDFLAGS = -module
 libmoniker_camera_la_LIBADD = $(EXTRA_GNOME_LIBS)
 

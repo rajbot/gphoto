@@ -1,11 +1,7 @@
 
 modulesdir = $(libdir)/vfs/modules
 
-if VFS_MODULE
 modules_LTLIBRARIES=libvfs-camera.la
-else
-modules_LTLIBRARIES=
-endif
 
 libvfs_camera_la_SOURCES = camera-method.c
 
@@ -20,9 +16,6 @@ libvfs_camera_la_LIBADD = $(VFS_LIBS) $(GCONF_LIBS) $(GPHOTO_LIBS)
 libvfs_camera_la_LDFLAGS = -export_dynamic -avoid-version
 
 modulesconfdir = $(sysconfdir)/vfs/modules
-if VFS_MODULE
 modulesconf_DATA=camera-methods.conf
-endif
 
 EXTRA_DIST=camera-methods.conf
-

@@ -117,6 +117,8 @@ AC_MSG_CHECKING(for gconf >= 0.10)
 if gconf-config --version > /dev/null 2>&1; then
     vers=`gconf-config --version | awk 'BEGIN { FS = "."; } { printf "%d", $1 * 1000 + $2;}'`
     if test "$vers" -ge 10; then
+    	GCONF_LIBS="`gconf-config --libs`"
+	AC_SUBST(GCONF_LIBS)
         AC_MSG_RESULT(found)
     else 
         AC_MSG_ERROR([
@@ -238,6 +240,13 @@ dnl Give some feedback...
 dnl *********************
 
 echo "
+
+***
+I didn't check for an image or movie viewer. If you 
+would like to view images or movies with ${PACKAGE}, 
+you would probably like to install for example eog
+for viewing images.
+***
 
 Configuration
 

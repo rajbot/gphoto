@@ -1,5 +1,15 @@
 2001-07-30	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
+	* capplet/gnocam-capplet-table[.c,.h,-scrolled.[c,h]]: New files.
+	* capplet/Makefile.am: Fix IMAGEDIR.
+	* capplet/gnocam-capplet-content.c: Use above files.
+	* capplet/gnocam-capplet-model.h: Cosmetics...
+	* gnocam/gnocam-camera.c: Implement getInfo
+	* gnocam/gnocam-main.c: Oops, forgot a "while (TRUE);"
+	* idl/GnoCam.idl: Add getInfo.
+
+2001-07-30	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
 	* gnocam/gnocam-main.c: Close the dialog if Cancel has been clicked.
 
 2001-07-30 	Lutz Müller  <urc8@rz.uni-karlsruhe.de>

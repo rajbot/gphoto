@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 INCLUDES = \
- -DIMAGEDIR=\"$(prefix)/usr/share/pixmaps\"\
+ -DIMAGEDIR=\"$(prefix)/share/pixmaps\"\
  -DGNOME_LOCALEDIR=\""$(datadir)/locale"\"\
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
  $(GCONF_CFLAGS)\
@@ -22,6 +22,8 @@ camera_capplet_SOURCES =\
  $(CORBA_GENERATED)\
  gnocam-capplet-content.c gnocam-capplet-content.h\
  gnocam-capplet-model.c gnocam-capplet-model.h\
+ gnocam-capplet-table.c gnocam-capplet-table.h\
+ gnocam-capplet-table-scrolled.c gnocam-capplet-table-scrolled.h\
  main.c
 
 camera_capplet_LDADD =\

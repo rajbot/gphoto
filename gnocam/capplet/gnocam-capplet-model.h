@@ -33,10 +33,10 @@ ETableModel	*gnocam_capplet_model_new 	(CappletWidget *capplet);
 
 void		 gnocam_capplet_model_delete_row	(GnoCamCappletModel *model, gint row);
 
-void		 gnocam_capplet_model_ok		(GnoCamCappletModel *model);
-void		 gnocam_capplet_model_revert		(GnoCamCappletModel *model);
-void		 gnocam_capplet_model_try		(GnoCamCappletModel *model);
-void		 gnocam_capplet_model_cancel		(GnoCamCappletModel *model);
+void		 gnocam_capplet_model_ok	(GnoCamCappletModel *);
+void		 gnocam_capplet_model_revert	(GnoCamCappletModel *);
+void		 gnocam_capplet_model_try	(GnoCamCappletModel *);
+void		 gnocam_capplet_model_cancel	(GnoCamCappletModel *);
 
 END_GNOME_DECLS
 

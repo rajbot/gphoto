@@ -13,6 +13,9 @@ module GNOME {
 		Bonobo::Stream capturePreview ();
 
 		void showConfiguration ();
+
+		string getInfo ()
+			raises (NotSupported, IOError);
 		
 		/* The path to the new image will be returned. */
 		string captureImage ()

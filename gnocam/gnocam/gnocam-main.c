@@ -105,7 +105,8 @@ impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant,
 			} else {
 				g_warning ("Unhandled button: %i", button);
 			}
-		}
+		} while (TRUE);
+
 		name = gnocam_camera_selector_get_name (
 					GNOCAM_CAMERA_SELECTOR (selector));
 		gnome_dialog_close (selector);

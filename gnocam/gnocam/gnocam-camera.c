@@ -40,6 +40,21 @@ struct _GnoCamCameraPrivate
 	}\
 }G_STMT_END
 
+static CORBA_char *
+impl_GNOME_Camera_getInfo (PortableServer_Servant servant, 
+		           CORBA_Environment *ev)
+{
+	GnoCamCamera *c;
+	CameraText text;
+
+	c = GNOCAM_CAMERA (bonobo_object_from_servant (servant));
+	CHECK_RESULT (gp_camera_get_manual (c->priv->camera, &text), ev);
+	if (BONOBO_EX (ev))
+		return (NULL);
+
+	return (g_strdup (text.text));
+}
+
 static Bonobo_Stream
 impl_GNOME_Camera_capturePreview (PortableServer_Servant servant, 
 				  CORBA_Environment *ev)
@@ -165,6 +180,7 @@ gnocam_camera_class_init (GnoCamCameraClass *klass)
 	epv->capturePreview    = impl_GNOME_Camera_capturePreview;
 	epv->captureImage      = impl_GNOME_Camera_captureImage;
 	epv->showConfiguration = impl_GNOME_Camera_showConfiguration;
+	epv->getInfo           = impl_GNOME_Camera_getInfo;
 }
 
 static void

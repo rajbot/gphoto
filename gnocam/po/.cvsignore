@@ -3,3 +3,5 @@ Makefile.in
 Makefile
 *.gmo
 GnoCam.pot
+cat-id-tbl.c
+

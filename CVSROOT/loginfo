@@ -28,5 +28,5 @@
 # please note the "n-dimensional" addresses are used for testing only
 # and are no official mailing lists!
 CVSROOT/ ${CVSROOT}/CVSROOT/syncmail -u %{sVv} cvs@home.n-dimensional.de
-gphoto2/ ${CVSROOT}/CVSROOT/syncmail -u %{sVv} gphoto-cvs@home.n-dimensional.de
-gtkam/   ${CVSROOT}/CVSROOT/syncmail -u %{sVv} gtkam-cvs@home.n-dimensional.de
+gphoto2/ ${CVSROOT}/CVSROOT/syncmail -u %{sVv} prelim-cvs@n-dimensional.de 
+gtkam/   ${CVSROOT}/CVSROOT/syncmail -u %{sVv} prelim-cvs@n-dimensional.de

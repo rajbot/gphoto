@@ -38,8 +38,7 @@ camera_new_by_uri (GnomeVFSURI* uri, GConfClient* client, GMutex* client_mutex, 
 	g_assert (value->type == GCONF_VALUE_LIST);
 	g_assert (gconf_value_get_list_type (value) == GCONF_VALUE_STRING);
 	list = gconf_value_get_list (value);
-	host = gnome_vfs_unescape_string (gnome_vfs_uri_get_host_name (uri), NULL);
-	g_print ("  searching host (%s)\n", host);
+	if (!(host = gnome_vfs_unescape_string (gnome_vfs_uri_get_host_name (uri), NULL))) return (NULL);
 	for (i = 0; i < g_slist_length (list); i++) {
 	        value = g_slist_nth_data (list, i);
 	        g_assert (value->type == GCONF_VALUE_STRING);

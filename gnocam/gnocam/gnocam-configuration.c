@@ -26,6 +26,7 @@
 #include <gal/util/e-util.h>
 #include <gtk/gtkradiobutton.h>
 #include <gtk/gtklabel.h>
+#include <gtk/gtkcombo.h>
 #include <gtk/gtksignal.h>
 #include <gtk/gtkframe.h>
 #include <gtk/gtkhscale.h>
@@ -123,10 +124,12 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 	const gchar *info;
 	gchar *value_char = NULL;
 	gfloat value_float = 0.0, min = 0., max = 0., increment = 0.;
+	const gchar* choice;
 	gint i, result, value_int = 0;
-	GtkWidget *vbox, *button, *gtk_widget, *frame;
+	GtkWidget *vbox, *button, *gtk_widget = NULL, *frame;
 	GtkObject *adjustment;
 	GSList *group = NULL;
+	GList *options = NULL;
 
 	gp_widget_get_label (widget, &label);
 	gp_widget_get_info (widget, &info);
@@ -167,7 +170,7 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 	
 		result = gp_widget_get_value (widget, &value_int);
 		if (result != GP_OK)
-			g_warning (_("Could not get value of widget '%s': %s!"),
+			g_warning ("Could not get value of widget '%s': %s!",
 				   label, gp_result_as_string (result));
 		gtk_widget = gnome_date_edit_new ((time_t) value_int,
 						  TRUE, TRUE);
@@ -183,7 +186,7 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 
 		result = gp_widget_get_value (widget, &value_char);
 		if (result != GP_OK)
-			g_warning (_("Could not get value of widget '%s': %s!"),
+			g_warning ("Could not get value of widget '%s': %s!",
 				   label, gp_result_as_string (result));
 		gtk_widget = gtk_entry_new ();
 		if (value_char)
@@ -197,14 +200,20 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 	case GP_WIDGET_RANGE:
 
 		result = gp_widget_get_value (widget, &value_float);
-		if (result != GP_OK)
-			g_warning (_("Could not get value of widget '%s': %s!"),
+		if (result != GP_OK) {
+			g_warning ("Could not get value of widget '%s': %s!",
 				   label, gp_result_as_string (result));
+			break;
+		}
+
 		result = gp_widget_get_range (widget, &min, &max, &increment);
-		if (result != GP_OK)
-			g_warning (_("Could not get values of range widget "
-				   "'%s': %s!"), label,
+		if (result != GP_OK) {
+			g_warning ("Could not get values of range widget "
+				   "'%s': %s!", label,
 				   gp_result_as_string (result));
+			break;
+		}
+
 		adjustment = gtk_adjustment_new (value_float, min, max,
 						 increment, 0, 0);
 		gtk_signal_connect (adjustment, "value_changed",
@@ -218,41 +227,86 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		break;
 	
 	case GP_WIDGET_MENU:
+
+		gtk_widget = gtk_combo_new ();
+
+		result = gp_widget_get_value (widget, &value_char);
+		if (result != GP_OK) {
+			g_warning ("Could not get value of widget '%s': %s!",
+				   label, gp_result_as_string (result));
+			break;
+		}
+
+		/* Get the possible values */
+		for (i = 0; i < gp_widget_count_choices (widget); i++) {
+			gp_widget_get_choice (widget, i, &choice);
+			options = g_list_append (options, g_strdup (choice));
+		}
+		gtk_combo_set_popdown_strings (GTK_COMBO (gtk_widget), options);
+		gtk_entry_set_text (GTK_ENTRY (GTK_COMBO (gtk_widget)->entry),
+				    value_char);
+
+		break;
+
 	case GP_WIDGET_RADIO:
 
-		if ((result = gp_widget_get_value (widget, &value_char)) != GP_OK)
-			g_warning (_("Could not get value of widget '%s': %s!"), label, gp_result_as_string (result));
+		if (gp_widget_count_choices (widget) < 6)
+			gtk_widget = gtk_hbox_new (FALSE, 5);
+		else
+			gtk_widget = gtk_vbox_new (FALSE, 5);
 
-		if (gp_widget_count_choices (widget) < 6) gtk_widget = gtk_hbox_new (FALSE, 5);
-		else gtk_widget = gtk_vbox_new (FALSE, 5);
+		result = gp_widget_get_value (widget, &value_char);
+		if (result != GP_OK) {
+			g_warning ("Could not get value of widget '%s': %s!",
+				   label, gp_result_as_string (result));
+			break;
+		}
+
+		/* Get the possible values */
 		for (i = 0; i < gp_widget_count_choices (widget); i++) {
-			const gchar* choice;
-
 			gp_widget_get_choice (widget, i, &choice);
-			button = gtk_radio_button_new_with_label (group, choice);
+			button = gtk_radio_button_new_with_label (group,
+								  choice);
 			gtk_widget_show (button);
-			group = gtk_radio_button_group (GTK_RADIO_BUTTON (button));
-			gtk_object_set_data (GTK_OBJECT (button), "value", (char*) choice);
-			gtk_box_pack_start (GTK_BOX (gtk_widget), button, FALSE, FALSE, 0);
-			if (value_char && !strcmp (value_char, choice)) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button), TRUE);
-			gtk_signal_connect (GTK_OBJECT (button), "toggled", GTK_SIGNAL_FUNC (on_radio_button_toggled), widget);
-			gtk_tooltips_set_tip (configuration->priv->tooltips, button, info, NULL);
+			group = gtk_radio_button_group (
+						GTK_RADIO_BUTTON (button));
+			gtk_object_set_data (GTK_OBJECT (button), "value",
+							(char*) choice);
+			gtk_box_pack_start (GTK_BOX (gtk_widget), button,
+							FALSE, FALSE, 0);
+			if (value_char && !strcmp (value_char, choice))
+				gtk_toggle_button_set_active (
+					GTK_TOGGLE_BUTTON (button), TRUE);
+			gtk_signal_connect (GTK_OBJECT (button), "toggled",
+				GTK_SIGNAL_FUNC (on_radio_button_toggled),
+				widget);
+			gtk_tooltips_set_tip (configuration->priv->tooltips,
+					      button, info, NULL);
 		}
 		break;
 	
 	case GP_WIDGET_TOGGLE:
 
-		if ((result = gp_widget_get_value (widget, &value_int)) != GP_OK)
-			g_warning (_("Could not get value of widget '%s': %s!"), label, gp_result_as_string (result));
-
 		gtk_widget = gtk_check_button_new_with_label (label);
-		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (gtk_widget), (value_int != 0));
-		gtk_signal_connect (GTK_OBJECT (gtk_widget), "toggled", GTK_SIGNAL_FUNC (on_toggle_button_toggled), widget);
-		gtk_tooltips_set_tip (configuration->priv->tooltips, gtk_widget, info, NULL);
+
+		result = gp_widget_get_value (widget, &value_int);
+		if (result != GP_OK) {
+			g_warning ("Could not get value of widget '%s': %s!",
+				   label, gp_result_as_string (result));
+			break;
+		}
+
+		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (gtk_widget),
+					      (value_int != 0));
+		gtk_signal_connect (GTK_OBJECT (gtk_widget), "toggled",
+				    GTK_SIGNAL_FUNC (on_toggle_button_toggled),
+				    widget);
+		gtk_tooltips_set_tip (configuration->priv->tooltips,
+				      gtk_widget, info, NULL);
 		break;
 	
 	default:
-		g_warning (_("Widget '%s' is of unknown type!"), label);
+		g_warning ("Widget '%s' is of unknown type!", label);
 		return;
 	}
 	

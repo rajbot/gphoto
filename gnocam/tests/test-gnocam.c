@@ -3,7 +3,9 @@
 #include <bonobo/bonobo-exception.h>
 #include <bonobo/bonobo-moniker-util.h>
 #include <bonobo/bonobo-event-source.h>
+#include <bonobo/bonobo-widget.h>
 #include <gtk/gtkmain.h>
+#include <gtk/gtkwindow.h>
 
 #include "GnoCam.h"
 
@@ -78,6 +80,14 @@ do_idle_tests (gpointer data)
 				"GNOME/Camera:CaptureImage", &ev, data);
 	CHECK (&ev);
 
+	g_message ("Getting configuration...");
+	GNOME_Camera_showConfiguration (camera, &ev);
+	CHECK (&ev);
+
+	g_message ("Capturing image...");
+	GNOME_Camera_captureImage (camera, &ev);
+	CHECK (&ev); 
+
 	CORBA_exception_free (&ev);
 
 	g_message ("Back again in the idle loop.");
@@ -127,10 +137,6 @@ main (int argc, char *argv[])
 	bonobo_object_release_unref (storage, NULL);
 
 	gtk_idle_add (do_idle_tests, camera);
-
-	g_message ("Capturing image...");
-	GNOME_Camera_captureImage (camera, &ev);
-	CHECK (&ev);
 
 	CORBA_exception_free (&ev);
 

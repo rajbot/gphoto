@@ -66,7 +66,7 @@ on_preferences_activate (GtkWidget* widget, gpointer user_data)
 void
 on_about_activate (GtkWidget* widget, gpointer user_data)
 {
-        g_assert (glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "about") != NULL);
+	g_return_if_fail (glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "about"));
 }
 
 void
@@ -176,6 +176,8 @@ int main (int argc, char *argv[])
 	/* Create the window. */
 	gtk_widget_show (GTK_WIDGET (main_window = GTK_WINDOW (bonobo_window_new (PACKAGE, PACKAGE))));
 	gtk_signal_connect (GTK_OBJECT (main_window), "delete_event", GTK_SIGNAL_FUNC (gtk_main_quit), NULL);
+
+	/* Create the tree. */
 	gtk_widget_show (GTK_WIDGET (main_paned = E_PANED (e_hpaned_new ())));
 	gtk_widget_show (scrolledwindow = gtk_scrolled_window_new (NULL, NULL));
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
@@ -183,8 +185,11 @@ int main (int argc, char *argv[])
 	gtk_widget_show (widget = gtk_viewport_new (NULL, NULL));
 	gtk_container_add (GTK_CONTAINER (scrolledwindow), widget);
 	gtk_widget_show (GTK_WIDGET (main_tree = GTK_TREE (gtk_tree_new ())));
+	gtk_tree_set_selection_mode (GTK_TREE (main_tree), GTK_SELECTION_MULTIPLE);
 	gtk_container_add (GTK_CONTAINER (widget), GTK_WIDGET (main_tree));
 	bonobo_window_set_contents (BONOBO_WINDOW (main_window), GTK_WIDGET (main_paned));
+
+	/* Create the component. */
         container = bonobo_ui_container_new ();
 	corba_container = bonobo_object_corba_objref (BONOBO_OBJECT (container));
         bonobo_ui_container_set_win (container, BONOBO_WINDOW (main_window));

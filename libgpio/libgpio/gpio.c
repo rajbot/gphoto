@@ -57,19 +57,22 @@ void gpio_debug_printf (char *format, ...) {
 int gpio_init()
 {
 	gpio_operations *ops;
+	gpio_debug_printf("Initializing...");
 	/* Enumerate all the available devices */
 	device_count = 0;
-
 	return (gpio_library_list(device_list, &device_count));
 }
 
 int gpio_get_device_count(void)
 {
+	gpio_debug_printf("Device count: %i", device_count);
 	return device_count;
 }
 
 int gpio_get_device_info(int device_number, gpio_device_info *info)
 {
+	gpio_debug_printf("Getting device info...");
+
 	memcpy(info, &device_list[device_number], sizeof(device_list[device_number]));
 
 	return GPIO_OK;
@@ -82,14 +85,17 @@ gpio_device *gpio_new(gpio_device_type type)
 	gpio_device_settings settings;
 	char buf[1024];
 
+	gpio_debug_printf("Creating new device... ");
+
 	dev = (gpio_device *) malloc(sizeof(gpio_device));
 	if (!dev) {
-		fprintf(stderr, "unable to allocate memory for gpio device\n");
+		gpio_debug_printf("Can not allocate device!");
 		return NULL;
 	}
 
 	if (gpio_library_load(dev, type)) {
 		/* whoops! that type of device isn't supported */
+		gpio_debug_printf("Device type not supported! (%i)", type);
 		free(dev);
 		return NULL;
 	}
@@ -136,6 +142,8 @@ gpio_device *gpio_new(gpio_device_type type)
 	}
 
 	dev->ops->init(dev);
+
+	gpio_debug_printf("Created device successfully...");
 
 	return (dev);
 }

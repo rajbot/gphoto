@@ -34,7 +34,6 @@ int gpio_library_list_load(char *filename, int loaded[], gpio_device_info *list,
         if ((lh = dlopen(filename, RTLD_LAZY))==NULL)
                 return (GPIO_ERROR);
 	
-
 	lib_type = dlsym(lh, "gpio_library_type");
 	lib_list = dlsym(lh, "gpio_library_list");
 

@@ -83,7 +83,6 @@ static GnoCamCamera *
 gnocam_main_get_camera (GnoCamMain *gm, const gchar *model, const gchar *port,
 		        CORBA_Environment *ev)
 {
-	guint i;
 	Camera *camera;
 	GnoCamCamera *gc = NULL;
 
@@ -162,20 +161,9 @@ typedef struct _IdleData IdleData;
 struct _IdleData {
 	GnoCamMain *gm;
 	Bonobo_Listener listener;
-	gchar *model;
-	gchar *port;
+	CORBA_string model;
+	CORBA_string port;
 };
-
-static void
-idle_data_destroy (gpointer data)
-{
-	IdleData *d = data;
-
-	bonobo_object_unref (d->gm);
-	g_free (d->model);
-	g_free (d->port);
-	g_free (d);
-}
 
 static gboolean
 get_camera_idle (gpointer data)
@@ -187,39 +175,52 @@ get_camera_idle (gpointer data)
 
 	CORBA_exception_init (&ev);
 
-	gc = gnocam_main_get_camera (d->gm, d->model, d->port, &ev);
+	/* Get the camera */
+	gc = gnocam_main_get_camera (d->gm, (const gchar *) d->model,
+					    (const gchar *) d->port, &ev);
 	if (BONOBO_EX (&ev)) {
 		GNOME_GnoCam_ErrorCode e = GNOME_GnoCam_ERROR;
 		any._type = TC_GNOME_GnoCam_ErrorCode;
 		any._value = &e;
 	} else {
-		GNOME_Camera c = CORBA_Object_duplicate (BONOBO_OBJREF (gc),
-							 &ev);
+		GNOME_Camera c = BONOBO_OBJREF (gc);
 		any._type = TC_GNOME_Camera;
 		any._value = &c;
 	}
 
+	/* Notify */
 	g_message ("Notifying...");
 	Bonobo_Listener_event (d->listener, "result", &any, &ev);
 	g_message ("Notified.");
 
+	/* Clean up */
+	if (gc)
+		bonobo_object_idle_unref (gc);
+	bonobo_object_release_unref (d->listener, NULL);
+	bonobo_object_unref (d->gm);
+	if (d->model)
+		CORBA_free (d->model);
+	if (d->port)
+		CORBA_free (d->port);
+	g_free (d);
 	CORBA_exception_free (&ev);
 	
 	return (FALSE);
 };
 
-static GNOME_Camera
+static void
 impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant,
-			     CORBA_Environment *ev)
+			     Bonobo_Listener listener, CORBA_Environment *ev)
 {
-	GnoCamMain *gm;
-	GnoCamCamera *gc;
+	IdleData *d;
 
-	gm = GNOCAM_MAIN (bonobo_object_from_servant (servant));
+	d = g_new0 (IdleData, 1);
+	d->gm = GNOCAM_MAIN (bonobo_object_from_servant (servant));
+	bonobo_object_ref (d->gm);
+	d->listener = bonobo_object_dup_ref (listener, NULL);
 
-	gc = gnocam_main_get_camera (gm, NULL, NULL, ev);
-
-	return (CORBA_Object_duplicate (BONOBO_OBJREF (gc), ev));
+	g_message ("Adding idle function...");
+	g_idle_add (get_camera_idle, d);
 }
 
 static void
@@ -231,31 +232,33 @@ impl_GNOME_GnoCam_getCameraByModel (
 	IdleData *d;
 
 	d = g_new0 (IdleData, 1);
-	d->model = g_strdup (model);
+	d->model = CORBA_string_dup (model);
 	d->gm = GNOCAM_MAIN (bonobo_object_from_servant (servant));
 	bonobo_object_ref (d->gm);
-	d->listener = CORBA_Object_duplicate (listener, NULL);
+	d->listener = bonobo_object_dup_ref (listener, NULL);
 
 	g_message ("Adding idle function...");
-	g_idle_add_full (0, get_camera_idle, d, idle_data_destroy);
+	g_idle_add (get_camera_idle, d);
 }
 
-static GNOME_Camera
+static void
 impl_GNOME_GnoCam_getCameraByModelAndPort (
 		PortableServer_Servant servant, 
+		Bonobo_Listener listener,
 		const CORBA_char *model, const CORBA_char *port,
 		CORBA_Environment *ev)
 {
-	GnoCamMain *gm;
-	GnoCamCamera *gc = NULL;
+	IdleData *d;
+	
+	d = g_new0 (IdleData, 1);
+	d->model = CORBA_string_dup (model);
+	d->port = CORBA_string_dup (port);
+	d->gm = GNOCAM_MAIN (bonobo_object_from_servant (servant));
+	bonobo_object_ref (d->gm);
+	d->listener = bonobo_object_dup_ref (listener, NULL);
 
-	gm = GNOCAM_MAIN (bonobo_object_from_servant (servant));
-
-	gc = gnocam_main_get_camera (gm, model, port, ev);
-	if (BONOBO_EX (ev))
-		return (CORBA_OBJECT_NIL);
-
-	return (CORBA_Object_duplicate (BONOBO_OBJREF (gc), ev));
+	g_message ("Adding idle function...");
+	g_idle_add (get_camera_idle, d);
 }
 
 static void
@@ -296,8 +299,7 @@ gnocam_main_class_init (gpointer g_class, gpointer class_data)
 	epv->getPortList            = impl_GNOME_GnoCam_getPortList;
 	epv->getCamera              = impl_GNOME_GnoCam_getCamera;
 	epv->getCameraByModelAndPort= impl_GNOME_GnoCam_getCameraByModelAndPort;
-
-	epv->getCameraByModel  = impl_GNOME_GnoCam_getCameraByModel;
+	epv->getCameraByModel       = impl_GNOME_GnoCam_getCameraByModel;
 }
 
 static void

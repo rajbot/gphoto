@@ -115,6 +115,5 @@ gnocam_cache_add (GnoCamCache *cache, GnoCamCamera *c)
 	g_return_if_fail (GNOCAM_IS_CACHE (cache));
 
 	cache->priv->list = g_list_append (cache->priv->list, c);
-	bonobo_object_ref (c);
 	g_signal_connect (c, "destroy", G_CALLBACK (on_camera_destroy), cache);
 }

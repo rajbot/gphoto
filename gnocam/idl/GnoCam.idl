@@ -15,7 +15,10 @@ module GNOME {
 			ERROR
 		};
 		
-		/* Async interface */
+		/*
+		 * Returns either an ErrorCode or a CORBA_string defining
+		 * the path to the new image.
+		 */
 		oneway void captureImage (
 				in Bonobo::Listener listener);
 	};
@@ -30,21 +33,21 @@ module GNOME {
 		ModelList getModelList ();
 		PortList  getPortList  ();
 
-		/* Sync interface */
-		Camera getCamera ()
-			raises (NotFound);
-		Camera getCameraByModelAndPort (in string model,
-					        in string port)
-			raises (NotFound);
-
 		enum ErrorCode {
 			ERROR
 		};
 
-		/* Async interface */
+		/*
+		 * Those functions either return a GNOME_Camera or an
+		 * ErrorCode.
+		 */
+		oneway void getCamera (in Bonobo::Listener listener);
 		oneway void getCameraByModel (
 				in Bonobo::Listener listener,
 				in string model);
+		oneway void getCameraByModelAndPort (
+				in Bonobo::Listener listener,
+				in string model, in string port);
 	};
 };
 

@@ -117,11 +117,15 @@ listener_cb (BonoboListener *listener, const char *event_name,
 	g_message ("Got event '%s'.", event_name);
 
 	if (CORBA_TypeCode_equal (any->_type, TC_GNOME_GnoCam_ErrorCode, ev)) {
-		g_message ("Error!");
+		g_warning ("Error!");
 	} else if (CORBA_TypeCode_equal (any->_type, TC_GNOME_Camera, ev)) {
-		a->priv->camera = any->_value;
+		g_message ("Got camera.");
+		if (a->priv->camera != CORBA_OBJECT_NIL)
+			bonobo_object_release_unref (a->priv->camera, NULL);
+		a->priv->camera = bonobo_object_dup_ref (
+				*((GNOME_Camera *) any->_value), NULL);
 	} else {
-		g_message ("Unknown type.");
+		g_warning ("Unknown type.");
 	}
 
 	gnocam_applet_update (a);
@@ -153,8 +157,15 @@ gnocam_applet_connect (GnoCamApplet *a)
 	gnocam_applet_disconnect (a);
 
 	l = bonobo_listener_new (listener_cb, a);
-	GNOME_GnoCam_getCameraByModel (o, BONOBO_OBJREF (l),
-		a->priv->prefs.model ? a->priv->prefs.model : "", &ev);
+	if ((a->priv->prefs.model && strlen (a->priv->prefs.model)) &&
+	    (a->priv->prefs.port  && strlen (a->priv->prefs.port)))
+		GNOME_GnoCam_getCameraByModelAndPort (o, BONOBO_OBJREF (l),
+			a->priv->prefs.model, a->priv->prefs.port, &ev);
+	else if (a->priv->prefs.model && strlen (a->priv->prefs.model))
+		GNOME_GnoCam_getCameraByModel (o, BONOBO_OBJREF (l),
+			a->priv->prefs.model, &ev);
+	else
+		GNOME_GnoCam_getCamera (o, BONOBO_OBJREF (l), &ev);
 	bonobo_object_release_unref (o, NULL);
 	if (BONOBO_EX (&ev)) {
 		gnocam_applet_report_error (a, &ev);
@@ -352,18 +363,19 @@ capture_cb (BonoboListener *listener, const char *event_name,
 		return;
 	}
 
+	g_message ("The captured image is available at '%s'.",
+		   *((const gchar **) any->_value));
+
 	st = Bonobo_Unknown_queryInterface (a->priv->camera,
 					    "IDL:Bonobo/Storage:1.0", ev);
 	if (BONOBO_EX (ev)) {
 		gnocam_applet_report_error (a, ev);
-		CORBA_free (any->_value);
 		return;
 	}
 
-	s = Bonobo_Storage_openStream (st, any->_value,
+	s = Bonobo_Storage_openStream (st, *((const gchar **) any->_value),
 				       Bonobo_Storage_READ, ev);
 	bonobo_object_release_unref (st, NULL);
-	CORBA_free (any->_value);
 	if (BONOBO_EX (ev)) {
 		gnocam_applet_report_error (a, ev);
 		return;

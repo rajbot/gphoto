@@ -1,3 +1,7 @@
+2002-11-26  Lutz Müller <lutz@users.sourceforge.net>
+
+	* applet/*: Fix various segfaults.
+
 2002-11-25  Lutz Müller <lutz@users.sourceforge.net>
 
 	* idl/GnoCam.h: Make some functions async.

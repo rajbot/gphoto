@@ -9,7 +9,6 @@ modules_LTLIBRARIES =\
 
 libvfs_camera_la_SOURCES =\
  camera-method.c\
- gphoto-extensions.h gphoto-extensions.c\
  utils.h utils.c\
  $(NULL)
 

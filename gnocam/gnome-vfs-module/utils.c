@@ -30,13 +30,11 @@ camera_new_by_uri (GnomeVFSURI* uri, GConfClient* client, GMutex* client_mutex, 
 	gchar*			host;
 
         /* Does gconf know about the camera (host)? */
+	*result = GNOME_VFS_ERROR_HOST_NOT_FOUND;
 	g_mutex_lock (client_mutex);
 	value = gconf_client_get (client, "/apps/GnoCam/cameras", NULL);
 	g_mutex_unlock (client_mutex);
-	if (!value) {
-		*result = GNOME_VFS_ERROR_HOST_NOT_FOUND;
-		return (NULL);
-	}
+	if (!value) return (NULL);
 	g_assert (value->type == GCONF_VALUE_LIST);
 	g_assert (gconf_value_get_list_type (value) == GCONF_VALUE_STRING);
 	list = gconf_value_get_list (value);
@@ -56,10 +54,7 @@ camera_new_by_uri (GnomeVFSURI* uri, GConfClient* client, GMutex* client_mutex, 
 	        if (!strcmp (name, host)) break;
 	}
 	g_free (host);
-	if (i == g_slist_length (list)) {
-	        *result = GNOME_VFS_ERROR_HOST_NOT_FOUND;
-	        return (NULL);
-	}
+	if (i == g_slist_length (list)) return (NULL);
 
         /* Connect to the camera (host). Beware of 'Directory Browse'.*/
 	*result = GNOME_VFS_ERROR_SERVICE_NOT_AVAILABLE;
@@ -115,7 +110,6 @@ file_handle_new (GnomeVFSURI* uri, GConfClient* client, GMutex* client_mutex, Gn
 	g_print ("  getting file '%s' from directory '%s'...\n", filename, dirname);
 	file = gp_file_new ();
 	if (gp_camera_file_get (camera, file, dirname, (gchar*) filename) != GP_OK) {
-		g_print ("    ERROR\n");
 		*result = GNOME_VFS_ERROR_GENERIC;
 		return (NULL);
 	}

@@ -1,33 +1,5 @@
 Things to do for the DC240 Driver:
 ----------------------------------
-   Error Handling:
-
-      - Need to add recovery from a packet timeout during packet
-        transfers.  The error function now knows what type of error
-        occured (unknown, read, write, or timeout), but it doesn't
-        do anything with the error.  The real question is "What should
-        be done on timeout errors?"
-
-      - Verify that packet checksum errors are correctly handled.
-        Basically, someone needs to beat the hell out of the driver
-        until you get a checksum error and make sure that checksum
-        errors cause a packet retransmission.
-
-      - Make the driver work correctly when gphoto is started with
-        the camera turned off.  Currently for things to work right,
-        the camera needs to be on when gphoto runs.
-
-        There is some logic in kodak_dc240_helpers.c that attemts to
-        reinitialize the camera (by asserting break and then trying
-        to change the baud rate from 9600 to 115200) after an error,
-        but I've never seen this work right.
-
-        After the break, the command to change the baud rate is sent,
-        but the camera goes bonkers after this.  By playing around with
-        the IGNBRK flag, I made the determination that the camera seems
-        to be asserting the break signal (or the PC thinks it is anyway).
-        This could mean that we have a baud rate mismatch or we've done
-        something to hose up the camera.
 
    Commands:
 

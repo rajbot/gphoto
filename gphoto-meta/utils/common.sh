@@ -8,6 +8,9 @@ fi
 
 cvsmodulelistsource="${metadir}/cvs-module-list"
 cvsmodulelist="${metadir}/cvs-module-list.filtered"
+buildtoollistsource="${metadir}/build-tool-list"
+buildtoollisttmp="${metadir}/build-tool-list.filtered"
+buildtoollist="${metadir}/build-tool-list.boot"
 
 cvsorig="${metadir}/cvs-orig"
 cvssrc="${metadir}/cvs-src"
@@ -40,11 +43,18 @@ cmd() {
     fi
 }
 
-if [ ! -f "$cvsmodulelist" ] || [ "$cvsmodulelistsource" -nt "$cvsmodulelist" ]
-then
-    echo "Re-creating $cvsmodulelist from $cvsmodulelistsource"
-    grep -v '^#' < "$cvsmodulelistsource" | grep -v "^$" > "$cvsmodulelist"
-fi
+filterlist() {
+    source="$1"
+    list="$2"
+    if [ ! -f "$list" ] || [ "$source" -nt "$list" ]
+    then
+	echo "Re-creating $list from $source"
+	grep -v '^#' < "$source" | grep -v "^$" > "$list"
+    fi
+}
+
+filterlist "$cvsmodulelistsource" "$cvsmodulelist"
+filterlist "$buildtoollistsource" "$buildtoollisttmp"
 
 if bzip2 --version < /dev/null > /dev/null 2>&1
 then
@@ -54,8 +64,7 @@ else
 	echo "bzip2 not found."
 	compression="gz"
 fi
-sed -e "s/\\\${compression}/${compression}/g" < build-tool-list > build-tool-list.boot
-buildtoollist="build-tool-list.boot"
+sed -e "s/\\\${compression}/${compression}/g" < "${buildtoollisttmp}" > "${buildtoollist}"
 
 if gmake --version< /dev/null > /dev/null 2>&1
 then

@@ -604,9 +604,10 @@ main_tree_update (GConfValue* value)
 	gchar*		model;
 	gchar*		port;
 	gchar*		speed;
-	gchar*		path;
+	gchar*		tmp;
         gint            i;
         gint            j;
+	gint		result;
         Camera*         camera;
 	gboolean	changed;
 
@@ -663,10 +664,15 @@ main_tree_update (GConfValue* value)
                 if (j == g_list_length (main_tree->children)) {
 
                         /* We don't have the camera in the tree (yet). */
-                        if ((camera = gp_camera_new_by_description (atoi (id), name, model, port, atoi (speed)))) {
-				path = g_strdup_printf ("camera://%s/", name);
-				camera_tree_folder_add (main_tree, camera, gnome_vfs_uri_new (path));
-				g_free (path);
+			camera = NULL;
+                        if ((result = gp_camera_new_by_description (atoi (id), name, model, port, atoi (speed), &camera)) != GP_OK) {
+				tmp = g_strdup_printf (_("Could not connect to the camera!\n(%s)"), gp_camera_result_as_string (camera, result));
+				gnome_error_dialog_parented (tmp, main_window);
+				g_free (tmp);
+			} else {
+				tmp = g_strdup_printf ("camera://%s/", name);
+				camera_tree_folder_add (main_tree, camera, gnome_vfs_uri_new (tmp));
+				g_free (tmp);
 			}
                 }
         }

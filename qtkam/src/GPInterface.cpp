@@ -172,6 +172,9 @@ QRect GPInterface::getGeometry()
 }
 
 
+/** 
+ * Returns a string list with all the supported cameras.
+ */
 QStringList GPInterface::getSupportedCameras() 
 {
     QStringList list;
@@ -191,6 +194,23 @@ QStringList GPInterface::getSupportedCameras()
     }
 
     return list;
+}
+
+
+/**
+ * Returns a string with all the camera information.
+ */
+QString GPInterface::getInformation()
+{
+    if (!cameraInitialized) 
+        initCamera();
+        
+    CameraText buf;
+    if (gp_camera_get_summary(theCamera, &buf) != GP_OK) 
+        // FIXME: do proper error handling
+        return QString("ERROR");
+
+    return QString(buf.text);
 }
 
 

@@ -38,6 +38,8 @@ class GPInterface
     static QStringList getSupportedCameras(); 
     static QStringList getSupportedPorts(const QString& camera);
     static QStringList getSupportedSpeeds(const QString& camera);
+    static QString getInformation();
+
     static void downloadThumbs(QIconView* iconView);
     static void downloadPicture(QString name, QString folder);
     static void deletePicture(QString name, QString folder);

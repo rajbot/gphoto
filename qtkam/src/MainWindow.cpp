@@ -317,13 +317,21 @@ void MainWindow::deleteSelected()
     }
 }
 
+
+/**
+ * Displays a message box with all the information of the camera
+ */ 
+void MainWindow::cameraInformation()
+{
+    KMessageBox::information(this, GPInterface::getInformation(), 
+                             "Camera Information");
+}
+
+
 void MainWindow::configureCamera()
 {
 }
 
-void MainWindow::cameraInformation()
-{
-}
 
 void MainWindow::cameraManual()
 {

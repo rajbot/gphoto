@@ -1,3 +1,11 @@
+2001-05-07	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
+	* bonobo-storage-module/bonobo-storage-camera.c: 
+	'mode' is for permissions, 'flags' are for example Bonobo_Storage_READ. 
+	Not the other way round.
+	* bonobo-moniker: For now, just open with READ (not WRITE). Added 
+	FIXME about this.
+
 2001-05-01	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
 	* libgnocam/gphoto-extensions.c: Use gnome_vfs_mime_type_from_name 

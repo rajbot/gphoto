@@ -3,7 +3,7 @@
 #include <gnome.h>
 #include <bonobo.h>
 #include <bonobo/bonobo-storage-plugin.h>
-#include <libgnomevfs/gnome-vfs.h>
+#include <libgnomevfs/gnome-vfs-mime.h>
 #include <gconf/gconf-client.h>
 
 #include "gphoto-extensions.h"
@@ -68,11 +68,11 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 	static GSList	   *list = NULL;
 	static GHashTable  *hash_table = NULL;
 
-	g_return_val_if_fail (camera, GP_ERROR_BAD_PARAMETERS);
-	g_return_val_if_fail (name_or_url [0] != '/', GP_ERROR_BAD_PARAMETERS);
-	g_return_val_if_fail (name_or_url [1] != '/', GP_ERROR_BAD_PARAMETERS);
-
 	CAM_EXT_DEBUG (("ENTER"));
+	CAM_EXT_DEBUG (("name_or_url: %s", name_or_url));
+
+	g_return_val_if_fail (camera, GP_ERROR_BAD_PARAMETERS);
+	g_return_val_if_fail (name_or_url, GP_ERROR_BAD_PARAMETERS);
 
 	/* Create the hash table if necessary */
 	if (!hash_table)
@@ -95,15 +95,12 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 	
 	/* Make sure we are given a camera name. */
 	if (!strncmp (name_or_url, "camera:", 7)) name_or_url += 7;
-	if (name_or_url [0] == '/') {
-		name_or_url += 2;
-		for (i = 0; name_or_url [i] != 0; i++) 
-		    	if (name_or_url [i] == '/') 
-			    	break;
-		name = g_strndup (name_or_url, i);
-	} else {
-		name = g_strdup (name_or_url);
-	}
+	if ((name_or_url [0] == '/') && (name_or_url [1] == '/'))
+	    	name_or_url += 2;
+	for (i = 0; name_or_url [i] != 0; i++) 
+	    	if (name_or_url [i] == '/') 
+		    	break;
+	name = g_strndup (name_or_url, i);
 
 	/* Get the list of configured cameras */
 	CAM_EXT_DEBUG (("  Getting list of configured cameras..."));

@@ -27,9 +27,16 @@ struct _BonoboStreamCameraClass {
 };
 
 GtkType       		bonobo_stream_camera_get_type	(void);
-BonoboStreamCamera*	bonobo_stream_camera_new	(Camera* camera, const gchar* dirname, const gchar* filename, gint mode, CORBA_Environment* ev);
+BonoboStreamCamera*	bonobo_stream_camera_new (Camera	   *camera, 
+						  const gchar      *dirname, 
+						  const gchar      *filename, 
+						  gint 		    flags, 
+						  CORBA_Environment* ev);
 
-BonoboStream*		bonobo_stream_camera_open     	(const gchar* path, gint flags, gint mode, CORBA_Environment* ev);
+BonoboStream*		bonobo_stream_camera_open (const gchar       *path, 
+						   gint 	      flags, 
+						   gint 	      mode, 
+						   CORBA_Environment *ev);
 	
 END_GNOME_DECLS
 

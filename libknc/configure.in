@@ -76,7 +76,7 @@ AM_CONDITIONAL(HAVE_KNCTEST, $have_knctest)
 AC_SUBST(LIBKNCTEST_CFLAGS)
 AC_SUBST(LIBKNCTEST_LIBS)
 
-AC_OUTPUT([po/Makefile.in m4/Makefile  intl/Makefile 
+AC_OUTPUT([
 Makefile
 libknc/Makefile
 libknc/libknc.pc

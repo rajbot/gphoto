@@ -6,8 +6,7 @@ void delete_all_selected 	(GtkTree* tree);
 
 void delete	(GtkTreeItem* item);
 void save 	(GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary);
-
-void upload (Camera* camera, gchar* path, gchar* filename);
+void upload 	(GtkTreeItem* item, gchar* filename);
 
 void camera_file_save (CameraFile* file, gchar* filename);
 void camera_file_save_as (CameraFile* file);

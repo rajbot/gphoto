@@ -68,7 +68,7 @@ on_drag_data_received (GtkWidget *widget, GdkDragContext *context, gint x, gint 
 
         filenames = gnome_uri_list_extract_filenames (selection_data->data);
         for (i = 0; i < g_list_length (filenames); i++) {
-                upload (camera, path, g_list_nth_data (filenames, i));
+                upload (GTK_TREE_ITEM (widget), g_list_nth_data (filenames, i));
         }
         gnome_uri_list_free_strings (filenames);
 }
@@ -77,13 +77,26 @@ on_drag_data_received (GtkWidget *widget, GdkDragContext *context, gint x, gint 
 /* Functions */
 /*************/
 
-/**
- * camera_tree_folder clean:
- *
- * This function removes all items from a tree and makes sure that 
- * the tree is still connected with its parent. Any associated
- * pages in the notebook are removed.
- **/
+void
+camera_tree_folder_notebook_pages_remove (GtkTreeItem* folder)
+{
+	gint		i;
+	GtkTree*	tree;
+	GtkTreeItem*	item;
+	GtkWidget*	page;
+	GtkNotebook*	notebook;
+
+	g_assert (folder != NULL);
+	g_assert ((tree = GTK_TREE (folder->subtree)) != NULL);
+	g_assert ((notebook = GTK_NOTEBOOK (glade_xml_get_widget (xml, "notebook_files"))) != NULL);
+
+	for (i = g_list_length (tree->children) - 1; i >= 0; i--) {
+		item = GTK_TREE_ITEM (g_list_nth_data (tree->children, i));
+		if (item->subtree) camera_tree_folder_notebook_pages_remove (item);
+		if ((page = gtk_object_get_data (GTK_OBJECT (item), "page"))) gtk_notebook_remove_page (notebook, gtk_notebook_page_num (notebook, page));
+	}
+}
+
 void
 camera_tree_folder_clean (GtkTreeItem* folder)
 {
@@ -95,6 +108,73 @@ camera_tree_folder_clean (GtkTreeItem* folder)
 
 	/* Delete all items of tree. */
 	for (i = g_list_length (tree->children) - 1; i >= 0; i--) camera_tree_item_remove (GTK_TREE_ITEM (g_list_nth_data (tree->children, i)));
+}
+
+void 
+camera_tree_folder_populate (GtkTreeItem* folder)
+{
+        CameraList              folder_list, file_list;
+        CameraListEntry*        folder_list_entry;
+        CameraListEntry*        file_list_entry;
+        Camera*                 camera;
+        gchar*                  path;
+        gchar*                  new_path;
+        gint                    folder_list_count, file_list_count;
+        gint                    i;
+
+        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (folder), "camera")) != NULL);
+        g_assert ((path = gtk_object_get_data (GTK_OBJECT (folder), "path")) != NULL);
+        g_assert (folder->subtree);
+        g_assert (GTK_OBJECT (folder->subtree)->ref_count > 0);
+
+        /* Get file and folder list. */
+        if (gp_camera_folder_list (camera, &folder_list, path) != GP_OK) {
+                dialog_information ("Could not get folder list for folder '%s'!", path);
+                return;
+        }
+        if (gp_camera_file_list (camera, &file_list, path) != GP_OK) {
+                dialog_information ("Could not get file list for folder '%s'!", path);
+                return;
+        }
+
+        /* Add folders to tree. */
+        folder_list_count = gp_list_count (&folder_list);
+        if (folder_list_count > 0) {
+                for (i = 0; i < folder_list_count; i++) {
+                        folder_list_entry = gp_list_entry (&folder_list, i);
+
+                        /* Construct the new path. */
+                        if (strcmp (path, "/") == 0) new_path = g_strdup_printf ("/%s", folder_list_entry->name);
+                        else new_path = g_strdup_printf ("%s/%s", path, folder_list_entry->name);
+
+                        /* Add the folder to the tree. */
+                        camera_tree_folder_add (GTK_TREE (folder->subtree), camera, new_path);
+
+                        /* Clean up. */
+                        g_free (new_path);
+                }
+        }
+
+        /* Add files to tree. */
+        file_list_count = gp_list_count (&file_list);
+        if (file_list_count > 0) {
+                for (i = 0; i < file_list_count; i++) {
+                        file_list_entry = gp_list_entry (&file_list, i);
+                        camera_tree_file_add (GTK_TREE (folder->subtree), camera, path, file_list_entry->name);
+                }
+        }
+
+	gtk_object_set_data (GTK_OBJECT (folder), "populated", GINT_TO_POINTER (1));
+}
+
+void
+camera_tree_folder_refresh (GtkTreeItem* folder)
+{
+	/* Clean the folder... */
+	camera_tree_folder_clean (folder);
+
+	/* ... and fill it. */
+	camera_tree_folder_populate (folder);
 }
 
 void

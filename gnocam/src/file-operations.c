@@ -33,8 +33,6 @@ void
 on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 {
 	CameraFile*		file;
-	Camera*			camera;
-	gchar*			path;
 	gchar* 			filename_user;
 	GtkFileSelection*	fileselection;
 
@@ -48,9 +46,7 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 		camera_file_save (file, filename_user);
 		gp_file_unref (file);
 	} else {
-		g_assert ((camera = gtk_object_get_data (GTK_OBJECT (button), "camera")) != NULL);
-		g_assert ((path = gtk_object_get_data (GTK_OBJECT (button), "path")) != NULL);
-		upload (camera, path, filename_user);
+		upload (gtk_object_get_data (GTK_OBJECT (button), "folder"), filename_user);
 	}
 
 	/* Clean up. */
@@ -83,8 +79,10 @@ on_fileselection_cancel_button_clicked (GtkButton *button, gpointer user_data)
 /*************/
 
 void
-upload (Camera* camera, gchar* path, gchar* filename)
+upload (GtkTreeItem* folder, gchar* filename)
 {
+	Camera*			camera;
+	gchar*			path;
 	GladeXML*		xml_fileselection;
 	GtkFileSelection*	fileselection;
 	GtkObject*		object;
@@ -97,8 +95,9 @@ upload (Camera* camera, gchar* path, gchar* filename)
         guint8                  data [1025];
 	CameraFile*		file;
 
-	g_assert (camera != NULL);
-	g_assert (path != NULL);
+	g_assert (folder != NULL);
+	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (folder), "camera")) != NULL);
+	g_assert ((path = gtk_object_get_data (GTK_OBJECT (folder), "path")) != NULL);
 
 	if (filename) {
 
@@ -135,8 +134,10 @@ upload (Camera* camera, gchar* path, gchar* filename)
 				j+= bytes_read;
 	                        file->size = j;
 	                }
-	                if ((result == GNOME_VFS_OK) || (result == GNOME_VFS_ERROR_EOF)) camera_file_upload (camera, path, file);
-			else {
+	                if ((result == GNOME_VFS_OK) || (result == GNOME_VFS_ERROR_EOF)) {
+				camera_file_upload (camera, path, file);
+				camera_tree_folder_refresh (folder);
+			} else {
 				dialog_information (_("An error occurred while trying to read file '%s' (%s)."), filename, gnome_vfs_result_to_string (result));
 	                        gp_file_free (file);
 			}
@@ -149,8 +150,7 @@ upload (Camera* camera, gchar* path, gchar* filename)
 	
 	        /* Store some data in the ok button. */
 	        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_ok_button"))) != NULL);
-	        gtk_object_set_data (object, "camera", camera);
-	        gtk_object_set_data (object, "path", path);
+	        gtk_object_set_data (object, "folder", folder);
 	        gtk_object_set_data (object, "fileselection", fileselection);
 	        gtk_object_set_data (object, "save", GINT_TO_POINTER (0));
 	

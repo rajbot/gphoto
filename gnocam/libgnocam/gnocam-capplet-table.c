@@ -155,7 +155,7 @@ get_info (GnoCamCappletTable *table, guint number)
 		        }
 	CORBA_exception_free (&ev);
 
-	gnome_ok_dialog (info);
+	gnome_dialog_run_and_close (GNOME_DIALOG (gnome_ok_dialog (info)));
 
 	CORBA_free (info);
 }

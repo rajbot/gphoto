@@ -156,8 +156,8 @@ dnl GConf
 dnl ******************************
 AM_PATH_GCONF(0.12,,,gconf-gtk)
 
-EXTRA_GNOME_CFLAGS="`gnome-config --cflags bonobo bonobox bonobox_print print gal gnome gnomeui oaf`"
-EXTRA_GNOME_LIBS="`gnome-config --libs bonobo bonobox bonobox_print print gal gnome gnomeui oaf`"
+EXTRA_GNOME_CFLAGS="`gnome-config --cflags bonobo bonobox bonobox_print print gal gnome gnomeui oaf bonobo_conf`"
+EXTRA_GNOME_LIBS="`gnome-config --libs bonobo bonobox bonobox_print print gal gnome gnomeui oaf bonobo_conf`"
 AC_SUBST(EXTRA_GNOME_CFLAGS)
 AC_SUBST(EXTRA_GNOME_LIBS)
 

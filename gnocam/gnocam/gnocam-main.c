@@ -50,7 +50,6 @@ impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant,
 	GnoCamCamera *gnocam_camera;
 	Camera *camera = NULL;
 	GSList *list;
-	gboolean initialized = FALSE;
 
 	gnocam_main = GNOCAM_MAIN (bonobo_object_from_servant (servant));
 	CHECK_RESULT (gp_camera_new (&camera), ev);
@@ -67,65 +66,75 @@ impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant,
 			gp_camera_unref (camera);
 			return (CORBA_OBJECT_NIL);
 		}
-		initialized = TRUE;
-	}
+	} else {
 
-	/* Only one camera? */
-	if (!initialized && (g_slist_length (list) == 3)) {
-		strcpy (camera->model, g_slist_nth_data (list, 1));
-		strcpy (camera->port->name, g_slist_nth_data (list, 2));
-		CHECK_RESULT (gp_camera_init (camera), ev);
-		if (BONOBO_EX (ev)) {
-			gp_camera_unref (camera);
-			return (CORBA_OBJECT_NIL);
-		}
-
-		initialized = TRUE;
-	}
-
-	/* Ask! */
-	if (!initialized) {
-		GnomeDialog *selector;
-		const gchar *name;
-		gint button;
-
-		selector = gnocam_camera_selector_new ();
-		do {
-			button = gnome_dialog_run (selector);
-			if (button == 1) {
-				/* Cancel */
-				gnome_dialog_close (selector);
-				CORBA_exception_set (ev, CORBA_USER_EXCEPTION,
-						     ex_GNOME_Cancelled, NULL);
+		/* Only one camera? */
+		if (g_slist_length (list) == 3) {
+			strcpy (camera->model, g_slist_nth_data (list, 1));
+			strcpy (camera->port->name, g_slist_nth_data (list, 2));
+			CHECK_RESULT (gp_camera_init (camera), ev);
+			if (BONOBO_EX (ev)) {
 				gp_camera_unref (camera);
 				return (CORBA_OBJECT_NIL);
-			} else if (button == 0) {
-				break;
-			} else {
-				g_warning ("Unhandled button: %i", button);
 			}
-		} while (TRUE);
+		} else {
 
-		name = gnocam_camera_selector_get_name (
+			/* Ask! */
+			GnomeDialog *selector;
+			const gchar *name;
+			gint button;
+	
+			selector = gnocam_camera_selector_new ();
+			do {
+				button = gnome_dialog_run (selector);
+				if (button == 1) {
+					/* Cancel */
+					gnome_dialog_close (selector);
+					CORBA_exception_set (ev,
+						CORBA_USER_EXCEPTION,
+						ex_GNOME_Cancelled, NULL);
+					gp_camera_unref (camera);
+					return (CORBA_OBJECT_NIL);
+				} else if (button == 0) {
+					break;
+				} else {
+					g_warning ("Unhandled button: %i",
+						   button);
+				}
+			} while (TRUE);
+	
+			name = gnocam_camera_selector_get_name (
 					GNOCAM_CAMERA_SELECTOR (selector));
-		gnome_dialog_close (selector);
+			gnome_dialog_close (selector);
 
-		if (!name) {
-			CORBA_exception_set (ev, CORBA_USER_EXCEPTION,
-					     ex_GNOME_GnoCam_NotFound, NULL);
-			gp_camera_unref (camera);
-			return (CORBA_OBJECT_NIL);
-		}
-		initialize_camera (list, camera, name, ev);
-		if (BONOBO_EX (ev)) {
-			gp_camera_unref (camera);
-			return (CORBA_OBJECT_NIL);
+			/* It can well be that the user clicked autodetect */
+			if (gconf_client_get_bool (gnocam_main->priv->client,
+						"/apps/" PACKAGE "/autodetect",
+						NULL)) {
+				CHECK_RESULT (gp_camera_init (camera), ev);
+				if (BONOBO_EX (ev)) {
+					gp_camera_unref (camera);
+					return (CORBA_OBJECT_NIL);
+				}
+			} else if (!name) {
+				CORBA_exception_set (ev, CORBA_USER_EXCEPTION,
+						     ex_GNOME_GnoCam_NotFound,
+						     NULL);
+				gp_camera_unref (camera);
+				return (CORBA_OBJECT_NIL);
+			} else {
+				initialize_camera (list, camera, name, ev);
+				if (BONOBO_EX (ev)) {
+					gp_camera_unref (camera);
+					return (CORBA_OBJECT_NIL);
+				}
+			}
 		}
 	}
 
 	gnocam_camera = gnocam_camera_new (camera, ev);
 	gp_camera_unref (camera);
-
+	
 	if (BONOBO_EX (ev))
 		return (CORBA_OBJECT_NIL);
 

@@ -9,6 +9,10 @@
 #include <libgnomeui/gnome-stock.h>
 #include <libgnomeui/gnome-dialog-util.h>
 #include <libgnome/gnome-i18n.h>
+#include <bonobo/bonobo-moniker-util.h>
+#include <bonobo/bonobo-exception.h>
+#include <bonobo/bonobo-object.h>
+#include <bonobo-conf/bonobo-property-editor.h>
 
 #include <gnocam-capplet-table-scrolled.h>
 
@@ -63,23 +67,15 @@ gnocam_camera_selector_init (GnoCamCameraSelector *selector)
 
 E_MAKE_TYPE (gnocam_camera_selector, "GnoCamCameraSelector", GnoCamCameraSelector, gnocam_camera_selector_class_init, gnocam_camera_selector_init, PARENT_TYPE)
 
-static void
-on_check_toggled (GtkToggleButton *toggle, gpointer data)
-{
-	GnoCamCameraSelector *selector;
-
-	selector = GNOCAM_CAMERA_SELECTOR (data);
-
-	gnome_error_dialog ("Not implemented!");
-}
-
 GnomeDialog *
 gnocam_camera_selector_new (void)
 {
 	GnoCamCameraSelector *selector;
 	const gchar *buttons[] = {GNOME_STOCK_BUTTON_OK,
 				  GNOME_STOCK_BUTTON_CANCEL, NULL};
-	GtkWidget *hbox, *pixmap, *vbox, *check;
+	GtkWidget *hbox, *pixmap, *vbox, *widget, *label;
+	Bonobo_PropertyBag pb;
+	CORBA_Environment ev;
 	
 	selector = gtk_type_new (GNOCAM_TYPE_CAMERA_SELECTOR);
 	gnome_dialog_constructv (GNOME_DIALOG (selector), _("Select a Camera"),
@@ -95,14 +91,32 @@ gnocam_camera_selector_new (void)
 	vbox = gtk_vbox_new (FALSE, 10);
 	gtk_widget_show (vbox);
 	gtk_box_pack_start (GTK_BOX (hbox), vbox, FALSE, FALSE, 0);
+
+	/* The camera picture */
 	pixmap = gnome_pixmap_new_from_file (IMAGEDIR "/gnocam.png");
 	gtk_widget_show (pixmap);
 	gtk_box_pack_start (GTK_BOX (vbox), pixmap, FALSE, FALSE, 0);
-	check = gtk_check_button_new_with_label (_("Do not ask again"));
-	gtk_widget_show (check);
-	gtk_box_pack_end (GTK_BOX (vbox), check, TRUE, TRUE, 0);
-	gtk_signal_connect (GTK_OBJECT (check), "toggled", 
-			    GTK_SIGNAL_FUNC (on_check_toggled), selector);
+
+	/* The "Autodetect" check button */
+	CORBA_exception_init (&ev);
+	pb = bonobo_get_object ("config:/apps/" PACKAGE,
+				"Bonobo/PropertyBag", &ev);
+	if (BONOBO_EX (&ev)) {
+		g_warning ("Could not get property bag: %s", 
+			   bonobo_exception_get_text (&ev));
+	} else {
+		GtkObject *ed;
+
+		ed = bonobo_peditor_new (pb, "autodetect", TC_boolean, NULL);
+		bonobo_object_release_unref (pb, NULL);
+		widget = bonobo_peditor_get_widget (BONOBO_PEDITOR (ed));
+		gtk_widget_show (widget);
+		gtk_box_pack_end (GTK_BOX (vbox), widget, FALSE, FALSE, 0);
+		label = gtk_label_new (_("Autodetect"));
+		gtk_widget_show (label);
+		gtk_container_add (GTK_CONTAINER (widget), label);
+	}
+	CORBA_exception_free (&ev);
 
 	/* The camera list */
 	selector->priv->table = gnocam_capplet_table_scrolled_new (NULL);

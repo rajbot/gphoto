@@ -131,7 +131,7 @@ void takepicture_call() {
 	}
 	    
 	appendpic(picNum, 0, TRUE, NULL);
-	sprintf(status, "New picture is #%i", picNum);
+	sprintf(status, "New picture is #%03i", picNum);
 	gtk_notebook_set_page (GTK_NOTEBOOK(notebook), picNum);
 	update_status(status);
 }
@@ -362,15 +362,15 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
                 node = node->next; i++;
                 if (GTK_TOGGLE_BUTTON(node->button)->active) {
 			if ((strcmp("i", type)==0)||(strcmp("in", type)==0)) {
-				sprintf(status, "Saving Image #%i...", i);
+				sprintf(status, "Saving Image #%03i...", i);
 				update_status(status);
-				sprintf(fname, "%s-%i",
+				sprintf(fname, "%s-%03i",
 					saveselectedtodisk_dir, pic);
 				savepictodisk(i, 0, fname); }
 			   else {
-				sprintf(status, "Saving Thumbnail #%i...", i);
+				sprintf(status, "Saving Thumbnail #%03i...", i);
 				update_status(status);
-				sprintf(fname, "%s-thumbnail-%i",
+				sprintf(fname, "%s-thumbnail-%03i",
 					saveselectedtodisk_dir, pic);
 				savepictodisk(i, 1, fname);
 			}
@@ -417,7 +417,7 @@ void appendpic (gint picNum, gint thumbnail, gint fromCamera, char *fileName) {
 							im->image_size);
 		free_image(im);
 		if (post_process) {
-			sprintf(imagename, "%s/gphoto-image-%i.jpg",
+			sprintf(imagename, "%s/gphoto-image-%03i.jpg",
 				gphotoDir, picNum);
 			gdk_imlib_save_image(node->imlibimage,
 				imagename, NULL);
@@ -1112,14 +1112,14 @@ void getpics (char *pictype) {
 			y++;
 			if ((strcmp("i", pictype) == 0) ||
 			    (strcmp("ti", pictype) == 0)) {
-				sprintf(status, "Getting Image #%i...", i);
+				sprintf(status, "Getting Image #%03i...", i);
 				update_status(status);
 				appendpic(i, 0, TRUE, NULL);
 			}
 			if ((strcmp("t", pictype) == 0) ||
 			    (strcmp("ti", pictype) == 0)) {			
 				appendpic(i, 1, TRUE, NULL);
-				sprintf(status, "Getting Thumbnail #%i...", i);
+				sprintf(status, "Getting Thumbnail #%03i...", i);
 				update_status(status);
 			}
 			gtk_toggle_button_set_state(
@@ -1253,7 +1253,7 @@ void save_dialog (GtkWidget *widget, gpointer data) {
 
 	x=1;
 	while (gtk_notebook_get_nth_page(GTK_NOTEBOOK(notebook),x)!=NULL){
-		sprintf(filename, "%s-%i.jpg",
+		sprintf(filename, "%s-%03i.jpg",
 			gtk_file_selection_get_filename(
 			GTK_FILE_SELECTION(save_dialog_filew)), x);
 		save_opened_image(x, filename);
@@ -1347,7 +1347,7 @@ void print_pic () {
 	}
 
 	pid = getpid();
-	sprintf(fname, "%s/gphoto-%i-%i.jpg", gphotoDir, pid, currentPic);
+	sprintf(fname, "%s/gphoto-%i-%03i.jpg", gphotoDir, pid, currentPic);
 	gdk_imlib_save_image(node->imlibimage, fname,NULL);
 
 	update_status("Now spooling...");

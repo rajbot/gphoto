@@ -40,6 +40,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.20  1999/11/23 11:17:29  ole
+ * Path fix by Jae <jgangemi@ccf.rutgers.edu>
+ *
  * Revision 1.19  1999/11/20 16:28:43  ole
  * Merged back changes
  *
@@ -469,7 +472,7 @@ Then, re-run the HTML Gallery.");
  	sprintf(outputdir,"%s",
 		(char*)gtk_object_get_data(GTK_OBJECT(dirlabel),"dir"));
 
-	sprintf(filename, "%s/%s",GALLERYDIR,theme);
+	sprintf(filename, "%s/%s/",GALLERYDIR,theme);
 	dir = opendir(filename);
 	file = readdir(dir);
 	while (file != NULL) {
@@ -479,7 +482,7 @@ Then, re-run the HTML Gallery.");
 		    (strcmp(file->d_name, "thumbnail.html") != 0 ) &&
 		    (strcmp(file->d_name, ".") != 0 ) &&
 		    (strcmp(file->d_name, "..") != 0 )) {
-			sprintf(filename2, "%s%s", outputdir, file->d_name);
+			sprintf(filename2, "%s/%s", outputdir, file->d_name);
 			if (confirm_overwrite(filename2)) {
 				sprintf(cp, "cp %s%s %s", filename, file->d_name,
 					outputdir);
@@ -520,6 +523,9 @@ Then, re-run the HTML Gallery.");
 					j+1);
 				error_dialog(error);
 				sprintf(thumbnail, "Not Available");
+				//jae
+				sprintf(thumbnail,
+		"<a href=\"picture-%03i.html\">Click Me<\\/a>",i+1);
 				sprintf(thumbnail_filename, "");
 				sprintf(thumbnail_number, "%03i", i+1);
 			} else {

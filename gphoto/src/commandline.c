@@ -26,7 +26,7 @@ void command_usage()
 	    "Copyright (C) 1998-99 Scott Fritzinger <scottf@unr.edu>\n\n");
     fprintf(stdout,
 	    "Usage: gphoto [-h] [-c] [-n] [-s # filename] [-t # filename]\n");
-    fprintf(stdout, "              [-d #] [-l filename]\n");
+    fprintf(stdout, "              [-d #] [-p filename] [-l filename]\n");
     fprintf(stdout, "\t-h                    display this help screen\n");
     fprintf(stdout, "\t-c                    display camera summary\n");
     fprintf(stdout, "\t-n                    display the # of pictures\n");

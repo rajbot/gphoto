@@ -96,16 +96,17 @@ printf ("No. Camera isn't in cache.\n");
 					   "/apps/" PACKAGE "/autodetect",
 					   NULL) &&
 		    (g_slist_length (list) == 3)) {
-			strcpy ((*camera)->model, g_slist_nth_data (list, 1));
-			strcpy ((*camera)->port->name,
-				g_slist_nth_data (list, 2));
+			gp_camera_set_model (*camera,
+					     g_slist_nth_data (list, 1));
+			gp_camera_set_port_name (*camera,
+						 g_slist_nth_data (list, 2));
 		}
 	} else 
 		for (i = 0; i < g_slist_length (list); i += 3)
 			if (!strcmp (g_slist_nth_data (list, i), host)) {
-				strcpy ((*camera)->model,
+				gp_camera_set_model (*camera,
 					g_slist_nth_data (list, i + 1));
-				strcpy ((*camera)->port->name,
+				gp_camera_set_port_name (*camera, 
 					g_slist_nth_data (list, i + 2));
 printf ("Found %s in database!\n", host);
 			}

@@ -67,8 +67,8 @@ initialize_camera (GSList *list, Camera *camera, const gchar *name,
 	}
 
 	g_message ("Trying to initialize %s...", name);
-	strcpy (camera->model, g_slist_nth_data (list, i + 1));
-	strcpy (camera->port->name, g_slist_nth_data (list, i + 2));
+	gp_camera_set_model (camera, g_slist_nth_data (list, i + 1));
+	gp_camera_set_port_name (camera, g_slist_nth_data (list, i + 2));
 	CHECK_RESULT (gp_camera_init (camera), ev);
 }
 
@@ -104,8 +104,10 @@ impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant,
 
 		/* Only one camera? */
 		if (g_slist_length (list) == 3) {
-			strcpy (camera->model, g_slist_nth_data (list, 1));
-			strcpy (camera->port->name, g_slist_nth_data (list, 2));
+			gp_camera_set_model (camera,
+					     g_slist_nth_data (list, 1));
+			gp_camera_set_port_name (camera,
+						 g_slist_nth_data (list, 2));
 			CHECK_RESULT (gp_camera_init (camera), ev);
 			if (BONOBO_EX (ev)) {
 				gp_camera_unref (camera);

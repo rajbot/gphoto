@@ -23,31 +23,31 @@ static GladeXML *xml;
 int gp_frontend_status (Camera *camera, char *status) 
 {
 	gnome_appbar_set_status (GNOME_APPBAR (glade_xml_get_widget (xml, "appbar")), status);
-	return (0);
+	return (GP_OK);
 }
 
 int gp_frontend_progress (Camera *camera, CameraFile *file, float percentage)
 {
 	gnome_appbar_set_progress (GNOME_APPBAR (glade_xml_get_widget (xml, "appbar")), percentage / 100);
-	return (0);
+	return (GP_OK);
 }
 
 int gp_frontend_message (Camera *camera, char *message)
 {
-	gnome_dialog_run_and_close (GNOME_DIALOG (gnome_app_warning (GNOME_APP (glade_xml_get_widget (xml, "app")), message)));
-	return (0);
+	gnome_app_warning (GNOME_APP (glade_xml_get_widget (xml, "app")), message);
+	return (GP_OK);
 }
 
 int gp_frontend_confirm (Camera *camera, char *message)
 {
 	//FIXME
-	return (0);
+	return (GP_CONFIRM_NO);
 }
 
 int gp_frontend_prompt (Camera *camera, CameraWidget *window)
 {
 	//FIXME
-	return (0);
+	return (GP_PROMPT_CANCEL);
 }
 
 static void
@@ -78,6 +78,9 @@ int main (int argc, char *argv[])
 	gchar*		prefix = NULL;
 	gchar*		home = NULL;
 	gchar*		message = NULL;
+
+	/* Init threads. */
+	g_thread_init (NULL);
 
 	/* Init GNOME, glade, gnome-vfs, gconf. */
 	gnome_init (PACKAGE, VERSION, argc, argv);
@@ -175,7 +178,9 @@ int main (int argc, char *argv[])
 	gtk_drag_source_set (glade_xml_get_widget (xml, "clist_files"), GDK_BUTTON1_MASK | GDK_BUTTON3_MASK, target_table, 1, GDK_ACTION_COPY);
 
 	/* Start the event loop. */
+	gdk_threads_enter ();
 	gtk_main ();
+	gdk_threads_leave ();
 
 	/* Clean up. */
 	gp_exit ();

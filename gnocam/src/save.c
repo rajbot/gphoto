@@ -15,6 +15,8 @@ void on_reply (gint reply, gpointer data);
 void on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data);
 void on_fileselection_cancel_button_clicked (GtkButton *button, gpointer user_data);
 
+void save_common (GladeXML* xml, Camera* camera, gchar* path, gchar* filename, gboolean file, gchar* filename_user);
+
 /*************/
 /* Callbacks */
 /*************/
@@ -40,55 +42,21 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 	gchar*		path;
 	gchar*		filename;
 	gchar* 		filename_user;
-	CameraFile*	camera_file;
-	gint		return_status;
-	GnomeApp*	app;
 	GtkFileSelection*	fileselection;
-	GnomeVFSResult		result;
-	GnomeVFSHandle*		handle;
-	GnomeVFSURI*		uri;
-	GnomeVFSFileSize	file_size;
+	gboolean		file;
 
+	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (button), "xml")) != NULL);
 	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (button), "camera")) != NULL);
 	g_assert ((path = gtk_object_get_data (GTK_OBJECT (button), "path")) != NULL);
 	g_assert ((filename = gtk_object_get_data (GTK_OBJECT (button), "filename")) != NULL);
-	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (button), "xml")) != NULL);
-	g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
 	g_assert ((fileselection = GTK_FILE_SELECTION (gtk_object_get_data (GTK_OBJECT (button), "fileselection"))) != NULL);
-	filename_user = gtk_file_selection_get_filename (fileselection);
 
-	/* Get the file/preview from gphoto backend. */
-	camera_file = gp_file_new ();
-	if (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (button), "file")) == 1) {
-		return_status = gp_camera_file_get (camera, camera_file, path, filename);
-	} else {
-		return_status = gp_camera_file_get_preview (camera, camera_file, path, filename);
-	}
-	if (return_status == GP_ERROR) {
-		gnome_app_error (app, _("Could not get file from camera!"));
-	} else {
+	file = (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (button), "file")) == 1);
+	filename_user = g_strdup (gtk_file_selection_get_filename (fileselection));
 
-		/* Let gnome-vfs save the file. */
-		uri = gnome_vfs_uri_new (filename_user);
-		if ((result = gnome_vfs_create_uri (&handle, uri, GNOME_VFS_OPEN_WRITE, FALSE, 0644)) != GNOME_VFS_OK) {
-			gnome_app_error (app, gnome_vfs_result_to_string (result));
-		} else {
-			if ((result = gnome_vfs_write (handle, camera_file->data, camera_file->size, &file_size)) != GNOME_VFS_OK) {
-				gnome_app_error (app, gnome_vfs_result_to_string (result));
-			}
-			if ((result = gnome_vfs_close (handle)) != GNOME_VFS_OK) {
-				gnome_app_error (app, gnome_vfs_result_to_string (result));
-			}
-		}
-		g_free (uri);
-	}
+	save_common (xml, camera, path, filename, file, filename_user);
 
-	/* Clean up. */
 	gtk_widget_destroy (GTK_WIDGET (fileselection));
-	gp_frontend_progress (camera, NULL, 0.0);
-	gp_file_free (camera_file);
-	g_free (path);
-	g_free (filename);
 }
 
 void
@@ -113,98 +81,76 @@ on_fileselection_cancel_button_clicked (GtkButton *button, gpointer user_data)
 /* Functions */
 /*************/
 
-/**
- * save:
- * @xml: A reference to the xml of the main window.
- * file: Save selected files (TRUE) or previews (FALSE)?
- * temp: Save temporarily (TRUE) or in prefix?
- *
- * Saves the selected files/previews.
- **/
-void 
-save (GladeXML *xml, gboolean file, gboolean temp)
+void
+save_common (GladeXML* xml, Camera* camera, gchar* path, gchar* filename, gboolean file, gchar* filename_user)
 {
-        GList 		*selection;
-        Camera 		*camera;
-        CameraFile 	*camera_file = NULL;
-        GtkCList 	*clist;
-        GnomeApp 	*app;
-        gchar*			path;
-	gchar*			file_name;
-	gchar*			full_file_name;
-        guint		 	i, row;
-        gint 		 	return_status = GP_OK;
-	GnomeVFSResult 	 	result;
-	GnomeVFSHandle*		handle;
-	GnomeVFSURI*		uri;
-	GnomeVFSFileSize 	file_size;
-	GConfClient*		client;
-	GConfValue*		value;
+	GnomeApp*		app;
+        CameraFile*     	camera_file;
+        gint            	return_status;
+        GnomeVFSResult          result;
+        GnomeVFSHandle*         handle;
+        GnomeVFSURI*            uri;
+        GnomeVFSFileSize        file_size;
 
         g_assert (xml != NULL);
-        g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
         g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
-	g_assert ((client = gtk_object_get_data (GTK_OBJECT (app), "client")) != NULL);
-
-        /* Check which files have been selected. */
-        selection = g_list_first (clist->selection);
-        if (selection != NULL) {
-                camera_file = gp_file_new ();
-                for (i = 0; i < g_list_length (selection); i++) {
-
-                        /* Retrieve some data we need. */
-                        row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
-                        g_assert ((camera = gtk_clist_get_row_data (clist, row)) != NULL);
-                        gtk_clist_get_text (clist, row, 1, &path);
-                        g_assert (path != NULL);
-                        gtk_clist_get_text (clist, row, 2, &file_name);
-                        g_assert (file_name != NULL);
-
-                        /* File or preview? */
-                        if (file) 
-                                return_status = gp_camera_file_get (camera, camera_file, path, file_name);
-                        else
-                                return_status = gp_camera_file_get_preview (camera, camera_file, path, file_name);
-                        if (return_status == GP_ERROR) gnome_app_error (app, _("Could not get file from camera!"));
-			else {
-
-				/* Let gnome-vfs save the file. */
-				if (temp) {
-					full_file_name = g_strdup_printf ("file:/tmp/%s", file_name);
-				} else { 
-					value = gconf_client_get (client, "/apps/" PACKAGE "/prefix", NULL);
-					if (value) {
-						g_assert (value->type == GCONF_VALUE_STRING);
-						full_file_name = g_strdup_printf ("%s/%s", gconf_value_get_string (value), file_name);
-					} else {
-						gnome_app_error (app, _("You should specify a prefix first!"));
-						return;
-					}
-				}
-				uri = gnome_vfs_uri_new (full_file_name);
-				g_free (full_file_name);
-				if ((result = gnome_vfs_create_uri (&handle, uri, GNOME_VFS_OPEN_WRITE, FALSE, 0644)) != GNOME_VFS_OK) {
-					gnome_app_error (app, gnome_vfs_result_to_string (result));
-				} else {
-					if ((result = gnome_vfs_write (handle, camera_file->data, camera_file->size, &file_size)) != GNOME_VFS_OK) {
-						gnome_app_error (app, gnome_vfs_result_to_string (result));
-					}
-					if ((result = gnome_vfs_close (handle)) != GNOME_VFS_OK) {
-						gnome_app_error (app, gnome_vfs_result_to_string (result));
-					}
-				}
-			}
-
-			/* Clean up. */
-			gp_frontend_progress (camera, NULL, 0.0);
-                }
-                gp_file_free (camera_file);
+        
+        /* Get the file/preview from gphoto backend. */
+        camera_file = gp_file_new ();
+        if (file) {
+                return_status = gp_camera_file_get (camera, camera_file, path, filename);
         } else {
-                gnome_app_error (app, _("No files selected!"));
+                return_status = gp_camera_file_get_preview (camera, camera_file, path, filename);
         }
+        if (return_status == GP_ERROR) {
+                gnome_app_error (app, _("Could not get file from camera!"));
+        } else {
+
+                /* Let gnome-vfs save the file. */
+                uri = gnome_vfs_uri_new (filename_user);
+                if ((result = gnome_vfs_create_uri (&handle, uri, GNOME_VFS_OPEN_WRITE, FALSE, 0644)) != GNOME_VFS_OK) {
+                        gnome_app_error (app, gnome_vfs_result_to_string (result));
+                } else {
+                        if ((result = gnome_vfs_write (handle, camera_file->data, camera_file->size, &file_size)) != GNOME_VFS_OK) {
+                                gnome_app_error (app, gnome_vfs_result_to_string (result));
+                        }
+                        if ((result = gnome_vfs_close (handle)) != GNOME_VFS_OK) {
+                                gnome_app_error (app, gnome_vfs_result_to_string (result));
+                        }
+                }
+                g_free (uri);
+        }
+
+	/* Clean up. */
+        gp_frontend_progress (camera, NULL, 0.0);
+        gp_file_free (camera_file);
+        g_free (path);
+	g_free (filename_user);
+        g_free (filename);
 }
 
-void save_as (GladeXML* xml, Camera* camera, gchar* path, gchar* filename, gboolean file)
+void 
+save (GladeXML* xml, Camera* camera, gchar* path, gchar* filename, gboolean file, gboolean temporary)
+{
+	GConfValue*	value;
+	GConfClient*	client;
+	GnomeApp*	app;
+
+	g_assert (xml != NULL);
+	g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
+	g_assert ((client = gtk_object_get_data (GTK_OBJECT (app), "client")) != NULL);
+
+	if (temporary) {
+		save_common (xml, camera, path, filename, file, g_strdup_printf ("file:/tmp/%s", filename));
+	} else {
+		g_assert ((value = gconf_client_get (client, "/apps/" PACKAGE "/prefix", NULL)));
+		g_assert (value->type == GCONF_VALUE_STRING);
+		save_common (xml, camera, path, filename, file, g_strdup_printf ("%s/%s", gconf_value_get_string (value), filename));
+	}
+}
+
+void 
+save_as (GladeXML* xml, Camera* camera, gchar* path, gchar* filename, gboolean file)
 {
 	GladeXML*		xml_fileselection;
 	GtkObject*		object;
@@ -243,5 +189,37 @@ void save_as (GladeXML* xml, Camera* camera, gchar* path, gchar* filename, gbool
 	glade_xml_signal_autoconnect (xml_fileselection);
 }
 
+void 
+save_all_selected (GladeXML* xml, gboolean file, gboolean ask_for_filename, gboolean temporary)
+{
+        GtkCList*       clist;
+        GList*          selection;
+        gint            i;
+        gint            row;
+        Camera*         camera;
+        gchar*          path;
+        gchar*          filename;
+
+        g_assert (xml != NULL);
+	g_assert (!(ask_for_filename && temporary));
+        g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
+
+        selection = g_list_first (clist->selection);
+        for (i = 0; i < g_list_length (selection); i++) {
+
+		/* Get some information. */
+                row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
+                g_assert ((camera = gtk_clist_get_row_data (clist, row)) != NULL);
+                gtk_clist_get_text (clist, row, 1, &path);
+                path = g_strdup (path);
+                gtk_clist_get_text (clist, row, 2, &filename);
+                filename = g_strdup (filename);
+
+		/* Save. */
+		if (ask_for_filename) save_as (xml, camera, path, filename, file);
+		else save (xml, camera, path, filename, file, temporary);
+        }
+
+}
 
 

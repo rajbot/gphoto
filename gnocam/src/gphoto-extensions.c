@@ -8,6 +8,7 @@
 #include "gphoto-extensions.h"
 
 /* Prototypes */
+
 gboolean description_extract (gchar* description, guint* id, gchar** name, gchar** model, gchar** port, guint* speed);
 
 /* Functions */
@@ -257,7 +258,8 @@ gp_camera_new_by_description (GladeXML *xml, gchar* description)
 		g_free (name);
 		g_free (model);
 		g_free (port);
-		gp_camera_free (camera);
+//FIXME: Why crashes the whole thing when initialization failed and I free the camera?
+//		gp_camera_free (camera);
 		return (NULL);
 	}
 

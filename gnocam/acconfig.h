@@ -9,3 +9,5 @@
 #undef HAVE_STPCPY
 #undef HAVE_LIBSM
 #undef PACKAGE_LOCALE_DIR
+
+#undef GNOCAM_USES_THREADS

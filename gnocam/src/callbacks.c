@@ -47,77 +47,25 @@ void on_duration_reply (gchar *string, gpointer user_data);
 void
 on_button_save_previews_clicked (GtkButton *button, gpointer user_data)
 {
-	GladeXML *xml;
-
-	xml = gtk_object_get_data (GTK_OBJECT (button), "xml");
-	g_assert (xml != NULL);
-
-	save (xml, FALSE, FALSE);
+	save_all_selected (gtk_object_get_data (GTK_OBJECT (button), "xml"), FALSE, FALSE, FALSE);
 }
 
 void
 on_button_save_preview_as_clicked (GtkButton *button, gpointer user_data)
 {
-        GladeXML*	xml;
-	GtkCList*	clist;
-	GList*		selection;
-	gint		i;
-	gint		row;
-	Camera*		camera;
-	gchar*		path;
-	gchar*		filename;
-
-        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (button), "xml")) != NULL);
-	g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
-
-	selection = g_list_first (clist->selection);
-	for (i = 0; i < g_list_length (selection); i++) {
-		row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
-		g_assert ((camera = gtk_clist_get_row_data (clist, row)) != NULL);
-		gtk_clist_get_text (clist, row, 1, &path);
-		path = g_strdup (path);
-		gtk_clist_get_text (clist, row, 2, &filename);
-		filename = g_strdup (filename);
-		save_as (xml, camera, path, filename, FALSE);
-	}
+	save_all_selected (gtk_object_get_data (GTK_OBJECT (button), "xml"), FALSE, TRUE, FALSE);
 }
 
 void
 on_button_save_files_clicked (GtkButton *button, gpointer user_data)
 {
-	GladeXML *xml;
-
-	xml = gtk_object_get_data (GTK_OBJECT (button), "xml");
-	g_assert (xml != NULL);
-
-	save (xml, TRUE, FALSE);
+	save_all_selected (gtk_object_get_data (GTK_OBJECT (button), "xml"), TRUE, FALSE, FALSE);
 }
 
 void
 on_button_save_file_as_clicked (GtkButton *button, gpointer user_data)
 {
-        GladeXML*       xml;
-        GtkCList*       clist;
-        GList*          selection;
-        gint            i;
-        gint            row;
-        Camera*         camera;
-        gchar*          path;
-        gchar*          filename;
-
-        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (button), "xml")) != NULL);
-        g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
-
-        selection = g_list_first (clist->selection);
-        for (i = 0; i < g_list_length (selection); i++) {
-                row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
-                g_assert ((camera = gtk_clist_get_row_data (clist, row)) != NULL);
-                gtk_clist_get_text (clist, row, 1, &path);
-                path = g_strdup (path);
-                gtk_clist_get_text (clist, row, 2, &filename);
-                filename = g_strdup (filename);
-                save_as (xml, camera, path, filename, TRUE);
-        }
+	save_all_selected (gtk_object_get_data (GTK_OBJECT (button), "xml"), TRUE, TRUE, FALSE);
 }
 
 void
@@ -174,77 +122,25 @@ on_button_delete_clicked (GtkButton *button, gpointer user_data)
 void
 on_save_previews_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
-        GladeXML *xml;
-
-        xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml");
-        g_assert (xml != NULL);
-
-	save (xml, FALSE, FALSE);
+	save_all_selected (gtk_object_get_data (GTK_OBJECT (menuitem), "xml"), FALSE, FALSE, FALSE);
 }
 
 void
 on_save_preview_as_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
-        GladeXML*       xml;
-        GtkCList*       clist;
-        GList*          selection;
-        gint            i;
-        gint            row;
-        Camera*         camera;
-        gchar*          path;
-        gchar*          filename;
-
-        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml")) != NULL);
-        g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
-
-        selection = g_list_first (clist->selection);
-        for (i = 0; i < g_list_length (selection); i++) {
-                row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
-                g_assert ((camera = gtk_clist_get_row_data (clist, row)) != NULL);
-                gtk_clist_get_text (clist, row, 1, &path);
-                path = g_strdup (path);
-                gtk_clist_get_text (clist, row, 2, &filename);
-                filename = g_strdup (filename);
-                save_as (xml, camera, path, filename, FALSE);
-        }
+	save_all_selected (gtk_object_get_data (GTK_OBJECT (menuitem), "xml"), FALSE, TRUE, FALSE);
 }
 
 void
 on_save_files_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
-	GladeXML *xml;
-
-	xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml");
-	g_assert (xml != NULL);
-
-	save (xml, TRUE, FALSE);
+	save_all_selected (gtk_object_get_data (GTK_OBJECT (menuitem), "xml"), TRUE, FALSE, FALSE);
 }
 
 void
 on_save_file_as_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
-        GladeXML*       xml;
-        GtkCList*       clist;
-        GList*          selection;
-        gint            i;
-        gint            row;
-        Camera*         camera;
-        gchar*          path;
-        gchar*          filename;
-
-        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml")) != NULL);
-        g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
-
-        selection = g_list_first (clist->selection);
-        for (i = 0; i < g_list_length (selection); i++) {
-                row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
-                g_assert ((camera = gtk_clist_get_row_data (clist, row)) != NULL);
-                gtk_clist_get_text (clist, row, 1, &path);
-                path = g_strdup (path);
-                gtk_clist_get_text (clist, row, 2, &filename);
-                filename = g_strdup (filename);
-                save_as (xml, camera, path, filename, TRUE);
-        }
+	save_all_selected (gtk_object_get_data (GTK_OBJECT (menuitem), "xml"), TRUE, TRUE, FALSE);
 }
 
 void
@@ -379,7 +275,7 @@ on_clist_files_drag_data_get (
 	for (i =0; ; i++) if (filenames[i] == 0) break;
 
 	//FIXME: Getting files takes too much time. Previews work...
-	save (xml, FALSE, TRUE);
+	save_all_selected (xml, FALSE, FALSE, TRUE);
 	gtk_selection_data_set (selection_data, selection_data->target, 8, filenames, i + 1);
 }
 

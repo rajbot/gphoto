@@ -20,7 +20,7 @@ casio_qv.a: $(OBJS)
 
 clean:
 	rm -f *~ *.o core casio_qv.a libgphoto_casio_qv.so \
-		configure config.h config.h.in config.cache
+		configure config.h config.h.in config.cache config.log config.status
 
 config.h.in:
 	autoheader

@@ -1,5 +1,7 @@
 1999-05-31  Ole Aamot  <oleaa@ifi.uio.no>
 
+	* casio/Makefile: clean now removes config.log and config.stats
+	* removed the gphoto-bug script.  Use the "debbugs" module
 	* modified the "gnome-bugs" scripts, and added gphoto-bug
 	* added more supported models to camera.h
 	* removed some cruft from the FAQ

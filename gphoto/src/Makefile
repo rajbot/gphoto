@@ -1,6 +1,12 @@
 # $Id$
 #
 # $Log$
+# Revision 1.4  1999/05/31 18:51:52  ole
+# 1999-05-31  Ole Aamot  <oleaa@ifi.uio.no>
+#
+# 	* casio/Makefile: clean now removes config.log and config.stats
+# 	* removed the gphoto-bug script.  Use the "debbugs" module
+#
 # Revision 1.3  1999/05/31 18:32:26  ole
 # 1999-05-31  Ole Aamot  <oleaa@ifi.uio.no>
 #
@@ -121,7 +127,6 @@ gphoto:	${OBJS} ${LIBS} ${SH_LIBS}
 
 install:
 	cp gphoto $(BINDIR)
-	cp ../gphoto-bug $(BINDIR)
 	cp ../man/gphoto.1 $(MANDIR)/man1
 	mkdir -p $(GPHOTODIR)
 	mkdir -p $(GPHOTODIR)/drivers
@@ -145,7 +150,6 @@ install:
 
 uninstall:
 	rm -rf ~/.gphoto/
-	rm -f $(BINDIR)/gphoto-bug
 	rm -f $(BINDIR)/gphoto
 	rm -f $(BINDIR)/gphoto.bin
 	rm -f $(MANDIR)/man1/gphoto.1

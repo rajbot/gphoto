@@ -30,6 +30,7 @@ struct _GPFsIf {
 	/* Functions */
 	GPFsIfFuncCountInfo f_count_info; void *f_data_count_info;
 	GPFsIfFuncGetInfo   f_get_info  ; void *f_data_get_info  ;
+	GPFsIfFuncSetInfo   f_set_info  ; void *f_data_set_info  ;
 	GPFsIfFuncRead      f_read      ; void *f_data_read      ;
 };
 
@@ -94,11 +95,29 @@ gpfs_if_get_info (GPFsIf *i, GPFsErr *e, unsigned int n, GPFsInfo *info)
 
 	if (!i->f_get_info) {
 		gpfs_err_set (e, GPFS_ERR_TYPE_NOT_SUPPORTED,
-			    _("This interface doesn't supply information."));
+			_("The interface '%s' doesn't support "
+			  "getting pieces of information."),
+			gpfs_if_get_name (i));
 		return;
 	}
 
 	i->f_get_info (i, e, n, info, i->f_data_get_info);
+}
+
+void
+gpfs_if_set_info (GPFsIf *i, GPFsErr *e, unsigned int n, GPFsInfo *info)
+{
+	CNV (i, e);
+
+	if (!i->f_set_info) {
+		gpfs_err_set (e, GPFS_ERR_TYPE_NOT_SUPPORTED,
+			_("The interface '%s' doesn't support "
+			  "setting pieces of information."),
+			gpfs_if_get_name (i));
+		return;
+	}
+
+	i->f_set_info (i, e, n, info, i->f_data_set_info);
 }
 
 void

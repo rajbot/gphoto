@@ -1,5 +1,11 @@
 Lutz Müller <lutz@users.sourceforge.net>
 
+	* libgpfs/gpfs-info-type.[c,h]: New
+	* libgpfs/gpfs-if.[c,h]: Support setting pieces of information.
+	* libgpfs/Makefile.am: Add new files.
+
+Lutz Müller <lutz@users.sourceforge.net>
+
 	* configure.in: Fix typo.
 
 Lutz Müller <lutz@users.sourceforge.net>

@@ -7,6 +7,25 @@
 #include "libgpfs/gpfs.h"
 #include "libgpfs/gpfs-cache.h"
 
+#ifdef ENABLE_NLS
+#  include <libintl.h>
+#  undef _
+#  define _(String) dgettext (GETTEXT_PACKAGE, String)
+#  ifdef gettext_noop
+#    define N_(String) gettext_noop (String)
+#  else
+#    define N_(String) (String)
+#  endif
+#else
+#  define textdomain(String) (String)
+#  define gettext(String) (String)
+#  define dgettext(Domain,Message) (Message)
+#  define dcgettext(Domain,Message,Type) (Message)
+#  define bindtextdomain(Domain,Directory) (Domain)
+#  define _(String) (String)
+#  define N_(String) (String)
+#endif
+
 /*****************************************************************************/
 /* The following functions are implemented by backends.                      */
 /*****************************************************************************/
@@ -41,16 +60,37 @@ func_read2 (GPFsIf *i, GPFsErr *e, GPFsIfFuncReadCb f, void *f_data, void *d)
 static unsigned int
 func_count_info (GPFsIf *i, GPFsErr *e, void *ud)
 {
-	return 1;
+	return 2;
 }
 
 static void
 func_get_info (GPFsIf *i, GPFsErr *e, unsigned int n, GPFsInfo *info, void *ud)
 {
 	gpfs_info_init (info);
-	info->name = strdup ("size");
-	info->t = GPFS_INFO_TYPE_UINT;
-	info->v.v_uint = sizeof ("Hello world!");
+	switch (n) {
+	case 0:
+		info->id = strdup ("size");
+		info->name = strdup (_("Size"));
+		info->description = strdup (_("The size of the file"));
+		info->t = GPFS_INFO_TYPE_UINT;
+		info->v.v_uint = sizeof ("Hello world!");
+		break;
+	case 1:
+		info->id = strdup ("description");
+		info->name = strdup (_("Description"));
+		info->description = strdup (_("The description of the "
+					      "interface"));
+		info->t = GPFS_INFO_TYPE_STRING;
+		if (!strcmp (gpfs_if_get_name (i), "default"))
+			info->v.v_string = strdup (_("The default interface"));
+		else
+			info->v.v_string = strdup (_("The interface supplying "
+						     "a preview"));
+		break;
+	default:
+		gpfs_err_set (e, GPFS_ERR_TYPE_BAD_PARAMETERS,
+			      _("Unknown piece of information."));
+	}
 }
 
 static GPFsFile *
@@ -62,16 +102,16 @@ func_get_file (GPFs *fs, GPFsErr *e, const char *folder, unsigned int n, void *d
 	printf ("<<< Backend is setting up a file >>>\n");
 	f = gpfs_file_new ();
 
-	/* Interface 'test' */
-	i = gpfs_if_new ("test");
+	/* Interface 'default' */
+	i = gpfs_if_new ("default");
 	gpfs_if_set_func_read (i, func_read1, NULL);
 	gpfs_if_set_func_count_info (i, func_count_info, NULL);
 	gpfs_if_set_func_get_info (i, func_get_info, NULL);
 	gpfs_file_add_if (f, i);
 	gpfs_if_unref (i);
 
-	/* Interface 'data' */
-	i = gpfs_if_new ("data");
+	/* Interface 'preview' */
+	i = gpfs_if_new ("preview");
 	gpfs_if_set_func_read (i, func_read2, NULL);
 	gpfs_if_set_func_count_info (i, func_count_info, NULL);
 	gpfs_if_set_func_get_info (i, func_get_info, NULL);
@@ -140,7 +180,21 @@ main (int argc, char **argv)
 		for (k = 0; k < gpfs_if_count_info (i, NULL); k++) {
 			gpfs_info_init (&info);
 			gpfs_if_get_info (i, NULL, k, &info);
-			printf ("      * '%s'\n", info.name);
+			printf ("     * '%s' (type '%s'): '%s'\n", info.name,
+				gpfs_info_type_get_name (info.t),
+				info.description);
+			switch (info.t) {
+			case GPFS_INFO_TYPE_STRING:
+				printf ("       Value: '%s'\n",
+					info.v.v_string);
+				break;
+			case GPFS_INFO_TYPE_INT:
+				printf ("       Value: %i\n", info.v.v_int);
+				break;
+			case GPFS_INFO_TYPE_UINT:
+				printf ("       Value: %i\n", info.v.v_uint);
+				break;
+			}
 			gpfs_info_clear (&info);
 		}
 	}

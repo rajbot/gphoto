@@ -4,6 +4,9 @@
 #include <glade/glade.h>
 #include <gconf/gconf-client.h>
 #include <libgnomevfs/gnome-vfs.h>
+#include <parser.h>
+#include <tree.h>
+#include <bonobo.h>
 #include "gnocam.h"
 #include "utils.h"
 #include "cameras.h"
@@ -13,10 +16,13 @@
 /**********************/
 
 extern GtkWindow*	main_window;
+extern gint		counter;
 
 /**************/
 /* Prototypes */
 /**************/
+
+void on_toggle_activated	(BonoboUIComponent* component, const gchar* path, Bonobo_UIComponent_EventType type, const gchar* state, gpointer user_data);
 
 void on_duration_button_ok_clicked      (GtkButton* button, gpointer user_data);
 void on_duration_button_cancel_clicked  (GtkButton* button, gpointer user_data);
@@ -24,6 +30,22 @@ void on_duration_button_cancel_clicked  (GtkButton* button, gpointer user_data);
 /*************/
 /* Callbacks */
 /*************/
+
+void
+on_toggle_activated (BonoboUIComponent* component, const gchar* label, Bonobo_UIComponent_EventType type, const gchar* state, gpointer window)
+{
+	Camera*		camera;
+	CameraWidget*	widget;
+	gint		value;
+	
+	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (component), "camera"));
+	g_return_if_fail (window);
+	
+	widget = gp_widget_child_by_label (window, (gchar*) label);
+	value = atoi (state);
+	gp_widget_value_set (widget, &value);
+	gp_camera_config_set (camera, window);
+}
 
 void
 on_duration_button_ok_clicked (GtkButton* button, gpointer user_data)
@@ -47,7 +69,6 @@ on_duration_button_ok_clicked (GtkButton* button, gpointer user_data)
         /* Clean up. */
         gtk_widget_destroy (gtk_object_get_data (GTK_OBJECT (button), "messagebox"));
         gp_file_free (file);
-        camera_tree_folder_refresh (((frontend_data_t*) camera->frontend_data)->item);
 	gp_camera_unref (camera);
 }
 
@@ -85,7 +106,6 @@ capture_image (Camera* camera)
 
         /* Clean up. */
         gp_file_free (file);
-        camera_tree_folder_refresh (((frontend_data_t*) camera->frontend_data)->item);
 }
 
 void
@@ -145,4 +165,112 @@ properties (Camera* camera)
 		g_free (message);
 	}
 }
+
+void gp_widget_to_xml (BonoboUIComponent* component, CameraWidget* window, CameraWidget* widget, xmlNodePtr popup, xmlNodePtr command, xmlNsPtr ns)
+{
+	CameraWidget*		child;
+	gint 			i;
+	xmlNodePtr		node;
+	gchar*			label;
+
+	for (i = 0; i < gp_widget_child_count (widget); i++) {
+		child = gp_widget_child (widget, i);
+		switch (gp_widget_type (child)) {
+		case GP_WIDGET_WINDOW:
+			break;
+		case GP_WIDGET_SECTION:
+			node = xmlNewNode (ns, "submenu");
+			xmlAddChild (popup, node);
+			gp_widget_to_xml (component, window, child, node, command, ns);
+			break;
+		case GP_WIDGET_TOGGLE:
+			label = gp_widget_label (child);
+			node = xmlNewNode (ns, "menuitem");
+			xmlAddChild (popup, node);
+			xmlSetProp (node, "name", label);
+			xmlSetProp (node, "verb", label);
+			xmlSetProp (node, "accel", "");
+			bonobo_ui_component_add_listener (component, label, on_toggle_activated, window);
+			xmlAddChild (command, node = xmlNewNode (ns, "cmd"));
+			xmlSetProp (node, "name", label);
+			xmlSetProp (node, "type", "toggle");
+			xmlSetProp (node, "_label", label);
+			break;
+		case GP_WIDGET_TEXT:
+			g_warning ("Not implemented!");
+			break;
+		case GP_WIDGET_RANGE:
+			g_warning ("Not implemented!");
+			break;
+		case GP_WIDGET_RADIO:
+			g_warning ("Not implemented!");
+			break;
+		case GP_WIDGET_MENU:
+			g_warning ("Not implemented!");
+			break;
+		case GP_WIDGET_BUTTON:
+			label = gp_widget_label (child);
+			node = xmlNewNode (ns, "menuitem");
+			xmlAddChild (popup, node);
+			xmlSetProp (node, "name", label);
+			xmlSetProp (node, "verb", label);
+			break;
+		case GP_WIDGET_DATE:
+			g_warning ("Not implemented!");
+			break;
+		default:
+			g_warning ("Not yet implemented!");
+			break;
+		}
+	}
+}
+
+void ui_set_values_from_widget (BonoboUIComponent* component, CameraWidget* widget)
+{
+	CameraWidget*	child;
+	gint		i, j;
+	gchar*		tmp;
+	gchar*		value;
+
+	for (i = 0; i < gp_widget_child_count (widget); i++) {
+		child = gp_widget_child (widget, i);
+		switch (gp_widget_type (child)) {
+		case GP_WIDGET_WINDOW:
+			break;
+		case GP_WIDGET_SECTION:
+			ui_set_values_from_widget (component, child);
+			break;
+		case GP_WIDGET_TOGGLE:
+			gp_widget_value_get (child, &j);
+			tmp = g_strdup_printf ("/commands/%s", gp_widget_label (child));
+			value = g_strdup_printf ("%i", j);
+			bonobo_ui_component_set_prop (component, tmp, "state", value, NULL);
+			g_free (value);
+			g_free (tmp);
+			break;
+                case GP_WIDGET_TEXT:
+			g_warning ("Not implemented!");
+                        break;
+                case GP_WIDGET_RANGE:
+			g_warning ("Not implemented!");
+                        break;
+                case GP_WIDGET_RADIO:
+			g_warning ("Not implemented!");
+                        break;
+                case GP_WIDGET_MENU:
+			g_warning ("Not implemented!");
+                        break;
+                case GP_WIDGET_BUTTON:
+			g_warning ("Not implemented!");
+			break;
+		case GP_WIDGET_DATE:
+			g_warning ("Not implemented!");
+			break;
+		default:
+			g_warning ("Not implemented!");
+			break;
+		}
+	}
+}
+
 

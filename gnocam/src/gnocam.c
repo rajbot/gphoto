@@ -25,6 +25,7 @@ GnoCamViewMode		view_mode 	= GNOCAM_VIEW_MODE_PREVIEW;
 GList*			preview_list 	= NULL;
 GladeXML*		xml_main 	= NULL;
 GtkWindow*		main_window	= NULL;
+gint			counter		= 0;
 
 /***************/
 /* Prototypes. */
@@ -36,7 +37,7 @@ void on_save_previews_activate 		(GtkWidget* widget, gpointer user_data);
 void on_save_previews_as_activate 	(GtkWidget* widget, gpointer user_data);
 void on_save_files_activate		(GtkWidget* widget, gpointer user_data);
 void on_save_files_as_activate		(GtkWidget* widget, gpointer user_data);
-void on_delete_activate			(GtkWidget* widget, gpointer user_data);
+void on_gnocam_delete_activate		(GtkWidget* widget, gpointer user_data);
 
 /**************/
 /* Callbacks. */
@@ -67,7 +68,7 @@ on_about_activate (GtkWidget* widget, gpointer user_data)
 }
 
 void
-on_manual_activate (GtkWidget* widget, gpointer user_data)
+on_gnocam_manual_activate (GtkWidget* widget, gpointer user_data)
 {
         gchar*  manualfile;
 
@@ -109,7 +110,7 @@ on_save_files_as_activate (GtkWidget* widget, gpointer user_data)
 }
 
 void 
-on_delete_activate (GtkWidget* widget, gpointer user_data)
+on_gnocam_delete_activate (GtkWidget* widget, gpointer user_data)
 {
 	gint 			i;
 	
@@ -136,12 +137,12 @@ int main (int argc, char *argv[])
 		BONOBO_UI_UNSAFE_VERB ("Exit", on_exit_activate),
 		BONOBO_UI_UNSAFE_VERB ("Preferences", on_preferences_activate),
 		BONOBO_UI_UNSAFE_VERB ("About", on_about_activate),
-		BONOBO_UI_UNSAFE_VERB ("Manual", on_manual_activate),
+		BONOBO_UI_UNSAFE_VERB ("Manual", on_gnocam_manual_activate),
 		BONOBO_UI_UNSAFE_VERB ("SavePreviews", on_save_previews_activate),
 		BONOBO_UI_UNSAFE_VERB ("SavePreviewsAs", on_save_previews_as_activate),
 		BONOBO_UI_UNSAFE_VERB ("SaveFiles", on_save_files_activate),
 		BONOBO_UI_UNSAFE_VERB ("SaveFilesAs", on_save_files_as_activate),
-		BONOBO_UI_UNSAFE_VERB ("Delete", on_delete_activate),
+		BONOBO_UI_UNSAFE_VERB ("Delete", on_gnocam_delete_activate),
 		BONOBO_UI_VERB_END};
 
 	/* Use translated strings. */
@@ -182,7 +183,7 @@ int main (int argc, char *argv[])
         component = bonobo_ui_component_new (PACKAGE);
         bonobo_ui_component_set_container (component, corba_container);
         bonobo_ui_component_add_verb_list (component, verb);
-        bonobo_ui_util_set_ui (component, "", "gnocam-main.xml", PACKAGE);
+        bonobo_ui_util_set_ui (component, NULL, "gnocam-main.xml", PACKAGE);
 
 	/* Add the view mode selection to the toolbar. */
 	gtk_widget_show (widget = gtk_option_menu_new ());

@@ -7,6 +7,7 @@
 #include <bonobo.h>
 #include <bonobo/bonobo-stream-memory.h>
 #include <libgnomevfs/gnome-vfs.h>
+#include <tree.h>
 #include "gnocam.h"
 #include "preview.h"
 #include "file-operations.h"
@@ -206,7 +207,7 @@ preview_new (Camera* camera)
 		BONOBO_UI_UNSAFE_VERB ("Exit", on_exit_activate),
 		BONOBO_UI_UNSAFE_VERB ("Properties", on_preview_properties_activate),
 		BONOBO_UI_UNSAFE_VERB ("Preferences", on_preferences_activate),
-		BONOBO_UI_UNSAFE_VERB ("Manual", on_manual_activate),
+		BONOBO_UI_UNSAFE_VERB ("Manual", on_gnocam_manual_activate),
 		BONOBO_UI_UNSAFE_VERB ("About", on_about_activate),
 		BONOBO_UI_VERB_END};
 

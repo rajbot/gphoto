@@ -218,8 +218,10 @@ upload (GtkTreeItem* folder, GnomeVFSURI* uri)
 		CORBA_exception_free (&ev);
 		CORBA_exception_free (&dummy);
 
-		/* Display the new file. */
-		camera_tree_folder_refresh (folder);
+		/* Add the new file to the tree. */
+		camera_tree_file_add (
+			GTK_TREE (folder->subtree), 
+			gnome_vfs_uri_append_file_name (gtk_object_get_data (GTK_OBJECT (folder), "uri"), gnome_vfs_uri_get_basename (uri)));
 		
 	} else {
 
@@ -316,12 +318,15 @@ save_all_selected (GtkTree* tree, gboolean preview, gboolean save_as)
 	/* Save files. */
 	for (i = 0; i < g_list_length (tree->selection); i++) {
 		item = GTK_TREE_ITEM (g_list_nth_data (tree->selection, i));
-		if (!item->subtree) save (item, preview, save_as);
+		if (!item->subtree) {
+			if (save_as) download (item, NULL, preview);
+			else save (item, preview);
+		}
 	}
 }
 
 void
-save (GtkTreeItem* item, gboolean preview, gboolean save_as)
+save (GtkTreeItem* item, gboolean preview)
 {
 	gchar*		tmp;
 	GConfValue*	value;
@@ -331,15 +336,12 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as)
         g_return_if_fail (value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL));
         g_return_if_fail (value->type == GCONF_VALUE_STRING);
 
-	/* Save the file. */
-	if (save_as) download (item, NULL, preview);
-	else {
-		tmp = g_strdup_printf ("%s/%s", gconf_value_get_string (value), gnome_vfs_uri_get_basename (gtk_object_get_data (GTK_OBJECT (item), "uri")));
-		uri = gnome_vfs_uri_new (tmp);
-		g_free (tmp);
-		download (item, uri, preview);
-		gnome_vfs_uri_unref (uri);
-	}
+	/* Save the file in the 'tmp' directory. */
+	tmp = g_strdup_printf ("%s/%s", gconf_value_get_string (value), gnome_vfs_uri_get_basename (gtk_object_get_data (GTK_OBJECT (item), "uri")));
+	uri = gnome_vfs_uri_new (tmp);
+	g_free (tmp);
+	download (item, uri, preview);
+	gnome_vfs_uri_unref (uri);
 }
 
 void

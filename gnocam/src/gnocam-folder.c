@@ -571,7 +571,6 @@ gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bo
 
 	/* Create menu */
 	gtk_idle_add (create_menu, new);
-//	create_menu (new);
 
 	return (GTK_WIDGET (new));
 }

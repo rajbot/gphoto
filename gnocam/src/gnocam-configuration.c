@@ -442,6 +442,8 @@ gnocam_configuration_new (Camera* camera, const gchar* dirname, const gchar* fil
 
 	new = gtk_type_new (GNOCAM_TYPE_CONFIGURATION);
 	gp_camera_ref (new->priv->camera = camera);
+	if (filename) new->priv->filename = g_strdup (filename);
+	if (dirname) new->priv->dirname = g_strdup (dirname);
 	new->priv->widget = widget;
 	new->priv->hash_table = g_hash_table_new (g_int_hash, g_int_equal);
 	gtk_widget_ref (new->priv->parent = parent);

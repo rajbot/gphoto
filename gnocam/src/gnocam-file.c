@@ -51,7 +51,7 @@ static unsigned int signals[LAST_SIGNAL] = { 0 };
 
 #define GNOCAM_FILE_UI_DELETE 												\
 "<placeholder name=\"Delete\">"												\
-"  <menuitem name=\"delete\" _label=\"Delete\" verb=\"\" pixtype=\"stock\" pixname=\"Delete\"/>"			\
+"  <menuitem name=\"Delete\" _label=\"Delete\" verb=\"\" pixtype=\"stock\" pixname=\"Delete\"/>"			\
 "</placeholder>"
 
 #define GNOCAM_FILE_UI_CONFIGURATION											\
@@ -71,6 +71,24 @@ static void	on_config_clicked	(BonoboUIComponent* component, gpointer user_data,
 /********************/
 
 static gint
+set_container (gpointer user_data)
+{
+	GnoCamFile*     file;
+
+	g_return_val_if_fail (user_data, FALSE);
+	file = GNOCAM_FILE (user_data);
+
+	if (!file->priv->component) return (TRUE);
+
+	if (file->priv->container == bonobo_ui_component_get_container (file->priv->component)) return (FALSE);
+
+	bonobo_ui_component_set_container (file->priv->component, file->priv->container);
+        if (file->priv->control) Bonobo_Control_activate (file->priv->control, TRUE, NULL);
+
+	return (FALSE);
+}
+	
+static gint
 create_menu (gpointer user_data)
 {
 	GnoCamFile*	file;
@@ -78,14 +96,15 @@ create_menu (gpointer user_data)
 	g_return_val_if_fail (user_data, FALSE);
 	file = GNOCAM_FILE (user_data);
 
+	file->priv->component = bonobo_ui_component_new (PACKAGE "File");
 	bonobo_ui_component_set_container (file->priv->component, file->priv->container);
 
-        bonobo_ui_component_set_translate (file->priv->component, "/menu/File/FileOperations", GNOCAM_FILE_UI, NULL);
+        bonobo_ui_component_set_translate (file->priv->component, "/menu/File", GNOCAM_FILE_UI, NULL);
 
         /* Delete? */
         if (file->priv->camera->abilities->file_delete) {
                 bonobo_ui_component_set_translate (file->priv->component, "/menu/File/FileOperations", GNOCAM_FILE_UI_DELETE, NULL);
-                bonobo_ui_component_add_verb (file->priv->component, "delete", on_delete_clicked, file);
+                bonobo_ui_component_add_verb (file->priv->component, "Delete", on_delete_clicked, file);
         }
 
         /* File Configuration? */
@@ -279,8 +298,7 @@ gnocam_file_hide_menu (GnoCamFile* file)
 void
 gnocam_file_show_menu (GnoCamFile* file)
 {
-	bonobo_ui_component_set_container (file->priv->component, file->priv->container);
-	if (file->priv->control) Bonobo_Control_activate (file->priv->control, TRUE, NULL);
+	gtk_idle_add (set_container, file);
 }
 
 GtkWidget*
@@ -378,8 +396,6 @@ gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bono
         }       
 
 	/* Create the menu */
-	new->priv->component = bonobo_ui_component_new (path);
-//	create_menu (new);
 	gtk_idle_add (create_menu, new);
 
 	create_widget (new);

@@ -529,7 +529,7 @@ buildtoollist="build-tool-list.boot"
 
 # remove autogen-generated files - mkinstalldirs irritates configuring
 # our packages
-rm -f mkinstalldirs missing ltmain.sh install-sh depcomp configure
+rm -f mkinstalldirs missing ltmain.sh install-sh depcomp configure Makefile
 
 checktools || die
 cvslogin || die

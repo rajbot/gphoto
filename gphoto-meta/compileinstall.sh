@@ -1,7 +1,6 @@
 #!/bin/bash
 
 . "$(dirname $0)/utils/common.sh"
-. "$(dirname $0)/utils/autodetect.sh"
 
 if [ "$1" != "" ]
 then
@@ -43,7 +42,7 @@ compileinstall() {
     export PKG_CONFIG_PATH="${instroot}/lib/pkgconfig:${PKG_CONFIG_PATH}"
     export LD_LIBRARY_PATH="${instroot}/lib:${LD_LIBRARY_PATH}"
     export PATH="${instroot}/bin:${PATH}"
-    while read CVSROOT module restofline
+    while read module restofline
     do
 	# unpack gz if available, else bz2 (this is faster :-)
 	for tarball in "${distdir}/${module}-"[0-9]*.tar.{gz,bz2}
@@ -55,6 +54,7 @@ compileinstall() {
 	    cmd cd "${srcdir}"
 	    base="$(basename ${tarball} .tar.gz)"
 	    base="$(basename ${base} .tar.bz2)"
+	    base="$(basename ${base} -broken)"
 	    if read dir < "${base}/installed-yet"
 	    then
 		if [ "$dir" = "${instroot}" ]

@@ -1116,9 +1116,7 @@ img_edit_new(struct ImageInfo *ii)
   GdkPixmap *pixmap;
   GdkBitmap *bitmap;
   GtkStyle *style;
-#ifdef  GTK_HAVE_FEATURES_1_1_0
   GtkAccelGroup*  cbag;
-#endif
 
   thisim=ii->imlibimage;
   imnode=ii;
@@ -1132,10 +1130,8 @@ img_edit_new(struct ImageInfo *ii)
 		     GTK_SIGNAL_FUNC(ee_edit_cb_destroy), w);
   gtk_widget_realize(w);
 
-#ifdef  GTK_HAVE_FEATURES_1_1_0
   cbag=gtk_accel_group_new();
   gtk_accel_group_attach(cbag,GTK_OBJECT(w));
-#endif
 
   style = gtk_widget_get_style(w);
   vm = gtk_vbox_new(FALSE, 2);
@@ -1444,11 +1440,9 @@ img_edit_new(struct ImageInfo *ii)
   gtk_toolbar_append_widget(GTK_TOOLBAR(t), c,
 			  "Quit the color editor",
 			  "Quit the color editor");
-#ifdef  GTK_HAVE_FEATURES_1_1_0
   gtk_accel_group_add(cbag,GDK_Escape,0,
 		      GTK_ACCEL_VISIBLE||GTK_ACCEL_LOCKED,
 		      GTK_OBJECT(c),"clicked");
-#endif
 
   gtk_widget_show(c);
 

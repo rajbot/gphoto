@@ -19,6 +19,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.3  1999/06/15 16:05:03  scottf
+ * removed the #ifdef's for gtk < 1.2
+ * windows show in middle of screen now instead of random places :)
+ *
  * Revision 1.2  1999/06/04 15:37:33  gdr
  * Fix for DOCDIR directory.
  *
@@ -82,14 +86,9 @@ developer_dialog_create ()
 
   if (developer_count == 0)
     {
-#ifdef  GTK_HAVE_FEATURES_1_1_0
       gchar  *   temp;
       temp = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "%s",
 			      DOCDIR, FILE_NAME);
-#else
-      char temp[128];
-      sprintf(temp, "%s/%s", DOCDIR, FILE_NAME);
-#endif
 
       read_developer_file (temp);
       g_free (temp);
@@ -103,9 +102,7 @@ developer_dialog_create ()
       developer_dialog = gtk_window_new (GTK_WINDOW_DIALOG);
       gtk_window_set_wmclass (GTK_WINDOW (developer_dialog), "developer", "gPhoto");
       gtk_window_set_title (GTK_WINDOW (developer_dialog), ("gPhoto release 0.3 was brought to you by"));
-#ifdef  GTK_HAVE_FEATURES_1_1_0
       gtk_window_set_position (GTK_WINDOW (developer_dialog), GTK_WIN_POS_CENTER);
-#endif
       gtk_signal_connect (GTK_OBJECT (developer_dialog), "delete_event",
 			  GTK_SIGNAL_FUNC (developer_dialog_hide), NULL);
       gtk_quit_add_destroy (1, GTK_OBJECT (developer_dialog));
@@ -115,16 +112,12 @@ developer_dialog_create ()
       gtk_widget_show (vbox);
 
       hbox1 = gtk_hbox_new (FALSE, 5);
-#ifdef  GTK_HAVE_FEATURES_1_1_0
       gtk_container_set_border_width (GTK_CONTAINER (hbox1), 10);
-#endif
       gtk_box_pack_start (GTK_BOX (vbox), hbox1, FALSE, TRUE, 0);
       gtk_widget_show (hbox1);
 
       hbox2 = gtk_hbox_new (FALSE, 5);
-#ifdef  GTK_HAVE_FEATURES_1_1_0
       gtk_container_set_border_width (GTK_CONTAINER (hbox2), 10);
-#endif
       gtk_box_pack_end (GTK_BOX (vbox), hbox2, FALSE, TRUE, 0);
       gtk_widget_show (hbox2);
       
@@ -170,9 +163,7 @@ developer_dialog_create ()
       gtk_widget_show (developer_label);
 
       button_prev = gtk_button_new_with_label ("Previous");
-#ifdef  GTK_HAVE_FEATURES_1_1_0
       GTK_WIDGET_UNSET_FLAGS (button_prev, GTK_RECEIVES_DEFAULT);
-#endif
       gtk_signal_connect (GTK_OBJECT (button_prev), "clicked",
 			  GTK_SIGNAL_FUNC (developer_show_next),
 			  (gpointer) "prev");
@@ -180,9 +171,7 @@ developer_dialog_create ()
       gtk_widget_show (button_prev);
 
       button_next = gtk_button_new_with_label ("Next");
-#ifdef  GTK_HAVE_FEATURES_1_1_0
       GTK_WIDGET_UNSET_FLAGS (button_next, GTK_RECEIVES_DEFAULT);
-#endif
       gtk_signal_connect (GTK_OBJECT (button_next), "clicked",
 			  GTK_SIGNAL_FUNC (developer_show_next),
 			  (gpointer) "next");

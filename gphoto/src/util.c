@@ -41,6 +41,7 @@ void error_dialog(char *Error) {
 
         dialog = gtk_dialog_new();
         gtk_window_set_title(GTK_WINDOW(dialog), "gPhoto Message");
+	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
         gtk_container_border_width(GTK_CONTAINER(dialog), 5);
 /*	gtk_widget_set_usize(dialog, 200, 100);*/
         label = gtk_label_new(Error);
@@ -80,6 +81,7 @@ void message_window(char *title, char *message, GtkJustification  jtype )
 
         dialog = gtk_dialog_new();
         gtk_window_set_title(GTK_WINDOW(dialog), title);
+	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
         gtk_container_border_width(GTK_CONTAINER(dialog), 5);
         label = gtk_label_new(message);
         gtk_label_set_justify ( GTK_LABEL(label), jtype );

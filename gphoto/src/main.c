@@ -105,19 +105,15 @@ int main (int argc, char *argv[]) {
 	gtk_container_border_width(GTK_CONTAINER(box), 5);
 
 	/* accelerator keys--------------------------------------- */
-#ifdef  GTK_HAVE_FEATURES_1_1_0
 	gtk_accel_group_attach(mainag,GTK_OBJECT(mainWin));
-#endif
 
 	/* Index Page notebook ----------------------------------- */
 	index_page = gtk_table_new(1,1,FALSE);
 	gtk_widget_show(index_page);
 	index_window = gtk_scrolled_window_new(NULL,NULL);
-#ifdef  GTK_HAVE_FEATURES_1_1_4
         index_vp=gtk_viewport_new(NULL,NULL);
         gtk_container_add(GTK_CONTAINER(index_window),index_vp);
         gtk_widget_show(index_vp);
-#endif
 	gtk_widget_show(index_window);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(index_window),
 					GTK_POLICY_AUTOMATIC,
@@ -210,11 +206,7 @@ int main (int argc, char *argv[]) {
 
 	index_table = gtk_hbox_new(FALSE, 0);
         gtk_widget_show(index_table);
-#ifndef GTK_HAVE_FEATURES_1_1_4
-       gtk_container_add( GTK_CONTAINER(index_window), index_table); 
-#else
        gtk_container_add( GTK_CONTAINER(index_vp), index_table); 
-#endif
 
 	gtk_box_pack_start(GTK_BOX(index_table), gpixmap, TRUE, FALSE, 0);
 

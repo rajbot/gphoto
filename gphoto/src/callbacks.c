@@ -179,6 +179,7 @@ void del_dialog () {
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
 			   button, FALSE, FALSE, 0);
 
+	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
 	gtk_widget_show(dialog);
 }
 
@@ -237,6 +238,8 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 
 		filesel = gtk_file_selection_new(
 				"Select a directory to store the images...");
+		gtk_window_set_position (GTK_WINDOW (filesel), 
+			GTK_WIN_POS_CENTER);
 		gtk_file_selection_set_filename(GTK_FILE_SELECTION(filesel),
 			filesel_cwd);
 		gtk_widget_hide(GTK_FILE_SELECTION(filesel)->file_list);
@@ -361,12 +364,8 @@ void appendpic (int picNum, int thumbnail, int fromCamera, char *fileName) {
         gtk_widget_show(scrwin);
 	gtk_container_add(GTK_CONTAINER(node->page), scrwin);
 
-#ifndef GTK_HAVE_FEATURES_1_1_4
-	gtk_container_add(GTK_CONTAINER(scrwin), node->image);
-#else
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrwin),
 					      node->image);
-#endif
 }
 
 /* GTK Functions ---------------------------------------------
@@ -412,6 +411,7 @@ void port_dialog() {
 
 	dialog = gtk_dialog_new();
 	gtk_window_set_title(GTK_WINDOW(dialog), "Select model/port...");
+	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
 	gtk_container_border_width(GTK_CONTAINER(dialog), 5);
 	gtk_widget_set_usize(dialog, 400, 300);
 
@@ -624,6 +624,7 @@ void usersmanual_dialog() {
 
 	dialog = gtk_dialog_new();
 	gtk_window_set_title(GTK_WINDOW(dialog), "User's Manual");
+	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
 	gtk_widget_set_usize(dialog, 460, 450);
 
 	label = gtk_label_new("
@@ -754,12 +755,8 @@ Tips and Tricks
                                         GTK_POLICY_AUTOMATIC,
                                         GTK_POLICY_AUTOMATIC);
  	gtk_widget_show(scrwin);
-#ifndef GTK_HAVE_FEATURES_1_1_4
- 	gtk_container_add(GTK_CONTAINER(scrwin), label);
-#else
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrwin),
 					      label);
-#endif
 
 	gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),scrwin);
 
@@ -970,11 +967,8 @@ void makeindex (int getthumbs) {
 
 	index_table = gtk_table_new(100,6,FALSE);
         gtk_widget_show(index_table);
-#ifndef GTK_HAVE_FEATURES_1_1_4
-        gtk_container_add(GTK_CONTAINER(index_window), index_table);
-#else
         gtk_container_add(GTK_CONTAINER(index_vp), index_table);
-#endif
+
 	num_pictures_taken = (*Camera->number_of_pictures)();
 fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
 	if (num_pictures_taken == -1) {
@@ -1177,6 +1171,8 @@ void filedialog (gchar *a) {
 	switch (a[0]) {
 	   	case 's':
 			filew = gtk_file_selection_new ("Save Image...");
+			gtk_window_set_position (GTK_WINDOW (filew),
+				 GTK_WIN_POS_CENTER);
 			gtk_file_selection_set_filename(GTK_FILE_SELECTION
 				(filew), filesel_cwd);
 			gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION
@@ -1193,6 +1189,8 @@ void filedialog (gchar *a) {
 
 		case 'o':
 			filew = gtk_file_selection_new ("Open Image...");
+			gtk_window_set_position (GTK_WINDOW (filew),
+				GTK_WIN_POS_CENTER);
 			gtk_file_selection_set_filename(GTK_FILE_SELECTION
 				(filew), filesel_cwd);
 			gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION
@@ -1227,7 +1225,7 @@ void print_pic () {
 
         dialog = gtk_dialog_new();
         gtk_window_set_title(GTK_WINDOW(dialog), "Print Image...");
-                
+	gtk_window_set_position (GTK_WINDOW (dialog),GTK_WIN_POS_CENTER);
         hbox = gtk_hbox_new(FALSE, 5);
         gtk_widget_show(hbox);
         gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
@@ -1368,7 +1366,7 @@ void resize_dialog() {
 
 	dialog = gtk_dialog_new();
 	gtk_window_set_title(GTK_WINDOW(dialog), "Resize Image...");
-
+	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
 	hbox = gtk_hbox_new(FALSE, 5);
 	gtk_widget_show(hbox);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
@@ -1602,7 +1600,7 @@ void post_process_change (GtkWidget *widget, GtkWidget *win) {
 
 	dialog = gtk_dialog_new();
 	gtk_window_set_title(GTK_WINDOW(dialog), "Post-Processing Options"); 
-
+	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
 	ok = gtk_button_new_with_label("OK");
 	gtk_widget_show(ok);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),

@@ -40,6 +40,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.5  1999/06/15 16:05:04  scottf
+ * removed the #ifdef's for gtk < 1.2
+ * windows show in middle of screen now instead of random places :)
+ *
  * Revision 1.4  1999/06/10 19:53:32  scottf
  * Updated the functions wrappers to check for errors everywhere
  * Updated the gallery to display an error if the thumbnails can't
@@ -99,6 +103,7 @@ void gallery_change_dir(GtkWidget *widget, GtkWidget *label) {
 	GtkWidget *filesel;
 
         filesel = gtk_file_selection_new("Select an Output Directory...");
+	gtk_window_set_position (GTK_WINDOW (filesel), GTK_WIN_POS_CENTER);
 	gtk_file_selection_set_filename(GTK_FILE_SELECTION(filesel),
 		filesel_cwd);
         gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_entry);
@@ -251,11 +256,7 @@ Please install/move gallery themes there.");
 
         scrwin = gtk_scrolled_window_new(NULL, NULL);
         gtk_widget_show(scrwin);
-#ifndef GTK_HAVE_FEATURES_1_1_4
-        gtk_container_add(GTK_CONTAINER(scrwin), list);
-#else 
         gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW(scrwin), list);
-#endif
         gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(index_window),
                                         GTK_POLICY_AUTOMATIC,
                                         GTK_POLICY_AUTOMATIC);

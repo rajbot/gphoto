@@ -1,15 +1,16 @@
 cvs		fatal
 grep		fatal
 egrep		fatal
-m4		auto	ftp://ftp.gnu.org/gnu/m4/m4-1.4.tar.gz
+m4		auto	ftp://ftp.gnu.org/gnu/m4/m4-1.4.2.tar.gz
 autoconf	auto	ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.59.tar.${compression}
 # Note about automake 1.8.3:
 # This doesn't copy mkinstalldirs, which is currently required for dist and distcheck.
-automake	auto	ftp://ftp.gnu.org/gnu/automake/automake-1.7.9.tar.${compression}
+automake	auto	ftp://ftp.gnu.org/gnu/automake/automake-1.9.4.tar.${compression}
 libtool		auto	ftp://ftp.gnu.org/gnu/libtool/libtool-1.5.4.tar.gz
 # Note about gettext 0.14.1:
 # This runs csc (C sharp compiler), but csc is also the chicken c compiler.
 # chicken is required for swig, which is required for subversion. Not good.
-gettext		auto	ftp://ftp.gnu.org/gnu/gettext/gettext-0.13.1.tar.gz
+#gettext		auto	ftp://ftp.gnu.org/gnu/gettext/gettext-0.13.1.tar.gz
+gettext		auto	ftp://ftp.gnu.org/gnu/gettext/gettext-0.14.1.tar.gz
 pkg-config	auto	http://www.freedesktop.org/software/pkgconfig/releases/pkgconfig-0.15.0.tar.gz
 wget		autocnd

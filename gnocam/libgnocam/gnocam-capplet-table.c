@@ -332,7 +332,7 @@ gnocam_capplet_table_new (CappletWidget *capplet)
 	GList *list;
 	gint number, i;
 	const char *buffer;
-	CameraPortInfo info;
+	GPPortInfo info;
 
 	table = gtk_type_new (GNOCAM_TYPE_CAPPLET_TABLE);
 

@@ -339,6 +339,38 @@ on_storage_view_vbox_button_release_event (GtkWidget* widget, GdkEventButton* bu
 /* Internal functions */
 /**********************/
 
+static int 
+gp_frontend_status (Camera* camera, char* status)
+{
+	BonoboUIComponent*	component;
+
+	component = BONOBO_UI_COMPONENT (camera->frontend_data);
+        bonobo_ui_component_set_status (component, status, NULL);
+
+        return (GP_OK);
+}
+
+static int 
+gp_frontend_message (Camera* camera, char* message)
+{
+        gnome_ok_dialog (message);
+        return (GP_OK);
+}
+
+static int 
+gp_frontend_confirm (Camera* camera, char* message)
+{
+        GtkWidget*      widget;
+        gint            result;
+
+        widget = gnome_dialog_new (message, GNOME_STOCK_BUTTON_YES, GNOME_STOCK_BUTTON_NO, NULL);
+        result = gnome_dialog_run_and_close (GNOME_DIALOG (widget));
+        gtk_widget_destroy (widget);
+
+        if (result == 1) return (GP_PROMPT_CANCEL);
+        return (GP_PROMPT_OK);
+}
+
 static void
 hash_table_forall_destroy_control (void* name, void* value, void* data)
 {
@@ -502,6 +534,10 @@ gnocam_control_new (BonoboMoniker* moniker, CORBA_Environment* ev)
 	new->priv->component = NULL;
 	new->priv->hash_table = g_hash_table_new (g_str_hash, g_str_equal);
 	gp_camera_ref (camera);
+
+	/* Callbacks for the backend */
+	camera->frontend_data = (void*) bonobo_control_get_ui_component (BONOBO_CONTROL (new));
+	gp_frontend_register (gp_frontend_status, NULL, gp_frontend_message, gp_frontend_confirm, NULL);
 
 	/* Create the basic layout */
 	gtk_widget_show (vbox = gtk_vbox_new (FALSE, 0));

@@ -1,6 +1,5 @@
 src/cameras.c
 src/file-operations.c
-src/frontend.c
 src/gnocam.c
 src/gnocam.glade
 src/preferences.c

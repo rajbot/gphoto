@@ -11,7 +11,6 @@
 #include <gal/e-paned/e-hpaned.h>
 
 #include "cameras.h"
-#include "frontend.h"
 #include "preferences.h"
 #include "file-operations.h"
 #include "gnocam-shortcut-bar.h"
@@ -133,7 +132,6 @@ int main (int argc, char *argv[])
 	if ((result = gp_init (GP_DEBUG_NONE)) != GP_OK) {
 		g_warning (_("Could not initialize gphoto! (%s)"), gp_result_as_string (result));
 	}
-	gp_frontend_register (gp_frontend_status, gp_frontend_progress, gp_frontend_message, gp_frontend_confirm, NULL);
 
 	/* Create the window and hpaned. */
 	main_window = GTK_WINDOW (bonobo_window_new (PACKAGE, PACKAGE));

@@ -18,7 +18,6 @@ bin_PROGRAMS = gnocam
 gnocam_SOURCES =\
  cameras.h cameras.c\
  file-operations.h file-operations.c\
- frontend.h frontend.c\
  gnocam.c\
  gnocam-shortcut-bar.h gnocam-shortcut-bar.c\
  preferences.h preferences.c

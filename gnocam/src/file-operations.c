@@ -8,7 +8,6 @@
 
 #include "cameras.h"
 #include "file-operations.h"
-#include "frontend.h"
 
 /***************/
 /* Definitions */

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gphoto\n"
 "POT-Creation-Date: 2000-04-02 01:18+0400\n"
-"PO-Revision-Date: 2000-04-02 03:11+04:00\n"
+"PO-Revision-Date: 2000-05-14 22:53+00:00\n"
 "Last-Translator: Valek Filippov <frob@df.ru>\n"
 "Language-Team: Russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -106,7 +106,7 @@ msgstr "Выполнено. Изображения сохранены в %s"
 #: src/callbacks.c:416 src/callbacks.c:951 src/gallery.c:535 src/gallery.c:566
 #, c-format
 msgid "Could not retrieve #%i"
-msgstr ""
+msgstr "Не удалось восстановить #%i"
 
 #: src/callbacks.c:424
 #, c-format
@@ -207,7 +207,7 @@ msgid ""
 "Licensealong with this program; if not, write to the Free "
 "SoftwareFoundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.See "
 "http://www.gnu.org for more details on the GNU project."
-msgstr ""
+msgstr "Это свободная программа, вы можете распространять и/или модифицировать ее на условиях GNU General Public License, опубликованной Free Software Foundation версии 2 или более поздней (по вашему усмотрению). Эта программа распространяется в расчете на то, что она будет полезной, но БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, в том числе без подразумеваемой гарантии КОММЕРЧЕСКОЙ ЦЕННОСТИ или ПРИГОДНОСТИ ДЛЯ КАКИХ-ЛИБО ЦЕЛЕЙ. Смотрите GNU General Public License для дополнительных деталей. Вы должны были получить копию GNU General Public License вместе с этой программой. Если это не так, напишите в Free Software Foundation Inc. по адресу: 675 Mass Ave, Cambridge, MA 02139, USA. Посетите http://www.gnu.org, чтобы узнать подробности о проекте GNU."
 
 #: src/callbacks.c:895
 #, c-format
@@ -351,15 +351,15 @@ msgstr "Масштаб изображения 200%..."
 
 #: src/callbacks.c:1784
 msgid "Post-Processing Options"
-msgstr ""
+msgstr "Параметры последующей обработки"
 
 #: src/callbacks.c:1796
 msgid "Enable post-processing"
-msgstr ""
+msgstr "Разрешить последующую обработку"
 
 #: src/callbacks.c:1803
 msgid "Post-processing command-line:"
-msgstr ""
+msgstr "Команда для последующей обработки:"
 
 #: src/callbacks.c:1869
 msgid "http://www.gphoto.org/help.php3"
@@ -415,6 +415,8 @@ msgid ""
 "%s summary:\n"
 "%s"
 msgstr ""
+"%s итого:\n"
+"%s"
 
 #: src/commandline.c:23 src/main.c:129
 #, c-format

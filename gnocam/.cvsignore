@@ -1,3 +1,8 @@
+config.guess
+config.sub
+ltmain.sh
+ltconfig
+libtool
 configure
 config.cache
 config.h

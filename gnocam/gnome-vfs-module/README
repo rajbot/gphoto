@@ -1,0 +1,13 @@
+
+This module isn't fully implemented (yet).
+
+You should be able to access a file with something 
+like "camera://My Camera/directory/filename.jpg", 
+where 'My Camera' is the name of the camera you
+specified in the preferences dialog of GnoCam.
+
+I can't get nautilus to compile, so I am missing
+a browser to actually use this module. 
+
+Let's wait and see...
+

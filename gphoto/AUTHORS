@@ -7,13 +7,6 @@ Fujitsu chipset library
 Eugene Crosser <crosser@average.org>
 Fujitsu chipset protocol
 
-Matt Martin <matt.martin@ieee.org>
-Fuji DS-7 library
-Bug fixing and GUI features
-
-Mike Labriola <mdlabriola@mindless.com> 
-Extra HTML gallery export options 
- 
 Werner Almesberger <almesber@lrc.di.epfl.ch>
 Canon A50 library
 
@@ -29,11 +22,44 @@ Canon PS350 protocol sniffing
 Anne Bezemer <costar@panic.et.tudelft.nl>
 Canon PS350 protocol sniffing
 
-Gus Hartmann <hartmann@cs.wisc.edu>
-Minolta Dimage V library
+Philippe Marzouk <bullmali@afribone.net.ml>
+Canon thumbnail and deletion support
+
+Edouard Lafargue <lafargue@oslo.geco-prakla.slb.com>
+Canon camera detection, fixes, configuration dialog
+
+Rasmus Andersen <rasmus@diku.dk>
+X independent CLI invocation, Canon library hacking
+Bug fixing
 
 Gary Ross <gdr@hooked.net>
 Casio QV library
+
+Matt Martin <matt.martin@ieee.org>
+Fuji DS-7 library
+Bug fixing and GUI features
+
+Del Simmons <del@gphoto.org>
+Kodak DC20/25 library
+
+Timecop <timecop@japan.co.jp>
+New Kodak DC21x library plus
+standalone dc21x_cam utility
+
+Brent D. Metz <bmetz@vt.edu>
+Kodak 200/210 library
+
+Brian Hirt <bhirt@loopy.berkhirt.com>
+Original Kodak 210 library
+
+Mandrake <mandrake@lobotomy.com>
+Kodak DC210 library hacking
+
+Randy D. Scott <scottr@wwa.com>
+Kodak DC240 library
+
+David Brownell <david-b@pacbell.net>
+Kodak DC240 USB library patch
 
 Phill Hugo <phill@gphoto.org>
 Konica Q-M100, HP-C20/30 library
@@ -46,14 +72,8 @@ Toshiki Fujisawa <gphoto@fujisaw.gr.jp>
 Konica Q-M200 library
 FreeBSD 3.2 patches
 
-M. Adam Kendall <joker@penguinpub.com>
-Sony DSC-F1 library
-
-Mark Davies <mdavies@dial.pipex.com>
-Sony DSC-F55E library
-
-Michael McCormack <mccormac@aals27.alcatel.com.au>
-Nikon CoolPix 600 library
+Gus Hartmann <hartmann@cs.wisc.edu>
+Minolta Dimage V library
 
 Henning Zabel <henning@uni-paderborn.de>
 New Mustek MDC 800 library
@@ -61,17 +81,8 @@ New Mustek MDC 800 library
 Pedro Caria <pmiguel@maquina.com>
 Original Mustek MDC 800 library
 
-Philippe Marzouk <bullmali@afribone.net.ml>
-Canon thumbnail and deletion support
-
-Edouard Lafargue <lafargue@oslo.geco-prakla.slb.com>
-Canon camera detection, fixes, configuration dialog
-
-Del Simmons <del@gphoto.org>
-Kodak DC20/25 library
-
-TimeCop <timecop@japan.co.jp>
-Enhanced Kodak DC21x support
+Michael McCormack <mccormac@aals27.alcatel.com.au>
+Nikon CoolPix 600 library
 
 Bob Paauwe <bpaauwe@bobsplace.com>
 Philips ESP 80 library
@@ -81,9 +92,14 @@ Cliff Wright <cliff@snipe444.org>
 Ricoh RDC 300/300Z library
 Bug fixing
 
-Rasmus Andersen <rasmus@diku.dk>
-X independent CLI invocation
-Bug fixing
+James McKenzie <james@fishsoup.dhs.org>
+Samsung Digimax 800k library
+
+M. Adam Kendall <joker@penguinpub.com>
+Sony DSC-F1 library
+
+Mark Davies <mdavies@dial.pipex.com>
+Sony DSC-F55E library
 
 Beat Christen <spiff@longstreet.ch>
 Toshiba PDR M1 library
@@ -91,26 +107,17 @@ Toshiba PDR M1 library
 Warren Baird <wjbaird@bigfoot.com>
 Bug fixing
 
-Brent D. Metz <bmetz@vt.edu>
-Kodak 200/210 library
-
-Brian Hirt <bhirt@loopy.berkhirt.com>
-Kodak 210 library
-
-Mandrake <mandrake@lobotomy.com>
-Kodak DC210 library hacking
-
-Randy D. Scott <scottr@wwa.com>
-Kodak DC240 library
-
-David Brownell <david-b@pacbell.net>
-Kodak DC240 USB library patch
+Mike Labriola <mdlabriola@mindless.com> 
+Extra HTML gallery export options 
 
 Paul S. Jenner <psj@mustec.eu.org>
 GNU AutoConf scripts
 
 Tuomas Kuosmanen <tigert@gimp.org>
 Misc. toolbar icons
+
+sjburges@gimp.org
+Orientation Icons
 
 Ole Aamot <ole@gnu.org>
 Mailinglists, web, FAQ, bug fixing

@@ -43,12 +43,12 @@ void dump_hex(const char *msg, const unsigned char *buf, int len)
 #if 0
     if (len > 160)
     {
-	printf("dump n:%d --> 160\n", len);
+	fprintf(stderr,"dump n:%d --> 160\n", len);
 	len = 160;
     }
 #endif
 
-    printf("%s: (%d bytes)\n", msg, len);
+    fprintf(stderr,"%s: (%d bytes)\n", msg, len);
     while (len > 0)
     {
 	sprintf(line, "%08x: ", buf - start);
@@ -93,7 +93,7 @@ void dump_hex(const char *msg, const unsigned char *buf, int len)
 
 	*out++ = 0;
 
-	printf("%s\n", line);
+	fprintf(stderr,"%s\n", line);
 
 	buf += 16;
 	len -= 16;

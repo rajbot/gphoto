@@ -12,16 +12,13 @@
  *
  ****************************************************************************/
 
-#include "config.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <termios.h>
 #include <fcntl.h>
 #include <sys/time.h>
 #include <errno.h>
-#ifdef HAVE_SYS_PARAM_H
-#include <sys/param.h>
-#endif
+#include <sys/ioctl.h>
 
 #include "util.h"
 
@@ -39,7 +36,65 @@ static int fd;
 
 void serial_flush_input(void)
 {
-    if (tcflush(fd,TCIFLUSH) < 0) perror("tcflush");
+    if (tcflush(fd,TCIFLUSH) < 0) perror("tciflush");
+}
+
+void serial_flush_output(void)
+{
+    if (tcflush(fd,TCOFLUSH) < 0) perror("tcoflush");
+}
+
+/*****************************************************************************
+ *
+ * canon_serial_change_speed
+ *
+ * change the speed of the communication.
+ *
+ * speed - the new speed
+ *
+ * Returns 1 on success.
+ * Returns 0 on any error.
+ *
+ ****************************************************************************/
+
+int canon_serial_change_speed(int speed)
+{
+         /* set speed */
+    cfsetospeed(&newtio, speed);
+    cfsetispeed(&newtio, speed);
+
+    if (0 > tcsetattr(fd, TCSANOW, &newtio))
+    {
+        perror("canon_serial_change_speed(): tcsetattr()");
+        return 0;
+    }
+	usleep(70000);
+
+    return 1;
+}
+ 
+
+/*****************************************************************************
+ *
+ * canon_serial_get_cts
+ *
+ * Gets the status of the CTS (Clear To Send) line on the serial port.
+ *
+ * CTS is "1" when the camera is ON, and "0" when it is OFF.
+ *
+ * Returns 1 on CTS high.
+ * Returns 0 on CTS low.
+ *
+ ****************************************************************************/
+int canon_serial_get_cts(void)
+{
+  int j;
+
+  if (ioctl(fd, TIOCMGET, &j) < 0) {
+    perror("Getting hardware status bits");
+  }
+
+  return (j & TIOCM_CTS);
 }
 
 
@@ -66,7 +121,7 @@ int canon_serial_init(const char *devname)
 
     D(printf("canon_init_serial(): devname %s\n", devname));
 
-    #ifdef BSD
+    #ifdef __FreeBSD__
     fd = open(devname, O_RDWR | O_NOCTTY | O_NONBLOCK);
     #else
     fd = open(devname, O_RDWR | O_NOCTTY | O_SYNC | O_NONBLOCK);
@@ -97,7 +152,8 @@ int canon_serial_init(const char *devname)
     #endif
     newtio.c_iflag |= (BRKINT | IGNPAR);
     newtio.c_oflag &= ~OPOST;
-    newtio.c_lflag = ~(ICANON | ISIG | ECHO | ECHONL | ECHOE | ECHOK);
+    newtio.c_lflag &= ~(ICANON | ISIG | ECHO | ECHONL | ECHOE | 
+			ECHOK | IEXTEN);
     newtio.c_cflag &= ~(CRTSCTS | PARENB | PARODD);
     newtio.c_cflag |= CLOCAL | CREAD;
     newtio.c_cc[VMIN] = 1;
@@ -175,7 +231,7 @@ int canon_serial_send(const unsigned char *buf, int len)
 	    {
 		continue;
 	    }
-perror("serial");
+	    perror("serial_send");
 	    return -1;
 	}
 	len -= sent;

@@ -25,11 +25,11 @@ AC_PATH_X
 dnl Check -ljpeg:
 AC_CHECK_LIB(jpeg, jpeg_start_decompress)
 dnl Check for glib
-AM_PATH_GLIB(1.2.6)
+AM_PATH_GLIB(1.2.3)
 dnl Check for gtk
-AM_PATH_GTK(1.2.6)
+AM_PATH_GTK(1.2.3)
 dnl Check for gdk_imlib
-AM_PATH_GDK_IMLIB(1.9.8)
+AM_PATH_GDK_IMLIB(1.9.4)
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -105,8 +105,6 @@ AC_OUTPUT([
 	samsung/Makefile
 	sony/Makefile
 	sony/dscf55/Makefile
-	toshiba/Makefile
-	toshiba/pdr/Makefile
 	src/Makefile
 	src/icons/Makefile
 ])

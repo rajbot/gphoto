@@ -13,8 +13,7 @@
  *
  * OWS 990925 Changed canon_get_picture and canon_number_of_pictures to
  *            work with A5. 
- * 
- * OWS 991202 Included old 0.3.6pre code so it works for A5.
+ *
  *
  ****************************************************************************/
 
@@ -31,10 +30,12 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-
+#include <termios.h>
+#include <time.h>
 #include <gtk/gtk.h>
 
 #include "../src/gphoto.h"
+#include "../src/util.h"
 
 #include "util.h"
 #include "serial.h"
@@ -71,13 +72,53 @@ static int check_readiness(void)
 {
     if (cached_ready) return 1;
     if (psa50_ready()) {
-       D(printf("A5 i canon.c %d\n",A5));
-       if (A5) update_status("Powershot A5");
+       D(printf("Camera type:  %d\n",camera.model));
        cached_ready = 1;
        return 1;
     }
     update_status("Camera unavailable");
     return 0;
+}
+
+static void switch_camera_off()
+{
+  psa50_off();
+  clear_readiness();
+}
+
+static void canon_set_owner(GtkWidget *win,GtkWidget *owner)
+{
+    char *entry;
+
+    update_status("Setting owner name.");
+    entry = gtk_entry_get_text(GTK_ENTRY(owner));
+    fprintf(stderr,"New owner name: %s\n",entry);
+    psa50_set_owner_name(entry);
+}
+
+
+char *camera_model_string()
+{
+  if (!check_readiness())
+    return "Camera unavailable";
+
+  switch (camera.model) {
+  case CANON_PS_A5:
+    return "Powershot A5";
+  case CANON_PS_A5_ZOOM:
+    return "Powershot A5 Zoom";
+    case CANON_PS_A50:
+    return "Powershot A50";
+  case CANON_PS_A70:
+    return "Powershot Pro70";
+  case CANON_PS_S10:
+    return "Powershot S10";
+  case CANON_PS_S20:
+    return "Powershot S20";
+  default:
+    return "Unknown model !";
+  }
+
 }
 
 
@@ -196,21 +237,55 @@ static int update_dir_cache(void)
     if (!update_disk_cache()) return 0;
     if (!check_readiness()) return 0;
     cached_images = 0;
-    if (A5) {
+    switch (camera.model) {
+    case CANON_PS_A5:
+    case CANON_PS_A5_ZOOM:
       if (recurse(cached_drive)) {
 	cached_dir = 1;
 	return 1;
       }
       clear_dir_cache();
       return 0;
-    }
-    else { /* A50 camera */
+      break;
+
+    default:  /* A50 or S10 or other */
       cached_tree = dir_tree(cached_drive);
       if (!cached_tree) return 0;
       cached_dir = 1;
       return 1;
+      break;
     }
 }
+
+/**
+ * setPathName was borrowed from the konica driver
+ */
+static void setPathName(char *fname)
+{
+  char *sp;
+  int   flen;
+  sp = getenv("HOME");
+  if (!sp)
+    sp = ".";
+  strcpy(fname, sp);
+  flen = strlen(fname);
+  while (fname[flen-1] == '/')
+    {
+      fname[flen-1] = '\0';
+      flen--;
+    }
+  if (!strstr(fname, "/.gphoto"))
+      strcat(fname, "/.gphoto");
+}
+/**
+ * setFileName was borrowed from the Konica driver
+ */
+static void setFileName(char *fname)
+{
+   setPathName(fname);
+   strcat(fname, "/powershotrc");
+}
+
 
 
 /****************************************************************************
@@ -306,74 +381,315 @@ static int populate(struct psa50_dir *entry,GtkWidget *branch)
 
 static void cb_clear(GtkWidget *widget,GtkWidget *window)
 {
-    gtk_widget_destroy(window);
+  //    gtk_widget_destroy(window);
+
     cached_ready = 0;
     cached_disk = 0;
     if (cached_dir) clear_dir_cache();
     cached_dir = 0;
 }
 
-static void cb_done(GtkWidget *widget,GtkWidget *window)
-{
-    gtk_widget_destroy(window);
-}
-
+/**
+ * Configuration dialog for Canon cameras.
+ *
+ * This dialog tries to get information from the camera, but in case
+ * the camera does not answer, it should show anyway.
+ *
+ * Main settings available there:
+ *
+ * - Compact Flash card contents with download
+ * - Speed select
+ * - Date get/set
+ * - Owner name get/set
+ * - AC status (battery/AC)
+ * - Firmware revision
+ */
 
 static int canon_configure(void)
 {
-    GtkWidget *window,*box,*scrolled_win,*tree,*clear,*done;
 
-    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    if (!window) return 0;
-    gtk_signal_connect(GTK_OBJECT(window),"delete_event",
-      GTK_SIGNAL_FUNC(gtk_widget_destroy),window);
-    box = gtk_vbox_new(FALSE,0);
-    if (!box) {
-	gtk_widget_destroy(window);
-	return 0;
+  //    GtkWidget *window,*box,*scrolled_win,*tree,*clear,*done;
+  GtkWidget *dialog, *hbox, *vbox, *label, *tree, *vseparator;
+  GtkWidget *file_list, *button, *cbutton, *clear,*set_button;
+  GtkWidget *combo, *swoff, *sync;
+  GtkWidget *owner_entry;
+  GList *list;
+
+  char cam_model[80];
+  char cam_date[34];
+  struct tm *camtm;
+  time_t camtime;
+  char *csp;
+
+  FILE *fd;
+  char  fname[128];
+
+
+  // First create the dialog window, with title, position and size:
+  dialog = gtk_dialog_new();
+  gtk_window_set_title(GTK_WINDOW(dialog), "Camera Setup");
+  gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
+  gtk_container_border_width(GTK_CONTAINER(dialog), 5);
+  gtk_widget_set_usize(dialog, 450, 300);
+
+
+  /* Box going across the dialog... */
+  hbox = gtk_hbox_new(FALSE, 5);
+  gtk_widget_show(hbox);
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+                             hbox);
+
+  /* Vertical box holding the file browser */
+  vbox = gtk_vbox_new(FALSE, 0);
+  gtk_widget_show(vbox);
+  gtk_box_pack_start_defaults(GTK_BOX(hbox), vbox);
+
+  label = gtk_label_new("CF card file browser:");
+  gtk_misc_set_alignment (GTK_MISC (label), 0, 0);
+  gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+  gtk_widget_show(label);
+
+  file_list = gtk_scrolled_window_new(NULL,NULL);
+  if (!file_list) {
+    gtk_widget_destroy(dialog);
+    return 0;
+  }
+  gtk_container_border_width(GTK_CONTAINER(file_list), 5);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(file_list),
+                                GTK_POLICY_AUTOMATIC,GTK_POLICY_AUTOMATIC);
+  gtk_widget_set_usize(file_list,200,400);
+  gtk_widget_show(file_list);
+  gtk_box_pack_start(GTK_BOX(vbox),file_list,TRUE,TRUE,FALSE);
+
+
+  clear = gtk_button_new_with_label("Clear list");
+  if (!clear) {
+    gtk_widget_destroy(dialog);
+    return 0;
+  }
+  
+  gtk_signal_connect(GTK_OBJECT(clear),"clicked",GTK_SIGNAL_FUNC(cb_clear),
+                    dialog);
+  gtk_widget_show(clear);
+  gtk_box_pack_start(GTK_BOX(vbox),clear,FALSE,FALSE,5);
+
+
+  /* Create the tree object that will hold the directory
+   * contents, and fill it.
+   */
+  tree = gtk_tree_new();
+  if (!tree) {
+    gtk_widget_destroy(dialog);
+    return 0;
+  }
+  gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(file_list),
+                                       tree);
+  gtk_widget_show(tree);
+  populate(NULL,tree);
+
+
+  /* The the second half of the dialog: camera model, date and time,
+   * etc...
+   */
+  vseparator = gtk_vseparator_new();
+  gtk_widget_show(vseparator);
+  gtk_box_pack_start(GTK_BOX(hbox), vseparator, FALSE, FALSE, 2);
+
+  vbox = gtk_vbox_new(FALSE, 0);
+  gtk_widget_show(vbox);
+  gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 2);
+
+  /* Get the camera model string. This will initiate serial traffic
+   * if the user did not get the index before. */
+  strcpy(cam_model,"Camera model: ");
+  strncat(cam_model, camera_model_string(),60);
+  label = gtk_label_new(cam_model);
+  gtk_misc_set_alignment (GTK_MISC (label), 0, 0);
+  gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+  gtk_widget_show(label);
+
+  /**
+   * Get the owner name, and put it in a label. In a next version
+   * we'll be able to edit it as well.
+   */
+  hbox = gtk_hbox_new(FALSE, 2);
+  gtk_widget_show(hbox);
+  gtk_box_pack_start(GTK_BOX(vbox),hbox,FALSE,FALSE,0);
+  label = gtk_label_new("Owner name: ");
+  gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+  gtk_widget_show(label);
+  
+  owner_entry = gtk_entry_new_with_max_length(30);
+  gtk_entry_set_text(GTK_ENTRY(owner_entry),camera.owner);
+  gtk_box_pack_start(GTK_BOX(hbox), owner_entry, FALSE, FALSE, 0);
+  gtk_widget_show(owner_entry);
+
+  set_button = gtk_button_new_with_label("Set");
+  gtk_box_pack_start(GTK_BOX(hbox), set_button, FALSE, FALSE, 1);
+  gtk_widget_show(set_button);
+  gtk_signal_connect(GTK_OBJECT(set_button),"clicked",GTK_SIGNAL_FUNC(canon_set_owner),
+                    owner_entry);
+  gtk_widget_show(label);
+
+  label = gtk_label_new(" ");
+  //  gtk_misc_set_alignment (GTK_MISC (label), 0, 0);
+  gtk_widget_show(label);
+  gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 1);
+
+  if (cached_ready) {
+    strcpy(cam_date,"Date: ");
+    camtime = psa50_get_time();
+    camtm = gmtime(&camtime);
+    strncat(cam_date, asctime(camtm),26);
+  }
+  else
+    strcpy(cam_date,"Date: camera unavailable");
+  label = gtk_label_new(cam_date);
+
+  gtk_misc_set_alignment (GTK_MISC (label), 0, 0);
+  gtk_widget_show(label);
+  gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 1);
+
+  label = gtk_label_new("Firmware revision: unknown");
+  gtk_misc_set_alignment (GTK_MISC (label), 0, 0);
+  gtk_widget_show(label);
+  gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 1);
+
+  label = gtk_label_new("Battery status: unknown");
+  gtk_misc_set_alignment (GTK_MISC (label), 0, 0);
+  gtk_widget_show(label);
+  gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 1);
+
+  label = gtk_label_new(" ");
+  gtk_widget_show(label);
+  gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 1);
+
+  /**
+   * Then, speed settings. We need to save these to a file...
+   */
+
+  /* Make a small horizontal box for speed selection: */
+  hbox = gtk_hbox_new(FALSE, 5);
+  gtk_widget_show(hbox);
+  gtk_box_pack_start(GTK_BOX(vbox),hbox,FALSE,FALSE,0);
+
+  label = gtk_label_new("Speed: ");
+  gtk_widget_show(label);
+  gtk_misc_set_alignment (GTK_MISC (label), 0, 0);
+  gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 2);
+
+  list = NULL;
+  combo = gtk_combo_new();
+  gtk_widget_show(combo);
+  gtk_box_pack_start(GTK_BOX(hbox), combo, FALSE, FALSE, 0);
+
+  list = g_list_append(list, "9600");
+  list = g_list_append(list, "19200");
+  list = g_list_append(list, "38400");
+  list = g_list_append(list, "57600");
+  list = g_list_append(list, "115200");
+
+  gtk_combo_set_popdown_strings(GTK_COMBO(combo), list);
+  switch (camera.speed) {
+  case B9600: csp = "9600"; break;
+  case B19200: csp = "19200"; break;
+  case B38400: csp = "38400"; break;
+  case B57600: csp = "57600"; break;
+  case B115200: csp = "115200"; break;
+  default: csp = "Choose speed";
+  }
+  gtk_entry_set_text(GTK_ENTRY(GTK_COMBO(combo)->entry),
+                    csp);
+  gtk_entry_set_editable(GTK_ENTRY(GTK_COMBO(combo)->entry),FALSE);
+
+  label = gtk_label_new(" ");
+  gtk_widget_show(label);
+  gtk_box_pack_start(GTK_BOX(vbox), label, TRUE, FALSE, 1);
+
+
+  sync = gtk_button_new_with_label("Synchronize Camera Time");
+  gtk_widget_show(sync);
+  gtk_box_pack_start(GTK_BOX(vbox), sync, FALSE, FALSE, 5);
+  gtk_signal_connect(GTK_OBJECT(sync),"clicked",GTK_SIGNAL_FUNC(psa50_sync_time),
+                    dialog);
+
+
+  /* Add a last button to switch off the camera if we want: */
+  swoff = gtk_button_new_with_label("Switch Camera Off");
+  gtk_widget_show(swoff);
+  gtk_box_pack_start(GTK_BOX(vbox), swoff, FALSE, FALSE, 5);
+  gtk_signal_connect(GTK_OBJECT(swoff),"clicked",GTK_SIGNAL_FUNC(switch_camera_off),
+                    dialog);
+
+  /* Buttons at the bottom of the dialog: OK/Save and Cancel */
+
+  button = gtk_button_new_with_label("Save");
+  gtk_widget_show(button);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
+                    button, TRUE, TRUE, 0);
+
+  cbutton = gtk_button_new_with_label("Cancel");
+  gtk_widget_show(cbutton);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
+                    cbutton, TRUE, TRUE, 0);
+
+  if (wait_for_hide(dialog, button, cbutton) == 0)
+      return 1;
+
+  /* If we're there, it's because the user pressed "OK". We should
+   * save the settings now...
+   */
+  csp = gtk_entry_get_text(GTK_ENTRY(GTK_COMBO(combo)->entry));
+  if (strncmp(csp, "115200", 6) == 0)
+    camera.speed = B115200;
+  else if (strncmp(csp, "57600", 5) == 0)
+    camera.speed = B57600;
+  else if (strncmp(csp, "38400", 5) == 0)
+    camera.speed = B38400;
+  else if (strncmp(csp, "19200", 5) == 0)
+    camera.speed = B19200;
+  else
+    camera.speed = B9600;
+  setFileName(fname);
+  fd = fopen(fname, "w");
+  if (!fd) {
+    char cmd[140];
+    setPathName(fname);
+    sprintf(cmd, "mkdir %s", fname);
+    system(cmd);
+    setFileName(fname);
+    fd = fopen(fname, "w");
+  }
+  if (fd) {
+    struct tm *tp;
+    time_t    mytime;
+    char *speed;
+    mytime = time(NULL);
+    tp = localtime(&mytime);
+    fprintf(fd, "#  Canon Powershot configuration - saved on %4.4d/%2.2d/%2.2d at %2.2d:%2.2d\n",
+           tp->tm_year+1900, tp->tm_mon+1, tp->tm_mday,
+           tp->tm_hour, tp->tm_min);
+    switch (camera.speed) {
+    case B19200:
+      speed = "19200"; break;
+    case B38400:
+      speed = "38400"; break;
+    case B57600:
+      speed = "57600"; break;
+    case B115200:
+      speed = "115200"; break;
+    default:
+      speed = "9600";
     }
-    gtk_container_add(GTK_CONTAINER(window),box);
-    gtk_widget_show(box);
-    scrolled_win = gtk_scrolled_window_new(NULL,NULL);
-    if (!scrolled_win) {
-	gtk_widget_destroy(window);
-	return 0;
-    }
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_win),
-      GTK_POLICY_AUTOMATIC,GTK_POLICY_AUTOMATIC);
-    gtk_widget_set_usize(scrolled_win,200,400);
-    gtk_widget_show(scrolled_win);
-    gtk_box_pack_start(GTK_BOX(box),scrolled_win,TRUE,TRUE,FALSE);
-    clear = gtk_button_new_with_label("Clear camera cache");
-    if (!clear) {
-	gtk_widget_destroy(window);
-	return 0;
-    }
-    gtk_signal_connect(GTK_OBJECT(clear),"clicked",GTK_SIGNAL_FUNC(cb_clear),
-      window);
-    gtk_widget_show(clear);
-    gtk_box_pack_start(GTK_BOX(box),clear,FALSE,FALSE,FALSE);
-    done = gtk_button_new_with_label("Done");
-    if (!done) {
-	gtk_widget_destroy(window);
-	return 0;
-    }
-    gtk_signal_connect(GTK_OBJECT(done),"clicked",GTK_SIGNAL_FUNC(cb_done),
-      window);
-    gtk_widget_show(done);
-    gtk_box_pack_start(GTK_BOX(box),done,FALSE,FALSE,FALSE);
-    tree = gtk_tree_new();
-    if (!tree) {
-	gtk_widget_destroy(window);
-	return 0;
-    }
-    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrolled_win),
-      tree);
-    gtk_widget_show(tree);
-    populate(NULL,tree);
-    gtk_widget_show(window);
-//    find(cached_tree,cached_drive,entry);
-    return 1;
+    fprintf(fd, "%-12.12s %s\n", "Speed", speed);
+    fclose(fd);
+    update_status("Saved configuration");
+  } else
+    printf("Unable to open/create %s - configuration not saved\n",
+          fname);
+
+  return 1;
+
 }
 
 /****************************************************************************/
@@ -405,17 +721,29 @@ static void pick_nth(int n,char *path)
 }
 
 
+#define JPEG_END	0xFFFFFFD9
+#define JPEG_ESC	0xFFFFFFFF
+
 static struct Image *canon_get_picture(int picture_number, int thumbnail)
 {
     struct Image *image;
     char path[300];
+    int Size;
+    void *ptr;
 
-    if (A5) {
+	
+	if (!check_readiness()) {
+	    return NULL;
+      }
+
+    switch (camera.model) {
+    case CANON_PS_A5:
+    case CANON_PS_A5_ZOOM:
+
       picture_number=picture_number*2-1;
       if (thumbnail) picture_number+=1;
       D(printf("Picture number %d\n",picture_number));
 
-      clear_readiness();
       image = malloc(sizeof(*image));
       if (!image) {
 	perror("malloc");
@@ -438,11 +766,10 @@ static struct Image *canon_get_picture(int picture_number, int thumbnail)
       if (image->image) return image;
       free(image);
       return NULL;
-      
-    } else /* For A50 or others */
-      if (thumbnail) return NULL;
-
-    clear_readiness();
+      break;
+    default:
+	/* For A50 or others */
+    /* clear_readiness(); */
     if (!update_dir_cache()) {
 	update_status("Could not obtain directory listing");
 	return 0;
@@ -457,6 +784,8 @@ static struct Image *canon_get_picture(int picture_number, int thumbnail)
     if (!picture_number || picture_number > cached_images) {
 	update_status("Invalid index");
 	free(image);
+	if (command_line_mode==1)
+		psa50_end(); 
 	return NULL;
     }
     strcpy(path,cached_drive);
@@ -466,34 +795,103 @@ static struct Image *canon_get_picture(int picture_number, int thumbnail)
 	free(image);
 	return NULL;
     }
-    image->image = psa50_get_file(path,&image->image_size);
+    if (thumbnail) {
+      ptr=image;
+      if ( (image->image = psa50_get_thumbnail(path,&image->image_size)) == NULL) {
+	if (command_line_mode == 1)
+		psa50_end(); 
+	free(ptr);
+	return NULL;
+      }
+      /* we count the byte returned until the end of the jpeg data
+	 which is FF D9 */
+      for(Size=1;Size<image->image_size;Size++)
+	if(image->image[Size]==JPEG_END) {
+	  if(image->image[Size-1]==JPEG_ESC) break;
+	}
+      image->image_size = Size+1; 
+    }
+    else {
+      image->image = psa50_get_file(path,&image->image_size);
+    }
+    if (command_line_mode==1) 
+      psa50_end(); 
     if (image->image) return image;
     free(image);
     return NULL;
+      break;
+    }
 }
-
 
 /****************************************************************************/
 
 
 static int canon_number_of_pictures(void)
 {
-  clear_readiness();
+  /* clear_readiness(); */
   if (!update_dir_cache()) {
     update_status("Could not obtain directory listing");
     return 0;
   }
-  if (A5) return cached_images/2; /* Odd is pictures even is thumbs */
-  else  return cached_images;
+  switch (camera.model) {
+  case CANON_PS_A5:
+  case CANON_PS_A5_ZOOM:
+    return cached_images/2; /* Odd is pictures even is thumbs */
+  default:
+	if (command_line_mode==1)
+		psa50_end();
+	return cached_images;
+  } 
 };
 
-/****************************************************************************/
-
+/**
+ * This routine initializes the serial port and also load the
+ * camera settings. Right now it is only the speed that is
+ * saved.
+ */
 static int canon_initialize(void)
 {
-    D(printf("canon_initialize()\n"));
+  char fname[1024];
+  FILE *conf;
 
-    return !canon_serial_init(serial_port);
+  D(printf("canon_initialize()\n"));
+ /* Default speed */
+  camera.speed = B9600;
+
+  setFileName(fname);
+  if ((conf = fopen(fname, "r"))) {
+    char buf[256];
+    char *sp, *vp;
+    while ((sp = fgets(buf, sizeof(buf)-1, conf)) != NULL)
+      {
+       if (*sp == '#' || *sp == '*')
+         continue;
+       sp = strtok(buf, " \t\r\n");
+       if (!sp)
+         continue;    /* skip blank lines */
+       vp = strtok(NULL, " \t\r\n");
+       if (!vp)
+         {
+            printf("No value for %s - ignored\n", sp);
+            continue;
+         }
+       if (strcasecmp(sp, "Speed") == 0) {
+         if (strncmp(vp, "115200", 6) == 0)
+           camera.speed = B115200;
+         else if (strncmp(vp, "57600", 5) == 0)
+           camera.speed = B57600;
+         else if (strncmp(vp, "38400", 5) == 0)
+           camera.speed = B38400;
+         else if (strncmp(vp, "19200", 5) == 0)
+           camera.speed = B19200;
+         else if (strncmp(vp, "9600", 5) == 0)
+           camera.speed = B9600;
+       }
+      }
+    fclose(conf);
+  }
+  fprintf(stderr,"Camera transmission speed : %i\n", camera.speed);
+  return !canon_serial_init(serial_port);
 }
 
 
@@ -531,13 +929,25 @@ static void pretty_number(int number,char *buffer)
 static char *canon_summary(void)
 {
     static char buffer[200],a[20],b[20];
+    char *model;
 
-    clear_readiness();
+    /*clear_readiness();*/
     if (!update_disk_cache()) return "Could not obtain disk information";
     pretty_number(cached_capacity,a);
     pretty_number(cached_available,b);
-    sprintf(buffer,"%s\nDrive %s\n%11s bytes total\n%11s bytes available",
-      psa50_id,cached_drive,a,b);
+    model = "Canon Powershot";
+    switch (camera.model) {
+    case CANON_PS_A5:      model = "Canon Powershot A5"; break;
+    case CANON_PS_A5_ZOOM: model = "Canon Powershot A5 Zoom"; break;
+    case CANON_PS_A50:     model = "Canon Powershot A50"; break;
+    case CANON_PS_A70:     model = "Canon Powershot A70"; break;
+    case CANON_PS_S10:     model = "Canon Powershot S10"; break;
+    case CANON_PS_S20:     model = "Canon Powershot S20"; break; 
+    }
+    sprintf(buffer,"%s\nDrive %s\n%11s bytes total\n%11s bytes available\n",
+      model,cached_drive,a,b);
+	if (!(camera.model == CANON_PS_A5 
+	      || camera.model == CANON_PS_A5_ZOOM) && command_line_mode==1) psa50_end();
     return buffer;
 }
 
@@ -545,17 +955,69 @@ static char *canon_summary(void)
 
 static char *canon_description(void)
 {
-    return ("Canon PowerShot A50 by\n"
+    return ("Canon PowerShot series driver by\n"
 	    "Wolfgang G. Reissnegger,\n"
-            "Werner Almesberger.\n"
-            "A5 additions by Ole W. Saastad\n");
+            "Werner Almesberger,\n"
+	    "Edouard Lafargue,\n"
+	    "Philippe Marzouk,\n"
+            "A5 additions by Ole W. Saastad\n"
+	    );
 
 }
 
 /****************************************************************************/
 
+static int canon_delete_image(int picture_number)
+{ 
+	char path[300];
+	char file[300], dir[300];
+	int j;
+
+	/*clear_readiness();*/
+	if (!check_readiness()) {
+		return 0;
+	}
+	if (!(camera.model == CANON_PS_A5 ||
+	  camera.model == CANON_PS_A5_ZOOM)) { /* this is tested only on powershot A50 */
+    
+    if (!update_dir_cache()) {
+      update_status("Could not obtain directory listing");
+      return 0;
+    }
+    if (!picture_number || picture_number > cached_images) {
+      update_status("Invalid index");
+      /* psa50_end(); */
+      return 0;
+    }
+    strcpy(path,cached_drive);
+    pick_nth(picture_number,path);
+    update_status(path);
+
+    j = strrchr(path, '\\') - path;
+    strncpy(dir,path,j);
+    dir[j]='\0';
+    strcpy(file, path+j+1);
+
+    if (psa50_delete_file(file,dir)) {
+      update_status("error deleting file");
+      /* psa50_end(); */
+      return -1;
+    }
+    else {
+      /*		psa50_end(); */
+      cached_ready = 0; /*RAA: do smarter!*/
+      cached_disk = 0;
+      if (cached_dir) clear_dir_cache();
+      cached_dir = 0;
+      return 1;
+    }
+  }
+  return 0; 
+}
+
+/****************************************************************************/
+
 static struct Image *canon_get_preview(void) { return NULL; }
-static int canon_delete_image(int picture_number) { return 0; }
 static int canon_take_picture(void) { return 0; };
 
 struct _Camera canon =

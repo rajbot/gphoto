@@ -34,8 +34,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "post_processing_on.xpm"
-#include "post_processing_off.xpm"
+#include "icons/post_processing_on.xpm"
+#include "icons/post_processing_off.xpm"
 
 #define DEBUG(x) printf(x)
 
@@ -140,7 +140,7 @@ void takepicture_call() {
 
 void format (GtkWidget *dialog, GtkObject *button) {
 
-        gint current, no_pics, i;
+        gint no_pics, i;
         char error[32];
 
 	no_pics = (*Camera->number_of_pictures)();
@@ -276,7 +276,7 @@ void savepictodisk (gint picNum, gint thumbnail, char *prefix) {
 		  atoi(node->info)!=picNum)  /*should be strtol. RAA*/
 		node = node->next;
 	    sprintf(fname, "%s.%s", prefix, "jpg");
-	    if (node != NULL) { /*A match was found*/
+	    if (node != NULL && node->info!=NULL) { /*A match was found*/
 		gdk_imlib_save_image(node->imlibimage, fname, NULL);
 		return;
 	    }
@@ -369,13 +369,13 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 				sprintf(status, "Saving Image #%03i...", i);
 				update_status(status);
 				sprintf(fname, "%s-%03i",
-					saveselectedtodisk_dir, pic);
+					saveselectedtodisk_dir, i);
 				savepictodisk(i, 0, fname); }
 			   else {
 				sprintf(status, "Saving Thumbnail #%03i...", i);
 				update_status(status);
 				sprintf(fname, "%s-thumbnail-%03i",
-					saveselectedtodisk_dir, pic);
+					saveselectedtodisk_dir, i);
 				savepictodisk(i, 1, fname);
 			}
 			pic++;
@@ -480,6 +480,20 @@ gint delete_event (GtkWidget *widget, GdkEvent *event, gpointer data) {
 /* Callbacks -------------------------------------------------
    ----------------------------------------------------------- */
 
+void port_dialog_tester(GtkWidget *entry, GtkWidget *label) {
+  int i=0;
+  char model[60];
+  
+  sprintf (model, "%s", gtk_entry_get_text(GTK_ENTRY(entry)));
+  while (strlen(cameras[i].name) > 0) {
+    if (strcmp(model, cameras[i].name) == 0) { 
+      gtk_label_set_text(GTK_LABEL(label),
+			 cameras[i].tester);
+      return;
+    } 
+    i++;
+  }
+}
 
 void port_dialog_update(GtkWidget *entry, GtkWidget *label) {
 
@@ -490,8 +504,8 @@ void port_dialog_update(GtkWidget *entry, GtkWidget *label) {
 
 	while (strlen(cameras[i].name) > 0) {
                 if (strcmp(model, cameras[i].name) == 0) {
-			gtk_label_set_text(GTK_LABEL(label),
-			(*cameras[i].library->description)());
+		       gtk_label_set_text(GTK_LABEL(label),
+					   (*cameras[i].library->description)());
 			return;
                 }
 		i++;
@@ -501,9 +515,9 @@ void port_dialog_update(GtkWidget *entry, GtkWidget *label) {
 
 void port_dialog() {
 
-	GtkWidget *dialog, *label, *button, *cbutton;
-	GtkWidget *port0, *port1, *port2, *port3, *other, *ent_other;
-	GtkWidget *hbox, *vbox, *vseparator;
+	GtkWidget *dialog, *label, *button, *cbutton, *betalabel;
+	GtkWidget *port0, *port1, *port2, *port3, *other, *ent_other, *tester;
+	GtkWidget *hbox, *vbox, *vseparator, *hseparator;
 	GtkWidget *combo, *description;
 	GSList *group;
 	GList *list;
@@ -530,8 +544,7 @@ void port_dialog() {
 	/* Box going across the dialog... */
 	hbox = gtk_hbox_new(FALSE, 5);
 	gtk_widget_show(hbox);
-	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-					hbox);
+	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),hbox);
 
 	/* For the camera selection... */
 	vbox = gtk_vbox_new(FALSE, 0);
@@ -570,6 +583,23 @@ void port_dialog() {
 		(gpointer)description);
 
 	port_dialog_update(GTK_COMBO(combo)->entry, description);
+
+	betalabel = gtk_label_new("\ngPhoto user(s) that reported this model:\n");
+	gtk_label_set_justify(GTK_LABEL(betalabel), GTK_JUSTIFY_LEFT);
+	gtk_widget_show(betalabel);
+	
+ 	gtk_box_pack_start(GTK_BOX(vbox), betalabel, FALSE, TRUE, 0);
+
+	tester = gtk_label_new ("");
+	gtk_widget_show(tester);
+	gtk_label_set_justify(GTK_LABEL(tester), GTK_JUSTIFY_LEFT);
+	gtk_signal_connect(GTK_OBJECT(GTK_COMBO(combo)->entry),
+		"changed", GTK_SIGNAL_FUNC(port_dialog_tester), 
+		(gpointer)tester);
+
+ 	gtk_box_pack_start(GTK_BOX(vbox), tester, FALSE, TRUE, 0);
+
+	port_dialog_tester(GTK_COMBO(combo)->entry, tester);
 
 	vseparator = gtk_vseparator_new();
 	gtk_widget_show(vseparator);
@@ -647,6 +677,9 @@ void port_dialog() {
         gtk_box_pack_start(GTK_BOX(vbox), other, FALSE, FALSE, 0);
         gtk_box_pack_start(GTK_BOX(vbox), ent_other, FALSE, FALSE, 0);
 
+/*  	gtk_box_pack_start(GTK_BOX(vbox), betalabel, FALSE, FALSE, 0); */
+/*  	gtk_box_pack_start(GTK_BOX(vbox), tester, FALSE, FALSE, 0); */
+
         button = gtk_button_new_with_label("Save");
         gtk_widget_show(button);
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
@@ -710,7 +743,7 @@ gint load_config() {
 	FILE *conf;
 
         sprintf(fname, "%s/gphotorc", gphotoDir);
-        if (conf = fopen(fname, "r")) {
+        if ((conf = fopen(fname, "r"))) {
 		fgets(fname, 100, conf);
 		strncpy(serial_port, fname, strlen(fname)-1);
 		fgets(fname, 100, conf);
@@ -741,7 +774,7 @@ void save_config() {
 	FILE *conf;
 
 	sprintf(gphotorc, "%s/gphotorc", gphotoDir);
-	if (conf = fopen(gphotorc, "w")) {
+	if ((conf = fopen(gphotorc, "w"))) {
 		fprintf(conf, "%s\n", serial_port);
 		fprintf(conf, "%s\n", camera_model);
 		fprintf(conf, "%s\n", post_process_script);
@@ -790,7 +823,7 @@ void usersmanual_dialog() {
 
 	sprintf(manual_filename, "%s/MANUAL", DOCDIR);
 
-	if (manual = fopen(manual_filename, "r")) {
+	if ((manual = fopen(manual_filename, "r"))) {
 		fseek(manual, 0, SEEK_END);
 		manual_size = ftell(manual);
 		rewind(manual);

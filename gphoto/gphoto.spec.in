@@ -12,7 +12,8 @@ Source: ftp://ftp.gphoto.org/projects/gphoto/pub/tar/gphoto/stable/gphoto-%{ver}
 BuildRoot: /var/tmp/gphoto-root
 URL: http://www.gphoto.org/
 Docdir: %{prefix}/doc
-Requires: gtk+ >= 1.2.0
+Requires: gtk+ >= 1.2.3
+Requires: imlib >= 1.9.4
 
 %description
 gPhoto is part of the GNU project - and is an universal, free
@@ -41,7 +42,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc AUTHORS COPYING FAQ MANUAL NEWS README THANKS THEMES ChangeLog
 %{prefix}/man/man1/gphoto.1
 %{prefix}/bin/*
-%{prefix}/lib/gphoto/*
+%{prefix}/lib/*
 %{prefix}/share/gphoto/doc/*
 %{prefix}/share/gphoto/gallery/Default/*
 %{prefix}/share/gphoto/gallery/RedNGray/*

@@ -40,6 +40,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.22  2000/03/06 21:23:06  ole
+ * Released 0.4.3.
+ *
  * Revision 1.21  1999/11/24 11:51:48  ole
  * typo
  *
@@ -530,7 +533,7 @@ Then, re-run the HTML Gallery.");
 				//jae
 				sprintf(thumbnail,
 		"<a href=\"picture-%03i.html\">Click Me<\\/a>",i+1);
-				sprintf(thumbnail_filename, "");
+  				sprintf(thumbnail_filename, "");
 				sprintf(thumbnail_number, "%03i", i+1);
 			} else {
 				sprintf(thumbnail, 

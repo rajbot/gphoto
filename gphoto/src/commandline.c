@@ -23,7 +23,7 @@ void command_usage()
 	    "gPhoto %s (%s) - the GNU digital camera application\n",
 	    VERSION, __DATE__);
     fprintf(stdout,
-	    "Copyright (C) 1998-99 Scott Fritzinger <scottf@unr.edu>\n\n");
+	    "Copyright (C) 1998-2000 Scott Fritzinger <scottf@unr.edu>\n\n");
     fprintf(stdout,
 	    "Usage: gphoto [-h] [-c] [-n] [-s # filename] [-t # filename]\n");
     fprintf(stdout, "              [-d #] [-p filename] [-l filename]\n");
@@ -50,7 +50,7 @@ void command_usage()
     fprintf(stdout,
 	    "in the source distribution to read the GNU GPL license terms.\n\n");
     fprintf(stdout,
-	    "Report bugs and camera reports to gphoto-devel@gphoto.org.\n");
+	    "Report bugs and camera success to gphoto-devel@gphoto.org.\n");
     fprintf(stdout,
 	    "See http://www.gphoto.org for the latest news and updates.\n");
     _exit(0);

@@ -15,8 +15,7 @@ DESCRIPTION
 	gallery "themes" (HTML with special tags), and publish images 
 	to the web.  A directory browse mode has also been implemented.
 
-	gPhoto supports a wide array of digital camera models.  
-	Visit http://www.gphoto.org/cameras.php3 for an updated list.
+	gPhoto supports a wide array of digital camera models.
 
 IMPORTANT NOTICES
 	- Remove your old one from your $HOME/.gphoto/ directory
@@ -24,8 +23,9 @@ IMPORTANT NOTICES
 	
 	- For info about HTML gallery theme support, read THEMES (included).
 
-	- For developer specs, please download the latest common interface 
-	  specs from http://www.gphoto.org/documentation/programmers.html
+	- For developer specs, check http://scott.unr.edu/gphoto/
+	  Subscribe to the gphoto-devel@gphoto.org mailinglist by
+	  visiting http://lists.styx.net/
 
 REQUIREMENTS:
         * GNU sed
@@ -37,17 +37,21 @@ REQUIREMENTS:
 	  
 WHATS IN THE PACKAGE:
 	* GTK+ graphical application, by Scott Fritzinger <scottf@scs.unr.edu>
-	* Canon A50 library by Werner Almesberger <almesber@lrc.di.epfl.ch>
-	* Canon A5 library supp. by Ole W. Saastad <o.w.saastad@kjemi.uio.no>
+	* Canon PowerShot library reverse-engineered by
+          Wolfgang Reissnegger
+          Werner Almesberger <almesber@lrc.di.epfl.ch>
+	  Rasmus Andersen <rasmus@diku.dk>
+	  Edouard Lafargue <lafargue@oslo.geco-prakla.slb.com>
+	  Philippe Marzouk <bullmali@afribone.net.ml>
+          Ole W. Saastad <o.w.saastad@kjemi.uio.no>
 	* Casio QV library implemented by Gary Ross <gdr@hooked.net>
 	* Directory Browse library, by Scott Fritzinger <scottf@scs.unr.edu>
         * Fuji DS/DX library implemented by Matt Martin <matt.martin@ieee.org>
         * Kodak DC-2x library implemented by Del Simmons <del@cimedia.com>
-	* Kodak DC-2x0 library implemented by Brian Hirt <bhirt@mobygames.com>
+	* Kodak DC-2x0 library and dc21x_cam by Timecop <timecop@japan.co.jp>
 	* Kodak DC-240/280 library by Randy Scott <scottr@wwa.com>
 	* Kodak DC-240/280 USB support by David Brownell <david-b@pacbell.net>
 	* Konica Q M-100 library implemented by Phill Hugo <phill@gphoto.org>
-        * Konica library improvements by Ed Legowski <edlegowski@pobox.com>
         * Konica library improvements by Ed Legowski <edlegowski@pobox.com>
 	* Konica Q-M200 library by Toshiki Fujisawa <fujisawa@konica.co.jp>
         * Minolta Dimage V library by Gus Hartmann <hartmann@cs.wisc.edu> 
@@ -57,8 +61,9 @@ WHATS IN THE PACKAGE:
 	* PhotoPC library written by Eugene Crosser <crosser@average.org> 
 	* PhotoPC library for gPhoto by Scott Fritzinger <scottf@scs.unr.edu>
         * Ricoh 300 library implemented by Clifford Wright <cliff@snipe444.org>
+	* Samsung Digimax 800k libr. by James McKenzie <james@fishsoup.dhs.org>
 	* Sony DSC library written by M. Adam Kendall <joker@penguinpub.com>
-	* Sony DSC-F55E library written by Mark Davies <mdavies@dial.pipex.com>
+	* Sony DSC-F55E library + rsony by Mark Davies <mdavies@dial.pipex.com>
 	* Command line interface, by Scott Fritzinger <scottf@scs.unr.edu>
         * Autoconf/automake/libtool scripts by Paul Jenner <psj@mustec.eu.org>
 
@@ -169,10 +174,10 @@ REPORT BUGS TO:
 	gphoto-kodak@gphoto.org
 
 UPDATES:
-	http://www.gphoto.org/download.php3
+	http://www.gphoto.org/gphoto/download.html
 
 VENDOR SUPPORT:
-	http://www.gphoto.org/supporting.php3
+	http://www.gphoto.org/gphoto/supporting.html
 
 SUPPORT LETTER TEMPLATE:
 	See ``LETTER''.
@@ -188,7 +193,7 @@ GALLERY THEMES DOCUMENTATION:
 
 COPYING:
 	gPhoto - the GNU Digital Camera Program
-	Copyright (C) 1998-99 Scott Fritzinger <scottf@unr.edu>
+	Copyright (C) 1998-2000 Scott Fritzinger <scottf@unr.edu>
 
 	For each camera library, see the authors' source code.  The authors
 	have been contacted, and the author's permission was kindly granted 
@@ -209,3 +214,7 @@ COPYING:
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, 
 	MA 02111-1307  USA
+
+
+
+

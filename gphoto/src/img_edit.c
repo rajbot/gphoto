@@ -415,7 +415,7 @@ static void
 ee_edit_cb_toggle(GtkWidget *widget, gpointer data)
 {
   GtkWidget *w, *b;
-  gint bt;
+  gint bt = 0;
 
   w = GTK_WIDGET(gtk_object_get_data(GTK_OBJECT(widget), "widget"));
   if (GTK_TOGGLE_BUTTON(widget)->active)

@@ -43,6 +43,7 @@ struct _Camera {
 struct Model {
 	char *name;
 	struct _Camera *library;
+        char *tester;
 };
 
 struct ImageMembers {

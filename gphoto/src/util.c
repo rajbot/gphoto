@@ -161,7 +161,7 @@ int confirm_overwrite (char *filename) {
 	FILE *f;
 	char confirm[1024];
 
-	if (f = fopen(filename, "r")) {
+	if ((f = fopen(filename, "r"))) {
 		fclose(f);
                 sprintf(confirm, "File %s exists. Overwrite?", filename);
                 return (confirm_dialog(confirm));
@@ -249,7 +249,7 @@ void save_image (char *filename, struct Image *im) {
 	char errormsg[1024];
 	FILE *fp;
 
-	if (fp = fopen (filename, "w"))
+	if ((fp = fopen (filename, "w")))
 	{
 		fwrite (im->image, (size_t)sizeof(char), (size_t)im->image_size, fp);
 		fclose (fp);
@@ -339,7 +339,7 @@ GdkImlibImage *gdk_imlib_load_image_mem(char *image, int size) {
 	sprintf(c, "/tmp/gphoto_image_%i.jpg", utilcounter);
 	utilcounter++;
 
-	if (fp = fopen(c, "w")) {
+	if ((fp = fopen(c, "w"))) {
 		fwrite (image, (size_t)sizeof(char), (size_t)size, fp);
 		fclose(fp);
 		imlibimage = gdk_imlib_load_image(c);

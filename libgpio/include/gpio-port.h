@@ -47,7 +47,7 @@ typedef struct {
 #define GP_DLERROR()			dlerror()
 
 /* Directory-oriented functions */
-#define GP_DIR				DIR *
-#define GP_DIRENT			struct dirent *
+#define GP_DIR				DIR*
+#define GP_DIRENT			struct dirent*
 
 #endif

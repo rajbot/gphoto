@@ -61,11 +61,12 @@ char     *gphotoDir;		/* gPhoto directory		*/
 char	  serial_port[20];	/* Serial port			*/
 char	  camera_model[100];	/* Currently selected cam model */
 #else
-extern int       command_line_mode;    /* TRUE if in command line mode */ 
+extern int       command_line_mode;    /* TRUE if in command line mode */
 extern char      *gphotoDir;           /* gPhoto directory             */
 extern char      serial_port[20];      /* Serial port                  */
-extern char      camera_mode
+extern char      camera_model[100];    /* Currently selected cam model */
 #endif
+
 void update_progress (float percentage);
 void update_status   (char *newStatus);
 

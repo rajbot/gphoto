@@ -19,7 +19,6 @@ main (int argc, char *argv[])
 	GNOME_Camera camera;
 	GNOME_GnoCam_ModelList *model_list;
 	int i;
-	BonoboListener *l;
 
 	bonobo_init (&argc, argv);
 

@@ -224,7 +224,7 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		
 		id = gp_widget_id (widget->parent);
 		vbox = g_hash_table_lookup (configuration->priv->hash_table, &id);
-//		g_return_if_fail (vbox);
+		g_return_if_fail (vbox);
 		gtk_container_add (GTK_CONTAINER (vbox), frame);
 	} else {
 		gint 	id;

@@ -220,7 +220,9 @@ knc_cntrl_read_packet (KncCntrl *c, unsigned char *rb, unsigned int *rbs,
 		memmove (buf, buf + *rbs, read - *rbs); read -= *rbs;
 		if ((buf[0] != ETX) && (buf[0] != ETB)) goto TryAgain;
 		if (last) *last = (buf[0] == ETX) ? 1 : 0;
-#warning Fix checksum!
+#ifdef __GCC__
+# warning Fix checksum!
+#endif
 //		if (buf[1] != checksum) goto TryAgain;
 
 		b = ACK; r = knc_cntrl_write (c, &b, 1); if (r) break;

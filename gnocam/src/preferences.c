@@ -43,6 +43,8 @@ gboolean on_combo_entry_model_focus_out_event 	(GtkWidget *widget, GdkEventFocus
 
 void on_radiobutton_debug_level_toggled (GtkToggleButton* toggle_button);
 
+void update_speed_and_port_list			(gchar* model);
+
 void dialog_preferences_debug_level_update 	(gint debug_level);
 void dialog_preferences_prefix_update 		(gchar *prefix);
 void dialog_preferences_cameras_update 		(GSList* camera_list);
@@ -270,7 +272,7 @@ on_clist_cameras_row_selection_changed (GtkWidget *clist, gint row, gint column,
 	GList *selection;
 	gchar *name, *model, *speed, *port;
 
-	g_assert (clist != NULL);
+	g_return_if_fail (clist);
 
 	/* Check how many cameras have been selected. */
 	selection = g_list_first (GTK_CLIST (clist)->selection);
@@ -285,6 +287,7 @@ on_clist_cameras_row_selection_changed (GtkWidget *clist, gint row, gint column,
                 gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_model")), model);
                 gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_speed")), speed);
                 gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_port")), port);
+		update_speed_and_port_list (model)
 
 	} else {
 		
@@ -325,46 +328,76 @@ on_radiobutton_debug_level_toggled (GtkToggleButton* toggle_button)
 gboolean
 on_combo_entry_model_focus_out_event (GtkWidget *widget, GdkEventFocus *event, gpointer user_data)
 {
-	GtkWindow*	window;
-	GList*		list;
-	GtkCombo*	combo;
-	gint 		i;
 	gchar*		model;
-	CameraAbilities abilities;
 
-	g_assert ((window = GTK_WINDOW (glade_xml_get_widget (xml_preferences, "dialog_preferences"))) != NULL);
-	g_assert ((combo = GTK_COMBO (glade_xml_get_widget (xml_preferences, "combo_speed"))) != NULL);
-
-	/* Clean up the speed list. */
-	if ((list = gtk_object_get_data (GTK_OBJECT (combo), "list")) != NULL)
-		g_list_free (list);
-	
-	/* Build speed list. */
 	model = gtk_entry_get_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_model")));
-	if (strcmp ("", model) != 0) {
-		
-		/* User has selected a model. */
-		if (gp_camera_abilities_by_name (model, &abilities) == GP_OK) {
-			i = 0;
-			list = NULL;
-			while (abilities.speed[i] != 0) {
-				list = g_list_append (list, g_strdup_printf ("%i", abilities.speed[i]));
-				i++;
-			}
-			if (list != NULL) {
-				gtk_combo_set_popdown_strings (combo, list);
-				gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_speed")), "");
-			}
-		} else {
-			gnome_error_dialog_parented (_("Could not get camera abilities!"), window);
-		}
-	}
+	if (strcmp ("", model) != 0) update_speed_and_port_list (model);
 	return (FALSE);
 }
 
 /******************************************************************************/
 /* Functions                                                                  */
 /******************************************************************************/
+
+void
+update_speed_and_port_list (gchar* model)
+{
+	GtkWindow*	window;
+	GtkCombo*	combo_speed;
+	GtkCombo*	combo_port;
+	CameraAbilities	abilities;
+	CameraPortInfo	info;
+	gint		i, result;
+
+	g_return_if_fail (model);
+        g_return_if_fail (window = GTK_WINDOW (glade_xml_get_widget (xml_preferences, "dialog_preferences")), FALSE);
+        g_return_if_fail (combo_speed = GTK_COMBO (glade_xml_get_widget (xml_preferences, "combo_speed")), FALSE);
+        g_return_if_fail (combo_port = GTK_COMBO (glade_xml_get_widget (xml_preferences, "combo_port")), FALSE);
+
+        /* User has selected a model. */
+        if ((result = gp_camera_abilities_by_name (model, &abilities)) == GP_OK) {
+
+                /* Construct list for speed. */
+                i = 0;
+                list = NULL;
+                while (abilities.speed[i] != 0) {
+                        list = g_list_append (list, g_strdup_printf ("%i", abilities.speed[i]));
+                        i++;
+                }
+                if (list != NULL) {
+                        gtk_combo_set_popdown_strings (combo_speed, list);
+                        gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_speed")), "");
+                }
+
+                /* Construct list for ports. */
+                i = 0;
+                list = NULL;
+                for (i = 0; i < gp_port_count (); i++) {
+                        if ((result = gp_port_info (i, &info)) != GP_OK) {
+                                tmp = g_strdup_printf (_("Could not get information about port number %i!\n(%s)"), i,
+                                        gp_result_as_string (result));
+                                gnome_error_dialog_parented (tmp, window);
+                                g_free (tmp);
+                        } else {
+                                if (    ((info.type == GP_PORT_SERIAL) && (SERIAL_SUPPORTED (abilities.port))) ||
+                                        ((info.type == GP_PORT_PARALLEL) && (PARALLEL_SUPPORTED (abilities.port))) ||
+                                        ((info.type == GP_PORT_USB) && (USB_SUPPORTED (abilities.port))) ||
+                                        ((info.type == GP_PORT_IEEE1394) && (IEEE1394_SUPPORTED (abilities.port))) ||
+                                        ((info.type == GP_PORT_NETWORK) && (NETWORK_SUPPORTED (abilities.port))))
+                                        list = g_list_append (list, g_strdup (info.name));
+			}
+                }
+                if (list != NULL) {
+                        gtk_combo_set_popdown_strings (combo_port, list);
+                        gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_port")), "");
+                }
+
+        } else {
+                tmp = g_strdup_printf (_("Could not get abilities for model '%s'!\n(%s)"), model, gp_result_as_string (result));
+                gnome_error_dialog_parented (tmp, window);
+                g_free (tmp);
+        }
+}
 
 void
 dialog_preferences_prefix_update (gchar* prefix)
@@ -619,12 +652,10 @@ preferences ()
 	GList*		list;
 	gchar 		buffer[1024];
 	gint 		number_of_models;
-	gint		number_of_ports;
 	gint		i;
 	GtkCombo*	combo;
 	GtkWindow*	window;
 	gchar*		name;
-	CameraPortInfo 	info;
 
 	/* Check if preferences dialog is already open. */
 	if (!xml_preferences) {
@@ -663,30 +694,4 @@ preferences ()
 			gnome_error_dialog_parented (_("Could not get number of supported models!"), window);
 		}
 	
-	        /* Build port list. */
-		g_assert ((combo = GTK_COMBO (glade_xml_get_widget (xml_preferences, "combo_port"))) != NULL);
-		list = NULL;
-	        if ((number_of_ports = gp_port_count ()) >= 0) {
-	                for (i = 0; i < number_of_ports; i++) {
-	                        if (gp_port_info (i, &info) != GP_OK) {
-	                                gnome_error_dialog_parented (_("Could not get port info!"), window);
-	                                list = g_list_append (list, g_strdup ("?"));
-	                        } else {
-	                                list = g_list_append (list, g_strdup (info.name));
-	                        }
-	                }
-	                if (list != NULL) {
-				gtk_combo_set_popdown_strings (combo, list);
-				gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_port")), "");
-			}
-	                gtk_object_set_data (GTK_OBJECT (combo), "list", list);
-	        } else {
-	                gnome_error_dialog_parented (_("Could not get number of ports!"), window);
-	                gtk_object_set_data (GTK_OBJECT (combo), "list", NULL);
-	        }
-	
-		dialog_preferences_update_sensitivity ();
-	}
-}
-
-
+		dialog_preference

@@ -6,8 +6,10 @@
 #include <qstringlist.h>
 #include <kdialog.h>
 #include <kmessagebox.h>
+#include <klocale.h>
 
 #include "SelectCameraDialog.h"
+#include "SelectCameraDialog.moc"
 #include "GPInterface.h"
 
 SelectCameraDialog::SelectCameraDialog(QWidget* parent=0) : 
@@ -18,7 +20,7 @@ SelectCameraDialog::SelectCameraDialog(QWidget* parent=0) :
      
     /* Draw Camera Model stuff */
     model_label = new QLabel(this);
-    model_label->setText("Select Camera Model");
+    model_label->setText(i18n("Select Camera Model"));
     model_combo = new QComboBox(this);
     connect(model_combo,SIGNAL(activated(int)),this,SLOT(modelChanged(int)));
     layout->addWidget(model_label);
@@ -26,7 +28,7 @@ SelectCameraDialog::SelectCameraDialog(QWidget* parent=0) :
      
     /* Draw Camera Port stuff */
     port_label = new QLabel(this);
-    port_label->setText("Select Port");
+    port_label->setText(i18n("Select Port"));
     port_combo = new QComboBox(this);
     connect(port_combo,SIGNAL(activated(int)), this,SLOT(portChanged(int)));
     layout->addWidget(port_label);
@@ -34,16 +36,16 @@ SelectCameraDialog::SelectCameraDialog(QWidget* parent=0) :
     
     /* Draw Port Speed stuff */
     speed_label = new QLabel(this);
-    speed_label->setText("Select Speed");
+    speed_label->setText(i18n("Select Speed"));
     speed_combo = new QComboBox(this);
     //connect(speed_combo,SIGNAL(activated(int)),this,SLOT(speed_changed(int)));
     layout->addWidget(speed_label);
     layout->addWidget(speed_combo);
 
     /* Draw Ok & Cancel Buttons */
-    QPushButton *ok = new QPushButton("Ok",this);
+    QPushButton *ok = new QPushButton(i18n("Ok"),this);
     connect(ok,SIGNAL(clicked()), this, SLOT(saveSettings()));
-    QPushButton *cancel = new QPushButton("Cancel",this);
+    QPushButton *cancel = new QPushButton(i18n("Cancel"),this);
     connect(cancel, SIGNAL(clicked()), this, SLOT(reject()));
     
     QHBoxLayout *l = new QHBoxLayout(layout);
@@ -108,12 +110,12 @@ void SelectCameraDialog::portChanged(int i)
 void SelectCameraDialog::saveSettings()
 {
     if (model_combo->currentText().isNull()) {
-        KMessageBox::error(this, "You must select a camera");
+        KMessageBox::error(this, i18n("You must select a camera"));
         return;
     }
     else {
         if (port_combo->isEnabled() && port_combo->currentText().isNull()) {
-            KMessageBox::error(this, "You must select a port");
+            KMessageBox::error(this, i18n("You must select a port"));
             return;
         }
         

@@ -1,6 +1,7 @@
-Makefile.in
 Makefile
+Makefile.in
 *.lo
 *.la
 .libs
 .deps
+gpio.h

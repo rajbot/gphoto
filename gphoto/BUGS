@@ -1,0 +1,65 @@
+gPhoto is registered in the Gnome and the Debian Bug Tracking System.
+
+http://bugs.gnome.org and http://bugs.debian.org are tracking systems, 
+which file details of problems reported by users and staff. Each ticket 
+is given a number, and is kept on file until it is marked as having been
+dealt with.
+
+Please report gPhoto related bugs and problems to these systems.
+
+The gphoto bug ticket status page at bugs.gnome.org is available at
+http://bugs.gnome.org/db/pa/lgphoto.html, while Debian bug reports for
+gphoto are availble at http://www.debian.org/Bugs/db/pa/lgphoto.html
+
+A problem report, with mail header, looks something like this:
+
+  To: submit@bugs.gnome.org
+  From: ole@gnu.org
+  Subject: invoking error
+
+  Package: gphoto
+  Version: 0.3.9
+
+  When I invoke `gphoto' without arguments from an ordinary shell
+  prompt it prints `goodbye', instead of opening the GTK+ window.
+
+  Here is a transcript:
+
+  $ gphoto
+  goodbye
+  $ /usr/local/bin/gphoto
+  goodbye
+  $
+
+  I suggest that the foo() routine, in main.c, be corrected.
+
+  I am using RedHat 6.0, Linux kernel version 2.2.12
+  and GNU libc 2.1.1.
+
+Please include in your report:
+
+* The exact and complete text of any error messages printed or
+  logged. This is very important!
+* Exactly what you typed or did to demonstrate the problem.
+* A description of the incorrect behaviour: exactly what behaviour
+  you were expecting, and what you observed. A transcript of an
+  example session is a good way of showing this.
+* A suggested fix, or even a patch, if you have one.
+* Details of the configuration of the program with the problem.
+  Include the complete text of its configuration files.
+
+Include any detail that seems relevant - you are in very little danger
+of making your report too long by including too much information. If
+they are small please include in your report any files you were using
+to reproduce the problem (uuencoding them if they may contain odd
+characters etc.).
+
+Of course, like any email, you should include a clear, descriptive
+Subject line in your main mail header. The subject you give will be
+used as the initial ticket title in the tracking system, so please try
+to make it informative.
+
+Visit http://bugs.gnome.org/ for further information about the GNOME
+Bug Tracking System.
+
+Thank you!

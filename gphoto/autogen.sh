@@ -53,6 +53,8 @@ esac
 for dir in .
 do 
     echo processing $dir
+    grep -v "<" TODO >ROADMAP
+    mv ROADMAP TODO
     (cd $dir; \
     libtoolize --copy --force; \
     aclocalinclude="$ACLOCAL_FLAGS"; \

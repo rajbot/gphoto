@@ -1,0 +1,53 @@
+OPTS = -O -DHAVE_TERMIOS_H=1
+CFLAGS = -I/usr/lib/glib/include
+OBJS = philips_io.o 
+GOBJS = philips_io.o gphoto_philips.o gphoto_philips_config.o
+
+.c.o:
+	${CC} ${CFLAGS} ${OPTS} -c $<
+
+libphilips.a: ${OBJS}
+	${AR} r $@ $?
+
+libgphoto_philips.so: ${GOBJS}
+	gcc -shared -Wl,-soname,$@ -o $@ ${GOBJS}
+
+libgphoto_philips.a: ${GOBJS}
+	${AR} r $@ $?
+
+clean:
+	rm -f *.o *.a check webcam libgphoto_philips.so
+
+# Sample programs that use the library.....
+
+# check, checks camera functions
+check: check.o libphilips.a
+	cc -o $@ check.o -L. -lphilips
+
+# webcam, impliments a simple webcam
+webcam: webcam.o libphilips.a
+	cc -o $@ webcam.o -L. -lphilips
+
+# dump_pics, reads all the pictures in the camera's memory
+dump_pics: dump_pics.o libphilips.a
+	cc -o $@ dump_pics.o -L. -lphilips
+
+# get_pic, reads a picture in the camera's memory
+get_pic: get_pic.o libphilips.a
+	cc -o $@ get_pic.o -L. -lphilips
+
+# upload_test. Send a picture to the camera
+upload_test: upload_test.o libphilips.a
+	cc -o $@ upload_test.o -L. -lphilips
+
+# make the distribution
+distribution: 
+	tar -cvzf philips.tar.gz COPYING FUNCTIONS.TXT Makefile PROTOCOL.TXT TODO check.c crctab.h debug.h gphoto_philips.c gphoto_philips_config.c philips.h philips_io.c philips_io.h webcam.c dump_pics.c upload_test.c get_pic.c
+
+
+philips_io.o: crctab.h philips.h debug.h
+
+gphoto_philips_config.o: gphoto_philips_config.c philips.h ../src/gphoto.h
+
+gphoto_philips.o: gphoto_philips.c philips.h ../src/gphoto.h
+

@@ -1,0 +1,39 @@
+
+This directory contains a driver for the Sony DSC-F55E camera.
+The driver currently manages still images only.
+
+
+To build the library and stand alone execute make from the shell prompt
+
+	$ make
+
+
+after make completes, there will be an executable called rsony in this
+directory.
+
+
+When using as a command line utility, set the cameras serial port using the 
+following shell variable.
+
+	$ export DSCF55E_PORT="/dev/ttyS0" (replace with required port)
+
+To select 115200 baud set a shell variable as below.
+
+	$ export DSCF55E_SPEED=115200
+
+This is used in both the standalone and library versions.
+
+The export command is used with bash, other shells have their own method of 
+setting variables, refer to the help for your shell.
+
+
+
+I would be interested in reports on various platforms, or any problems that
+arise from the use of this library/utility.
+
+
+
+
+Contact : mdavies@dial.pipex.com
+
+

@@ -1,0 +1,18 @@
+
+
+
+Add GPL copyright to files.
+Add ability to download images from camera	Done
+Add ability to upload images to camera
+Add reset after image download			Done
+Add reset on startup				Done
+Add Configure dialog
+Add conf file processing
+
+
+Implement high speed (115k) transfer		Done.
+
+Add ability to download MPEG files.
+
+Tidy source code.
+

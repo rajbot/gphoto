@@ -1551,6 +1551,7 @@ struct	CAM_DATA	*cam_data;   /* data returned by camera */
 		return ( 1 );
 		}
 	
+	dcprintf();
 	/* look at what the camera return code and feed that back */
 	err = (cam_data->data[1] << 8 | cam_data->data[0]) & 0xffff;
 	return ( err );

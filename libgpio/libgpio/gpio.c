@@ -34,7 +34,7 @@ gpio_device_info device_list[256];
 int              device_count;
 
 /* Toggle to turn on/off debugging */
-int              device_debug=0;
+int              device_debug=1;
 
 void gpio_debug_printf (char *format, ...) {
 

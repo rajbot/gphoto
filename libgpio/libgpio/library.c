@@ -89,9 +89,9 @@ int gpio_library_list (gpio_device_info *list, int *count) {
 	   de = GP_READDIR(d);
 	   if (de) {
 #if defined(OS2) || defined(WIN32)
-		sprintf(buf, "%s\\%s", IOLIBS, GP_FILENAME(de->d_name));
+		sprintf(buf, "%s\\%s", IOLIBS, GP_FILENAME(de));
 #else
-		sprintf(buf, "%s/%s", IOLIBS, GP_FILENAME(de->d_name));
+		sprintf(buf, "%s/%s", IOLIBS, GP_FILENAME(de));
 #endif
 		if (gpio_library_is_valid(buf) == GPIO_OK)
 			gpio_library_list_load(buf, loaded, list, count);

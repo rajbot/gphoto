@@ -73,10 +73,16 @@ installautotools() {
     local tool URL restofline
 
     cmd mkdir -p "${downloads}" "${toolroot}" "${toolsrc}"
-    cmd rm -rf "${toolroot}"
+    #cmd rm -rf "${toolroot}"
 
     while read tool action URL restofline
     do
+    	if test "x$action" = "xauto"; then
+	    if test -x "${toolroot}/bin/${tool}"; then
+	    	echo "##### $tool already build. Skipping."
+		continue
+	    fi
+	fi
 	case "$URL" in
 	    http://*) ;;
 	    ftp://*)  ;;
@@ -117,6 +123,7 @@ installautotools() {
 	base="$(basename "$tarball" "$ext")"
 	cmd cd "${toolsrc}/${base}"
 	cmd ./configure --prefix="${toolroot}" --disable-csharp
+	if "$check" && test "$tool" != "gettext"; then cmd "$MAKE" $MAKEOPT check; fi
 	cmd "$MAKE" $MAKEOPT install
     done < "${buildtoollist}"
     (cd "${toolroot}/bin" && patch -p0 < "${metadir}/gettextize.patch")
@@ -133,7 +140,17 @@ checktools() {
     echo "##### Checking for presence of tools..."
     while read tool action restofline
     do
-	output=$("$tool" --version < /dev/null)
+    	if test "x$action" = 'xauto'; then
+	    	tp="$toolroot/bin/$tool"
+		if test -x "$tp"; then
+			echo "    # $tool found."
+			continue;
+		fi
+	else
+		tp="$tool"
+	fi
+	echo "$tp" --version
+	output=$("$tp" --version < /dev/null)
 	if [ $? -eq 0 ]
 	then
 	    if [ "$tool" = "pkg-config" ] || echo "$output" | grep -i "$tool" > /dev/null
@@ -267,7 +284,7 @@ getsources() {
 		# FIXME: Use other directory (do not modify timestamps if not required)
 		local stdout="${tmpdir}/.tmp.${module}.stdout"
 		cmd rm -f "$stdout"
-		cmd cvs -z3 update -d -P ${releaseparm} > "$stdout"
+		xmd cvs -z3 update -d -P ${releaseparm} > "$stdout"
 		if [ -s "$stdout" ]
 		then
 		    # FIXME: Handle conflicts, etc.
@@ -386,7 +403,9 @@ builddist() {
 
 	    echo "##### Press enter when asked to. And complain to the gettextize guys,"
 	    echo "    # not to me. Or run this with \"echo $0 | at now\"."
-	    cmd ./autogen.sh --enable-maintainer-mode --prefix="${distroot}" ${configopts}
+	    if xmd ./autogen.sh --enable-maintainer-mode --prefix="${distroot}" ${configopts}; then :; else
+	    	cmd ./autogen.sh --init
+	    fi
 	    cmd ./configure  --enable-maintainer-mode --prefix="${distroot}" ${configopts}
 	    target="dist"
 	    if "$check"; then target="distcheck"; fi

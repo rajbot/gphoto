@@ -165,6 +165,9 @@ void menu_select (gpointer data, guint action, GtkWidget *widget) {
 		case 43: /* Color balance */
 			color_dialog();
 			break;
+       	        case 44: /* Post-processing */
+                        post_process_change(widget, data);
+			break;
 		default:
 	}
 }
@@ -222,7 +225,7 @@ GtkItemFactoryEntry menu_items[] = {
 	{"/C_onfigure",						NULL, 0,		0,	"<Branch>"},
 	{"/Configure/_Select Port-Camera Model",		NULL, menu_select,	23},
 	{"/Configure/_Configure Camera...",			NULL, menu_select,	24},
-
+	{"/Configure/_Post-processing",                         NULL, menu_select,      44},
 	{"/_Plugins",						NULL, 0,		0,	"<Branch>"},
 	{"/Plugins/HTML _Gallery",				NULL, menu_select,	25},
 	{"/Plugins/_Live Camera!",				NULL, menu_select,	26},

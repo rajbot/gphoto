@@ -16,8 +16,6 @@
 #include <sched.h>
 #endif
 
-#define BROWSER "netscape"
-
 extern int command_line_mode;
 extern char *filesel_cwd;
 extern GtkWidget *browse_button;

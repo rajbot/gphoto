@@ -1,6 +1,8 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
+#define BROWSER "netscape"
+
 #include <gdk_imlib.h>
 #include <gtk/gtk.h>
 

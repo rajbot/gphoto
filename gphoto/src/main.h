@@ -5,9 +5,3 @@
  */
 
 #include <gtk/gtk.h>
-
-/* Big happy title and version # */
-#define   TITLE_VER	"GNU Photo (gPhoto) - v0.3"
-
-#define BROWSER "netscape"
-

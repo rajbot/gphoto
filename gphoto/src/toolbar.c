@@ -136,6 +136,6 @@ void create_toolbar (GtkWidget *box, GtkWidget *mainWin) {
   add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1);
   add_to_toolbar(mainWin, "Help", help_xpm, 
                  GTK_SIGNAL_FUNC(usersmanual_dialog), NULL, box, 1);
-  add_to_toolbar(mainWin, "Exit GNU Photo", exit_xpm,
+  add_to_toolbar(mainWin, "Exit gPhoto", exit_xpm,
                  GTK_SIGNAL_FUNC(delete_event), NULL, box, 1);
 }

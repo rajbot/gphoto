@@ -115,7 +115,7 @@ int main (int argc, char *argv[]) {
 	/* set up the main window -------------------------------- */
 	mainWin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 	gtk_container_border_width (GTK_CONTAINER(mainWin), 0);
-	sprintf(title, "GNU Photo (gPhoto) - %s", VERSION);
+	sprintf(title, "gPhoto %s - the GNU digital camera application", VERSION);
 	gtk_window_set_title (GTK_WINDOW(mainWin), title);
 	gtk_signal_connect (GTK_OBJECT(mainWin), "delete_event",
 			    GTK_SIGNAL_FUNC(delete_event), NULL);

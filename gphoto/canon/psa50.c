@@ -181,7 +181,7 @@ static int psa50_wait_for_ack(void)
     while (1) {
 	pkt = psa50_recv_packet(&type,&seq,&len);
 	if (!pkt) return 0;
-	if (len >= 2 && seq == seq_tx && type == PKT_ACK) {
+	if (seq == seq_tx && type == PKT_ACK) {
 	    seq_tx++;
 	    return 1;
 	}

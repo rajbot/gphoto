@@ -103,6 +103,8 @@ gpio_device *gpio_new(gpio_device_type type)
         dev->type = type;
         dev->device_fd = 0;
 
+		dev->ops->init(dev);
+
         switch (dev->type) {
         case GPIO_DEVICE_SERIAL:
                 sprintf(buf, GPIO_SERIAL_PREFIX, GPIO_SERIAL_RANGE_LOW);
@@ -141,7 +143,6 @@ gpio_device *gpio_new(gpio_device_type type)
                 break;
         }
 
-        dev->ops->init(dev);
 
         gpio_debug_printf("Created device successfully...");
 

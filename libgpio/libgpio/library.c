@@ -38,7 +38,7 @@ int gpio_library_list_load(char *filename, int loaded[], gpio_device_info *list,
 	lib_list = (gpio_ptr_list)GPIO_DLSYM(lh, "gpio_library_list");
 
 	if ((!list) || (!lib_type)) {
-		gpio_debug_printf("%s ", GPIO_DLERROR());
+		gpio_debug_printf("could not find type/list symbols: %s ", GPIO_DLERROR());
 		GPIO_DLCLOSE(lh);
 		return (GPIO_ERROR);
 	}
@@ -113,7 +113,7 @@ int gpio_library_load (gpio_device *device, gpio_device_type type) {
 			/* Open the correct library */
 			device->library_handle = GPIO_DLOPEN(device_list[x].library_filename);
 			if (!device->library_handle) {
-				gpio_debug_printf (" %s %s ", device_list[x].library_filename,
+				gpio_debug_printf ("bad handle: %s %s ", device_list[x].library_filename,
 					GPIO_DLERROR());
 				return (GPIO_ERROR);
 			}
@@ -121,7 +121,7 @@ int gpio_library_load (gpio_device *device, gpio_device_type type) {
 			/* Load the operations */
 			ops_func = (gpio_ptr_operations)GPIO_DLSYM(device->library_handle, "gpio_library_operations");
 			if (!ops_func) {
-				gpio_debug_printf (" %s %s ", device_list[x].library_filename,
+				gpio_debug_printf ("can't load ops: %s %s ", device_list[x].library_filename,
 					GPIO_DLERROR());
 				GPIO_DLCLOSE(device->library_handle);
 				return (GPIO_ERROR);

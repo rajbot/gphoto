@@ -8,7 +8,7 @@
 #include <string.h>
 
 /* Libraries go in the current directory */
-#define IOLIBS ".\\"
+#define IOLIBS "."
 
 /* Work-around for readdir() */
 typedef struct {
@@ -16,6 +16,9 @@ typedef struct {
 	int got_first;
 	WIN32_FIND_DATA search;
 } GPIOWINDIR;
+
+/* Sleep functionality */
+#define	GPIO_SLEEP(_ms)				Sleep(_ms)
 
 /* Dynamic library functions */
 #define GPIO_DLOPEN(_filename)		LoadLibrary(_filename)
@@ -39,6 +42,9 @@ typedef struct {
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+/* Sleep functionality */
+#define	GPIO_SLEEP(_ms)				usleep(_ms*1000)
 
 /* Dynamic library functions */
 #define GPIO_DLOPEN(_filename)		dlopen(_filename, RTLD_LAZY)

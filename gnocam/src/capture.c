@@ -12,7 +12,6 @@
 #include "capture.h"
 #include "file-operations.h"
 #include "cameras.h"
-#include "utils.h"
 #include "preferences.h"
 
 /**********************/
@@ -278,28 +277,6 @@ capture_new (Camera* camera, CameraCaptureType type)
 		break;
 	default:
 		break;
-	}
-
-	/* Create the "camera properties" menu item. */
-	bonobo_ui_component_set_prop (component, "/menu/Edit", "hidden", "1", NULL);
-	if (camera->abilities->config && (gp_camera_config_get (camera, &window_camera) == GP_OK)) {
-		doc = xmlNewDoc ("1.0");
-		ns = xmlNewGlobalNs (doc, "xxx", "xxx");
-		xmlDocSetRootElement (doc, node = xmlNewNode (ns, "Root"));
-		xmlAddChild (node, command = xmlNewNode (ns, "commands"));
-		xmlAddChild (node, node_child = xmlNewNode (ns, "menu"));
-		xmlAddChild (node_child, node = xmlNewNode (ns, "submenu"));
-		xmlSetProp (node, "name", "Edit");
-		xmlSetProp (node, "_label", _("_Edit"));
-		xmlSetProp (node, "_tip", _("Edit"));
-		popup_prepare (component, window_camera, node, command, ns);
-		xmlDocDumpMemory (doc, (xmlChar**) &tmp, &i);
-		xmlFreeDoc (doc);
-		CORBA_exception_init (&ev);
-		bonobo_ui_component_set_translate (component, "/", tmp, &ev);
-		CORBA_exception_free (&ev);
-		g_free (tmp);
-		popup_fill (component, "/menu/Edit", window_camera, window_camera, TRUE);
 	}
 
 	return (window);

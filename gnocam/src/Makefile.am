@@ -37,8 +37,7 @@ gnocam_SOURCES =\
  frontend.h frontend.c\
  gnocam.h gnocam.c\
  gphoto-extensions.h gphoto-extensions.c\
- preferences.h preferences.c\
- utils.h utils.c
+ preferences.h preferences.c
 
 gnocam_LDFLAGS =\
  $(GPHOTO2_LIBS)\

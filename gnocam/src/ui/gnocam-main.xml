@@ -1,13 +1,9 @@
 <Root>
   <menu>
     <submenu name="File" _label="_File">
-      <menuitem name="SavePreviews" verb="" _label="Save Previews" pixtype="stock" pixname="Save"/>
-      <menuitem name="SavePreviewsAs" verb="" _label="Save Previews As" pixtype="stock" pixname="Save As"/>
-      <menuitem name="SaveFiles" verb="" _label="Save Files" pixtype="stock" pixname="Save"/>
-      <menuitem name="SaveFilesAs" verb="" _label="Save Files As" pixtype="stock" pixname="Save As"/>
-      <menuitem name="Delete" verb="" _label="_Delete" pixtype="stock" pixname="Trash"/>
-      <separator/>
       <menuitem name="Exit" verb="" _label="E_xit" pixtype="stock" pixname="Quit"/>
+    </submenu>
+    <submenu name="Edit" _label="_Edit">
     </submenu>
     <submenu name="Settings" _label="_Settings">
       <menuitem name="Preferences" verb="" _label="_Preferences" pixtype="stock" pixname="Preferences"/>

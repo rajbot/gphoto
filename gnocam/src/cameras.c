@@ -18,7 +18,6 @@
 #include "gnocam.h"
 #include "cameras.h"
 #include "file-operations.h"
-#include "utils.h"
 #include "capture.h"
 
 /**********************/
@@ -47,8 +46,6 @@ void on_save_file_as_activate		(BonoboUIComponent* component, gpointer folder, c
 void on_save_preview_activate		(BonoboUIComponent* component, gpointer folder, const gchar* name);
 void on_save_preview_as_activate	(BonoboUIComponent* component, gpointer folder, const gchar* name);
 void on_delete_activate			(BonoboUIComponent* component, gpointer folder, const gchar* name);
-
-gboolean on_tree_item_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data);
 
 void on_tree_item_expand        (GtkTreeItem* tree_item, gpointer user_data);
 void on_tree_item_collapse      (GtkTreeItem* tree_item, gpointer user_data);
@@ -142,18 +139,6 @@ on_manual_activate (BonoboUIComponent* component, gpointer folder, const gchar* 
 	}
 }
 
-gboolean
-on_tree_item_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
-{
-        /* Did the user right-click? */
-        if (event->button != 3) return (FALSE);
-
-	/* If needed, create the popup. */
-	if (!gtk_object_get_data (GTK_OBJECT (widget), "menu")) camera_tree_item_popup_create (GTK_TREE_ITEM (widget));
-        gtk_menu_popup (gtk_object_get_data (GTK_OBJECT (widget), "menu"), NULL, NULL, NULL, NULL, 3, 0);
-        return (TRUE);
-}
-
 void
 on_tree_item_expand (GtkTreeItem* tree_item, gpointer user_data)
 {
@@ -169,38 +154,17 @@ on_tree_item_collapse (GtkTreeItem* tree_item, gpointer user_data)
 void
 on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 {
-	CORBA_Environment	ev;
-	Bonobo_Control		control;
 	GtkWidget*		widget;
-	gchar*			url;
 
 	g_return_if_fail (item);
 	g_return_if_fail (main_paned);
-	g_return_if_fail (url = gtk_object_get_data (GTK_OBJECT (item), "url"));
-
-	/* Init exceptions. */
-	CORBA_exception_init (&ev);
 
 	/* If there is an old viewer, destroy it. */
 	if (main_paned->child2) gtk_container_remove (GTK_CONTAINER (main_paned), main_paned->child2);
 
-	/* Get the control. */
-	control = bonobo_get_object (url, "IDL:Bonobo/Control:1.0", &ev);
-	if (BONOBO_EX (&ev)) {
-		gchar* tmp = g_strdup_printf (_(
-			"Could not get any widget for\n"
-			"displaying '%s'!\n"
-			"(%s)"), url, bonobo_exception_get_text (&ev));
-		gnome_error_dialog_parented (tmp, main_window);
-		g_free (tmp);
-		CORBA_exception_free (&ev);
-		return;
-	}
-	gtk_widget_show (widget = bonobo_widget_new_control_from_objref (control, corba_container));
+	/* Display! */
+	gtk_widget_show (widget = bonobo_widget_new_control (gtk_object_get_data (GTK_OBJECT (item), "url"), corba_container));
 	e_paned_pack2 (main_paned, widget, TRUE, TRUE);
-
-	/* Clean up. */
-	CORBA_exception_free (&ev);
 }
 
 void
@@ -361,7 +325,6 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* url)
         gtk_signal_connect (GTK_OBJECT (item), "collapse", GTK_SIGNAL_FUNC (on_tree_item_collapse), NULL);
         gtk_signal_connect (GTK_OBJECT (item), "select", GTK_SIGNAL_FUNC (on_tree_item_select), NULL);
 	gtk_signal_connect (GTK_OBJECT (item), "drag_data_get", GTK_SIGNAL_FUNC (on_camera_tree_folder_drag_data_get), NULL);
-	gtk_signal_connect (GTK_OBJECT (item), "button_press_event", GTK_SIGNAL_FUNC (on_tree_item_button_press_event), NULL);
 
 	/* Clean the item (in order to check if the folder is empty or not). */
 	camera_tree_folder_clean (GTK_TREE_ITEM (item));
@@ -390,7 +353,6 @@ camera_tree_file_add (GtkTree* tree, gchar* url)
 
         /* Connect the signals. */
         gtk_signal_connect (GTK_OBJECT (item), "select", GTK_SIGNAL_FUNC (on_tree_item_select), NULL);
-        gtk_signal_connect (GTK_OBJECT (item), "button_press_event", GTK_SIGNAL_FUNC (on_tree_item_button_press_event), NULL);
 	gtk_signal_connect (GTK_OBJECT (item), "drag_data_get", GTK_SIGNAL_FUNC (on_camera_tree_file_drag_data_get), NULL);
 }
 
@@ -485,6 +447,7 @@ main_tree_update (void)
 	gtk_object_unref (GTK_OBJECT (client));
 }
 
+#if 0
 void
 camera_tree_item_popup_create (GtkTreeItem* item)
 {
@@ -729,5 +692,5 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 	/* Clean up. */
 	g_free (folder);
 }
-
+#endif
 

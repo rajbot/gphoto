@@ -1722,3 +1722,59 @@ Example: /usr/local/bin/datestamp %s");
         gtk_pixmap_set(GTK_PIXMAP(post_process_pixmap), pixmap, bitmap);
 	gtk_widget_destroy(dialog);
 }
+
+void browse_gallery() {
+        char *buf;
+        buf = malloc(256);
+        snprintf(buf, 256, "file:%sindex.html", filesel_cwd);
+        url_send_browser (buf);
+        free (buf);
+}
+
+void browse_help() {
+        url_send_browser ("http://www.gphoto.org/help.php3");
+}
+
+void browse_gphoto() {
+        url_send_browser ("http://www.gphoto.org/");
+}
+
+void browse_feedback() {
+        url_send_browser ("http://www.gphoto.org/feedback.php3");
+}
+
+void browse_news() {
+        url_send_browser ("http://www.gphoto.org/news.php3");
+}
+
+void browse_download() {
+        url_send_browser ("http://www.gphoto.org/download.php3");
+}
+
+void browse_cameras() {
+        url_send_browser ("http://www.gphoto.org/cameras.php3");
+}
+
+void browse_supporting() {
+        url_send_browser ("http://www.gphoto.org/supporting.php3");
+}
+
+void browse_discussion() {
+        url_send_browser ("http://www.gphoto.org/lists.php3");
+}
+
+void browse_team() {
+        url_send_browser ("http://www.gphoto.org/team.php3");
+}
+
+void browse_themes() {
+        url_send_browser ("http://www.gphoto.org/themes.php3");
+}
+
+void browse_links() {
+        url_send_browser ("http://www.gphoto.org/links.php3");
+}
+
+void browse_todo() {
+        url_send_browser ("http://www.gphoto.org/todo.php3");
+}

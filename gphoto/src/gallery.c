@@ -40,6 +40,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.10  1999/06/29 01:55:36  scottf
+ * source code tidying. moved browse_ callbacks to callbacks.c but left
+ * url_send_browse in util (could be very handy).
+ * also removed some toolbar icons (plug-ins) just to try to remove a little
+ * clutter.
+ *
  * Revision 1.9  1999/06/21 18:26:43  ole
  * Removed deactivate_button(browse_button);
  *
@@ -103,7 +109,7 @@
 #include <sys/dir.h>
 
 extern GtkWidget *index_window;
-extern GtkWidget *browse_button;
+/* extern GtkWidget *browse_button; */
 
 extern struct ImageInfo Thumbnails;
 extern struct ImageInfo Images;
@@ -123,8 +129,6 @@ char picture_filename[128];
 char picture_number[5];
 char picture_next[128];
 char picture_previous[128];
-
-extern browse_gallery();
 
 void gallery_change_dir(GtkWidget *widget, GtkWidget *label) {
 
@@ -482,5 +486,5 @@ Please install/move gallery themes there.");
 	browse_gallery();
 	sprintf(statmsg, "Loaded file:%sindex.html in %s", filesel_cwd, BROWSER);
 	update_status(statmsg);
-	activate_button(browse_button);
+/*	activate_button(browse_button); */
 }

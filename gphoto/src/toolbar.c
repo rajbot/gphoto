@@ -25,12 +25,13 @@
 #include "rotc.xpm"
 #include "rotcc.xpm"
 #include "save_current_image.xpm"
-#include "take_picture.xpm"
 #include "stop.xpm"
-#include "web_browse.xpm"
+
+/* #include "web_browse.xpm"   */
+/* #include "take_picture.xpm" */
+/* GtkWidget *browse_button = NULL; */
 
 GtkWidget *stop_button = NULL;
-GtkWidget *browse_button = NULL;
 
 GtkWidget *add_to_toolbar (GtkWidget *mainWin, gchar *tooltipText, 
 		     gchar ** xpmIcon, GtkSignalFunc f, gpointer data,
@@ -65,10 +66,6 @@ GtkWidget *add_to_toolbar (GtkWidget *mainWin, gchar *tooltipText,
     gtk_box_pack_end(GTK_BOX(box), button, FALSE, FALSE, 0);
   return (button);
 }
-
-extern browse_gallery();
-extern browse_feedback();
-extern browse_help();
 
 void deactivate_button (GtkWidget *cur_button) {
 	gtk_widget_set_sensitive(GTK_WIDGET(cur_button), FALSE);
@@ -125,11 +122,15 @@ void create_toolbar (GtkWidget *box, GtkWidget *mainWin) {
 		 GTK_SIGNAL_FUNC(color_dialog),
 		 "Colors", box, 1);
   add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1);
+
+/*
   browse_button = add_to_toolbar(mainWin, "HTML Gallery", web_browse_xpm,
 		 GTK_SIGNAL_FUNC(gallery_main), NULL, box, 1);
   add_to_toolbar(mainWin, "Live Camera!", take_picture_xpm,
                  GTK_SIGNAL_FUNC(live_main), NULL, box, 1);
   add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1);
+*/
+
   add_to_toolbar(mainWin, "Camera Configuration", configure_xpm, 
 		 GTK_SIGNAL_FUNC(configure_call), NULL, box, 1);
   add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1);

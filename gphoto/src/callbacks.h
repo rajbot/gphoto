@@ -54,3 +54,16 @@ void post_process_change (GtkWidget *widget, GtkWidget *window);
 void save_dialog (GtkWidget *widget, gpointer data);
 void open_dialog (GtkWidget *widget, gpointer data);
 
+void browse_gallery();
+void browse_help();
+void browse_gphoto();
+void browse_feedback();
+void browse_news();
+void browse_download();
+void browse_cameras();
+void browse_supporting();
+void browse_discussion();
+void browse_team();
+void browse_themes();
+void browse_links();
+void browse_todo();

@@ -27,5 +27,6 @@ void free_image(struct Image *im);
 
 void save_image(char *filename, struct Image *im);
 
+void url_send_browser(char *url);
 
 #endif /* _UTIL_H */

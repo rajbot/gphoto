@@ -132,7 +132,7 @@ on_druid_finish (GnomeDruidPage* page, GtkWidget* druid)
 	g_return_if_fail (client = gconf_client_get_default ());
 
 	for (i = 0; ; i++) {
-		gchar* path = g_strdup_printf ("/" PACKAGE "/camera/%i", i);
+		gchar* path = g_strdup_printf ("/apps/" PACKAGE "/camera/%i", i);
 		if (!gconf_client_dir_exists (client, path, NULL)) {
 			gchar* tmp;
 
@@ -194,7 +194,7 @@ on_button_camera_delete_clicked (GtkButton *button)
 		gint	row = GPOINTER_TO_INT (selection->data);
 		gchar*	tmp;
 		
-		tmp = g_strdup_printf ("/" PACKAGE "/camera/%i", GPOINTER_TO_INT (gtk_clist_get_row_data (clist, row)));
+		tmp = g_strdup_printf ("/apps/" PACKAGE "/camera/%i", GPOINTER_TO_INT (gtk_clist_get_row_data (clist, row)));
 		gconf_client_remove_dir (client, tmp, NULL);
 		g_free (tmp);
 		
@@ -238,6 +238,7 @@ preferences ()
 
 	g_return_if_fail (xml = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "dialog_preferences"));
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "dialog_preferences_button_ok")), "xml", xml);
+	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "button_camera_delete")), "xml", xml);
 	glade_xml_signal_autoconnect (xml);
 	g_return_if_fail (clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_cameras")));
 
@@ -245,18 +246,18 @@ preferences ()
 	CORBA_exception_init (&ev);
 
 	/* Get the current setting for prefix. */
-	gtk_widget_show (widget = bonobo_widget_new_control ("config:/" PACKAGE "/prefix", NULL));
+	gtk_widget_show (widget = bonobo_widget_new_control ("config:/apps/" PACKAGE "/prefix", NULL));
 	bonobo_control_frame_control_activate (bonobo_widget_get_control_frame (BONOBO_WIDGET (widget)));
 	gtk_container_add (GTK_CONTAINER (glade_xml_get_widget (xml, "vbox_prefix")), widget);
 
 	/* Get the current setting for debug level. */
-	gtk_widget_show (widget = bonobo_widget_new_control ("config:/" PACKAGE "/debug_level", NULL));
+	gtk_widget_show (widget = bonobo_widget_new_control ("config:/apps/" PACKAGE "/debug_level", NULL));
 	bonobo_control_frame_control_activate (bonobo_widget_get_control_frame (BONOBO_WIDGET (widget)));
 	gtk_container_add (GTK_CONTAINER (glade_xml_get_widget (xml, "vbox_debug_level")), widget);
 
 	/* Get the current settings for cameras. */
 	for (i = 0; ; i++) {
-		gchar* tmp = g_strdup_printf ("/" PACKAGE "/camera/%i", i);
+		gchar* tmp = g_strdup_printf ("/apps/" PACKAGE "/camera/%i", i);
 		if (gconf_client_dir_exists (client, tmp, NULL)) {
 			gchar* moniker = g_strconcat ("config:", tmp, NULL);
 			bag = bonobo_get_object (moniker, "IDL:Bonobo/PropertyBag:1.0", &ev);

@@ -131,7 +131,7 @@ int main (int argc, char *argv[])
 	CORBA_exception_init (&ev);
 
 	/* Do we already have a debug level stored in our preferences? */
-	bag = bonobo_get_object ("config:/" PACKAGE, "IDL:Bonobo/PropertyBag:1.0", &ev);
+	bag = bonobo_get_object ("config:/apps/" PACKAGE, "IDL:Bonobo/PropertyBag:1.0", &ev);
 	if (BONOBO_EX (&ev)) g_error (_("Could not get property bag for " PACKAGE "! (%s)"), bonobo_exception_get_text (&ev));
 	property = Bonobo_PropertyBag_getPropertyByName (bag, "debug_level", &ev);
 	if (BONOBO_EX (&ev)) g_error (_("Could not get property 'debug_level! (%s)"), bonobo_exception_get_text (&ev));
@@ -139,7 +139,7 @@ int main (int argc, char *argv[])
                 Bonobo_Unknown  property;
 		BonoboArg*	arg;
 
-                property = bonobo_get_object ("config:/" PACKAGE "/debug_level", "IDL:Bonobo/Property:1.0", &ev);
+                property = bonobo_get_object ("config:/apps/" PACKAGE "/debug_level", "IDL:Bonobo/Property:1.0", &ev);
                 if (BONOBO_EX (&ev)) g_error (_("Could not get property 'debug_level'! (%s)"), bonobo_exception_get_text (&ev));
                 arg = bonobo_arg_new (TC_GNOME_Gphoto_DebugLevel);
                 BONOBO_ARG_SET_GENERAL (arg, GNOME_Gphoto_DEBUG_LEVEL_NONE, TC_GNOME_Gphoto_DebugLevel, int, NULL);
@@ -183,12 +183,12 @@ int main (int argc, char *argv[])
         bonobo_ui_component_add_verb_list (main_component, verb);
         bonobo_ui_util_set_ui (main_component, GNOCAM_DATADIR, "gnocam-main.xml", PACKAGE);
 
-	if (!gconf_client_get_string (gconf_client_get_default (), "/" PACKAGE "/prefix", NULL)) {
+	if (!gconf_client_get_string (gconf_client_get_default (), "/apps/" PACKAGE "/prefix", NULL)) {
 		gchar*			prefix;
 		
 		/* Set prefix to HOME by default. */
 		prefix = g_strconcat ("file:", g_get_home_dir (), NULL);
-		gconf_client_set_string (gconf_client_get_default (), "/" PACKAGE "/prefix", prefix, NULL);
+		gconf_client_set_string (gconf_client_get_default (), "/apps/" PACKAGE "/prefix", prefix, NULL);
 		g_free (prefix);
 
 		/* Popup a welcome message. */

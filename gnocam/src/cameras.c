@@ -411,7 +411,7 @@ main_tree_update (void)
 		gchar* path;
 
 		/* Check each entry in gconf's database. */
-		path = g_strdup_printf ("/" PACKAGE "/camera/%i", i);
+		path = g_strdup_printf ("/apps/" PACKAGE "/camera/%i", i);
 		if (gconf_client_dir_exists (client, path, NULL)) {
 			Camera*	camera = NULL;
 			gint	j;

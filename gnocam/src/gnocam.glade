@@ -97,6 +97,7 @@
       <widget>
 	<class>GtkFrame</class>
 	<name>frame4</name>
+	<border_width>10</border_width>
 	<label>Cameras</label>
 	<label_xalign>0</label_xalign>
 	<shadow_type>GTK_SHADOW_ETCHED_IN</shadow_type>
@@ -184,6 +185,7 @@
 	  <widget>
 	    <class>GtkScrolledWindow</class>
 	    <name>scrolledwindow1</name>
+	    <width>270</width>
 	    <hscrollbar_policy>GTK_POLICY_AUTOMATIC</hscrollbar_policy>
 	    <vscrollbar_policy>GTK_POLICY_AUTOMATIC</vscrollbar_policy>
 	    <hupdate_policy>GTK_UPDATE_CONTINUOUS</hupdate_policy>

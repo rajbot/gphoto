@@ -20,7 +20,7 @@ util_camera_new (GnomeVFSURI* uri, CORBA_Environment* ev)
 	for (i = 0; ; i++) {
 		gchar* name;
 		gchar* tmp;
-		gchar* path = g_strdup_printf ("/" PACKAGE "/camera/%i", i);
+		gchar* path = g_strdup_printf ("/apps/" PACKAGE "/camera/%i", i);
 		gchar* host = gnome_vfs_unescape_string (gnome_vfs_uri_get_host_name (uri), NULL);
 		
 		if (!gconf_client_dir_exists (client, path, NULL)) {

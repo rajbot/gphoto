@@ -1,10 +1,12 @@
 SUBDIRS =\
+ idl\
  intl\
  macros\
  po\
  bonobo-storage-module\
  bonobo-moniker\
- gnome-vfs-module
+ gnome-vfs-module\
+ src
 
 EXTRA_DIST =\
  README\

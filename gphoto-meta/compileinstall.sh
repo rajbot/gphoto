@@ -22,7 +22,7 @@ fi
 # compile & install stuff
 
 compileinstall() {
-    if ! ls "${distdir}"/*.tar.gz >& /dev/null
+    if ! ls "${distdir}"/*.tar.{gz,bz2} >& /dev/null
     then
 	echo "$0: Fatal: No source distributions found. Did you run bootstrap.sh?"
 	exit 1
@@ -36,8 +36,13 @@ compileinstall() {
 	# unpack gz if available, else bz2 (this is faster :-)
 	for tarball in "${distdir}/${module}-"[0-9]*.tar.{gz,bz2}
 	do
+	    if [ ! -f "${tarball}" ]
+	    then
+		continue
+	    fi
 	    cmd cd "${srcdir}"
 	    base="$(basename ${tarball} .tar.gz)"
+	    base="$(basename ${base} .tar.bz2)"
 	    if read dir < "${base}/installed-yet"
 	    then
 		if [ "$dir" = "${instroot}" ]

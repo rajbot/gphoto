@@ -46,12 +46,12 @@
 #include "gnocam-folder.h"
 #include "gnocam-file.h"
 
-#define PARENT_TYPE BONOBO_X_OBJECT_TYPE
-static BonoboObjectClass* gnocam_camera_parent_class = NULL;
+#define PARENT_TYPE GTK_TYPE_VBOX
+static GtkVBoxClass* parent_class = NULL;
 
 struct _GnoCamCameraPrivate
 {
-	GtkWidget*			window;
+	GtkWindow*			window;
 	
 	Bonobo_UIContainer		container;
 	BonoboUIComponent*		component;
@@ -62,8 +62,6 @@ struct _GnoCamCameraPrivate
 	CameraWidget*                   configuration;
 
 	GConfClient*			client;
-
-	GtkWidget*			widget;
 
 	GtkWidget*			title_bar;
 	GtkWidget*			hpaned;
@@ -390,7 +388,7 @@ on_capture_preview_clicked (BonoboUIComponent* component, gpointer user_data, co
 
 	camera = GNOCAM_CAMERA (user_data);
 
-	gtk_widget_show (GTK_WIDGET (gnocam_capture_new (camera->priv->camera, GP_CAPTURE_PREVIEW, camera->priv->client)));
+	gtk_widget_show (GTK_WIDGET (gnocam_capture_new (camera->priv->camera, GP_CAPTURE_PREVIEW, camera->priv->client, camera->priv->window)));
 }
 
 static void 
@@ -400,7 +398,7 @@ on_capture_image_clicked (BonoboUIComponent* component, gpointer user_data, cons
 
 	camera = GNOCAM_CAMERA (user_data);
 
-	gtk_widget_show (GTK_WIDGET (gnocam_capture_new (camera->priv->camera, GP_CAPTURE_IMAGE, camera->priv->client)));
+	gtk_widget_show (GTK_WIDGET (gnocam_capture_new (camera->priv->camera, GP_CAPTURE_IMAGE, camera->priv->client, camera->priv->window)));
 }
 
 static void
@@ -410,7 +408,7 @@ on_capture_video_clicked (BonoboUIComponent* component, gpointer user_data, cons
 
 	camera = GNOCAM_CAMERA (user_data);
 
-	gtk_widget_show (GTK_WIDGET (gnocam_capture_new (camera->priv->camera, GP_CAPTURE_VIDEO, camera->priv->client)));
+	gtk_widget_show (GTK_WIDGET (gnocam_capture_new (camera->priv->camera, GP_CAPTURE_VIDEO, camera->priv->client, camera->priv->window)));
 }
 
 static void
@@ -636,12 +634,6 @@ gnocam_camera_set_storage_view_mode (GnoCamCamera* camera, GnoCamCameraStorageVi
 	gconf_client_set_int (camera->priv->client, "/apps/" PACKAGE "/storage_view_mode", mode, NULL);
 }
 
-GtkWidget*
-gnocam_camera_get_widget (GnoCamCamera* camera)
-{
-	return (camera->priv->widget);
-}
-
 void
 gnocam_camera_show_menu (GnoCamCamera* camera)
 {
@@ -670,8 +662,8 @@ gnocam_camera_hide_menu (GnoCamCamera* camera)
 /* Bonobo-X-Object stuff */
 /*************************/
 
-GnoCamCamera*
-gnocam_camera_new (const gchar* url, Bonobo_UIContainer container, GtkWidget* window, GConfClient* client, CORBA_Environment* ev)
+GtkWidget*
+gnocam_camera_new (const gchar* url, Bonobo_UIContainer container, GtkWindow* window, GConfClient* client, CORBA_Environment* ev)
 {
 	GnoCamCamera*		new;
 	gchar*			name;
@@ -683,7 +675,6 @@ gnocam_camera_new (const gchar* url, Bonobo_UIContainer container, GtkWidget* wi
 	GtkWidget*		label;
 
 	g_return_val_if_fail (url, NULL);
-	g_return_val_if_fail (window, NULL);
 	g_return_val_if_fail (ev, NULL);
 
 	/* Try to get a camera */
@@ -703,7 +694,7 @@ gnocam_camera_new (const gchar* url, Bonobo_UIContainer container, GtkWidget* wi
 	g_return_val_if_fail (storage, NULL);
 
 	new = gtk_type_new (GNOCAM_TYPE_CAMERA);
-	gtk_widget_ref (new->priv->window = window);
+	new->priv->window = window;
 	gp_camera_ref (new->priv->camera = camera);
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
 	new->priv->configuration = NULL;
@@ -716,18 +707,18 @@ gnocam_camera_new (const gchar* url, Bonobo_UIContainer container, GtkWidget* wi
 	gp_frontend_register (gp_frontend_status, NULL, gp_frontend_message, gp_frontend_confirm, NULL);
 
 	/* Create the basic layout */
-	gtk_widget_show (new->priv->widget = gtk_vbox_new (FALSE, 0));
-	gtk_container_set_border_width (GTK_CONTAINER (new->priv->widget), 2);
+	gtk_box_set_homogeneous (GTK_BOX (new), FALSE);
+	gtk_container_set_border_width (GTK_CONTAINER (new), 2);
 
 	/* Create the title bar */
 	gtk_widget_show (new->priv->title_bar = e_shell_folder_title_bar_new ());
 	gtk_signal_connect (GTK_OBJECT (new->priv->title_bar), "title_toggled", GTK_SIGNAL_FUNC (on_title_bar_toggled), new);
-	gtk_box_pack_start (GTK_BOX (new->priv->widget), new->priv->title_bar, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX (new), new->priv->title_bar, FALSE, FALSE, 0);
 
 	/* Create the paned */
 	gtk_widget_show (new->priv->hpaned = e_hpaned_new ());
 	gtk_signal_connect (GTK_OBJECT (new->priv->hpaned), "size_request", GTK_SIGNAL_FUNC (on_size_request), new);
-	gtk_box_pack_start (GTK_BOX (new->priv->widget), new->priv->hpaned, TRUE, TRUE, 2); 
+	gtk_box_pack_start (GTK_BOX (new), new->priv->hpaned, TRUE, TRUE, 2); 
 
 	/* Create the notebook */
 	gtk_widget_show (new->priv->notebook = gtk_notebook_new ());
@@ -776,7 +767,7 @@ gnocam_camera_new (const gchar* url, Bonobo_UIContainer container, GtkWidget* wi
 	new->priv->storage_view_mode = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/storage_view_mode", NULL);
 	gnocam_camera_set_storage_view_mode (new, new->priv->storage_view_mode);
 
-	return (new);
+	return (GTK_WIDGET (new));
 }
 
 static void
@@ -785,8 +776,6 @@ gnocam_camera_destroy (GtkObject* object)
 	GnoCamCamera*  camera;
 	
 	camera = GNOCAM_CAMERA (object);
-
-	gtk_widget_unref (camera->priv->window);
 
 	bonobo_object_release_unref (camera->priv->storage, NULL);
 	bonobo_object_unref (BONOBO_OBJECT (camera->priv->component));
@@ -800,6 +789,9 @@ gnocam_camera_destroy (GtkObject* object)
 	g_hash_table_destroy (camera->priv->hash_table);
 
 	g_free (camera->priv);
+	camera->priv = NULL;
+
+	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void
@@ -817,10 +809,9 @@ gnocam_camera_class_init (GnoCamCameraClass* klass)
 	object_class = GTK_OBJECT_CLASS (klass);
 	object_class->destroy = gnocam_camera_destroy;
 
-        gnocam_camera_parent_class = gtk_type_class (PARENT_TYPE);
+	parent_class = gtk_type_class (PARENT_TYPE);
 }
 
-BONOBO_X_TYPE_FUNC_FULL (GnoCamCamera, GNOME_GnoCam_camera, PARENT_TYPE, gnocam_camera);
-
+E_MAKE_TYPE (gnocam_camera, "GnoCamCamera", GnoCamCamera, gnocam_camera_class_init, gnocam_camera_init, PARENT_TYPE)
 
 

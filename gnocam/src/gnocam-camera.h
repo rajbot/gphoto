@@ -27,22 +27,19 @@ typedef enum _GnoCamCameraStorageViewMode	GnoCamCameraStorageViewMode;
 			
 
 struct _GnoCamCamera {
-	BonoboXObject           parent;
+	GtkVBox			parent;
 
 	GnoCamCameraPrivate*	priv;
 };
 
 struct _GnoCamCameraClass {
-	BonoboXObjectClass              parent_class;
-
-	POA_GNOME_GnoCam_camera__epv	epv;
+	GtkVBoxClass		parent_class;
 };
 
 GtkType 	gnocam_camera_get_type			(void);
-GnoCamCamera*	gnocam_camera_new			(const gchar* url, Bonobo_UIContainer container, GtkWidget* parent, GConfClient* client, CORBA_Environment* ev);
+GtkWidget*	gnocam_camera_new			(const gchar* url, Bonobo_UIContainer container, GtkWindow* window, GConfClient* client, CORBA_Environment* ev);
 
 void 		gnocam_camera_set_storage_view_mode 	(GnoCamCamera* camera, GnoCamCameraStorageViewMode mode);
-GtkWidget*	gnocam_camera_get_widget 		(GnoCamCamera* camera);
 
 void		gnocam_camera_show_menu			(GnoCamCamera* camera);
 void		gnocam_camera_hide_menu			(GnoCamCamera* camera);

@@ -36,8 +36,6 @@ static GnomeDialogClass* parent_class = NULL;
 
 struct _GnoCamConfigurationPrivate {
 
-	GtkWidget*	parent;
-	
 	Camera*		camera;
 	CameraWidget*	widget;
 
@@ -387,8 +385,6 @@ gnocam_configuration_destroy (GtkObject* object)
 
 	configuration = GNOCAM_CONFIGURATION (object);
 
-	gtk_widget_unref (configuration->priv->parent);
-
 	if (configuration->priv->dirname) g_free (configuration->priv->dirname);
 	if (configuration->priv->filename) g_free (configuration->priv->filename);
 	
@@ -400,7 +396,7 @@ gnocam_configuration_destroy (GtkObject* object)
 	g_free (configuration->priv);
 	configuration->priv = NULL;
 
-//	GTK_OBJECT_CLASS (parent_class)->destroy (object);
+	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void
@@ -421,7 +417,7 @@ gnocam_configuration_init (GnoCamConfiguration* configuration)
 }
 
 GtkWidget*
-gnocam_configuration_new (Camera* camera, const gchar* dirname, const gchar* filename, GtkWidget* parent)
+gnocam_configuration_new (Camera* camera, const gchar* dirname, const gchar* filename, GtkWindow* window)
 {
 	GnoCamConfiguration*	new;
 	gint			result;
@@ -451,8 +447,8 @@ gnocam_configuration_new (Camera* camera, const gchar* dirname, const gchar* fil
 	if (dirname) new->priv->dirname = g_strdup (dirname);
 	new->priv->widget = widget;
 	new->priv->hash_table = g_hash_table_new (g_int_hash, g_int_equal);
-	gtk_widget_ref (new->priv->parent = parent);
 	gnome_dialog_constructv (GNOME_DIALOG (new), gp_widget_label (new->priv->widget), buttons);
+	gnome_dialog_set_parent (GNOME_DIALOG (new), window);
 	gnome_dialog_set_close (GNOME_DIALOG (new), FALSE);
 
 	/* Connect signals */

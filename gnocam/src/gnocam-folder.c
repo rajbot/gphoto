@@ -16,7 +16,7 @@ static ETableClass* parent_class;
 
 struct _GnoCamFolderPrivate
 {
-	GtkWidget*			window;
+	GtkWindow*			window;
 	
 	Bonobo_UIContainer		container;
 	BonoboUIComponent*		component;
@@ -499,8 +499,6 @@ printf ("gnocam_folder_destroy\n");
 
 	folder = GNOCAM_FOLDER (object);
 
-	gtk_widget_unref (folder->priv->window);
-
 	bonobo_object_release_unref (folder->priv->container, NULL);
 	bonobo_object_unref (BONOBO_OBJECT (folder->priv->component));
 
@@ -535,7 +533,7 @@ gnocam_folder_init (GnoCamFolder* folder)
 }
 
 GtkWidget*
-gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bonobo_UIContainer container, GConfClient* client, GtkWidget* window)
+gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bonobo_UIContainer container, GConfClient* client, GtkWindow* window)
 {
 	GnoCamFolder*			new;
 	Bonobo_Storage_DirectoryList*   list;
@@ -558,7 +556,7 @@ gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bo
 
 	new = gtk_type_new (GNOCAM_TYPE_FOLDER);
 	gp_camera_ref (new->priv->camera = camera);
-	gtk_widget_ref (new->priv->window = window);
+	new->priv->window = window;
 	new->priv->path = g_strdup (path);
 	new->priv->storage = bonobo_object_dup_ref (storage, NULL);
 	new->priv->list = list;

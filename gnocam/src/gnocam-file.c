@@ -15,7 +15,7 @@ static BonoboObjectClass* gnocam_file_parent_class;
 
 struct _GnoCamFilePrivate
 {
-	GtkWidget*		window;
+	GtkWindow*		window;
 
 	Bonobo_UIContainer	container;
 	BonoboUIComponent*      component;
@@ -319,8 +319,6 @@ gnocam_file_destroy (GtkObject* object)
 
 	file = GNOCAM_FILE (object);
 
-	gtk_widget_unref (file->priv->window);
-
 	bonobo_object_release_unref (file->priv->container, NULL);
 	bonobo_object_unref (BONOBO_OBJECT (file->priv->component));
 
@@ -376,7 +374,7 @@ gnocam_file_init (GnoCamFile* file)
 }
 
 GnoCamFile*
-gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bonobo_UIContainer container, GConfClient* client, GtkWidget* window)
+gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bonobo_UIContainer container, GConfClient* client, GtkWindow* window)
 {
 	GnoCamFile*		new;
 
@@ -386,7 +384,7 @@ gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bono
 	new->priv->filename = g_strdup (g_basename (path));
 	new->priv->path = g_strdup (path);
 	new->priv->container = bonobo_object_dup_ref (container, NULL);
-	gtk_widget_ref (new->priv->window = window);
+	new->priv->window = window;
 	gp_camera_ref (new->priv->camera = camera);
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
 	new->priv->cnxn = gconf_client_notify_add (client, "/apps/" PACKAGE "/preview", on_preview_changed, new, NULL, NULL);

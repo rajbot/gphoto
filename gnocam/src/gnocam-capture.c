@@ -26,30 +26,32 @@ struct _GnoCamCapturePrivate {
 	gint			duration;
 };
 
-#define GNOCAM_CAPTURE_UI 												\
-"<Root>"														\
-"  <menu>"														\
-"    <submenu name=\"File\" _label=\"_File\">"										\
-"      <placeholder name=\"FileOperations\"/>"										\
-"      <menuitem name=\"Close\" verb=\"\" _label=\"_Close\" pixtype=\"stock\" pixname=\"Close\"/>"			\
-"    </submenu>"													\
-"    <submenu name=\"Camera\" _label=\"Camera\">"                         						\
-"      <menuitem name=\"Manual\" _label=\"Manual\" verb=\"\" pixtype=\"stock\" pixname=\"Book Open\"/>"			\
-"      <placeholder name=\"CaptureOperations\" delimit=\"top\"/>"							\
-"      <placeholder name=\"Configuration\" delimit=\"top\"/>"								\
-"    </submenu>"                                                          						\
-"    <submenu name=\"Edit\" _label=\"_Edit\">"                                                                          \
-"       <placeholder/>"                                                                                                 \
-"       <menuitem name=\"BonoboCustomize\" verb=\"\" _label=\"Customi_ze...\" pos=\"bottom\"/>"                         \
-"    </submenu>"                                                                                                        \
-"    <submenu name=\"View\" _label=\"_View\"/>"										\
-"    <submenu name=\"Help\" _label=\"_Help\">"										\
-"      <menuitem name=\"About\" _label=\"_About\" pixtype=\"stock\" pixname=\"About\"/>"				\
-"    </submenu>"													\
-"  </menu>"														\
-"  <dockitem name=\"Toolbar\" homogenous=\"0\" look=\"icons\">"								\
-"    <toolitem name=\"Refresh\" verb=\"\" _label=\"Refresh\" _tip=\"Refresh\" pixtype=\"stock\" pixname=\"Refresh\"/>"	\
-"  </dockitem>"														\
+#define GNOCAM_CAPTURE_UI 													\
+"<Root>"															\
+"  <menu>"															\
+"    <submenu name=\"File\" _label=\"_File\">"											\
+"      <placeholder name=\"FileOperations\"/>"											\
+"      <placeholder name=\"System\" delimit=\"top\">"										\
+"        <menuitem name=\"Close\" verb=\"\" _label=\"_Close\" pixtype=\"stock\" pixname=\"Close\" accel=\"*Control*w\"/>"	\
+"      </placeholder>"														\
+"    </submenu>"														\
+"    <submenu name=\"Camera\" _label=\"Camera\">"                         							\
+"      <menuitem name=\"Manual\" _label=\"Manual\" verb=\"\" pixtype=\"stock\" pixname=\"Book Open\"/>"				\
+"      <placeholder name=\"CaptureOperations\" delimit=\"top\"/>"								\
+"      <placeholder name=\"Configuration\" delimit=\"top\"/>"									\
+"    </submenu>"                                                          							\
+"    <submenu name=\"Edit\" _label=\"_Edit\">"                                                                          	\
+"       <placeholder/>"                                                                                                 	\
+"       <menuitem name=\"BonoboCustomize\" verb=\"\" _label=\"Customi_ze...\" pos=\"bottom\"/>"                         	\
+"    </submenu>"                                                                                                        	\
+"    <submenu name=\"View\" _label=\"_View\"/>"											\
+"    <submenu name=\"Help\" _label=\"_Help\">"											\
+"      <menuitem name=\"About\" _label=\"_About\" pixtype=\"stock\" pixname=\"About\"/>"					\
+"    </submenu>"														\
+"  </menu>"															\
+"  <dockitem name=\"Toolbar\" homogenous=\"0\" look=\"icons\">"									\
+"    <toolitem name=\"Refresh\" verb=\"\" _label=\"Refresh\" _tip=\"Refresh\" pixtype=\"stock\" pixname=\"Refresh\"/>"		\
+"  </dockitem>"															\
 "</Root>"
 
 #define GNOCAM_CAPTURE_UI_CONFIGURATION											\
@@ -245,7 +247,7 @@ on_configuration_clicked (BonoboUIComponent* component, gpointer user_data, cons
 
 	capture = GNOCAM_CAPTURE (user_data);
 	
-	widget = gnocam_configuration_new (capture->priv->camera, NULL, NULL, GTK_WIDGET (capture));
+	widget = gnocam_configuration_new (capture->priv->camera, NULL, NULL, GTK_WINDOW (capture));
 	gtk_widget_show (widget);
 }
 
@@ -343,7 +345,7 @@ on_close_clicked (BonoboUIComponent* component, gpointer user_data, const gchar*
 
 	capture = GNOCAM_CAPTURE (user_data);
 
-	gtk_widget_destroy (GTK_WIDGET (capture));
+	gtk_widget_unref (GTK_WIDGET (capture));
 }
 
 /***********************/
@@ -388,7 +390,7 @@ gnocam_capture_init (GnoCamCapture* capture)
 }
 
 GnoCamCapture*
-gnocam_capture_new (Camera* camera, CameraCaptureType type, GConfClient* client)
+gnocam_capture_new (Camera* camera, CameraCaptureType type, GConfClient* client, GtkWindow* window)
 {
 	GnoCamCapture*		new;
 	gint			w, h;
@@ -401,6 +403,7 @@ gnocam_capture_new (Camera* camera, CameraCaptureType type, GConfClient* client)
 	gp_camera_ref (new->priv->camera = camera);
 	new->priv->type = type;
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
+	gtk_window_set_transient_for (GTK_WINDOW (new), window);
 
 	bonobo_ui_engine_config_set_path (bonobo_window_get_ui_engine (BONOBO_WINDOW (new)), "/" PACKAGE "/UIConf/capture");
 

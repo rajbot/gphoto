@@ -39,9 +39,9 @@ struct _GnoCamMainPrivate {
 "  <menu>"															\
 "    <submenu name=\"File\" _label=\"_File\">"											\
 "      <placeholder name=\"FileOperations\"/>"											\
-"      <placeholder name=\"Dummy\" delimit=\"top\">"										\
-"        <menuitem name=\"Exit\" verb=\"\" _label=\"E_xit\" pixtype=\"stock\" pixname=\"Quit\"/>"				\
-"      </placeholder>"														\
+"      <placeholder name=\"System\" delimit=\"top\">"                                                                           \
+"        <menuitem name=\"Close\" verb=\"\" _label=\"_Close\" pixtype=\"stock\" pixname=\"Close\" accel=\"*Control*w\"/>"       \
+"      </placeholder>"                                                                                                          \
 "    </submenu>"														\
 "    <placeholder name=\"Folder\"/>"												\
 "    <placeholder name=\"Camera\"/>"												\
@@ -71,7 +71,7 @@ struct _GnoCamMainPrivate {
 
 static void 	on_preferences_activate 	(BonoboUIComponent* component, gpointer user_data, const gchar* path);
 static void	on_about_activate		(BonoboUIComponent* component, gpointer user_data, const gchar* path);
-static void	on_exit_activate		(BonoboUIComponent* component, gpointer user_data, const gchar* path);
+static void	on_close_activate		(BonoboUIComponent* component, gpointer user_data, const gchar* path);
 
 /**********************/
 /* Internal functions */
@@ -81,7 +81,6 @@ static gint
 create_camera (gpointer user_data)
 {
 	GnoCamMain*		m;
-	GnoCamCamera*		camera;
 	CORBA_Environment	ev;
 	GtkWidget*		widget;
 
@@ -90,7 +89,7 @@ create_camera (gpointer user_data)
 
         /* Get the camera */
         CORBA_exception_init (&ev);
-        camera = gnocam_camera_new (m->priv->url, m->priv->container, GTK_WIDGET (m), m->priv->client, &ev);
+        widget = gnocam_camera_new (m->priv->url, m->priv->container, GTK_WINDOW (m), m->priv->client, &ev);
         if (BONOBO_EX (&ev)) {
                 g_warning (_("Could not display camera widget for camera '%s'!\n(%s)"), m->priv->url, bonobo_exception_get_text (&ev));
                 CORBA_exception_free (&ev);
@@ -99,19 +98,14 @@ create_camera (gpointer user_data)
                 return (FALSE);
         }
         CORBA_exception_free (&ev);
-        g_return_val_if_fail (camera, FALSE);
-
-        /* Get the widget */
-        widget = gnocam_camera_get_widget (camera);
         g_return_val_if_fail (widget, FALSE);
         gtk_widget_show (widget);
-        gtk_widget_ref (widget);
 
         /* Append the page, store the page number */
         gtk_notebook_append_page (GTK_NOTEBOOK (m->priv->notebook), widget, NULL);
-        gtk_object_set_data (GTK_OBJECT (camera), "page", GINT_TO_POINTER (gtk_notebook_page_num (GTK_NOTEBOOK (m->priv->notebook), widget)));
+	gtk_object_set_data (GTK_OBJECT (widget), "page", GINT_TO_POINTER (gtk_notebook_page_num (GTK_NOTEBOOK (m->priv->notebook), widget)));
 
-        g_hash_table_insert (m->priv->hash_table, m->priv->url, camera);
+        g_hash_table_insert (m->priv->hash_table, m->priv->url, GNOCAM_CAMERA (widget));
 	m->priv->url = NULL;
 
 	gtk_signal_emit_by_name (GTK_OBJECT (m->priv->shortcut_bar), "item_selected", NULL, 0, m->priv->item);
@@ -124,7 +118,7 @@ create_menu (gpointer user_data)
 {
 	GnoCamMain*		m;
         BonoboUIVerb            verb [] = {
-                BONOBO_UI_VERB ("Exit", on_exit_activate),
+                BONOBO_UI_VERB ("Close", on_close_activate),
                 BONOBO_UI_VERB ("Preferences", on_preferences_activate),
                 BONOBO_UI_VERB ("About", on_about_activate),
                 BONOBO_UI_VERB_END};
@@ -228,16 +222,13 @@ on_preferences_activate (BonoboUIComponent* component, gpointer user_data, const
 }
 
 static void
-on_exit_activate (BonoboUIComponent* component, gpointer user_data, const gchar* path)
+on_close_activate (BonoboUIComponent* component, gpointer user_data, const gchar* path)
 {
 	GnoCamMain*	m;
 
 	m = GNOCAM_MAIN (user_data);
 
 	gtk_widget_unref (GTK_WIDGET (m));
-
-	//FIXME: Fix ref leaks.
-	gtk_main_quit ();
 }
 
 /***********************/

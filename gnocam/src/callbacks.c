@@ -6,7 +6,7 @@
 #include <gphoto2.h>
 #include <gconf/gconf-client.h>
 #include "preferences.h"
-#include "save.h"
+#include "file-operations.h"
 #include "gnocam.h"
 #include "callbacks.h"
 #include "information.h"

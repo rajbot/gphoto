@@ -26,6 +26,7 @@ bin_PROGRAMS = gnocam
 gnocam_SOURCES =\
  callbacks.h callbacks.c\
  cameras.h cameras.c\
+ file-operations.h file-operations.c\
  frontend.h frontend.c\
  gnocam.h gnocam.c\
  gphoto-extensions.h gphoto-extensions.c\
@@ -33,8 +34,7 @@ gnocam_SOURCES =\
  notification.h notification.c\
  preferences.h preferences.c\
  preview.h preview.c\
- properties.h properties.c\
- save.h save.c
+ properties.h properties.c
 
 glade_DATA = gnocam.glade
 
@@ -44,3 +44,4 @@ gnocam_LDADD = \
  $(INTLLIBS)
 
 EXTRA_DIST = $(glade_DATA)
+

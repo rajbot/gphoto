@@ -7,7 +7,7 @@
 #include "information.h"
 #include "gnocam.h"
 #include "preview.h"
-#include "save.h"
+#include "file-operations.h"
 #include "cameras.h"
 
 void

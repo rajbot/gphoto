@@ -93,8 +93,7 @@ int main (int argc, char *argv[])
 	glade_xml_signal_autoconnect (xml);
 
         /* Populate the camera tree. */
-        value = gconf_client_get (client, "/apps/" PACKAGE "/cameras", NULL);
-        if (value) {
+        if ((value = gconf_client_get (client, "/apps/" PACKAGE "/cameras", NULL))) {
                 camera_tree_update (GTK_TREE (glade_xml_get_widget (xml, "tree_cameras")), value);
                 gconf_value_free (value);
         }

@@ -1,5 +1,5 @@
-#ifndef GPIO_USB_H
-#define GPIO_USB_H
+#ifndef _GPIO_USB_H_
+#define _GPIO_USB_H_
 
 /* USB port specific settings */
 typedef struct {
@@ -13,4 +13,4 @@ typedef struct {
 
 extern struct gpio_operations gpio_usb_operations;
 
-#endif /* GPIO_USB_H */
+#endif /* _GPIO_USB_H_ */

@@ -1,3 +1,6 @@
+#ifndef _GPIO_SERIAL_H_
+#define _GPIO_SERIAL_H_
+
 /* Serial port prefix for enumeration */
 /* %i for numbers, %c for letters */
 
@@ -44,3 +47,11 @@ typedef struct {
 } gpio_serial_settings;
 
 extern struct gpio_operations gpio_serial_operations;   
+
+#endif /* _GPIO_SERIAL_H_ */
+
+
+
+
+
+

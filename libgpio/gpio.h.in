@@ -1,5 +1,5 @@
-#ifndef GPIO_H
-#define GPIO_H
+#ifndef _GPIO_H_
+#define _GPIO_H_
 
 #if @GPIO_USB@
 #define GPIO_USB
@@ -198,4 +198,4 @@ gpio_device *gpio_new		(int device_number);
 		not implemented for USB (useful?)
 		*/
 
-#endif
+#endif /* _GPIO_H_ */

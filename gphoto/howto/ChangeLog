@@ -1,3 +1,66 @@
+1999-07-04  Ole Aamot  <oleaa@ifi.uio.no>
+
+	* Rewrote some SGML to comform with the Docbook dtd.
+	* Structured the sections like this:
+	  
+	Introduction
+	      Acknowledgements
+	      Feedback
+	      Distribution Policy
+	            OpenContent License (OPL)
+	            LICENSE
+	            NO WARRANTY
+	Digital Photo Technologies
+	      Introducing digital imaging
+	      Film Scanners
+	      Paper Scanners
+	      Digital Cameras
+	            35mm Lens Equivalent
+	            Aperture
+	            Audio Recording
+	            Battery Type
+	            Color Depth
+	            Continuous Shooting
+	            Dimensions (HxWxD)
+	            Flash
+	            Focus
+	            Image Capacity
+	            Image Capacity at Max Res.
+	            Interface
+	            ISO Equivalent
+	            LCD Size (in)
+	            Macro
+	            Max. Resolution
+	            On Camera Editing
+	            Other Resolution Modes
+	            Red Eye Reduction
+	            Self Timer
+	            Shutter Speed
+	            Storage Type
+	            Video Out
+	            Viewfinder
+	            Zoom
+	      Pitfalls
+	            Kodak PhotoCD
+	            Canon PowerShot
+	Software for Digital Photo Devices
+	      Free Software
+	            DC20PACK
+	            FujiPlay
+	            gPhoto
+	            kdcpi
+	            NV-DC1000 / PV-DC1000
+	            OpenDiS
+	            PhotoPC
+	            Qvplay
+	            SANE
+	      Non-free Software
+	            JCam
+	            MotifCamedia
+
+	* Added section regarding open specs and non-free software.	
+
+	
 1999-06-19  Ole Aamot  <oleaa@ifi.uio.no>
 
 	* Initial version.

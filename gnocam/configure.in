@@ -195,6 +195,7 @@ intl/Makefile
 macros/Makefile
 po/Makefile.in
 idl/Makefile
+libgnocam/Makefile
 gnocam/Makefile
 capplet/Makefile
 bonobo-moniker/Makefile

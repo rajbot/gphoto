@@ -7,7 +7,6 @@
 
 struct _GnoCamCappletTableScrolledPrivate
 {
-	ETable *table;
 };
 
 #define PARENT_TYPE E_TYPE_SCROLL_FRAME
@@ -46,6 +45,8 @@ gnocam_capplet_table_scrolled_class_init (GnoCamCappletTableScrolledClass *klass
 {
 	GtkObjectClass *object_class;
 
+	parent_class = gtk_type_class (PARENT_TYPE);
+
 	object_class = GTK_OBJECT_CLASS (klass);
 	object_class->destroy  = gnocam_capplet_table_scrolled_destroy;
 	object_class->finalize = gnocam_capplet_table_scrolled_finalize;
@@ -62,10 +63,12 @@ gnocam_capplet_table_scrolled_new (CappletWidget *capplet)
 	e_scroll_frame_set_policy (E_SCROLL_FRAME (table), 
 				   GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 
-	table->priv->table = gnocam_capplet_table_new (capplet);
-	gtk_container_add (GTK_CONTAINER (table),
-			   GTK_WIDGET (table->priv->table));
-	gtk_widget_show (GTK_WIDGET (table->priv->table));
+	/* Add the table with the cameras */
+	table->table = gnocam_capplet_table_new (capplet);
+	gtk_container_add (GTK_CONTAINER (table), GTK_WIDGET (table->table));
+	gtk_widget_show (GTK_WIDGET (table->table));
+	e_selection_model_select_single_row (
+			E_SELECTION_MODEL (table->table->selection), 0);
 
 	return (GTK_WIDGET (table));
 }
@@ -73,25 +76,25 @@ gnocam_capplet_table_scrolled_new (CappletWidget *capplet)
 void
 gnocam_capplet_table_scrolled_ok (GnoCamCappletTableScrolled *table)
 {
-	gnocam_capplet_table_ok (GNOCAM_CAPPLET_TABLE (table->priv->table));
+	gnocam_capplet_table_ok (GNOCAM_CAPPLET_TABLE (table->table));
 }
 
 void
 gnocam_capplet_table_scrolled_revert (GnoCamCappletTableScrolled *table)
 {
-	gnocam_capplet_table_revert (GNOCAM_CAPPLET_TABLE (table->priv->table));
+	gnocam_capplet_table_revert (GNOCAM_CAPPLET_TABLE (table->table));
 }
 
 void
 gnocam_capplet_table_scrolled_try (GnoCamCappletTableScrolled *table)
 {
-	gnocam_capplet_table_try (GNOCAM_CAPPLET_TABLE (table->priv->table));
+	gnocam_capplet_table_try (GNOCAM_CAPPLET_TABLE (table->table));
 }
 
 void
 gnocam_capplet_table_scrolled_cancel (GnoCamCappletTableScrolled *table)
 {
-	gnocam_capplet_table_cancel (GNOCAM_CAPPLET_TABLE (table->priv->table));
+	gnocam_capplet_table_cancel (GNOCAM_CAPPLET_TABLE (table->table));
 }
 
 E_MAKE_TYPE (gnocam_capplet_table_scrolled, "GnoCamCappletTableScrolled", GnoCamCappletTableScrolled, gnocam_capplet_table_scrolled_class_init, gnocam_capplet_table_scrolled_init, PARENT_TYPE)

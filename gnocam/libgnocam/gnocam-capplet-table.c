@@ -73,6 +73,8 @@ gnocam_capplet_table_class_init (GnoCamCappletTableClass *klass)
 {
 	GtkObjectClass *object_class;
 
+	parent_class = gtk_type_class (PARENT_TYPE);
+
 	object_class = GTK_OBJECT_CLASS (klass);
 	object_class->destroy  = gnocam_capplet_table_destroy;
 	object_class->finalize = gnocam_capplet_table_finalize;
@@ -153,7 +155,7 @@ get_info (GnoCamCappletTable *table, guint number)
 		        }
 	CORBA_exception_free (&ev);
 
-	g_message (info);
+	gnome_ok_dialog (info);
 
 	CORBA_free (info);
 }

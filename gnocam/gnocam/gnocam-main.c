@@ -89,8 +89,7 @@ impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant,
 		const gchar *name;
 		gint button;
 
-		selector = gnocam_camera_selector_new (
-						gnocam_main->priv->client);
+		selector = gnocam_camera_selector_new ();
 		do {
 			button = gnome_dialog_run (selector);
 			if (button == 1) {

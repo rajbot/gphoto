@@ -40,7 +40,11 @@ notify_cameras (GConfClient *client, guint cnxn_id, GConfEntry *entry, gpointer 
 	model->priv->list = gconf_client_get_list (model->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, NULL); 
 	
 	e_table_model_changed (E_TABLE_MODEL (model)); 
-	capplet_widget_state_changed (model->priv->capplet, TRUE); 
+
+	if (model->priv->capplet)
+		capplet_widget_state_changed (model->priv->capplet, TRUE);
+	else
+		gnocam_capplet_model_ok (model);
 }
 
 /*****************/
@@ -83,7 +87,10 @@ set_value_at (ETableModel *m, gint col, gint row, const void* value)
 	g_free (g_slist_nth_data (model->priv->list, 3 * row + col));
 	(g_slist_nth (model->priv->list, 3 * row + col))->data = g_strdup (value);
 
-	capplet_widget_state_changed (model->priv->capplet, TRUE);
+	if (model->priv->capplet)
+		capplet_widget_state_changed (model->priv->capplet, TRUE);
+	else
+		gnocam_capplet_model_ok (model);
 }
 
 static gboolean
@@ -133,7 +140,11 @@ append_row (ETableModel *m, ETableModel *source, gint row)
 	for (col = 0; col < 3; col++) model->priv->list = g_slist_append (model->priv->list, g_strdup (e_table_model_value_at (source, col, row)));
 
 	e_table_model_changed (m);
-	capplet_widget_state_changed (model->priv->capplet, TRUE);
+
+	if (model->priv->capplet)
+		capplet_widget_state_changed (model->priv->capplet, TRUE);
+	else
+		gnocam_capplet_model_ok (model);
 }
 
 /*******************/
@@ -167,10 +178,14 @@ gnocam_capplet_model_revert (GnoCamCappletModel* model)
 	for (i = 0; i < g_slist_length (model->priv->list); i++) g_free (g_slist_nth_data (model->priv->list, i)); 
 	g_slist_free (model->priv->list); 
 	
-	gconf_client_set_list (model->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, model->priv->backup, NULL); 
-	model->priv->list = gconf_client_get_list (model->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, NULL); 
+	gconf_client_set_list (model->priv->client,
+			       "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING,
+			       model->priv->backup, NULL); 
+	model->priv->list = gconf_client_get_list (model->priv->client,
+						   "/apps/" PACKAGE "/cameras",
+						   GCONF_VALUE_STRING, NULL); 
 	
-	e_table_model_changed (E_TABLE_MODEL (model)); 
+	e_table_model_changed (E_TABLE_MODEL (model));
 }
 							
 void
@@ -192,7 +207,11 @@ gnocam_capplet_model_delete_row (GnoCamCappletModel *model, gint row)
 	} 
 	
 	e_table_model_changed (E_TABLE_MODEL (model)); 
-	capplet_widget_state_changed (model->priv->capplet, TRUE); 
+
+	if (model->priv->capplet)
+		capplet_widget_state_changed (model->priv->capplet, TRUE);
+	else
+		gnocam_capplet_model_ok (model);
 }
 
 static void
@@ -203,20 +222,44 @@ gnocam_capplet_model_destroy (GtkObject *object)
 
 	model = GNOCAM_CAPPLET_MODEL (object);
 
-	for (i = 0; i < g_slist_length (model->priv->list); i++) g_free (g_slist_nth_data (model->priv->list, i)); 
-	g_slist_free (model->priv->list); 
+	if (model->priv->list) {
+		for (i = 0; i < g_slist_length (model->priv->list); i++)
+			g_free (g_slist_nth_data (model->priv->list, i)); 
+		g_slist_free (model->priv->list); 
+		model->priv->list = NULL;
+	}
 	
-	for (i = 0; i < g_slist_length (model->priv->backup); i++) g_free (g_slist_nth_data (model->priv->backup, i)); 
-	g_slist_free (model->priv->backup);
+	if (model->priv->backup) {
+		for (i = 0; i < g_slist_length (model->priv->backup); i++)
+			g_free (g_slist_nth_data (model->priv->backup, i)); 
+		g_slist_free (model->priv->backup);
+		model->priv->backup = NULL;
+	}
 				
-	gconf_client_notify_remove (model->priv->client, model->priv->notify_cameras);
+	if (model->priv->notify_cameras) {
+		gconf_client_notify_remove (model->priv->client,
+					    model->priv->notify_cameras);
+		model->priv->notify_cameras = 0;
+	}
 
-	gtk_object_unref (GTK_OBJECT (model->priv->client));
+	if (model->priv->client) {
+		gtk_object_unref (GTK_OBJECT (model->priv->client));
+		model->priv->client = NULL;
+	}
+
+	GTK_OBJECT_CLASS (parent_class)->destroy (object);
+}
+
+static void
+gnocam_capplet_model_finalize (GtkObject *object)
+{
+	GnoCamCappletModel *model;
+
+	model = GNOCAM_CAPPLET_MODEL (object);
 
 	g_free (model->priv);
 
-	if (GTK_OBJECT_CLASS (parent_class)->destroy) 
-		GTK_OBJECT_CLASS (parent_class)->destroy (object);
+	GTK_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -232,7 +275,8 @@ gnocam_capplet_model_class_init (GnoCamCappletModelClass *klass)
 	ETableModelClass	*model_class;
 
 	object_class = GTK_OBJECT_CLASS (klass);
-	object_class->destroy = gnocam_capplet_model_destroy;
+	object_class->destroy  = gnocam_capplet_model_destroy;
+	object_class->finalize = gnocam_capplet_model_finalize;
 
 	model_class = E_TABLE_MODEL_CLASS (klass);
 	model_class->column_count = column_count;
@@ -259,10 +303,16 @@ gnocam_capplet_model_new (CappletWidget *capplet)
 	model->priv->capplet = capplet;
 
 	model->priv->client = gconf_client_get_default ();
-	gconf_client_add_dir (model->priv->client, "/apps/" PACKAGE, GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
-	model->priv->list = gconf_client_get_list (model->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, NULL);
-	model->priv->backup = gconf_client_get_list (model->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, NULL);
-	gconf_client_notify_add (model->priv->client, "/apps/" PACKAGE "/cameras", notify_cameras, model, NULL, NULL);
+	gconf_client_add_dir (model->priv->client, "/apps/" PACKAGE,
+			      GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
+	model->priv->list = gconf_client_get_list (model->priv->client,
+						   "/apps/" PACKAGE "/cameras",
+						   GCONF_VALUE_STRING, NULL);
+	model->priv->backup = gconf_client_get_list (model->priv->client,
+			"/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, NULL);
+	gconf_client_notify_add (model->priv->client,
+				 "/apps/" PACKAGE "/cameras", notify_cameras,
+				 model, NULL, NULL);
 
 	return (E_TABLE_MODEL (model));
 }

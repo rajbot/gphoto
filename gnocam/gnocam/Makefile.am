@@ -1,6 +1,7 @@
 INCLUDES =\
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
  -DIMAGEDIR=\"$(prefix)/share/pixmaps\"\
+ -I../libgnocam\
  $(GPHOTO_CFLAGS)\
  $(GCONF_CFLAGS)\
  $(EXTRA_GNOME_CFLAGS)
@@ -26,6 +27,8 @@ gnocam_SOURCES =\
  gnocam-util.h
 
 gnocam_LDADD =\
+ ../libgnocam/libgnocam.a\
+ $(CAPPLET_LIBS)\
  $(GPHOTO_LIBS)\
  $(GCONF_LIBS)\
  $(EXTRA_GNOME_LIBS)

@@ -2,7 +2,6 @@
 #define __GNOCAM_CAMERA_SELECTOR_H__
 
 #include <libgnomeui/gnome-dialog.h>
-#include <gconf/gconf-client.h>
 
 BEGIN_GNOME_DECLS
 
@@ -27,7 +26,7 @@ struct _GnoCamCameraSelectorClass {
 
 GtkType	     gnocam_camera_selector_get_type (void);
 
-GnomeDialog *gnocam_camera_selector_new (GConfClient *client);
+GnomeDialog *gnocam_camera_selector_new (void);
 
 const gchar *gnocam_camera_selector_get_name (GnoCamCameraSelector *);
 

@@ -2,7 +2,7 @@
 #include "gnocam-camera-selector.h"
 
 #include <gal/util/e-util.h>
-#include <gtk/gtkclist.h>
+#include <gtk/gtksignal.h>
 #include <gtk/gtktogglebutton.h>
 #include <gtk/gtkcheckbutton.h>
 #include <gtk/gtkhbox.h>
@@ -10,16 +10,16 @@
 #include <libgnomeui/gnome-dialog-util.h>
 #include <libgnome/gnome-i18n.h>
 
+#include <gnocam-capplet-table-scrolled.h>
+
 #define PARENT_TYPE GNOME_TYPE_DIALOG
 static GnomeDialogClass *parent_class;
 
 struct _GnoCamCameraSelectorPrivate
 {
-	GConfClient *client;
+	const gchar *name;
 
-	GSList *list;
-
-	GtkWidget *clist;
+	GtkWidget *table;
 };
 
 static void
@@ -28,8 +28,6 @@ gnocam_camera_selector_destroy (GtkObject *object)
 	GnoCamCameraSelector *selector;
 
 	selector = GNOCAM_CAMERA_SELECTOR (object);
-
-	gtk_object_unref (GTK_OBJECT (selector->priv->client));
 
 	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
@@ -76,26 +74,19 @@ on_check_toggled (GtkToggleButton *toggle, gpointer data)
 }
 
 GnomeDialog *
-gnocam_camera_selector_new (GConfClient *client)
+gnocam_camera_selector_new (void)
 {
 	GnoCamCameraSelector *selector;
 	const gchar *buttons[] = {GNOME_STOCK_BUTTON_OK,
 				  GNOME_STOCK_BUTTON_CANCEL, NULL};
-	const gchar *text[] = {NULL, NULL};
-	gint i;
 	GtkWidget *hbox, *pixmap, *vbox, *check;
 	
-	g_return_val_if_fail (client, NULL);
-
 	selector = gtk_type_new (GNOCAM_TYPE_CAMERA_SELECTOR);
 	gnome_dialog_constructv (GNOME_DIALOG (selector), _("Select a Camera"),
 				 buttons);
-	gnome_dialog_grab_focus (GNOME_DIALOG (selector), 0);
-
-	selector->priv->client = client;
-	gtk_object_ref (GTK_OBJECT (client));
-	selector->priv->list = gconf_client_get_list (client,
-			"/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, NULL);
+	gnome_dialog_set_default (GNOME_DIALOG (selector), 0);
+	gtk_window_set_policy (GTK_WINDOW (selector), TRUE, TRUE, TRUE);
+	gtk_widget_set_usize (GTK_WIDGET (selector), 400, 300);
 
 	hbox = gtk_hbox_new (FALSE, 10);
 	gtk_widget_show (hbox);
@@ -113,37 +104,38 @@ gnocam_camera_selector_new (GConfClient *client)
 	gtk_signal_connect (GTK_OBJECT (check), "toggled", 
 			    GTK_SIGNAL_FUNC (on_check_toggled), selector);
 
-	selector->priv->clist = gtk_clist_new (1);
-	gtk_widget_show (selector->priv->clist);
-	gtk_box_pack_start (GTK_BOX (hbox), selector->priv->clist, TRUE, 
-			    TRUE, 0);
+	/* The camera list */
+	selector->priv->table = gnocam_capplet_table_scrolled_new (NULL);
+	gtk_widget_show (selector->priv->table);
+	gtk_box_pack_start (GTK_BOX (hbox), selector->priv->table,
+			    TRUE, TRUE, 0);
 	
-	for (i = 0; i < g_slist_length (selector->priv->list); i += 3) {
-		text[0] = g_slist_nth_data (selector->priv->list, i);
-		gtk_clist_append (GTK_CLIST (selector->priv->clist),
-				  (gchar **) text);
-	}
-
-	if (g_slist_length (selector->priv->list))
-		gtk_clist_select_row (GTK_CLIST (selector->priv->clist), 0, 0);
-
 	return (GNOME_DIALOG (selector));
+}
+
+static void
+foreach_name (gint row, gpointer data)
+{
+	GnoCamCameraSelector *selector;
+	ETable *table;
+
+	selector = GNOCAM_CAMERA_SELECTOR (data);
+	table = GNOCAM_CAPPLET_TABLE_SCROLLED (selector->priv->table)->table;
+
+	selector->priv->name = e_table_model_value_at (table->model, 0, row);
 }
 
 const gchar *
 gnocam_camera_selector_get_name (GnoCamCameraSelector *selector)
 {
-	GList *selection;
-	const gchar *name;
+	ETable *table;
 
-	selection = GTK_CLIST (selector->priv->clist)->selection;
-	if (!g_list_length (selection))
-		return (NULL);
+	table = GNOCAM_CAPPLET_TABLE_SCROLLED (selector->priv->table)->table;
 
-	if (g_list_length (selection) > 1)
+	if (e_table_selected_count (table) != 1)
 		g_warning ("More than one entry selected!");
 
-	name = g_slist_nth_data (selector->priv->list, 
-				 GPOINTER_TO_INT (selection->data) * 3);
-	return (name);
+	e_table_selected_row_foreach (table, foreach_name, selector);
+
+	return (selector->priv->name);
 }

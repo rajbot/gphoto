@@ -1,12 +1,10 @@
 #include <gphoto2.h>
-
 #include "gnocam-capplet-content.h"
 
 #include <gal/util/e-util.h>
-#include <gal/e-table/e-table-memory-callbacks.h>
-#include <gconf/gconf-client.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
-#include "gnocam-capplet-table-scrolled.h"
+#include <gnocam-capplet-table-scrolled.h>
 
 #define PARENT_TYPE GTK_TYPE_VBOX
 static GtkVBoxClass *parent_class = NULL;

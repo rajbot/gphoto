@@ -4,6 +4,7 @@ SUBDIRS =\
  art\
  macros\
  idl\
+ libgnocam\
  capplet\
  bonobo-moniker\
  gnome-vfs-module\

@@ -3,6 +3,7 @@
 
 #include <capplet-widget.h>
 #include <gal/widgets/e-scroll-frame.h>
+#include <gal/e-table/e-table.h>
 
 BEGIN_GNOME_DECLS
 
@@ -16,6 +17,8 @@ typedef struct _GnoCamCappletTableScrolledClass   GnoCamCappletTableScrolledClas
 
 struct _GnoCamCappletTableScrolled {
 	EScrollFrame parent;
+
+	ETable *table;
 
 	GnoCamCappletTableScrolledPrivate *priv;
 };

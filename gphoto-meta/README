@@ -7,16 +7,19 @@ What can you do with gphoto-meta?
 ===========================================================
 
 If you don't have current autoconf, automake, gettext and libtool
-installed, run bootstrap.sh with the "--tools" parameter and it will 
-download, build and locally install all these tools.
+installed (i.e. you run into trouble), run bootstrap.sh with the 
+"--tools" parameter and it will download, build and locally install
+all these tools in a working version.
 
-Downloads sources for all subprojects from CVS into cvs-orig/.
+bootstrap.sh downloads sources for all subprojects from CVS into 
+cvs-orig/ - if this hasn't already been done before. If you already
+have CVS sources in cvs-orig, you can have bootstrap.sh update to
+current CVS by running it with the --update parameter.
 
-Then initializes the build system in a copy in cvs-src/.
+Then bootstrap.sh initializes the build system in a copy in cvs-src/.
 
-Then configures the copy, builds distribution tarballs in 
+It configures the copy, builds distribution tarballs in 
 dist-files/ and installs into dist-root/ if necessary.
-
 Unfortunately, (due to usage of pkgconfig), we have to install
 libgphoto2 before gtkam or gphoto2 will even configure.
 

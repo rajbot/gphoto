@@ -6,9 +6,9 @@
   This routine works for DS-7 thumbnail files.  Don't know about any others.
 
   Tag descriptions and an ever-increasing number of structural details
-  Taken from "exifdump.py"
-   Written by Thierry Bousch <bousch@topo.math.u-psud.fr>
+  Taken from "exifdump.py" by Thierry Bousch <bousch@topo.math.u-psud.fr>
 
+  Thanks to Paul Wood <pwood@cs.bris.ac.uk> for sub-ifd parsing.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -240,17 +240,21 @@ char *tagname(int tagnum){
 };
 
 int dump_ifd(int ifdnum,exifparser *exifdata,char **allpars){
-  int i,tag,numtags,tagtype,count,typelen;
+  int i,tag,numtags,tagtype,count,typelen, value,tmp1,tmp2;
   char tmpstr[256];
   unsigned char* thistag;
   unsigned char* thedata;
   unsigned char* thisisd;
+  char tmpdat[200];
+  char** name;
+  
   
     thisisd=exifdata->ifds[ifdnum];
     numtags=lilend(thisisd,2);
     printf("has %d tags ----------------------\n",numtags);
     for (i=0;i<numtags;i++){
       thistag=thisisd+i*12+2;
+
       tag=lilend(thistag,2);          /* tag identifier */
       tagtype=lilend(thistag+2,2);    /* tag type */
       count = lilend(thistag+4, 4);   /* how many */
@@ -259,15 +263,35 @@ int dump_ifd(int ifdnum,exifparser *exifdata,char **allpars){
       if (count*typelen > 4)   /* find it in a data block elsewhere */
 	thedata = exifdata->data+lilend(thistag+8, 4);
 
-      printf("Got tag 0x%X %s = ",tag,tagname(tag));
-      if (tagtype!=2) printf("%d",lilend(thistag+8,typelen));
-      else {
+      printf("Tag 0x%X %s = ",tag,tagname(tag));
+
+      if (tagtype==2) {
 	/* Do an ASCII tag */
 	strncpy(tmpstr,thedata,count+1);
 	tmpstr[count+1]='\0';
 	printf("%s",tmpstr);
+      }  else if ((tagtype==5)||(tagtype==10)) {/* Fractional */
+	tmp1=lilend(thedata,4);
+	tmp2=lilend(thedata+4,4);
+	printf("%d/%d=%f",tmp1,tmp2,(tmp2==0)?0:(1.0*tmp1/tmp2));
+      }
+      else {
+         value =lilend(thistag+8,typelen);
+         printf("%d",value);
       };
       printf("\n");
+
+/* Print SubIfd tags */
+      if ( tag == 0x8769 ) {
+         printf("Exif SubIFD at offset %d\n", value );
+         exifdata->ifds[exifdata->ifdcnt]     = exifdata->data+value;  
+         exifdata->ifds[exifdata->ifdcnt];
+         exifdata->ifdtags[exifdata->ifdcnt]=lilend(exifdata->data+value,2);
+         exifdata->ifdcnt++;
+
+}
+/***/
+
     };
 };
 
@@ -309,7 +333,20 @@ int dump_exif(exifparser *exifdata){
     if (stat_exif(exifdata)) return(-1);
 
   for (i=0;i<exifdata->ifdcnt;i++){
-    printf("IFD %d, %s ",i,i?"Thumbnail":"Main Image");
+    switch (i) {
+       case 0:      
+          printf("IFD %d, %s ",i,"Main Image");
+          break;
+       case 1:
+          printf("IFD %d, %s ",i,"Thumbnail");
+         break;
+       case 2:
+          printf("IFD %d, %s ",i,"Sub IFD");
+          break;
+   
+   }       
+       
+
     dump_ifd(i,exifdata,NULL);
   };
 };

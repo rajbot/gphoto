@@ -1,10 +1,7 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "exif.h"
-/*#define FUJI_DEBUG*/  /* Uncomment for debugging */
-
 #include "gphoto_fuji.h"
 #include "../src/gphoto.h"
 

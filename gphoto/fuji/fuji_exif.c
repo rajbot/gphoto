@@ -41,12 +41,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
+#include "gphoto_fuji.h"
 #include "exif.h"
 
 /***********************************************************************
    EXIF handling functions
  **********************************************************************/
-/*#define FUJI_DEBUG*/
 
 /* 
    New conversion function, all in memory 
@@ -60,27 +60,29 @@ unsigned char *fuji_exif_convert(exifparser *exifdat){
 
   if (exif_header_parse(exifdat)<0) return(NULL);
   /* Check out the exif data */
-  if (stat_exif(exifdat)) return(NULL);
+  if (stat_exif(exifdat)) return(NULL); /* Couldn't parse exif data,quit */
+
   newimg=malloc(exifdat->exiflen);
+  if (newimg==NULL){
+    fprintf(stderr,"fuji_exif_convert: could not malloc\n");
+    return(NULL);
+  };
 
   /* Copy header*/
   memcpy(newimg,exifdat->data,8);
   curptr=newimg+8;
 
   offset=lilend(exifdat->data+4,4);
-#ifdef FUJI_DEBUG
-  printf("Offset is %d bytes\n",offset);
-#endif
 
-#ifdef FUJI_DEBUG
-  dump_exif(exifdat);
-#endif
+  if (fuji_debug) {
+    printf("Offset is %d bytes\n",offset);
+    dump_exif(exifdat);
+  };
 
   /* Skip to TIFF image data */
-  if(exifdat->ifdcnt<2) return 0;
-#ifdef FUJI_DEBUG
-  printf("New Offset is %d bytes\n",offset);
-#endif
+  if(exifdat->ifdcnt<2) return(NULL); /* Things don't look right...*/
+
+  if (fuji_debug) printf("New Offset is %d bytes\n",offset);
 
   /* Jump to image data */
   exifimg=exifdat->ifds[1];
@@ -90,9 +92,9 @@ unsigned char *fuji_exif_convert(exifparser *exifdat){
   curptr+=2;
 
   entry=lilend(exifimg,2);
-#ifdef FUJI_DEBUG
-  printf("Entry is %d \n",entry);
-#endif
+
+  if (fuji_debug) printf("Entry is %d \n",entry);
+
   tmp=getintval(exifimg,EXIF_StripOffsets); /*imagedata start*/
   if (tmp==-1) {
     printf("Split one\n");
@@ -106,16 +108,16 @@ unsigned char *fuji_exif_convert(exifparser *exifdat){
     return(NULL);
   };
 
-#ifdef FUJI_DEBUG
-  printf("Imagedata size is %ld bytes\n",dataptr);
-#endif
+  if (fuji_debug) printf("Imagedata size is %ld bytes\n",dataptr);
 
   for (i=0;i<entry;i++){
     dsize=datsize(exifimg,i);
     tag=tagnum(exifimg,i);
-#ifdef FUJI_DEBUG
-    printf("Datsize %d (tag=%ld) is %ld\n",i,tag,dsize);
-#endif
+
+    /*
+      if (fuji_debug) printf("Datsize %d (tag=%ld) is %ld\n",i,tag,dsize);
+    */
+
     if (tag==EXIF_StripOffsets) {
       setval(exifimg,i,12*entry+14); /* set to end of directory */
       memcpy(curptr,exifimg+12*i+2,12);

@@ -48,8 +48,6 @@
 #include <fcntl.h>
 #include <signal.h>
 #include "exif.h"
-/*#define FUJI_DEBUG*/  /* Uncomment for debugging */
-
 #include "../src/gphoto.h"
 #include "../src/util.h"
 #include "../src/callbacks.h"
@@ -71,8 +69,6 @@ extern GtkWidget *open_fuji_config_dialog();
 #if !defined(B115200) && defined(EXTB)
 #define B115200 EXTB
 #endif
-
-#define DEFAULT_DEVICE	"/dev/fujifilm"
 
 struct pict_info {
 	char *name;
@@ -637,16 +633,21 @@ int download_picture(int n,int thumb,struct Image *im)
 
 		if (fuji_debug) printf("%3d   %12s  \n", n, name);
 	}
-	else fuji_size=10500;  /* Probly not same for all cams, better way? */
+	else fuji_size=10500;  /* Probly not same for all cams, better way ? */
 	im->image_size=fuji_size;
-	im->image=malloc(fuji_size);  /* Provide some headroom */
+	im->image=malloc(fuji_size*2);  /* Provide some headroom */
 	
 	t1 = times(0);
 	if (cmd2(0, (thumb?0:0x02), n, im->image)==-1) return(-1);
 
-	if (fuji_debug) printf("%4d actual bytes vs %4d bytes\n", 
-			       fuji_count , im->image_size);
-
+	if (fuji_debug) printf("Download %s: %4d actual bytes vs %4d bytes\n", 
+			       (thumb?"thumbnail":"picture"),fuji_count , 
+			       im->image_size);
+	if (im->image_size>(fuji_count*2)) {
+	  free(im->image);
+	  im->image=NULL;
+	  return(-1);
+	};
 	im->image_size=fuji_count;
 	t2 = times(0);
 
@@ -819,6 +820,7 @@ struct Image *fuji_get_picture (int picture_number,int thumbnail){
   if (fuji_init()) return(0);/*goto bugout*/;
 
   newimage=malloc(sizeof(struct Image));
+  newimage->image=NULL;
 
   if (thumbnail)
     sprintf(tmpfname, "%s/gphoto-thumbnail-%i-%i.jpg",
@@ -845,7 +847,10 @@ struct Image *fuji_get_picture (int picture_number,int thumbnail){
   
     newimage->image_info=
       malloc(sizeof(char*)*(exifdat.ifdtags[thumbnail?1:0]*2+(thumbnail?6:0)));
-    if (newimage->image_info==NULL) fprintf(stderr,"BIG TROUBLE!!!\n");
+    if (newimage->image_info==NULL) {
+      fprintf(stderr,"BIG TROUBLE!!! Bad image memory allocation\n");
+      return(0);
+    };
     newimage->image_info_size=exifdat.ifdtags[thumbnail?1:0]*2;
 
     if (thumbnail) {/* This SHOULD be done by tag id */
@@ -868,10 +873,14 @@ struct Image *fuji_get_picture (int picture_number,int thumbnail){
     /* Tiff info in thumbnail must be converted to be viewable */
     if (thumbnail) {
       newimage->image=fuji_exif_convert(&exifdat);
+      
       if (newimage->image==NULL) {
 	FILE *fp;
 	
-	fprintf(stderr,"Thumbnail conversion error, saving data\n");
+	fprintf(stderr,"Thumbnail conversion error, saving data to \
+fuji-death-dump.dat\n\
+\tPlease mail this file to Matt.Martin@ieee.org along with a description \
+of setup, camera model and any text output.\n");
 	if ((fp=fopen("fuji-death-dump.dat","w"))!=NULL){
 	  fwrite(buffer,1,newimage->image_size,fp);
 	  fclose(fp);

@@ -39,6 +39,8 @@
 #include <signal.h>
 #include "exif.h"
 
+int fuji_debug=0;
+
 main(int argc, char** argv){
   FILE *fd;
   unsigned char tmpbuff[32];

@@ -12,4 +12,4 @@ char *fuji_description();
 
 /* Global Configuration Variables */
 
-extern fuji_debug; 
+extern int fuji_debug; 

@@ -1,5 +1,4 @@
 src/gnocam.c
-src/gnocam.glade
 bonobo-moniker/Bonobo_Moniker_camera.oaf.in
 bonobo-moniker/bonobo-moniker-camera.c
 

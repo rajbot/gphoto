@@ -56,9 +56,6 @@ int main (int argc, char *argv[])
 	/* Init bonobo */
 	g_return_val_if_fail (bonobo_init (CORBA_OBJECT_NIL, CORBA_OBJECT_NIL, CORBA_OBJECT_NIL), 1);
 
-	/* Init glade */
-	glade_gnome_init ();
-
 	/* Init GConf */
 	if (!gconf_init (argc, argv, &gerror)) g_error ("Could not initialize gconf: %s", gerror->message);
 	g_return_val_if_fail (client = gconf_client_get_default (), 1);

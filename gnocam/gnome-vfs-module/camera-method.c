@@ -3,7 +3,6 @@
 #endif
 
 #include <gphoto2.h>
-#include <gnome.h>
 #include <libgnome/gnome-defs.h>
 #include <libgnome/gnome-util.h>
 #include <libgnomevfs/gnome-vfs.h>
@@ -28,6 +27,8 @@ static GnomeVFSResult do_open (
 	GnomeVFSContext* 		context)
 {
 	GnomeVFSResult	result;
+
+	g_print ("do_open\n");
 
 	if ((mode == GNOME_VFS_OPEN_READ) || (mode == GNOME_VFS_OPEN_WRITE)) 
 		*handle = file_handle_new (uri, mode, context, &result);
@@ -165,6 +166,8 @@ static GnomeVFSResult do_open_directory (
 {
 	GnomeVFSResult		result;
 
+	g_print ("do_open_directory\n");
+
 	*handle = directory_handle_new (uri, options, context, &result);
 	return (result);
 }
@@ -186,6 +189,8 @@ static GnomeVFSResult do_read_directory (
 	GnomeVFSContext*                context)
 {
 	directory_handle_t*	directory_handle;
+
+	g_print ("do_read_directory\n");
 	
 	g_return_val_if_fail (directory_handle = (directory_handle_t*) handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
 	
@@ -233,6 +238,8 @@ static GnomeVFSResult do_get_file_info (
 	CameraList	camera_list;
 	Camera*		camera = NULL;
 	gint		i;
+
+	g_print ("do_get_file_info\n");
 
         /* Connect to the camera. */
         {
@@ -354,6 +361,8 @@ static GnomeVFSMethod method = {
 GnomeVFSMethod*
 vfs_module_init (const gchar* method_name, const gchar* args)
 {
+	printf ("vfs_module_init\n");
+
         gtk_init (0, NULL);
         gp_init (GP_DEBUG_NONE);
         gp_frontend_register (NULL, NULL, NULL, NULL, NULL);

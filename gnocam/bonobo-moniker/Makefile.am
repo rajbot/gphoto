@@ -7,7 +7,6 @@ INCLUDES =\
  -DGNOCAM_DATADIR=\""$(datadir)"\"\
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
  -DGNOMELOCALEDIR=\""$(datadir)/locale"\"\
- $(EXTRA_GNOME_CFLAGS)\
  $(EXTRA_WARNING_CFLAGS)\
  $(GCONF_CFLAGS)\
  $(GPHOTO_CFLAGS)\
@@ -29,7 +28,6 @@ bonobo_moniker_camera_SOURCES =\
 
 bonobo_moniker_camera_LDADD=\
  ../libgnocam/libgnocam.la\
- $(EXTRA_GNOME_LIBS)\
  $(GPHOTO_LIBS)\
  $(BONOBO_LIBS)
 

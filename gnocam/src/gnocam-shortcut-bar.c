@@ -122,7 +122,7 @@ gnocam_shortcut_bar_new (void)
 {
 	GnoCamShortcutBar*	new;
 
-	new = gtk_type_new (gnocam_shortcut_bar_get_type ());
+	new = gtk_type_new (GNOCAM_TYPE_SHORTCUT_BAR);
 	new->priv->client = gconf_client_get_default ();
 	new->priv->cnxn = gconf_client_notify_add (new->priv->client, "/apps/" PACKAGE "/cameras", on_cameras_changed, new, NULL, NULL);
 

@@ -157,27 +157,6 @@ dnl GConf
 dnl ******************************
 AM_PATH_GCONF(0.12,,,gconf-gtk)
 
-dnl ********
-dnl libglade
-dnl ********
-AC_MSG_CHECKING(for Glade libraries >= 0.14)
-if gnome-config --libs libglade > /dev/null 2>&1; then
-    vers=`gnome-config --modversion libglade | awk 'BEGIN { FS = "."; } { print $1 * 1000 + $2;}'`
-    if test "$vers" -ge 14; then
-	AC_MSG_RESULT(found)
-    else
-	AC_MSG_ERROR([
-*** You need a least libglade 0.14 for this version of ${PACKAGE}.
-*** Get the latest version from http://www.gnome.org.
-*** Mirrors can be found at http://www.gnome.org/mirrors.])
-    fi
-else
-    AC_MSG_ERROR([
-*** You need libglade for this version of ${PACKAGE}.
-*** Get the latest version from http://www.gnome.org.
-*** Mirrors can be found at http://www.gnome.org/mirrors.])
-fi
-
 dnl ******************************
 dnl More compiler warnings
 dnl ******************************
@@ -236,11 +215,6 @@ GPHOTO_CFLAGS="`gphoto2-config --cflags` `gphoto2-port-config --cflags`"
 GPHOTO_LIBS="`gphoto2-config --libs` `gphoto2-port-config --cflags`"
 AC_SUBST(GPHOTO_CFLAGS)
 AC_SUBST(GPHOTO_LIBS)
-
-EXTRA_GNOME_CFLAGS=`gnome-config --cflags libglade`
-EXTRA_GNOME_LIBS=`gnome-config --libs libglade`
-AC_SUBST(EXTRA_GNOME_CFLAGS)
-AC_SUBST(EXTRA_GNOME_LIBS)
 
 AC_SUBST(CFLAGS)
 AC_SUBST(CPPFLAGS)

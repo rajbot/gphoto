@@ -25,12 +25,12 @@ noinst_LTLIBRARIES = libgnocam.la
 
 libgnocam_la_SOURCES =\
  $(CORBA_SOURCES)\
+ gnocam-camera-druid.h gnocam-camera-druid.c\
  gphoto-extensions.h gphoto-extensions.c
 
 libgnocam_la_LIBADD =\
  $(GNOME_LIBS)\
- $(GNOME_LIBDIR)\
- $(GNOME_LIBS)\
+ $(GPHOTO_LIBS)\
  $(OAF_LIBS)\
  $(GCONF_LIBS)\
  $(VFS_LIBS)

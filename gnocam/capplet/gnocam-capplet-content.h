@@ -3,6 +3,7 @@
 #define __GNOCAM_CAPPLET_CONTENT_H__
 
 #include <gnome.h>
+#include <capplet-widget.h>
 
 BEGIN_GNOME_DECLS
 
@@ -29,7 +30,12 @@ struct _GnoCamCappletContentClass
 };
 
 GtkType		gnocam_capplet_content_get_type 	(void);
-GtkWidget*	gnocam_capplet_content_new		(void);
+GtkWidget*	gnocam_capplet_content_new		(CappletWidget* capplet);
+
+void		gnocam_capplet_content_ok	(GnoCamCappletContent* content);
+void		gnocam_capplet_content_revert	(GnoCamCappletContent* content);
+void		gnocam_capplet_content_cancel	(GnoCamCappletContent* content);
+void		gnocam_capplet_content_try	(GnoCamCappletContent* content);
 
 END_GNOME_DECLS
 

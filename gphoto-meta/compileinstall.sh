@@ -112,9 +112,9 @@ compileinstall() {
     echo "# You may want to set the following variables to use the gphoto suite"
     echo "# installed there:"
     echo "##########################################################################"
-    echo "export PATH=\"${instroot}/bin:${PATH}\""
-    echo "export LD_LIBRARY_PATH=\"${instroot}/lib:${LD_LIBRARY_PATH}\""
-    echo "export PKG_CONFIG_PATH=\"${instroot}/lib/pkgconfig:${PKG_CONFIG_PATH}\""
+    echo "export PATH=\"${PATH}\""
+    echo "export LD_LIBRARY_PATH=\"${LD_LIBRARY_PATH}\""
+    echo "export PKG_CONFIG_PATH=\"${PKG_CONFIG_PATH}\""
     echo "########################################################################"
 }
 

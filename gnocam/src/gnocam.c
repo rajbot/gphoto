@@ -149,6 +149,10 @@ int main (int argc, char *argv[])
 		BONOBO_UI_UNSAFE_VERB ("SaveFilesAs", on_save_files_as_activate),
 		BONOBO_UI_VERB_END};
 
+	/* Use translated strings. */
+	bindtextdomain (PACKAGE, GNOME_LOCALEDIR);
+	textdomain (PACKAGE);
+
 	/* Init GNOME, glade, gnome-vfs, gconf. */
 	gnome_init (PACKAGE, VERSION, argc, argv);
 	oaf_init (argc, argv);

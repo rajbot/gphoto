@@ -2,6 +2,7 @@ src/callbacks.c
 src/cameras.c
 src/file-operations.c
 src/frontend.c
+src/gallery.c
 src/gnocam.c
 src/gphoto-extensions.c
 src/information.c
@@ -9,5 +10,9 @@ src/notification.c
 src/preferences.c
 src/preview.c
 src/properties.c
+src/utils.c
 src/libglade-i18n.c
 src/ui/gnocam-gallery.h
+src/ui/gnocam-main.h
+src/ui/gnocam-preview.h
+

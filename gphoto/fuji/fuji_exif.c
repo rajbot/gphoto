@@ -89,7 +89,7 @@ unsigned char *fuji_exif_convert(exifparser *exifdat){
 
   if (fuji_debug) printf("New Offset is %d bytes\n",offset);
 
-  /* Jump to image data */
+  /* Jump to thumbnail image data */
   exifimg=exifdat->ifds[1];
 
   /* Copy number of entries */
@@ -100,9 +100,24 @@ unsigned char *fuji_exif_convert(exifparser *exifdat){
 
   if (fuji_debug) printf("Entry is %d \n",entry);
 
+  /* See if thumb is a JPEG */
+  tmp=getintval(exifimg,EXIF_JPEGInterchangeFormat); /*imagedata start*/
+  if (tmp>0) { /* jpeg image */
+    if (fuji_debug) fprintf(stderr,"Found jpeg thumb data\n");
+    dsize=getintval(exifimg,EXIF_JPEGInterchangeFormatLength);
+    if (dsize==-1){
+      fprintf(stderr,"No Jpeg size tag for thumbnail, skipping\n");
+      return(NULL);
+    };
+    imagedata=exifdat->data+tmp;
+    memcpy(newimg,imagedata,dsize);
+    return(newimg);
+  };
+
+  /* Try a TIFF */
   tmp=getintval(exifimg,EXIF_StripOffsets); /*imagedata start*/
   if (tmp==-1) {
-    fprintf(stderr,"fuji_exif: Tiff data not found, skipping\n");
+    fprintf(stderr,"fuji_exif: Tiff or jpeg data not found, skipping\n");
     return(NULL);
   };
   imagedata=exifdat->data+tmp;

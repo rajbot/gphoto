@@ -230,7 +230,7 @@ int getintval(unsigned char *data, int tagnum){
  }while((i<numtags)&&(tag!=tagnum));
 
  if(tag!=tagnum) {
-   printf("Tag %d not found\n",tagnum);
+   if (exif_debug) fprintf(stderr,"Tag %d not found\n",tagnum);
    return(-1);
  };
 
@@ -342,7 +342,7 @@ int stat_exif(exifparser *exifdata){
 
   exifdata->ifdcnt=-1;
 
-  /*Step through each IFD (looks like there should be only 2)*/
+  /*Step through each IFD (looks like there should be 2 or 3)*/
   do{
     exifdata->ifdcnt++;
     exifdata->ifds[exifdata->ifdcnt]     = exifdata->data+offset;
@@ -412,7 +412,7 @@ void setval(unsigned char *data,int tagind,long newval){
 long next_ifd(unsigned char *exif,int num){
   int offset=(exif[num]+(exif[num+1]<<8))*12+num+2;
 
-  if (exif_debug) printf("nifd,offset=%d\n",offset);
+  if (exif_debug) printf("next_ifd,offset=%d\n",offset);
 
   return(lilend(exif+offset,4));
 };

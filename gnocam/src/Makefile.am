@@ -1,5 +1,5 @@
 
-SUBDIRS = stock ui
+SUBDIRS = ui
 
 gladedir = $(datadir)/$(PACKAGE)/
 

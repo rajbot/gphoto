@@ -121,8 +121,8 @@ if $try_capplet; then
 	AC_MSG_CHECKING(for capplet libraries)
 	if gnome-config --libs capplet > /dev/null 2>&1; then
 		AC_MSG_RESULT(found)
-		CAPPLET_LIBS="$GCONF_LIBS `gnome-config --libs capplet gal gnomeui gdk_pixbuf bonobo`"
-		CAPPLET_CFLAGS="$GCONF_CFLAGS `gnome-config --cflags capplet gal gnomeui gdk_pixbuf bonobo`"
+		CAPPLET_LIBS="$GCONF_LIBS `gnome-config --libs capplet gal gnomeui gdk_pixbuf bonobo oaf`"
+		CAPPLET_CFLAGS="$GCONF_CFLAGS `gnome-config --cflags capplet gal gnomeui gdk_pixbuf bonobo oaf`"
 		AC_SUBST(CAPPLET_LIBS)
 		AC_SUBST(CAPPLET_CFLAGS)
 		have_capplet=true
@@ -148,8 +148,8 @@ if $try_applet; then
 	AC_MSG_CHECKING(for applet libraries)
 	if gnome-config --libs applets > /dev/null 2>&1; then
 		AC_MSG_RESULT(found)
-		APPLET_LIBS="`gnome-config --libs applets bonobo gdk_pixbuf`"
-		APPLET_CFLAGS="`gnome-config --cflags applets bonobo gdk_pixbuf`"
+		APPLET_LIBS="`gnome-config --libs applets bonobo gdk_pixbuf oaf`"
+		APPLET_CFLAGS="`gnome-config --cflags applets bonobo gdk_pixbuf oaf`"
 		AC_SUBST(APPLET_LIBS)
 		AC_SUBST(APPLET_CFLAGS)
 		applet_msg=yes
@@ -160,8 +160,8 @@ if $try_applet; then
 fi
 AM_CONDITIONAL(APPLET, $have_applet)
 
-EXTRA_GNOME_CFLAGS="`gnome-config --cflags bonobo bonobox bonobox_print print gal gnome gnomeui oaf bonobo_conf`"
-EXTRA_GNOME_LIBS="`gnome-config --libs bonobo bonobox bonobox_print print gal gnome gnomeui oaf bonobo_conf`"
+EXTRA_GNOME_CFLAGS="`gnome-config --cflags oaf bonobo bonobox bonobox_print print gal gnome gnomeui oaf bonobo_conf`"
+EXTRA_GNOME_LIBS="`gnome-config --libs oaf bonobo bonobox bonobox_print print gal gnome gnomeui oaf bonobo_conf`"
 AC_SUBST(EXTRA_GNOME_CFLAGS)
 AC_SUBST(EXTRA_GNOME_LIBS)
 

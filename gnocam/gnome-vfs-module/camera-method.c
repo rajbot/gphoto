@@ -60,6 +60,7 @@ static GnomeVFSResult
 get_camera (GnomeVFSURI *uri, Camera **camera)
 {
 	CamerasEntry *entry;
+	CameraAbilities abilities;
 	const gchar *host;
 	GSList *list, *sl;
 	guint i;
@@ -95,16 +96,19 @@ printf ("No. Camera isn't in cache.\n");
 					   "/apps/" PACKAGE "/autodetect",
 					   NULL) &&
 		    (g_slist_length (list) == 3)) {
-			gp_camera_set_model (*camera,
-					     g_slist_nth_data (list, 1));
+			gp_camera_abilities_by_name (g_slist_nth_data (list, 1),
+						     &abilities);
+			gp_camera_set_abilities (*camera, abilities);
 			gp_camera_set_port_name (*camera,
 						 g_slist_nth_data (list, 2));
 		}
 	} else 
 		for (i = 0; i < g_slist_length (list); i += 3)
 			if (!strcmp (g_slist_nth_data (list, i), host)) {
-				gp_camera_set_model (*camera,
-					g_slist_nth_data (list, i + 1));
+				gp_camera_abilities_by_name (
+					g_slist_nth_data (list, i + 1),
+					&abilities);
+				gp_camera_set_abilities (*camera, abilities);
 				gp_camera_set_port_name (*camera, 
 					g_slist_nth_data (list, i + 2));
 printf ("Found %s in database!\n", host);

@@ -32,9 +32,11 @@ do
 		check_Makefile.am \
 		check_configure.in
 	do
-		if "$check" "$file"; then
+		"$check" "$file"
+		status="$?"
+		if [ "$status" -gt 0 ]; then
 			error_files="$error_files $file"
-			error_count=$(( $error_count + 1 ))
+			error_count=$(( $error_count + $status ))
 		fi
 	done
 

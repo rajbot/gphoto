@@ -1,3 +1,8 @@
+2002-11-15  Lutz Müller <lutz@users.sourceforge.net>
+
+	* applets/*: The code does not only compile, the applet is now even
+	  visible.
+
 2002-11-14  Lutz Müller <lutz@users.sourceforge.net>
 
 	The beast compiles again.

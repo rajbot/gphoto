@@ -1,12 +1,14 @@
 
-INCLUDES =\
- -I$(top_srcdir)\
- -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
- -DIMAGEDIR=\"$(prefix)/share/pixmaps\"\
- -DGNOMELOCALEDIR=\""$(datadir)/locale"\"\
+INCLUDES =					\
+ -I$(top_srcdir)				\
+ -DG_LOG_DOMAIN=\"$(PACKAGE)\"			\
+ -DIMAGEDIR=\"$(prefix)/share/pixmaps/\"		\
+ -DUIDIR="\"$(datadir)/$(PACKAGE)/ui/\""	\
+ -DGNOMELOCALEDIR=\""$(datadir)/locale"\"	\
  $(APPLET_CFLAGS)
 
 libexec_PROGRAMS = gnocam-applet
+gnocam_applet_LDADD = $(APPLET_LIBS)
 
 CORBA_GENERATED = GnoCam.h GnoCam-common.c GnoCam-stubs.c
 
@@ -34,6 +36,10 @@ EXTRA_DIST = GNOME_GnoCamApplet.server.in.in
 $(server_in_files): $(server_in_files:.server.in=.server.in.in)
 	sed -e "s|\@LIBEXECDIR\@|$(libexecdir)|; s|\@PREFIX\@|$(prefix)|;" $< > $@
 
+uidir   = $(datadir)/$(PACKAGE)/ui
+ui_DATA = GNOME_GnoCamApplet.xml
+
 BUILT_SOURCES = $(CORBA_GENERATED) \
 	GNOME_GnoCamApplet.server GNOME_GnoCamApplet.server.in
 CLEANFILES = $(BUILT_SOURCES)
+

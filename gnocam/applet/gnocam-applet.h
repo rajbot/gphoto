@@ -25,6 +25,6 @@ struct _GnoCamAppletClass
 
 GType gnocam_applet_get_type (void);
 
-GnoCamApplet *gnocam_applet_new (void);
+void  gnocam_applet_create_ui (GnoCamApplet *);
 
 #endif

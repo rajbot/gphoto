@@ -1,4 +1,3 @@
-src/callbacks.c
 src/cameras.c
 src/file-operations.c
 src/frontend.c

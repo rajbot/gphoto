@@ -9,6 +9,7 @@
 #include "gphoto-extensions.h"
 #include "gnocam.h"
 #include "cameras.h"
+#include "properties.h"
 
 /********************/
 /* Static Variables */
@@ -46,8 +47,18 @@ int gp_frontend_confirm (Camera *camera, char *message)
 
 int gp_frontend_prompt (Camera *camera, CameraWidget *window)
 {
-	//FIXME
-	return (GP_PROMPT_CANCEL);
+	frontend_data_t*	frontend_data;
+	
+	g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
+
+	/* Is the propertybox opened? */	
+	if (frontend_data->xml_properties) {
+		values_set (frontend_data->xml_properties, window);
+		return (GP_PROMPT_OK);
+	} else {
+		camera_properties (xml, camera, window);
+		return (GP_PROMPT_CANCEL);
+	}
 }
 
 static void

@@ -45,6 +45,86 @@ description_extract (gchar* description, guint* id, gchar** name, gchar** model,
 	return (TRUE);
 }
 
+CameraWidget*
+gp_widget_clone (CameraWidget* widget)
+{
+        CameraWidget*   widget_new;
+        CameraWidget*   widget_child;
+        CameraWidget*   widget_child_new = NULL;
+        gfloat          low, high, increment;
+        gint            i, j;
+        gchar*          value;
+
+        g_assert (widget != NULL);
+        g_assert ((widget_new = gp_widget_new (gp_widget_type (widget), g_strdup (gp_widget_label (widget)))) != NULL);
+
+        for (i = 0; i < gp_widget_child_count (widget); i++) {
+                widget_child = gp_widget_child (widget, i);
+                switch (gp_widget_type (widget_child)) {
+                case GP_WIDGET_SECTION:
+                        widget_child_new = gp_widget_clone (widget_child);
+                        gp_widget_append (widget_new, widget_child_new);
+                        break;
+                case GP_WIDGET_TEXT:
+			widget_child_new = gp_widget_new (gp_widget_type (widget_child), g_strdup (gp_widget_label (widget_child)));
+			gp_widget_append (widget_new, widget_child_new);
+                        value = gp_widget_value_get (widget_child);
+                        gp_widget_value_set (widget_child_new, value);
+                        break;
+                case GP_WIDGET_RANGE:
+			widget_child_new = gp_widget_new (gp_widget_type (widget_child), g_strdup (gp_widget_label (widget_child)));
+			gp_widget_append (widget_new, widget_child_new);
+                        gp_widget_range_get (widget_child, &low, &high, &increment);
+                        gp_widget_range_set (widget_child_new, low, high, increment);
+			value = gp_widget_value_get (widget_child);
+                        gp_widget_value_set (widget_child_new, value);
+                        break;
+                case GP_WIDGET_TOGGLE:
+			widget_child_new = gp_widget_new (gp_widget_type (widget_child), g_strdup (gp_widget_label (widget_child)));
+			gp_widget_append (widget_new, widget_child_new);
+			value = gp_widget_value_get (widget_child);
+                        gp_widget_value_set (widget_child_new, value);
+                        break;
+                case GP_WIDGET_RADIO:
+			widget_child_new = gp_widget_new (gp_widget_type (widget_child), g_strdup (gp_widget_label (widget_child)));
+			gp_widget_append (widget_new, widget_child_new);
+			for (j = 0; j < gp_widget_choice_count (widget_child); j++)
+			{
+				gp_widget_choice_add (widget_child_new, g_strdup (gp_widget_choice (widget_child, j)));
+			}
+			value = gp_widget_value_get (widget_child);
+                        gp_widget_value_set (widget_child_new, value);
+                        break;
+                case GP_WIDGET_MENU:
+			widget_child_new = gp_widget_new (gp_widget_type (widget_child), g_strdup (gp_widget_label (widget_child)));
+			gp_widget_append (widget_new, widget_child_new);
+			for (j = 0; j < gp_widget_choice_count (widget_child); j++)
+                        {
+                                gp_widget_choice_add (widget_child_new, g_strdup (gp_widget_choice (widget_child, j)));
+                        }
+			value = gp_widget_value_get (widget_child);
+                        gp_widget_value_set (widget_child_new, value);
+                        break;
+                case GP_WIDGET_BUTTON:
+			widget_child_new = gp_widget_new (gp_widget_type (widget_child), g_strdup (gp_widget_label (widget_child)));
+			gp_widget_append (widget_new, widget_child_new);
+			//FIXME
+			g_warning ("Not yet implemented!");
+			gp_widget_callback_set (widget_child_new, gp_widget_callback (widget_child));
+                        break;
+                case GP_WIDGET_DATE:
+			widget_child_new = gp_widget_new (gp_widget_type (widget_child), g_strdup (gp_widget_label (widget_child)));
+			gp_widget_append (widget_new, widget_child_new);
+                        value = gp_widget_value_get (widget_child);
+                        gp_widget_value_set (widget_child_new, value);
+                        break;
+                default:
+                        break;
+                }
+        }
+        return (widget_new);
+}
+
 /**
  * gp_camera_update_by_description:
  *
@@ -267,6 +347,7 @@ gp_camera_new_by_description (GladeXML *xml, gchar* description)
 	frontend_data = g_new (frontend_data_t, 1);
 	frontend_data->id = id;
 	frontend_data->name = name;
+	frontend_data->xml_properties = NULL;
 	camera->frontend_data = frontend_data;
 
 	/* Clean up. */

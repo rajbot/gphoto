@@ -29,6 +29,7 @@ gnocam_SOURCES =\
  callbacks.h callbacks.c\
  gphoto-extensions.h gphoto-extensions.c\
  preferences.h preferences.c\
+ properties.h properties.c\
  save.h save.c
 
 glade_DATA = gnocam.glade

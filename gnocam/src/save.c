@@ -12,6 +12,7 @@
 /**************/
 
 void on_reply (gint reply, gpointer data);
+
 void on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data);
 void on_fileselection_cancel_button_clicked (GtkButton *button, gpointer user_data);
 
@@ -219,7 +220,6 @@ save_all_selected (GladeXML* xml, gboolean file, gboolean ask_for_filename, gboo
 		if (ask_for_filename) save_as (xml, camera, path, filename, file);
 		else save (xml, camera, path, filename, file, temporary);
         }
-
 }
 
 

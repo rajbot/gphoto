@@ -4,6 +4,7 @@
 typedef struct {
 	guint		id;
 	gchar* 		name;
+	GladeXML*	xml_properties;
 } frontend_data_t;
 
 /* Prototypes */

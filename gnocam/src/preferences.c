@@ -13,7 +13,6 @@
 void on_button_camera_add_clicked 			(GtkButton *button, gpointer user_data);
 void on_button_camera_update_clicked 			(GtkButton *button, gpointer user_data);
 void on_button_camera_delete_clicked 			(GtkButton *button, gpointer user_data);
-void on_button_camera_properties_clicked 		(GtkButton *button, gpointer user_data);
 
 void on_dialog_preferences_button_revert_clicked 	(GtkButton *button, gpointer user_data);
 void on_dialog_preferences_button_ok_clicked 		(GtkButton *button, gpointer user_data);
@@ -53,8 +52,7 @@ on_button_camera_add_clicked (GtkButton *button, gpointer user_data)
 	gchar*		name;
 	gchar*		text[4];
 	GConfChangeSet*	change_set;
-	gchar*		camera_id;
-	gint		i;
+	gint		unused_id;
 	guint		j;
 
 	g_assert ((xml_preferences = gtk_object_get_data (GTK_OBJECT (button), "xml_preferences")) != NULL);
@@ -76,13 +74,12 @@ on_button_camera_add_clicked (GtkButton *button, gpointer user_data)
 	} else {
 	
 		/* Search for unused id. */
-		for (i = 0; ; i++) {
+		for (unused_id = 0; ; unused_id++) {
 			for (j = 0; j < clist->rows; j++) {
-				if (atoi (gtk_clist_get_row_data (clist, j)) == i) break;
+				if (GPOINTER_TO_INT (gtk_clist_get_row_data (clist, j)) == unused_id) break;
 			}
 			if (j == clist->rows) break;
 		}
-		camera_id = g_strdup_printf ("%i", i);
 
 		/* Add entry to clist. */
 		text[0] = name;
@@ -90,7 +87,7 @@ on_button_camera_add_clicked (GtkButton *button, gpointer user_data)
 		text[2] = port;
 		text[3] = speed;
 		gtk_clist_append (clist, text);
-		gtk_clist_set_row_data (clist, clist->rows - 1, camera_id);
+		gtk_clist_set_row_data (clist, clist->rows - 1, GINT_TO_POINTER (unused_id));
 
 		dialog_preferences_cameras_changed (xml_preferences);
 		dialog_preferences_update_sensitivity (xml_preferences);
@@ -175,7 +172,6 @@ on_button_camera_delete_clicked (GtkButton *button, gpointer user_data)
 		/* Remove the rows in the camera list. */
 		while (selection != NULL) {
 			row = GPOINTER_TO_INT (selection->data);
-			g_free (gtk_clist_get_row_data (clist, row));
 			gtk_clist_remove (clist, row);
 			selection = g_list_first (clist->selection);
 		}
@@ -185,12 +181,6 @@ on_button_camera_delete_clicked (GtkButton *button, gpointer user_data)
 	} else {
 		gnome_error_dialog_parented (_("Please select a camera first!"), window);
 	}
-}
-
-void 
-on_button_camera_properties_clicked (GtkButton *button, gpointer user_data)
-{
-	gnome_error_dialog ("Not yet implemented!");
 }
 
 void
@@ -442,7 +432,7 @@ dialog_preferences_cameras_update (GladeXML* xml_preferences, GSList* list_camer
 	gchar*		camera_description;
 	guint		i;
 	guint		j;
-	gchar*		camera_id;
+	gint		id;
 	guint		count;
 
 	g_assert (xml_preferences != NULL);
@@ -461,7 +451,7 @@ dialog_preferences_cameras_update (GladeXML* xml_preferences, GSList* list_camer
 			}
 		}
 		g_assert (count == 4);
-		camera_id = g_strdup (camera_description);
+		id = atoi (camera_description);
 		for (j = 0; camera_description[j] != '\0'; j++);
                 text[0] = g_strdup (&camera_description[++j]);
                 for (; camera_description[j] != '\0'; j++);
@@ -471,7 +461,7 @@ dialog_preferences_cameras_update (GladeXML* xml_preferences, GSList* list_camer
 	        for (; camera_description[j] != '\0'; j++);
 	        text[3] = g_strdup (&camera_description[++j]);
                 gtk_clist_append (clist, text);
-		gtk_clist_set_row_data (clist, clist->rows - 1, camera_id);
+		gtk_clist_set_row_data (clist, clist->rows - 1, GINT_TO_POINTER (id));
 		g_free (camera_description);
 		for (j = 0; j < 4; j++) g_free (text[j]);
         }
@@ -490,7 +480,7 @@ dialog_preferences_cameras_changed (GladeXML* xml_preferences)
 	gchar*		model;
 	gchar*		port;
 	gchar*		speed;
-	gchar*		camera_id;
+	gint		id;
 
 	g_assert (xml_preferences != NULL);
 	g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences"))) != NULL);
@@ -499,12 +489,12 @@ dialog_preferences_cameras_changed (GladeXML* xml_preferences)
 
         /* Build up the camera list for gconf from scratch. */
         for (i = 0; i < clist->rows; i++) {
-		camera_id = gtk_clist_get_row_data (clist, i);
+		id = GPOINTER_TO_INT (gtk_clist_get_row_data (clist, i));
 		gtk_clist_get_text (clist, i, 0, &name);
 		gtk_clist_get_text (clist, i, 1, &model);
 		gtk_clist_get_text (clist, i, 2, &port);
 		gtk_clist_get_text (clist, i, 3, &speed);
-                camera_description = g_strdup_printf ("%s\n%s\n%s\n%s\n%s", camera_id, name, model, port, speed);
+                camera_description = g_strdup_printf ("%i\n%s\n%s\n%s\n%s", id, name, model, port, speed);
 		list_cameras = g_slist_append (list_cameras, camera_description);
         }
 

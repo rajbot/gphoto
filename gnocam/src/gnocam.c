@@ -23,7 +23,6 @@ GladeXML*	xml;
 
 int main (int argc, char *argv[]) 
 {
-//	static GtkTargetEntry target_table[] = {{"text/uri-list", 0, 0}};
 	GError*		gerror = NULL;
 	GConfValue*	value = NULL;
 	guint 		notify_id_cameras, notify_id_magnification, notify_id_interpolation;
@@ -104,10 +103,6 @@ int main (int argc, char *argv[])
 	notify_id_cameras = gconf_client_notify_add (client, "/apps/" PACKAGE "/cameras", on_camera_setup_changed, NULL, NULL, NULL);
 	notify_id_magnification = gconf_client_notify_add (client, "/apps/" PACKAGE "/magnification", on_preview_setup_changed, NULL, NULL, NULL);
 	notify_id_interpolation = gconf_client_notify_add (client, "/apps/" PACKAGE "/interpolation", on_preview_setup_changed, NULL, NULL, NULL);
-
-	/* Drag'n drop stuff. */
-//FIXME
-//	gtk_drag_source_set (glade_xml_get_widget (xml, "clist_files"), GDK_BUTTON1_MASK | GDK_BUTTON3_MASK, target_table, 1, GDK_ACTION_COPY);
 
 	/* Start the event loop. */
 #ifdef GNOCAM_USES_THREADS

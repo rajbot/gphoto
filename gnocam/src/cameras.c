@@ -12,6 +12,7 @@
 #include "gnocam.h"
 #include "cameras.h"
 #include "information.h"
+#include "save.h"
 
 /**********************/
 /* External Variables */
@@ -19,6 +20,72 @@
 
 extern GladeXML*	xml;
 extern GConfClient*	client;
+
+/**************/
+/* Prototypes */
+/**************/
+
+void on_drag_data_received                      (GtkWidget* widget, GdkDragContext*context, gint x, gint y, GtkSelectionData* selection_data, guint info, guint time);
+void on_camera_tree_file_drag_data_get          (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data);
+void on_camera_tree_folder_drag_data_get        (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data);
+
+/*************/
+/* Callbacks */
+/*************/
+
+void
+on_camera_tree_file_drag_data_get (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data)
+{
+	dialog_information (_("Not yet implemented!"));
+
+        /* Check which files have been selected. */
+//      selection = g_list_first (clist->selection);
+//      filenames = g_strdup ("");
+//      for (i = 0; i < g_list_length (selection); i++) {
+//      row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
+//            gtk_clist_get_text (clist, row, 2, &file_name);
+//              g_assert (file_name != NULL);
+//              filenames_old = filenames;
+//              if (i == 0) filenames = g_strdup_printf ("file://tmp/%s\n", g_strdup (file_name));
+//              else filenames = g_strdup_printf ("%sfile://tmp/%s\n", filenames_old, g_strdup (file_name));
+//              g_free (filenames_old);
+//      }
+
+        /* Calculate size of variable filenames. */
+//      for (i =0; ; i++) if (filenames[i] == 0) break;
+
+        //FIXME: Getting files takes too much time. Previews work...
+//      save_all_selected (xml, FALSE, FALSE, TRUE);
+//      gtk_selection_data_set (selection_data, selection_data->target, 8, filenames, i + 1);
+}
+
+void
+on_camera_tree_folder_drag_data_get (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data)
+{
+	dialog_information (_("Not yet implemented!"));
+}
+
+void
+on_drag_data_received (GtkWidget *widget, GdkDragContext *context, gint x, gint y, GtkSelectionData *selection_data, guint info, guint time)
+{
+        GList*                  filenames;
+        guint                   i;
+        gchar*                  path;
+        Camera*                 camera;
+
+        g_assert ((path = gtk_object_get_data (GTK_OBJECT (widget), "path")) != NULL);
+        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (widget), "camera")) != NULL);
+
+        filenames = gnome_uri_list_extract_filenames (selection_data->data);
+        for (i = 0; i < g_list_length (filenames); i++) {
+                upload (camera, path, g_list_nth_data (filenames, i));
+        }
+        gnome_uri_list_free_strings (filenames);
+}
+
+/*************/
+/* Functions */
+/*************/
 
 /**
  * camera_tree_folder clean:
@@ -100,7 +167,7 @@ camera_tree_item_remove (GtkTreeItem* item)
 void
 camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* path)
 {
-	GtkTreeItem*	item;
+	GtkWidget*	item;
 	GtkWidget*	subtree;
 	gboolean 	root;
 	CameraList	folder_list;
@@ -108,7 +175,7 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* path)
 	gint		folder_list_count;
 	gint		file_list_count;
 	GtkTargetEntry 	target_table[] = {{"text/uri-list", 0, 0}};
-	
+
 	g_assert (camera != NULL);
 	g_assert (tree != NULL);
 	g_assert (path != NULL);
@@ -117,14 +184,15 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* path)
 	root = (strcmp ("/", path) == 0);
 
 	/* Create the new item. */
-	if (root) item = GTK_TREE_ITEM (gtk_tree_item_new_with_label (((frontend_data_t*) camera->frontend_data)->name));
-	else item = GTK_TREE_ITEM (gtk_tree_item_new_with_label (path));
-        gtk_widget_show (GTK_WIDGET (item));
-        gtk_tree_append (tree, GTK_WIDGET (item));
+	if (root) item = gtk_tree_item_new_with_label (((frontend_data_t*) camera->frontend_data)->name);
+	else item = gtk_tree_item_new_with_label (path);
+        gtk_widget_show (item);
+        gtk_tree_append (tree, item);
 
         /* For drag and drop. */
         //FIXME: Right now, only drops onto the camera (= root folder) work. Why?!?
-        gtk_drag_dest_set (GTK_WIDGET (item), GTK_DEST_DEFAULT_ALL, target_table, 1, GDK_ACTION_COPY);
+        gtk_drag_dest_set (item, GTK_DEST_DEFAULT_ALL, target_table, 1, GDK_ACTION_COPY);
+	gtk_drag_source_set (item, GDK_BUTTON1_MASK | GDK_BUTTON3_MASK, target_table, 1, GDK_ACTION_COPY);
 
         /* Connect the signals. */
         gtk_signal_connect (GTK_OBJECT (item), "drag_data_received", GTK_SIGNAL_FUNC (on_drag_data_received), NULL);
@@ -134,6 +202,7 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* path)
         gtk_signal_connect (GTK_OBJECT (item), "deselect", GTK_SIGNAL_FUNC (on_tree_item_deselect), NULL);
 	if (root) gtk_signal_connect (GTK_OBJECT (item), "button_press_event", GTK_SIGNAL_FUNC (on_tree_item_camera_button_press_event), NULL);
 	else gtk_signal_connect (GTK_OBJECT (item), "button_press_event", GTK_SIGNAL_FUNC (on_tree_item_folder_button_press_event), NULL);
+	gtk_signal_connect (GTK_OBJECT (item), "drag_data_get", GTK_SIGNAL_FUNC (on_camera_tree_folder_drag_data_get), NULL);
 
         /* Store some data. */
         gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
@@ -158,7 +227,38 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* path)
         subtree = gtk_tree_new ();
         gtk_widget_ref (subtree);
         gtk_widget_show (subtree);
-        gtk_tree_item_set_subtree (item, subtree);
+        gtk_tree_item_set_subtree (GTK_TREE_ITEM (item), subtree);
+}
+
+void
+camera_tree_file_add (GtkTree* tree, Camera* camera, gchar* path, gchar* filename)
+{
+	GtkWidget*	item;
+	GtkTargetEntry  target_table[] = {{"text/uri-list", 0, 0}};
+
+	g_assert (tree != NULL);
+	g_assert (camera != NULL);
+	g_assert (path != NULL);
+	g_assert (filename != NULL);
+	
+	/* Add the file to the tree. */
+        item = gtk_tree_item_new_with_label (filename);
+        gtk_widget_show (item);
+        gtk_tree_append (tree, item);
+
+	/* Drag and Drop */
+	gtk_drag_source_set (item, GDK_BUTTON1_MASK | GDK_BUTTON3_MASK, target_table, 1, GDK_ACTION_COPY);
+
+        /* Store some data. */
+        gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
+        gtk_object_set_data (GTK_OBJECT (item), "path", g_strdup (path));
+        gtk_object_set_data (GTK_OBJECT (item), "filename", g_strdup (filename));
+
+        /* Connect the signals. */
+        gtk_signal_connect (GTK_OBJECT (item), "select", GTK_SIGNAL_FUNC (on_tree_item_select), NULL);
+        gtk_signal_connect (GTK_OBJECT (item), "deselect", GTK_SIGNAL_FUNC (on_tree_item_deselect), NULL);
+        gtk_signal_connect (GTK_OBJECT (item), "button_press_event", GTK_SIGNAL_FUNC (on_tree_item_file_button_press_event), NULL);
+	gtk_signal_connect (GTK_OBJECT (item), "drag_data_get", GTK_SIGNAL_FUNC (on_camera_tree_file_drag_data_get), NULL);
 }
 
 /**

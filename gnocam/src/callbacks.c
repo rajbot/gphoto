@@ -41,8 +41,6 @@ void on_exit_activate 			(GtkMenuItem* menuitem, gpointer user_data);
 void on_preferences_activate 		(GtkMenuItem* menuitem, gpointer user_data);
 void on_about_activate 			(GtkMenuItem* menuitem, gpointer user_data);
 
-//void on_clist_files_drag_data_get (GtkWidget *widget, GdkDragContext *context, GtkSelectionData *selection_data, guint info, guint time, gpointer data);
-
 void on_camera_tree_popup_file_delete_activate 		(GtkMenuItem* menuitem, gpointer user_data);
 void on_camera_tree_popup_file_save_file_activate 	(GtkMenuItem* menuitem, gpointer user_data);
 void on_camera_tree_popup_file_save_file_as_activate 	(GtkMenuItem* menuitem, gpointer user_data);
@@ -56,15 +54,12 @@ void on_capture_video_activate 		(GtkMenuItem* menuitem, gpointer user_data);
 
 void on_camera_tree_popup_folder_upload_file_activate		(GtkMenuItem* menuitem, gpointer user_data);
 
-void on_tree_item_deselect (GtkTreeItem* item, gpointer user_data);
-void on_tree_item_select (GtkTreeItem* item, gpointer user_data);
-
 void on_duration_reply (gchar *string, gpointer user_data);
 
 void on_app_preview_close_activate 	(GtkMenuItem* menuitem, gpointer user_data);
 void on_app_preview_save_activate 	(GtkMenuItem* menuitem, gpointer user_data);
 void on_app_preview_save_as_activate 	(GtkMenuItem* menuitem, gpointer user_data);
-void on_app_preview_refresh_activate (GtkMenuItem* menuitem, gpointer user_data);
+void on_app_preview_refresh_activate 	(GtkMenuItem* menuitem, gpointer user_data);
 
 void on_app_preview_button_refresh_clicked 	(GtkButton* button, gpointer user_data);
 void on_app_preview_button_save_clicked 	(GtkButton* button, gpointer user_data);
@@ -145,48 +140,6 @@ on_about_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
 	g_assert (glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "about") != NULL);
 }
-
-//void
-//on_clist_files_drag_data_get (
-//	GtkWidget *widget, 
-//	GdkDragContext *context, 
-//	GtkSelectionData *selection_data, 
-//	guint info, 
-//	guint time, 
-//	gpointer data)
-//{
-//	GladeXML *xml;
-//	gchar *filenames, *filenames_old;
-//	GList *selection;
-//	GtkCList *clist;
-//	gchar *file_name;
-//	gint i, row;
-
-//	xml = gtk_object_get_data (GTK_OBJECT (widget), "xml");
-//	g_assert (xml != NULL);
-//	clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"));
-//	g_assert (clist != NULL);
-
-        /* Check which files have been selected. */
-//	selection = g_list_first (clist->selection);
-//	filenames = g_strdup ("");
-//      for (i = 0; i < g_list_length (selection); i++) {
-//	row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
-//	      gtk_clist_get_text (clist, row, 2, &file_name);
-//		g_assert (file_name != NULL);
-//		filenames_old = filenames;
-//		if (i == 0) filenames = g_strdup_printf ("file://tmp/%s\n", g_strdup (file_name));
-//		else filenames = g_strdup_printf ("%sfile://tmp/%s\n", filenames_old, g_strdup (file_name));
-//		g_free (filenames_old);
-//	}
-
-	/* Calculate size of variable filenames. */
-//	for (i =0; ; i++) if (filenames[i] == 0) break;
-
-	//FIXME: Getting files takes too much time. Previews work...
-//	save_all_selected (xml, FALSE, FALSE, TRUE);
-//	gtk_selection_data_set (selection_data, selection_data->target, 8, filenames, i + 1);
-//}
 
 void 
 on_camera_tree_popup_folder_upload_file_activate (GtkMenuItem* menuitem, gpointer user_data)
@@ -305,24 +258,6 @@ on_tree_item_folder_button_press_event (GtkWidget *widget, GdkEventButton *event
 }
 
 void
-on_drag_data_received (GtkWidget *widget, GdkDragContext *context, gint x, gint y, GtkSelectionData *selection_data, guint info, guint time)
-{
-        GList*			filenames;
-        guint 			i;
-        gchar*			path;
-	Camera*			camera;
-
-	g_assert ((path = gtk_object_get_data (GTK_OBJECT (widget), "path")) != NULL);
-	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (widget), "camera")) != NULL);
-
-        filenames = gnome_uri_list_extract_filenames (selection_data->data);
-        for (i = 0; i < g_list_length (filenames); i++) {
-		upload (camera, path, g_list_nth_data (filenames, i));
-        }
-        gnome_uri_list_free_strings (filenames);
-}
-
-void
 on_tree_item_expand (GtkTreeItem* tree_item, gpointer user_data)
 {
 	CameraList		folder_list, file_list;
@@ -333,7 +268,6 @@ on_tree_item_expand (GtkTreeItem* tree_item, gpointer user_data)
 	gchar*			new_path;
 	gint			folder_list_count, file_list_count;
 	gint			i;
-	GtkWidget*		item;
 
 	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (tree_item), "camera")) != NULL);
 	g_assert ((path = gtk_object_get_data (GTK_OBJECT (tree_item), "path")) != NULL);
@@ -373,22 +307,7 @@ on_tree_item_expand (GtkTreeItem* tree_item, gpointer user_data)
 	if (file_list_count > 0) {
 		for (i = 0; i < file_list_count; i++) {
 			file_list_entry = gp_list_entry (&file_list, i);
-
-			/* Add the file to the tree. */
-			item = gtk_tree_item_new_with_label (file_list_entry->name);
-			gtk_widget_show (item);
-			gtk_tree_append (GTK_TREE (tree_item->subtree), item);
-
-			/* Store some data. */
-			gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
-			gtk_object_set_data (GTK_OBJECT (item), "path", g_strdup (path));
-			gtk_object_set_data (GTK_OBJECT (item), "filename", g_strdup (file_list_entry->name));
-			gtk_object_set_data (GTK_OBJECT (item), "file_list_count", GINT_TO_POINTER (file_list_count));
-
-			/* Connect the signals. */
-			gtk_signal_connect (GTK_OBJECT (item), "select", GTK_SIGNAL_FUNC (on_tree_item_select), NULL);
-			gtk_signal_connect (GTK_OBJECT (item), "deselect", GTK_SIGNAL_FUNC (on_tree_item_deselect), NULL);
-			gtk_signal_connect (GTK_OBJECT (item), "button_press_event", GTK_SIGNAL_FUNC (on_tree_item_file_button_press_event), NULL);
+			camera_tree_file_add (GTK_TREE (tree_item->subtree), camera, path, file_list_entry->name);
 		}
 	}
 }

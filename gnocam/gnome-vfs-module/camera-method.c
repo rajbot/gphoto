@@ -564,7 +564,9 @@ static GnomeVFSResult do_check_same_fs (
 	GnomeVFSContext*                context)
 {
 	g_print ("do_check_same_fs\n");
-	return (GNOME_VFS_ERROR_INTERNAL);
+
+	*same_fs_return = !strcmp (gnome_vfs_uri_get_host_name (a), gnome_vfs_uri_get_host_name (b));
+	return (GNOME_VFS_OK);
 }
 
 static GnomeVFSResult do_set_file_info (

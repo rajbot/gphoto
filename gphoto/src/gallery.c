@@ -40,6 +40,11 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.18  1999/08/11 15:03:05  ole
+ * 999-08-11  Ole Aamot  <oleaa@ifi.uio.no>
+ *
+ * 	* Fixes for HTML 4.0 compliance
+ *
  * Revision 1.17  1999/07/03 20:17:09  scottf
  * rehashed the confirmation of overwrite to be more modular.
  * fixed small gallery bugs. this is a good release candidate.
@@ -460,8 +465,8 @@ Please install/move gallery themes there.");
 				sprintf(thumbnail_number, "%03i", i+1);
 			} else {
 				sprintf(thumbnail, 
-	"<a href=\"picture-%03i.html\"><img src=\"thumbnail-%03i.%s\"><\\/a>",
-					i+1, i+1, im->image_type);
+	"<a href=\"picture-%03i.html\"><img alt=\"%03i\" src=\"thumbnail-%03i.%s\"><\\/a>",
+					i+1, i+1, i+1, im->image_type);
 				sprintf(thumbnail_filename, "thumbnail-%03i.%s",
 					i+1, im->image_type);
 				sprintf(thumbnail_number, "%03i", i+1);
@@ -486,8 +491,8 @@ Please install/move gallery themes there.");
 				sprintf(picture_filename, "");
 				sprintf(picture_number, "%03i", i+1);}
 			   else {
-				sprintf(picture, "<img src=\"picture-%03i.%s\">",
-                                	i+1, im->image_type);
+				sprintf(picture, "<img alt=\"%03i\" src=\"picture-%03i.%s\">",
+                                	i+1, i+1, im->image_type);
                         	sprintf(picture_filename, "picture-%03i.%s",
                                 	i+1, im->image_type);
 				sprintf(picture_number, "%03i", i+1);

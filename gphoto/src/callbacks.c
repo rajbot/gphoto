@@ -357,10 +357,10 @@ void appendpic (int picNum, int thumbnail, int fromCamera, char *fileName) {
 	gtk_widget_show(node->image);
 
 	/* Append to notebook -------------------------------- */
-	sprintf(fname, "%i", picNum);
+	sprintf(fname, "%03i", picNum);
 	node->info = strdup(fname);
 	if (fromCamera) {
-		sprintf(fname, "Image %i", picNum);
+		sprintf(fname, "%03i", picNum);
 		label = gtk_label_new(fname);}
 	   else {
 		openName = strrchr(fileName, (int)'/');
@@ -940,7 +940,7 @@ fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
 		gtk_widget_show(node->button);
 
 		/* make a label for the thumbnail */
-		sprintf(status, "%i", i);
+		sprintf(status, "%03i", i);
 		node->info=strdup(status);
 		node->label=gtk_label_new(node->info);
 		gtk_widget_show(node->label);

@@ -31,7 +31,7 @@
 #include <usb.h>
 #include "gpio.h"
 
-#define GPIO_USB_DEBUG
+// #define GPIO_USB_DEBUG
 
 int gpio_usb_list(gpio_device_info *list, int *count);
 int gpio_usb_init(gpio_device *dev);
@@ -173,9 +173,9 @@ int gpio_usb_clear_halt_lib(gpio_device * dev)
 
 int gpio_usb_write(gpio_device * dev, char *bytes, int size)
 {
+#ifdef GPIO_USB_DEBUG
 	int i;
 
-#ifdef GPIO_USB_DEBUG
 	printf("gpio_usb_write(): ");
 	for (i = 0; i < size; i++)
 	  printf("%02x ",(unsigned char)bytes[i]);
@@ -187,7 +187,7 @@ int gpio_usb_write(gpio_device * dev, char *bytes, int size)
 
 int gpio_usb_read(gpio_device * dev, char *bytes, int size)
 {
-	int i, ret;
+	int ret;
 
 	ret = usb_bulk_read(dev->device_handle, dev->settings.usb.inep,
 			     bytes, size, dev->timeout);
@@ -195,10 +195,14 @@ int gpio_usb_read(gpio_device * dev, char *bytes, int size)
 		return GPIO_ERROR;
 
 #ifdef GPIO_USB_DEBUG
+	{
+	int i;
+
 	printf("gpio_usb_read(timeout=%d): ", dev->timeout);
 	for (i = 0; i < ret; i++)
 	  printf("%02x ",(unsigned char)(bytes[i]));
 	printf("\n");
+	}
 #endif
 	return ret;
 }
@@ -232,10 +236,8 @@ int gpio_usb_find_device_lib(gpio_device * d, int idvendor, int idproduct)
 {
 	struct usb_bus *bus;
 	struct usb_device *dev;
-printf("here\n");
 	for (bus = usb_busses; bus; bus = bus->next) {
 		for (dev = bus->devices; dev; dev = dev->next) {
-printf("vendor=%x product=%x\n", dev->descriptor.idVendor, dev->descriptor.idProduct);
 			if ((dev->descriptor.idVendor == idvendor) &&
 			    (dev->descriptor.idProduct == idproduct)) {
 				d->usb_device = dev;

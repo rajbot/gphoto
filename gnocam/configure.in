@@ -147,6 +147,7 @@ capplet/help/Makefile
 capplet/help/C/Makefile
 libgnocam/Makefile
 tests/Makefile
+idl/gnocam.pc
 ])
 
 dnl ---------------------------------------------------------------------------

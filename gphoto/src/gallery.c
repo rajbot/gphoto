@@ -40,6 +40,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.7  1999/06/19 15:32:57  ole
+ * Generated SUPPORTED from http://www.gphoto.org/cameras.php3
+ *
  * Revision 1.6  1999/06/15 19:44:32  scottf
  * various updates to headers and sources
  * added constrain proportions to resize
@@ -306,6 +309,7 @@ Please install/move gallery themes there.");
 
 	cbutton = gtk_button_new_with_label("Cancel");
 	gtk_widget_show(cbutton);
+        GTK_WIDGET_SET_FLAGS (cbutton, GTK_CAN_DEFAULT);
 	gtk_box_pack_start_defaults(
 		GTK_BOX(GTK_DIALOG(dialog)->action_area), cbutton);
 	gtk_widget_show(dialog);

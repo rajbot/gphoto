@@ -1,0 +1,243 @@
+Supported Camera Models
+http://www.gphoto.org/cameras.php3
+
+- Agfa ePhoto (307, 780, 1280, 1680)
+
+  Protocol details by Eugene Crosser <crosser@average.org>,
+  gPhoto library by Scott Fritzinger <scottf@scs.unr.edu>
+
+  GPL'ed library source code in CVS
+
+  Verifications:
+  Agfa ePhoto 307: Gary del Valle <gdv@bewellnet.com>
+  Agfa ePhoto 780: Eric Berenguier <bereng@cybercable.fr> and
+                   <koch@math.utexas.edu>
+  Agfa ePhoto 1280: Peter Kaempf <pkaempf@kaempf.ch> and 
+                    Nick Bailey <n.j.bailey@leed.ac.uk>
+  Agfa ePhoto 1680: Richard Caley <rjc@cstr.ed.ac.uk>
+
+- Casio QV (10, 11, 100, 200)
+
+  Protocol details by Gary Ross <gdr@hooked.net>,
+  gPhoto library by Gary Ross <gdr@hooked.net>
+
+  GPL'ed library source code in CVS
+
+  Verifications:
+  Casio QV-10: Gary Ross <gdr@hooked.net>
+  Casio QV-11: Reklaw <reklaw@disinfo.net>
+  Casio QV-100: Rolf Offermanns <rolf@kawo2.rwth-aachen.de>
+  Casio QV-200: Nils Faerber <nils@unix-ag.org>
+
+- Canon PowerShot ()
+
+  Protocol details by ,
+  gPhoto library by
+
+  Henri Bergius <Henri.Bergius@iki.fi> has offered to help an already
+  existing camera support project, so if you are working on a Canon A5
+  or other Canon drivers, please contact the gphoto-devel mailinglist.
+
+  Verifications:
+  No reported success yet. Please notify us.
+
+- Epson PhotoPC (500, 600, 700)
+
+  Protocol details by Eugene Crosser <crosser@average.org>,
+  gPhoto library by Scott Fritzinger <scottf@scs.unr.edu>
+
+  GPL'ed library source code in CVS
+
+  Verifications:
+  Epson PhotoPC 500: Rene Adad <adren@wanadoo.fr>
+  Epson PhotoPC 600: Shunsuke Sumitani <blunted@purdue.edu>
+  Epson PhotoPC 700: Berjoan Damien <damien@casm.insa-lyon.fr> and
+                     Yann Vernier <yann@algonet.se>
+
+- Fuji (DS-7, DX-5)
+
+  Protocol details by Matt Martin <matt.martin@ieee.org>,
+  gPhoto library by Matt Martin <matt.martin@ieee.org>
+
+  GPL'ed library source code in CVS
+
+  Verifications:
+  Fuji DS-7: Matt Martin <matt.martin@ieee.org>
+  Fuji DX-5: Thomas Kuehn <th.kuehn@fh-wolfenbuettel.de>
+
+- Hewlett Packard (C20, C30)
+
+  Protocol details by Jesper Skov <jskov@cygnus.co.uk>,
+  gPhoto library by Phill Hugo <plh102@york.ac.uk>
+
+  GPL'ed library source code in CVS
+
+  Verifications:
+  HP C30: Simon Walker <simon@intent.demon.co.uk>
+
+- Kodak Digital Science (20, 25)
+
+  Protocol details by Del Simmons <del@cimedia.com>,
+  gPhoto library by Del Simmons<del@cimedia.com>
+
+  GPL'ed library source code in CVS
+
+  Verifications:
+  Kodak DC-20: Del Simmons <del@cimedia.com>
+  Kodak DC-25: Del Simmons <del@cimedia.com>
+
+- Kodak Digital Science (200+, 210)
+
+  Protocol details by Eastman Kodak Company,
+  gPhoto library by Brian Hirt <bhirt@mobygames.com>
+
+  Work in progress by the author of KDCPI, a command line perl program
+  that interfaces with the Kodak DC210.
+
+  Verifications:
+  Kodak DC-200+: William R. McDonough wrmcd@wilmcd.com
+  Kodak DC-210: Wesley (Buck) Lemke <wesley@dwave.net>
+
+- Kodak Digital Science (220, 260)
+
+  Protocol details by Eastman Kodak,
+  gPhoto library by Jim Thompson <jim.thompson@pobox.com>
+
+  In progress
+
+  Verifications:
+  No reported success yet. Please notify us.
+
+- Kodak Digital Science (240)
+
+  Protocol details by Eastman Kodak,
+  gPhoto library by Randy D. Scott <scottr@wwa.com>
+
+  Library not yet committed in CVS
+
+  Verifications:
+  Kodak DC240: Randy D. Scott <scottr@wwa.com>
+
+- Konica (Q-M100, Q-M100V)
+
+  Protocol details by Jesper Skov <jskov@cygnus.co.uk>,
+  gPhoto library by Phill Hugo <plh102@york.ac.uk>
+
+  GPL'ed library source code in CVS
+
+  Verifications:
+  Konica Q-M100: Phill Hugo <plh102@york.ac.uk>
+  Konica Q-M100V: Chris Worley <cworley@altatech.com>
+
+- Minolta dImage ()
+
+  Protocol details by Minolta,
+  gPhoto library by Gus Hartmann <hartmann@cs.wisc.edu>
+
+  Verifications:
+  No reported success yet. Please notify us.
+
+- Nikon CoolPix (900, 900S, 950)
+
+  Protocol details by Eugene Crosser <crosser@average.org>,
+  gPhoto library by Scott Fritzinger <scottf@scs.unr.edu>
+
+  GPL'ed library source code in CVS
+
+  Verifications:
+  Nikon CoolPix 900: Russ Wagner <RussWagner@worlnet.att.net>
+  Nikon CoolPix 900S: Ike Hishikawa <ike@whitedragon.org>
+  Nikon CoolPix 950: Michael C. Piantedosi <drclaw@excelr8.net>
+
+- Olympus Camedia (D-220L, D-300L, D-320L, D-340L, C-400, C-410,
+  D-500L, D-600L, C-820L, C-830L, C-840L, C-900 Zoom, C-1000L,
+  C-1400L)
+
+  Protocol details by Eugene Crosser <crosser@average.org>,
+  gPhoto library by Scott Fritzinger <scottf@scs.unr.edu>
+
+  GPL'ed library source code in CVS
+
+  Verifications:
+  Olympus D-220L: Scott Fritzinger <scottf@scs.unr.edu>
+  Olympus D-300L: Andrew Burd <fretless@bookastudios.com>
+  Olympus D-320L: Jon Stroud <jgstroud@eos.ncsu.edu>
+  Olympus D-340L: Shaun Moran <Shaun@TheMorans.com>
+  Olympus C-400L: Ole Aamot <oleaa@ifi.uio.no>
+  Olympus C-410L: Martin Preishuber <Martin.Preishuber@stuco.uni-klu.ac.at>
+  Olympus D-500L: Wylie Swanson <wswanson@pingzero.net>
+  Olympus D-600L: Wylie Swanson <wswanson@pingzero.net>
+  Olympus C-820L: Tore Halvorsen <torehalv@stud.ntnu.no>
+  Olympus C-830L: Thorkild Stray <thorkild@ifi.uio.no>
+  Olympus C-840L: Andrew Gray <andrew@mercury.demon.co.uk>
+  Olympus C-900 Zoom: Per H. Isaksen <PerHenning.Isaksen@marintek.sintef.no>
+  Olympus C-1000L: Gael LeDimet <gledimet@capgemini.fr>
+  Olympus C-1400L: Oliver Graf <ograf@fga.de>
+  Olympus C-2000Z: Verified
+
+- Philips ESP, ESP2 (2, 50, 60, 70, 80)
+
+  Protocol details by Bob Paauwe <bpaauwe@bobsplace.com>,
+  gPhoto library by Bob Paauwe <bpaauwe@bobsplace.com>
+
+  GPL'ed library source code in CVS
+
+  Verifications:
+  Philips ESP-60: Scott Matthews <overhead@charter.net>
+  Philips ESP-80: Bob Paauwe <bpaauwe@bobsplace.com>
+
+- Polaroid PDC (640)
+
+  Protocol details by Eugene Crosser <crosser@average.org>,
+  gPhoto library by Scott Fritzinger <scottf@scs.unr.edu>
+
+  GPL'ed library source code in CVS
+
+  Verifications:
+  Polaroid PDC 640: Brad Willson <cpu@ifixcomputers.com>
+
+- Ricoh RDC (4300)
+
+  Protocol details by Bob Paauwe <bpaauwe@bobsplace.com>,
+  gPhoto library by Bob Paauwe <bpaauwe@bobsplace.com>
+
+  GPL'ed library source code in CVS
+
+  Verifications:
+  Compatible with Philips ESP80: Bob Paauwe <bpaauwe@bobsplace.com>
+
+- Ricoh RDC (300Z)
+
+  Protocol details by Jun-ichiro itojun Hagino <itojun@iijlab.net>,
+  gPhoto library by Clifford Wright <cliff@snipe444.org>
+
+  GPL'ed library source code in CVS
+
+  Verifications:
+  Ricoh 300: Clifford Wright <cliff@snipe444.org>
+
+- Sanyo VPC (G210, G250)
+
+  Protocol details by Eugene Crosser <crosser@average.org>,
+  gPhoto library by Scott Fritzinger <scottf@scs.unr.edu>
+
+  GPL'ed library source code in CVS
+
+  Verifications:
+  Sanyo VPC-G210: Tim Fletcher <tim@night-shade.demon.co.uk>
+  Sanyo VPC-G250: Igor Sarychkin <igor@cccp.demon.co.uk>
+
+- Sony DSC (F1Hi)
+
+  Protocol details by ken-ichi HAYASHI <xg2k-hys@asahi-net.or.jp>,
+  gPhoto library by M. Adam Kendall <joker@penguinpub.com>
+
+  GPL'ed library source code in CVS
+
+  Verifications:
+  Sony DSC-F1Hi: M. Adam Kendall <joker@penguinpub.com>
+
+---
+
+If your model isn't listed, but works with gPhoto, please send a
+notification to gphoto-devel@gphoto.org.  Thanks!

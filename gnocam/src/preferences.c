@@ -702,7 +702,6 @@ preferences (GladeXML *xml)
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "button_camera_add")), "xml_preferences", xml_preferences);
         gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "button_camera_update")), "xml_preferences", xml_preferences);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "button_camera_delete")), "xml_preferences", xml_preferences);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "button_camera_properties")), "xml_preferences", xml_preferences);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences_button_apply")), "xml_preferences", xml_preferences);
         gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences_button_revert")), "xml_preferences", xml_preferences);
         gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences_button_cancel")), "xml_preferences", xml_preferences);

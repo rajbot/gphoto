@@ -48,7 +48,7 @@ camera_tree_item_remove (GtkTreeItem* item)
 	g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
 	g_assert ((tree = GTK_TREE (GTK_WIDGET (item)->parent)) != NULL);
 	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
-	g_assert ((frontend_data = (frontend_data_t*) frontend_data) != NULL);
+	g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
 
 	/* Root folder needs special care. */
 	root = ((!(filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) && (strcmp ("/", path) == 0));

@@ -75,11 +75,6 @@ int gpio_parallel_list(gpio_device_info *list, int *count) {
         char buf[1024];
         int x, fd, use_int=0, use_char=0;
 
-        if ((strstr(GPIO_PARALLEL_PREFIX, "%i") == NULL) &&
-            (strstr(GPIO_PARALLEL_PREFIX, "%c") == NULL))
-                /* No enumeration values */
-                return (GPIO_ERROR);
-
         for (x=GPIO_PARALLEL_RANGE_LOW; x<=GPIO_PARALLEL_RANGE_HIGH; x++) {
                 sprintf(buf, GPIO_PARALLEL_PREFIX, x);
                 fd = open (buf, O_RDONLY | O_NDELAY);

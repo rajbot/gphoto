@@ -100,11 +100,6 @@ int gpio_serial_list (gpio_device_info *list, int *count) {
 	char buf[1024];
 	int x, fd, use_int=0, use_char=0;
 
-	if ((strstr(GPIO_SERIAL_PREFIX, "%i") == NULL) &&
-	    (strstr(GPIO_SERIAL_PREFIX, "%c") == NULL))
-		/* No enumeration values */
-		return (GPIO_ERROR);
-
 	for (x=GPIO_SERIAL_RANGE_LOW; x<=GPIO_SERIAL_RANGE_HIGH; x++) {
 		sprintf(buf, GPIO_SERIAL_PREFIX, x);
 		fd = open (buf, O_RDONLY | O_NDELAY);

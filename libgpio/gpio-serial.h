@@ -7,40 +7,51 @@
 /* %i for numbers, %c for letters */
 /* also define the low and high values of the range to check for devices */
 
-#define GPIO_SERIAL_RANGE_LOW	0
-#define GPIO_SERIAL_RANGE_HIGH	32
 
 /* Linux */
 #ifdef linux
 #define GPIO_SERIAL_PREFIX "/dev/ttyS%i"
+#define GPIO_SERIAL_RANGE_LOW	0
+#define GPIO_SERIAL_RANGE_HIGH	32
 #endif
 
 /* BSD */
 #if defined(__FreeBSD__) || defined(__NetBSD__)
 #define GPIO_SERIAL_PREFIX "/dev/tty0%i"
+#define GPIO_SERIAL_RANGE_LOW	0
+#define GPIO_SERIAL_RANGE_HIGH	32
 #endif
 
 /* Solaris */
 #ifdef sun
 #define GPIO_SERIAL_PREFIX "/dev/ttya%i"
+#define GPIO_SERIAL_RANGE_LOW	0
+#define GPIO_SERIAL_RANGE_HIGH	32
 #endif
 
 /* BeOS */
 #ifdef beos
 /* ????????????? */
 #define GPIO_SERIAL_PREFIX NULL
+#define GPIO_SERIAL_RANGE_LOW	0
+#define GPIO_SERIAL_RANGE_HIGH	0
 #endif
 
 /* Windows */
 #ifdef WIN
 #define GPIO_SERIAL_PREFIX "COM%i:"
+#define GPIO_SERIAL_RANGE_LOW	0
+#define GPIO_SERIAL_RANGE_HIGH	32
 #endif
 
 /* Others? */
 
 /* Default */
 #ifndef GPIO_SERIAL_PREFIX
-#define GPIO_SERIAL_PREFIX NULL
+#warning GPIO_SERIAL_PREFIX not defined. Enumeration will fail
+#define GPIO_SERIAL_PREFIX 	NULL
+#define GPIO_SERIAL_RANGE_LOW	0
+#define GPIO_SERIAL_RANGE_HIGH	0
 #endif
 
 /* Serial port specific settings */
@@ -64,7 +75,5 @@ extern struct gpio_operations gpio_serial_operations;
 
 
 #endif /* _GPIO_SERIAL_H_ */
-
-
 
 

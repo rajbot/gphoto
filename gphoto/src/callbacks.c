@@ -394,12 +394,31 @@ gint delete_event (GtkWidget *widget, GdkEvent *event, gpointer data) {
 /* Callbacks -------------------------------------------------
    ----------------------------------------------------------- */
 
+
+void port_dialog_update(GtkWidget *entry, GtkWidget *label) {
+
+	int i=0;
+	char model[60];
+
+	sprintf(model, "%s", gtk_entry_get_text(GTK_ENTRY(entry)));
+
+	while (strlen(cameras[i].name) > 0) {
+                if (strcmp(model, cameras[i].name) == 0) {
+			gtk_label_set_text(GTK_LABEL(label),
+			(*cameras[i].library->description)());
+			return;
+                }
+		i++;
+        }
+
+}
+
 void port_dialog() {
 
 	GtkWidget *dialog, *label, *button, *cbutton, *toggle;
 	GtkWidget *port0, *port1, *port2, *port3, *other, *ent_other;
 	GtkWidget *hbox, *vbox, *vseparator;
-	GtkWidget *combo;
+	GtkWidget *combo, *description;
 	GSList *group;
 	GList *dlist, *list;
 	GtkObject *olist_item;
@@ -452,6 +471,13 @@ void port_dialog() {
 	gtk_entry_set_text(GTK_ENTRY(GTK_COMBO(combo)->entry),
 		camera_model);
 	gtk_entry_set_editable(GTK_ENTRY(GTK_COMBO(combo)->entry),FALSE);
+
+	description = gtk_label_new("");
+	gtk_widget_show(description);
+	gtk_box_pack_start(GTK_BOX(vbox), description, FALSE, FALSE, 0);
+	gtk_signal_connect(GTK_OBJECT(GTK_COMBO(combo)->entry),
+		"changed", GTK_SIGNAL_FUNC(port_dialog_update), 
+		(gpointer)description);
 
 	vseparator = gtk_vseparator_new();
 	gtk_widget_show(vseparator);

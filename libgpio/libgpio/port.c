@@ -81,7 +81,7 @@ int GPIO_CLOSEDIR (GPIO_DIR dir) {
 int GPIO_IS_FILE (char *filename) {
 	struct stat st;
 
-	if (stat(filename, &st)==0)
+	if (stat(filename, &st)!=0)
 		return 0;
 	return (!S_ISDIR(st.st_mode));
 }
@@ -89,7 +89,7 @@ int GPIO_IS_FILE (char *filename) {
 int GPIO_IS_DIR (char *dirname) {
 	struct stat st;
 
-	if (stat(dirname, &st)==0)
+	if (stat(dirname, &st)!=0)
 		return 0;
 	return (S_ISDIR(st.st_mode));
 }

@@ -44,15 +44,21 @@ module GNOME {
 		};
 
 		interface Factory : Bonobo::Unknown {
-			typedef sequence<string> CameraList;
+
+			typedef sequence<string> ModelList;
+			typedef sequence<string> PortList;
 
 			exception NotFound {};
 	
-			CameraList getCameraList ();
+			ModelList getModelList ();
+			PortList  getPortList  ();
 
 			Camera getCamera ()
 				raises (NotFound, Cancelled);
-			Camera getCameraByName (in string name)
+			Camera getCameraByModel (in string model)
+				raises (NotFound);
+			Camera getCameraByModelAndPort (in string model,
+						        in string port)
 				raises (NotFound);
 		};
 	};

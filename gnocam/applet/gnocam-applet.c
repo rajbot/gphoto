@@ -11,6 +11,19 @@
 #include <gtk/gtkbutton.h>
 #include <gtk/gtkimage.h>
 #include <gtk/gtkwindow.h>
+#include <gtk/gtkstock.h>
+#include <gtk/gtklabel.h>
+#include <gtk/gtkhbox.h>
+
+#include <gconf/gconf-client.h>
+
+#include <bonobo/bonobo-exception.h>
+
+#include <panel-applet-gconf.h>
+
+#include "GnoCam.h"
+
+#include "gnocam-prefs.h"
 
 #ifdef ENABLE_NLS
 #  include <libintl.h>
@@ -31,14 +44,116 @@
 #  define N_(String) (String)
 #endif
 
-#define PARENT_TYPE PANEL_TYPE_APPLET
-static PanelAppletClass *parent_class;
+#define PARENT_TYPE G_TYPE_OBJECT
+static GObjectClass *parent_class;
+
+typedef struct _GnoCamPreferences GnoCamPreferences;
+struct _GnoCamPreferences {
+	gboolean camera_automatic;
+	gboolean connect_automatic;
+	gchar *model;
+	gchar *port;
+};
+
+struct _GnoCamAppletPrivate
+{
+	GnoCamPreferences prefs;
+
+	GNOME_GnoCam_Camera camera;
+
+	PanelApplet *applet;
+};
+
+static void
+gnocam_applet_connect (GnoCamApplet *a)
+{
+	g_return_if_fail (GNOCAM_IS_APPLET (a));
+
+	g_message ("Implement!");
+}
+
+static void
+gnocam_applet_load_preferences (GnoCamApplet *a)
+{
+	gchar *key;
+	GConfClient *client;
+
+	g_return_if_fail (GNOCAM_IS_APPLET (a));
+
+	key = panel_applet_get_preferences_key (a->priv->applet);
+	client = gconf_client_get_default ();
+	if (key && gconf_client_dir_exists (client, key, NULL)) {
+		a->priv->prefs.camera_automatic = panel_applet_gconf_get_bool (
+			a->priv->applet, "camera_automatic", NULL);
+		a->priv->prefs.connect_automatic = panel_applet_gconf_get_bool (
+			a->priv->applet, "connect_automatic", NULL);
+		free (a->priv->prefs.model);
+		a->priv->prefs.model = panel_applet_gconf_get_string (
+			a->priv->applet, "model", NULL);
+		free (a->priv->prefs.port);
+		a->priv->prefs.port = panel_applet_gconf_get_string (
+			a->priv->applet, "port", NULL);
+	}
+	g_free (key);
+	g_object_unref (client);
+
+	if (a->priv->prefs.connect_automatic && 
+	    (a->priv->camera == CORBA_OBJECT_NIL))
+		gnocam_applet_connect (a);
+}
+
+static void
+on_close_clicked (GtkButton *button, GtkDialog *dialog)
+{
+	gtk_widget_destroy (GTK_WIDGET (dialog));
+}
+
+static void
+gnocam_applet_report_error (GnoCamApplet *a, CORBA_Environment *ev)
+{
+	GtkWidget *d;
+	GtkWidget *w, *hb;
+
+	g_return_if_fail (GNOCAM_IS_APPLET (a));
+	g_return_if_fail (ev != NULL);
+
+	d = gtk_dialog_new ();
+	gtk_window_set_wmclass (GTK_WINDOW (d), "gnocam-applet",
+				"Camera Applet");
+	gtk_container_set_border_width (
+			GTK_CONTAINER (GTK_DIALOG (d)->vbox), 5);
+
+	w = gtk_button_new_from_stock (GTK_STOCK_OK);
+	gtk_widget_show (w);
+	gtk_box_pack_end (GTK_BOX (GTK_DIALOG (d)->action_area), w,
+			  FALSE, FALSE, 0);
+	g_signal_connect (G_OBJECT (w), "clicked",
+			  G_CALLBACK (on_close_clicked), d);
+
+	hb = gtk_hbox_new (FALSE, 5);
+	gtk_widget_show (hb);
+	gtk_container_add (GTK_CONTAINER (GTK_DIALOG (d)->vbox), hb);
+
+	w = gtk_image_new_from_stock (GTK_STOCK_DIALOG_ERROR,
+				      GTK_ICON_SIZE_DIALOG);
+	gtk_widget_show (w);
+	gtk_box_pack_start (GTK_BOX (hb), w, FALSE, FALSE, 0);
+
+	w = gtk_label_new (bonobo_exception_get_text (ev));
+	gtk_label_set_line_wrap (GTK_LABEL (w), TRUE);
+	gtk_widget_show (w);
+	gtk_box_pack_start (GTK_BOX (hb), w, TRUE, TRUE, 0);
+
+	gtk_widget_show (d);
+}
 
 static void
 gnocam_applet_finalize (GObject *object)
 {
 	GnoCamApplet *a = GNOCAM_APPLET (object);
 
+	g_free (a->priv->prefs.model);
+	g_free (a->priv->prefs.port);
 	g_free (a->priv);
 
 	G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -56,10 +171,80 @@ gnocam_applet_class_init (gpointer g_class, gpointer class_data)
 }
 
 static void
+on_prefs_camera_changed (GnoCamPrefs *prefs, gboolean automatic,
+			 GnoCamApplet *a)
+{
+	panel_applet_gconf_set_bool (a->priv->applet, "camera_automatic",
+				     automatic, NULL);
+	gnocam_applet_load_preferences (a);
+}
+
+static void
+on_prefs_connect_changed (GnoCamPrefs *prefs, gboolean automatic,
+			  GnoCamApplet *a)
+{
+	panel_applet_gconf_set_bool (a->priv->applet, "connect_automatic",
+				     automatic, NULL);
+	gnocam_applet_load_preferences (a);
+}
+
+static void
+on_prefs_model_changed (GnoCamPrefs *prefs, const gchar *model, GnoCamApplet *a)
+{
+	panel_applet_gconf_set_string (a->priv->applet, "model", model, NULL);
+	gnocam_applet_load_preferences (a);
+}
+
+static void
+on_prefs_port_changed (GnoCamPrefs *prefs, const gchar *port, GnoCamApplet *a)
+{
+	panel_applet_gconf_set_string (a->priv->applet, "port", port, NULL);
+	gnocam_applet_load_preferences (a);
+}
+
+static void
 gnocam_applet_properties_cb (BonoboUIComponent *uic, GnoCamApplet *a,
 			     const char verbname)
 {
-	g_message ("Implement!");
+	static GnoCamPrefs *prefs = NULL;
+	CORBA_Environment ev;
+
+	if (prefs) {
+		gtk_window_present (GTK_WINDOW (prefs));
+		return;
+	}
+
+	/* Create the dialog. */
+	CORBA_exception_init (&ev);
+	prefs = gnocam_prefs_new (a->priv->prefs.camera_automatic,
+				  a->priv->prefs.connect_automatic,
+				  a->priv->prefs.model, a->priv->prefs.port,
+				  &ev);
+	if (BONOBO_EX (&ev) || !prefs) {
+		gnocam_applet_report_error (a, &ev);
+		CORBA_exception_free (&ev);
+		return;
+	}
+	CORBA_exception_free (&ev);
+
+	/* Set up the dialog. */
+	gtk_window_set_wmclass (GTK_WINDOW (prefs), "gnocam-applet",
+				"Camera Applet");
+	gnome_window_icon_set_from_file (GTK_WINDOW (prefs),
+					 IMAGEDIR "gnocam-camera1.png");
+	g_signal_connect (prefs, "destroy", G_CALLBACK (gtk_widget_destroyed),
+			  &prefs);
+	g_signal_connect (prefs, "camera_changed",
+			  G_CALLBACK (on_prefs_camera_changed), a);
+	g_signal_connect (prefs, "connect_changed",
+			  G_CALLBACK (on_prefs_connect_changed), a);
+	g_signal_connect (prefs, "model_changed",
+			  G_CALLBACK (on_prefs_model_changed), a);
+	g_signal_connect (prefs, "port_changed",
+			  G_CALLBACK (on_prefs_port_changed), a);
+
+	/* Show the dialog. */
+	gtk_widget_show (GTK_WIDGET (prefs));
 }
 
 static void
@@ -113,28 +298,38 @@ static const BonoboUIVerb gnocam_applet_menu_verbs[] = {
 	BONOBO_UI_VERB_END
 };
 
-void
-gnocam_applet_create_ui (GnoCamApplet *a)
+GnoCamApplet *
+gnocam_applet_new (PanelApplet *applet)
 {
-	g_return_if_fail (GNOCAM_IS_APPLET (a));
+	GnoCamApplet *a;
+	GtkWidget *w;
 
-	gnome_window_icon_set_default_from_file (IMAGEDIR "gnocam-camera1.png");
+	g_return_val_if_fail (PANEL_IS_APPLET (applet), NULL);
 
-	gtk_widget_show (GTK_WIDGET (a));
+	a = g_object_new (GNOCAM_TYPE_APPLET, NULL);
+	a->priv->applet = applet;
 
-	panel_applet_setup_menu_from_file (PANEL_APPLET (a), UIDIR,
+	/* Setup menu. */
+	panel_applet_setup_menu_from_file (applet, UIDIR,
 		"GNOME_GnoCamApplet.xml", NULL, gnocam_applet_menu_verbs, a);
+
+	/* Setup widget. */
+	w = gtk_image_new_from_file (IMAGEDIR "gnocam-camera1.png");
+	gtk_widget_show (w);
+	gtk_container_add (GTK_CONTAINER (a->priv->applet), w);
+	gtk_widget_show (GTK_WIDGET (a->priv->applet));
+
+	gnocam_applet_load_preferences (a);
+
+	return (a);
 }
 
 static void
 gnocam_applet_init (GTypeInstance *instance, gpointer g_class)
 {
         GnoCamApplet *a = GNOCAM_APPLET (instance);
-	GtkWidget *w;
 
-	w = gtk_image_new_from_file (IMAGEDIR "gnocam-camera1.png");
-	gtk_widget_show (w);
-	gtk_container_add (GTK_CONTAINER (a), w);
+	a->priv = g_new0 (GnoCamAppletPrivate, 1);
 }
 
 GType

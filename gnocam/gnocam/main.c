@@ -31,11 +31,16 @@ static BonoboObject *
 gnocam_factory (BonoboGenericFactory *this, const char *oaf_iid,
 		gpointer data)
 {
+	GnoCamMain *m;
+
 	g_message ("Trying to create a new GnoCamMain...");
 
-	if (!strcmp (oaf_iid, "OAFIID:GNOME_GnoCam_Factory"))
-		return (BONOBO_OBJECT (gnocam_main_new ()));
-	else {
+	if (!strcmp (oaf_iid, "OAFIID:GNOME_GnoCam")) {
+		m = gnocam_main_new ();
+		if (!m)
+			return NULL;
+		return (BONOBO_OBJECT (m));
+	} else {
 		g_message ("Unknown OAFIID '%s'.", oaf_iid);
 		return (NULL);
 	}
@@ -48,9 +53,8 @@ main (int argc, char **argv)
 	bind_textdomain_codeset (PACKAGE, "UTF-8");
 	textdomain (PACKAGE);
 
-	if (!bonobo_init (&argc, argv))
-		g_error (_("Could not initialize Bonobo"));
+	BONOBO_FACTORY_INIT ("gnocam", VERSION, &argc, argv);
 
-	return (bonobo_generic_factory_main ("OAFIID:GNOME_GnoCam_Factory",
-					     gnocam_factory, NULL));
+	return bonobo_generic_factory_main ("OAFIID:GNOME_GnoCam_Factory",
+					    gnocam_factory, NULL);
 }

@@ -28,8 +28,21 @@ AM_GLIB_GNU_GETTEXT
 AC_PROG_INTLTOOL([0.18])
 
 dnl ---------------------------------------------------------------------------
+dnl gconf
+dnl ---------------------------------------------------------------------------
+AC_PATH_PROG(GCONFTOOL, gconftool-2, no)
+if test x"$GCONFTOOL" = xno; then
+  AC_MSG_ERROR([gconftool-2 executable not found in your path])
+fi
+AM_GCONF_SOURCE_2
+
+dnl ---------------------------------------------------------------------------
 dnl gtk+
 dnl ---------------------------------------------------------------------------
+AC_PATH_PROG(GLIB_GENMARSHAL, glib-genmarshal, no)
+if test x"$GLIB_GENMARSHAL" = xno; then
+  AC_MSG_ERROR([glib-genmarshal executable not found in your path])
+fi
 PKG_CHECK_MODULES(GTK, gtk+-2.0)
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
@@ -37,7 +50,7 @@ AC_SUBST(GTK_LIBS)
 dnl ---------------------------------------------------------------------------
 dnl panel
 dnl ---------------------------------------------------------------------------
-PKG_CHECK_MODULES(APPLET, libpanelapplet-2.0)
+PKG_CHECK_MODULES(APPLET, libpanelapplet-2.0 ORBit-2.0)
 AC_SUBST(APPLET_CFLAGS)
 AC_SUBST(APPLET_LIBS)
 

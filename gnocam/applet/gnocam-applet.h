@@ -13,18 +13,17 @@ typedef struct _GnoCamAppletClass   GnoCamAppletClass;
 
 struct _GnoCamApplet
 {
-	PanelApplet parent;
+	GObject parent;
 
 	GnoCamAppletPrivate *priv;
 };
 
 struct _GnoCamAppletClass
 {
-	PanelAppletClass parent_class;
+	GObjectClass parent_class;
 };
 
-GType gnocam_applet_get_type (void);
-
-void  gnocam_applet_create_ui (GnoCamApplet *);
+GType         gnocam_applet_get_type (void);
+GnoCamApplet *gnocam_applet_new      (PanelApplet *applet);
 
 #endif

@@ -1,0 +1,49 @@
+<gconfschemafile>
+  <schemalist>
+
+    <schema>
+      <key>/schemas/apps/gnocam-applet/prefs/camera_automatic</key>
+      <owner>gnocam-applet</owner>
+      <type>bool</type>
+      <default>true</default>
+      <locale name="C">
+        <short>Automatic detection of camera model</short>
+	<long>Automatic detection of camera model</long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/gnocam-applet/prefs/connect_automatic</key>
+      <owner>gnocam-applet</owner>
+      <type>bool</type>
+      <default>true</default>
+      <locale name="C">
+        <short>Automatic connection to the camera</short>
+	<long>Automatic connection to the camera</long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/gnocam-applet/prefs/model</key>
+      <owner>gnocam-applet</owner>
+      <type>string</type>
+      <default></default>
+      <locale name="C">
+        <short>Camera model</short>
+	<long>Camera model</long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/gnocam-applet/prefs/port</key>
+      <owner>gnocam-applet</owner>
+      <type>string</type>
+      <default></default>
+      <locale name="C">
+        <short>Port</short>
+	<long>Port</long>
+      </locale>
+    </schema>
+
+  </schemalist>
+</gconfschemafile>

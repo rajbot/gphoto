@@ -35,10 +35,11 @@ void GPInterface::initialize()
 
 
 /**
- * Ends gphoto2.
+ * Shuts down gphoto and cleans up everything.
  */
 void GPInterface::shutdown() 
 {
+    deleteTempFolder();
     gp_exit();
 }
 
@@ -52,14 +53,14 @@ void GPInterface::initCamera()
 
     /* Retrieve camera settings */
     if (gp_setting_get("qtkam", "camera", camera) != GP_OK) 
-        throw "You must choose a camera";
+        throw QString("You must choose a camera");
     
     gp_setting_get("qtkam", "port", port);
     gp_setting_get("qtkam", "speed", speed);
 
     /* Create new camera */
     if (gp_camera_new(&theCamera) != GP_OK) 
-        throw "Error creating new camera!";
+        throw QString("Error creating new camera!");
     
     /* Set camera model, port & speed settings */
     gp_camera_set_model(theCamera, camera);
@@ -69,7 +70,7 @@ void GPInterface::initCamera()
 
     /* Initialize camera */
     if (gp_camera_init(theCamera) != GP_OK) 
-        throw "Error initializing new camera!";
+        throw QString("Error initializing new camera!");
 
     /* Mark camera as initialized */
     cameraInitialized = true;
@@ -198,7 +199,7 @@ QStringList GPInterface::getSupportedCameras()
     /* Get the number of cameras */
     int num_cameras;
     if ((num_cameras = gp_camera_count())<0) 
-        throw "Can't get number of camera's!";
+        throw QString("Can't get number of camera's!");
     
     /* Build camera list */
     char* name; /* FIXME: why can't name be an array? */
@@ -221,11 +222,11 @@ QStringList GPInterface::getSupportedPorts(const QString& camera)
 
     /* Retrieve camera abilities */
     if (gp_camera_abilities_by_name(camera.latin1(),&a)!=GP_OK) 
-        throw "Cannot get abilities for camera";
+        throw QString("Cannot get abilities for camera");
 
     /* Retrieve numer of ports */
     if ((num_ports = gp_port_count_get()) < 0) 
-        throw "Cannot get number of ports";
+        throw QString("Cannot get number of ports");
 
     /* Populate port list */
     CameraPortInfo info;
@@ -258,7 +259,7 @@ QStringList GPInterface::getSupportedSpeeds(const QString& camera)
 
     /* Retrieve camera abilities */
     if (gp_camera_abilities_by_name(camera.latin1(),&a)!=GP_OK) 
-        throw "Cannot get abilities for camera";
+        throw QString("Cannot get abilities for camera");
 
     /* Populate speed list */
     for (int i = 0; a.speed[i] != 0; i++)
@@ -275,14 +276,14 @@ void GPInterface::downloadThumbs(QIconView* iconView)
     CameraList list;
      
     if (!cameraInitialized)
-        throw "Camera not initialized";
+        throw QString("Camera not initialized");
 
     /* Clear temp floder */
     initTempFolder();
 
     /* Get list of files */
     if (gp_camera_folder_list_files(theCamera, getTempFolder().latin1(), &list) != GP_OK)
-        throw "Could not retrieve picture list";
+        throw QString("Could not retrieve picture list");
 
     /* Iterate over whole list */
     count = gp_list_count(&list);
@@ -309,7 +310,7 @@ QPixmap GPInterface::downloadThumb(const char* name, const char* folder)
     /* Try downloading thumb */
     if (gp_camera_file_get(theCamera, folder, name,
                            GP_FILE_TYPE_PREVIEW, f) != GP_OK) 
-        throw "Couldn't get thumb";
+        throw QString("Couldn't get thumb");
     
     /* Construct Pixmap */
     gp_file_get_data_and_size(f,&data,&size);

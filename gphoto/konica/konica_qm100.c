@@ -41,7 +41,8 @@ static void dlprogress(void)
 int konica_qm100_initialize()
 {
    qm100_readConfigData(&qm100_configData);
-   strcpy(serial_port, qm100_configData.device);
+   if (*serial_port == '\0')
+      strcpy(serial_port, qm100_configData.device);
    qm100_setTrace();
    qm100_setTransmitSpeed();
    konica_picCounter = 0;

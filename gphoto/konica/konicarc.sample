@@ -1,3 +1,4 @@
+
 #  Camera - sets the default device/port - this is useful only
 #           for the qm100 utility
 Camera      /dev/ttyS0

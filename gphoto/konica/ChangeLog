@@ -1,3 +1,7 @@
+2000-02-29    <EdLegowski@pobox.com>
+	* Fix bug in konical_qm100.c which overrode the 
+	  name of the serial port, with internal default.
+
 1999-09-27    <EdLegowski@pobox.com>
 	* Change default speed to 57600.
 	* Add progress indicator during downloads.

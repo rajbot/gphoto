@@ -174,7 +174,7 @@ AC_SUBST(CFLAGS)
 dnl **********
 dnl libgphoto2
 dnl **********
-PKG_CHECK_MODULES(GPHOTO, libgphoto-2.0)
+PKG_CHECK_MODULES(GPHOTO, libgphoto2)
 AC_SUBST(GPHOTO_CFLAGS)
 AC_SUBST(GPHOTO_LIBS)
 

@@ -5,6 +5,38 @@
 
 #include "konica.h"
 
+enum {
+	PROP_SELF_TIMER_TIME,
+	PROP_BEEP,
+	PROP_SLIDE_SHOW_INTERVAL,
+	PROP_AUTO_OFF_TIME
+};
+
+/* Property */
+static void
+f_prop_set_val (GPFsProp *p, GPFsErr *e, GPFsVal v, void *d)
+{
+	GPPort *port = (GPPort *) d;
+
+	switch (gpfs_obj_get_id (GPFS_OBJ (p))) {
+	case PROP_SLIDE_SHOW_INTERVAL:
+		k_set_preference (port, e, K_PREFERENCE_SLIDE_SHOW_INTERVAL,
+				  v.v.v_uint);
+		break;
+	case PROP_SELF_TIMER_TIME:
+		k_set_preference (port, e, K_PREFERENCE_SELF_TIMER_TIME,
+				  v.v.v_uint);
+		break;
+	case PROP_BEEP:
+		k_set_preference (port, e, K_PREFERENCE_BEEP, v.v.v_bool);
+		break;
+	case PROP_AUTO_OFF_TIME:
+		k_set_preference (port, e, K_PREFERENCE_AUTO_OFF_TIME,
+				  v.v.v_uint);
+		break;
+	}
+}
+
 /* Property bag */
 
 static GPFsBag *
@@ -29,35 +61,50 @@ f_fs_bag_get (GPFsObj *o, GPFsErr *e, unsigned int n, void *d)
 
 	v.t = GPFS_VAL_TYPE_UINT;
 	v.v.v_uint = prefs.shutoff_time;
-	p = gpfs_prop_new (1, _("Shutoff time"),
+	p = gpfs_prop_new (v);
+	gpfs_obj_set_id (GPFS_OBJ (p), PROP_AUTO_OFF_TIME);
+	gpfs_obj_set_name_impl (GPFS_OBJ (p), _("Shutoff time"));
+	gpfs_obj_set_descr_impl (GPFS_OBJ (p),
 		_("The time after which the camera shuts itself "
-		  "off automatically."), v);
+		  "off automatically."));
 	gpfs_bag_prop_add_impl (b, p);
-
+	gpfs_prop_set_func_set_val (p, f_prop_set_val, d);
 	p->t = GPFS_ALT_TYPE_RANGE;
-	p->alt.range.min = 0;
-	p->alt.range.max = 255;
-	p->alt.range.incr = 1;
+	p->alt.range.min = 0; p->alt.range.max = 255; p->alt.range.incr = 1;
+
 	v.t = GPFS_VAL_TYPE_UINT; 
 	v.v.v_uint = prefs.self_timer_time;
-	p = gpfs_prop_new (2, _("Self timer time"),
-		_("The time after which an image is taken."), v);
+	p = gpfs_prop_new (v);
+	gpfs_obj_set_id (GPFS_OBJ (p), PROP_SELF_TIMER_TIME);
+	gpfs_obj_set_name_impl (GPFS_OBJ (p), _("Self timer time"));
+	gpfs_obj_set_descr_impl (GPFS_OBJ (p),
+		_("The time after which an image is taken."));
 	gpfs_bag_prop_add_impl (b, p);
+	gpfs_prop_set_func_set_val (p, f_prop_set_val, d);
+	p->t = GPFS_ALT_TYPE_RANGE;
+	p->alt.range.min = 0; p->alt.range.max = 255; p->alt.range.incr = 1;
 
-	v.t = GPFS_VAL_TYPE_UINT;
-	v.v.v_uint = prefs.beep;
-	p = gpfs_prop_new (3, _("Beep"),
-		_("Defines whether the camera beeps when capturing "
-		  "images."), v);
+	v.t = GPFS_VAL_TYPE_BOOL;
+	v.v.v_bool = prefs.beep;
+	p = gpfs_prop_new (v);
+	gpfs_obj_set_id (GPFS_OBJ (p), PROP_BEEP);
+	gpfs_obj_set_name_impl (GPFS_OBJ (p), _("Beep"));
+	gpfs_obj_set_descr_impl (GPFS_OBJ (p),
+		_("Defines whether the camera beeps when capturing images."));
 	gpfs_bag_prop_add_impl (b, p);
+	gpfs_prop_set_func_set_val (p, f_prop_set_val, d);
 
 	v.t = GPFS_VAL_TYPE_UINT;
 	v.v.v_uint = prefs.slide_show_interval;
-	p = gpfs_prop_new (4,
-		_("Slide show interval"),
-		_("Duration between two slides during the slide "
-		  "show."), v);
+	p = gpfs_prop_new (v);
+	gpfs_obj_set_id (GPFS_OBJ (p), PROP_SLIDE_SHOW_INTERVAL);
+	gpfs_obj_set_name_impl (GPFS_OBJ (p), _("Slide show interval"));
+	gpfs_obj_set_descr_impl (GPFS_OBJ (p),
+		_("Duration between two slides during the slide show."));
 	gpfs_bag_prop_add_impl (b, p);
+	gpfs_prop_set_func_set_val (p, f_prop_set_val, d);
+	p->t = GPFS_ALT_TYPE_RANGE;
+	p->alt.range.min = 0; p->alt.range.max = 255; p->alt.range.incr = 1;
 
 	return b;
 }

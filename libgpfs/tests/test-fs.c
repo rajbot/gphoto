@@ -56,24 +56,33 @@ func_prop_get (GPFsBag *b, GPFsErr *e, unsigned int n, void *ud)
 		gpfs_val_init (&v);
 		v.t = GPFS_VAL_TYPE_UINT;
 		v.v.v_uint = sizeof ("Hello world!");
-		i = gpfs_prop_new (0, _("Size"),
-				_("The size of the file"), v);
+		i = gpfs_prop_new (v);
+		gpfs_obj_set_id (GPFS_OBJ (i), 0);
+		gpfs_obj_set_name_impl (GPFS_OBJ (i), _("Size"));
+		gpfs_obj_set_descr_impl (GPFS_OBJ (i),
+			_("The size of the file"));
 		gpfs_val_clear (&v);
 		break;
 	case 1:
 		gpfs_val_init (&v);
 		v.t = GPFS_VAL_TYPE_STRING;
 		v.v.v_string = strdup (_("Some interface"));
-		i = gpfs_prop_new (1, _("Description"),
-				_("The description of the interface"), v);
+		i = gpfs_prop_new (v);
+		gpfs_obj_set_id (GPFS_OBJ (i), 1);
+		gpfs_obj_set_name_impl (GPFS_OBJ (i), _("Description"));
+		gpfs_obj_set_descr_impl (GPFS_OBJ (i), 
+			_("The description of the interface"));
 		gpfs_val_clear (&v);
 		break;
 	case 2:
 		gpfs_val_init (&v);
 		v.t = GPFS_VAL_TYPE_STRING;
 		v.v.v_string = strdup ("image/png");
-		i = gpfs_prop_new (2, _("Mime type"),
-				_("The mime type of the file"), v);
+		i = gpfs_prop_new (v);
+		gpfs_obj_set_id (GPFS_OBJ (i), 2);
+		gpfs_obj_set_name_impl (GPFS_OBJ (i), _("Mime type"));
+		gpfs_obj_set_descr_impl (GPFS_OBJ (i),
+				_("The mime type of the file"));
 		gpfs_val_clear (&v);
 		i->t = GPFS_ALT_TYPE_VALS;
 		i->alt.vals.vals_count = 2;

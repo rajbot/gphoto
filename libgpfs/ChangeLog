@@ -1,5 +1,10 @@
 2002-12-19  Lutz Müller <lutz@users.sourceforge.net>
 
+	* libgpfs/gpfs-prop.h: Move some functions to ...
+	* libgpfs/gpfs-obj.h: ... here.
+
+2002-12-19  Lutz Müller <lutz@users.sourceforge.net>
+
 	* libgpfs/gpfs-bag.[c,h] (gpfs_bag_[bag,prop]_add_impl): New.
 
 2002-12-18  Lutz Müller <lutz@users.sourceforge.net>

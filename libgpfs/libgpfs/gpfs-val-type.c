@@ -6,6 +6,7 @@ static struct {
 	GPFsValType t;
 	const char *name;
 } GPFsValTypeNames[] = {
+	{GPFS_VAL_TYPE_BOOL  , N_("Boolean")},
 	{GPFS_VAL_TYPE_STRING, N_("String")},
 	{GPFS_VAL_TYPE_UINT  , N_("Unsigned integer")},
 	{GPFS_VAL_TYPE_INT   , N_("Integer")},

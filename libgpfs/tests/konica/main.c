@@ -25,6 +25,8 @@ main (int argc, char **argv)
 	GPPortInfo info;
 	int n;
 	GPFsBag *b;
+	GPFsProp *prop;
+	GPFsVal v;
 
 #if 0
 	gp_log_add_func (GP_LOG_ALL, log_func, NULL);
@@ -62,6 +64,18 @@ main (int argc, char **argv)
 	printf ("... done.\n");
 
 	gpfs_bag_dump (b);
+
+	printf ("Getting first property...\n");
+	prop = gpfs_bag_prop_get (b, NULL, 0);
+	printf ("... done.\n");
+
+	printf ("Setting new value...\n");
+	gpfs_val_init (&v);
+	v.t = GPFS_VAL_TYPE_UINT;
+	v.v.v_uint = 254;
+	gpfs_prop_set_val (prop, NULL, v);
+	gpfs_val_clear (&v);
+	printf ("... done.\n");
 
 	printf ("Releasing property bag...\n");
 	gpfs_obj_unref (GPFS_OBJ (b));

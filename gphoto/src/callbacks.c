@@ -583,7 +583,7 @@ void port_dialog(void)
 #elif defined(__FreeBSD__) || defined(__NetBSD__)
 	strcpy(serial_port_prefix, "/dev/tty0");
 #elif defined(sun)
-        strcpy(serial_port_prefix, "/dev/ttya");
+        strcpy(serial_port_prefix, "/dev/tty");
 #else
 	strcpy(serial_port_prefix, "/dev/tty0");
 #endif
@@ -774,28 +774,44 @@ void port_dialog(void)
 	/* Enumerate the serial port devices */
 
 	portgroup = NULL;
-	sprintf(temp, "%s0 (COM1)", serial_port_prefix);
+#ifdef sun
+	sprintf(temp, "%sa (COM1)", serial_port_prefix);
+#else
+	sprintf(temp, "%s0 (COM1)", serial_port_prefix);	
+#endif	
 	port0 = gtk_radio_button_new_with_label(NULL, temp);
 	gtk_widget_show(port0);
 	if (strcmp(serial_port, temp)==0)
 		gtk_button_clicked(GTK_BUTTON(port0));
 
 	portgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(port0));
-	sprintf(temp, "%s1 (COM2)", serial_port_prefix);
+#ifdef sun
+	sprintf(temp, "%sb (COM2)", serial_port_prefix);
+#else
+	sprintf(temp, "%s1 (COM2)", serial_port_prefix);	
+#endif	
 	port1 = gtk_radio_button_new_with_label(portgroup, temp);
 	gtk_widget_show(port1);
 	if (strcmp(serial_port, temp)==0)
 		gtk_button_clicked(GTK_BUTTON(port1));
 
 	portgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(port1));
-	sprintf(temp, "%s2 (COM3)", serial_port_prefix);
+#ifdef sun
+	sprintf(temp, "%sc (COM3)", serial_port_prefix);
+#else
+	sprintf(temp, "%s2 (COM3)", serial_port_prefix);	
+#endif	
 	port2 = gtk_radio_button_new_with_label(portgroup, temp);
 	gtk_widget_show(port2);
 	if (strcmp(serial_port, temp)==0)
 		gtk_button_clicked(GTK_BUTTON(port2));
 
 	portgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(port2));
-	sprintf(temp, "%s3 (COM4)", serial_port_prefix);
+#ifdef sun
+	sprintf(temp, "%sd (COM4)", serial_port_prefix);
+#else
+	sprintf(temp, "%s3 (COM4)", serial_port_prefix);	
+#endif	
 	port3 = gtk_radio_button_new_with_label(portgroup, temp);
 	gtk_widget_show(port3);
 	if (strcmp(serial_port, temp)==0)
@@ -867,16 +883,32 @@ void port_dialog(void)
 		set_camera(camera_selected);
 
 		if (GTK_WIDGET_STATE(port0) == GTK_STATE_ACTIVE) {
-			sprintf(tempstring, "%s0", serial_port_prefix);
+#ifdef sun
+			sprintf(tempstring, "%sa", serial_port_prefix);
+#else
+			sprintf(tempstring, "%s0", serial_port_prefix);	
+#endif	
 			strcpy(serial_port, tempstring);
 		} else if (GTK_WIDGET_STATE(port1) == GTK_STATE_ACTIVE) {
-			sprintf(tempstring, "%s1", serial_port_prefix);
+#ifdef sun
+			sprintf(tempstring, "%sb", serial_port_prefix);
+#else
+			sprintf(tempstring, "%s1", serial_port_prefix);	
+#endif	
 			strcpy(serial_port, tempstring);
 		} else if (GTK_WIDGET_STATE(port2) == GTK_STATE_ACTIVE) {
-			sprintf(tempstring, "%s2", serial_port_prefix);
+#ifdef sun
+			sprintf(tempstring, "%sc", serial_port_prefix);
+#else
+			sprintf(tempstring, "%s2", serial_port_prefix);	
+#endif	
 			strcpy(serial_port, tempstring);
 		} else if (GTK_WIDGET_STATE(port3) == GTK_STATE_ACTIVE) {
-			sprintf(tempstring, "%s3", serial_port_prefix);
+#ifdef sun
+			sprintf(tempstring, "%sd", serial_port_prefix);
+#else
+			sprintf(tempstring, "%s4", serial_port_prefix);	
+#endif	
 			strcpy(serial_port, tempstring);
 		} else if (GTK_WIDGET_STATE(other) == GTK_STATE_ACTIVE) {
 			sprintf(tempstring, "%s",
@@ -946,7 +978,9 @@ int load_config(void)
 	/* reset to defaults, and save */
 #ifdef __NetBSD__
 	sprintf(serial_port, "/dev/tty00");
-#else   
+#elif defined(sun)   
+	sprintf(serial_port, "/dev/ttya");
+#else	
 	sprintf(serial_port, "/dev/ttyS0");
 #endif
 	sprintf(post_process_script, "");

@@ -185,6 +185,9 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* path)
 	/* Root folder needs special care. */
 	root = (strcmp ("/", path) == 0);
 
+	/* If root, ref the camera. */
+	if (root) gp_camera_ref (camera);
+
 	/* Create the new item. */
 	if (root) item = gtk_tree_item_new_with_label (((frontend_data_t*) camera->frontend_data)->name);
 	else item = gtk_tree_item_new_with_label (path);
@@ -273,14 +276,17 @@ void
 camera_tree_update (GtkTree* tree, GConfValue* value)
 {
         GSList*         list_cameras = NULL;
-        GtkObject*      object;
 	GtkTreeItem*	item;
-        GList*          tree_list;
         gchar*          description;
+	gchar*		label;
+	gchar*		name;
+	gchar*		model;
+	gchar*		port;
         gint            i;
         gint            j;
-        guint           id;
+        guint           id, speed;
         Camera*         camera;
+	gboolean	changed;
 
 	g_assert (tree != NULL);
 
@@ -290,14 +296,11 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
                 list_cameras = gconf_value_get_list (value);
         }
 
-        tree_list = g_list_first (tree->children);
-
         /* Mark each camera in the tree as unchecked. */
-        for (i = 0; i < g_list_length (tree_list); i++) gtk_object_set_data (GTK_OBJECT (g_list_nth_data (tree_list, i)), "checked", GINT_TO_POINTER (0));
+        for (i = 0; i < g_list_length (tree->children); i++) gtk_object_set_data (GTK_OBJECT (g_list_nth_data (tree->children, i)), "checked", GINT_TO_POINTER (0));
 
 	/* Investigate if the new cameras are in the tree. */
         for (i = 0; i < g_slist_length (list_cameras); i++) {
-                tree_list = g_list_first (tree->children);
                 value = g_slist_nth_data (list_cameras, i);
                 g_assert (value->type == GCONF_VALUE_STRING);
                 description = g_strdup (gconf_value_get_string (value));
@@ -307,45 +310,39 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
                 id = (guint) atoi (description);
 
                 /* Do we have this camera in the tree? */
-                for (j = 0; j < g_list_length (tree_list); j++) {
-                        g_assert (GTK_IS_OBJECT (g_list_nth_data (tree_list, j)));
-                        object = GTK_OBJECT (g_list_nth_data (tree_list, j));
-                        g_assert ((camera = gtk_object_get_data (object, "camera")) != NULL);
+                for (j = 0; j < g_list_length (tree->children); j++) {
+			item = GTK_TREE_ITEM (g_list_nth_data (tree->children, j));
+                        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
                         if (id == ((frontend_data_t*) camera->frontend_data)->id) {
 
-                                /* We found the camera. Do we have to update? */
-                                if (gp_camera_update_by_description (&camera, description)) {
-                                        /* Update the label. */
-                                        gtk_label_set_text (GTK_LABEL (GTK_BIN (object)->child), ((frontend_data_t*) camera->frontend_data)->name);
+                                /* We found the camera. Changed? */
+				g_assert (description_extract (description, &id, &name, &model, &port, &speed));
 
-                                        /* Mark camera as checked. */
-                                        g_assert (GPOINTER_TO_INT (gtk_object_get_data (object, "checked")) == 0);
-                                        gtk_object_set_data (object, "checked", GINT_TO_POINTER (1));
-                                }
-                                break;
+				gtk_label_get (GTK_LABEL (GTK_BIN (item)->child), &label);
+				changed = (strcmp (label, name) != 0);
+				changed = changed || (strcmp (camera->model, model) != 0);
+				changed = changed || (strcmp (camera->port->name, port) != 0);
+				changed = changed || (speed != camera->port->speed);
+				if (changed) {
+
+					/* We simply remove the camera and add a new one to the tree. */
+					camera_tree_item_remove (GTK_TREE_ITEM (item));
+					j = g_list_length (tree->children) - 1;
+				}
                         }
                 }
-                if (j == g_list_length (tree_list)) {
+                if (j == g_list_length (tree->children)) {
 
                         /* We don't have the camera in the tree (yet). */
-                        if ((camera = gp_camera_new_by_description (description))) {
-
-				/* Add the camera to the tree. */
-				gp_camera_ref (camera);
-				camera_tree_folder_add (tree, camera, "/");
-			}
+                        if ((camera = gp_camera_new_by_description (description))) camera_tree_folder_add (tree, camera, "/");
                 }
                 g_free (description);
         }
 
         /* Delete all unchecked cameras. */
-        tree_list = g_list_first (tree->children);
-        for (j = g_list_length (tree_list) - 1; j >= 0; j--) {
-                item = GTK_TREE_ITEM (g_list_nth_data (tree_list, j));
-                if (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (item), "checked")) == 0) {
-			camera_tree_item_remove (item);
-                        tree_list = g_list_first (tree->children);
-                }
+        for (j = g_list_length (tree->children) - 1; j >= 0; j--) {
+                item = GTK_TREE_ITEM (g_list_nth_data (tree->children, j));
+                if (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (item), "checked")) == 0) camera_tree_item_remove (item);
         }
 }
 

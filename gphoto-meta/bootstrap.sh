@@ -235,9 +235,9 @@ getsources() {
     while read module releasetag CVSROOT restofline
     do 
 	local releaseparm
-	if [ 'HEAD' = $releasetag ]
+	if [ 'HEAD' = "$releasetag" ]
 	then
-	    releaseparm=""
+	    releaseparm="-r HEAD"
 	else
 	    case "$releasetag" in
 		-*)
@@ -257,7 +257,7 @@ getsources() {
 		# FIXME: Use other directory (do not modify timestamps if not required)
 		local stdout="${tmpdir}/.tmp.${module}.stdout"
 		cmd rm -f "$stdout"
-		cmd cvs -z3 update -d -P > "$stdout"
+		cmd cvs -z3 update -d -P ${releaseparm} > "$stdout"
 		if [ -s "$stdout" ]
 		then
 		    # FIXME: Handle conflicts, etc.

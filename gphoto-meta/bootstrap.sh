@@ -403,6 +403,23 @@ function builddist {
 		fi
 	    fi
 
+	    if [ "$module" = "gphoto2-manual" ]
+	    then
+		local dir
+		for dir in html xhtml html-nochunks xhtml-nochunks man pdf txt
+		do
+		    if ls "${docdir}/${dir}/"* > /dev/null 2>&1
+			local base
+			base="${distdir}/${module}-${dir}.tar"
+			tar cvfhz "${base}.gz" "${dir}/"
+			if [ "$compression" = "bz2" ]
+			then
+			    gunzip -c "${base}.gz" | bzip2 -c > "${base}.bz2"
+			fi
+		    fi
+		done
+	    fi
+
 	    # make sure time stamps for dependencies are correct
 	    local file
 	    for file in "${distdir}/${module}-"[0-9]*.tar.{gz,bz2}

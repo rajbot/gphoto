@@ -450,7 +450,11 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
 		g_assert ((xml = g_strdup (gconf_value_get_string (value))) != NULL);
 		if (!(doc = xmlParseMemory (g_strdup (xml), strlen (xml)))) continue;
 		g_assert ((node = xmlDocGetRootElement (doc)) != NULL);
+
+		/* This sanity check only seems to work with libxml2. */
+#ifdef GNOCAM_USES_LIBXML2
 		if (strcmp (node->name, "Camera") != 0) continue;
+#endif
 		g_assert ((id = xmlGetProp (node, "ID")) != NULL);
 		g_assert ((name = xmlGetProp (node, "Name")) != NULL);
 		g_assert ((model = xmlGetProp (node, "Model")) != NULL);

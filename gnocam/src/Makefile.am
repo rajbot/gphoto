@@ -21,6 +21,7 @@ LDFLAGS = @LDFLAGS@\
  `gphoto2-config --libs`\
  `gpio-config --libs`\
  `gnome-config --libs libglade gdk_pixbuf gnomeui vfs bonobo`\
+ `libglade-config --libs bonobo`\
  `gconf-config --libs gconf gconf-gtk`
 
 bin_PROGRAMS = gnocam
@@ -43,18 +44,10 @@ gnocam_SOURCES =\
 
 glade_DATA = gnocam.glade
 
-if GNOCAM_USES_GTKHTML
-gnocam_LDADD = \
- $(GNOME_LIBDIR)\
- $(GNOMEUI_LIBS)\
- $(INTLLIBS)\
- /usr/lib/libglade-bonobo.so
-else
 gnocam_LDADD =\
  $(GNOME_LIBDIR)\
  $(GNOMEUI_LIBS)\
  $(INTLLIBS)
-endif
 
 EXTRA_DIST = $(glade_DATA)
 

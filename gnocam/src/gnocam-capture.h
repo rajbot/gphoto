@@ -28,7 +28,7 @@ struct _GnoCamCaptureClass {
 };
 
 GtkType		gnocam_capture_get_type 	(void);
-GnoCamCapture*	gnocam_capture_new 		(Camera* camera, CameraCaptureType type, GConfClient* client, GtkWindow* window);
+GtkWidget*	gnocam_capture_new 		(Camera* camera, const gchar* name, GConfClient* client, GtkWindow* window);
 
 END_GNOME_DECLS
 

@@ -22,7 +22,7 @@ struct _GnoCamCapturePrivate {
 	Camera*			camera;
 	CameraWidget*		configuration;
 
-	CameraCaptureType	type;
+	gint			type;
 	gint			duration;
 };
 
@@ -59,19 +59,9 @@ struct _GnoCamCapturePrivate {
 "  <menuitem name=\"Configuration\" _label=\"Configuration\" verb=\"\" pixtype=\"stock\" pixname=\"Properties\"/>"	\
 "</placeholder>"
 
-#define GNOCAM_CAPTURE_UI_IMAGE                                                 \
-"<placeholder name=\"CaptureOperations\">"                                      \
-"  <menuitem name=\"CaptureImage\" _label=\"Capture Image\" verb=\"\"/>"        \
-"</placeholder>"
-
-#define GNOCAM_CAPTURE_UI_PREVIEW						\
-"<placeholder name=\"CaptureOperations\">"                                      \
-"  <menuitem name=\"CapturePreview\" _label=\"Capture Preview\" verb=\"\"/>"    \
-"</placeholder>"
-
-#define GNOCAM_CAPTURE_UI_VIDEO							\
-"<placeholder name=\"CaptureOperations\">"                                      \
-"  <menuitem name=\"CaptureVideo\" _label=\"Capture Video\" verb=\"\"/>"        \
+#define GNOCAM_CAPTURE_UI_CAPTURE                          \
+"<placeholder name=\"CaptureOperations\">"                 \
+"  <menuitem name=\"%s\" _label=\"%s\" verb=\"\"/>"        \
 "</placeholder>"
 
 /**************/
@@ -79,9 +69,7 @@ struct _GnoCamCapturePrivate {
 /**************/
 
 static void 	on_manual_clicked 		(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
-static void	on_capture_image_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
-static void	on_capture_video_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
-static void	on_capture_preview_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
+static void	on_capture_clicked		(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 static void	on_capture_refresh_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 static void	on_configuration_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 static void	on_close_clicked		(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
@@ -94,6 +82,7 @@ static gint
 create_menu (gpointer user_data)
 {
 	GnoCamCapture*	capture;
+	gint		i;
 
 	capture = GNOCAM_CAPTURE (user_data);
 
@@ -114,17 +103,14 @@ create_menu (gpointer user_data)
         }
 
         /* Capture? */
-        if (capture->priv->camera->abilities->capture & GP_CAPTURE_IMAGE) {
-                bonobo_ui_component_set_translate (capture->priv->component, "/menu/Camera/CaptureOperations", GNOCAM_CAPTURE_UI_IMAGE, NULL);
-                bonobo_ui_component_add_verb (capture->priv->component, "CaptureImage", on_capture_image_clicked, capture);
-        }
-        if (capture->priv->camera->abilities->capture & GP_CAPTURE_VIDEO) {
-                bonobo_ui_component_set_translate (capture->priv->component, "/menu/Camera/CaptureOperations", GNOCAM_CAPTURE_UI_VIDEO, NULL);
-                bonobo_ui_component_add_verb (capture->priv->component, "CaptureVideo", on_capture_video_clicked, capture);
-        }
-        if (capture->priv->camera->abilities->capture & GP_CAPTURE_PREVIEW) {
-                bonobo_ui_component_set_translate (capture->priv->component, "/menu/Camera/CaptureOperations", GNOCAM_CAPTURE_UI_PREVIEW, NULL);
-                bonobo_ui_component_add_verb (capture->priv->component, "CapturePreview", on_capture_preview_clicked, capture);
+	for (i = 0; capture->priv->camera->abilities->capture [i].type != GP_CAPTURE_NONE; i++) {
+		gchar*	tmp;
+
+		tmp = g_strdup_printf (GNOCAM_CAPTURE_UI_CAPTURE, capture->priv->camera->abilities->capture [i].name, 
+				       capture->priv->camera->abilities->capture [i].name);
+		bonobo_ui_component_set_translate (capture->priv->component, "/menu/Camera/CaptureOperations", tmp, NULL);
+		g_free (tmp);
+		bonobo_ui_component_add_verb (capture->priv->component, capture->priv->camera->abilities->capture [i].name, on_capture_clicked, capture);
         }
 
 	return (FALSE);
@@ -135,7 +121,6 @@ do_capture (GnoCamCapture* capture)
 {
 	GtkWidget*		widget;
 	CameraFile*		file;
-	CameraCaptureInfo	info;
 	gint			result;
 	gchar*                  oaf_requirements;
 	CORBA_Environment	ev;
@@ -148,13 +133,11 @@ do_capture (GnoCamCapture* capture)
 
         /* Prepare the image. */
         file = gp_file_new ();
-        info.type = capture->priv->type;
-	info.duration = capture->priv->duration;
 
         /* Capture. */
-        result = gp_camera_capture (capture->priv->camera, file, &info);
+	result = gp_camera_capture_preview (capture->priv->camera, file);
 	if (result != GP_OK) {
-		g_warning (_("Could not capture!\n(%s)"), gp_camera_result_as_string (capture->priv->camera, result));
+		g_warning (_("Could not capture!\n(%s)"), gp_camera_get_result_as_string (capture->priv->camera, result));
 		gp_file_unref (file);
 		return;
 	}
@@ -259,72 +242,73 @@ on_manual_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 
         capture = GNOCAM_CAPTURE (user_data);
 
-        result = gp_camera_manual (capture->priv->camera, &manual);
+        result = gp_camera_get_manual (capture->priv->camera, &manual);
         if (result != GP_OK) {
-		g_warning (_("Could not get camera manual: %s!"), gp_camera_result_as_string (capture->priv->camera, result));
+		g_warning (_("Could not get camera manual: %s!"), gp_camera_get_result_as_string (capture->priv->camera, result));
 		return;
         }
 
         g_message (manual.text);
 }
 
+#if 0
 static void
-on_duration_clicked (GnomeDialog* dialog, gint button_number)
+on_duration_clicked (GnomeDialog* dialog, gint button_number, gpointer user_data)
 {
+	GnoCamCapture*	capture;
+
+	capture = GNOCAM_CAPTURE (user_data);
+
 	if (button_number == 0) {
-		GnoCamCapture*	capture;
 		GtkAdjustment*	adjustment;
 
-		capture = GNOCAM_CAPTURE (gtk_object_get_data (GTK_OBJECT (dialog), "capture"));
 		adjustment = GTK_ADJUSTMENT (gtk_object_get_data (GTK_OBJECT (dialog), "adjustment"));
-		capture->priv->type = GP_CAPTURE_VIDEO;
 		capture->priv->duration = adjustment->value;
 
 		do_capture (capture);
 	}
 }
+#endif 
 
 static void
-on_capture_video_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
-{
-	GnoCamCapture*	capture;
-	GtkWidget*	new;
-	GtkWidget*	widget;
-	GtkObject*	adjustment;
-
-	capture = GNOCAM_CAPTURE (user_data);
-	
-	gtk_widget_show (new = gnome_message_box_new (_("How long should the video be (in seconds)?"), 
-		GNOME_MESSAGE_BOX_QUESTION, GNOME_STOCK_BUTTON_OK, GNOME_STOCK_BUTTON_CANCEL, NULL));
-	gtk_signal_connect (GTK_OBJECT (new), "clicked", GTK_SIGNAL_FUNC (on_duration_clicked), new);
-	gtk_object_set_data (GTK_OBJECT (new), "capture", capture);
-
-	adjustment = gtk_adjustment_new (0, 0, 99999, 1, 10, 1);
-	gtk_widget_show (widget = gtk_spin_button_new (GTK_ADJUSTMENT (adjustment), 2, 0));
-        gtk_container_add (GTK_CONTAINER ((GNOME_DIALOG (new))->vbox), widget);
-	gtk_object_set_data (GTK_OBJECT (new), "adjustment", adjustment);
-}
-
-static void
-on_capture_image_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
-{
-	GnoCamCapture*	capture;
-
-	capture = GNOCAM_CAPTURE (user_data);
-	capture->priv->type = GP_CAPTURE_IMAGE;
-	
-	do_capture (capture);
-}
-
-static void
-on_capture_preview_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
+on_capture_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
 {
 	GnoCamCapture*  capture;
+	gint		i;
 
 	capture = GNOCAM_CAPTURE (user_data);
-	capture->priv->type = GP_CAPTURE_PREVIEW;
 
-	do_capture (capture);
+	for (i = 0; capture->priv->camera->abilities->capture [i].type != GP_CAPTURE_NONE; i++) {
+		if (!strcmp (capture->priv->camera->abilities->capture [i].name, cname)) {
+			capture->priv->type = i;
+#if 0
+			if ((capture->priv->camera->abilities->capture [i].type == GP_CAPTURE_VIDEO) || 
+			    (capture->priv->camera->abilities->capture [i].type == GP_CAPTURE_AUDIO)) {
+				GtkWidget*	new;
+				GtkWidget*	widget;
+				GtkObject*	adjustment;
+				
+				/* Ask for duration */
+				if (capture->priv->camera->abilities->capture [i].type == GP_CAPTURE_VIDEO) 
+					new = gnome_message_box_new (_("How long should the video be (in seconds)?"), GNOME_MESSAGE_BOX_QUESTION, 
+						GNOME_STOCK_BUTTON_OK, GNOME_STOCK_BUTTON_CANCEL, NULL);
+				else 
+					new = gnome_message_box_new (_("How long should the record be (in seconds)?"), GNOME_MESSAGE_BOX_QUESTION,
+						GNOME_STOCK_BUTTON_OK, GNOME_STOCK_BUTTON_CANCEL, NULL);
+				gtk_widget_show (new);
+				gtk_signal_connect (GTK_OBJECT (new), "clicked", GTK_SIGNAL_FUNC (on_duration_clicked), capture);
+				adjustment = gtk_adjustment_new (0, 0, 99999, 1, 10, 1);
+				widget = gtk_spin_button_new (GTK_ADJUSTMENT (adjustment), 2, 0);
+				gtk_widget_show (widget);
+				gtk_container_add (GTK_CONTAINER ((GNOME_DIALOG (new))->vbox), widget);
+				gtk_object_set_data (GTK_OBJECT (new), "adjustment", adjustment);
+
+			} else 
+#endif
+			do_capture (capture);
+			break;
+		}
+	}
 }
 
 static void
@@ -388,8 +372,8 @@ gnocam_capture_init (GnoCamCapture* capture)
 	capture->priv->camera = NULL;
 }
 
-GnoCamCapture*
-gnocam_capture_new (Camera* camera, CameraCaptureType type, GConfClient* client, GtkWindow* window)
+GtkWidget*
+gnocam_capture_new (Camera* camera, const gchar* name, GConfClient* client, GtkWindow* window)
 {
 	GnoCamCapture*		new;
 	gint			w, h;
@@ -400,7 +384,6 @@ gnocam_capture_new (Camera* camera, CameraCaptureType type, GConfClient* client,
 	new = GNOCAM_CAPTURE (bonobo_window_construct (BONOBO_WINDOW (new), PACKAGE "Capture", PACKAGE " - Capture"));
 	gtk_signal_connect (GTK_OBJECT (new), "size_request", GTK_SIGNAL_FUNC (on_window_size_request), new);
 	gp_camera_ref (new->priv->camera = camera);
-	new->priv->type = type;
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
 	gtk_window_set_transient_for (GTK_WINDOW (new), window);
 
@@ -414,19 +397,7 @@ gnocam_capture_new (Camera* camera, CameraCaptureType type, GConfClient* client,
 	gtk_idle_add (create_menu, new);
 
         /* Capture. */
-	switch (type) {
-	case GP_CAPTURE_PREVIEW:
-		on_capture_preview_clicked (NULL, new, NULL);
-		break;
-	case GP_CAPTURE_IMAGE:
-		on_capture_image_clicked (NULL, new, NULL);
-		break;
-	case GP_CAPTURE_VIDEO:
-		on_capture_video_clicked (NULL, new, NULL);
-		break;
-	default:
-		break;
-	}
+	on_capture_clicked (NULL, new, name);
 
 	/* Set the default settings */
         w = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/width_capture", NULL);
@@ -434,7 +405,7 @@ gnocam_capture_new (Camera* camera, CameraCaptureType type, GConfClient* client,
 	if (w + h == 0) gtk_window_set_default_size (GTK_WINDOW (new), 500, 500);
 	else gtk_window_set_default_size (GTK_WINDOW (new), w, h);
 
-	return (new);
+	return (GTK_WIDGET (new));
 }
 
 E_MAKE_TYPE (gnocam_capture, "GnoCamCapture", GnoCamCapture, gnocam_capture_class_init, gnocam_capture_init, PARENT_TYPE)

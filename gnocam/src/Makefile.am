@@ -21,6 +21,7 @@ gnocam_SOURCES =\
  gnocam.c\
  gnocam-configuration.h gnocam-configuration.c\
  gnocam-camera.h gnocam-camera.c\
+ gnocam-capture.h gnocam-capture.c\
  gnocam-file.h gnocam-file.c\
  gnocam-folder.h gnocam-folder.c\
  gnocam-main.h gnocam-main.c\

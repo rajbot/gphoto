@@ -1,16 +1,3 @@
-2002-12-20  gettextize  <bug-gnu-gettext@gnu.org>
+2003-01-01  Lutz Müller <lutz@users.sourceforge.net>
 
-	* configure.in (AC_OUTPUT): Add intl/Makefile.
-
-2002-12-20  gettextize  <bug-gnu-gettext@gnu.org>
-
-	* Makefile.am (SUBDIRS): Remove intl.
-	* configure.in (AC_OUTPUT): Remove intl/Makefile.
-
-2002-12-20  gettextize  <bug-gnu-gettext@gnu.org>
-
-	* Makefile.am (SUBDIRS): Add intl,
-	(ACLOCAL_AMFLAGS): New variable.
-	(EXTRA_DIST): New variable.
-	* configure.in (AC_OUTPUT): Add intl/Makefile,
-
+	* First checkin

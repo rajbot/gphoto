@@ -1,0 +1,18 @@
+				     libknc
+				     ------
+
+About libknc
+------------
+
+libknc is a library that provides easy access to some digital cameras
+maufactured by Konica.
+
+Licence
+-------
+
+LGPL
+
+Author
+------
+
+Lutz Müller <lutz@users.sourceforge.net>

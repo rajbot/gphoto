@@ -9,9 +9,9 @@
 # 
 #  - Empty lines are ignored.
 
-libusb		HEAD	:pserver:anonymous@cvs.libusb.sourceforge.net:/cvsroot/libusb	install
+libexif 	HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif	install
 
-libexif 	libexif-before-0_6_0-api-change	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif	install
+libusb		HEAD	:pserver:anonymous@cvs.libusb.sourceforge.net:/cvsroot/libusb	install
 
 # gphoto2-manual	HEAD	:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto	install
 

@@ -1,3 +1,7 @@
+2002-11-17  Lutz Müller <lutz@users.sourceforge.net>
+
+	* applets/*: Rejoice - the "About"-Dialog is working :-)
+
 2002-11-15  Lutz Müller <lutz@users.sourceforge.net>
 
 	* applets/*: The code does not only compile, the applet is now even

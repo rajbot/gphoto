@@ -9,6 +9,8 @@
 
 #include <gtk/gtkhbbox.h>
 #include <gtk/gtkbutton.h>
+#include <gtk/gtkimage.h>
+#include <gtk/gtkwindow.h>
 
 #ifdef ENABLE_NLS
 #  include <libintl.h>
@@ -69,31 +71,39 @@ gnocam_applet_about_cb (BonoboUIComponent *uic, GnoCamApplet *a,
 	GError *e = NULL;
 
 	static const gchar *authors[] = {
-		"Lutz Müller <lutz@users.sourceforge.net>",
+		"Lutz Mueller <lutz@users.sourceforge.net>",
 		NULL
 	};
 	const gchar *documenters[] = {NULL};
 	const gchar *translator_credits = _("translator_credits");
 
+	/* Do we already have the widget? */
 	if (about) {
 		gtk_window_present (GTK_WINDOW (about));
 		return;
 	}
 
+	/* Create the widget. */
 	pixbuf = gdk_pixbuf_new_from_file (IMAGEDIR "gnocam-camera1.png", &e);
 	about = gnome_about_new (
 		_("Camera Applet"), VERSION,
-		_("Copyright (c) 2002 Lutz Müller"),
+		_("Copyright (c) 2002 Lutz Mueller"),
 		_("Access your digital camera."),
 		authors, documenters,
 		(strcmp (translator_credits, "translator_credits") ?
 	 				translator_credits : NULL), pixbuf);
 	if (pixbuf)
 		g_object_unref (pixbuf);
+
+	/* Set up the widget. */
 	gtk_window_set_wmclass (GTK_WINDOW (about), "gnocam-applet", 
 				"Camera Applet");
+	gnome_window_icon_set_from_file (GTK_WINDOW (about),
+					 IMAGEDIR "gnocam-camera1.png");
 	g_signal_connect (about, "destroy", G_CALLBACK (gtk_widget_destroyed),
 			  &about);
+
+	/* Show the widget. */
 	gtk_widget_show (about);
 }
 
@@ -108,30 +118,23 @@ gnocam_applet_create_ui (GnoCamApplet *a)
 {
 	g_return_if_fail (GNOCAM_IS_APPLET (a));
 
-	GtkWidget *bbox, *button;
+	gnome_window_icon_set_default_from_file (IMAGEDIR "gnocam-camera1.png");
+
+	gtk_widget_show (GTK_WIDGET (a));
 
 	panel_applet_setup_menu_from_file (PANEL_APPLET (a), UIDIR,
 		"GNOME_GnoCamApplet.xml", NULL, gnocam_applet_menu_verbs, a);
-
-	gnome_window_icon_set_default_from_file (IMAGEDIR "gnocam-camera1.png");
-
-	bbox = gtk_hbutton_box_new ();
-	gtk_widget_show (bbox);
-	gtk_container_add (GTK_CONTAINER (a), bbox);
-
-	button = gtk_button_new_with_label (_("Capture"));
-	gtk_widget_show (button);
-	gtk_container_add (GTK_CONTAINER (bbox), button);
-
-	gtk_widget_show (GTK_WIDGET (a));
 }
 
 static void
 gnocam_applet_init (GTypeInstance *instance, gpointer g_class)
 {
         GnoCamApplet *a = GNOCAM_APPLET (instance);
+	GtkWidget *w;
 
-	a = NULL;
+	w = gtk_image_new_from_file (IMAGEDIR "gnocam-camera1.png");
+	gtk_widget_show (w);
+	gtk_container_add (GTK_CONTAINER (a), w);
 }
 
 GType

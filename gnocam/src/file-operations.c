@@ -113,7 +113,7 @@ download (GtkTreeItem* folder, GnomeVFSURI* uri, gboolean preview)
                 /* Display error message (if any). */
                 if (BONOBO_EX (&ev)) {
 			gchar* name = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_basename (uri));
-                        gchar* tmp = g_strdup_printf (_("Could not download the file '%s'!\n(%s)"), name, bonobo_exception_get_text (&ev));
+			gchar* tmp = g_strdup_printf (_("Could not download the file '%s'!\n(%s)"), name, bonobo_exception_get_text (&ev));
 			g_free (name);
                         gnome_error_dialog_parented (tmp, main_window);
                         g_free (tmp);

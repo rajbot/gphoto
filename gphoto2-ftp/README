@@ -4,8 +4,8 @@
 What is gphoto2-ftp?
 --------------------
 
-gphoto2-ftp is a ftp-server that makes accessible the files on your 
-digital camera available over FTP.
+gphoto2-ftp is a program that transforms your computer into an ftp-server
+that makes accessible the files on your digital camera available over FTP.
 
 What adjustments to the setup of my system are needed?
 ------------------------------------------------------

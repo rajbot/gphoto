@@ -1,1 +1,8 @@
+- Get JPEG support from KDE libraries
 - Make a 'listview mode'
+- Make own logos ? (instead of standard KDE logos)
+- Use QPrinter or KDE printing functions for printing pics.
+- Make use of i18n
+- KDE doesn't seem to like the use of exceptions. Remove it.
+- 'make dist' doesn't do the right job
+- Use KAction instead of manually inserting menus

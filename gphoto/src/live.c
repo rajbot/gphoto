@@ -22,8 +22,10 @@ void live_snapshot(GtkWidget *dialog) {
 	GtkWidget *gpixmap = GTK_WIDGET(child->data);
 
 	update_status("Getting live image...");
-        if ((im = (*Camera->get_preview)()) == 0)
+        if ((im = (*Camera->get_preview)()) == 0) {
+		error_dialog("Could not get preview");
 		return;
+	}
 	imlibimage = gdk_imlib_load_image_mem(im->image, im->image_size);
 	free(im->image);
 	free(im);

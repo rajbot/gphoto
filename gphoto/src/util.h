@@ -41,4 +41,5 @@ void free_image(struct Image *im);
 
 void save_image(char *filename, struct Image *im);
 
+
 #endif /* _UTIL_H */

@@ -40,6 +40,14 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.4  1999/06/10 19:53:32  scottf
+ * Updated the functions wrappers to check for errors everywhere
+ * Updated the gallery to display an error if the thumbnails can't
+ * 	be saved.
+ * Updated so that now, the last directory you selected is the one
+ * 	"working directory" in most fileselection boxes
+ * 	(reduces mouse clicks :)
+ *
  * Revision 1.3  1999/06/10 16:38:54  scottf
  * Updated the callbacks.h file
  * FIxed the gallery numbering bug (again)
@@ -91,13 +99,12 @@ void gallery_change_dir(GtkWidget *widget, GtkWidget *label) {
 	GtkWidget *filesel;
 
         filesel = gtk_file_selection_new("Select an Output Directory...");
+	gtk_file_selection_set_filename(GTK_FILE_SELECTION(filesel),
+		filesel_cwd);
         gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_entry);
         gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_text);
         gtk_widget_hide(GTK_FILE_SELECTION(filesel)->file_list);
 	gtk_widget_show(filesel);
-	
-	gtk_file_selection_set_filename(GTK_FILE_SELECTION(filesel),
-		gtk_object_get_data(GTK_OBJECT(label), "dir"));
 
         if (wait_for_hide(filesel,
            GTK_FILE_SELECTION(filesel)->ok_button,
@@ -109,6 +116,8 @@ void gallery_change_dir(GtkWidget *widget, GtkWidget *label) {
 	gtk_file_selection_get_filename(GTK_FILE_SELECTION(filesel))));
 	gtk_object_set_data(GTK_OBJECT(label), "dir", strdup(
 	gtk_file_selection_get_filename(GTK_FILE_SELECTION(filesel))));
+	sprintf(filesel_cwd, "%s", gtk_file_selection_get_filename(
+		GTK_FILE_SELECTION(filesel)));
 
 	gtk_widget_destroy(filesel);
 }
@@ -144,7 +153,7 @@ void gallery_main() {
 
 	int i=0, j=0, num_selected = 0;
 	char outputdir[1024], theme[32];
-	char filename[1024], filename2[1024], cp[1024];
+	char filename[1024], filename2[1024], cp[1024], error[32];
 	struct Image *im;
 
 	GList *dlist;
@@ -359,32 +368,51 @@ Please install/move gallery themes there.");
 		/* Get the current thumbnail */
 			sprintf(cp, "Getting Thumbnail #%i...", j+1);
 			update_status(cp);
-			im = (*Camera->get_picture)(j+1, 1);
-			sprintf(thumbnail, 
+			if ((im = (*Camera->get_picture)(j+1, 1))==0) {
+				sprintf(error, "Could not retrieve #%i",
+					j+1);
+				error_dialog(error);
+				sprintf(thumbnail, "Not Available");
+				sprintf(thumbnail_filename, "");
+				sprintf(thumbnail_number, "%03i", i+1);
+			} else {
+				sprintf(thumbnail, 
 	"<a href=\"picture-%03i.html\"><img src=\"thumbnail-%03i.%s\"><\\/a>",
-				i+1, i+1, im->image_type);
-			sprintf(thumbnail_filename, "thumbnail-%03i.%s",
-				i+1, im->image_type);
-			sprintf(thumbnail_number, "%03i", i+1);
-			sprintf(filename2, "%s%s", outputdir,
-				thumbnail_filename);
-			save_image(filename2, im);
-			free_image(im);
-
-		/* Get the current image */
+					i+1, i+1, im->image_type);
+				sprintf(thumbnail_filename, "thumbnail-%03i.%s",
+					i+1, im->image_type);
+				sprintf(thumbnail_number, "%03i", i+1);
+				sprintf(filename2, "%s%s", outputdir,
+					thumbnail_filename);
+				save_image(filename2, im);
+				free_image(im);
+			}
+			/* Get the current image */
 			sprintf(cp, "Getting Image #%i...", j+1);
 			update_status(cp);
-			im = (*Camera->get_picture)(j+1, 0);
-			sprintf(picture, "<img src=\"picture-%03i.%s\">",
-				i+1, im->image_type);
-			sprintf(picture_filename, "picture-%03i.%s",
-				i+1, im->image_type);
-			sprintf(picture_number, "%03i", i+1);
+			
+			if ((im = (*Camera->get_picture)(j+1, 0))==0) {
+				sprintf(error, "Could not retrieve #%i", j+1);
+				error_dialog(error);	
+				sprintf(picture, "Not Available");
+				sprintf(picture_filename, "");
+				sprintf(picture_number, "%03i", i+1);}
+			   else {
+				sprintf(picture, "<img src=\"picture-%03i.%s\">",
+                                	i+1, im->image_type);
+                        	sprintf(picture_filename, "picture-%03i.%s",
+                                	i+1, im->image_type);
+				sprintf(picture_number, "%03i", i+1);
+				sprintf(filename2, "%s%s", outputdir,
+					picture_filename);
+				save_image(filename2, im);
+				free_image(im);
+			}
 			if (i+1 == num_selected)
 				strcpy(picture_next, gallery_index);
 			   else	
 				sprintf(picture_next, "picture-%03i.html",
-					 i+2);
+					i+2);
 			if (i == 0)
 				strcpy(picture_previous, gallery_index);
 			   else
@@ -392,10 +420,6 @@ Please install/move gallery themes there.");
 					i);
 			sprintf(cp, "echo \"<td>\" >> %s", filename);
 			system(cp);
-			sprintf(filename2, "%s%s", outputdir,
-				picture_filename);
-			save_image(filename2, im);
-			free_image(im);
 
 			sprintf(filename2,
 				"/usr/local/share/gphoto/gallery/%s/thumbnail.html",
@@ -408,11 +432,11 @@ Please install/move gallery themes there.");
 				outputdir, i+1);
 			sprintf(cp, "echo \" \" > %s", filename);
 			system(cp);
-	
+		
 			sprintf(filename2,
 				"/usr/local/share/gphoto/gallery/%s/picture.html",
 				theme);
-			gallery_parse_tags(filename, filename2);
+				gallery_parse_tags(filename, filename2);
 			i++;
 		}
 		j++;

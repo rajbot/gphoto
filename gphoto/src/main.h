@@ -10,6 +10,7 @@
 #define   TITLE_VER	"GNU Photo (gPhoto) - v0.3"
 
 extern struct Model cameras[];
+extern char filesel_cwd[];
 
 #ifdef  GTK_HAVE_FEATURES_1_1_0
 extern GtkAccelGroup*  mainag;

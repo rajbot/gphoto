@@ -20,6 +20,8 @@
 		PICTURE_PREVIOUS
 */
 
+extern char filesel_cwd[1024];
+
 void gallery_change_dir(GtkWidget *widget, GtkWidget *label);
 void gallery_parse_tags(char *dest, char *source);
 void gallery_main();

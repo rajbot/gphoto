@@ -64,6 +64,7 @@ int main (int argc, char *argv[]) {
 #endif
 
 	/* Make sure there's a .gphoto directory in their home ---- */
+	sprintf(filesel_cwd, "%s", getenv("PWD"));
 	gphotoDir = getenv("HOME");
 	sprintf(gphotoDir, "%s/.gphoto", gphotoDir);
 	(void)mkdir(gphotoDir, 0744);

@@ -52,12 +52,13 @@ void set_camera (char *model) {
 			gtk_label_set(GTK_LABEL(library_name),
 					cameras[i].name);
 			Camera = cameras[i].library;
-			if ((*Camera->initialize)() != 0)
+			if ((*Camera->initialize)() != 0) {
 				return;
+			}
 		}
 		i++;
 	}
-	error_dialog("Could not set camera library.");
+	error_dialog("Could not initialize the library.");
 }
 
 void configure_call() {
@@ -77,11 +78,11 @@ void takepicture_call() {
 	int picNum;
 
 	update_status("Taking picture...");
-	printf("Calling the take_picture function!");
+printf("Calling the take_picture function!");
 	picNum = (*Camera->take_picture)();
 
 	if (picNum == 0) {
-		update_status("Could not take pictures.");
+		error_dialog("Could not take a picture.");
 		return;
 	}
 
@@ -94,6 +95,7 @@ void takepicture_call() {
 void del_pics (GtkWidget *dialog, GtkObject *button) {
 
         int i=1;
+	char error[32];
 
         struct ImageInfo *node = &Thumbnails;
 
@@ -103,17 +105,20 @@ void del_pics (GtkWidget *dialog, GtkObject *button) {
         /* delete from camera... */
         node = node->next;  /* Point at first thumbnail */
         while (node != NULL) {
-            if (GTK_TOGGLE_BUTTON(node->button)->active) {
-				node = node->next;
-                if ((*Camera->delete_picture)(i) != 0) {
-				    remove_thumbnail(i);
-        	        i--;
-			    }
-            }
-			else {
-				node = node->next;
-				}
-			i++;
+            	if (GTK_TOGGLE_BUTTON(node->button)->active) {
+			node = node->next;
+                	if ((*Camera->delete_picture)(i) != 0) {
+				remove_thumbnail(i);
+        	        	i--;}
+			   else {
+				sprintf(error, 
+				"Could not delete #%i", i);
+				error_dialog(error);
+			}}
+		   else {
+			node = node->next;
+		}
+		i++;
         }
         gtk_widget_destroy(dialog);
         update_status("Done.");
@@ -172,9 +177,13 @@ void savepictodisk (int picNum, int thumbnail, char *prefix) {
 
 	FILE *fp;
 	struct Image *im = NULL; 
-	char fname[1024];
+	char fname[1024], error[32];
 
-	im = (*Camera->get_picture)(picNum, thumbnail);
+	if ((im = (*Camera->get_picture)(picNum, thumbnail)) == 0) {
+		sprintf(error, "Could not save #%i", picNum);
+		error_dialog(error);
+		return;
+	}
 	sprintf(fname, "%s.%s", prefix, im->image_type);
 	save_image(fname, im);
 	free_image(im);
@@ -208,7 +217,8 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 	if ((strcmp("tn", type) != 0) && (strcmp("in", type) != 0)) {
 		filesel = gtk_file_selection_new(
 				"Select a directory to store the images...");
-
+		gtk_file_selection_set_filename(GTK_FILE_SELECTION(filesel),
+			filesel_cwd);
 		gtk_widget_hide(GTK_FILE_SELECTION(filesel)->file_list);
 		gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_text);
 		gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_entry);
@@ -231,12 +241,13 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 	
 		/* if they clicked cancel, return  ------------- */
 		if (wait_for_hide(filesel, GTK_FILE_SELECTION(filesel)->ok_button, 
-		    GTK_FILE_SELECTION(filesel)->ok_button) == 0)
+		    GTK_FILE_SELECTION(filesel)->cancel_button) == 0)
 			return;
 	        /* --------------------------------------------- */
 
 		filesel_dir = gtk_file_selection_get_filename(
 				GTK_FILE_SELECTION(filesel));
+	        strcpy(filesel_cwd, filesel_dir);
 		filesel_prefix = gtk_entry_get_text(GTK_ENTRY(entry));
 		sprintf(saveselectedtodisk_dir, "%s%s", filesel_dir,
 			filesel_prefix);
@@ -265,7 +276,7 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 void appendpic (int picNum, int thumbnail, int fromCamera, char *fileName) {
 
 	int w, h;
-	char fname[15], *openName;
+	char fname[15], error[32], *openName;
 	
 	GtkWidget *scrwin, *label;
 	GdkPixmap *pixmap;
@@ -280,7 +291,11 @@ void appendpic (int picNum, int thumbnail, int fromCamera, char *fileName) {
 	node = node->next; node->next = NULL;
 
 	if (fromCamera) {
-		im = (*Camera->get_picture)(picNum, thumbnail);
+		if ((im = (*Camera->get_picture)(picNum, thumbnail))==0) {
+			sprintf(error, "Could not retrieve #%i", picNum);
+			error_dialog(error);
+			return;
+		}
 		node->imlibimage =  gdk_imlib_load_image_mem(im->image,
 							im->image_size);
 		free_image(im);}
@@ -812,7 +827,7 @@ void remove_thumbnail (int i) {
 
 /* Place a thumbnail into the index at location corresponding to node */
 void insert_thumbnail(struct ImageInfo *node) {
-  char status[256];
+  char status[256], error[32];
   GdkPixmap *pixmap;
   GdkImlibImage *scaledImage;
   GtkWidget *vbox;
@@ -840,7 +855,11 @@ void insert_thumbnail(struct ImageInfo *node) {
     gdk_imlib_kill_image(node->imlibimage);
 
 
-  im = (*Camera->get_picture)(i, 1);
+  if ((im = (*Camera->get_picture)(i, 1))==0) {
+	sprintf(error, "Could not retrieve #%i", i);
+	error_dialog(error);
+	return;
+  }
   node->imlibimage = gdk_imlib_load_image_mem(im->image, im->image_size);
   /*
   thumbname=find_tag(im,"ImageDescription");
@@ -924,9 +943,11 @@ void makeindex (int getthumbs) {
         gtk_container_add(GTK_CONTAINER(index_vp), index_table);
 #endif
 	num_pictures_taken = (*Camera->number_of_pictures)();
-	fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
-	if (num_pictures_taken == -1)
+fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
+	if (num_pictures_taken == -1) {
+		error_dialog("Could not get the number of pictures");
 		return;
+	}
 
 	for (i=1; i<=num_pictures_taken; i++) {
 		node->next = malloc (sizeof(struct ImageInfo));
@@ -1102,7 +1123,7 @@ void savepic (GtkWidget *widget, GtkFileSelection *fwin) {
 
 void openpic (GtkWidget *widget, GtkFileSelection *fwin) {
 
-	char *fname;
+	char *fname, dir[1024];
 
 	gtk_widget_hide(GTK_WIDGET(fwin));
 	fname = gtk_file_selection_get_filename(GTK_FILE_SELECTION(fwin));
@@ -1119,6 +1140,8 @@ void filedialog (gchar *a) {
 	switch (a[0]) {
 	   	case 's':
 			filew = gtk_file_selection_new ("Save Image...");
+			gtk_file_selection_set_filename(GTK_FILE_SELECTION
+				(filew), filesel_cwd);
 			gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION
 			    (filew)->ok_button), "clicked",
 			    (GtkSignalFunc) savepic,
@@ -1133,6 +1156,8 @@ void filedialog (gchar *a) {
 
 		case 'o':
 			filew = gtk_file_selection_new ("Open Image...");
+			gtk_file_selection_set_filename(GTK_FILE_SELECTION
+				(filew), filesel_cwd);
 			gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION
 			    (filew)->ok_button), "clicked",
 			    (GtkSignalFunc) openpic,

@@ -163,7 +163,6 @@ void save_image (char *filename, struct Image *im) {
 	fclose (fp);
 }
 
-
 GdkImlibImage *gdk_imlib_load_image_mem(char *image, int size) {
 
 	/* Scott was here. just a quick hash until the mem-to-mem
@@ -298,3 +297,4 @@ METHODDEF(void) decom_term (j_decompress_ptr cinfo) {
 	return;
 }
 */
+

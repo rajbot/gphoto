@@ -683,7 +683,7 @@ gnocam_camera_new (const gchar* url, Bonobo_UIContainer container, GtkWidget* wi
 	
 	/* Try to get a storage */
 	mode = Bonobo_Storage_READ;
-	if (gconf_client_get_bool (client, "/apps/" PACKAGE "/preview", NULL)) mode |= Bonobo_Storage_COMPRESSED;
+	if (gconf_client_get_bool (client, "/apps/" PACKAGE "/preview", NULL) && camera->abilities->file_preview) mode |= Bonobo_Storage_COMPRESSED;
 	if (camera->abilities->file_put) mode |= Bonobo_Storage_WRITE;
 	storage = bonobo_storage_open_full ("camera", url, mode, 0664, ev);
 	if (BONOBO_EX (ev)) {

@@ -51,7 +51,3 @@ void qm100_savePic(int serialdev, char *filename, int pic,
   qm100_endTransmit(serialdev, "GetPicture");
   qm100_getCommandTermination(serialdev);
 }
-
-
-
-

@@ -29,7 +29,7 @@ void progress(void)
 }
 void usage(void)
 {
-   printf("Konica QM-100 Digtal Camera Utility "
+   printf("Konica QM-100 Digital Camera Utility "
           "Version %s Mod %s\n", QM100_VER,  QM100_MOD);
    printf("Usage:\tqm100 MODE [OPTION]... [FILENAME]\n");
    printf("\tMODES\n");
@@ -265,5 +265,3 @@ int main(int argc, char *argv[])
       usage();
    return 0;
 }
-
-

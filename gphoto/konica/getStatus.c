@@ -88,7 +88,3 @@ int qm100_getStatus(int serialdev, QM100_CAMERA_INFO *cip)
       }
    return qm100_pictureCount;
 }
-
-
-
-

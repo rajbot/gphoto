@@ -609,4 +609,3 @@ static void showCameraClock(void)
    gtk_label_set_text(GTK_LABEL(clockLabel), "new clock value");
    gtk_widget_show(clockLabel);
 }
-

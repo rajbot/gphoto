@@ -56,14 +56,3 @@ void qm100_takePic(int serialdev)
   qm100_transmit(serialdev, cmd_takepic, sizeof(cmd_takepic), &packet, "Take Picture");
   qm100_getCommandTermination(serialdev);
 }
-
-
-
-
-
-
-
-
-
-
-

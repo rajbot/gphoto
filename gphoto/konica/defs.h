@@ -1,7 +1,7 @@
 #ifndef _QM100_DEFS_H
 #define _QM100_DEFS_H
-#define QM100_MOD      "1999/08/15"
-#define QM100_VER      "0.4.0"   
+#define QM100_MOD      "1999/12/26"
+#define QM100_VER      "0.4.0d"   
 
 /*---------------------------------------------------------------------*
  *                                                                     *

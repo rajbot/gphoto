@@ -64,6 +64,3 @@ void qm100_setSpeed(int serialdev, int speed)
         qm100_error(serialdev, "Unable to set serial device attributes", errno);
      }
 }
-
-
-

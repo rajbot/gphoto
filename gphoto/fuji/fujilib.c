@@ -90,7 +90,6 @@ struct pict_info {
 int fuji_initialized=0; 
 int fuji_count;
 int fuji_size;
-int fuji_piccount;       /* For unique filename to Defeat the ImLib Cache */
 int devfd = -1;
 int maxnum;
 int fuji_debug=0;
@@ -582,9 +581,11 @@ void close_connection (void)
 
 void reset_serial (void)
 {
+        if (fuji_debug) fprintf(stderr,"Fujilib:Reset Serial\n");
 	if (devfd >= 0) {
 		close_connection();
 		tcsetattr(devfd, TCSANOW, &oldt);
+		close(devfd);
 	}
 	devfd = -1;
 }
@@ -592,14 +593,21 @@ void reset_serial (void)
 int init_serial (const char *devname)
 {
         /* Attempt to open the serial device*/
-	devfd = open(devname, O_RDWR|O_NOCTTY);
+        if (devfd<0) {
+                if (fuji_debug) 
+		        fprintf(stderr,"Fujilib:Opening Serial Device\n`");
 
-	if (devfd < 0) {
-		perror("Cannot open device");
-		return -1;
+		devfd = open(devname, O_RDWR|O_NOCTTY);
+
+		if (devfd < 0) { /* Open didn't work */
+		        fprintf(stderr,"Fujilib:Cannot open device %s\n",\
+				devname);
+		        return -1;
+		}
 	}
+
 	if (tcgetattr(devfd, &oldt) < 0) {
-		perror("tcgetattr");
+	        fprintf(stderr,"Fujilib:tcgetattr error %s\n",devname);
 	        return -1;
 	}
 	newt = oldt;
@@ -615,16 +623,20 @@ int init_serial (const char *devname)
 	cfsetispeed(&newt, B9600);
 
 	if (tcsetattr(devfd, TCSANOW, &newt) < 0) {
-		perror("tcsetattr");
+	        fprintf(stderr,"Fujilib:tcgetattr error %s\n",devname);
 		return -1;
 	}
-	atexit(reset_serial);
+
        return(attention());
 }
 
 void set_max_speed (void)
 {
 	int speed;
+
+	if (fuji_debug)
+	        fprintf(stderr,"Setting max speed\n");
+
 	/* This mess could be cleaned up... */
 #ifdef B115200
 	speed = B115200;
@@ -652,6 +664,9 @@ change_speed:
 	cfsetospeed(&newt, speed);
 	tcsetattr(devfd, TCSANOW, &newt);
 	attention();
+	if (fuji_debug)
+	        fprintf(stderr,"Speed Upgraded\n");
+
 }
 
 int download_picture(int n,int thumb,struct Image *im)
@@ -804,42 +819,18 @@ again:
 
 
 int fuji_init(){
-        char idstring[256];
+	
+        if (! fuji_initialized)  /* this should never happen...*/
+	        if (fuji_initialize()<1) return -1;
 
-	if (fuji_debug) printf("Initializing %s\n",serial_port);
-
-	fuji_maxbuf=FUJI_MAXBUF_DEFAULT; /* This should be camera dependent */
-	/*	read_fuji_config(); */
+	if (fuji_debug) 
+	        fprintf(stderr,"Fujilib:Initializing %s\n",serial_port);
 
 	if (init_serial(serial_port)==-1) return(-1);
 
 	set_max_speed();
 
-	if (!fuji_initialized){
-
-	  /* Allocate photo buffer */
-	  fuji_buffer=malloc(fuji_maxbuf);
-	  if (fuji_buffer==NULL) {
-	    fprintf(stderr,"Memory allocation error\n");
-	    return(-1);
-	  } else if (fuji_debug) {
-	    fprintf(stderr,"Allocated %ld bytes to main buffer\n",fuji_maxbuf);
-	  };
-	  
-	  /* could ID camera here and set the relevent variables... */
-	        get_command_list();
-	  /* For now assume that the user wil not use 2 different fuji cams
-	     in one session */
-	        strcpy(idstring,"Identified ");
-	        strncat(idstring,dc_version_info(),100);
-	        update_status(idstring);
-
-		/* load_fuji_options() */
-
-	        fuji_initialized=1;  
-	};
-
-    return(0);
+	return(0);
 };
 
 
@@ -978,6 +969,8 @@ int fuji_delete_image (int picture_number){
 int fuji_number_of_pictures (){
   int numpix;
 
+  if (fuji_debug) fprintf(stderr, "Fujilib:Number of Pictures Called\n");
+
   if (fuji_init()) return (-1);
   numpix=dc_nb_pictures();
 
@@ -986,8 +979,45 @@ int fuji_number_of_pictures (){
 
 };
 
+/* 
+   One-time initialization: Read config, allocate buffers, etc
+ */
 int fuji_initialize () {
+        char idstring[256];
 
+	fuji_maxbuf=FUJI_MAXBUF_DEFAULT; /*Should be camera dependent*/
+	/*	read_fuji_config(); */
+
+	if (fuji_debug) fprintf(stderr,"Fujilib: Doing First Init\n");
+
+	/* Allocate photo buffer */
+	if (fuji_buffer) free(fuji_buffer);
+	fuji_buffer=malloc(fuji_maxbuf);
+	if (fuji_buffer==NULL) {
+	        fprintf(stderr,"Fujilib:Memory allocation error\n");
+		return(-1);
+	} else if (fuji_debug) {
+	        fprintf(stderr,"Fujilib:Allocated %ld bytes to main buffer\n",\
+			fuji_maxbuf);
+	};
+	fuji_initialized=1;  
+	atexit(reset_serial);
+
+	/* Setup the serial port*/
+	if (fuji_init()) {
+	        fuji_initialized=0;
+		return(-1);
+	};
+	
+	/* could ID camera here and set the relevent variables... */
+	get_command_list();
+	/* Assume the user won't use 2 diff fuji cams in one session */
+	strcpy(idstring,"Identified ");
+	strncat(idstring,dc_version_info(),100);
+	update_status(idstring);
+	if (fuji_debug) fprintf (stderr,"Fujilib:%s\n",idstring);
+
+	reset_serial();
 	return 1;
 }
 
@@ -996,10 +1026,12 @@ struct Image *fuji_get_preview (){
 
   struct Image *newimage;
 
+  if (fuji_init()) return NULL;
+
   newimage=malloc(sizeof( struct Image));
 
   if (!has_cmd[0x62] || !has_cmd[0x64]) {
-    update_status("Cannot preview (unsupported command)\n");
+    update_status("Cannot preview (unsupported command)");
     return ( 0 );
   }
 
@@ -1008,11 +1040,17 @@ struct Image *fuji_get_preview (){
   newimage->image=malloc(fuji_count); /* What a hack!!!*/
   memcpy(newimage->image,fuji_buffer,fuji_count);
 
+  reset_serial();
+  newimage->image_size = fuji_count;
+
   return(newimage);
 };
 
 int fuji_take_picture (){
-  if (!has_cmd[0x62] || !has_cmd[0x64]) {
+
+   if (fuji_init()) return (-1);
+
+   if (!has_cmd[0x27]) {
     update_status("Cannot take picture (unsupported command)\n");
     return(0);
   }

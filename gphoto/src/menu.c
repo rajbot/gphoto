@@ -162,11 +162,16 @@ void menu_select (gpointer data, guint action, GtkWidget *widget) {
 		case 42: /* Online Feedback */
 			browse_feedback();
 			break;
+		case 43: /* Color balance */
+			color_dialog();
+			break;
 		default:
 	}
 }
 
 /* Oh WOW is this a lot easier :) */
+/* Thanks to Eric Harlow for his book "Developing Linux Applications".
+   This is a definite must-buy/read/worship for GTK development!! */
 
 GtkItemFactoryEntry menu_items[] = {
 	{"/_File",						NULL, 0,		0,	"<Branch>"},
@@ -180,15 +185,16 @@ GtkItemFactoryEntry menu_items[] = {
 	{"/File/_Quit",					"<control>q", menu_select,	5},
 
 	{"/_Edit",						NULL, 0,		0,	"<Branch>"},
-	{"/Edit/Image _Orientation",				NULL, 0,		0,	"<Branch>"},
-	{"/Edit/Image Orientation/Rotate Clockwise", 		NULL, menu_select,	6},
-	{"/Edit/Image Orientation/Rotate Counter-Clockwise", 	NULL, menu_select,	7},
-	{"/Edit/Image Orientation/Flip Horizontal", 		NULL, menu_select,	8},
-	{"/Edit/Image Orientation/Flip Vertical", 		NULL, menu_select,	9},
-	{"/Edit/Image _Dimension",				NULL, 0,		0,	"<Branch>"},
-	{"/Edit/Image Dimension/Scale _Half",			NULL, menu_select,	10},
-	{"/Edit/Image Dimension/Scale _Double",			NULL, menu_select,	11},
-	{"/Edit/Image Dimension/_Scale",			NULL, menu_select,	12},
+	{"/Edit/_Orientation",					NULL, 0,		0,	"<Branch>"},
+	{"/Edit/Orientation/Rotate Clockwise", 			NULL, menu_select,	6},
+	{"/Edit/Orientation/Rotate Counter-Clockwise", 		NULL, menu_select,	7},
+	{"/Edit/Orientation/Flip Horizontal", 			NULL, menu_select,	8},
+	{"/Edit/Orientation/Flip Vertical", 			NULL, menu_select,	9},
+	{"/Edit/_Size",						NULL, 0,		0,	"<Branch>"},
+	{"/Edit/Size/Scale _Half",				NULL, menu_select,	10},
+	{"/Edit/Size/Scale _Double",				NULL, menu_select,	11},
+	{"/Edit/Size/_Scale",					NULL, menu_select,	12},
+	{"/Edit/_Color Balance",				NULL, menu_select,	43},
 	{"/Edit/sep3",						NULL, 0, 		0,	"<Separator>"},
 	{"/Edit/Select _All",				  "<shift>a", menu_select,	13},
 	{"/Edit/Select _Inverse",			  "<shift>i", menu_select,	14},

@@ -246,26 +246,13 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 	GtkWidget *filesel, *label;
 	GtkWidget *entry;
 	GSList *group;
-	GList *child;
 
 	if ((strcmp("tn", type) != 0) && (strcmp("in", type) != 0)) {
 		/* Get an output directory */
-
-		filesel = gtk_file_selection_new(
+		filesel = gtk_directory_selection_new(
 				"Select a directory to store the images...");
 		gtk_window_set_position (GTK_WINDOW (filesel), 
 			GTK_WIN_POS_CENTER);
-		gtk_file_selection_set_filename(GTK_FILE_SELECTION(filesel),
-			filesel_cwd);
-	        /* get the main vbox children */
-	        child = gtk_container_children(
-	                GTK_CONTAINER(GTK_FILE_SELECTION(filesel)->main_vbox));
-	        /* get the dir/file list box children */
-	        child = gtk_container_children(
-	                GTK_CONTAINER(child->next->next->data));
-	        gtk_widget_hide(GTK_WIDGET(child->next->data));
-		gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_text);
-		gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_entry);
 
 		label = gtk_label_new("Enter the file prefix for the images:");
 		gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);

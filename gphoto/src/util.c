@@ -8,7 +8,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <sys/dir.h>
+#include <dirent.h>
 #include <sys/resource.h>
+#ifdef linux
+#include <sched.h>
+#endif
 
 #define BROWSER "netscape"
 
@@ -171,6 +176,65 @@ void save_image (char *filename, struct Image *im) {
 
 		error_dialog(errormsg);
 	}
+}
+
+void gtk_directory_selection_update(GtkWidget *entry, GtkWidget *dirsel) {
+
+	DIR *dir=NULL;
+
+	char *dirname;
+
+	dir = opendir(gtk_entry_get_text(GTK_ENTRY(entry)));
+
+	if (dir == NULL)
+		/* not a directory */
+		return;
+
+	closedir(dir);
+
+	dirname = (char *)malloc(sizeof(char)*strlen(
+		gtk_entry_get_text(GTK_ENTRY(entry)))+2);
+	strcpy(dirname, gtk_entry_get_text(GTK_ENTRY(entry)));
+	if (dirname[strlen(dirname)-2] != '/')
+		strcat(dirname, "/");
+
+	gtk_file_selection_set_filename(
+		GTK_FILE_SELECTION(dirsel),dirname);
+
+	free(dirname);
+}
+
+GtkWidget *gtk_directory_selection_new(char *title) {
+
+	GtkWidget *dirsel, *entry;
+
+	GList *child;
+
+	dirsel = gtk_file_selection_new(title);
+
+	gtk_file_selection_set_filename(GTK_FILE_SELECTION(dirsel),
+		filesel_cwd);
+        gtk_widget_hide(GTK_FILE_SELECTION(dirsel)->selection_entry);
+        gtk_widget_hide(GTK_FILE_SELECTION(dirsel)->selection_text);
+        /* get the main vbox children */
+        child = gtk_container_children(
+                GTK_CONTAINER(GTK_FILE_SELECTION(dirsel)->main_vbox));
+        /* get the dir/file list box children */
+        child = gtk_container_children(
+                GTK_CONTAINER(child->next->next->data));
+        gtk_widget_hide(GTK_WIDGET(child->next->data));
+
+	entry = gtk_entry_new();
+	gtk_widget_show(entry);
+	gtk_signal_connect(GTK_OBJECT(entry), "changed",
+		GTK_SIGNAL_FUNC(gtk_directory_selection_update),
+		dirsel);
+	gtk_box_pack_start_defaults(GTK_BOX(
+		GTK_FILE_SELECTION(dirsel)->main_vbox), entry);
+	gtk_box_reorder_child(GTK_BOX(
+		GTK_FILE_SELECTION(dirsel)->main_vbox), entry, 5);
+	gtk_widget_grab_focus(entry);
+	return(dirsel);
 }
 
 GdkImlibImage *gdk_imlib_load_image_mem(char *image, int size) {
@@ -340,6 +404,18 @@ void execute_program (char *program, char *arg) {
 		fprintf(stderr, "Closed %d files.\n", fd);
 */
 		char *args[3];
+#ifdef linux
+		/* kick the priority back down to normal */
+		if (geteuid() == 0) {
+			struct sched_param sp;
+			int rc,minp,maxp;
+			minp=sched_get_priority_min(SCHED_FIFO);
+			maxp=sched_get_priority_max(SCHED_FIFO);
+			sp.sched_priority=minp;
+			if ((rc=sched_setscheduler(0,SCHED_FIFO,&sp)) == -1)
+				fprintf(stderr,"failed to set priority\n");
+		}
+#endif
 
 		args[0]=program;
 		args[1]=arg;

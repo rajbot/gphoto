@@ -40,6 +40,14 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.12  1999/06/30 00:13:16  scottf
+ * updated the "get blank index" icon to be a little more consistent
+ * added gtk_directory_selection_new() and related functions
+ * 	(possible new GTK widget?)
+ * updated priority to go back to min priority when execute_program is
+ * 	called
+ * other misc fixes.
+ *
  * Revision 1.11  1999/06/29 19:51:02  scottf
  * label rewording
  * added check for "%s" in the post-process command-line
@@ -139,21 +147,9 @@ char picture_previous[128];
 void gallery_change_dir(GtkWidget *widget, GtkWidget *label) {
 
 	GtkWidget *filesel;
-	GList *child;
 
-        filesel = gtk_file_selection_new("Select an Output Directory...");
+        filesel = gtk_directory_selection_new("Select an Output Directory...");
 	gtk_window_set_position (GTK_WINDOW (filesel), GTK_WIN_POS_CENTER);
-	gtk_file_selection_set_filename(GTK_FILE_SELECTION(filesel),
-		filesel_cwd);
-        gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_entry);
-        gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_text);
-        /* get the main vbox children */
-        child = gtk_container_children(
-                GTK_CONTAINER(GTK_FILE_SELECTION(filesel)->main_vbox));
-        /* get the dir/file list box children */
-        child = gtk_container_children(
-                GTK_CONTAINER(child->next->next->data));
-        gtk_widget_hide(GTK_WIDGET(child->next->data));
 	gtk_widget_show(filesel);
 
         if (wait_for_hide(filesel,

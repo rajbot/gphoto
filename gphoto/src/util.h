@@ -21,6 +21,8 @@ void ok_click (GtkWidget *dialog);
 int wait_for_hide (GtkWidget *dialog, GtkWidget *ok_button,
                    GtkWidget *cancel_button) ;
 
+GtkWidget *gtk_directory_selection_new(char *title);
+
 GdkImlibImage *gdk_imlib_load_image_mem(char *image, int size);
 
 void free_image(struct Image *im);

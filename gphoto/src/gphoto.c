@@ -35,4 +35,3 @@ void update_progress(float percentage) {
         while (gtk_events_pending())
                 gtk_main_iteration();
 }
-

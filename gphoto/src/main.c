@@ -80,7 +80,6 @@ int main (int argc, char *argv[]) {
 	Images.next=NULL;
 
 	/* Set the priority (taken from PhotoPC photopc.c) */
-
 #ifdef linux
         if (geteuid() == 0) {
                 struct sched_param sp;
@@ -91,7 +90,6 @@ int main (int argc, char *argv[]) {
                 sp.sched_priority=minp+(maxp-minp)/2;
                 if ((rc=sched_setscheduler(0,SCHED_FIFO,&sp)) == -1)
                         fprintf(stderr,"failed to set priority\n");
-                /* (void)seteuid(getuid()); */
 	}
 #endif
 	/* Command line mode anyone? ----------------------------- */

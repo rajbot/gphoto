@@ -1,28 +1,208 @@
 #!/bin/bash
 
 source "$(dirname $0)/utils/common.sh" || exit 7
-source "${metadir}/utils/autodetect.sh" || exit 7
 
 
 ########################################################################
 # evaluate command line parameters
 
-if [ "$1" = "--update" ]
-then
-    parm_update="true"
-else
-    parm_update="false"
-fi
+parm_update="false"
+parm_tools="false"
+while :
+do
+    case "$1" in
+	--update) parm_update="true" ;;
+	--tools)  parm_tools="true" ;;
+	--help)   cat<<EOF
+Usage: $this [OPTION]...
+Bootstrap the gphoto-meta package, i.e. download and build distribution 
+tarballs of all gphoto and related packages.
+
+     --update    run a CVS update if a module is already checked out
+     --tools     use a local copy of the build tools (i.e. autoconf, 
+                 automake, libtool, gettext), download and install them
+                 if required
+EOF
+		  exit
+		  ;;
+	"")       ;;
+	*)
+	    echo "Fatal: Unknown parameter: $1"
+	    exit 1
+	    ;;
+    esac
+    if ! shift
+    then
+	break
+    fi
+done
+set | grep '^parm_'
+
+
+########################################################################
+# installautotools - check for necessary tools to be installed
+
+function installautotools() {
+    local tool URL restofline
+
+    cmd mkdir -p "${downloads}" "${toolroot}" "${toolsrc}"
+    cmd rm -rf "${toolroot}"
+
+    while read tool URL restofline
+    do
+	local tarball
+	tarball="${downloads}/$(basename "$URL")"
+	if [ -f "$tarball" ]
+	then
+	    echo "##### $tool already downloaded. Skipping."
+	else
+	    cmd cd "${downloads}"
+	    if ! cmd wget --continue "$URL"
+	    then
+		echo "##### Fatal: Could not get $tool from $URL."
+		echo "    # You may want to manually download $URL to $downloads."
+		exit 12
+	    fi
+	fi
+	echo "    # Distribution tarball is at $tarball."
+	cmd cd "$toolsrc"
+	cmd rm -rf "$toolsrc/$tool-"[0-9]*
+	local ext
+	case "$tarball" in
+	    *.tar.gz)
+		cmd tar xvfz "$tarball"
+		ext=".tar.gz"
+		;;
+	    *.tar.bz2)
+		cmd tar xvfj "$tarball"
+		ext=".tar.bz2"
+		;;
+	    *)
+		echo "#### Fatal: Unknown format of $tarball."
+		exit 124
+		;;
+	esac
+	base="$(basename "$tarball" "$ext")"
+	cmd cd "${toolsrc}/${base}"
+	cmd ./configure --prefix="${toolroot}"
+	cmd make install
+    done <<EOF
+autoconf	ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.53.tar.bz2
+automake	ftp://ftp.gnu.org/gnu/automake/automake-1.6.3.tar.bz2
+libtool		ftp://ftp.gnu.org/gnu/libtool/libtool-1.4.2.tar.gz
+gettext		ftp://ftp.gnu.org/gnu/gettext/gettext-0.11.5.tar.gz
+EOF
+}
+
+
+########################################################################
+# checktools - check for necessary tools to be installed
+
+function checktools() {
+    local action tool restofline
+    local autoinstall="false"
+
+    if [ -d "$toolroot" ]
+    then
+	echo "##### Going to use/build our own tools from/to ${toolroot}"
+	echo "    # If you don't want to use these tools, remove the"
+	echo "    # ${toolroot} directory."
+	# these are global variables
+	PATH="${toolroot}/bin:${PATH}"
+	LD_LIBRARY_PATH="${toolroot}/lib:${LD_LIBRARY_PATH}"
+	export PATH LD_LIBRARY_PATH
+    fi
+
+    echo "##### Checking for presence of tools..."
+    while read action tool restofline
+    do
+	if "$tool" --version >& /dev/null
+	then
+	    echo "    # $tool found."
+	else
+	    echo "    # $tool not found."
+	    if [ "$action" = "fatal" ] || ( [ "$action" = "autocnd" ] && [ "$autoinstall" = "true" ] )
+	    then
+		echo "    # $tool is absolutely required, so we're aborting."
+		exit 2
+	    elif [ "$action" = "auto" ]
+	    then
+		echo "    # $tool is required, so we're installing the autosuite first."
+		autoinstall="true"
+	    else
+		echo "##### Illegal action. Internal error."
+		exit 225
+	    fi
+	fi
+    done <<EOF
+fatal	cvs
+fatal	grep
+fatal	egrep
+auto	autoconf
+auto	automake
+auto	gettext
+auto	libtool
+autocnd	wget
+EOF
+
+    if [ "${parm_tools}" = "false" ]
+    then
+	true
+    elif [ "${autoinstall}" = "false" ]
+    then
+	true
+    else
+	installautotools
+    fi
+
+    # no need for autodetection if we installed our own version
+    [ -d "$toolroot" ] && return
+
+    for suffix in -1.6 1.6 -1.5 1.5 ""
+    do
+	if "automake${suffix}" "--version" 2> /dev/null | grep -qi "automake"
+	then
+	    echo "Detected automake: automake${suffix}"
+	    AUTOMAKE_SUFFIX="$suffix"
+	    break
+	fi
+    done
+    if [ "$AUTOMAKE_SUFFIX" = "" ]
+    then
+	echo "$this: Fatal: automake not found"
+	exit 2
+    fi
+    export AUTOMAKE_SUFFIX
+
+    for suffix in -2.53 2.53 -2.50 2.50 ""
+    do
+	if "autoconf${suffix}" "--version" 2> /dev/null | grep -qi "autoconf"
+	then
+	    echo "Detected autoconf: autoconf${suffix}"
+	    AUTOCONF_SUFFIX="$suffix"
+	    break
+	fi
+    done
+    if [ "$AUTOCONF_SUFFIX" = "" ]
+    then
+	echo "$this: Fatal: autoconf not found"
+	exit 2
+    fi
+    export AUTOCONF_SUFFIX
+
+    echo "AUTOCONF_SUFFIX=$AUTOCONF_SUFFIX"
+    echo "AUTOMAKE_SUFFIX=$AUTOMAKE_SUFFIX"
+}
 
 
 ########################################################################
 # cvslogin - initialize stuff (CVS logins, etc)
 
-cvslogin() {
+function cvslogin() {
     local module releasetag CVSROOT restofline
     while read module releasetag CVSROOT restofline
     do 
-	local CVSROOT="$(echo "${CVSROOT}" | sed 's|:/|:2401/|')"
+	CVSROOT="$(echo "${CVSROOT}" | sed 's|:/|:2401/|')"
 	if grep -q "${CVSROOT}" $HOME/.cvspass
 	then
 	    echo "Good: already logged in for ${CVSROOT}."
@@ -38,7 +218,7 @@ cvslogin() {
 ########################################################################
 # getsources - get software sources from CVS into ${cvsorig}/MODULE
 
-getsources() {
+function getsources() {
     echo "##### Getting software from CVS"
     cmd mkdir -p "${cvsorig}"
     cmd cd "${cvsorig}"
@@ -63,7 +243,7 @@ getsources() {
 	    echo "##### CVS module ${module} is already here."
 	    if [ "$parm_update" = "true" ]
 	    then
-		echo "#     Updating ${module}"
+		echo "    # Updating ${module}"
 		cmd cd "${cvsorig}/${module}"
 		# FIXME: Use other directory (do not modify timestamps if not required)
 		local stdout="${tmpdir}/.tmp.${module}.stdout"
@@ -79,7 +259,7 @@ getsources() {
 		fi
 		rm -f "$stdout"
 	    else
-		echo "#     Not updating ${module} - run $this with --update if you want that."
+		echo "    # Not updating ${module} - run $this with --update if you want that."
 	    fi
 	else
 	    echo "##### Checking out ${module} release ${releasetag} from ${CVSROOT}"
@@ -93,7 +273,7 @@ getsources() {
 ########################################################################
 # builddist - build distribution tarball for all MODULEs
 
-builddist() {
+function builddist() {
     local PKG_CONFIG_PATH="${distroot}/lib/pkgconfig:${PKG_CONFIG_PATH}"
     local LD_LIBRARY_PATH="${distroot}/lib:${LD_LIBRARY_PATH}"
     local PATH="${distroot}/bin:${PATH}"
@@ -115,7 +295,7 @@ builddist() {
 	if [ "$redist" != "true" ]
 	then
 	    echo "##### Distribution tarball ${file} for ${module} is current."
-	    echo "#     Not rebuilding dist tarball for ${module}."
+	    echo "    # Not rebuilding dist tarball for ${module}."
 	else
 	    echo "########################################################################"
 	    echo "##### Creating new distribution tarball of ${module} now:"
@@ -130,7 +310,7 @@ builddist() {
 	    local docroot="${distroot}/share/doc/gphoto2-manual-"[0-9]*
 	    if [ -d "$docroot" ]
 	    then
-		echo "#### Installing documentation for ${module}..."
+		echo "##### Installing documentation for ${module}..."
 		case "${module}" in
 		    gtkam)	   
 			cmd cp -f "${docroot}/man/gtkam.1" doc/gtkam.1
@@ -144,8 +324,8 @@ builddist() {
 			;;
 		esac
 	    fi
-	    echo "#### Press enter when asked to. And complain to the gettextize guys,"
-	    echo "#    not to me. Or run this with \"echo $0 | at now\"."
+	    echo "##### Press enter when asked to. And complain to the gettextize guys,"
+	    echo "    # not to me. Or run this with \"echo $0 | at now\"."
 	    cmd ./autogen.sh --enable-maintainer-mode --prefix="${distroot}" ${configopts}
 	    cmd ./configure  --enable-maintainer-mode --prefix="${distroot}" ${configopts}
 	    cmd make dist
@@ -162,6 +342,7 @@ builddist() {
 		    local file
 		    for file in "${distdir}/${module}-"[0-9]*.tar.{bz2,gz}
 		    do
+			local ext
 			if [ -f "$file" ] && ! echo "$file" | egrep -q -- '-broken.tar.(bz2|gz)$'
 			then
 			    case "$file" in
@@ -197,7 +378,7 @@ builddist() {
 ########################################################################
 # makefiles - create Makefile.am files
 
-makefiles() {
+function makefiles() {
     cmd cd "${distdir}"
     local files=""
     while read module restofline
@@ -226,6 +407,7 @@ EOF
 ########################################################################
 # main program
 
+checktools
 cvslogin
 getsources
 builddist

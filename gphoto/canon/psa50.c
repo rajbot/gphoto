@@ -6,7 +6,6 @@
 
 
 #include <stdlib.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -105,7 +104,7 @@ static int psa50_send_packet(unsigned char type,unsigned char seq,
   unsigned char *pkt,int len)
 {
     unsigned char *hdr = pkt-PKT_HDR_LEN;
-    uint16_t crc;
+    unsigned short crc;
 
     hdr[PKT_TYPE] = type;
     hdr[PKT_SEQ] = seq;
@@ -123,7 +122,7 @@ static unsigned char *psa50_recv_packet(unsigned char *type,unsigned char *seq,
   int *len)
 {
     unsigned char *pkt;
-    uint16_t crc;
+    unsigned short crc;
     int raw_length,length;
 
     pkt = psa50_recv_frame(&raw_length);
@@ -423,7 +422,7 @@ void psa50_free_dir(struct psa50_dir *list)
 {
     struct psa50_dir *walk;
 
-    for (walk = list; walk->name; walk++) free(walk->name);
+    for (walk = list; walk->name; walk++) free((char *) walk->name);
     free(list);
 }
 

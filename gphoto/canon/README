@@ -11,6 +11,13 @@ the caches can be manually flushed using "Configure camera".
 Change history
 ==============
 
+Version 4 (3-SEP-1999)
+---------
+
+ - changed uint16_t to unsigned short and removed inclusion of stdint.h, for
+   compatibility :-(
+
+
 Version 3 (1-SEP-1999)
 ---------
 

@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -180,9 +179,10 @@ static int crc_init[1024] = {
 };
 
 
-static uint16_t chksum(uint16_t init,unsigned n,const unsigned char *s)
+static unsigned short chksum(unsigned short init,unsigned n,
+  const unsigned char *s)
 {
-    uint16_t crc;
+    unsigned short crc;
 
     for (crc = init; n > 0; n--)
         crc = crc_table[(crc ^ *s++) & 0xff] ^ (crc >> 8);
@@ -196,7 +196,7 @@ static int find_init(int len)
 }
 
 
-uint16_t canon_psa50_gen_crc(const unsigned char *pkt,int len)
+unsigned short canon_psa50_gen_crc(const unsigned char *pkt,int len)
 {
     int init;
 
@@ -219,9 +219,9 @@ static int guess(const unsigned char *m,int len,int crc)
 }
 
 
-int canon_psa50_chk_crc(const unsigned char *pkt,int len,uint16_t crc)
+int canon_psa50_chk_crc(const unsigned char *pkt,int len,unsigned short crc)
 {
-    uint16_t this;
+    unsigned short this;
     int init;
 
     init = find_init(len);

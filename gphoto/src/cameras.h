@@ -19,6 +19,7 @@ struct Model cameras[] = {
 	{"Apple QuickTake 200", &olympus},
 	{"Casio QV-10", &casio_qv},
 	{"Casio QV-11", &casio_qv},
+	{"Casio QV-30", &casio_qv},
 	{"Casio QV-70", &casio_qv},
 	{"Casio QV-100", &casio_qv},
 	{"Casio QV-200", &casio_qv},

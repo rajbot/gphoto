@@ -28,9 +28,13 @@ compileinstall() {
 	exit 1
     fi
     cmd mkdir -p "${srcdir}"
+    export PKG_CONFIG_PATH="${instroot}/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    export LD_LIBRARY_PATH="${instroot}/lib:${LD_LIBRARY_PATH}"
+    export PATH="${instroot}/bin:${PATH}"
     while read CVSROOT module restofline
     do
-	for tarball in "${distdir}/${module}-"[0-9]*.tar.gz
+	# unpack gz if available, else bz2 (this is faster :-)
+	for tarball in "${distdir}/${module}-"[0-9]*.tar.{gz,bz2}
 	do
 	    cmd cd "${srcdir}"
 	    base="$(basename ${tarball} .tar.gz)"
@@ -44,7 +48,14 @@ compileinstall() {
 		fi
 	    fi
 	    cmd rm -rf "${base}/"
-	    cmd tar xvfz "${tarball}"
+	    case "${tarball}" in
+		*.tar.gz)
+		    cmd tar xvfz "${tarball}"
+		    ;;
+		*.tar.bz2)
+		    cmd tar xvfj "${tarball}"
+		    ;;
+	    esac
 	    cmd cd "${srcdir}/${base}"
 	    cmd ./configure --prefix="${instroot}"
 	    cmd make install

@@ -1,4 +1,6 @@
 
+SUBDIRS = stock
+
 gladedir = $(datadir)/$(PACKAGE)/
 
 INCLUDES = \
@@ -36,7 +38,8 @@ gnocam_SOURCES =\
  notification.h notification.c\
  preferences.h preferences.c\
  preview.h preview.c\
- properties.h properties.c
+ properties.h properties.c\
+ stock.h stock.c
 
 glade_DATA = gnocam.glade
 

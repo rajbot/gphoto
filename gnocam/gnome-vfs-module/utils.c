@@ -132,7 +132,7 @@ file_handle_new (GnomeVFSURI* uri, GnomeVFSOpenMode mode, GConfClient* client, G
 		file = gp_file_new ();
 
 		/* Preview? */
-		if (strcmp (gnome_vfs_uri_get_user_name (uri), "previews") == 0) {
+		if (gnome_vfs_uri_get_user_name (uri) && (strcmp (gnome_vfs_uri_get_user_name (uri), "previews") == 0)) {
 			*result = GNOME_VFS_RESULT (gp_camera_file_get_preview (camera, file, dirname, (gchar*) filename));
 		} else {
 			*result = GNOME_VFS_RESULT (gp_camera_file_get (camera, file, dirname, (gchar*) filename));

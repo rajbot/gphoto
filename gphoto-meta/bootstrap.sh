@@ -7,8 +7,6 @@
 # our packages
 rm -f mkinstalldirs missing ltmain.sh install-sh depcomp configure Makefile
 
-set -x
-
 parsecommandline "$@" || die
 checktools || die
 cvslogin || die

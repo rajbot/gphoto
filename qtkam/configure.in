@@ -8,27 +8,33 @@ AM_INIT_AUTOMAKE(qtkam,0.1a)
 
 KDE_SET_PREFIX
 
-dnl AM_CONFIG_HEADER(config.h)
-
 dnl Checks for programs.
 AC_CHECK_COMPILERS
 KDE_PROG_LIBTOOL
 dnl AC_PROG_CXX
 
 dnl Checks for libgphoto2:
-AC_CHECK_LIB(gphoto2, gp_exit, 
-    [LIBS="$LIBS -lgphoto2"], 
-    [AC_MSG_ERROR("You need libgphoto2")])
-
-dnl Checks for header files.
-dnl AC_CHECK_HEADERS(gphoto2/gphoto2.h,
-dnl gphoto_includes="$gphoto_includes -I/usr/local/include/gphoto2"
-dnl [ AC_MSG_ERROR("Cant find gphoto2 headers")])
-    
-dnl Checks for typedefs, structures, and compiler characteristics.
-
-dnl Output the Makefile
+dnl AC_CHECK_LIB(gphoto2, gp_exit, 
+dnl     [LIBS="$LIBS -lgphoto2"], 
+dnl     [AC_MSG_ERROR("You need libgphoto2")])
+dnl Check for gPhoto2 configuration
+                
+dnl Check for programs
 AC_PATH_KDE
 AC_ARG_PROGRAM
+AC_PATH_PROG(GPHOTO_CONFIG,gphoto2-config)
+if test -n "${GPHOTO_CONFIG}"; then
+    GPHOTO_FLAGS="`$GPHOTO_CONFIG --cflags` `gphoto2-port-config --cflags`"
+    GPHOTO_LIBS="`$GPHOTO_CONFIG --libs`"
+    AC_SUBST(GPHOTO_FLAGS)
+    AC_SUBST(GPHOTO_LIBS)
+else
+    AC_MSG_ERROR([
+        gPhoto2 is required. Available from gPhoto's Sourceforge CVS.
+        Check http://www.gphoto.net/download.html for details. ])
+    exit 1
+   fi
+                        
+dnl Output the Makefile
 AM_CONFIG_HEADER(config.h)
 AC_OUTPUT([Makefile src/Makefile])

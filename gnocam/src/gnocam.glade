@@ -13,399 +13,6 @@
 </project>
 
 <widget>
-  <class>GnomeApp</class>
-  <name>app</name>
-  <signal>
-    <name>destroy</name>
-    <handler>on_app_destroy</handler>
-    <last_modification_time>Sat, 14 Oct 2000 10:46:41 GMT</last_modification_time>
-  </signal>
-  <title>GnoCam</title>
-  <type>GTK_WINDOW_TOPLEVEL</type>
-  <position>GTK_WIN_POS_NONE</position>
-  <modal>False</modal>
-  <allow_shrink>False</allow_shrink>
-  <allow_grow>True</allow_grow>
-  <auto_shrink>False</auto_shrink>
-  <enable_layout_config>True</enable_layout_config>
-
-  <widget>
-    <class>GnomeDock</class>
-    <child_name>GnomeApp:dock</child_name>
-    <name>dock</name>
-    <allow_floating>True</allow_floating>
-    <child>
-      <padding>0</padding>
-      <expand>True</expand>
-      <fill>True</fill>
-    </child>
-
-    <widget>
-      <class>GnomeDockItem</class>
-      <name>dockitem</name>
-      <border_width>2</border_width>
-      <placement>GNOME_DOCK_TOP</placement>
-      <band>0</band>
-      <position>0</position>
-      <offset>0</offset>
-      <locked>False</locked>
-      <exclusive>True</exclusive>
-      <never_floating>False</never_floating>
-      <never_vertical>True</never_vertical>
-      <never_horizontal>False</never_horizontal>
-      <shadow_type>GTK_SHADOW_OUT</shadow_type>
-
-      <widget>
-	<class>GtkMenuBar</class>
-	<name>menubar</name>
-	<shadow_type>GTK_SHADOW_NONE</shadow_type>
-
-	<widget>
-	  <class>GtkMenuItem</class>
-	  <name>file1</name>
-	  <stock_item>GNOMEUIINFO_MENU_FILE_TREE</stock_item>
-
-	  <widget>
-	    <class>GtkMenu</class>
-	    <name>file1_menu</name>
-
-	    <widget>
-	      <class>GtkPixmapMenuItem</class>
-	      <name>new_gallery</name>
-	      <signal>
-		<name>activate</name>
-		<handler>on_new_gallery_activate</handler>
-		<last_modification_time>Sat, 14 Oct 2000 08:27:32 GMT</last_modification_time>
-	      </signal>
-	      <stock_item>GNOMEUIINFO_MENU_NEW_ITEM</stock_item>
-	      <label>_New Gallery</label>
-	    </widget>
-
-	    <widget>
-	      <class>GtkMenuItem</class>
-	      <name>separator12</name>
-	      <right_justify>False</right_justify>
-	    </widget>
-
-	    <widget>
-	      <class>GtkPixmapMenuItem</class>
-	      <name>save_previews</name>
-	      <signal>
-		<name>activate</name>
-		<handler>on_save_previews_activate</handler>
-		<last_modification_time>Thu, 07 Sep 2000 21:04:40 GMT</last_modification_time>
-	      </signal>
-	      <label>Save _Preview(s)</label>
-	      <right_justify>False</right_justify>
-	      <stock_icon>GNOME_STOCK_MENU_SAVE</stock_icon>
-	    </widget>
-
-	    <widget>
-	      <class>GtkPixmapMenuItem</class>
-	      <name>save_previews_as</name>
-	      <signal>
-		<name>activate</name>
-		<handler>on_save_previews_as_activate</handler>
-		<last_modification_time>Sun, 01 Oct 2000 11:57:40 GMT</last_modification_time>
-	      </signal>
-	      <label>Save Preview(s) As...</label>
-	      <right_justify>False</right_justify>
-	      <stock_icon>GNOME_STOCK_MENU_SAVE_AS</stock_icon>
-	    </widget>
-
-	    <widget>
-	      <class>GtkPixmapMenuItem</class>
-	      <name>save_files</name>
-	      <signal>
-		<name>activate</name>
-		<handler>on_save_files_activate</handler>
-		<last_modification_time>Thu, 07 Sep 2000 21:00:27 GMT</last_modification_time>
-	      </signal>
-	      <label>Save _File(s)</label>
-	      <right_justify>False</right_justify>
-	      <stock_icon>GNOME_STOCK_MENU_SAVE</stock_icon>
-	    </widget>
-
-	    <widget>
-	      <class>GtkPixmapMenuItem</class>
-	      <name>save_files_as</name>
-	      <signal>
-		<name>activate</name>
-		<handler>on_save_files_as_activate</handler>
-		<last_modification_time>Sun, 01 Oct 2000 11:57:52 GMT</last_modification_time>
-	      </signal>
-	      <label>Save File(s) As...</label>
-	      <right_justify>False</right_justify>
-	      <stock_icon>GNOME_STOCK_MENU_SAVE_AS</stock_icon>
-	    </widget>
-
-	    <widget>
-	      <class>GtkPixmapMenuItem</class>
-	      <name>delete</name>
-	      <signal>
-		<name>activate</name>
-		<handler>on_delete_activate</handler>
-		<last_modification_time>Fri, 22 Sep 2000 18:11:32 GMT</last_modification_time>
-	      </signal>
-	      <label>_Delete</label>
-	      <right_justify>False</right_justify>
-	      <stock_icon>GNOME_STOCK_MENU_TRASH</stock_icon>
-	    </widget>
-
-	    <widget>
-	      <class>GtkMenuItem</class>
-	      <name>separator1</name>
-	      <right_justify>False</right_justify>
-	    </widget>
-
-	    <widget>
-	      <class>GtkPixmapMenuItem</class>
-	      <name>exit</name>
-	      <signal>
-		<name>activate</name>
-		<handler>on_exit_activate</handler>
-		<last_modification_time>Sat, 14 Oct 2000 10:47:13 GMT</last_modification_time>
-	      </signal>
-	      <stock_item>GNOMEUIINFO_MENU_EXIT_ITEM</stock_item>
-	    </widget>
-	  </widget>
-	</widget>
-
-	<widget>
-	  <class>GtkMenuItem</class>
-	  <name>settings1</name>
-	  <stock_item>GNOMEUIINFO_MENU_SETTINGS_TREE</stock_item>
-
-	  <widget>
-	    <class>GtkMenu</class>
-	    <name>settings1_menu</name>
-
-	    <widget>
-	      <class>GtkPixmapMenuItem</class>
-	      <name>preferences</name>
-	      <signal>
-		<name>activate</name>
-		<handler>on_preferences_activate</handler>
-		<last_modification_time>Mon, 04 Sep 2000 09:25:18 GMT</last_modification_time>
-	      </signal>
-	      <stock_item>GNOMEUIINFO_MENU_PREFERENCES_ITEM</stock_item>
-	    </widget>
-	  </widget>
-	</widget>
-
-	<widget>
-	  <class>GtkMenuItem</class>
-	  <name>help1</name>
-	  <stock_item>GNOMEUIINFO_MENU_HELP_TREE</stock_item>
-
-	  <widget>
-	    <class>GtkMenu</class>
-	    <name>help1_menu</name>
-
-	    <widget>
-	      <class>GtkPixmapMenuItem</class>
-	      <name>manual1</name>
-	      <signal>
-		<name>activate</name>
-		<handler>on_manual_activate</handler>
-		<last_modification_time>Sat, 14 Oct 2000 13:14:59 GMT</last_modification_time>
-	      </signal>
-	      <label>_Manual</label>
-	      <right_justify>False</right_justify>
-	      <stock_icon>GNOME_STOCK_MENU_BOOK_RED</stock_icon>
-	    </widget>
-
-	    <widget>
-	      <class>GtkMenuItem</class>
-	      <name>separator14</name>
-	      <right_justify>False</right_justify>
-	    </widget>
-
-	    <widget>
-	      <class>GtkPixmapMenuItem</class>
-	      <name>about</name>
-	      <signal>
-		<name>activate</name>
-		<handler>on_about_activate</handler>
-		<last_modification_time>Mon, 04 Sep 2000 09:25:28 GMT</last_modification_time>
-	      </signal>
-	      <stock_item>GNOMEUIINFO_MENU_ABOUT_ITEM</stock_item>
-	    </widget>
-	  </widget>
-	</widget>
-      </widget>
-    </widget>
-
-    <widget>
-      <class>GnomeDockItem</class>
-      <name>dockitem</name>
-      <border_width>1</border_width>
-      <placement>GNOME_DOCK_TOP</placement>
-      <band>1</band>
-      <position>0</position>
-      <offset>0</offset>
-      <locked>False</locked>
-      <exclusive>True</exclusive>
-      <never_floating>False</never_floating>
-      <never_vertical>False</never_vertical>
-      <never_horizontal>False</never_horizontal>
-      <shadow_type>GTK_SHADOW_OUT</shadow_type>
-
-      <widget>
-	<class>GtkToolbar</class>
-	<name>toolbar</name>
-	<border_width>1</border_width>
-	<orientation>GTK_ORIENTATION_HORIZONTAL</orientation>
-	<type>GTK_TOOLBAR_BOTH</type>
-	<space_size>16</space_size>
-	<space_style>GTK_TOOLBAR_SPACE_LINE</space_style>
-	<relief>GTK_RELIEF_NONE</relief>
-	<tooltips>True</tooltips>
-
-	<widget>
-	  <class>GtkButton</class>
-	  <child_name>Toolbar:button</child_name>
-	  <name>button_save_previews</name>
-	  <tooltip>Save selected previews</tooltip>
-	  <signal>
-	    <name>clicked</name>
-	    <handler>on_button_save_previews_clicked</handler>
-	    <last_modification_time>Thu, 07 Sep 2000 21:03:56 GMT</last_modification_time>
-	  </signal>
-	  <label>Save Preview(s)</label>
-	  <stock_pixmap>GNOME_STOCK_PIXMAP_SAVE</stock_pixmap>
-	</widget>
-
-	<widget>
-	  <class>GtkButton</class>
-	  <child_name>Toolbar:button</child_name>
-	  <name>button_save_previews_as</name>
-	  <tooltip>Save selected previews</tooltip>
-	  <signal>
-	    <name>clicked</name>
-	    <handler>on_button_save_previews_as_clicked</handler>
-	    <last_modification_time>Sun, 01 Oct 2000 11:59:17 GMT</last_modification_time>
-	  </signal>
-	  <label>Save Preview(s) As...</label>
-	  <stock_pixmap>GNOME_STOCK_PIXMAP_SAVE_AS</stock_pixmap>
-	</widget>
-
-	<widget>
-	  <class>GtkButton</class>
-	  <child_name>Toolbar:button</child_name>
-	  <name>button_save_files</name>
-	  <tooltip>Save selected files</tooltip>
-	  <signal>
-	    <name>clicked</name>
-	    <handler>on_button_save_files_clicked</handler>
-	    <last_modification_time>Thu, 07 Sep 2000 21:04:03 GMT</last_modification_time>
-	  </signal>
-	  <label>Save File(s)</label>
-	  <stock_pixmap>GNOME_STOCK_PIXMAP_SAVE</stock_pixmap>
-	</widget>
-
-	<widget>
-	  <class>GtkButton</class>
-	  <child_name>Toolbar:button</child_name>
-	  <name>button_save_files_as</name>
-	  <tooltip>Save selected previews</tooltip>
-	  <signal>
-	    <name>clicked</name>
-	    <handler>on_button_save_files_as_clicked</handler>
-	    <last_modification_time>Sun, 01 Oct 2000 11:59:32 GMT</last_modification_time>
-	  </signal>
-	  <label>Save File(s) As...</label>
-	  <stock_pixmap>GNOME_STOCK_PIXMAP_SAVE_AS</stock_pixmap>
-	</widget>
-
-	<widget>
-	  <class>GtkButton</class>
-	  <child_name>Toolbar:button</child_name>
-	  <name>button_delete</name>
-	  <tooltip>Delete selected files</tooltip>
-	  <signal>
-	    <name>clicked</name>
-	    <handler>on_button_delete_clicked</handler>
-	    <last_modification_time>Fri, 22 Sep 2000 18:31:40 GMT</last_modification_time>
-	  </signal>
-	  <label>Delete</label>
-	  <stock_pixmap>GNOME_STOCK_PIXMAP_TRASH</stock_pixmap>
-	</widget>
-      </widget>
-    </widget>
-
-    <widget>
-      <class>GtkHPaned</class>
-      <child_name>GnomeDock:contents</child_name>
-      <name>hpaned1</name>
-      <border_width>5</border_width>
-      <handle_size>10</handle_size>
-      <gutter_size>10</gutter_size>
-
-      <widget>
-	<class>GtkScrolledWindow</class>
-	<name>scrolledwindow_cameras</name>
-	<width>150</width>
-	<height>150</height>
-	<hscrollbar_policy>GTK_POLICY_AUTOMATIC</hscrollbar_policy>
-	<vscrollbar_policy>GTK_POLICY_AUTOMATIC</vscrollbar_policy>
-	<hupdate_policy>GTK_UPDATE_CONTINUOUS</hupdate_policy>
-	<vupdate_policy>GTK_UPDATE_CONTINUOUS</vupdate_policy>
-	<child>
-	  <shrink>True</shrink>
-	  <resize>False</resize>
-	</child>
-
-	<widget>
-	  <class>GtkViewport</class>
-	  <name>viewport_cameras</name>
-	  <shadow_type>GTK_SHADOW_IN</shadow_type>
-
-	  <widget>
-	    <class>GtkTree</class>
-	    <name>tree_cameras</name>
-	    <selection_mode>GTK_SELECTION_MULTIPLE</selection_mode>
-	    <view_mode>GTK_TREE_VIEW_LINE</view_mode>
-	    <view_line>True</view_line>
-	  </widget>
-	</widget>
-      </widget>
-
-      <widget>
-	<class>GtkNotebook</class>
-	<child_name>GnomeDock:contents</child_name>
-	<name>notebook_files</name>
-	<can_focus>True</can_focus>
-	<show_tabs>True</show_tabs>
-	<show_border>True</show_border>
-	<tab_pos>GTK_POS_TOP</tab_pos>
-	<scrollable>True</scrollable>
-	<tab_hborder>2</tab_hborder>
-	<tab_vborder>2</tab_vborder>
-	<popup_enable>False</popup_enable>
-	<child>
-	  <shrink>True</shrink>
-	  <resize>True</resize>
-	</child>
-      </widget>
-    </widget>
-  </widget>
-
-  <widget>
-    <class>GnomeAppBar</class>
-    <child_name>GnomeApp:appbar</child_name>
-    <name>appbar</name>
-    <has_progress>True</has_progress>
-    <has_status>True</has_status>
-    <child>
-      <padding>0</padding>
-      <expand>True</expand>
-      <fill>True</fill>
-    </child>
-  </widget>
-</widget>
-
-<widget>
   <class>GnomeAbout</class>
   <name>about</name>
   <modal>False</modal>
@@ -1312,11 +919,14 @@
       </widget>
 
       <widget>
-	<class>GtkVBox</class>
-	<name>vbox5</name>
+	<class>GtkTable</class>
+	<name>table7</name>
 	<border_width>10</border_width>
+	<rows>3</rows>
+	<columns>3</columns>
 	<homogeneous>False</homogeneous>
-	<spacing>10</spacing>
+	<row_spacing>10</row_spacing>
+	<column_spacing>10</column_spacing>
 
 	<widget>
 	  <class>GtkFrame</class>
@@ -1325,9 +935,18 @@
 	  <label_xalign>0</label_xalign>
 	  <shadow_type>GTK_SHADOW_ETCHED_IN</shadow_type>
 	  <child>
-	    <padding>0</padding>
-	    <expand>True</expand>
-	    <fill>True</fill>
+	    <left_attach>0</left_attach>
+	    <right_attach>2</right_attach>
+	    <top_attach>0</top_attach>
+	    <bottom_attach>1</bottom_attach>
+	    <xpad>0</xpad>
+	    <ypad>0</ypad>
+	    <xexpand>True</xexpand>
+	    <yexpand>True</yexpand>
+	    <xshrink>False</xshrink>
+	    <yshrink>False</yshrink>
+	    <xfill>True</xfill>
+	    <yfill>True</yfill>
 	  </child>
 
 	  <widget>
@@ -1343,142 +962,6 @@
 	    <text_visible>True</text_visible>
 	    <text_max_length>0</text_max_length>
 	    <text></text>
-	  </widget>
-	</widget>
-
-	<widget>
-	  <class>GtkFrame</class>
-	  <name>frame3</name>
-	  <label>Previews</label>
-	  <label_xalign>0</label_xalign>
-	  <shadow_type>GTK_SHADOW_ETCHED_IN</shadow_type>
-	  <child>
-	    <padding>0</padding>
-	    <expand>True</expand>
-	    <fill>True</fill>
-	  </child>
-
-	  <widget>
-	    <class>GtkHBox</class>
-	    <name>hbox2</name>
-	    <border_width>5</border_width>
-	    <homogeneous>False</homogeneous>
-	    <spacing>10</spacing>
-
-	    <widget>
-	      <class>GtkHBox</class>
-	      <name>hbox3</name>
-	      <homogeneous>False</homogeneous>
-	      <spacing>5</spacing>
-	      <child>
-		<padding>0</padding>
-		<expand>True</expand>
-		<fill>True</fill>
-	      </child>
-
-	      <widget>
-		<class>GtkLabel</class>
-		<name>label12</name>
-		<label>Magnification:</label>
-		<justify>GTK_JUSTIFY_CENTER</justify>
-		<wrap>False</wrap>
-		<xalign>0.5</xalign>
-		<yalign>0.5</yalign>
-		<xpad>0</xpad>
-		<ypad>0</ypad>
-		<child>
-		  <padding>0</padding>
-		  <expand>False</expand>
-		  <fill>False</fill>
-		</child>
-	      </widget>
-
-	      <widget>
-		<class>GtkHScale</class>
-		<name>hscale_magnification</name>
-		<can_focus>True</can_focus>
-		<draw_value>True</draw_value>
-		<value_pos>GTK_POS_TOP</value_pos>
-		<digits>1</digits>
-		<policy>GTK_UPDATE_CONTINUOUS</policy>
-		<value>1.2</value>
-		<lower>1</lower>
-		<upper>5</upper>
-		<step>0</step>
-		<page>0</page>
-		<page_size>0</page_size>
-		<child>
-		  <padding>0</padding>
-		  <expand>True</expand>
-		  <fill>True</fill>
-		</child>
-	      </widget>
-	    </widget>
-
-	    <widget>
-	      <class>GtkHBox</class>
-	      <name>hbox4</name>
-	      <homogeneous>False</homogeneous>
-	      <spacing>5</spacing>
-	      <child>
-		<padding>0</padding>
-		<expand>True</expand>
-		<fill>True</fill>
-	      </child>
-
-	      <widget>
-		<class>GtkLabel</class>
-		<name>label13</name>
-		<label>Interpolation Mode:</label>
-		<justify>GTK_JUSTIFY_CENTER</justify>
-		<wrap>False</wrap>
-		<xalign>0.5</xalign>
-		<yalign>0.5</yalign>
-		<xpad>0</xpad>
-		<ypad>0</ypad>
-		<child>
-		  <padding>0</padding>
-		  <expand>False</expand>
-		  <fill>False</fill>
-		</child>
-	      </widget>
-
-	      <widget>
-		<class>GtkCombo</class>
-		<name>combo1</name>
-		<value_in_list>True</value_in_list>
-		<ok_if_empty>False</ok_if_empty>
-		<case_sensitive>False</case_sensitive>
-		<use_arrows>True</use_arrows>
-		<use_arrows_always>False</use_arrows_always>
-		<items>Nearest
-Tiles
-Bilinear
-Hyper
-</items>
-		<child>
-		  <padding>0</padding>
-		  <expand>True</expand>
-		  <fill>True</fill>
-		</child>
-
-		<widget>
-		  <class>GtkEntry</class>
-		  <child_name>GtkCombo:entry</child_name>
-		  <name>entry_interpolation</name>
-		  <can_focus>True</can_focus>
-		  <signal>
-		    <name>changed</name>
-		    <handler>on_entry_interpolation_changed</handler>
-		    <last_modification_time>Fri, 06 Oct 2000 21:10:45 GMT</last_modification_time>
-		  </signal>
-		  <editable>True</editable>
-		  <text_visible>True</text_visible>
-		  <text_max_length>0</text_max_length>
-		  <text>Nearest</text>
-		</widget>
-	      </widget>
-	    </widget>
 	  </widget>
 	</widget>
       </widget>
@@ -3028,6 +2511,263 @@ Hyper
 
       <widget>
 	<class>Placeholder</class>
+      </widget>
+    </widget>
+  </widget>
+</widget>
+
+<widget>
+  <class>GtkWindow</class>
+  <name>dummy_window_main</name>
+  <title>window1</title>
+  <type>GTK_WINDOW_TOPLEVEL</type>
+  <position>GTK_WIN_POS_NONE</position>
+  <modal>False</modal>
+  <allow_shrink>False</allow_shrink>
+  <allow_grow>True</allow_grow>
+  <auto_shrink>False</auto_shrink>
+
+  <widget>
+    <class>GtkHPaned</class>
+    <child_name>GnomeDock:contents</child_name>
+    <name>hpaned</name>
+    <border_width>5</border_width>
+    <handle_size>10</handle_size>
+    <gutter_size>10</gutter_size>
+
+    <widget>
+      <class>GtkVBox</class>
+      <name>vbox6</name>
+      <homogeneous>False</homogeneous>
+      <spacing>5</spacing>
+      <child>
+	<shrink>True</shrink>
+	<resize>False</resize>
+      </child>
+
+      <widget>
+	<class>GtkFrame</class>
+	<name>frame9</name>
+	<label>View Mode</label>
+	<label_xalign>0</label_xalign>
+	<shadow_type>GTK_SHADOW_ETCHED_IN</shadow_type>
+	<child>
+	  <padding>0</padding>
+	  <expand>False</expand>
+	  <fill>False</fill>
+	</child>
+
+	<widget>
+	  <class>GtkOptionMenu</class>
+	  <name>optionmenu_view_mode</name>
+	  <border_width>10</border_width>
+	  <can_focus>True</can_focus>
+	  <signal>
+	    <name>clicked</name>
+	    <handler>on_optionmenu_view_mode_clicked</handler>
+	    <last_modification_time>Mon, 30 Oct 2000 09:43:28 GMT</last_modification_time>
+	  </signal>
+	  <items>None
+Preview
+File
+</items>
+	  <initial_choice>0</initial_choice>
+	</widget>
+      </widget>
+
+      <widget>
+	<class>GtkScrolledWindow</class>
+	<name>scrolledwindow_cameras</name>
+	<width>150</width>
+	<height>150</height>
+	<hscrollbar_policy>GTK_POLICY_AUTOMATIC</hscrollbar_policy>
+	<vscrollbar_policy>GTK_POLICY_AUTOMATIC</vscrollbar_policy>
+	<hupdate_policy>GTK_UPDATE_CONTINUOUS</hupdate_policy>
+	<vupdate_policy>GTK_UPDATE_CONTINUOUS</vupdate_policy>
+	<child>
+	  <padding>0</padding>
+	  <expand>True</expand>
+	  <fill>True</fill>
+	</child>
+
+	<widget>
+	  <class>GtkViewport</class>
+	  <name>viewport_cameras</name>
+	  <shadow_type>GTK_SHADOW_IN</shadow_type>
+
+	  <widget>
+	    <class>GtkTree</class>
+	    <name>main_tree</name>
+	    <selection_mode>GTK_SELECTION_MULTIPLE</selection_mode>
+	    <view_mode>GTK_TREE_VIEW_LINE</view_mode>
+	    <view_line>True</view_line>
+	  </widget>
+	</widget>
+      </widget>
+    </widget>
+
+    <widget>
+      <class>Placeholder</class>
+      <child_name>GnomeDock:contents</child_name>
+    </widget>
+  </widget>
+</widget>
+
+<widget>
+  <class>GnomeMessageBox</class>
+  <name>duration_messagebox</name>
+  <message_box_type>GNOME_MESSAGE_BOX_QUESTION</message_box_type>
+  <message>How long should the video 
+be (in seconds)?</message>
+  <title>Information</title>
+  <position>GTK_WIN_POS_NONE</position>
+  <modal>False</modal>
+  <allow_shrink>False</allow_shrink>
+  <allow_grow>False</allow_grow>
+  <auto_shrink>False</auto_shrink>
+  <auto_close>True</auto_close>
+  <hide_on_close>False</hide_on_close>
+
+  <widget>
+    <class>GtkVBox</class>
+    <child_name>GnomeDialog:vbox</child_name>
+    <name>duration_vbox</name>
+    <border_width>5</border_width>
+    <homogeneous>False</homogeneous>
+    <spacing>5</spacing>
+    <child>
+      <padding>0</padding>
+      <expand>True</expand>
+      <fill>True</fill>
+    </child>
+
+    <widget>
+      <class>GtkHButtonBox</class>
+      <child_name>GnomeDialog:action_area</child_name>
+      <name>dialog-action_area4</name>
+      <layout_style>GTK_BUTTONBOX_END</layout_style>
+      <spacing>0</spacing>
+      <child_min_width>85</child_min_width>
+      <child_min_height>27</child_min_height>
+      <child_ipad_x>7</child_ipad_x>
+      <child_ipad_y>0</child_ipad_y>
+      <child>
+	<padding>0</padding>
+	<expand>False</expand>
+	<fill>True</fill>
+	<pack>GTK_PACK_END</pack>
+      </child>
+
+      <widget>
+	<class>GtkButton</class>
+	<name>duration_button_ok</name>
+	<can_default>True</can_default>
+	<can_focus>True</can_focus>
+	<signal>
+	  <name>clicked</name>
+	  <handler>on_duration_button_ok_clicked</handler>
+	  <last_modification_time>Mon, 30 Oct 2000 09:53:25 GMT</last_modification_time>
+	</signal>
+	<stock_button>GNOME_STOCK_BUTTON_OK</stock_button>
+      </widget>
+
+      <widget>
+	<class>GtkButton</class>
+	<name>duration_button_cancel</name>
+	<can_default>True</can_default>
+	<can_focus>True</can_focus>
+	<signal>
+	  <name>clicked</name>
+	  <handler>on_duration_button_cancel_clicked</handler>
+	  <last_modification_time>Mon, 30 Oct 2000 09:53:16 GMT</last_modification_time>
+	</signal>
+	<stock_button>GNOME_STOCK_BUTTON_CANCEL</stock_button>
+      </widget>
+    </widget>
+
+    <widget>
+      <class>GtkHScale</class>
+      <name>duration_hscale</name>
+      <can_focus>True</can_focus>
+      <draw_value>True</draw_value>
+      <value_pos>GTK_POS_TOP</value_pos>
+      <digits>0</digits>
+      <policy>GTK_UPDATE_DISCONTINUOUS</policy>
+      <value>0</value>
+      <lower>0</lower>
+      <upper>60</upper>
+      <step>0</step>
+      <page>0</page>
+      <page_size>0</page_size>
+      <child>
+	<padding>0</padding>
+	<expand>True</expand>
+	<fill>True</fill>
+      </child>
+    </widget>
+  </widget>
+</widget>
+
+<widget>
+  <class>GnomeMessageBox</class>
+  <name>welcome_messagebox</name>
+  <message_box_type>GNOME_MESSAGE_BOX_GENERIC</message_box_type>
+  <message>It seems that you are running
+GnoCam for the first time.
+
+GnoCam is a small but powerful
+front-end to gphoto. Welcome to
+the wonderful world of gphoto!
+Before you do anything else, you
+should probably first open the
+preferences dialog and add a
+camera.
+
+Enjoy!</message>
+  <title>Information</title>
+  <position>GTK_WIN_POS_NONE</position>
+  <modal>False</modal>
+  <allow_shrink>False</allow_shrink>
+  <allow_grow>False</allow_grow>
+  <auto_shrink>False</auto_shrink>
+  <auto_close>True</auto_close>
+  <hide_on_close>False</hide_on_close>
+
+  <widget>
+    <class>GtkVBox</class>
+    <child_name>GnomeDialog:vbox</child_name>
+    <name>dialog-vbox5</name>
+    <homogeneous>False</homogeneous>
+    <spacing>0</spacing>
+    <child>
+      <padding>0</padding>
+      <expand>True</expand>
+      <fill>True</fill>
+    </child>
+
+    <widget>
+      <class>GtkHButtonBox</class>
+      <child_name>GnomeDialog:action_area</child_name>
+      <name>dialog-action_area5</name>
+      <layout_style>GTK_BUTTONBOX_END</layout_style>
+      <spacing>0</spacing>
+      <child_min_width>85</child_min_width>
+      <child_min_height>27</child_min_height>
+      <child_ipad_x>7</child_ipad_x>
+      <child_ipad_y>0</child_ipad_y>
+      <child>
+	<padding>0</padding>
+	<expand>False</expand>
+	<fill>True</fill>
+	<pack>GTK_PACK_END</pack>
+      </child>
+
+      <widget>
+	<class>GtkButton</class>
+	<name>button8</name>
+	<can_default>True</can_default>
+	<can_focus>True</can_focus>
+	<stock_button>GNOME_STOCK_BUTTON_OK</stock_button>
       </widget>
     </widget>
   </widget>

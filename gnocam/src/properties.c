@@ -301,7 +301,7 @@ page_new (GnomePropertyBox *propertybox, CameraWidget *camera_widget)
 }
 
 void
-camera_properties (GladeXML* xml, Camera* camera, CameraWidget* window)
+camera_properties (Camera* camera, CameraWidget* window)
 {
 	GladeXML*		xml_properties;
 	GnomePropertyBox*	propertybox;
@@ -309,13 +309,11 @@ camera_properties (GladeXML* xml, Camera* camera, CameraWidget* window)
 	CameraWidget*		camera_widget;
 	gint 			i;
 	gboolean 		orphans = FALSE;
-	GnomeApp*		app;
 	frontend_data_t*	frontend_data;
 
 	g_assert (camera != NULL);
 	g_assert (window != NULL);
 	g_assert (gp_widget_type (window) == GP_WIDGET_WINDOW);
-	g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
 	g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
 	gp_widget_ref (window);
 

@@ -5,12 +5,7 @@
 #include "information.h"
 #include "gnocam.h"
 #include "properties.h"
-
-/**********************/
-/* External Variables */
-/**********************/
-
-extern GladeXML*	xml;
+#include "information.h"
 
 /*************/
 /* Functions */
@@ -18,13 +13,15 @@ extern GladeXML*	xml;
 
 int gp_frontend_status (Camera *camera, char *status) 
 {
-        gnome_appbar_set_status (GNOME_APPBAR (glade_xml_get_widget (xml, "appbar")), status);
+	//FIXME: Put this into the statusbar.
+	dialog_information (_("Status: %s"), status);
         return (GP_OK);
 }
 
 int gp_frontend_progress (Camera *camera, CameraFile *file, float percentage)
 {
-        gnome_appbar_set_progress (GNOME_APPBAR (glade_xml_get_widget (xml, "appbar")), percentage / 100);
+	//FIXME: Put this into the statusbar.
+	dialog_information (_("Progress: %f"), percentage);
         return (GP_OK);
 }
 
@@ -36,7 +33,7 @@ int gp_frontend_message (Camera *camera, char *message)
 
 int gp_frontend_confirm (Camera *camera, char *message)
 {
-        //FIXME
+        //FIXME: How do we handle that?
         return (GP_CONFIRM_NO);
 }
 
@@ -51,7 +48,7 @@ int gp_frontend_prompt (Camera *camera, CameraWidget *window)
                 values_set (frontend_data->xml_properties, window);
                 return (GP_PROMPT_OK);
         } else {
-                camera_properties (xml, camera, window);
+                camera_properties (camera, window);
                 return (GP_PROMPT_CANCEL);
         }
 }

@@ -1,9 +1,5 @@
 
-SUBDIRS = stock
-
-if GNOCAM_USES_GTKHTML
-  SUBDIRS += ui
-endif
+SUBDIRS = stock ui
 
 gladedir = $(datadir)/$(PACKAGE)/
 
@@ -18,20 +14,22 @@ INCLUDES = \
 CFLAGS = @CFLAGS@\
  `gphoto2-config --cflags`\
  `gpio-config --cflags`\
- `gnome-config --cflags libglade gdk_pixbuf gnomeui vfs xml`\
+ `libglade-config --cflags bonobo`\
+ `gnome-config --cflags libglade gdk_pixbuf gnomeui vfs xml gtkhtml bonobox`\
  `gconf-config --cflags gconf gconf-gtk`
 
 LDFLAGS = @LDFLAGS@\
  `gphoto2-config --libs`\
  `gpio-config --libs`\
- `gnome-config --libs libglade gdk_pixbuf gnomeui vfs xml`\
+ `libglade-config --libs bonobo`\
+ `gnome-config --libs libglade gdk_pixbuf gnomeui vfs xml gtkhtml bonobox`\
  `gconf-config --libs gconf gconf-gtk`
  
 
 bin_PROGRAMS = gnocam
 
 gnocam_SOURCES =\
- callbacks.h callbacks.c\
+ callbacks.c\
  cameras.h cameras.c\
  file-operations.h file-operations.c\
  frontend.h frontend.c\
@@ -42,7 +40,8 @@ gnocam_SOURCES =\
  notification.h notification.c\
  preferences.h preferences.c\
  preview.h preview.c\
- properties.h properties.c
+ properties.h properties.c\
+ utils.h utils.c
 
 glade_DATA = gnocam.glade
 

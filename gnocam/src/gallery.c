@@ -6,22 +6,18 @@
 #include <HTMLparser.h>
 #include <HTMLtree.h>
 #include <parser.h>
-#ifdef GNOCAM_USES_GTKHTML
-#  include <pspell/pspell.h>
-#  include <gtkhtml/gtkhtml.h>
-#  include <bonobo.h>
-#  include <bonobo/bonobo-stream-memory.h>
-#  include <libgnomeprint/gnome-print.h>
-#  include <libgnomeprint/gnome-print-master.h>
-#  include <libgnomeprint/gnome-print-master-preview.h>
-#endif
+#include <pspell/pspell.h>
+#include <gtkhtml/gtkhtml.h>
+#include <bonobo.h>
+#include <bonobo/bonobo-stream-memory.h>
+#include <libgnomeprint/gnome-print.h>
+#include <libgnomeprint/gnome-print-master.h>
+#include <libgnomeprint/gnome-print-master-preview.h>
+#include "gnocam.h"
 #include "cameras.h"
 #include "file-operations.h"
 #include "information.h"
-#include "callbacks.h"
 #include "gallery.h"
-
-#ifdef GNOCAM_USES_GTKHTML
 
 /***************/
 /* Definitions */
@@ -119,7 +115,6 @@ on_window_gallery_close_activate (GtkWidget* widget, gpointer user_data)
 void
 on_window_gallery_exit_activate (GtkWidget* widget, gpointer user_data)
 {
-	app_clean_up ();
         gtk_main_quit ();
 }
 
@@ -153,15 +148,12 @@ on_window_gallery_button_clear_clicked (GtkWidget* widget, gpointer user_data)
 	dialog_information (_("Not yet implemented!"));
 }
 
-#endif
-
 /*************/
 /* Funktions */
 /*************/
 
 void gallery_new (void)
 {
-#ifdef GNOCAM_USES_GTKHTML
         GtkTargetEntry          target_table[] = {{"text/uri-list", 0, 0}};
         GtkWidget*              window;
         GtkWidget*              widget;
@@ -194,9 +186,6 @@ void gallery_new (void)
         /* Drag and Drop. */
 	gtk_signal_connect (GTK_OBJECT (widget), "drag_data_received", GTK_SIGNAL_FUNC (on_editor_drag_data_received), NULL);
 	gtk_drag_dest_set (widget, GTK_DEST_DEFAULT_ALL, target_table, 1, GDK_ACTION_COPY);
-#else
-        dialog_information (_("You need to compile " PACKAGE " with gtkhtml enabled in order to use this feature."));
-#endif
 }
 
 

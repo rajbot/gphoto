@@ -1,5 +1,5 @@
 /**
- * This file should be called utils.c or so.
+ * This file should be called main-tree-utils.c or so.
  * I'll change the name some day.
  * 
  * Should this file be split up? 
@@ -10,21 +10,27 @@
 #include <glade/glade.h>
 #include <gphoto2.h>
 #include <gconf/gconf-client.h>
-#include <gdk-pixbuf/gdk-pixbuf-loader.h>
 #include <parser.h>
+#include <bonobo.h>
+#include <bonobo/bonobo-stream-memory.h>
 #include "gphoto-extensions.h"
 #include "gnocam.h"
 #include "cameras.h"
 #include "information.h"
 #include "file-operations.h"
 #include "frontend.h"
+#include "utils.h"
+#include "preview.h"
 
 /**********************/
 /* External Variables */
 /**********************/
 
-extern GladeXML*	xml;
-extern GConfClient*	client;
+extern GConfClient*		gconf_client;
+extern BonoboObjectClient*	viewer_client;
+extern GtkTree*			main_tree;
+extern GnoCamViewMode		view_mode;
+extern GList*			preview_list;
 
 /**************/
 /* Prototypes */
@@ -44,9 +50,31 @@ void on_drag_data_received                      (GtkWidget* widget, GdkDragConte
 void on_camera_tree_file_drag_data_get          (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data);
 void on_camera_tree_folder_drag_data_get        (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data);
 
+void on_capture_preview_activate        (GtkMenuItem* menuitem, gpointer user_data);
+void on_capture_image_activate          (GtkMenuItem* menuitem, gpointer user_data);
+void on_capture_video_activate          (GtkMenuItem* menuitem, gpointer user_data);
+
 /*************/
 /* Callbacks */
 /*************/
+
+void
+on_capture_preview_activate (GtkMenuItem* menuitem, gpointer user_data)
+{
+        preview_list = g_list_append (preview_list, preview_new (gtk_object_get_data (GTK_OBJECT (menuitem), "camera")));
+}
+
+void
+on_capture_image_activate (GtkMenuItem *menuitem, gpointer user_data)
+{
+        capture_image (gtk_object_get_data (GTK_OBJECT (menuitem), "camera"));
+}
+
+void
+on_capture_video_activate (GtkMenuItem* menuitem, gpointer user_data)
+{
+        capture_video (gtk_object_get_data (GTK_OBJECT (menuitem), "camera"));
+}
 
 gboolean
 on_tree_item_file_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
@@ -135,9 +163,9 @@ on_tree_item_camera_button_press_event (GtkWidget *widget, GdkEventButton *event
                 g_assert ((xml_popup = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "camera_tree_popup_camera")) != NULL);
 
                 /* Store some data. */
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_video")), "item", widget);
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_image")), "item", widget);
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_preview")), "item", widget);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_video")), "camera", camera);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_image")), "camera", camera);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_preview")), "camera", camera);
                 gtk_object_set_data  (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_manual")), "camera", camera);
                 gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_properties")), "camera", camera);
                 gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_upload_file")), "item", widget);
@@ -169,110 +197,69 @@ on_tree_item_collapse (GtkTreeItem* tree_item, gpointer user_data)
 void
 on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 {
-        GladeXML*               xml_page = NULL;
-        GtkNotebook*            notebook;
         gchar*                  filename;
         gchar*                  path;
-        gchar*                  count;
-        GtkWidget*              page;
-        GtkWidget*              label;
-        CameraFile*             file;
+        CameraFile*             file = NULL;
         Camera*                 camera;
-        CameraText              cameratext;
-        GtkPixmap*              pixmap;
+	CORBA_Environment	ev;
+	CORBA_Object		interface;
+	BonoboStream*		stream;
 
-        g_assert ((notebook = GTK_NOTEBOOK (glade_xml_get_widget (xml, "notebook_files"))) != NULL);
         g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
         g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
-        g_assert (gtk_object_get_data (GTK_OBJECT (item), "page") == NULL);
 
-        /* Folder or file? */
-        if ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) {
+	/* Folder or file? */
+	if ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) {
+		switch (view_mode) {
+		case GNOCAM_VIEW_MODE_NONE:
+			break;
+		case GNOCAM_VIEW_MODE_PREVIEW:
 
-                /* We've got a file. */
-                g_assert ((xml_page = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "table_file")) != NULL);
-                g_assert ((page = glade_xml_get_widget (xml_page, "table_file")) != NULL);
-                g_assert ((pixmap = GTK_PIXMAP (glade_xml_get_widget (xml_page, "pixmap_preview"))) != NULL);
-                gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_page, "entry_filename")), filename);
+		        /* Do we already have the preview? */
+		        if (!(file = gtk_object_get_data (GTK_OBJECT (item), "preview"))) {
+		                file = gp_file_new ();
+		                if (gp_camera_file_get_preview (camera, file, path, filename) != GP_OK) {
+		                        if (strcmp ("/", path) == 0) dialog_information (_("Could not get preview of file '/%s' from camera!"), filename);
+		                        else dialog_information (_("Could not get preview of file '%s/%s' from camera!"), path, filename);
+		                        gp_file_unref (file);
+		                        file = NULL;
+		                } else gtk_object_set_data (GTK_OBJECT (item), "preview", file);
+		                gp_frontend_progress (camera, NULL, 0.0);
+		        }
+			break;
+		case GNOCAM_VIEW_MODE_FILE:
 
-                /* Store some data. */
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_zoom_in")), "pixmap", pixmap);
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_zoom_out")), "pixmap", pixmap);
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_zoom_1")), "pixmap", pixmap);
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_zoom_fit")), "pixmap", pixmap);
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_close_page")), "item", item);
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_save_file")), "item", item);
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_save_file_as")), "item", item);
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_save_preview")), "item", item);
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "button_save_preview_as")), "item", item);
-
-                /* Connect the signals. */
-                glade_xml_signal_autoconnect (xml_page);
-
-                /* This is because libglade takes the GNOME default for the toolbar style. We don't want that. */
-                gtk_toolbar_set_style (GTK_TOOLBAR (glade_xml_get_widget (xml_page, "toolbar_close")), GTK_TOOLBAR_ICONS);
-                gtk_toolbar_set_style (GTK_TOOLBAR (glade_xml_get_widget (xml_page, "toolbar_save")), GTK_TOOLBAR_ICONS);
-                gtk_toolbar_set_style (GTK_TOOLBAR (glade_xml_get_widget (xml_page, "toolbar_zoom")), GTK_TOOLBAR_ICONS);
-
-                /* Do we already have the preview? */
-                if (!(file = gtk_object_get_data (GTK_OBJECT (item), "preview"))) {
-                        file = gp_file_new ();
-                        if (gp_camera_file_get_preview (camera, file, path, filename) != GP_OK) {
-                                if (strcmp ("/", path) == 0) dialog_information (_("Could not get preview of file '/%s' from the camera!"), filename);
-                                else dialog_information (_("Could not get preview of file '%s/%s' from the camera!"), path, filename);
-                                gp_file_free (file);
-                                file = NULL;
-                        } else {
-                                gtk_object_set_data (GTK_OBJECT (item), "preview", file);
-                        }
-                        gp_frontend_progress (camera, NULL, 0.0);
-                }
-
-                pixmap_set (GTK_PIXMAP (glade_xml_get_widget (xml_page, "pixmap_preview")), file);
-                label = gtk_label_new (filename);
-
-        } else {
-
-                /* We've got a folder. */
-                if (strcmp ("/", path) == 0) {
-
-                        /* This is the root folder. */
-                        g_assert ((xml_page = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "table_camera")) != NULL);
-                        g_assert ((page = glade_xml_get_widget (xml_page, "table_camera")) != NULL);
-                        if (gp_camera_summary (camera, &cameratext) != GP_OK) strcpy ("?", (gchar*) &cameratext);
-                        gnome_less_show_string (GNOME_LESS (glade_xml_get_widget (xml_page, "less")), (gchar*) &cameratext);
-                } else {
-
-                        /* This is a non-root folder. */
-                        g_assert ((xml_page = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "table_folder")) != NULL);
-                        g_assert ((page = glade_xml_get_widget (xml_page, "table_folder")) != NULL);
-                }
-                count = g_strdup_printf ("%i", GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (item), "folder_list_count")));
-                gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_page, "entry_folders")), count);
-                g_free (count);
-                count = g_strdup_printf ("%i", GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (item), "file_list_count")));
-                gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_page, "entry_files")), count);
-                g_free (count);
-                label = gtk_label_new (path);
-        }
-
-        /* Common for all pages. */
-        gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_page, "entry_camera")), ((frontend_data_t*) camera->frontend_data)->name);
-        gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_page, "entry_path")), "/");
-        gtk_notebook_append_page (notebook, page, label);
-        gtk_notebook_set_page (notebook, gtk_notebook_page_num (notebook, page));
-        gtk_object_set_data (GTK_OBJECT (item), "xml_page", xml_page);
+			/* Do we already have the file? */
+			if (!(file = gtk_object_get_data (GTK_OBJECT (item), "file"))) {
+				file = gp_file_new ();
+				if (gp_camera_file_get (camera, file, path, filename) != GP_OK) {
+					if (strcmp ("/", path) == 0) dialog_information (_("Could not get file '/%s' from camera!"), filename);
+					else dialog_information (_("Could not get file '%s/%s' from camera!"), path, filename);
+					gp_file_unref (file);
+					file = NULL;
+				} else gtk_object_set_data (GTK_OBJECT (item), "file", file);
+				gp_frontend_progress (camera, NULL, 0.0);
+			}
+			break;
+		}
+		if (file) {
+			CORBA_exception_init (&ev);
+			g_assert ((interface = bonobo_object_client_query_interface (viewer_client, "IDL:Bonobo/PersistStream:1.0", &ev)));
+			g_assert ((stream = bonobo_stream_mem_create (file->data, file->size, FALSE, TRUE)));
+			Bonobo_PersistStream_load (interface, (Bonobo_Stream) bonobo_object_corba_objref (BONOBO_OBJECT (stream)), file->type, &ev);
+			if (ev._major != CORBA_NO_EXCEPTION) dialog_information (_("Could not display the file! (%s)"), bonobo_exception_get_text (&ev));
+			bonobo_object_unref (BONOBO_OBJECT (stream));
+			Bonobo_Unknown_unref (interface, &ev);
+			CORBA_Object_release (interface, &ev);
+			CORBA_exception_free (&ev);
+		}
+	}
 }
 
 void
 on_tree_item_deselect (GtkTreeItem* item, gpointer user_data)
 {
-        GladeXML*       xml_page;
-
-        if ((xml_page = gtk_object_get_data (GTK_OBJECT (item), "xml_page"))) {
-                gtk_object_set_data (GTK_OBJECT (item), "xml_page", NULL);
-                page_remove (xml_page);
-        }
+	//FIXME: Anything to do here?
 }
 
 void
@@ -405,10 +392,8 @@ camera_tree_folder_refresh (GtkTreeItem* folder)
 void
 camera_tree_item_remove (GtkTreeItem* item)
 {
-	GladeXML*		xml_page;
 	gchar*			path;
 	gchar*			filename;
-	GtkNotebook*		notebook;
 	GtkWidget*		owner;
 	GtkTree*		tree;
 	Camera*			camera;
@@ -416,7 +401,6 @@ camera_tree_item_remove (GtkTreeItem* item)
 	CameraFile*		file;
 
 	g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
-	g_assert ((notebook = GTK_NOTEBOOK (glade_xml_get_widget (xml, "notebook_files"))) != NULL);
 	g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
 	g_assert ((tree = GTK_TREE (GTK_WIDGET (item)->parent)) != NULL);
 	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
@@ -431,13 +415,8 @@ camera_tree_item_remove (GtkTreeItem* item)
 		gtk_widget_unref (item->subtree);
 	}
 
-        /* Do we have to remove a notebook page? */
-        if ((xml_page = gtk_object_get_data (GTK_OBJECT (item), "xml_page"))) page_remove (xml_page);
-
 	/* If it's the root folder, unref the camera. */
-	if (root) {
-		gp_camera_unref (camera);
-	}
+	if (root) gp_camera_unref (camera);
 
 	/* If this is the last item, we have to make sure we don't loose the 	*/
 	/* tree. Therefore, keep a reference to the tree owner. 		*/
@@ -559,100 +538,6 @@ camera_tree_file_add (GtkTree* tree, Camera* camera, gchar* path, gchar* filenam
 }
 
 void
-pixmap_set (GtkPixmap* pm, CameraFile* file)
-{
-        GdkPixbuf*              pixbuf;
-        GdkPixbufLoader*        loader;
-        GdkPixmap*              pixmap;
-        GdkBitmap*              bitmap;
-	gfloat*			magnification;
-
-	g_assert (pm != NULL);
-	g_return_if_fail (pm != NULL);
-	g_assert ((loader = gdk_pixbuf_loader_new ()) != NULL);
-
-	/* Make sure the magnification is already there. */
-	if (!(magnification = gtk_object_get_data (GTK_OBJECT (pm), "magnification"))) {
-		magnification = g_new (gfloat, 1);
-		*magnification = 1.0;
-		 gtk_object_set_data (GTK_OBJECT (pm), "magnification", magnification);
-	}
-
-	/* Create the pixmap. */
-	if (gdk_pixbuf_loader_write (loader, file->data, file->size)) {
-		if ((pixbuf = gtk_object_get_data (GTK_OBJECT (pm), "pixbuf")) != NULL) gdk_pixbuf_unref (pixbuf);
-                gdk_pixbuf_loader_close (loader);
-                g_assert ((pixbuf = gdk_pixbuf_loader_get_pixbuf (loader)) != NULL);
-                gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 127);
-                gtk_pixmap_set (pm, pixmap, bitmap);
-		gtk_object_set_data (GTK_OBJECT (pm), "pixbuf", pixbuf);
-        } else dialog_information (_("Could not load image '%s'!"), file->name);
-
-	/* Scale it according to gconf's values. */
-	pixmap_rescale (pm, NULL);
-}
-
-void
-pixmap_rescale (GtkPixmap* pm, gfloat* magnification)
-{
-        GdkInterpType           interpolation = 0;
-        GConfValue*             value;
-        GdkPixbuf*              pixbuf;
-        GdkPixmap*              pixmap;
-        GdkBitmap*              bitmap;
-	gfloat*			magnification_absolute;
-
-	g_assert (pm != NULL);
-	if ((pixbuf = gtk_object_get_data (GTK_OBJECT (pm), "pixbuf"))) {
-
-		/* Magnification? */
-		g_assert ((magnification_absolute = gtk_object_get_data (GTK_OBJECT (pm), "magnification")) != NULL);
-		if (magnification) {
-			*magnification_absolute *= *magnification;
-		} else {
-	                value = gconf_client_get_without_default (client, "/apps/" PACKAGE "/magnification", NULL);
-	                if (value) {
-	                        g_assert (value->type = GCONF_VALUE_FLOAT);
-	                        *magnification_absolute = gconf_value_get_float (value);
-	                }
-		}
-		if (!((gint) (*magnification_absolute * gdk_pixbuf_get_width (pixbuf)) * (gint) (*magnification_absolute * gdk_pixbuf_get_height (pixbuf)))) { 
-			dialog_information (_("Can't scale down to zero!"));
-			return;
-		}
-
-                /* Interpolation? */
-                value = gconf_client_get_without_default (client, "/apps/" PACKAGE "/interpolation", NULL);
-                if (value) {
-                        g_assert (value->type = GCONF_VALUE_INT);
-                        switch (gconf_value_get_int (value)) {
-                        case 0:
-                                interpolation = GDK_INTERP_NEAREST;
-                                break;
-                        case 1:
-                                interpolation = GDK_INTERP_TILES;
-                                break;
-                        case 2:
-                                interpolation = GDK_INTERP_BILINEAR;
-                                break;
-                        case 3:
-                                interpolation = GDK_INTERP_HYPER;
-                                break;
-                        default:
-                                g_assert_not_reached ();
-                        }
-                } else interpolation = GDK_INTERP_BILINEAR;
-
-                gdk_pixbuf_render_pixmap_and_mask (gdk_pixbuf_scale_simple (
-                        pixbuf,
-                        *magnification_absolute * gdk_pixbuf_get_width (pixbuf),
-                        *magnification_absolute * gdk_pixbuf_get_height (pixbuf),
-                        interpolation), &pixmap, &bitmap, 127);
-                gtk_pixmap_set (pm, pixmap, bitmap);
-	}
-}
-
-void
 camera_tree_update (GtkTree* tree, GConfValue* value)
 {
 	xmlDocPtr	doc;
@@ -734,61 +619,5 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
         }
 }
 
-void
-camera_tree_rescale_pixmaps (GtkTree* tree)
-{
-	GladeXML*	xml_page;
-        GtkTreeItem*    item;
-        gint            i;
-
-	g_assert (tree != NULL);
-
-        for (i = 0; i < g_list_length (tree->children); i++) {
-                item = GTK_TREE_ITEM (g_list_nth_data (tree->children, i));
-                if (item->subtree) camera_tree_rescale_pixmaps (GTK_TREE (item->subtree));
-                else if (gtk_object_get_data (GTK_OBJECT (item), "filename")) {
-			if ((xml_page = gtk_object_get_data (GTK_OBJECT (item), "xml_page"))) {
-				pixmap_rescale (GTK_PIXMAP (glade_xml_get_widget (xml_page, "pixmap_preview")), NULL);
-			}
-		}
-        }
-} 
-
-void
-app_clean_up (void)
-{
-	GtkTree*		tree;
-	gint			i;
-
-        g_assert ((tree = GTK_TREE (glade_xml_get_widget (xml, "tree_cameras"))) != NULL);
-
-        for (i = g_list_length (tree->children) - 1; i >= 0; i--) {
-
-		/* Remove the tree item. */
-		camera_tree_item_remove (g_list_nth_data (tree->children, i));
-
-		/* Close all previews. */
-//FIXME: Do I have to set up a list of open windows in order to access them?
-//We do have to destroy the previews in order to unref the cameras.
-	}
-}
-
-void
-page_remove (GladeXML* xml_page)
-{
-	GtkWidget*	page;
-	GtkNotebook*	notebook;
-	GdkPixbuf*	pixbuf;
-
-	g_assert (xml_page != NULL);
-	g_assert ((notebook = GTK_NOTEBOOK (glade_xml_get_widget (xml, "notebook_files"))) != NULL);
-
-	if (!(page = glade_xml_get_widget (xml_page, "table_camera"))) 
-		if (!(page = glade_xml_get_widget (xml_page, "table_folder"))) 
-			if (!(page = glade_xml_get_widget (xml_page, "table_file"))) 
-				g_assert_not_reached ();
-	if ((pixbuf = gtk_object_get_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "pixmap_preview")), "pixbuf"))) gdk_pixbuf_unref (pixbuf);
-        gtk_notebook_remove_page (notebook, gtk_notebook_page_num (notebook, page));
-}
 
 

@@ -26,27 +26,6 @@ else
     AC_DEFINE_UNQUOTED(PACKAGE_LOCALE_DIR, "${prefix}/${DATADIRNAME}/locale")
 fi
 
-dnl **************
-dnl Use threading?
-dnl **************
-AC_ARG_ENABLE(threads, [  --enable-threads        Use threading [default=no]],[use_threads=$enableval],[use_threads=no])
-AC_MSG_CHECKING([whether to use threads])
-if test x"$use_threads" = xyes; then
-    AC_MSG_RESULT([yes])
-    if test ! -z `glib-config 2>&1 |grep 'gthread'`; then
-	THREAD_CFLAGS=`glib-config --cflags gthread`
-	THREAD_LIBS=`glib-config --libs gthread`
-	CFLAGS="$CFLAGS $THREAD_CFLAGS"
-	LIBS="$LIBS $THREAD_LIBS"
-	AC_DEFINE(GNOCAM_USES_THREADS,1)
-    else
-	AC_MSG_ERROR([
-*** ${PACKAGE} requires GThread from GLib to use threading.])
-    fi
-else
-    AC_MSG_RESULT([no])
-fi
-
 dnl **********
 dnl gnome-libs
 dnl **********
@@ -64,43 +43,45 @@ else
 *** Did not find gnome-libs installed.])
 fi
 
-dnl ************
-dnl Use gtkhtml?
-dnl ************
-AC_ARG_ENABLE(gtkhtml, [  --enable-gtkhtml        Use gtkhtml [default=no]],[use_gtkhtml=$enableval],[use_gtkhtml=no])
-AC_MSG_CHECKING([whether to use gtkhtml])
-if test x"$use_gtkhtml" = xyes; then
-    AC_MSG_RESULT([yes])
-    if `test ! -z `gnome-config>&1 |grep gtkhtml>/dev/null``; then
-dnl     ******
-dnl     bonobo
-dnl     ******
-	AC_MSG_CHECKING(for bonobox)
-	if gnome-config --libs bonobox > /dev/null 2>&1; then
-	    AC_MSG_RESULT(found)
-	else
-	    AC_MSG_ERROR([
+dnl *******************
+dnl html-editor-control
+dnl *******************
+AC_MSG_CHECKING(for html-editor-control)
+if test -x /bin/html-editor-control || test -x /usr/bin/html-editor-control; then
+    AC_MSG_RESULT(found)
+else
+    AC_MSG_ERROR([
+*** You need the html-editor-control for this version of ${PACKAGE}.
+*** Get the latest version of gtkhtml from
+*** http://www.gnome.org. Mirrors can be found at
+*** http://www.gnome.org/mirrors.])
+fi
+
+dnl ****************
+dnl eog-image-viewer
+dnl ****************
+AC_MSG_CHECKING(for eog-image-viewer)
+if test -x /bin/html-editor-control || test -x /usr/bin/eog-image-viewer; then
+    AC_MSG_RESULT(found)
+else
+    AC_MSG_ERROR([
+*** You need the eog-image-viewer for this version of ${PACKAGE}.
+*** Get the latest version of eog from
+*** http://www.gnome.org. Mirrors can be found at 
+*** http://www.gnome.org/mirrors.])
+fi
+
+dnl ******
+dnl bonobo
+dnl ******
+AC_MSG_CHECKING(for bonobox)
+if gnome-config --libs bonobox > /dev/null 2>&1; then
+    AC_MSG_RESULT(found)
+else
+    AC_MSG_ERROR([
 *** You need bonobo for this version of ${PACKAGE}. Get the latest 
 *** version from http://www.gnome.org. Mirrors can be found at
-*** http://www.gnome.org/mirrors. 
-***
-*** Alternatively, you can configure ${PACKAGE} without gtkhtml
-*** enabled.])
-	fi
-        GTKHTML_CFLAGS="`gnome-config --cflags gtkhtml bonobox` `libglade-config --cflags bonobo`"
-        GTKHTML_LIBS="`gnome-config --libs gtkhtml bonobox` `libglade-config --libs bonobo`"
-        CFLAGS="$CFLAGS $GTKHTML_CFLAGS"
-        LIBS="$LIBS $GTKHTML_LIBS"
-        AC_DEFINE(GNOCAM_USES_GTKHTML,1)
-        AM_CONDITIONAL(GNOCAM_USES_GTKHTML,true)
-    else
-        AC_MSG_ERROR([
-*** You need to have gtkhtml installed to use it. Get the latest
-*** version from http://www.gnome.org.])
-    fi
-else
-    AC_MSG_RESULT([no])
-    AM_CONDITIONAL(GNOCAM_USES_GTKHTML,false)
+*** http://www.gnome.org/mirrors.]) 
 fi
 
 dnl *********

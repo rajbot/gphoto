@@ -4,9 +4,7 @@
 #include <gconf/gconf-client.h>
 #include <glade/glade.h>
 #include <gphoto2.h>
-#ifdef GNOCAM_USES_GTKHTML
-#  include <bonobo.h>
-#endif
+#include <bonobo.h>
 #include "information.h"
 #include "cameras.h"
 #include "file-operations.h"
@@ -25,8 +23,7 @@
 /* External Variables */
 /**********************/
 
-extern GladeXML*	xml;
-extern GConfClient*	client;
+extern GConfClient*	gconf_client;
 
 /**************/
 /* Prototypes */
@@ -46,13 +43,11 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 {
 	CameraFile*		file;
 	GtkFileSelection*	fileselection;
-#ifdef GNOCAM_USES_GTKHTML
 	GtkWidget*		window;
 	GtkWidget*		widget;
 	CORBA_Object 		interface;
 	CORBA_Environment	ev;
 	BonoboObjectClient*	client;
-#endif
 
 	g_assert ((fileselection = GTK_FILE_SELECTION (glade_xml_get_widget (gtk_object_get_data (GTK_OBJECT (button), "xml_fileselection"), "fileselection"))));
 
@@ -65,7 +60,6 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 		camera_file_save (file,  gtk_file_selection_get_filename (fileselection));
 		gp_file_unref (file);
 		break;
-#ifdef GNOCAM_USES_GTKHTML
 	case OPERATION_GALLERY_OPEN:
 		g_assert ((window = gtk_object_get_data (GTK_OBJECT (button), "window")));
 		g_assert ((widget = gtk_object_get_data (GTK_OBJECT (window), "editor")));
@@ -86,7 +80,6 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
                 if (ev._major != CORBA_NO_EXCEPTION) dialog_information (_("Could not load gallery."));
 		CORBA_exception_free (&ev);
                 break;
-#endif
 	default:
 		g_assert_not_reached ();
 	}
@@ -327,7 +320,7 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 	g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
 	g_assert ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename")) != NULL);
 	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
-        g_assert ((value = gconf_client_get (client, "/apps/" PACKAGE "/prefix", NULL)));
+        g_assert ((value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL)));
         g_assert (value->type == GCONF_VALUE_STRING);
 
 	if (temporary) filename_user = g_strdup_printf ("file:/tmp/%s", filename);
@@ -374,10 +367,8 @@ delete_all_selected (GtkTree* tree)
         gchar*          filename;
 	gint		i;
 	GtkTreeItem*	item;
-	GtkNotebook*	notebook;
 
         g_assert (tree != NULL);
-	g_assert ((notebook = GTK_NOTEBOOK (glade_xml_get_widget (xml, "notebook_files"))) != NULL);
 
         /* Look into folders first. */
         for (i = 0; i < g_list_length (tree->children); i++) {

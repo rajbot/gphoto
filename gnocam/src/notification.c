@@ -10,7 +10,7 @@
 /* External Variables */
 /**********************/
 
-extern GladeXML*	xml;
+extern GtkTree*		main_tree;
 
 /*************/
 /* Functions */
@@ -19,28 +19,13 @@ extern GladeXML*	xml;
 void
 on_camera_setup_changed (GConfClient* client, guint notify_id, GConfEntry* entry, gpointer user_data)
 {
-        GtkTree*        tree;
-
-        g_assert ((tree = GTK_TREE (glade_xml_get_widget (xml, "tree_cameras"))) != NULL);
-
         if (entry->value == NULL) {
 
                 /* No cameras configured. */
-                camera_tree_update (tree, NULL);
+                camera_tree_update (main_tree, NULL);
         } else {
-                camera_tree_update (tree, entry->value);
+                camera_tree_update (main_tree, entry->value);
         }
-}
-
-void
-on_preview_setup_changed (GConfClient* client, guint notify_id, GConfEntry* entry, gpointer user_data)
-{
-	GtkTree*		tree;
-
-	g_assert ((tree = GTK_TREE (glade_xml_get_widget (xml, "tree_cameras"))) != NULL);
-
-	/* Redraw the pixmaps in the notebook. */
-        camera_tree_rescale_pixmaps (GTK_TREE (glade_xml_get_widget (xml, "tree_cameras")));
 }
 
 

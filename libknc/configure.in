@@ -20,7 +20,6 @@ dnl ---------------------------------------------------------------------------
 dnl We need some programs
 dnl ---------------------------------------------------------------------------
 AC_PROG_CC
-AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 AC_PROG_INTLTOOL
@@ -145,7 +144,7 @@ AC_SUBST(ORBIT_IDL)
 AC_SUBST(CORBA_CFLAGS)
 AC_SUBST(CORBA_LIBS)
 
-AC_OUTPUT([ intl/Makefile 
+AC_OUTPUT([ intl/Makefile po/Makefile.in
 Makefile
 libknc/Makefile
 libknc/libknc.pc

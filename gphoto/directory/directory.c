@@ -40,7 +40,7 @@ int dir_get_dir() {
 	GdkImlibImage *imlibimage;
 
 	filesel = gtk_file_selection_new("Select a directory to open...");
-	
+	gtk_window_set_position(GTK_WINDOW(filesel), GTK_WIN_POS_CENTER);	
 	gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_entry);
 	gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_text);
 	gtk_widget_hide(GTK_FILE_SELECTION(filesel)->file_list);
@@ -142,8 +142,7 @@ struct Image *dir_get_picture (int picture_number, int thumbnail) {
 	fread(imagedata, (size_t)imagesize, (size_t)sizeof(char),
 		fp);
 	fclose(fp);
-	sprintf(filename, "rm %s", fname);
-	system(filename);
+	remove(fname);
 	im = (struct Image*)malloc(sizeof(struct Image));
 	im->image = imagedata;
 	im->image_size = imagesize;

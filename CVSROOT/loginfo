@@ -28,8 +28,8 @@
 # please note the "n-dimensional" addresses are used for testing only
 # and are no official mailing lists!
 CVSROOT/        ${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} gp@n-dimensional.de
-gphoto2/        ${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} gphoto-cvs@lists.sourceforge.net
-gphoto2-manual/ ${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} gphoto-cvs@lists.sourceforge.net
-libgphoto2/     ${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} gphoto-cvs@lists.sourceforge.net
-gtkam/          ${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} gphoto-cvs@lists.sourceforge.net
-gnocam/         ${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} gphoto-cvs@lists.sourceforge.net
+DEFAULT         ${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} gphoto-cvs@lists.sourceforge.net
+#gphoto2-manual/ ${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} gphoto-cvs@lists.sourceforge.net
+#libgphoto2/     ${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} gphoto-cvs@lists.sourceforge.net
+#gtkam/          ${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} gphoto-cvs@lists.sourceforge.net
+#gnocam/         ${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} gphoto-cvs@lists.sourceforge.net

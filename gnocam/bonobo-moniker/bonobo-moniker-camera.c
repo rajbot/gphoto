@@ -63,9 +63,15 @@ camera_resolve (BonoboMoniker 		    *moniker,
 	/* Storage? */
 	if (!strcmp (requested_interface, "IDL:Bonobo/Storage:1.0")) {
 		BonoboStorage* storage;
+		gchar *tmp;
+
+		if (getenv ("DEBUG_GNOCAM"))
+			g_message ("Trying to get storage for '%s'...", name);
 
 		mode = Bonobo_Storage_READ | Bonobo_Storage_WRITE;
-		storage = bonobo_storage_camera_open (name, mode, 0644, ev);
+		tmp = g_strconcat ("camera:", name, NULL);
+		storage = bonobo_storage_camera_open (tmp, mode, 0644, ev);
+		g_free (tmp);
 		if (BONOBO_EX (ev)) {
 			g_warning ("Could not get storage: %s", 
 				   bonobo_exception_get_text (ev));
@@ -83,6 +89,9 @@ camera_resolve (BonoboMoniker 		    *moniker,
 static BonoboObject *
 bonobo_moniker_camera_factory (BonoboGenericFactory *this, gpointer data)
 {
+	/* Initialize gphoto */
+	gp_init (GP_DEBUG_NONE);
+
 	return BONOBO_OBJECT (bonobo_moniker_simple_new ("camera:", 
 		    					 camera_resolve));
 }

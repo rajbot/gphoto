@@ -910,9 +910,10 @@ void remove_thumbnail (int i) {
 		x++;
 	}
 
-	prev->next = node->next;
-
-	free_imagemembers (node);
+	if (node) {
+	  prev->next = node->next;
+	  free_imagemembers (node);
+	}
 }
 
 /* Place a thumbnail into the index at location corresponding to node */

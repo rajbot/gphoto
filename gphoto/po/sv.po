@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gphoto 0.4.3\n"
-"POT-Creation-Date: 2000-04-21 23:52+0200\n"
+"POT-Creation-Date: 2000-05-07 00:30+0200\n"
 "PO-Revision-Date: 2000-04-21 23:23+0200\n"
 "Last-Translator: Andreas Hyden <a.hyden@cyberpoint.se>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -127,6 +127,8 @@ msgid ""
 "\n"
 "gPhoto user(s) that reported this model:\n"
 msgstr ""
+"\n"
+"gPhoto-användare som har rapporterat denna modellen:\n"
 
 #: src/callbacks.c:613
 msgid "Port:"
@@ -150,7 +152,7 @@ msgstr "Fel: misslyckades att öppna %s"
 
 #: src/callbacks.c:727
 msgid "Missing Serial Device Permissions"
-msgstr ""
+msgstr "Saknar seriellportsrättigheter"
 
 #: src/callbacks.c:728
 msgid "Please check the permissions (see the manual)."
@@ -175,7 +177,10 @@ msgid ""
 "Version Information-------------------Current Version: %sNew features all "
 "over the place. Please seethe ChangeLog for more information.As always, "
 "report bugs gphoto-devel@gphoto.orgThanx much."
-msgstr "Versjonsinformasjon-------------------Denne versjon: %sNye funksjoner over det hele. Vennligst se ChangeLog for mer informasjon. Som alltid, rapporter feil til gphoto-devel@gphoto.org. Takk så mye."
+msgstr ""
+"Versjonsinformasjon-------------------Denne versjon: %sNye funksjoner over "
+"det hele. Vennligst se ChangeLog for mer informasjon. Som alltid, rapporter "
+"feil til gphoto-devel@gphoto.org. Takk så mye."
 
 #: src/callbacks.c:818
 msgid "User's Manual"
@@ -207,6 +212,16 @@ msgid ""
 "SoftwareFoundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.See "
 "http://www.gnu.org for more details on the GNU project."
 msgstr ""
+"Detta program är fri mjukvara; du kan distribuera det och/eller modifiera det under "
+"vilkoren i GNU General Public License som publicerats av Free Software "
+"Foundation; antingen version 2 av licensen, eller(om du så vill) någon senare "
+"version. Detta program distribueras i hopp om att det ska vara användbart, men "
+"UTAN NÅGON SOM HELST GARANTI, även utan underförstådd garanti om SÄLJBARHET eller "
+"LÄMPLIGHET FÖR NÅGOT SPECIELLT ÄNDAMÅL. Se GNU General Public "
+"License för ytterligare information. Du bör ha fått en kopia av GNU General Public License "
+"tillsammans med detta program. Om inte, skriv till Free "
+"Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.See "
+"http://www.gnu.org för mer detaljer om GNU-projektet."
 
 #: src/callbacks.c:895
 #, c-format
@@ -238,7 +253,7 @@ msgstr "Kunde inte få antalet bilder"
 
 #: src/callbacks.c:1062
 msgid "Download cancelled."
-msgstr ""
+msgstr "Nerladdning avbryten."
 
 #: src/callbacks.c:1121
 msgid "Done getting index."
@@ -300,11 +315,11 @@ msgstr "Skriv ut"
 
 #: src/callbacks.c:1409
 msgid "Now spooling..."
-msgstr "."
+msgstr "Mellanlagrar (spooling)..."
 
 #: src/callbacks.c:1414
 msgid "Spooling done. Printing may take a minute."
-msgstr ""
+msgstr "Mellanlagring (spooling) klar. Utskrivningen kan ta någon minut."
 
 #: src/callbacks.c:1458
 msgid "Can't modify the index colors."
@@ -350,15 +365,15 @@ msgstr "Skalar bild med 200%..."
 
 #: src/callbacks.c:1784
 msgid "Post-Processing Options"
-msgstr ""
+msgstr "Inställningar för efterbearbetning"
 
 #: src/callbacks.c:1796
 msgid "Enable post-processing"
-msgstr ""
+msgstr "Aktivera efterbearbetning"
 
 #: src/callbacks.c:1803
 msgid "Post-processing command-line:"
-msgstr ""
+msgstr "Bearbetningskommando-rad:"
 
 #: src/callbacks.c:1869
 msgid "http://www.gphoto.org/help.php3"
@@ -426,7 +441,9 @@ msgstr "gPhoto %s (%s) - GNU's digitalkamera applikation\n"
 msgid ""
 "Copyright (C) 1998-2000 Scott Fritzinger <scottf@unr.edu>\n"
 "\n"
-msgstr "Copyright (C) 1998-2000 Scott Fritzinger <scottf@unr.edu>\n\n"
+msgstr ""
+"Copyright (C) 1998-2000 Scott Fritzinger <scottf@unr.edu>\n"
+"\n"
 
 #: src/commandline.c:28 src/main.c:134
 msgid "Usage: gphoto [-h] [-c] [-n] [-s # filename] [-t # filename]\n"
@@ -442,63 +459,67 @@ msgstr "-h                      visa den här hjälptexten\n"
 
 #: src/commandline.c:31
 msgid "\t-c                    display camera summary\n"
-msgstr ""
+msgstr "\t-c                    visa kamerasummering\n"
 
 #: src/commandline.c:32
 msgid "\t-n                    display the # of pictures\n"
-msgstr ""
+msgstr "\t-n                    visa antalet bilder\n"
 
 #: src/commandline.c:33
 msgid "\t-s # filename         save image # as filename\n"
-msgstr ""
+msgstr "\t-s # filnamn          spara bild # som filnamn\n"
 
 #: src/commandline.c:35
 msgid "\t-t # filename         save thumbnail # as filename\n"
-msgstr ""
+msgstr "\t-t # filnamn          spara minibild # som filnamn\n"
 
 #: src/commandline.c:37
 msgid "\t-d #                  delete image # from camera\n"
-msgstr ""
+msgstr "\t-d #                  ta bort bild # från kameran\n"
 
 #: src/commandline.c:39
 msgid "\t-p filename           take picture and save as filename\n"
-msgstr ""
+msgstr "\t-p filnamn            ta bild och spara som filnamn\n"
 
 #: src/commandline.c:41
 msgid ""
 "\t-l filename           save live preview as filename\n"
 "\n"
 msgstr ""
+"\t-l filnamn           spara nuvarande förhandsgranskning som filnamn\n"
+"\n"            
 
 #: src/commandline.c:43
 msgid "gPhoto is free GNU software; you can redistribute it and/or\n"
-msgstr ""
+msgstr "gPhoto är fri GNU-mjukvara; du kan omdistribuera det och/eller\n"
 
 #: src/commandline.c:45
 msgid "modify it under the terms of the GNU General Public License \n"
-msgstr ""
+msgstr "modifiera det under termerna i GNU General Public License \n"
 
 #: src/commandline.c:47
 msgid "as published by the Free Software Foundation; either version \n"
-msgstr ""
+msgstr "som publicerats av Free Software Foundation; antingen version \n"
 
 #: src/commandline.c:49
 msgid "2 of the License, or any later version.  Visit gphoto/COPYING\n"
-msgstr ""
+msgstr "2 av licensen, eller någon senare version.  Besök gphoto/COPYING\n"
 
 #: src/commandline.c:51
 msgid ""
 "in the source distribution to read the GNU GPL license terms.\n"
 "\n"
 msgstr ""
+"i källkods-distributionen för att läsa GNU GPL licenstermerna.\n"
+"\n"
 
 #: src/commandline.c:53
 msgid "Report bugs and camera success to gphoto-devel@gphoto.org.\n"
-msgstr ""
+msgstr "Rapportera fel och framgång med kameran till gphoto-devel@gphoto.org.\n"
 
 #: src/commandline.c:55
 msgid "See http://www.gphoto.org for the latest news and updates.\n"
-msgstr ""
+msgstr "Se http://www.gphoto.org för de senaste nyheterna och uppdateringarna.\n"
 
 #: src/commandline.c:73
 #, c-format
@@ -520,7 +541,7 @@ msgstr "FEL: \"filnamn\" inte angivet.\n"
 
 #: src/commandline.c:115 src/commandline.c:144
 msgid "ERROR: '#' and 'filename' not specified.\n"
-msgstr ""
+msgstr "FEL: \"#\" och \"filnamn\" inte angivet.\n"
 
 #: src/commandline.c:154
 msgid "ERROR: Could not delete image.\n"
@@ -528,11 +549,11 @@ msgstr "FEL: Kunde inte ta bort bild.\n"
 
 #: src/commandline.c:162
 msgid "ERROR: '#' not specified.\n"
-msgstr ""
+msgstr "FEL: \"#\" inte angivet.\n"
 
 #: src/commandline.c:169
 msgid "ERROR: filename not specified.\n"
-msgstr ""
+msgstr "FEL: filnamn inte angivet.\n"
 
 #: src/commandline.c:172
 msgid "Taking picture...\n"
@@ -558,7 +579,7 @@ msgstr ""
 #: src/developer_dialog.c:136
 #, c-format
 msgid "gPhoto release %s was brought to you by"
-msgstr ""
+msgstr "gPhoto versionen %s presenterat av"
 
 #: src/developer_dialog.c:199
 msgid "Web Page"
@@ -581,14 +602,16 @@ msgid ""
 "The gPhoto AUTHORS file appears to be missing!\n"
 "\t      There should be a file called "
 msgstr ""
+"gPhoto's AUTHORS-fil verkar saknas!\n"
+"\t      Där borde finnas en fil kallad "
 
 #: src/gallery.c:212
 msgid "Select an Output Directory..."
-msgstr ""
+msgstr "Välj en utdata-katalog..."
 
 #: src/gallery.c:310
 msgid "Gallery Name:"
-msgstr ""
+msgstr "Gallerinamn:"
 
 #: src/gallery.c:323
 msgid "Theme:"
@@ -596,7 +619,7 @@ msgstr "Tema:"
 
 #: src/gallery.c:382
 msgid "Output Directory:"
-msgstr ""
+msgstr "Utdata-katalog:"
 
 #: src/gallery.c:393
 msgid "Change..."
@@ -608,15 +631,15 @@ msgstr "Ändra..."
 #.
 #: src/gallery.c:403
 msgid "Export file as *.shtml?"
-msgstr ""
+msgstr "Exportera fil som *.shtml?"
 
 #: src/gallery.c:407
 msgid "Set table border width to zero for thumbnails?"
-msgstr ""
+msgstr "Sätt bredden på tabellkanten till 0 för minibilder?"
 
 #: src/gallery.c:411
 msgid "Set image border width to zero? (so you don't see the link colors...)"
-msgstr ""
+msgstr "Sätt bredden på bildkanten till 0? (så att du inte ser länkfägerna...)"
 
 #: src/gallery.c:421
 msgid "Create"
@@ -639,7 +662,7 @@ msgstr "Ej tillgänglig"
 #: src/gallery.c:541
 #, c-format
 msgid "<a href=\"picture-%03i.html\">Click Me<\\/a>"
-msgstr ""
+msgstr "<a href=\"picture-%03i.html\">Klicka mig<\\/a>"
 
 #: src/gallery.c:548
 #, c-format
@@ -655,7 +678,7 @@ msgstr "Hämtar bild #%i..."
 #: src/gallery.c:572
 #, c-format
 msgid "<img alt=\"%03i\" src=\"picture-%03i.%s\">"
-msgstr ""
+msgstr "<img alt=\"%03i\" src=\"picture-%03i.%s\">"
 
 #: src/gallery.c:574
 #, c-format
@@ -675,20 +698,20 @@ msgstr "%sbild-%o3i.html"
 #: src/gallery.c:630
 #, c-format
 msgid "Loaded file:%s%s in %s"
-msgstr ""
+msgstr "Laddade filen:%s%s i %s"
 
 #: src/gallery.c:633
 #, c-format
 msgid "Gallery saved in: %s"
-msgstr ""
+msgstr "Galleri sparat i: %s"
 
 #: src/img_edit.c:1125
 msgid "Color Adjustment"
-msgstr ""
+msgstr "Färgjustering"
 
 #: src/img_edit.c:1126
 msgid "gPhoto - Color Adjustment"
-msgstr ""
+msgstr "gPhoto - Färgjustering"
 
 #: src/img_edit.c:1141
 msgid "Colour Settings"
@@ -696,23 +719,23 @@ msgstr "Färginställningar"
 
 #: src/img_edit.c:1247
 msgid "Gray Controls"
-msgstr ""
+msgstr "Gråa kontroller"
 
 #: src/img_edit.c:1287
 msgid "Red Controls"
-msgstr ""
+msgstr "Röda kontroller"
 
 #: src/img_edit.c:1327
 msgid "Green Controls"
-msgstr ""
+msgstr "Gröna kontroller"
 
 #: src/img_edit.c:1367
 msgid "Blue Controls"
-msgstr ""
+msgstr "Blåa kontroller"
 
 #: src/img_edit.c:1408
 msgid "Colour Modifications:"
-msgstr ""
+msgstr "Färgmodifieringar:"
 
 #: src/img_edit.c:1415
 msgid "Apply"
@@ -720,7 +743,7 @@ msgstr "Verktställ"
 
 #: src/img_edit.c:1419
 msgid "Keep"
-msgstr ""
+msgstr "Behåll"
 
 #: src/img_edit.c:1423
 msgid "Reset"
@@ -728,23 +751,23 @@ msgstr "Nollställ"
 
 #: src/img_edit.c:1424 src/img_edit.c:1425
 msgid "Reset all the color changes to normal values"
-msgstr ""
+msgstr "Nollställ alla färgändringar till normala värden"
 
 #: src/img_edit.c:1427
 msgid "Always Apply"
-msgstr ""
+msgstr "Alltid verkställ"
 
 #: src/live.c:28 src/live.c:68
 msgid "Getting live image..."
-msgstr ""
+msgstr "Hämtar nuvarande bild..."
 
 #: src/live.c:30 src/live.c:109
 msgid "Could not get preview"
-msgstr ""
+msgstr "Kunde inte få tag på förhandsgranskning"
 
 #: src/live.c:70
 msgid "Live Camera!"
-msgstr ""
+msgstr "Direktsänd kamera!"
 
 #: src/live.c:77
 msgid "Update Picture"
@@ -759,11 +782,13 @@ msgid ""
 "\n"
 "Launching Gnome Bugbuddy...\n"
 msgstr ""
+"\n"
+"Kör Gnome Bugbuddy...\n"
 
 #: src/main.c:152
 #, c-format
 msgid "gPhoto %s - the GNU digital camera application"
-msgstr ""
+msgstr "gPhoto %s - GNU's digitala kamera-applikation"
 
 #: src/main.c:190
 msgid "Image Index"
@@ -795,39 +820,39 @@ msgstr "Nästa sida"
 
 #: src/toolbar.c:104
 msgid "Download Thumbnail Index"
-msgstr ""
+msgstr "Ladda ner minibild index"
 
 #: src/toolbar.c:106
 msgid "Download Empty Index"
-msgstr ""
+msgstr "Ladda ner tomt index"
 
 #: src/toolbar.c:108
 msgid "Download Selected Images"
-msgstr ""
+msgstr "Ladda ner markerade bilder"
 
 #: src/toolbar.c:110
 msgid "Delete Selected Images"
-msgstr ""
+msgstr "Ta bort markerade bilder"
 
 #: src/toolbar.c:113
 msgid "Halt Download"
-msgstr ""
+msgstr "Stoppa nerladdning"
 
 #: src/toolbar.c:117
 msgid "Rotate Clockwise"
-msgstr ""
+msgstr "Rotera medurs"
 
 #: src/toolbar.c:119
 msgid "Rotate Counter-Clockwise"
-msgstr ""
+msgstr "Rotera moturs"
 
 #: src/toolbar.c:121
 msgid "Flip Horizontal"
-msgstr ""
+msgstr "Vänd horisontellt"
 
 #: src/toolbar.c:123
 msgid "Flip Vertical"
-msgstr ""
+msgstr "Vänd vertikalt"
 
 #: src/toolbar.c:128 src/toolbar.c:130
 msgid "Colors"
@@ -842,7 +867,7 @@ msgstr "Färger"
 #.
 #: src/toolbar.c:141
 msgid "Camera Configuration"
-msgstr ""
+msgstr "Kamerakonfiguration"
 
 #: src/toolbar.c:144
 msgid "Help"
@@ -854,11 +879,11 @@ msgstr "Avsluta gPhoto"
 
 #: src/util.c:56
 msgid "gPhoto Message"
-msgstr ""
+msgstr "gPhoto Meddelande"
 
 #: src/util.c:127
 msgid "Confirm"
-msgstr ""
+msgstr "Bekräfta"
 
 #: src/util.c:166
 #, c-format
@@ -867,7 +892,7 @@ msgstr "Filen %s existerar. Skriva över?"
 
 #: src/util.c:349
 msgid "load_image_mem: could not load image\n"
-msgstr ""
+msgstr "load_image_mem: kunde inte ladda bild\n"
 
 #: src/util.c:472
 msgid "Fork failed. Exiting. \n"

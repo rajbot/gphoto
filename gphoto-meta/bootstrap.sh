@@ -237,7 +237,7 @@ getsources() {
 	local releaseparm
 	if [ 'HEAD' = "$releasetag" ]
 	then
-	    releaseparm="-rHEAD"
+	    releaseparm=""
 	else
 	    case "$releasetag" in
 		-*)
@@ -436,8 +436,10 @@ builddist() {
 		    if ls "${docroot}/${dir}/"* > /dev/null 2>&1
 		    then
 			echo "    # building special manual package for ${dir}"
+			local version
+			version="$(grep '^AM_INIT_AUTOMAKE' configure.in | sed -e 's/^[^,]*, *//g' | sed -e 's/[,)].*//g')"
 			local base
-			base="${distdir}/${module}-${dir}.tar"
+			base="${distdir}/${module}-${dir}-${version}.tar"
 			(cd "${docroot}" && tar cvfhz "${base}.gz" "${dir}/")
 			if [ "$compression" = "bz2" ]
 			then

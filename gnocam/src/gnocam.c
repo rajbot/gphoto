@@ -3,7 +3,10 @@
 #include <libgnomevfs/gnome-vfs.h>
 #include <glade/glade.h>
 #include <gconf/gconf-client.h>
-#include <bonobo.h>
+#ifdef GNOCAM_USES_GTKHTML
+#  include <liboaf/liboaf.h>
+#  include <bonobo.h>
+#endif
 #include <gphoto2.h>
 #include "gnocam.h"
 #include "gphoto-extensions.h"
@@ -39,7 +42,7 @@ int main (int argc, char *argv[])
 	gnome_init (PACKAGE, VERSION, argc, argv);
 #ifdef GNOCAM_USES_GTKHTML
 	oaf_init (argc, argv);
-	bonobo_init (CORBA_OBJECT_NIL, CORBA_OBJECT_NIL, CORBA_OBJECT_NIL);
+	g_assert (bonobo_init (CORBA_OBJECT_NIL, CORBA_OBJECT_NIL, CORBA_OBJECT_NIL));
 	glade_bonobo_init ();
 #else
 	glade_gnome_init ();
@@ -111,7 +114,11 @@ int main (int argc, char *argv[])
 
 	/* Start the event loop. */
 	gdk_threads_enter ();
+#ifdef GNOCAM_USES_GTKHTML
+	bonobo_main ();
+#else
 	gtk_main ();
+#endif
 	gdk_threads_leave ();
 
 	/* Clean up. */

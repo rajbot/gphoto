@@ -174,16 +174,7 @@ AC_SUBST(CFLAGS)
 dnl **********
 dnl libgphoto2
 dnl **********
-AC_MSG_CHECKING(for libgphoto2)
-if gphoto2-config --libs > /dev/null 2>&1; then
-    AC_MSG_RESULT(found)
-else
-    AC_MSG_ERROR([
-*** You need libgphoto2 for this version of ${PACKAGE}.
-*** Get it from http://sourceforge.net/projects/gphoto/])
-fi
-GPHOTO_CFLAGS="`gphoto2-config --cflags` `gphoto2-port-config --cflags`"
-GPHOTO_LIBS="`gphoto2-config --libs` `gphoto2-port-config --cflags`"
+PKG_CHECK_MODULES(GPHOTO, libgphoto-2.0)
 AC_SUBST(GPHOTO_CFLAGS)
 AC_SUBST(GPHOTO_LIBS)
 

@@ -39,7 +39,9 @@ struct _GnoCamMainPrivate {
 "       <menuitem name=\"BonoboCustomize\" verb=\"\" _label=\"Customi_ze...\" pos=\"bottom\"/>"					\
 "    </submenu>"														\
 "    <placeholder name=\"Edit\"/>"												\
-"    <placeholder name=\"View\"/>"												\
+"    <submenu name=\"View\" _label=\"_View\">"											\
+"      <menuitem name=\"Preview\" _label=\"Preview\" verb=\"\" type=\"toggle\" hidden=\"1\" pos=\"top\"/>"			\
+"    </submenu>"														\
 "    <submenu name=\"Settings\" _label=\"_Settings\">"										\
 "      <menuitem name=\"Preferences\" verb=\"\" _label=\"_Preferences\" pixtype=\"stock\" pixname=\"Preferences\"/>"		\
 "    </submenu>"														\

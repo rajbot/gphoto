@@ -97,13 +97,6 @@ struct _GnoCamCameraPrivate
 #define CAPTURE_PREVIEW	"<menuitem name=\"CapturePreview\" _label=\"Capture Preview\" verb=\"\"/>"
 #define CAPTURE_VIDEO	"<menuitem name=\"CaptureVideo\" _label=\"Capture Video\" verb=\"\"/>"
 
-#define GNOCAM_CAMERA_UI_PREVIEW							\
-"<placeholder name=\"View\">"								\
-"  <submenu name=\"View\" _label=\"_View\">"						\
-"    <menuitem name=\"Preview\" _label=\"Preview\" verb=\"\" type=\"toggle\"/>"		\
-"  </submenu>"										\
-"</placeholder>"
-
 /**************/
 /* Prototypes */
 /**************/
@@ -146,16 +139,18 @@ create_menu (GnoCamCamera* camera)
                 result = gp_camera_config_get (camera->priv->camera, &(camera->priv->configuration));
                 if (result == GP_OK) menu_setup (camera->priv->component, camera->priv->camera, camera->priv->configuration, "/menu/Camera/Camera", NULL, NULL);
         }
-        /* Preview? */
-//      if (camera->priv->camera->abilities->file_preview) {
-                bonobo_ui_component_set_translate (camera->priv->component, "/menu", GNOCAM_CAMERA_UI_PREVIEW, NULL);
+	/* Preview? */
+	if (camera->priv->camera->abilities->file_preview) {
                 if (gconf_client_get_bool (camera->priv->client, "/apps/" PACKAGE "/preview", NULL)) {
-                        bonobo_ui_component_set_prop (camera->priv->component, "/menu/View/View/Preview", "state", "1", NULL);
+                        bonobo_ui_component_set_prop (camera->priv->component, "/menu/View/Preview", "state", "1", NULL);
                 } else {
-                        bonobo_ui_component_set_prop (camera->priv->component, "/menu/View/View/Preview", "state", "0", NULL);
+                        bonobo_ui_component_set_prop (camera->priv->component, "/menu/View/Preview", "state", "0", NULL);
                 }
                 bonobo_ui_component_add_listener (camera->priv->component, "Preview", on_preview_clicked, camera);
-//      }
+		bonobo_ui_component_set_prop (camera->priv->component, "/menu/View/Preview", "hidden", "0", NULL);
+	} else {
+		bonobo_ui_component_set_prop (camera->priv->component, "/menu/View/Preview", "hidden", "1", NULL);
+	}
 
         /* Capture? */
         if (camera->priv->camera->abilities->capture != GP_CAPTURE_NONE) {

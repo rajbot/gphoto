@@ -129,7 +129,7 @@ function checktools {
     echo "##### Checking for presence of tools..."
     while read action tool restofline
     do
-	if "$tool" --version &> /dev/null
+	if "$tool" --version > /dev/null 2>&1
 	then
 	    echo "    # $tool found."
 	else

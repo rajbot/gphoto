@@ -200,6 +200,7 @@ preview_new (Camera* camera)
 	gchar*			tmp;
 	gint			i;
 	CameraWidget*		window_camera = NULL;
+	CORBA_Environment	ev;
 
         g_return_val_if_fail (camera, NULL);
 
@@ -234,12 +235,14 @@ preview_new (Camera* camera)
 		xmlAddChild (node, node_child = xmlNewNode (ns, "menu"));
 		xmlAddChild (node_child, node = xmlNewNode (ns, "submenu"));
 		xmlSetProp (node, "name", "Edit");
-		xmlSetProp (node, "_label", "_Edit");
-		xmlSetProp (node, "_tip", "Edit");
+		xmlSetProp (node, "_label", _("_Edit"));
+		xmlSetProp (node, "_tip", _("Edit"));
 		popup_prepare (component, window_camera, node, command, ns);
 		xmlDocDumpMemory (doc, (xmlChar**) &tmp, &i);
 		xmlFreeDoc (doc);
-		bonobo_window_xml_merge (BONOBO_WINDOW (window), "/", tmp, "Preview");
+		CORBA_exception_init (&ev);
+		bonobo_ui_component_set_translate (component, "/", tmp, &ev);
+		CORBA_exception_free (&ev);
 		g_free (tmp);
 		popup_fill (component, "/menu/Edit", window_camera, window_camera, TRUE);
 	}

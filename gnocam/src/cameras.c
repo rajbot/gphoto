@@ -379,7 +379,6 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
 {
 	CameraWidget*		window_camera = NULL;
 	CameraWidget*		window_folder = NULL;
-	CameraAbilities		abilities;
 	GtkWidget*		item;
 	GtkWidget*		widget;
 	gboolean		root;
@@ -520,45 +519,45 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
 		xmlAddChild (node, xmlNewNode (ns, "separator"));
         }
 
-        /* Upload? Capturing?*/
-        if ((result = gp_camera_abilities_by_name (camera->model, &abilities)) == GP_OK) {
-                if (abilities.file_put) {
+        /* Upload? */
+        if (camera->abilities->file_put) {
+                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
+                xmlSetProp (node_child, "name", "Upload");
+                xmlSetProp (node_child, "_label", "Upload");
+                xmlSetProp (node_child, "_tip", "Upload a file");
+                xmlSetProp (node_child, "verb", "on_upload_activate");
+                bonobo_ui_component_add_verb (component, "on_upload_activate", on_upload_activate, item);
+                xmlAddChild (node, xmlNewNode (ns, "separator"));
+        }
+
+	/* Capturing? */
+        if (root && camera->abilities->capture) {
+                xmlAddChild (node, xmlNewNode (ns, "separator"));
+                if (camera->abilities->capture & GP_CAPTURE_PREVIEW) {
                         xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-                        xmlSetProp (node_child, "name", "Upload");
-                        xmlSetProp (node_child, "_label", "Upload");
-                        xmlSetProp (node_child, "_tip", "Upload a file");
-                        xmlSetProp (node_child, "verb", "on_upload_activate");
-                        bonobo_ui_component_add_verb (component, "on_upload_activate", on_upload_activate, item);
-                        xmlAddChild (node, xmlNewNode (ns, "separator"));
+                        xmlSetProp (node_child, "name", "Capture Preview");
+                        xmlSetProp (node_child, "_label", "Capture Preview");
+                        xmlSetProp (node_child, "_tip", "Capture a preview");
+                        xmlSetProp (node_child, "verb", "on_capture_preview_activate");
+                        bonobo_ui_component_add_verb (component, "on_capture_preview_activate", on_capture_preview_activate, item);
                 }
-                if (root && abilities.capture) {
-                        xmlAddChild (node, xmlNewNode (ns, "separator"));
-                        if (abilities.capture & GP_CAPTURE_PREVIEW) {
-                                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-                                xmlSetProp (node_child, "name", "Capture Preview");
-                                xmlSetProp (node_child, "_label", "Capture Preview");
-                                xmlSetProp (node_child, "_tip", "Capture a preview");
-                                xmlSetProp (node_child, "verb", "on_capture_preview_activate");
-                                bonobo_ui_component_add_verb (component, "on_capture_preview_activate", on_capture_preview_activate, item);
-                        }
-                        if (abilities.capture & GP_CAPTURE_IMAGE) {
-                                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-                                xmlSetProp (node_child, "name", "Capture Image");
-                                xmlSetProp (node_child, "_label", "Capture Image");
-                                xmlSetProp (node_child, "_tip", "Capture an image");
-                                xmlSetProp (node_child, "verb", "on_capture_image_activate");
-                                bonobo_ui_component_add_verb (component, "on_capture_image_activate", on_capture_image_activate, item);
-                        }
-                        if (abilities.capture & GP_CAPTURE_VIDEO) {
-                                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-                                xmlSetProp (node_child, "name", "Capture Video");
-                                xmlSetProp (node_child, "_label", "Capture Image");
-                                xmlSetProp (node_child, "_tip", "Capture a video");
-                                xmlSetProp (node_child, "verb", "on_capture_video_activate");
-                                bonobo_ui_component_add_verb (component, "on_capture_video_activate", on_capture_video_activate, item);
-                        }
-                        xmlAddChild (node, xmlNewNode (ns, "separator"));
+                if (camera->abilities->capture & GP_CAPTURE_IMAGE) {
+                        xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
+                        xmlSetProp (node_child, "name", "Capture Image");
+                        xmlSetProp (node_child, "_label", "Capture Image");
+                        xmlSetProp (node_child, "_tip", "Capture an image");
+                        xmlSetProp (node_child, "verb", "on_capture_image_activate");
+                        bonobo_ui_component_add_verb (component, "on_capture_image_activate", on_capture_image_activate, item);
                 }
+                if (camera->abilities->capture & GP_CAPTURE_VIDEO) {
+                        xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
+                        xmlSetProp (node_child, "name", "Capture Video");
+                        xmlSetProp (node_child, "_label", "Capture Image");
+                        xmlSetProp (node_child, "_tip", "Capture a video");
+                        xmlSetProp (node_child, "verb", "on_capture_video_activate");
+                        bonobo_ui_component_add_verb (component, "on_capture_video_activate", on_capture_video_activate, item);
+                }
+                xmlAddChild (node, xmlNewNode (ns, "separator"));
         }
 
         /* Refresh. */
@@ -612,7 +611,6 @@ camera_tree_file_add (GtkTree* tree, GnomeVFSURI* uri)
 {
 	Camera*			camera;
 	CameraWidget*		window = NULL;
-	CameraAbilities		abilities;
 	GtkWidget*		item;
 	GtkWidget*		menu = NULL;
 	GtkTargetEntry  	target_table[] = {{"text/uri-list", 0, 0}};
@@ -683,35 +681,31 @@ camera_tree_file_add (GtkTree* tree, GnomeVFSURI* uri)
         g_free (tmp);
 
         /* Save preview? */
-        if ((result = gp_camera_abilities_by_name (camera->model, &abilities)) == GP_OK) {
-                if (abilities.file_preview) {
-                        xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-                        xmlSetProp (node_child, "name", "Save Preview");
-                        xmlSetProp (node_child, "_label", "Save Preview");
-                        xmlSetProp (node_child, "_tip", "Save preview");
-                        xmlSetProp (node_child, "verb", "on_save_preview_activate");
-                        bonobo_ui_component_add_verb (component, "on_save_preview_activate", on_save_preview_activate, item);
-                        xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-                        xmlSetProp (node_child, "name", "Save Preview As");
-                        xmlSetProp (node_child, "_label", "Save Preview As");
-                        xmlSetProp (node_child, "_tip", "Save preview as");
-                        xmlSetProp (node_child, "verb", "on_save_preview_as_activate");
-                        bonobo_ui_component_add_verb (component, "on_save_preview_as_activate", on_save_preview_as_activate, item);
-                        xmlAddChild (node, xmlNewNode (ns, "separator"));
-                }
+        if (camera->abilities->file_preview) {
+                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
+                xmlSetProp (node_child, "name", "Save Preview");
+                xmlSetProp (node_child, "_label", "Save Preview");
+                xmlSetProp (node_child, "_tip", "Save preview");
+                xmlSetProp (node_child, "verb", "on_save_preview_activate");
+                bonobo_ui_component_add_verb (component, "on_save_preview_activate", on_save_preview_activate, item);
+                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
+                xmlSetProp (node_child, "name", "Save Preview As");
+                xmlSetProp (node_child, "_label", "Save Preview As");
+                xmlSetProp (node_child, "_tip", "Save preview as");
+                xmlSetProp (node_child, "verb", "on_save_preview_as_activate");
+                bonobo_ui_component_add_verb (component, "on_save_preview_as_activate", on_save_preview_as_activate, item);
+                xmlAddChild (node, xmlNewNode (ns, "separator"));
         }
 
         /* Delete? */
-        if ((result = gp_camera_abilities_by_name (camera->model, &abilities)) == GP_OK) {
-                if (abilities.file_delete) {
-                        xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-                        xmlSetProp (node_child, "name", "Delete");
-                        xmlSetProp (node_child, "_label", "Delete");
-                        xmlSetProp (node_child, "_tip", "Delete a file");
-                        xmlSetProp (node_child, "verb", "on_delete_activate");
-                        bonobo_ui_component_add_verb (component, "on_delete_activate", on_delete_activate, item);
-                        xmlAddChild (node, xmlNewNode (ns, "separator"));
-                }
+        if (camera->abilities->file_delete) {
+                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
+                xmlSetProp (node_child, "name", "Delete");
+                xmlSetProp (node_child, "_label", "Delete");
+                xmlSetProp (node_child, "_tip", "Delete a file");
+                xmlSetProp (node_child, "verb", "on_delete_activate");
+                bonobo_ui_component_add_verb (component, "on_delete_activate", on_delete_activate, item);
+                xmlAddChild (node, xmlNewNode (ns, "separator"));
         }
 
         /* Save file. */

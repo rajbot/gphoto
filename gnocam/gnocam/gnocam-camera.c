@@ -15,7 +15,6 @@
 
 #include "gnocam-capture.h"
 #include "bonobo-storage-camera.h"
-#include "gnocam-configuration.h"
 #include "GnoCam.h"
 
 #define PARENT_TYPE BONOBO_X_OBJECT_TYPE
@@ -89,29 +88,6 @@ static void
 on_dialog_destroy (GtkObject *object, gpointer data)
 {
 	bonobo_object_idle_unref (BONOBO_OBJECT (data));
-}
-
-static void
-impl_GNOME_Camera_showConfiguration (PortableServer_Servant servant,
-				     CORBA_Environment *ev)
-{
-	GnoCamCamera *c;
-	CameraWidget *widget = NULL;
-	GtkWidget *dialog;
-
-	c = GNOCAM_CAMERA (bonobo_object_from_servant (servant));
-
-	CHECK_RESULT (gp_camera_get_config (c->priv->camera, &widget), ev);
-	if (BONOBO_EX (ev))
-		return;
-
-	dialog = gnocam_configuration_new (c->priv->camera, widget);
-	gp_widget_unref (widget);
-	gtk_widget_show (dialog);
-
-	bonobo_object_ref (BONOBO_OBJECT (c));
-	gtk_signal_connect (GTK_OBJECT (dialog), "destroy",
-			    GTK_SIGNAL_FUNC (on_dialog_destroy), c);
 }
 
 static gboolean
@@ -264,7 +240,6 @@ gnocam_camera_class_init (GnoCamCameraClass *klass)
 	epv = &klass->epv;
 	epv->capturePreview    = impl_GNOME_Camera_capturePreview;
 	epv->captureImage      = impl_GNOME_Camera_captureImage;
-	epv->showConfiguration = impl_GNOME_Camera_showConfiguration;
 	epv->getInfo           = impl_GNOME_Camera_getInfo;
 }
 

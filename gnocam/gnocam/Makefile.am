@@ -24,7 +24,6 @@ gnocam_SOURCES =\
  bonobo-stream-camera.c bonobo-stream-camera.h\
  main.c\
  gnocam-capture.c gnocam-capture.h\
- gnocam-configuration.c gnocam-configuration.h\
  gnocam-main.c gnocam-main.h\
  gnocam-camera.c gnocam-camera.h\
  gnocam-camera-selector.c gnocam-camera-selector.h\

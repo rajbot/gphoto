@@ -1,15 +1,12 @@
-#include <gphoto2.h>
+#include <gphoto2-camera.h>
 #include "gnocam-capplet-table.h"
 
 #include <gal/widgets/e-popup-menu.h>
 #include <gal/util/e-util.h>
 #include <gal/widgets/e-gui-utils.h>
-#include <bonobo/bonobo-exception.h>
-#include <bonobo/bonobo-object.h>
-#include <liboaf/oaf-activate.h>
 
 #include "gnocam-capplet-model.h"
-#include "GnoCam.h"
+#include "gnocam-configuration.h"
 
 struct _GnoCamCappletTablePrivate
 {
@@ -80,84 +77,133 @@ gnocam_capplet_table_class_init (GnoCamCappletTableClass *klass)
 	object_class->finalize = gnocam_capplet_table_finalize;
 }
 
-static GNOME_Camera
-get_camera (GnoCamCappletTable *table, guint number)
-{
-	const gchar *name;
-	CORBA_Environment ev;
-	GNOME_Camera camera;
-	CORBA_Object gnocam;
-
-	name = name = e_table_model_value_at (table->priv->model, 0, number);
-	
-	CORBA_exception_init (&ev);
-	gnocam = oaf_activate_from_id ("OAFIID:GNOME_GnoCam", 0, NULL, &ev);
-	if (BONOBO_EX (&ev)) {
-		g_warning ("Could not start GnoCam: %s",
-			   bonobo_exception_get_text (&ev));
-		CORBA_exception_free (&ev);
-		return (CORBA_OBJECT_NIL);
-	}
-
-	camera = GNOME_GnoCam_getCameraByName (gnocam, name, &ev);
-	bonobo_object_release_unref (gnocam, NULL);
-	if (BONOBO_EX (&ev)) {
-		g_warning ("Could not get camera: %s",
-			   bonobo_exception_get_text (&ev));
-		CORBA_exception_free (&ev);
-		return (CORBA_OBJECT_NIL);
-	}
-
-	return (camera);
-}
-
 static void
 configure_camera (GnoCamCappletTable *table, guint number)
-{	
-	GNOME_Camera camera;
-	CORBA_Environment ev;
+{
+	Camera *camera;
+	CameraWidget *config;
+	const gchar *model, *port;
+	GtkWidget *widget;
+	gint result;
 
-	camera = get_camera (table, number);
-	if (camera == CORBA_OBJECT_NIL)
-		return;
+	model = e_table_model_value_at (table->priv->model, 1, number);
+	port  = e_table_model_value_at (table->priv->model, 2, number);
 
-	CORBA_exception_init (&ev);
-	GNOME_Camera_showConfiguration (camera, &ev);
-	bonobo_object_release_unref (camera, NULL);
-	if (BONOBO_EX (&ev)) {
-		g_warning ("Could not show configuration: %s",
-			   bonobo_exception_get_text (&ev));
-		CORBA_exception_free (&ev);
+	/* Create camera */
+	result = gp_camera_new (&camera);
+	if (result < 0) {
+		g_warning ("Could not create camera: %s",
+			   gp_result_as_string (result));
 		return;
 	}
-	CORBA_exception_free (&ev);
+
+	/* Set the model */
+	result = gp_camera_set_model (camera, model);
+	if (result < 0) {
+		g_warning ("Could not set model: %s",
+			   gp_camera_get_result_as_string (camera, result));
+		gp_camera_unref (camera);
+		return;
+	}
+
+	/* Set the port */
+	result = gp_camera_set_port_name (camera, port);
+	if (result < 0) {
+		g_warning ("Could not set port: %s",
+			   gp_camera_get_result_as_string (camera, result));
+		gp_camera_unref (camera);
+		return;
+	}
+
+	/* Initialize camera */
+	result = gp_camera_init (camera);
+	if (result < 0) {
+		g_warning ("Could not initialize camera: %s",
+			   gp_camera_get_result_as_string (camera, result));
+		gp_camera_unref (camera);
+	}
+
+	/* Get the configuration */
+	result = gp_camera_get_config (camera, &config);
+	if (result < 0) {
+		g_warning ("Could not get configuration: %s",
+			   gp_camera_get_result_as_string (camera, result));
+		gp_camera_unref (camera);
+	}
+
+	widget = gnocam_configuration_new (camera, config);
+	gtk_widget_show (widget);
+
+	/* Clean up */
+	result = gp_camera_unref (camera);
+	if (result < 0)
+		g_warning ("Could not unref camera: %s",
+			   gp_camera_get_result_as_string (camera, result));
+	result = gp_widget_unref (config);
+	if (result < 0)
+		g_warning ("Could not unref widget: %s",
+			   gp_result_as_string (result));
 }
 
 static void
 get_info (GnoCamCappletTable *table, guint number)
 {
-	GNOME_Camera camera;
-	CORBA_Environment ev;
-	CORBA_char *info;
+	Camera *camera;
+	const gchar *model, *port;
+	gint result;
+	CameraText text;
 
-	camera = get_camera (table, number);
-	if (camera == CORBA_OBJECT_NIL)
+	model = e_table_model_value_at (table->priv->model, 1, number);
+	port  = e_table_model_value_at (table->priv->model, 2, number);
+
+	/* Create camera */
+	result = gp_camera_new (&camera);
+	if (result < 0) {
+		g_warning ("Could not create camera: %s",
+			   gp_result_as_string (result));
 		return;
+	}
 
-	CORBA_exception_init (&ev);
-	info = GNOME_Camera_getInfo (camera, &ev);
-	bonobo_object_release_unref (camera, NULL);
-	if (BONOBO_EX (&ev)) {
-		g_warning ("Could not get info: %s",
-			   bonobo_exception_get_text (&ev));
-		CORBA_exception_free (&ev);
+	/* Set the model */
+	result = gp_camera_set_model (camera, model);
+	if (result < 0) {
+		g_warning ("Could not set model: %s",
+			   gp_camera_get_result_as_string (camera, result));
+		gp_camera_unref (camera);
 		return;
-		        }
-	CORBA_exception_free (&ev);
+	}
 
-	gnome_dialog_run_and_close (GNOME_DIALOG (gnome_ok_dialog (info)));
+	/* Set the port */
+	result = gp_camera_set_port_name (camera, port);
+	if (result < 0) {
+		g_warning ("Could not set port: %s",
+			   gp_camera_get_result_as_string (camera, result));
+		gp_camera_unref (camera);
+		return;
+	}
 
-	CORBA_free (info);
+	/* Initialize camera */
+	result = gp_camera_init (camera);
+	if (result < 0) {
+		g_warning ("Could not initialize camera: %s",
+			   gp_camera_get_result_as_string (camera, result));
+		gp_camera_unref (camera);
+	}
+
+	/* Get the summary */
+	result = gp_camera_get_summary (camera, &text);
+	if (result < 0) {
+		g_warning ("Could not get summary: %s",
+			   gp_camera_get_result_as_string (camera, result));
+	}
+
+	gnome_dialog_run_and_close (GNOME_DIALOG (gnome_ok_dialog (text.text)));
+
+	/* Clean up */
+	result = gp_camera_unref (camera);
+	if (result < 0)
+		g_warning ("Could not unref camera: %s",
+			   gp_camera_get_result_as_string (camera, result));
 }
 
 static void

@@ -35,7 +35,8 @@ int 		gpio_parallel_close(gpio_device *dev);
 int 		gpio_parallel_read(gpio_device *dev, char *bytes, int size);
 int 		gpio_parallel_write(gpio_device *dev, char *bytes, int size);
 
-int		gpio_parallel_status(gpio_device *dev, int line);
+int		gpio_parallel_get_pin(gpio_device *dev, int pin);
+int		gpio_parallel_set_pin(gpio_device *dev, int pin, int level);
 
 int 		gpio_parallel_update (gpio_device *dev);
 
@@ -50,7 +51,8 @@ struct gpio_operations gpio_parallel_operations =
         gpio_parallel_close,
         gpio_parallel_read,
         gpio_parallel_write,
-        gpio_parallel_status,
+        gpio_parallel_get_pin,
+	gpio_parallel_set_pin,
         gpio_parallel_update
 };
 
@@ -84,7 +86,11 @@ int gpio_parallel_write(gpio_device *dev, char *bytes, int size) {
 
 }
 
-int gpio_parallel_status(gpio_device *dev, int line) {
+int gpio_parallel_get_pin(gpio_device *dev, int pin) {
+
+}
+
+int gpio_parallel_set_pin(gpio_device *dev, int pin, int level) {
 
 }
 

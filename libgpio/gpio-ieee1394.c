@@ -35,7 +35,8 @@ int 		gpio_ieee1394_close(gpio_device *dev);
 int 		gpio_ieee1394_read(gpio_device *dev, char *bytes, int size);
 int 		gpio_ieee1394_write(gpio_device *dev, char *bytes, int size);
 
-int		gpio_ieee1394_status(gpio_device *dev, int line);
+int		gpio_ieee1394_get_pin(gpio_device *dev, int pin);
+int		gpio_ieee1394_set_pin(gpio_device *dev, int pin, int level);
 
 int 		gpio_ieee1394_update (gpio_device *dev);
 
@@ -51,7 +52,8 @@ struct gpio_operations gpio_ieee1394_operations =
         gpio_ieee1394_close,
         gpio_ieee1394_read,
         gpio_ieee1394_write,
-        gpio_ieee1394_status,
+        gpio_ieee1394_get_pin,
+		gpio_iee1394_set_pin,
         gpio_ieee1394_update
 };
 
@@ -84,7 +86,11 @@ int gpio_ieee1394_write(gpio_device *dev, char *bytes, int size) {
 
 }
 
-int gpio_ieee1394_status(gpio_device *dev, int line) {
+int gpio_ieee1394_get_pin(gpio_device *dev, int pin) {
+
+}
+
+int gpio_ieee1394_set_pin(gpio_device *dev, int pin, int level) {
 
 }
 

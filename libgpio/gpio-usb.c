@@ -119,7 +119,12 @@ int gpio_usb_msg_read(gpio_device * dev, int value, char *bytes, int size)
  * This function does nothing for USB
  *
  */
-int gpio_usb_status(gpio_device * dev, int line)
+int gpio_usb_get_pin(gpio_device * dev, int pin)
+{
+	return GPIO_OK;
+}
+
+int gpio_usb_set_pin(gpio_device * dev, int pin, int level)
 {
 	return GPIO_OK;
 }
@@ -149,7 +154,8 @@ struct gpio_operations gpio_usb_operations =
 	gpio_usb_close,
 	gpio_usb_read,
 	gpio_usb_write,
-	gpio_usb_status,
+	gpio_usb_get_pin,
+	gpio_usb_set_pin,
 	gpio_usb_update
 };
 

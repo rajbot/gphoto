@@ -138,10 +138,15 @@ int gpio_read(gpio_device * dev, char *bytes, int size)
 	return dev->ops->read(dev, bytes, size);
 }
 
-int gpio_status(gpio_device * dev, int line)
+int gpio_get_pin(gpio_device * dev, int pin)
 {
-	/* Give the status of line from dev */
-	return dev->ops->status(dev, line);
+	/* Give the status of pin from dev */
+	return dev->ops->get_pin(dev, pin);
+}
+int gpio_set_pin(gpio_device * dev, int pin, int level)
+{
+	/* Set the status of pin from dev to level */
+	return dev->ops->set_pin(dev, pin, level);
 }
 int gpio_set_timeout(gpio_device * dev, int millisec_timeout)
 {

@@ -34,6 +34,8 @@ int main(int argc, char **argv)
 
 	dump(dev);
 
+	printf("CTS: %i", gpio_get_pin(dev,PIN_CTS));
+
 	gpio_write(dev, "AT\n", 3);	/* write bytes to the device */
 
 	gpio_read(dev, buf, 3);	/* read bytes from the device */

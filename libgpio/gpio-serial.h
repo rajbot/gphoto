@@ -50,6 +50,15 @@ typedef struct {
 
 extern struct gpio_operations gpio_serial_operations;   
 
+#define PIN_RTS 0
+#define PIN_DTR 1
+#define PIN_CTS 2
+#define PIN_DSR 3
+#define PIN_CD  4
+#define PIN_RING 5 
+
+
+
 #endif /* _GPIO_SERIAL_H_ */
 
 

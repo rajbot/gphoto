@@ -66,7 +66,8 @@ int 		gpio_serial_close(gpio_device *dev);
 int 		gpio_serial_read(gpio_device *dev, char *bytes, int size);
 int 		gpio_serial_write(gpio_device *dev, char *bytes, int size);
 
-int		gpio_serial_status(gpio_device *dev, int line);
+int			gpio_serial_get_pin(gpio_device *dev, int pin);
+int     	gpio_serial_set_pin(gpio_device *dev, int pin, int level); 
 
 int 		gpio_serial_update (gpio_device *dev);
 
@@ -83,7 +84,8 @@ struct gpio_operations gpio_serial_operations =
 	gpio_serial_close,
 	gpio_serial_read,
 	gpio_serial_write,
-	gpio_serial_status,
+	gpio_serial_get_pin,
+	gpio_serial_set_pin,
 	gpio_serial_update
 };
 
@@ -127,6 +129,10 @@ int gpio_serial_open(gpio_device * dev)
 		perror(dev->settings.serial.port);
 		return GPIO_ERROR;
 	}
+/*	if (ioctl (dev->device_fd, TIOCMBIC, &RTS) <0) {
+		perror("ioctl(TIOCMBIC)");
+		return GPIO_ERROR;
+	} */
 	return GPIO_OK;
 }
 
@@ -213,21 +219,95 @@ int gpio_serial_read(gpio_device * dev, char *bytes, int size)
 }
 
 /*
- * This Function will the status of the lines of the serial port
- * lines : 1  =  CTS
+ * Get the status of the lines of the serial port
+ * 
  */
-int gpio_serial_status(gpio_device * dev, int line)
+int gpio_serial_get_pin(gpio_device * dev, int pin)
 {
-	int j, serial_line;
+	int j, bit;
 
-	if (line = 1)
-		serial_line = TIOCMGET;
-	if (ioctl(dev->device_fd, serial_line, &j) < 0) {
+	switch(pin) {
+		case PIN_RTS:
+			bit = TIOCM_RTS;
+			break;
+		case PIN_DTR:
+			bit = TIOCM_DTR;
+			break;
+		case PIN_CTS:
+			bit = TIOCM_CTS;
+			break;
+		case PIN_DSR:
+			bit = TIOCM_DSR;
+			break;
+		case PIN_CD:
+			bit = TIOCM_CD;
+			break;
+		case PIN_RING:
+			bit = TIOCM_RNG;
+			break;
+		default:
+			return GPIO_ERROR;
+	}
+	
+	if (ioctl(dev->device_fd, TIOCMGET, &j) < 0) {
 		perror("gpio_serial_status (Getting hardware status bits)");
 		return GPIO_ERROR;
 	}
-	return (j & TIOCM_CTS);
+	return (j & bit);
 }
+
+/*
+* Set the status of lines in the serial port
+*
+* level is 0 for off and 1 for on
+*
+*/
+int gpio_serial_set_pin(gpio_device * dev, int pin, int level)
+{
+	int bit,request;
+
+	switch(pin) {
+		case PIN_RTS:
+			bit = TIOCM_RTS;
+			break;
+		case PIN_DTR:
+			bit = TIOCM_DTR;
+			break;
+		case PIN_CTS:
+			bit = TIOCM_CTS;
+			break;
+		case PIN_DSR:
+			bit = TIOCM_DSR;
+			break;
+		case PIN_CD:
+			bit = TIOCM_CD;
+			break;
+		case PIN_RING:
+			bit = TIOCM_RNG;
+			break;
+		default:
+			return GPIO_ERROR;
+	}
+	
+	switch(level) {
+		case 0:
+			request = TIOCMBIS;
+			break;
+		case 1:
+			request = TIOCMBIC;
+			break;
+		default:
+			return GPIO_ERROR;
+	}	
+
+	if (ioctl (dev->device_fd, request, &bit) <0) {
+        perror("ioctl(TIOCMBI[CS])");
+        return GPIO_ERROR;
+    }
+
+	return GPIO_OK;	
+}
+
 /*
  * This function will apply the settings to
  * the device. The device has to be opened

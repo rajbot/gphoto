@@ -87,7 +87,8 @@ struct gpio_operations {
 	int (*close)	(gpio_device *);
 	int (*read)	(gpio_device *, char *, int);
 	int (*write)	(gpio_device *, char *, int);
-	int (*status)	(gpio_device *, int);
+	int (*get_pin)	(gpio_device *, int);
+	int (*set_pin)	(gpio_device *, int, int);
 	int (*update) (gpio_device *);
 };
 
@@ -189,10 +190,23 @@ gpio_device *gpio_new		(int device_number);
 				unsuccessful: GPIO_ERROR
 		*/
 
-		int gpio_status   (gpio_device *dev, int line);
-		/* Give the status of line from dev
-			line values:
-				1:	CTS
+		int gpio_get_pin   (gpio_device *dev, int pin);
+		/* Give the status of pin from dev
+			pin values:
+				 see PIN_ constants in the various .h files	
+			return values:
+				  successful: status
+				unsuccessful: GPIO_ERROR
+		not implemented for USB (useful?)
+		*/
+
+		int gpio_set_pin   (gpio_device *dev, int pin, int level);
+		/* set the status of pin from dev to level
+			pin values:
+				 see PIN_ constants in the various .h files	
+			level values:
+					0 for off
+					1 for on
 			return values:
 				  successful: status
 				unsuccessful: GPIO_ERROR

@@ -117,16 +117,19 @@ struct Image *dir_get_picture (int picture_number, int thumbnail) {
 	imlibimage = gdk_imlib_load_image(filename);
 	w = imlibimage->rgb_width; 
 	h = imlibimage->rgb_height;
-	if ((w > h) && (w > 64)) {
+	if (w > 64) {
 		h = h * 80 / w;
 		w = 80;
 	}
-	if ((h > w) && (h > 64)) {
+	if (h > 64) {
 		w = w * 60/ h;
 		h = 60;
 	}
-	thumbimlibimage = gdk_imlib_clone_scaled_image( 
-				imlibimage, w, h);
+	if (w == 0)
+		w = 1;
+	if (h == 0)
+		h = 1;
+	thumbimlibimage = gdk_imlib_clone_scaled_image(imlibimage, w, h);
 	sprintf(fname, "%s/dir_thumb_%s", gphotoDir, dir_images[picture_number-1]);
 	gdk_imlib_save_image(thumbimlibimage, fname, NULL);
 	gdk_imlib_kill_image(imlibimage);

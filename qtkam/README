@@ -1,0 +1,50 @@
+
+                   QtKam: A Qt/KDE interface to gPhoto2
+                   ------------------------------------
+
+            THIS PROGRAM IS NOT FUNCTIONAL YET ! DON'T USE IT !
+
+--
+
+What is QtKam ?
+---------------
+QtKam is a graphical frontend for gphoto2, using the Qt and KDE libraries.
+For the moment, we aim at making the GUI functional for KDE. 
+In the future, we're going to make a 'light' version of QtKam, for which
+the KDE libraries won't be necessary.
+
+
+
+Requirements
+------------
+* libgphoto2: the gphoto2 library, which can be obtained at 
+              http://www.gphoto.net
+
+* KDE libraries: can be found at http://www.kde.org
+
+* Qt: a graphical toolkit. The KDE libraries are based on this toolkit, so
+      when you have those, you should have the Qt libraries too. 
+      More info on Qt can be found at http://www.trolltech.com/
+               
+* To be able to view thumbnails, you need either
+    - JPEG support compiled in your Qt libs (compiled with the '-system-jpeg' 
+      option)
+    - JPEG support compiled in your KDE libs (doesn't seem to work yet)
+
+* And of course: a C++ compiler.
+
+
+Install
+-------
+
+
+Useage
+------
+
+
+Troubleshooting
+---------------
+
+
+
+

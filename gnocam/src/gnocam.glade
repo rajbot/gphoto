@@ -436,9 +436,27 @@
     <signal>
       <name>activate</name>
       <handler>on_camera_tree_popup_folder_upload_file_activate</handler>
-      <last_modification_time>Mon, 02 Oct 2000 20:24:03 GMT</last_modification_time>
+      <last_modification_time>Fri, 13 Oct 2000 18:12:28 GMT</last_modification_time>
     </signal>
     <label>Upload File</label>
+    <right_justify>False</right_justify>
+  </widget>
+
+  <widget>
+    <class>GtkMenuItem</class>
+    <name>separator9</name>
+    <right_justify>False</right_justify>
+  </widget>
+
+  <widget>
+    <class>GtkMenuItem</class>
+    <name>camera_tree_popup_camera_refresh</name>
+    <signal>
+      <name>activate</name>
+      <handler>on_camera_tree_popup_folder_refresh_activate</handler>
+      <last_modification_time>Fri, 13 Oct 2000 18:12:28 GMT</last_modification_time>
+    </signal>
+    <label>Refresh</label>
     <right_justify>False</right_justify>
   </widget>
 
@@ -1552,6 +1570,24 @@ Hyper
       <last_modification_time>Sun, 08 Oct 2000 13:42:08 GMT</last_modification_time>
     </signal>
     <label>Upload file</label>
+    <right_justify>False</right_justify>
+  </widget>
+
+  <widget>
+    <class>GtkMenuItem</class>
+    <name>separator10</name>
+    <right_justify>False</right_justify>
+  </widget>
+
+  <widget>
+    <class>GtkMenuItem</class>
+    <name>camera_tree_popup_folder_refresh</name>
+    <signal>
+      <name>activate</name>
+      <handler>on_camera_tree_popup_folder_refresh_activate</handler>
+      <last_modification_time>Fri, 13 Oct 2000 18:13:26 GMT</last_modification_time>
+    </signal>
+    <label>Refresh</label>
     <right_justify>False</right_justify>
   </widget>
 </widget>

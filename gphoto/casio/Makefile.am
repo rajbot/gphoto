@@ -10,5 +10,5 @@ libgphoto_casio_qv_la_SOURCES = getuint.c ppm.c jpeg.c printMsg.c sdComm.c \
 
 libgphoto_casio_qv_la_LDFLAGS = -version-info 0:0:0
 
-EXTRA_DIST = PROTOCOL README
+EXTRA_DIST = README
 

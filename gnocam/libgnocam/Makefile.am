@@ -31,7 +31,6 @@ libgnocam_la_LIBADD =\
  $(GNOME_LIBDIR)\
  $(GNOME_LIBS)\
  $(OAF_LIBS)\
- $(INTLLIBS)\
  $(GCONF_LIBS)
 
 idls = $(top_srcdir)/idl/Gphoto.idl

@@ -31,6 +31,5 @@ libstorage_camera_la_LIBADD =\
  $(GNOME_LIBS)\
  $(GNOME_LIBDIR)\
  $(GCONF_LIBS)\
- $(INTLLIBS)\
  $(EXTRA_GNOME_LIBS)\
  $(GPHOTO_LIBS)

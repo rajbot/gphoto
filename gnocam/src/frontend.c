@@ -10,7 +10,7 @@
 /**********************/
 
 extern GtkWindow*		main_window;
-extern BonoboUIComponent*	component;
+extern BonoboUIComponent*	main_component;
 
 /*************/
 /* Functions */
@@ -18,7 +18,7 @@ extern BonoboUIComponent*	component;
 
 int gp_frontend_status (Camera *camera, char *status) 
 {
-	bonobo_ui_component_set_status (component, status, NULL);
+	bonobo_ui_component_set_status (main_component, status, NULL);
         return (GP_OK);
 }
 

@@ -26,6 +26,7 @@
 /**********************/
 
 extern GConfClient*		gconf_client;
+extern BonoboUIComponent*	main_component;
 extern Bonobo_UIContainer	corba_container;
 extern GtkTree*			main_tree;
 extern GnoCamViewMode		view_mode;
@@ -673,13 +674,19 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 		if (strcmp (gnome_vfs_uri_get_path (uri), "/") == 0) {
 
 	                /* Camera configuration? */
-	                if ((result = gp_camera_config_get (camera, &window_camera)) == GP_OK) {
-	                        xmlAddChild (node, node_child = xmlNewNode (ns, "submenu"));
-	                        xmlSetProp (node_child, "name", "Camera Configuration");
-	                        xmlSetProp (node_child, "_label", "Camera Configuration");
-				xmlSetProp (node_child, "_tip", "Camera configuration");
-	                        popup_prepare (component, window_camera, node_child, command, ns);
-	                }
+			if (camera->abilities->config) {
+		                if ((result = gp_camera_config_get (camera, &window_camera)) == GP_OK) {
+		                        xmlAddChild (node, node_child = xmlNewNode (ns, "submenu"));
+		                        xmlSetProp (node_child, "name", "Camera Configuration");
+		                        xmlSetProp (node_child, "_label", "Camera Configuration");
+					xmlSetProp (node_child, "_tip", "Camera configuration");
+		                        popup_prepare (component, window_camera, node_child, command, ns);
+		                } else {
+					tmp = g_strdup_printf (_("Could not get camera configuration!\n(%s)"), gp_camera_result_as_string (camera, result));
+					bonobo_ui_component_set_status (main_component, tmp, NULL);
+					g_free (tmp);
+				}
+			}
 	
 	                /* Manual. */
 	                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
@@ -691,7 +698,7 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 	                xmlAddChild (node, xmlNewNode (ns, "separator"));
 
         	        /* Capturing? */
-	                if (camera->abilities->capture) {
+	                if (camera->abilities->capture != GP_CAPTURE_NONE) {
 	                        if (camera->abilities->capture & GP_CAPTURE_PREVIEW) {
 	                                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
 	                                xmlSetProp (node_child, "name", "Capture Preview");

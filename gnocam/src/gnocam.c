@@ -21,7 +21,7 @@
 
 GConfClient*		gconf_client 	= NULL;
 Bonobo_UIContainer	corba_container = CORBA_OBJECT_NIL;
-BonoboUIComponent*      component	= NULL;
+BonoboUIComponent*      main_component	= NULL;
 GtkTree*		main_tree 	= NULL;
 GnoCamViewMode		view_mode 	= GNOCAM_VIEW_MODE_PREVIEW;
 GList*			preview_list 	= NULL;
@@ -188,10 +188,10 @@ int main (int argc, char *argv[])
         container = bonobo_ui_container_new ();
 	corba_container = bonobo_object_corba_objref (BONOBO_OBJECT (container));
         bonobo_ui_container_set_win (container, BONOBO_WINDOW (main_window));
-        component = bonobo_ui_component_new (PACKAGE);
-        bonobo_ui_component_set_container (component, corba_container);
-        bonobo_ui_component_add_verb_list (component, verb);
-        bonobo_ui_util_set_ui (component, NULL, "gnocam-main.xml", PACKAGE);
+        main_component = bonobo_ui_component_new (PACKAGE);
+        bonobo_ui_component_set_container (main_component, corba_container);
+        bonobo_ui_component_add_verb_list (main_component, verb);
+        bonobo_ui_util_set_ui (main_component, NULL, "gnocam-main.xml", PACKAGE);
 
 	/* Add the view mode selection to the toolbar. */
 	gtk_widget_show (widget = gtk_option_menu_new ());
@@ -207,7 +207,7 @@ int main (int argc, char *argv[])
 	gtk_signal_connect (GTK_OBJECT (menu_item), "activate", GTK_SIGNAL_FUNC (on_view_mode_activate), GINT_TO_POINTER (GNOCAM_VIEW_MODE_FILE));
 	gtk_option_menu_set_menu (GTK_OPTION_MENU (widget), menu);
 	gtk_option_menu_set_history (GTK_OPTION_MENU (widget), 1);
-	bonobo_ui_component_object_set (component, "/Toolbar/ViewMode", bonobo_object_corba_objref (BONOBO_OBJECT (bonobo_control_new (widget))), NULL);
+	bonobo_ui_component_object_set (main_component, "/Toolbar/ViewMode", bonobo_object_corba_objref (BONOBO_OBJECT (bonobo_control_new (widget))), NULL);
 
 	/* Do we already have a prefix in the database? */
 	if (!(value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL))) {
@@ -241,7 +241,7 @@ int main (int argc, char *argv[])
 
 	/* Clean up the main window. */
         for (i = g_list_length (main_tree->children) - 1; i >= 0; i--) camera_tree_item_remove (g_list_nth_data (main_tree->children, i));
-	bonobo_object_unref (BONOBO_OBJECT (component));
+	bonobo_object_unref (BONOBO_OBJECT (main_component));
 	bonobo_object_unref (BONOBO_OBJECT (container));
 	gtk_widget_destroy (GTK_WIDGET (main_window));
 

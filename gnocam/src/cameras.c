@@ -242,15 +242,19 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 			}
 			break;
 		}
-		if (file) {
+		if (file && viewer_client) {
 			CORBA_exception_init (&ev);
-			g_assert ((interface = bonobo_object_client_query_interface (viewer_client, "IDL:Bonobo/PersistStream:1.0", &ev)));
-			g_assert ((stream = bonobo_stream_mem_create (file->data, file->size, FALSE, TRUE)));
-			Bonobo_PersistStream_load (interface, (Bonobo_Stream) bonobo_object_corba_objref (BONOBO_OBJECT (stream)), file->type, &ev);
-			if (ev._major != CORBA_NO_EXCEPTION) dialog_information (_("Could not display the file! (%s)"), bonobo_exception_get_text (&ev));
-			bonobo_object_unref (BONOBO_OBJECT (stream));
-			Bonobo_Unknown_unref (interface, &ev);
-			CORBA_Object_release (interface, &ev);
+			interface = bonobo_object_client_query_interface (viewer_client, "IDL:Bonobo/PersistStream:1.0", &ev);
+			if (ev._major != CORBA_NO_EXCEPTION) 
+				dialog_information (_("Could not connect to the eog image viewer! (%s)"), bonobo_exception_get_text (&ev));
+			else {
+				g_assert ((stream = bonobo_stream_mem_create (file->data, file->size, FALSE, TRUE)));
+				Bonobo_PersistStream_load (interface, (Bonobo_Stream) bonobo_object_corba_objref (BONOBO_OBJECT (stream)), file->type, &ev);
+				if (ev._major != CORBA_NO_EXCEPTION) dialog_information (_("Could not display the file! (%s)"), bonobo_exception_get_text (&ev));
+				bonobo_object_unref (BONOBO_OBJECT (stream));
+				Bonobo_Unknown_unref (interface, &ev);
+				CORBA_Object_release (interface, &ev);
+			}
 			CORBA_exception_free (&ev);
 		}
 	}

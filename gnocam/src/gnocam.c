@@ -1,6 +1,5 @@
 #include <config.h>
 #include <gnome.h>
-#include <gal/widgets/gtk-combo-box.h>
 #include <libgnomevfs/gnome-vfs.h>
 #include <glade/glade.h>
 #include <gconf/gconf-client.h>
@@ -188,12 +187,12 @@ int main (int argc, char *argv[])
 	gp_frontend_register (gp_frontend_status, gp_frontend_progress, gp_frontend_message, gp_frontend_confirm, gp_frontend_prompt);
 
 	/* Create the window. We cannot do it with libglade as bonobo-support in libglade misses some features like toolbars and menus. */
-	gtk_widget_show (window = bonobo_win_new (PACKAGE, PACKAGE));
+	gtk_widget_show (window = bonobo_window_new (PACKAGE, PACKAGE));
 	g_assert ((xml_main = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "main_vbox")));
 	gtk_widget_show (widget = glade_xml_get_widget (xml_main, "main_vbox"));
-	bonobo_win_set_contents (BONOBO_WIN (window), widget);
+	bonobo_window_set_contents (BONOBO_WINDOW (window), widget);
         container = bonobo_ui_container_new ();
-        bonobo_ui_container_set_win (container, BONOBO_WIN (window));
+        bonobo_ui_container_set_win (container, BONOBO_WINDOW (window));
         component = bonobo_ui_component_new (PACKAGE);
         bonobo_ui_component_set_container (component, bonobo_object_corba_objref (BONOBO_OBJECT (container)));
         bonobo_ui_component_add_verb_list (component, verb);
@@ -216,12 +215,14 @@ int main (int argc, char *argv[])
 	bonobo_ui_component_object_set (component, "/Toolbar/ViewMode", bonobo_object_corba_objref (BONOBO_OBJECT (bonobo_control_new (widget))), NULL);
 
 	/* Create the viewer. */
-	gtk_widget_show (viewer = bonobo_widget_new_control (EOG_IMAGE_VIEWER_ID, bonobo_object_corba_objref (BONOBO_OBJECT (container))));
-	gtk_paned_pack2 (GTK_PANED (glade_xml_get_widget (xml_main, "main_hpaned")), viewer, TRUE, TRUE);
+	if ((viewer = bonobo_widget_new_control (EOG_IMAGE_VIEWER_ID, bonobo_object_corba_objref (BONOBO_OBJECT (container))))) {
+		gtk_widget_show (viewer);
+		gtk_paned_pack2 (GTK_PANED (glade_xml_get_widget (xml_main, "main_hpaned")), viewer, TRUE, TRUE);
+		viewer_client = bonobo_widget_get_server (BONOBO_WIDGET (viewer));
+	} else dialog_information (_("Could not start the eog image viewer!"));
 
 	/* Set the global variables. */
 	main_tree = GTK_TREE (glade_xml_get_widget (xml_main, "main_tree"));
-	viewer_client = bonobo_widget_get_server (BONOBO_WIDGET (viewer));
 
 	/* Connect the signals. */
 	glade_xml_signal_autoconnect (xml_main);

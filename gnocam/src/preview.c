@@ -104,6 +104,7 @@ preview_refresh (GtkWidget* preview)
 	CORBA_Environment	ev;
 	CORBA_Object		interface;
 	BonoboStream*		stream;
+	BonoboObjectClient*	client;
 
 	g_assert (preview);
 	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (preview), "camera")));
@@ -117,17 +118,21 @@ preview_refresh (GtkWidget* preview)
         if (gp_camera_capture (camera, file, &info) == GP_OK) {
 		if ((old_file = gtk_object_get_data (GTK_OBJECT (preview), "file"))) gp_file_free (old_file);
 		gtk_object_set_data (GTK_OBJECT (preview), "file", file);
-		CORBA_exception_init (&ev);
-		g_assert ((interface = bonobo_object_client_query_interface (
-			gtk_object_get_data (GTK_OBJECT (preview), "client"), 
-			"IDL:Bonobo/PersistStream:1.0", &ev)));
-		g_assert ((stream = bonobo_stream_mem_create (file->data, file->size, FALSE, TRUE)));
-		Bonobo_PersistStream_load (interface, (Bonobo_Stream) bonobo_object_corba_objref (BONOBO_OBJECT (stream)), file->type, &ev);
-		if (ev._major != CORBA_NO_EXCEPTION) dialog_information (_("Could not display the file! (%s)"), bonobo_exception_get_text (&ev));
-		bonobo_object_unref (BONOBO_OBJECT (stream));
-		Bonobo_Unknown_unref (interface, &ev);
-		CORBA_Object_release (interface, &ev);
-		CORBA_exception_free (&ev);
+		if ((client = gtk_object_get_data (GTK_OBJECT (preview), "client"))) {
+			CORBA_exception_init (&ev);
+			interface = bonobo_object_client_query_interface (client, "IDL:Bonobo/PersistStream:1.0", &ev);
+			if (ev._major != CORBA_NO_EXCEPTION) 
+				dialog_information (_("Could not connect to the eog image viewer! (%s)"), bonobo_exception_get_text (&ev));
+			else {
+				g_assert ((stream = bonobo_stream_mem_create (file->data, file->size, FALSE, TRUE)));
+				Bonobo_PersistStream_load (interface, (Bonobo_Stream) bonobo_object_corba_objref (BONOBO_OBJECT (stream)), file->type, &ev);
+				if (ev._major != CORBA_NO_EXCEPTION) dialog_information (_("Could not display the file! (%s)"), bonobo_exception_get_text (&ev));
+				bonobo_object_unref (BONOBO_OBJECT (stream));
+				Bonobo_Unknown_unref (interface, &ev);
+				CORBA_Object_release (interface, &ev);
+			}
+			CORBA_exception_free (&ev);
+		}
         } else {
                 dialog_information (_("Could not get preview from camera!"));
                 gp_file_unref (file);
@@ -194,20 +199,21 @@ preview_new (Camera* camera)
         g_assert (camera);
 
 	/* Create the interface. */
-	window = bonobo_win_new ("Preview", "Preview");
+	window = bonobo_window_new ("Preview", "Preview");
 	container = bonobo_ui_container_new ();
-	bonobo_ui_container_set_win (container, BONOBO_WIN (window));
+	bonobo_ui_container_set_win (container, BONOBO_WINDOW (window));
 	component = bonobo_ui_component_new ("Preview");
 	bonobo_ui_component_set_container (component, bonobo_object_corba_objref (BONOBO_OBJECT (container)));
 	bonobo_ui_component_add_verb_list_with_data (component, verb, window);
 	bonobo_ui_util_set_ui (component, "", "gnocam-preview.xml", "Preview");
-	widget = bonobo_widget_new_control (EOG_IMAGE_VIEWER_ID, bonobo_object_corba_objref (BONOBO_OBJECT (container)));
-	bonobo_win_set_contents (BONOBO_WIN (window), widget);
+	if ((widget = bonobo_widget_new_control (EOG_IMAGE_VIEWER_ID, bonobo_object_corba_objref (BONOBO_OBJECT (container))))) {
+		bonobo_window_set_contents (BONOBO_WINDOW (window), widget);
+		gtk_object_set_data (GTK_OBJECT (window), "client", bonobo_widget_get_server (BONOBO_WIDGET (widget)));
+	} else dialog_information (_("Could not start the eog image viewer!"));
 	gtk_widget_show_all (window);
 
         /* Store some data. */
         gtk_object_set_data (GTK_OBJECT (window), "camera", camera);
-	gtk_object_set_data (GTK_OBJECT (window), "client", bonobo_widget_get_server (BONOBO_WIDGET (widget)));
 
 	/* Ref the camera. */
 	gp_camera_ref (camera);

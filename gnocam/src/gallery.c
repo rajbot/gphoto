@@ -165,15 +165,15 @@ void gallery_new (void)
                 BONOBO_UI_UNSAFE_VERB ("Preferences", on_preferences_activate),
                 BONOBO_UI_VERB_END};
 
-        window = bonobo_win_new ("Gallery", "Gallery");
+        window = bonobo_window_new ("Gallery", "Gallery");
         container = bonobo_ui_container_new ();
-        bonobo_ui_container_set_win (container, BONOBO_WIN (window));
+        bonobo_ui_container_set_win (container, BONOBO_WINDOW (window));
         component = bonobo_ui_component_new ("Gallery");
         bonobo_ui_component_set_container (component, bonobo_object_corba_objref (BONOBO_OBJECT (container)));
 	bonobo_ui_component_add_verb_list_with_data (component, verb, window);
         bonobo_ui_util_set_ui (component, "", "gnocam-gallery.xml", "Gallery");
         widget = bonobo_widget_new_control (HTML_EDITOR_CONTROL_ID, bonobo_object_corba_objref (BONOBO_OBJECT (container)));
-        bonobo_win_set_contents (BONOBO_WIN (window), widget);
+        bonobo_window_set_contents (BONOBO_WINDOW (window), widget);
         gtk_widget_show_all (window);
 
 	/* Store some data. */

@@ -16,6 +16,11 @@ SelectCameraDialog::SelectCameraDialog(QWidget* parent=0) :
     KDialog(parent,"selectcamera",true)
 {
     int selected;
+
+    /* Set title */
+    setCaption("Select Camera");
+
+    /* Create new layout */
     QVBoxLayout* layout = new QVBoxLayout(this);
      
     /* Draw Camera Model stuff */

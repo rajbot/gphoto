@@ -18,7 +18,16 @@ check_Makefile.am() {
 
 check_configure.in() {
 	[ "$basename" == "configure.in" ] || return 0
-	errors="0"
+	errors=0
+	output="$(awk 'BEGIN { n=0; } /^AC_OUTPUT\(/ { n=1; } (n) { print; } (n) && /\)/ { n=0; }' "$file")"
+	for forbidden in po/Makefile.in intl/Makefile.in; do
+		if echo "$output" | grep -q "$forbidden"; then
+			echo "ERROR in file $file:"
+			echo "A CVS configure.in AC_OUTPUT statement may not contain \"$forbidden\""
+			echo "The \"$forbidden\" entry is added automatically be autogen.sh/gettextize"
+			errors=$(( $errors + 1 ))
+		fi
+	done
 	return "$errors"
 }
 

@@ -165,10 +165,10 @@ the message type. The following combinations have been sighted:
 
 <mtype> <dir> <fffb>	    Operation
 01      11    6a 08 79 04   Download image request
-01      11    aa 06 79 04   Download thumbnail request
+01      11    aa 06 79 04   Download "thumbnail" request (see below)
 01      12    14 f7 8a 00   Identify camera request
 01      21    6a 08 79 04   Image data
-01      21    aa 06 79 04   Thumbnail data
+01      21    aa 06 79 04   "Thumbnail" data
 01      22    14 f7 8a 00   Identify camera response
 09      11    d8 f7 8a 00   Disk info request
 09      21    d8 f7 8a 00   Disk info response
@@ -281,4 +281,5 @@ Data messages have the following structure:
 	     |		  current offset
              total length
 
-All lengths are measured in bytes.
+All lengths are measured in bytes. Note that the "image" and the
+"thumbnail" variants seem to perform exactly the same operation.

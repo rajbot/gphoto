@@ -32,6 +32,13 @@
 static struct termios oldtio, newtio;
 static int fd;
 
+
+void serial_flush_input(void)
+{
+    if (tcflush(fd,TCIFLUSH) < 0) perror("tcflush");
+}
+
+
 /*****************************************************************************
  *
  * canon_serial_init
@@ -98,6 +105,8 @@ int canon_serial_init(const char *devname)
 	perror("fcntl F_SETFL");
 	return -1;
     }
+
+    serial_flush_input();
 
     return 0;
 }

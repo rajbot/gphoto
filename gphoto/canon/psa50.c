@@ -311,10 +311,10 @@ static unsigned char *psa50_dialogue(unsigned char mtype,unsigned char dir,
 /* ----------------------- Command-level processing ------------------------ */
 
 
-#define MAX_TRIES 50 /* 10 */
+#define MAX_TRIES 10
 
 
-char psa50_id[40];
+char psa50_id[200]; /* some models may have a lot to report */
 
 
 int psa50_ready(void)
@@ -325,6 +325,7 @@ int psa50_ready(void)
     int try,len;
 
     serial_set_timeout(1);
+    serial_flush_input();
     if (active) {
 	if (!psa50_send_packet(PKT_EOT,seq_tx,psa50_eot+PKT_HDR_LEN,0)) {
 	    active = 0;
@@ -359,7 +360,7 @@ int psa50_ready(void)
 	update_status("Unrecognized response");
 	return 0;
     }
-    strcpy(psa50_id,pkt+26);
+    strcpy(psa50_id,pkt+26); /* @@@ check size */
     serial_set_timeout(10);
     (void) psa50_recv_packet(&type,&seq,NULL);
     if (type != PKT_EOT || seq) {
@@ -418,6 +419,15 @@ int psa50_disk_info(const char *name,int *capacity,int *available)
 }
 
 
+void psa50_free_dir(struct psa50_dir *list)
+{
+    struct psa50_dir *walk;
+
+    for (walk = list; walk->name; walk++) free(walk->name);
+    free(list);
+}
+
+
 struct psa50_dir *psa50_list_directory(const char *name)
 {
     struct psa50_dir *dir = NULL;
@@ -439,6 +449,7 @@ struct psa50_dir *psa50_list_directory(const char *name)
 	if (p >= msg+len) goto error;
     while (1) {
 	unsigned char *start;
+	int is_file;
 
 //fprintf(stderr,"p %p msg+len %p len %d\n",p,msg+len,len);
 	if (p == msg+len-1) {
@@ -449,7 +460,8 @@ struct psa50_dir *psa50_list_directory(const char *name)
 	    p = msg+4;
 	}
 	if (p+2 >= msg+len) goto error;
-	if (p[1] == 0x10 || p[1] == 0x20) p += 11;
+	is_file = p[1] == 0x20;
+	if (p[1] == 0x10 || is_file) p += 11;
 	else break;
 	if (p >= msg+len) goto error;
 	for (start = p; *p; p++)
@@ -466,6 +478,7 @@ struct psa50_dir *psa50_list_directory(const char *name)
 	}
 	memcpy((unsigned char *) &dir[entries].size,start-8,4);
 	memcpy((unsigned char *) &dir[entries].date,start-4,4);
+	dir[entries].is_file = is_file;
 fprintf(stderr,"\"%s\", %d bytes, %s",dir[entries].name,dir[entries].size,
   ctime(&dir[entries].date));
 	entries++;
@@ -474,6 +487,7 @@ fprintf(stderr,"\"%s\", %d bytes, %s",dir[entries].name,dir[entries].size,
     return dir;
 error:
     fprintf(stderr,"ERROR: truncated message\n");
+    if (dir) psa50_free_dir(dir);
     return NULL;
 }
 

@@ -16,9 +16,13 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#include <gtk/gtk.h>
 
 #include "../src/gphoto.h"
 
@@ -42,7 +46,7 @@ static char cached_drive[10]; /* usually something like C: */
 static int cached_capacity,cached_available;
 
 static int cached_dir = 0;
-static char **cached_paths;
+static struct psa50_dir *cached_tree;
 static int cached_images;
 
 
@@ -97,52 +101,37 @@ static int is_image(const char *name)
 }
 
 
-static int recurse(const char *name)
+static int comp_dir(const void *a,const void *b)
+{
+    return strcmp(((const struct psa50_dir *) a)->name,
+      ((const struct psa50_dir *) b)->name);
+}
+
+
+static struct psa50_dir *dir_tree(const char *path)
 {
     struct psa50_dir *dir,*walk;
     char buffer[300]; /* longest path, etc. */
-    int count,curr;
 
-    dir = psa50_list_directory(name);
-    if (!dir) return 1; /* assume it's empty @@@ */
-    count = 0;
-    for (walk = dir; walk->name; walk++)
-	if (walk->size && is_image(walk->name)) count++;
-    cached_paths = realloc(cached_paths,sizeof(char *)*(cached_images+count+1));
-    memset(cached_paths+cached_images+1,0,sizeof(char *)*count);
-    if (!cached_paths) {
-	perror("realloc");
-	return 0;
-    }
-    curr = cached_images;
-    cached_images += count;
+    dir = psa50_list_directory(path);
+    if (!dir) return NULL; /* assume it's empty @@@ */
     for (walk = dir; walk->name; walk++) {
-	sprintf(buffer,"%s\\%s",name,walk->name);
-	if (!walk->size) {
-	    if (!recurse(buffer)) return 0;
+	if (walk->is_file) {
+	    if (is_image(walk->name)) cached_images++;
 	}
 	else {
-	    if (!is_image(walk->name)) continue;
-	    curr++;
-	    cached_paths[curr] = strdup(buffer);
-	    if (!cached_paths[curr]) {
-		perror("strdup");
-		return 0;
-	    }
+	    sprintf(buffer,"%s\\%s",path,walk->name);
+	    walk->user = dir_tree(buffer);
 	}
     }
-    free(dir);
-    return 1;
+    qsort(dir,walk-dir,sizeof(*dir),comp_dir);
+    return dir;
 }
 
 
 static void clear_dir_cache(void)
 {
-    int i;
-
-    for (i = 0; i < cached_images; i++)
-	if (cached_paths[i]) free(cached_paths[i]);
-    free(cached_paths);
+    psa50_free_dir(cached_tree);
 }
 
 
@@ -152,12 +141,10 @@ static int update_dir_cache(void)
     if (!update_disk_cache()) return 0;
     if (!check_readiness()) return 0;
     cached_images = 0;
-    if (recurse(cached_drive)) {
-	cached_dir = 1;
-	return 1;
-    }
-    clear_dir_cache();
-    return 0;    
+    cached_tree = dir_tree(cached_drive);
+    if (!cached_tree) return 0;
+    cached_dir = 1;
+    return 1;
 }
 
 
@@ -168,24 +155,206 @@ static int update_dir_cache(void)
  ****************************************************************************/
 
 
-static int canon_configure(void)
+static int _entry_path(const struct psa50_dir *tree,
+  const struct psa50_dir *entry,char *path)
 {
-    if (!confirm_dialog("Clear driver caches ?")) return 1;
+    path = strchr(path,0);
+    while (tree->name) {
+	*path = '\\';
+	strcpy(path+1,tree->name);
+	if (tree == entry) return 1;
+	if (!tree->is_file && tree->user)
+	    if (_entry_path(tree->user,entry,path)) return 1;
+	tree++;
+    }
+    return 0;
+}
+
+
+static char *entry_path(const struct psa50_dir *tree,
+  const struct psa50_dir *entry)
+{
+    static char path[300];
+
+    strcpy(path,cached_drive);
+    (void) _entry_path(cached_tree,entry,path);
+    return path;
+}
+
+
+static void cb_select(GtkItem *item,struct psa50_dir *entry)
+{
+    char *path;
+    unsigned char *file;
+    int length,size;
+    int fd;
+
+    if (!entry || !entry->is_file) {
+	gtk_item_deselect(item);
+	return;
+    }
+    path = entry_path(cached_tree,entry);
+    update_status(path);
+    file = psa50_get_file(path,&length);
+    if (!file) return;
+    fd = creat(entry->name,0644);
+    if (fd < 0) {
+	perror("creat");
+	free(file);
+	return;
+    }
+    size = write(fd,file,length);
+    if (size < 0) perror("write");
+    else if (size < length) fprintf(stderr,"short write: %d/%d\n",size,length);
+    if (close(fd) < 0) perror("close");
+    free(file);
+    update_status("File saved");
+}
+
+
+static int populate(struct psa50_dir *entry,GtkWidget *branch)
+{
+    GtkWidget *item,*subtree;
+
+    item = gtk_tree_item_new_with_label(entry ? (char *) entry->name :
+      cached_drive);
+    if (!item) return 0;
+    gtk_tree_append(GTK_TREE(branch),item);
+    gtk_widget_show(item);
+    gtk_signal_connect(GTK_OBJECT(item),"select",GTK_SIGNAL_FUNC(cb_select),
+      entry);
+    if (entry && entry->is_file) {
+	entry->user = item;
+	return 1;
+    }
+    entry = entry ? entry->user : cached_tree;
+    if (!entry) return 1;
+    subtree = gtk_tree_new();
+    if (!subtree) return 0;
+    gtk_tree_item_set_subtree(GTK_TREE_ITEM(item),subtree);
+    gtk_tree_item_expand(GTK_TREE_ITEM(item));
+    for (; entry->name; entry++)
+	if (!populate(entry,subtree)) return 0;
+    return 1;
+}
+
+
+static void cb_clear(GtkWidget *widget,GtkWidget *window)
+{
+    gtk_widget_destroy(window);
     cached_ready = 0;
     cached_disk = 0;
     if (cached_dir) clear_dir_cache();
     cached_dir = 0;
+}
+
+
+static void cb_done(GtkWidget *widget,GtkWidget *window)
+{
+    gtk_widget_destroy(window);
+}
+
+
+static int canon_configure(void)
+{
+    GtkWidget *window,*box,*scrolled_win,*tree,*clear,*done;
+
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    if (!window) return 0;
+    gtk_signal_connect(GTK_OBJECT(window),"delete_event",
+      GTK_SIGNAL_FUNC(gtk_widget_destroy),window);
+    box = gtk_vbox_new(FALSE,0);
+    if (!box) {
+	gtk_widget_destroy(window);
+	return 0;
+    }
+    gtk_container_add(GTK_CONTAINER(window),box);
+    gtk_widget_show(box);
+    scrolled_win = gtk_scrolled_window_new(NULL,NULL);
+    if (!scrolled_win) {
+	gtk_widget_destroy(window);
+	return 0;
+    }
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_win),
+      GTK_POLICY_AUTOMATIC,GTK_POLICY_AUTOMATIC);
+    gtk_widget_set_usize(scrolled_win,200,400);
+    gtk_widget_show(scrolled_win);
+    gtk_box_pack_start(GTK_BOX(box),scrolled_win,TRUE,TRUE,FALSE);
+    clear = gtk_button_new_with_label("Clear camera cache");
+    if (!clear) {
+	gtk_widget_destroy(window);
+	return 0;
+    }
+    gtk_signal_connect(GTK_OBJECT(clear),"clicked",GTK_SIGNAL_FUNC(cb_clear),
+      window);
+    gtk_widget_show(clear);
+    gtk_box_pack_start(GTK_BOX(box),clear,FALSE,FALSE,FALSE);
+    done = gtk_button_new_with_label("Done");
+    if (!done) {
+	gtk_widget_destroy(window);
+	return 0;
+    }
+    gtk_signal_connect(GTK_OBJECT(done),"clicked",GTK_SIGNAL_FUNC(cb_done),
+      window);
+    gtk_widget_show(done);
+    gtk_box_pack_start(GTK_BOX(box),done,FALSE,FALSE,FALSE);
+    tree = gtk_tree_new();
+    if (!tree) {
+	gtk_widget_destroy(window);
+	return 0;
+    }
+    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrolled_win),
+      tree);
+    gtk_widget_show(tree);
+    populate(NULL,tree);
+    gtk_widget_show(window);
+//    find(cached_tree,cached_drive,entry);
     return 1;
 }
 
 /****************************************************************************/
 
+
+static int _pick_nth(struct psa50_dir *tree,int n,char *path)
+{
+    int i;
+
+    path = strchr(path,0);
+    for (i = 0; i <= n; i++) {
+	if (!tree->name) return i;
+	while (1) {
+	    *path = '\\';
+	    strcpy(path+1,tree->name);
+	    if (!tree->is_file) {
+		i += _pick_nth(tree->user,n-i,path);
+		break;
+	    }
+	    if (is_image(tree->name)) break;
+	    tree++;
+	}
+	tree++;
+    }
+    return i;
+}
+
+
+static void pick_nth(int n,char *path)
+{
+    (void) _pick_nth(cached_tree,n,path);
+}
+
+
 static struct Image *canon_get_picture(int picture_number, int thumbnail)
 {
     struct Image *image;
+    char path[300];
 
     if (thumbnail) return NULL;
     clear_readiness();
+    if (!update_dir_cache()) {
+	update_status("Could not obtain directory listing");
+	return 0;
+    }
     image = malloc(sizeof(*image));
     if (!image) {
 	perror("malloc");
@@ -198,13 +367,14 @@ static struct Image *canon_get_picture(int picture_number, int thumbnail)
 	free(image);
 	return NULL;
     }
-    update_status(cached_paths[picture_number]);
+    strcpy(path,cached_drive);
+    pick_nth(picture_number,path);
+    update_status(path);
     if (!check_readiness()) {
 	free(image);
 	return NULL;
     }
-    image->image = psa50_get_file(cached_paths[picture_number],
-      &image->image_size);
+    image->image = psa50_get_file(path,&image->image_size);
     if (image->image) return image;
     free(image);
     return NULL;

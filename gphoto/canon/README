@@ -11,6 +11,20 @@ the caches can be manually flushed using "Configure camera".
 Change history
 ==============
 
+Version 3 (1-SEP-1999)
+---------
+
+ - lowered number of tries when initializing from 50 to 10 (50 was for
+   experiments)
+ - increased camera ID buffer to be large enough for PS350 responses
+ - serial input is now flushed before testing or attempting synchronization
+ - directories are now sorted alphabetically, implicitly ordering images by
+   date
+ - fixed a few memory leaks in directory handling
+ - added arbitrary file download to Configure/Configure Camera (experimental;
+   very fragile)
+
+
 Version 2 (29-AUG-1999)
 ---------
 
@@ -52,7 +66,6 @@ To do
   - change many fprintf(stderr,... to GUI calls or callbacks
 - improve error handling: distinguish between severe and harmless errors
   (e.g. duplicate EOT vs. ten timeouts in a row)
-- move camera bringup to a50.c
 - find out how to generate thumbnails
 - find out how error recovery works (need traces)
 - find out how higher bit rates work
@@ -65,3 +78,4 @@ To do
    - upload file, create directory
 - find out how to avoid blocking gPhoto during transfer
 - improve the performance of the serial interface (fewer system calls)
+- add initialization for other PS models

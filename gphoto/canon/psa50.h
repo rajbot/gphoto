@@ -12,6 +12,8 @@ struct psa50_dir {
     const char *name; /* NULL if at end */
     size_t size;
     time_t date;
+    int is_file;
+    void *user;	/* user-specific data */
 };
 
 
@@ -26,6 +28,7 @@ int psa50_ready(void);
 char *psa50_get_disk(void);
 int psa50_disk_info(const char *name,int *capacity,int *available);
 struct psa50_dir *psa50_list_directory(const char *name);
+void psa50_free_dir(struct psa50_dir *list);
 unsigned char *psa50_get_file(const char *name,int *length);
 
 #endif

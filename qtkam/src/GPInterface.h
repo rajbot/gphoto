@@ -17,9 +17,7 @@
 
 /** 
  * The GPInterface class definition.
- * Since there can be only 1 running gphoto, the interface is 
- * a singleton (private constructor). 
- * Access to the interface is done by using handle().
+ * All methods are static.
  */
 class GPInterface 
 {

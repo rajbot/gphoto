@@ -9,39 +9,51 @@
 #include "gnocam-control.h"
 #include "utils.h"
 
+/********************/
+/* Type Definitions */
+/********************/
+
+typedef struct {
+	Camera*		camera;
+	CameraWidget*	widget;
+	gchar*		folder;
+	gchar*		file;
+} WidgetData;
+
 /**************/
 /* Prototypes */
 /**************/
 
-void on_button_clicked			(GtkObject* object, gpointer user_data);
+static void on_button_clicked 		(BonoboUIComponent *uic, gpointer user_data, const char *cname);
+static void on_togglebutton_clicked	(BonoboUIComponent* uic, const char* path, Bonobo_UIComponent_EventType type, const char* state, gpointer user_data);
+
 void on_entry_changed			(GtkObject* object, gpointer user_data);
 void on_radio_button_activate 		(GtkObject* object, gpointer user_data);
 void on_adjustment_value_changed 	(GtkObject* object, gpointer user_data);
 void on_togglebutton_toggled 		(GtkObject* object, gpointer user_data);
 void on_date_changed 			(GtkObject* object, gpointer user_data);
 
-void menu_setup 	(GnoCamControl* control, CameraWidget* widget, gchar* name, gboolean for_camera);
+void menu_setup 	(GnoCamControl* control, CameraWidget* widget, gchar* name, gchar* folder, gchar* file);
 void menu_prepare       (CameraWidget* widget, xmlNodePtr popup, xmlNodePtr command, xmlNsPtr ns);
-void menu_fill          (GnoCamControl* control, gchar* path, CameraWidget* window, CameraWidget* widget, gboolean camera);
+void menu_fill          (GnoCamControl* control, gchar* path, CameraWidget* window, CameraWidget* widget, gchar* folder, gchar* file);
 
 /*************/
 /* Callbacks */
 /*************/
 
-void
-on_button_clicked (GtkObject* object, gpointer user_data)
+static void
+on_button_clicked (BonoboUIComponent *uic, gpointer user_data, const char *cname)
 {
-	Camera*			camera;
-	CameraWidget*		widget;
+	WidgetData*		data = (WidgetData*) user_data;
 	CameraWidgetCallback	callback;
 	gint			result;
-	
-	g_return_if_fail (object);
-	g_return_if_fail (widget = gtk_object_get_data (object, "widget"));
-	g_return_if_fail (camera = gtk_object_get_data (object, "camera"));
 
-	callback = gp_widget_callback (widget);
-	if ((result = callback (camera, widget)) != GP_OK) g_warning (_("Could not set configuration!\n(%s)"), gp_camera_result_as_string (camera, result));
+	g_return_if_fail (data);
+
+	g_warning ("on_button_clicked");
+	callback = gp_widget_callback (data->widget);
+	if ((result = callback (data->camera, data->widget)) != GP_OK) 
+		g_warning (_("Could not execute command '%s'! (%s)"), gp_widget_label (data->widget), gp_camera_result_as_string (data->camera, result));
 }
 
 void
@@ -117,27 +129,22 @@ on_adjustment_value_changed (GtkObject* object, gpointer user_data)
 	}
 }
 
-void
-on_togglebutton_toggled (GtkObject* object, gpointer user_data)
+static void
+on_togglebutton_clicked (BonoboUIComponent* component, const char* path, Bonobo_UIComponent_EventType type, const char* state, gpointer user_data)
 {
-	Camera*		camera;
-	CameraWidget*	window;
-	CameraWidget*	widget;
-	gint		i, i_new = 0;
+	WidgetData*     data = (WidgetData*) user_data;
+	gint		i = atoi (state);
 	gint		result;
 	
-	g_return_if_fail (object);
-	g_return_if_fail (window = gtk_object_get_data (object, "window"));
-	g_return_if_fail (widget = gtk_object_get_data (object, "widget"));
-	g_return_if_fail (camera = gtk_object_get_data (object, "camera"));
+	g_return_if_fail (data);
 
-	gp_widget_value_get (widget, &i);
-	if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (object))) i_new = 1;
-	if (i != i_new) {
-		g_return_if_fail (gp_widget_value_set (widget, &i_new) == GP_OK);
-		if ((result = gp_camera_config_set (camera, window)) != GP_OK)
-			g_warning (_("Could not set configuration!\n(%s)"), gp_camera_result_as_string (camera, result));
-	}
+	g_warning ("on_togglebutton_clicked (%s)", state);
+	g_return_if_fail (gp_widget_value_set (data->widget, &i) == GP_OK);
+	if (data->file) result = gp_camera_file_config_set (data->camera, gp_widget_root (data->widget), data->folder, data->file);
+	else if (data->folder) result = gp_camera_folder_config_set (data->camera, gp_widget_root (data->widget), data->folder);
+	else result = gp_camera_config_set (data->camera, gp_widget_root (data->widget));
+	if (result != GP_OK) 
+		g_warning (_("Could not set configuration of '%s'! (%s)"), gp_widget_label (data->widget), gp_camera_result_as_string (data->camera, result));
 }
 
 void
@@ -255,7 +262,9 @@ menu_create (GnoCamControl* control)
 	Bonobo_UIContainer container = bonobo_control_get_remote_ui_container (BONOBO_CONTROL (control));
 
 	if (container != CORBA_OBJECT_NIL) {
-		BonoboUIComponent* component = bonobo_control_get_ui_component (BONOBO_CONTROL (control));
+		BonoboUIComponent* 	component = bonobo_control_get_ui_component (BONOBO_CONTROL (control));
+		gchar*			file = g_basename (control->path);
+		gchar*  		folder = g_dirname (control->path);
 		
 		/* Set the component's container. */
 		bonobo_ui_component_set_container (component, container);
@@ -267,36 +276,35 @@ menu_create (GnoCamControl* control)
 				g_warning (_("Could not get widget for camera configuration! (%s)"), 
 					gp_camera_result_as_string (control->camera, result));
 		}
-		if (control->config_camera) menu_setup (control, control->config_camera, "CameraConfiguration", TRUE);
+		if (control->config_camera) menu_setup (control, control->config_camera, "CameraConfiguration", NULL, NULL);
 
 		/* File Configuration? */
 		if (!control->config_file) {
-			gchar* 	file = g_basename (control->path);
-			gchar*	folder = g_dirname (control->path);
 			gint result = gp_camera_file_config_get (control->camera, &(control->config_file), folder, file);
 			if (result != GP_OK) 
 				g_warning (_("Could not get widget for configuration of file '%s' in folder '%s'! (%s)"), 
 					file, folder, gp_camera_result_as_string (control->camera, result));
-			g_free (folder);
 		}
-		if (control->config_file) menu_setup (control, control->config_file, "FileConfiguration", FALSE);
+		if (control->config_file) menu_setup (control, control->config_file, "FileConfiguration", folder, file);
 
 		/* Folder Configuration? */
 		if (!control->config_folder) {
-			gint result = gp_camera_folder_config_get (control->camera, &(control->config_folder), control->path);
+			gint result = gp_camera_folder_config_get (control->camera, &(control->config_folder), folder);
 			if (result != GP_OK) 
-				g_warning (_("Could not get widget for configuration of '%s'! (%s)"), 
-					control->path, gp_camera_result_as_string (control->camera, result));
+				g_warning (_("Could not get widget for configuration of folder '%s'! (%s)"), 
+					folder, gp_camera_result_as_string (control->camera, result));
 		}
-		if (control->config_folder) menu_setup (control, control->config_folder, "FolderConfiguration", FALSE);
+		if (control->config_folder) menu_setup (control, control->config_folder, "FolderConfiguration", folder, NULL);
 		
 		/* Release the container. */
 		bonobo_object_release_unref (container, NULL);
+
+		g_free (folder);
 	}
 }
 
 void
-menu_setup (GnoCamControl* control, CameraWidget* widget, gchar* name, gboolean for_camera)
+menu_setup (GnoCamControl* control, CameraWidget* widget, gchar* name, gchar* folder, gchar* file)
 {
         gchar*          tmp = NULL;
         xmlDocPtr       doc = xmlNewDoc ("1.0");
@@ -325,7 +333,7 @@ menu_setup (GnoCamControl* control, CameraWidget* widget, gchar* name, gboolean 
 
 	/* Finish. */
 	tmp = g_strconcat ("/menu/Edit/", name, NULL);
-	menu_fill (control, tmp, widget, widget, for_camera);
+	menu_fill (control, tmp, widget, widget, folder, file);
 	g_free (tmp);
 }
 
@@ -333,9 +341,10 @@ void
 menu_prepare (CameraWidget* widget, xmlNodePtr menu, xmlNodePtr command, xmlNsPtr ns)
 {
 	CameraWidget*		child;
-	gint 			i;
+	gint 			i, value_int;
 	xmlNodePtr		node;
 	gchar*			id;
+	gchar*			tmp;
 
 	for (i = 0; i < gp_widget_child_count (widget); i++) {
 		child = gp_widget_child (widget, i);
@@ -352,14 +361,32 @@ menu_prepare (CameraWidget* widget, xmlNodePtr menu, xmlNodePtr command, xmlNsPt
 			break;
 		case GP_WIDGET_TEXT:
 		case GP_WIDGET_MENU:
-		case GP_WIDGET_RADIO:
 		case GP_WIDGET_DATE:
-		case GP_WIDGET_TOGGLE:
-		case GP_WIDGET_BUTTON:
+		case GP_WIDGET_RADIO:
 		case GP_WIDGET_RANGE:
 			xmlAddChild (menu, node = xmlNewNode (ns, "control"));
 			xmlSetProp (node, "name", id);
 			xmlSetProp (node, "_tip", gp_widget_label (child));
+			break;
+		case GP_WIDGET_BUTTON:
+			xmlAddChild (menu, node = xmlNewNode (ns, "menuitem"));
+			xmlSetProp (node, "name", id);
+			xmlSetProp (node, "_tip", gp_widget_label (child));
+			xmlSetProp (node, "_label", gp_widget_label (child));
+			xmlSetProp (node, "verb", id);
+			break;
+		case GP_WIDGET_TOGGLE:
+			xmlAddChild (menu, node = xmlNewNode (ns, "menuitem"));
+			xmlSetProp (node, "name", id);
+			xmlSetProp (node, "_tip", gp_widget_label (child));
+			xmlSetProp (node, "_label", gp_widget_label (child));
+			xmlSetProp (node, "type", "toggle");
+			xmlSetProp (node, "verb", id);
+			if (gp_widget_value_get (child, &value_int) == GP_OK) {
+				tmp = g_strdup_printf ("%i", value_int);
+				xmlSetProp (node, "state", tmp);
+				g_free (tmp);
+			}
 			break;
 		default:
 			g_warning ("Encountered unsupported widget!");
@@ -370,7 +397,7 @@ menu_prepare (CameraWidget* widget, xmlNodePtr menu, xmlNodePtr command, xmlNsPt
 }
 
 void 
-menu_fill (GnoCamControl* control, gchar* path, CameraWidget* window, CameraWidget* widget, gboolean for_camera)
+menu_fill (GnoCamControl* control, gchar* path, CameraWidget* window, CameraWidget* widget, gchar* folder, gchar* file)
 {
 	GtkWidget*		hbox;
 	GtkWidget*		gtkwidget;
@@ -384,6 +411,7 @@ menu_fill (GnoCamControl* control, gchar* path, CameraWidget* window, CameraWidg
 	gfloat			max, min, increment, value_float;
 	gint			value_int;
 	BonoboUIComponent*	component = bonobo_control_get_ui_component (BONOBO_CONTROL (control));
+	WidgetData*		data;
 
 	for (i = 0; i < gp_widget_child_count (widget); i++) {
 		child = gp_widget_child (widget, i);
@@ -392,7 +420,7 @@ menu_fill (GnoCamControl* control, gchar* path, CameraWidget* window, CameraWidg
 			break;
 		case GP_WIDGET_SECTION:
 			tmp = g_strdup_printf ("%s/%i", path, gp_widget_id (child));
-			menu_fill (control, tmp, window, child, for_camera);
+			menu_fill (control, tmp, window, child, folder, file);
 			g_free (tmp);
 			break;
 		case GP_WIDGET_MENU:
@@ -407,11 +435,11 @@ menu_fill (GnoCamControl* control, gchar* path, CameraWidget* window, CameraWidg
 			for (j = 0; j < gp_widget_choice_count (child); j++) {
 				gtk_widget_show (menu_item = gtk_menu_item_new_with_label (gp_widget_choice (child, j)));
 				gtk_menu_append (GTK_MENU (menu), menu_item);
-				gtk_object_set_data (GTK_OBJECT (menu_item), "camera", control->camera);
+				gtk_object_set_data (GTK_OBJECT (menu_item), "control", control);
 				gtk_object_set_data (GTK_OBJECT (menu_item), "window", window);
 				gtk_object_set_data (GTK_OBJECT (menu_item), "widget", child);
 				gtk_object_set_data (GTK_OBJECT (menu_item), "choice", GINT_TO_POINTER (j));
-				if (for_camera) gtk_object_set_data (GTK_OBJECT (menu_item), "for_camera", GINT_TO_POINTER (1));
+//				gtk_object_set_data (GTK_OBJECT (menu_item), "type", GINT_TO_POINTER (type));
 				if (value_string && (strcmp (value_string, gp_widget_choice (child, j)) == 0)) 
 					gtk_option_menu_set_history (GTK_OPTION_MENU (gtkwidget), j);
 				gtk_signal_connect (GTK_OBJECT (menu_item), "activate", GTK_SIGNAL_FUNC (on_radio_button_activate), NULL);
@@ -422,17 +450,14 @@ menu_fill (GnoCamControl* control, gchar* path, CameraWidget* window, CameraWidg
 			g_free (tmp);
 			break;
 		case GP_WIDGET_TOGGLE:
-			gp_widget_value_get (child, &value_int);
-			gtk_widget_show (gtkwidget = gtk_check_button_new_with_label (gp_widget_label (child)));
-			gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (gtkwidget), (value_int != 0));
-			gtk_object_set_data (GTK_OBJECT (gtkwidget), "camera", control->camera);
-			gtk_object_set_data (GTK_OBJECT (gtkwidget), "window", window);
-			gtk_object_set_data (GTK_OBJECT (gtkwidget), "widget", child);
-			if (for_camera) gtk_object_set_data (GTK_OBJECT (gtkwidget), "for_camera", GINT_TO_POINTER (1));
-			gtk_signal_connect (GTK_OBJECT (gtkwidget), "toggled", GTK_SIGNAL_FUNC (on_togglebutton_toggled), NULL);
-			tmp = g_strdup_printf ("%s/%i", path, gp_widget_id (child));
-			bonobo_ui_component_object_set (component, tmp, bonobo_object_corba_objref (BONOBO_OBJECT (bonobo_control_new (gtkwidget))), NULL);
-			g_free (tmp);
+			data = g_new0 (WidgetData, 1);
+			data->camera = control->camera;
+			data->folder = g_strdup (folder);
+			data->file = g_strdup (file);
+			data->widget = child;
+			tmp = g_strdup_printf ("%i", gp_widget_id (child));
+			bonobo_ui_component_add_listener (component, tmp, on_togglebutton_clicked, data);
+                        g_free (tmp);
 			break;
 		case GP_WIDGET_RANGE:
 			gp_widget_value_get (child, &value_float);
@@ -444,7 +469,7 @@ menu_fill (GnoCamControl* control, gchar* path, CameraWidget* window, CameraWidg
 			gtk_object_set_data (adjustment, "camera", control->camera);
 			gtk_object_set_data (adjustment, "window", window);
 			gtk_object_set_data (adjustment, "widget", child);
-			if (for_camera) gtk_object_set_data (GTK_OBJECT (adjustment), "for_camera", GINT_TO_POINTER (1));
+//			if (for_camera) gtk_object_set_data (GTK_OBJECT (adjustment), "for_camera", GINT_TO_POINTER (1));
 			gtk_signal_connect (adjustment, "value_changed", GTK_SIGNAL_FUNC (on_adjustment_value_changed), NULL);
 			gtk_widget_show (gtkwidget = gtk_hscale_new (GTK_ADJUSTMENT (adjustment)));
 			gtk_range_set_update_policy (GTK_RANGE (gtkwidget), GTK_UPDATE_DISCONTINUOUS);
@@ -462,7 +487,7 @@ menu_fill (GnoCamControl* control, gchar* path, CameraWidget* window, CameraWidg
 			gtk_object_set_data (GTK_OBJECT (gtkwidget), "camera", control->camera);
 			gtk_object_set_data (GTK_OBJECT (gtkwidget), "window", window);
 			gtk_object_set_data (GTK_OBJECT (gtkwidget), "widget", child);
-			if (for_camera) gtk_object_set_data (GTK_OBJECT (gtkwidget), "for_camera", GINT_TO_POINTER (1));
+//			if (for_camera) gtk_object_set_data (GTK_OBJECT (gtkwidget), "for_camera", GINT_TO_POINTER (1));
 			gtk_signal_connect (GTK_OBJECT (gtkwidget), "date_changed", GTK_SIGNAL_FUNC (on_date_changed), NULL);
 			gtk_signal_connect (GTK_OBJECT (gtkwidget), "time_changed", GTK_SIGNAL_FUNC (on_date_changed), NULL);
 			gtk_box_pack_end (GTK_BOX (hbox), gtkwidget, TRUE, TRUE, 0);
@@ -480,7 +505,7 @@ menu_fill (GnoCamControl* control, gchar* path, CameraWidget* window, CameraWidg
 			gtk_object_set_data (GTK_OBJECT (gtkwidget), "camera", control->camera);
 			gtk_object_set_data (GTK_OBJECT (gtkwidget), "window", window);
 			gtk_object_set_data (GTK_OBJECT (gtkwidget), "widget", child);
-			if (for_camera) gtk_object_set_data (GTK_OBJECT (gtkwidget), "for_camera", GINT_TO_POINTER (1));
+//			if (for_camera) gtk_object_set_data (GTK_OBJECT (gtkwidget), "for_camera", GINT_TO_POINTER (1));
 			gtk_signal_connect (GTK_OBJECT (gtkwidget), "changed", GTK_SIGNAL_FUNC (on_entry_changed), NULL);
 			gtk_box_pack_end (GTK_BOX (hbox), gtkwidget, TRUE, TRUE, 0);
 			tmp = g_strdup_printf ("%s/%i", path, gp_widget_id (child));
@@ -488,13 +513,13 @@ menu_fill (GnoCamControl* control, gchar* path, CameraWidget* window, CameraWidg
 			g_free (tmp);
 			break;
 		case GP_WIDGET_BUTTON:
-			gtk_widget_show (gtkwidget = gtk_button_new_with_label (gp_widget_label (child)));
-			gtk_object_set_data (GTK_OBJECT (gtkwidget), "camera", control->camera);
-			gtk_object_set_data (GTK_OBJECT (gtkwidget), "widget", child);
-			if (for_camera) gtk_object_set_data (GTK_OBJECT (gtkwidget), "for_camera", GINT_TO_POINTER (1));
-			gtk_signal_connect (GTK_OBJECT (gtkwidget), "clicked", GTK_SIGNAL_FUNC (on_button_clicked), NULL);
-			tmp = g_strdup_printf ("%s/%i", path, gp_widget_id (child));
-			bonobo_ui_component_object_set (component, tmp, bonobo_object_corba_objref (BONOBO_OBJECT (bonobo_control_new (gtkwidget))), NULL);
+			data = g_new0 (WidgetData, 1);
+			data->camera = control->camera;
+			data->widget = child;
+			data->folder = g_strdup (folder);
+			data->file = g_strdup (file);
+			tmp = g_strdup_printf ("%i", gp_widget_id (child));
+			bonobo_ui_component_add_verb (component, tmp, on_button_clicked, data);
 			g_free (tmp);
 			break;
 		default:

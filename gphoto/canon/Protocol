@@ -159,8 +159,9 @@ ACK has the following format:
 xx 05 xx 00 00 00
 |     |
 |     error code
-<mseq>  00 No error, acknowledged
+<mseq> 		00 No error, acknowledged
                 01 Not acknowledged
+ 		FF retransmit last sequence
                 else other values not known
 
 

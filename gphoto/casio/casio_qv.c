@@ -264,6 +264,44 @@ casio_qv_summary() {
     sprintf(line, "Casio Camera Library\n");
     strcat(summary, line);
 
+    switch(revision) {
+	case 0x00531719:
+	case 0x00538b8f:
+	    sprintf(line, "Model QV10 detected\n");
+	    strcat(summary, line);
+	    break;
+
+	case 0x00800003:
+	    sprintf(line, "Model QV10A detected\n");
+	    strcat(summary, line);
+	    break;
+
+	case 0x00835321:
+	    sprintf(line, "Model QV70 detected\n");
+	    strcat(summary, line);
+	    break;
+
+	case 0x0103ba90:
+	    sprintf(line, "Model QV100 detected\n");
+	    strcat(summary, line);
+	    break;
+
+	case 0x01048dc0:
+	    sprintf(line, "Model QV300 detected\n");
+	    strcat(summary, line);
+	    break;
+
+	case 0x01a0e081:
+	    sprintf(line, "Model QV700 detected\n");
+	    strcat(summary, line);
+	    break;
+
+	case 0x01a10000:
+	    sprintf(line, "Model QV770 detected\n");
+	    strcat(summary, line);
+	    break;
+    }
+
     sprintf(line, "Connected to %s at %d baud\n", serial_port, baudRate);
     strcat(summary, line);
 

@@ -39,10 +39,9 @@
 #    endif /* HAVE_TERMIO_H */
 #endif /* HAVE_TERMIOS_H */
 
-// #ifdef HAVE_IOCTL_TYPES_H
-	// Temporary fix for now
-#include <sys/ioctl.h>
-// #endif
+#ifdef HAVE_IOCTL_TYPES_H
+#include <ioctl-types.h>
+#endif
 
 #ifdef HAVE_TTOLD_H 
 #include <ttold.h>
@@ -386,7 +385,7 @@ sdcGetBaudRate(sdcInfo info) {
 
 static int
 setBaudRateFinish(sdcInfo info) {
-#ifndef NO_RTS
+#if HAVE_RTS_IOCTL
     int mode;
     mode = TIOCM_RTS;
     if(ioctl(info->fd, TIOCMBIC, &mode) < 0){ /* RTS OFF */

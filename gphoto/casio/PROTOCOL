@@ -527,6 +527,7 @@ Comment:
     model    YYZZWWVV
     QV10   0x00531719
     QV10   0x00538b8f
+    QV10A  0x00800003
     QV70   0x00835321
     QV100  0x0103ba90
     QV300  0x01048dc0

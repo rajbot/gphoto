@@ -225,7 +225,7 @@ preview_new (Camera* camera)
 			bonobo_window_set_contents (BONOBO_WINDOW (window), widget);
 			gtk_object_set_data (GTK_OBJECT (window), "client", bonobo_widget_get_server (BONOBO_WIDGET (widget)));
 		} else gnome_error_dialog_parented (_("Could not start the image viewer!"), main_window);
-	} gnome_warning_dialog_parented (_("No image viewer has been specified. Please select one in the preferences dialog."), main_window);
+	} else gnome_warning_dialog_parented (_("No image viewer has been specified. Please select one in the preferences dialog."), main_window);
 	gtk_widget_show_all (window);
 
         /* Store some data. */

@@ -12,6 +12,7 @@ Source: ftp://ftp.gphoto.org/projects/gphoto/pub/tar/libgpio/libgpio-%{ver}.tar.
 BuildRoot: /var/tmp/libgpio-%{PACKAGE_VERSION}-root
 URL: http://www.gphoto.org/
 Docdir: %{prefix}/doc
+Requires: libusb
 
 %description
 The benefit to using this library would be that all communications can be
@@ -61,4 +62,5 @@ rm -rf $RPM_BUILD_ROOT
 
 %{prefix}/lib/lib*.so
 %{prefix}/lib/*a
+%{prefix}/lib/*.sh
 %{prefix}/include/*

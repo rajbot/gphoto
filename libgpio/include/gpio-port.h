@@ -10,9 +10,10 @@
 #include <string.h>
 #include <stdio.h>
 
-#define IOLIBS					"."
-#define strcasecmp				_stricmp
-#define snprintf				_snprintf
+#define IOLIBS			"."
+#define strcasecmp		_stricmp
+#define snprintf		_snprintf
+>>>>>>> 1.6
 
 /* Work-around for readdir() */
 typedef struct {
@@ -26,18 +27,18 @@ typedef struct {
 } GPIOWINDIR;
 
 /* Sleep functionality */
-#define	GPIO_SLEEP(_ms)				Sleep(_ms)
+#define	GPIO_SLEEP(_ms)		Sleep(_ms)
 
 /* Dynamic library functions */
 #define GPIO_DLOPEN(_filename)		LoadLibrary(_filename)
 #define GPIO_DLSYM(_handle, _funcname)	GetProcAddress(_handle, _funcname)
 #define GPIO_DLCLOSE(_handle)		FreeLibrary(_handle)
-#define GPIO_DLERROR()				"Windows Error"
+#define GPIO_DLERROR()			"Windows Error"
 
 /* Directory-oriented functions */
-#define GPIO_DIR				GPIOWINDIR *
-#define GPIO_DIRENT				WIN32_FIND_DATA *
-#define GPIO_DIR_DELIM			'/'
+#define GPIO_DIR		GPIOWINDIR *
+#define GPIO_DIRENT		WIN32_FIND_DATA *
+#define GPIO_DIR_DELIM		'\\'
 
 
 #else
@@ -54,24 +55,28 @@ typedef struct {
 #include <unistd.h>
 
 /* Sleep functionality */
-#define	GPIO_SLEEP(_ms)				usleep(_ms*1000)
+#define	GPIO_SLEEP(_ms)		usleep(_ms*1000)
 
 /* Dynamic library functions */
 #define GPIO_DLOPEN(_filename)		dlopen(_filename, RTLD_LAZY)
 #define GPIO_DLSYM(_handle, _funcname)	dlsym(_handle, _funcname)
 #define GPIO_DLCLOSE(_handle)		dlclose(_handle)
-#define GPIO_DLERROR()				dlerror()
+#define GPIO_DLERROR()			dlerror()
 
 /* Directory-oriented functions */
-#define GPIO_DIR			DIR *
-#define GPIO_DIRENT			struct dirent *
+#define GPIO_DIR		DIR *
+#define GPIO_DIRENT		struct dirent *
+#ifdef OS2
+#define GPIO_DIR_DELIM		'\\'
+#else
 #define GPIO_DIR_DELIM		'/'
+#endif /* OS2 */
 
-#endif
+#endif /* else */
 
 GPIO_DIR	GPIO_OPENDIR	(char *dirname);
 GPIO_DIRENT	GPIO_READDIR	(GPIO_DIR d);
 char*		GPIO_FILENAME	(GPIO_DIRENT de);
-int			GPIO_CLOSEDIR	(GPIO_DIR dir);
-int			GPIO_IS_FILE	(char *filename);
-int			GPIO_IS_DIR		(char *dirname);
+int		GPIO_CLOSEDIR	(GPIO_DIR dir);
+int		GPIO_IS_FILE	(char *filename);
+int		GPIO_IS_DIR		(char *dirname);

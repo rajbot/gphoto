@@ -632,7 +632,7 @@ int Converse(Packet *out, unsigned char *str, int len)
 	Packet ps;
 	char old_sequence=33;
 	int sequence_count=0;
-+ 	int invalid_sequence=0;
+ 	int invalid_sequence=0;
 	int count;
 
 	MakePacket(&ps, str, len);

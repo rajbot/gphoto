@@ -189,7 +189,7 @@ on_druid_finish (GnomeDruidPage* page, GtkWidget* druid)
 	for (i = 0; i < g_slist_length (list); i++) g_free (g_slist_nth_data (list, i));
 	g_slist_free (list);
 
-	gtk_widget_destroy (glade_xml_get_widget (xml, "window_druid"));
+	gtk_widget_unref (glade_xml_get_widget (xml, "window_druid"));
 	gtk_object_unref (GTK_OBJECT (client));
 }
 

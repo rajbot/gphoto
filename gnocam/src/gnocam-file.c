@@ -246,8 +246,6 @@ on_preview_changed (GConfClient *client, guint cnxn_id, GConfEntry* entry, gpoin
 {
 	GnoCamFile*		file;
 
-printf ("on_preview_changed\n");
-
 	file = GNOCAM_FILE (user_data);
 
         /* Clean up */

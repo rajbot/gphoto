@@ -62,6 +62,7 @@ int main (int argc, char *argv[])
 	/* Init GConf */
 	if (!gconf_init (argc, argv, &gerror)) g_error ("Could not initialize gconf: %s", gerror->message);
 	g_return_val_if_fail (client = gconf_client_get_default (), 1);
+	gconf_client_add_dir (client, "/apps/" PACKAGE, GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
 
 	/* Init GPhoto2 */
 	if ((result = gp_init (GP_DEBUG_NONE)) != GP_OK) g_error (_("Could not initialize gphoto! (%s)"), gp_result_as_string (result));

@@ -307,16 +307,12 @@ on_preview_clicked (BonoboUIComponent* component, const gchar* path, Bonobo_UICo
 	GnoCamCamera*	camera;
 	gboolean	current;
 
-printf ("on_preview_clicked\n");
-
 	camera = GNOCAM_CAMERA (user_data);
 
 	/* Did the state really change? */
 	current = gconf_client_get_bool (camera->priv->client, "/apps/" PACKAGE "/preview", NULL);
 	if (current && !strcmp ("1", state)) return;
 	if (!current && !strcmp ("0", state)) return;
-
-printf ("SET!\n");
 
 	/* Tell GConf about the change */
 	if (!strcmp ("0", state)) gconf_client_set_bool (camera->priv->client, "/apps/" PACKAGE "/preview", FALSE, NULL);

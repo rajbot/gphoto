@@ -166,7 +166,7 @@ int main (int argc, char *argv[])
         bonobo_ui_container_set_win (container, BONOBO_WINDOW (main_window));
         bonobo_ui_component_set_container (main_component = bonobo_ui_component_new (PACKAGE), corba_container);
         bonobo_ui_component_add_verb_list (main_component, verb);
-        bonobo_ui_util_set_ui (main_component, NULL, "gnocam-main.xml", PACKAGE);
+        bonobo_ui_util_set_ui (main_component, GNOCAM_DATADIR, "gnocam-main.xml", PACKAGE);
 
 	/* Add the view mode selection to the toolbar. */
 	gtk_widget_show (widget = gtk_option_menu_new ());

@@ -210,7 +210,7 @@ preview_new (Camera* camera)
 	component = bonobo_ui_component_new ("Preview");
 	bonobo_ui_component_set_container (component, corba_container);
 	bonobo_ui_component_add_verb_list_with_data (component, verb, window);
-	bonobo_ui_util_set_ui (component, "", "gnocam-preview.xml", "Preview");
+	bonobo_ui_util_set_ui (component, GNOCAM_DATADIR, "gnocam-preview.xml", "Preview");
 	gtk_widget_show_all (window);
 
         /* Store some data. */

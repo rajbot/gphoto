@@ -17,7 +17,7 @@
 /******************************************************************************/
 
 void on_button_save_previews_clicked 	(GtkButton *button, gpointer user_data);
-void on_button_save_previews_as_clicked 	(GtkButton *button, gpointer user_data);
+void on_button_save_previews_as_clicked	(GtkButton *button, gpointer user_data);
 void on_button_save_files_clicked 	(GtkButton *button, gpointer user_data);
 void on_button_save_files_as_clicked 	(GtkButton *button, gpointer user_data);
 void on_button_delete_clicked 		(GtkButton *button, gpointer user_data);
@@ -31,15 +31,20 @@ void on_exit_activate 			(GtkMenuItem *menuitem, gpointer user_data);
 void on_preferences_activate 		(GtkMenuItem *menuitem, gpointer user_data);
 void on_about_activate 			(GtkMenuItem *menuitem, gpointer user_data);
 
-void on_clist_files_drag_data_get (GtkWidget *widget, GdkDragContext *context, GtkSelectionData *selection_data, guint info, guint time, gpointer data);
-gboolean on_clist_files_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data);
+//void on_clist_files_drag_data_get (GtkWidget *widget, GdkDragContext *context, GtkSelectionData *selection_data, guint info, guint time, gpointer data);
 
-void on_tree_cameras_selection_changed (GtkWidget *tree);
-gboolean on_tree_cameras_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data);
+void on_camera_tree_popup_file_delete_activate 		(GtkMenuItem* menuitem, gpointer user_data);
+void on_camera_tree_popup_file_save_file_activate 	(GtkMenuItem* menuitem, gpointer user_data);
+void on_camera_tree_popup_file_save_file_as_activate 	(GtkMenuItem* menuitem, gpointer user_data);
+void on_camera_tree_popup_file_save_preview_as_activate (GtkMenuItem* menuitem, gpointer user_data);
+void on_camera_tree_popup_file_save_preview_activate 	(GtkMenuItem* menuitem, gpointer user_data);
 
-void on_tree_cameras_popup_properties_activate 		(GtkMenuItem* menu_item, gpointer user_data);
-void on_tree_cameras_popup_capture_image_activate 	(GtkMenuItem *menu_item, gpointer user_data);
-void on_tree_cameras_popup_capture_video_activate 	(GtkMenuItem *menu_item, gpointer user_data);
+void on_camera_tree_popup_camera_properties_activate 		(GtkMenuItem* menu_item, gpointer user_data);
+void on_camera_tree_popup_camera_capture_image_activate 	(GtkMenuItem *menu_item, gpointer user_data);
+void on_camera_tree_popup_camera_capture_video_activate 	(GtkMenuItem *menu_item, gpointer user_data);
+
+void on_tree_item_deselect (GtkTreeItem* item, gpointer user_data);
+void on_tree_item_select (GtkTreeItem* item, gpointer user_data);
 
 void on_duration_reply (gchar *string, gpointer user_data);
 
@@ -50,25 +55,37 @@ void on_duration_reply (gchar *string, gpointer user_data);
 void
 on_button_save_previews_clicked (GtkButton *button, gpointer user_data)
 {
-	save_all_selected (gtk_object_get_data (GTK_OBJECT (button), "xml"), FALSE, FALSE, FALSE);
+	GladeXML*	xml;
+
+	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (button), "xml")) != NULL);
+	save_all_selected (GTK_TREE (glade_xml_get_widget (xml, "tree_cameras")), FALSE, FALSE, FALSE);
 }
 
 void
 on_button_save_previews_as_clicked (GtkButton *button, gpointer user_data)
 {
-	save_all_selected (gtk_object_get_data (GTK_OBJECT (button), "xml"), FALSE, TRUE, FALSE);
+        GladeXML*       xml;
+
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (button), "xml")) != NULL);
+	save_all_selected (GTK_TREE (glade_xml_get_widget (xml, "tree_cameras")), FALSE, TRUE, FALSE);
 }
 
 void
 on_button_save_files_clicked (GtkButton *button, gpointer user_data)
 {
-	save_all_selected (gtk_object_get_data (GTK_OBJECT (button), "xml"), TRUE, FALSE, FALSE);
+        GladeXML*       xml;    
+
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (button), "xml")) != NULL);    
+	save_all_selected (GTK_TREE (glade_xml_get_widget (xml, "tree_cameras")), TRUE, FALSE, FALSE);
 }
 
 void
 on_button_save_files_as_clicked (GtkButton *button, gpointer user_data)
 {
-	save_all_selected (gtk_object_get_data (GTK_OBJECT (button), "xml"), TRUE, TRUE, FALSE);
+        GladeXML*       xml;
+
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (button), "xml")) != NULL);
+	save_all_selected (GTK_TREE (glade_xml_get_widget (xml, "tree_cameras")), TRUE, TRUE, FALSE);
 }
 
 void
@@ -77,31 +94,43 @@ on_button_delete_clicked (GtkButton *button, gpointer user_data)
 	GladeXML*	xml;
 
 	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (button), "xml")) != NULL);
-	delete_all_selected (xml);
+	delete_all_selected (GTK_TREE (glade_xml_get_widget (xml, "tree_cameras")));
 }
 
 void
 on_save_previews_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
-	save_all_selected (gtk_object_get_data (GTK_OBJECT (menuitem), "xml"), FALSE, FALSE, FALSE);
+        GladeXML*       xml;
+
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml")) != NULL);
+	save_all_selected (GTK_TREE (glade_xml_get_widget (xml, "tree_cameras")), FALSE, FALSE, FALSE);
 }
 
 void
 on_save_previews_as_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
-	save_all_selected (gtk_object_get_data (GTK_OBJECT (menuitem), "xml"), FALSE, TRUE, FALSE);
+        GladeXML*       xml;
+
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml")) != NULL);
+	save_all_selected (GTK_TREE (glade_xml_get_widget (xml, "tree_cameras")), FALSE, TRUE, FALSE);
 }
 
 void
 on_save_files_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
-	save_all_selected (gtk_object_get_data (GTK_OBJECT (menuitem), "xml"), TRUE, FALSE, FALSE);
+        GladeXML*       xml;
+
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml")) != NULL);
+	save_all_selected (GTK_TREE (glade_xml_get_widget (xml, "tree_cameras")), TRUE, FALSE, FALSE);
 }
 
 void
 on_save_files_as_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
-	save_all_selected (gtk_object_get_data (GTK_OBJECT (menuitem), "xml"), TRUE, TRUE, FALSE);
+        GladeXML*       xml;
+
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml")) != NULL);
+	save_all_selected (GTK_TREE (glade_xml_get_widget (xml, "tree_cameras")), TRUE, TRUE, FALSE);
 }
 
 void
@@ -110,7 +139,7 @@ on_delete_activate (GtkMenuItem *menuitem, gpointer user_data)
         GladeXML*       xml;
 
         g_assert ((xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml")) != NULL);
-	delete_all_selected (xml);
+	delete_all_selected (GTK_TREE (glade_xml_get_widget (xml, "tree_cameras")));
 }
 
 void
@@ -156,88 +185,208 @@ on_about_activate (GtkMenuItem *menuitem, gpointer user_data)
 	if (xml_about == NULL) gnome_app_error (app, _("Could not find " GNOCAM_GLADEDIR "gnocam.glade. Check if GnoCam was installed correctly."));
 }
 
-void
-on_clist_files_drag_data_get (
-	GtkWidget *widget, 
-	GdkDragContext *context, 
-	GtkSelectionData *selection_data, 
-	guint info, 
-	guint time, 
-	gpointer data)
-{
-	GladeXML *xml;
-	gchar *filenames, *filenames_old;
-	GList *selection;
-	GtkCList *clist;
-	gchar *file_name;
-	gint i, row;
+//void
+//on_clist_files_drag_data_get (
+//	GtkWidget *widget, 
+//	GdkDragContext *context, 
+//	GtkSelectionData *selection_data, 
+//	guint info, 
+//	guint time, 
+//	gpointer data)
+//{
+//	GladeXML *xml;
+//	gchar *filenames, *filenames_old;
+//	GList *selection;
+//	GtkCList *clist;
+//	gchar *file_name;
+//	gint i, row;
 
-	xml = gtk_object_get_data (GTK_OBJECT (widget), "xml");
-	g_assert (xml != NULL);
-        clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"));
-        g_assert (clist != NULL);
+//	xml = gtk_object_get_data (GTK_OBJECT (widget), "xml");
+//	g_assert (xml != NULL);
+//	clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"));
+//	g_assert (clist != NULL);
 
         /* Check which files have been selected. */
-        selection = g_list_first (clist->selection);
-	filenames = g_strdup ("");
-        for (i = 0; i < g_list_length (selection); i++) {
-                row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
-                gtk_clist_get_text (clist, row, 2, &file_name);
-                g_assert (file_name != NULL);
-		filenames_old = filenames;
-		if (i == 0) filenames = g_strdup_printf ("file://tmp/%s\n", g_strdup (file_name));
-		else filenames = g_strdup_printf ("%sfile://tmp/%s\n", filenames_old, g_strdup (file_name));
-		g_free (filenames_old);
-	}
+//	selection = g_list_first (clist->selection);
+//	filenames = g_strdup ("");
+//      for (i = 0; i < g_list_length (selection); i++) {
+//	row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
+//	      gtk_clist_get_text (clist, row, 2, &file_name);
+//		g_assert (file_name != NULL);
+//		filenames_old = filenames;
+//		if (i == 0) filenames = g_strdup_printf ("file://tmp/%s\n", g_strdup (file_name));
+//		else filenames = g_strdup_printf ("%sfile://tmp/%s\n", filenames_old, g_strdup (file_name));
+//		g_free (filenames_old);
+//	}
 
 	/* Calculate size of variable filenames. */
-	for (i =0; ; i++) if (filenames[i] == 0) break;
+//	for (i =0; ; i++) if (filenames[i] == 0) break;
 
 	//FIXME: Getting files takes too much time. Previews work...
-	save_all_selected (xml, FALSE, FALSE, TRUE);
-	gtk_selection_data_set (selection_data, selection_data->target, 8, filenames, i + 1);
+//	save_all_selected (xml, FALSE, FALSE, TRUE);
+//	gtk_selection_data_set (selection_data, selection_data->target, 8, filenames, i + 1);
+//}
+
+/**********************/
+/* Camera tree stuff. */
+/**********************/
+
+void 
+on_camera_tree_popup_file_delete_activate (GtkMenuItem* menuitem, gpointer user_data)
+{
+	GtkTreeItem*	item;
+
+	g_assert ((item = GTK_TREE_ITEM (gtk_object_get_data (GTK_OBJECT (menuitem), "item"))) != NULL);
+
+	delete (item);
 }
 
-/********************/
-/* File list stuff. */
-/********************/
+void
+on_camera_tree_popup_file_save_file_activate (GtkMenuItem* menuitem, gpointer user_data)
+{
+	GladeXML* 	xml;
+	Camera*		camera;
+        gchar*          filename;
+        gchar*          path;
+
+	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml")) != NULL);
+	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (menuitem), "camera")) != NULL);
+	g_assert ((filename = gtk_object_get_data (GTK_OBJECT (menuitem), "filename")) != NULL);
+	g_assert ((path = gtk_object_get_data (GTK_OBJECT (menuitem), "path")) != NULL);
+
+	save (xml, camera, path, filename, TRUE, FALSE);
+}
+
+void
+on_camera_tree_popup_file_save_file_as_activate (GtkMenuItem* menuitem, gpointer user_data)
+{
+        GladeXML*       xml;
+        Camera*         camera;
+	gchar*		filename;
+	gchar*		path;
+
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml")) != NULL);
+        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (menuitem), "camera")) != NULL);
+        g_assert ((filename = gtk_object_get_data (GTK_OBJECT (menuitem), "filename")) != NULL);
+        g_assert ((path = gtk_object_get_data (GTK_OBJECT (menuitem), "path")) != NULL);
+
+        save_as (xml, camera, path, filename, TRUE);
+}
+
+void
+on_camera_tree_popup_file_save_preview_activate (GtkMenuItem* menuitem, gpointer user_data)
+{
+        GladeXML*       xml;
+        Camera*         camera;
+        gchar*          filename;
+        gchar*          path;
+
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml")) != NULL);
+        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (menuitem), "camera")) != NULL);
+        g_assert ((filename = gtk_object_get_data (GTK_OBJECT (menuitem), "filename")) != NULL);
+        g_assert ((path = gtk_object_get_data (GTK_OBJECT (menuitem), "path")) != NULL);
+
+        save (xml, camera, path, filename, FALSE, FALSE);
+}
+
+void
+on_camera_tree_popup_file_save_preview_as_activate (GtkMenuItem* menuitem, gpointer user_data)
+{
+        GladeXML*       xml;
+        Camera*         camera;
+        gchar*          filename;
+        gchar*          path;
+
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml")) != NULL);
+        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (menuitem), "camera")) != NULL);
+        g_assert ((filename = gtk_object_get_data (GTK_OBJECT (menuitem), "filename")) != NULL);
+        g_assert ((path = gtk_object_get_data (GTK_OBJECT (menuitem), "path")) != NULL);
+
+        save_as (xml, camera, path, filename, FALSE);
+}
 
 gboolean
-on_clist_files_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+on_tree_item_file_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
-        GladeXML *xml_popup, *xml;
+        GladeXML*	xml_popup;
+	GladeXML*	xml;
+        Camera*		camera;
+	gchar*		path;
+	gchar*		filename;
 
         g_assert (event != NULL);
-        xml = gtk_object_get_data (GTK_OBJECT (widget), "xml");
-        g_assert (xml != NULL);
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (widget), "xml")) != NULL);
+        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (widget), "camera")) != NULL);
+	g_assert ((filename = gtk_object_get_data (GTK_OBJECT (widget), "filename")) != NULL);
+	g_assert ((path = gtk_object_get_data (GTK_OBJECT (widget), "path")) != NULL);
 
         /* Did the user right-click? */
         if (event->button == 3) {
 
                 /* Create the dialog. */
-                g_assert ((xml_popup = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "menu_clist_files_popup")) != NULL);
+                g_assert ((xml_popup = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "camera_tree_popup_file")) != NULL);
 
                 /* Store some data. */
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "clist_files_popup_save_previews")), "xml", xml);
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "clist_files_popup_save_previews_as")), "xml", xml);
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "clist_files_popup_save_files")), "xml", xml);
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "clist_files_popup_save_files_as")), "xml", xml);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "clist_files_popup_delete")), "xml", xml);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_preview")), "xml", xml);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_preview")), "camera", camera);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_preview")), "path", path);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_preview")), "filename", filename);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_preview_as")), "xml", xml);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_preview_as")), "camera", camera);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_preview_as")), "path", path);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_preview_as")), "filename", filename);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_file")), "xml", xml);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_file")), "camera", camera);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_file")), "path", path);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_file")), "filename", filename);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_file_as")), "xml", xml);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_file_as")), "camera", camera);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_file_as")), "path", path);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_file_as")), "filename", filename);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_delete")), "item", widget);
 
                 /* Connect the signals. */
                 glade_xml_signal_autoconnect (xml_popup);
 
                 /* Pop up the dialog. */
-                gtk_menu_popup (GTK_MENU (glade_xml_get_widget (xml_popup, "menu_clist_files_popup")), NULL, NULL, NULL, NULL, event->button, event->time);
+                gtk_menu_popup (GTK_MENU (glade_xml_get_widget (xml_popup, "camera_tree_popup_file")), NULL, NULL, NULL, NULL, event->button, event->time);
 
                 return (TRUE);
 
         } else return (FALSE);
 }
 
-/**********************/
-/* Camera tree stuff. */
-/**********************/
+gboolean
+on_tree_item_folder_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+{
+        GladeXML*       xml_popup;
+        GladeXML*       xml;
+        Camera*         camera;
+        gchar*          path;
+
+        g_assert (event != NULL);
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (widget), "xml")) != NULL);
+        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (widget), "camera")) != NULL);
+        g_assert ((path = gtk_object_get_data (GTK_OBJECT (widget), "path")) != NULL);
+
+        /* Did the user right-click? */
+        if (event->button == 3) {
+
+                /* Create the dialog. */
+		g_assert ((xml_popup = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "camera_tree_popup_folder")) != NULL);
+
+                /* Store some data. */
+                
+		/* Connect the signals. */
+		glade_xml_signal_autoconnect (xml_popup);
+
+		/* Pop up the dialog. */
+		gtk_menu_popup (GTK_MENU (glade_xml_get_widget (xml_popup, "camera_tree_popup_folder")), NULL, NULL, NULL, NULL, event->button, event->time);
+
+		return (TRUE);
+
+	} else return (FALSE);
+}
 
 void
 on_drag_data_received (GtkWidget *widget, GdkDragContext *context, gint x, gint y, GtkSelectionData *selection_data, guint info, guint time)
@@ -258,60 +407,75 @@ on_drag_data_received (GtkWidget *widget, GdkDragContext *context, gint x, gint 
 void
 on_tree_item_expand (GtkTreeItem* tree_item, gpointer user_data)
 {
-	CameraList		folder_list;
-	CameraList		folder_list_subfolder;
+	CameraList		folder_list, file_list;
 	CameraListEntry*	folder_list_entry;
+	CameraListEntry*	file_list_entry;
 	Camera*			camera;
 	gchar*			path;
 	gchar*			new_path;
-	gint			count;
+	gint			folder_list_count, file_list_count;
 	gint			i;
 	GtkWidget*		item;
-	GtkWidget*		tree;
+	GladeXML*		xml;
 
+	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (tree_item), "xml")) != NULL);
 	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (tree_item), "camera")) != NULL);
 	g_assert ((path = gtk_object_get_data (GTK_OBJECT (tree_item), "path")) != NULL);
 	g_assert (tree_item->subtree);
 	g_assert (GTK_OBJECT (tree_item->subtree)->ref_count > 0);
 
-	/* Get the subfolders. */
-	if (gp_camera_folder_list (camera, &folder_list, path) == GP_OK) {
-                count = gp_list_count (&folder_list);	
-		if (count > 0) {
-			for (i = 0; i < count; i++) {
-				folder_list_entry = gp_list_entry (&folder_list, i);
-				
-				/* Add the subfolder to the tree. */
-				item = gtk_tree_item_new_with_label (folder_list_entry->name);
-				gtk_widget_show (item);
-				gtk_tree_append (GTK_TREE (tree_item->subtree), item);
+	/* Get file and folder list. */
+	if (gp_camera_folder_list (camera, &folder_list, path) != GP_OK) {
+		dialog_information ("Could not get folder list for folder '%s'!", path);
+		return;
+	}
+	if (gp_camera_file_list (camera, &file_list, path) != GP_OK) {
+		dialog_information ("Could not get file list for folder '%s'!", path);
+		return;
+	}
 
-				/* Construct the new path. */
-				if (strcmp (path, "/") == 0) new_path = g_strdup_printf ("/%s", folder_list_entry->name);
-				else new_path = g_strdup_printf ("%s/%s", path, folder_list_entry->name);
-				
-				/* Store some data. */
-				gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
-				gtk_object_set_data (GTK_OBJECT (item), "path", new_path);
-		
-				/* Connect the signals. */
-				gtk_signal_connect (GTK_OBJECT (item), "expand", GTK_SIGNAL_FUNC (on_tree_item_expand), NULL);
-				gtk_signal_connect (GTK_OBJECT (item), "collapse", GTK_SIGNAL_FUNC (on_tree_item_collapse), NULL);
-				
-				/* Does this folder have subfolders? */
-				if (gp_camera_folder_list (camera, &folder_list_subfolder, new_path) == GP_OK) {
-					if (gp_list_count (&folder_list_subfolder) > 0) {
+	/* Add folders to tree. */
+        folder_list_count = gp_list_count (&folder_list);
+	if (folder_list_count > 0) {
+		for (i = 0; i < folder_list_count; i++) {
+			folder_list_entry = gp_list_entry (&folder_list, i);
+			
+                        /* Construct the new path. */
+                        if (strcmp (path, "/") == 0) new_path = g_strdup_printf ("/%s", folder_list_entry->name);
+                        else new_path = g_strdup_printf ("%s/%s", path, folder_list_entry->name);
 
-						/* Create the subtree. Don't populate it yet. */
-						tree = gtk_tree_new ();
-						gtk_widget_ref (tree);
-						gtk_widget_show (tree);
-						gtk_tree_item_set_subtree (GTK_TREE_ITEM (item), tree);
-					}
-				} else dialog_information ("Could not get folder list for folder '%s'!", new_path);
-			}
-		} else dialog_information ("Folder '%s' is empty!", path);
-	} else dialog_information ("Could not get folder list for folder '%s'!", path);
+			/* Add the folder to the tree. */
+			camera_tree_folder_add (GTK_TREE (tree_item->subtree), camera, new_path);
+			
+			/* Clean up. */
+			g_free (new_path);
+		}
+	}
+
+	/* Add files to tree. */
+	file_list_count = gp_list_count (&file_list);
+	if (file_list_count > 0) {
+		for (i = 0; i < file_list_count; i++) {
+			file_list_entry = gp_list_entry (&file_list, i);
+
+			/* Add the file to the tree. */
+			item = gtk_tree_item_new_with_label (file_list_entry->name);
+			gtk_widget_show (item);
+			gtk_tree_append (GTK_TREE (tree_item->subtree), item);
+
+			/* Store some data. */
+			gtk_object_set_data (GTK_OBJECT (item), "xml", xml);
+			gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
+			gtk_object_set_data (GTK_OBJECT (item), "path", g_strdup (path));
+			gtk_object_set_data (GTK_OBJECT (item), "filename", g_strdup (file_list_entry->name));
+			gtk_object_set_data (GTK_OBJECT (item), "file_list_count", GINT_TO_POINTER (file_list_count));
+
+			/* Connect the signals. */
+			gtk_signal_connect (GTK_OBJECT (item), "select", GTK_SIGNAL_FUNC (on_tree_item_select), NULL);
+			gtk_signal_connect (GTK_OBJECT (item), "deselect", GTK_SIGNAL_FUNC (on_tree_item_deselect), NULL);
+			gtk_signal_connect (GTK_OBJECT (item), "button_press_event", GTK_SIGNAL_FUNC (on_tree_item_file_button_press_event), NULL);
+		}
+	}
 }
 
 void
@@ -324,130 +488,104 @@ on_tree_item_collapse (GtkTreeItem* tree_item, gpointer user_data)
 }
 
 void
-on_tree_cameras_selection_changed (GtkWidget *tree)
+on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 {
-	GList *selection;
-	GtkWidget *item;
-	Camera *camera;
-	CameraList camera_list;
-	CameraListEntry *camera_list_entry;
-	CameraFile *camera_file;
-	gint count, i, j, row;
-	GtkCList *clist;
-	GdkPixbuf *pixbuf;
-	GdkPixbufLoader *loader;
-	GdkPixmap *pixmap;
-	GdkBitmap *bitmap;
-	GladeXML *xml;
-	GnomeApp *app;
-	gchar *text_dummy[3] = {NULL, NULL, NULL};
-	gchar *path, *file_name;
-	gboolean found;
-	
-	g_assert (tree != NULL);
-	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (tree), "xml")) != NULL);
-	g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
-	g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
-	selection = g_list_first (GTK_TREE_SELECTION (tree));
-	gtk_clist_set_row_height (clist, 70); //FIXME: Move that to an appropriate position.
+	GladeXML*		xml;
+	GtkNotebook*		notebook;
+	gchar*			filename;
+	gchar*			path;
+	gchar*			text;
+	GtkWidget*		page;
+	GtkWidget*		label;
+	GtkWidget*		widget;
+	GtkWidget*		viewport;
+	CameraFile*		file;
+	Camera*			camera;
+        GdkPixbuf*		pixbuf;
+        GdkPixbufLoader*	loader;
+        GdkPixmap*		pixmap;
+        GdkBitmap*		bitmap;
 
-	/* Look for each file in the file list if we still are to display it. */
-	/* Ok, we only check if the folder is still selected, not if the file */
-	/* is still in there... FIXME?                                        */
-	for (row = clist->rows - 1; row >= 0; row--) {
-		found = FALSE;
-		for (i = 0; i < g_list_length (selection); i++) {
-			item = GTK_WIDGET (g_list_nth_data (selection, i));
-	
-			/* Is camera the same? */
-			if (gtk_object_get_data (GTK_OBJECT (item), "camera") != gtk_clist_get_row_data (clist, row)) continue;
+	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (item), "xml")) != NULL);
+	g_assert ((notebook = GTK_NOTEBOOK (glade_xml_get_widget (xml, "notebook_files"))) != NULL);
+	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
+	g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
+	g_assert (gtk_object_get_data (GTK_OBJECT (item), "page") == NULL);
 
-			/* Is the path the same? */
-			gtk_clist_get_text (clist, row, 1, &path);
-			if (strcmp (gtk_object_get_data (GTK_OBJECT (item), "path"), path) != 0) continue;
+	/* Folder or file? */
+	if ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) {
 
-			found = TRUE;
-		}
-		if (!found) gtk_clist_remove (clist, row);	
-	}
-
-	/* Look for each selected folder if we have displayed all files. */
-	for (i = 0; i < g_list_length (selection); i++) {
-		item = GTK_WIDGET (g_list_nth_data (selection, i));
-		g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
-		g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
-
-		/* Get the files. */
-		if (gp_camera_file_list (camera, &camera_list, path) == GP_OK) {
-			count = gp_list_count (&camera_list);
-			for (j = 0; j < count; j++) {
-				camera_list_entry = gp_list_entry (&camera_list, j);
-
-				/* Do we have this file already in the list? */
-				found = FALSE;
-				for (row = 0; row < clist->rows; row++) {
-
-					/* Is the path the same? */
-					gtk_clist_get_text (clist, row, 1, &path);
-					if (strcmp (gtk_object_get_data (GTK_OBJECT (item), "path"), path) != 0) continue;
-
-					/* Is the camera the same? */
-					if (gtk_object_get_data (GTK_OBJECT (item), "camera") != gtk_clist_get_row_data (clist, row)) continue;
-
-					/* Is the file name the same? */
-					gtk_clist_get_text (clist, row, 2, &file_name);
-					if (strcmp (file_name, camera_list_entry->name) != 0) continue;
-
-					found = TRUE;
-				}
-				if (!found) {
-					g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
-
-					/* Add entry to list. */
-					gtk_clist_append (clist, text_dummy);
-					gtk_clist_set_text (clist, clist->rows - 1, 1, path);
-					gtk_clist_set_row_data (clist, clist->rows - 1, camera);
-	
-					/* Get the file. */
-					camera_file = gp_file_new ();
-					if (gp_camera_file_get_preview (camera, camera_file, path, camera_list_entry->name) == GP_OK) {
-	
-						/* Process the image. */
-						loader = gdk_pixbuf_loader_new ();
-						g_assert (loader != NULL);
-						if (gdk_pixbuf_loader_write (loader, camera_file->data, camera_file->size)) {
-							gdk_pixbuf_loader_close (loader);
-							pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
-							gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 127);
-							gdk_pixbuf_unref (pixbuf);
-		
-							/* Add pixbuf to the entry. */
-							gtk_clist_set_pixmap (clist, clist->rows - 1, 0, pixmap, bitmap);
-						} else {
-							gnome_app_error (app, _("Could not load image!"));
-							gtk_clist_set_text (clist, clist->rows - 1, 0, "?");
-						}
-						gtk_clist_set_text (clist, clist->rows - 1, 2, camera_list_entry->name);
-	
-					} else {
-						gnome_app_error (app, _("Could not get preview from the camera!"));
-						gtk_clist_set_text (clist, clist->rows - 1, 0, "?");
-						gtk_clist_set_text (clist, clist->rows - 1, 2, "?");
-					}
-		
-					/* We got the file. Clean up. */
-					gp_frontend_progress (camera, NULL, 0.0);
-					gp_file_free (camera_file);
-				}
-			}
+		/* We've got a file. Get the preview from the camera. */
+                file = gp_file_new ();
+	        if (gp_camera_file_get_preview (camera, file, path, filename) != GP_OK) {
+			dialog_information (_("Could not get preview of file '%s/%s' from the camera!"), path, filename);
+			page = gtk_label_new ("?"); //FIXME: Do something nicer here...
 		} else {
-			gnome_app_error (app, _("Could not get the file list from the camera!"));
-		}
+
+                        /* Process the image. */
+                        loader = gdk_pixbuf_loader_new ();
+                        g_assert (loader != NULL);
+                        if (gdk_pixbuf_loader_write (loader, file->data, file->size)) {
+                                gdk_pixbuf_loader_close (loader);
+                                pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
+                                gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 127);
+                                gdk_pixbuf_unref (pixbuf);
+				
+				page = gtk_scrolled_window_new (NULL, NULL);
+				gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (page), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+				viewport = gtk_viewport_new (NULL, NULL);
+				gtk_widget_show (viewport);
+				gtk_container_add (GTK_CONTAINER (page), viewport);
+				widget = gtk_pixmap_new (pixmap, bitmap);
+				gtk_widget_show (widget);
+				gtk_container_add (GTK_CONTAINER (viewport), widget);
+                        } else {
+                                dialog_information (_("Could not load image '%s/%s'!"), path, filename);
+				page = gtk_label_new ("?"); //FIXME: Do something nicer here...
+                        }
+                }
+
+                /* We got the file. Clean up. */
+                gp_frontend_progress (camera, NULL, 0.0);
+                gp_file_free (file);
+
+		label = gtk_label_new (filename);
+	} else {
+	
+		/* We've got a folder. */
+		text = g_strdup_printf (
+			_("Folder '%s' contains %i folders and %i files."), 
+			path, 
+			GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (item), "folder_list_count")),
+			GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (item), "file_list_count")));
+		page = gtk_label_new (text);
+		g_free (text);
+		
+		label = gtk_label_new (path);
 	}
+
+	gtk_widget_show (page);
+	gtk_notebook_append_page (notebook, page, label);
+	gtk_object_set_data (GTK_OBJECT (item), "page", page);
+}
+
+void
+on_tree_item_deselect (GtkTreeItem* item, gpointer user_data)
+{
+        GladeXML*       xml;
+        GtkNotebook*    notebook;
+	GtkWidget*	page;
+
+	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (item), "xml")) != NULL);
+	g_assert ((notebook = GTK_NOTEBOOK (glade_xml_get_widget (xml, "notebook_files"))) != NULL);
+	g_assert ((page = GTK_WIDGET (gtk_object_get_data (GTK_OBJECT (item), "page"))) != NULL);
+
+	gtk_object_set_data (GTK_OBJECT (item), "page", NULL);
+	gtk_notebook_remove_page (notebook, gtk_notebook_page_num (notebook, page));
 }
 
 gboolean
-on_tree_cameras_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+on_tree_item_camera_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
 	GladeXML *xml_popup, *xml;
 	Camera *camera;
@@ -460,21 +598,21 @@ on_tree_cameras_button_press_event (GtkWidget *widget, GdkEventButton *event, gp
 	if (event->button == 3) {
 		
 		/* Create the dialog. */
-		g_assert ((xml_popup = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "menu_tree_cameras_popup")) != NULL);
+		g_assert ((xml_popup = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "camera_tree_popup_camera")) != NULL);
 
 		/* Store some data. */
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "tree_cameras_popup_capture_video")), "xml", xml);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "tree_cameras_popup_capture_video")), "camera", camera);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "tree_cameras_popup_capture_image")), "xml", xml);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "tree_cameras_popup_capture_image")), "camera", camera);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "tree_cameras_popup_properties")), "xml", xml);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "tree_cameras_popup_properties")), "camera", camera);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_video")), "xml", xml);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_video")), "camera", camera);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_image")), "xml", xml);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_image")), "camera", camera);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_properties")), "xml", xml);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_properties")), "camera", camera);
 
 		/* Connect the signals. */
 		glade_xml_signal_autoconnect (xml_popup);
 
 		/* Pop up the dialog. */
-		gtk_menu_popup (GTK_MENU (glade_xml_get_widget (xml_popup, "menu_tree_cameras_popup")), NULL, NULL, NULL, NULL, event->button, event->time);
+		gtk_menu_popup (GTK_MENU (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera")), NULL, NULL, NULL, NULL, event->button, event->time);
 
 		return (TRUE);
 
@@ -482,7 +620,7 @@ on_tree_cameras_button_press_event (GtkWidget *widget, GdkEventButton *event, gp
 }
 
 void
-on_tree_cameras_popup_properties_activate (GtkMenuItem* menu_item, gpointer user_data)
+on_camera_tree_popup_camera_properties_activate (GtkMenuItem* menu_item, gpointer user_data)
 {
         GladeXML*       	xml;
         Camera*         	camera;
@@ -505,7 +643,7 @@ on_tree_cameras_popup_properties_activate (GtkMenuItem* menu_item, gpointer user
 }
 
 void
-on_tree_cameras_popup_capture_image_activate (GtkMenuItem *menu_item, gpointer user_data)
+on_camera_tree_popup_camera_capture_image_activate (GtkMenuItem *menu_item, gpointer user_data)
 {
 	GladeXML *xml;
 	Camera *camera;
@@ -554,7 +692,7 @@ on_duration_reply (gchar *string, gpointer user_data)
 }
 
 void
-on_tree_cameras_popup_capture_video_activate (GtkMenuItem *menu_item, gpointer user_data)
+on_camera_tree_popup_camera_capture_video_activate (GtkMenuItem *menu_item, gpointer user_data)
 {
 	GladeXML *xml;
         Camera *camera;

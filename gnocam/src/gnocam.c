@@ -82,9 +82,7 @@ on_camera_setup_changed (GConfClient* client, guint notify_id, GConfEntry* entry
 
 int main (int argc, char *argv[]) 
 {
-	static GtkTargetEntry target_table[] = { 
-		{"text/uri-list", 0, 0}
-	};
+//	static GtkTargetEntry target_table[] = {{"text/uri-list", 0, 0}};
 	GError*		gerror = NULL;
 	GConfClient*	client = NULL;
 	GConfValue*	value = NULL;
@@ -164,7 +162,6 @@ int main (int argc, char *argv[])
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "preferences")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "about")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "tree_cameras")), "xml", xml);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "clist_files")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "button_save_files")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "button_save_files_as")), "xml", xml);
         gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "button_save_previews")), "xml", xml);
@@ -183,7 +180,8 @@ int main (int argc, char *argv[])
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "app")), "notify_id_cameras", GUINT_TO_POINTER (notify_id_cameras));
 
 	/* Drag'n drop stuff. */
-	gtk_drag_source_set (glade_xml_get_widget (xml, "clist_files"), GDK_BUTTON1_MASK | GDK_BUTTON3_MASK, target_table, 1, GDK_ACTION_COPY);
+//FIXME
+//	gtk_drag_source_set (glade_xml_get_widget (xml, "clist_files"), GDK_BUTTON1_MASK | GDK_BUTTON3_MASK, target_table, 1, GDK_ACTION_COPY);
 
 	/* Start the event loop. */
 	gdk_threads_enter ();

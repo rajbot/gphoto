@@ -303,96 +303,10 @@
       <name>table</name>
       <border_width>5</border_width>
       <rows>2</rows>
-      <columns>2</columns>
+      <columns>3</columns>
       <homogeneous>False</homogeneous>
       <row_spacing>5</row_spacing>
       <column_spacing>5</column_spacing>
-
-      <widget>
-	<class>GtkScrolledWindow</class>
-	<child_name>GnomeDock:contents</child_name>
-	<name>scrolledwindow_files</name>
-	<width>300</width>
-	<height>150</height>
-	<hscrollbar_policy>GTK_POLICY_AUTOMATIC</hscrollbar_policy>
-	<vscrollbar_policy>GTK_POLICY_AUTOMATIC</vscrollbar_policy>
-	<hupdate_policy>GTK_UPDATE_CONTINUOUS</hupdate_policy>
-	<vupdate_policy>GTK_UPDATE_CONTINUOUS</vupdate_policy>
-	<child>
-	  <left_attach>1</left_attach>
-	  <right_attach>2</right_attach>
-	  <top_attach>0</top_attach>
-	  <bottom_attach>2</bottom_attach>
-	  <xpad>0</xpad>
-	  <ypad>0</ypad>
-	  <xexpand>True</xexpand>
-	  <yexpand>True</yexpand>
-	  <xshrink>False</xshrink>
-	  <yshrink>False</yshrink>
-	  <xfill>True</xfill>
-	  <yfill>True</yfill>
-	</child>
-
-	<widget>
-	  <class>GtkCList</class>
-	  <name>clist_files</name>
-	  <can_focus>True</can_focus>
-	  <signal>
-	    <name>drag_data_get</name>
-	    <handler>on_clist_files_drag_data_get</handler>
-	    <last_modification_time>Tue, 05 Sep 2000 18:36:07 GMT</last_modification_time>
-	  </signal>
-	  <signal>
-	    <name>button_press_event</name>
-	    <handler>on_clist_files_button_press_event</handler>
-	    <last_modification_time>Fri, 22 Sep 2000 17:43:25 GMT</last_modification_time>
-	  </signal>
-	  <columns>3</columns>
-	  <column_widths>49,52,52</column_widths>
-	  <selection_mode>GTK_SELECTION_MULTIPLE</selection_mode>
-	  <show_titles>True</show_titles>
-	  <shadow_type>GTK_SHADOW_IN</shadow_type>
-
-	  <widget>
-	    <class>GtkLabel</class>
-	    <child_name>CList:title</child_name>
-	    <name>label_preview</name>
-	    <label>Preview</label>
-	    <justify>GTK_JUSTIFY_CENTER</justify>
-	    <wrap>False</wrap>
-	    <xalign>0.5</xalign>
-	    <yalign>0.5</yalign>
-	    <xpad>0</xpad>
-	    <ypad>0</ypad>
-	  </widget>
-
-	  <widget>
-	    <class>GtkLabel</class>
-	    <child_name>CList:title</child_name>
-	    <name>label_path</name>
-	    <label>Path</label>
-	    <justify>GTK_JUSTIFY_CENTER</justify>
-	    <wrap>False</wrap>
-	    <xalign>0.5</xalign>
-	    <yalign>0.5</yalign>
-	    <xpad>0</xpad>
-	    <ypad>0</ypad>
-	  </widget>
-
-	  <widget>
-	    <class>GtkLabel</class>
-	    <child_name>CList:title</child_name>
-	    <name>label_name</name>
-	    <label>Name</label>
-	    <justify>GTK_JUSTIFY_CENTER</justify>
-	    <wrap>False</wrap>
-	    <xalign>0.5</xalign>
-	    <yalign>0.5</yalign>
-	    <xpad>0</xpad>
-	    <ypad>0</ypad>
-	  </widget>
-	</widget>
-      </widget>
 
       <widget>
 	<class>GtkScrolledWindow</class>
@@ -407,7 +321,7 @@
 	  <left_attach>0</left_attach>
 	  <right_attach>1</right_attach>
 	  <top_attach>0</top_attach>
-	  <bottom_attach>2</bottom_attach>
+	  <bottom_attach>1</bottom_attach>
 	  <xpad>0</xpad>
 	  <ypad>0</ypad>
 	  <xexpand>True</xexpand>
@@ -426,16 +340,39 @@
 	  <widget>
 	    <class>GtkTree</class>
 	    <name>tree_cameras</name>
-	    <signal>
-	      <name>selection_changed</name>
-	      <handler>on_tree_cameras_selection_changed</handler>
-	      <last_modification_time>Tue, 05 Sep 2000 15:37:21 GMT</last_modification_time>
-	    </signal>
 	    <selection_mode>GTK_SELECTION_MULTIPLE</selection_mode>
 	    <view_mode>GTK_TREE_VIEW_LINE</view_mode>
 	    <view_line>True</view_line>
 	  </widget>
 	</widget>
+      </widget>
+
+      <widget>
+	<class>GtkNotebook</class>
+	<child_name>GnomeDock:contents</child_name>
+	<name>notebook_files</name>
+	<can_focus>True</can_focus>
+	<show_tabs>True</show_tabs>
+	<show_border>True</show_border>
+	<tab_pos>GTK_POS_TOP</tab_pos>
+	<scrollable>True</scrollable>
+	<tab_hborder>2</tab_hborder>
+	<tab_vborder>2</tab_vborder>
+	<popup_enable>False</popup_enable>
+	<child>
+	  <left_attach>1</left_attach>
+	  <right_attach>2</right_attach>
+	  <top_attach>0</top_attach>
+	  <bottom_attach>1</bottom_attach>
+	  <xpad>0</xpad>
+	  <ypad>0</ypad>
+	  <xexpand>True</xexpand>
+	  <yexpand>False</yexpand>
+	  <xshrink>False</xshrink>
+	  <yshrink>False</yshrink>
+	  <xfill>True</xfill>
+	  <yfill>True</yfill>
+	</child>
       </widget>
     </widget>
   </widget>
@@ -466,15 +403,15 @@
 
 <widget>
   <class>GtkMenu</class>
-  <name>menu_tree_cameras_popup</name>
+  <name>camera_tree_popup_camera</name>
 
   <widget>
     <class>GtkMenuItem</class>
-    <name>tree_cameras_popup_capture_image</name>
+    <name>camera_tree_popup_camera_capture_image</name>
     <signal>
       <name>activate</name>
-      <handler>on_tree_cameras_popup_capture_image_activate</handler>
-      <last_modification_time>Mon, 18 Sep 2000 15:49:12 GMT</last_modification_time>
+      <handler>on_camera_tree_popup_camera_capture_image_activate</handler>
+      <last_modification_time>Sun, 01 Oct 2000 18:51:16 GMT</last_modification_time>
     </signal>
     <label>Capture Image</label>
     <right_justify>False</right_justify>
@@ -482,11 +419,11 @@
 
   <widget>
     <class>GtkMenuItem</class>
-    <name>tree_cameras_popup_capture_video</name>
+    <name>camera_tree_popup_camera_capture_video</name>
     <signal>
       <name>activate</name>
-      <handler>on_tree_cameras_popup_capture_video_activate</handler>
-      <last_modification_time>Mon, 18 Sep 2000 15:49:01 GMT</last_modification_time>
+      <handler>on_camera_tree_popup_camera_capture_video_activate</handler>
+      <last_modification_time>Sun, 01 Oct 2000 18:51:39 GMT</last_modification_time>
     </signal>
     <label>Capture Video</label>
     <right_justify>False</right_justify>
@@ -500,11 +437,11 @@
 
   <widget>
     <class>GtkPixmapMenuItem</class>
-    <name>tree_cameras_popup_properties</name>
+    <name>camera_tree_popup_camera_properties</name>
     <signal>
       <name>activate</name>
-      <handler>on_tree_cameras_popup_properties_activate</handler>
-      <last_modification_time>Thu, 28 Sep 2000 12:07:15 GMT</last_modification_time>
+      <handler>on_camera_tree_popup_camera_properties_activate</handler>
+      <last_modification_time>Sun, 01 Oct 2000 18:51:58 GMT</last_modification_time>
     </signal>
     <stock_item>GNOMEUIINFO_MENU_PROPERTIES_ITEM</stock_item>
   </widget>
@@ -512,31 +449,32 @@
 
 <widget>
   <class>GtkMenu</class>
-  <name>menu_clist_files_popup</name>
+  <name>camera_tree_popup_file</name>
 
   <widget>
     <class>GtkPixmapMenuItem</class>
-    <name>clist_files_popup_save_previews</name>
+    <name>camera_tree_popup_file_save_preview</name>
     <signal>
       <name>activate</name>
-      <handler>on_save_previews_activate</handler>
-      <last_modification_time>Fri, 22 Sep 2000 17:57:11 GMT</last_modification_time>
+      <handler>on_camera_tree_popup_file_save_preview_activate</handler>
+      <last_modification_time>Sun, 01 Oct 2000 16:34:47 GMT</last_modification_time>
     </signal>
-    <label>Save _Preview(s)</label>
+    <label>Save _Preview</label>
     <right_justify>False</right_justify>
     <stock_icon>GNOME_STOCK_MENU_SAVE</stock_icon>
   </widget>
 
   <widget>
-    <class>GtkMenuItem</class>
-    <name>clist_files_popup_save_previews_as</name>
+    <class>GtkPixmapMenuItem</class>
+    <name>camera_tree_popup_file_save_preview_as</name>
     <signal>
       <name>activate</name>
-      <handler>on_save_previews_as_activate</handler>
-      <last_modification_time>Sun, 01 Oct 2000 11:55:25 GMT</last_modification_time>
+      <handler>on_camera_tree_popup_file_save_preview_as_activate</handler>
+      <last_modification_time>Sun, 01 Oct 2000 16:35:42 GMT</last_modification_time>
     </signal>
-    <label>Save Preview(s) As...</label>
+    <label>Save Preview As...</label>
     <right_justify>False</right_justify>
+    <stock_icon>GNOME_STOCK_MENU_SAVE_AS</stock_icon>
   </widget>
 
   <widget>
@@ -546,27 +484,29 @@
   </widget>
 
   <widget>
-    <class>GtkMenuItem</class>
-    <name>clist_files_popup_save_files</name>
+    <class>GtkPixmapMenuItem</class>
+    <name>camera_tree_popup_file_save_file</name>
     <signal>
       <name>activate</name>
-      <handler>on_save_files_activate</handler>
-      <last_modification_time>Fri, 22 Sep 2000 17:58:09 GMT</last_modification_time>
+      <handler>on_camera_tree_popup_file_save_file_activate</handler>
+      <last_modification_time>Sun, 01 Oct 2000 16:36:27 GMT</last_modification_time>
     </signal>
-    <label>Save _File(s)</label>
+    <label>Save _File</label>
     <right_justify>False</right_justify>
+    <stock_icon>GNOME_STOCK_MENU_SAVE</stock_icon>
   </widget>
 
   <widget>
-    <class>GtkMenuItem</class>
-    <name>clist_files_popup_save_files_as</name>
+    <class>GtkPixmapMenuItem</class>
+    <name>camera_tree_popup_file_save_file_as</name>
     <signal>
       <name>activate</name>
-      <handler>on_save_files_as_activate</handler>
-      <last_modification_time>Sun, 01 Oct 2000 11:55:21 GMT</last_modification_time>
+      <handler>on_camera_tree_popup_file_save_file_as_activate</handler>
+      <last_modification_time>Sun, 01 Oct 2000 16:36:38 GMT</last_modification_time>
     </signal>
-    <label>Save File(s) As...</label>
+    <label>Save File As...</label>
     <right_justify>False</right_justify>
+    <stock_icon>GNOME_STOCK_MENU_SAVE_AS</stock_icon>
   </widget>
 
   <widget>
@@ -577,11 +517,11 @@
 
   <widget>
     <class>GtkPixmapMenuItem</class>
-    <name>clist_files_popup_delete</name>
+    <name>camera_tree_popup_file_delete</name>
     <signal>
       <name>activate</name>
-      <handler>on_delete_activate</handler>
-      <last_modification_time>Fri, 22 Sep 2000 17:59:33 GMT</last_modification_time>
+      <handler>on_camera_tree_popup_file_delete_activate</handler>
+      <last_modification_time>Sun, 01 Oct 2000 16:37:30 GMT</last_modification_time>
     </signal>
     <label>_Delete</label>
     <right_justify>False</right_justify>
@@ -1443,6 +1383,11 @@
       </child>
     </widget>
   </widget>
+</widget>
+
+<widget>
+  <class>GtkMenu</class>
+  <name>camera_tree_popup_folder</name>
 </widget>
 
 </GTK-Interface>

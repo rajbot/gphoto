@@ -6,6 +6,8 @@
 #include <gphoto2.h>
 #include "save.h"
 #include "gnocam.h"
+#include "information.h"
+#include "cameras.h"
 
 /**************/
 /* Prototypes */
@@ -125,21 +127,27 @@ save_common (GladeXML* xml, Camera* camera, gchar* path, gchar* filename, gboole
 	/* Clean up. */
         gp_frontend_progress (camera, NULL, 0.0);
         gp_file_free (camera_file);
-        g_free (path);
+	g_free (path);
 	g_free (filename_user);
-        g_free (filename);
+	g_free (filename);
 }
 
 void 
-save (GladeXML* xml, Camera* camera, gchar* path, gchar* filename, gboolean file, gboolean temporary)
+save (GladeXML* xml, Camera* camera, gchar* path_orig, gchar* filename_orig, gboolean file, gboolean temporary)
 {
 	GConfValue*	value;
 	GConfClient*	client;
 	GnomeApp*	app;
+        gchar*                  path;
+        gchar*                  filename;
 
 	g_assert (xml != NULL);
 	g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
 	g_assert ((client = gtk_object_get_data (GTK_OBJECT (app), "client")) != NULL);
+
+	/* Filename and path will be freed afterwards. */
+	filename = g_strdup (filename_orig);
+	path = g_strdup (path_orig);
 
 	if (temporary) {
 		save_common (xml, camera, path, filename, file, g_strdup_printf ("file:/tmp/%s", filename));
@@ -151,16 +159,22 @@ save (GladeXML* xml, Camera* camera, gchar* path, gchar* filename, gboolean file
 }
 
 void 
-save_as (GladeXML* xml, Camera* camera, gchar* path, gchar* filename, gboolean file)
+save_as (GladeXML* xml, Camera* camera, gchar* path_orig, gchar* filename_orig, gboolean file)
 {
 	GladeXML*		xml_fileselection;
 	GtkObject*		object;
 	GtkFileSelection*	fileselection;
+	gchar*			path;
+	gchar*			filename;
 
 	g_assert (xml != NULL);
 	g_assert (camera != NULL);
-	g_assert (path != NULL);
-	g_assert (filename != NULL);
+	g_assert (path_orig != NULL);
+	g_assert (filename_orig != NULL);
+
+	/* Filename and path will be freed afterwards. */
+	filename = g_strdup (filename_orig);
+        path = g_strdup (path_orig);
 
 	/* Pop up the file selection dialog. */
 	g_assert ((xml_fileselection = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "fileselection")) != NULL);
@@ -191,85 +205,106 @@ save_as (GladeXML* xml, Camera* camera, gchar* path, gchar* filename, gboolean f
 }
 
 void 
-save_all_selected (GladeXML* xml, gboolean file, gboolean ask_for_filename, gboolean temporary)
+save_all_selected (GtkTree* tree, gboolean file, gboolean ask_for_filename, gboolean temporary)
 {
-        GtkCList*       clist;
-        GList*          selection;
+	GladeXML*	xml;
         gint            i;
-        gint            row;
         Camera*         camera;
         gchar*          path;
         gchar*          filename;
-	GnomeApp*	app;
+	GtkTreeItem*	item;
 
-        g_assert (xml != NULL);
+        g_assert (tree != NULL);
 	g_assert (!(ask_for_filename && temporary));
-        g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
-	g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
+	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (tree), "xml")) != NULL);
 
-        if (!(selection = g_list_first (clist->selection))) gnome_app_message (app, _("Please select at least one file first."));
-        for (i = 0; i < g_list_length (selection); i++) {
+	/* Look into folders first. */
+	for (i = 0; i < g_list_length (tree->children); i++) {
+		item = GTK_TREE_ITEM (g_list_nth_data (tree->children, i));
+		g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
+                g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
+		
+		/* Is this item a folder? */
+		if (!(filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) {
 
-		/* Get some information. */
-                row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
-                g_assert ((camera = gtk_clist_get_row_data (clist, row)) != NULL);
-                gtk_clist_get_text (clist, row, 1, &path);
-                path = g_strdup (path);
-                gtk_clist_get_text (clist, row, 2, &filename);
-                filename = g_strdup (filename);
+			/* Save selected files in subfolders. */
+			if (item->subtree) save_all_selected (GTK_TREE (item->subtree), file, ask_for_filename, temporary);
+		}
+	}
 
-		/* Save. */
-		if (ask_for_filename) save_as (xml, camera, path, filename, file);
-		else save (xml, camera, path, filename, file, temporary);
-        }
+	/* Files. */
+	for (i = 0; i < g_list_length (tree->selection); i++) {
+		item = GTK_TREE_ITEM (g_list_nth_data (tree->selection, i));
+		g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
+                g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
+		if ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) {
+
+			/* Save. */
+			if (ask_for_filename) save_as (xml, camera, path, filename, file);
+			else save (xml, camera, path, filename, file, temporary);
+		}
+	}
 }
 
 void
-delete_all_selected (GladeXML* xml)
+delete_all_selected (GtkTree* tree)
 {
-        GnomeApp*       app;
-        GList*          selection;
-        GtkCList*       clist;
-        Camera*         camera;
-        gint            row;
-        gint            reply;
-        gchar*          path;
+	GladeXML*	xml;
         gchar*          filename;
-        gchar*          message;
+	gint		i;
+	GtkTreeItem*	item;
+	GtkNotebook*	notebook;
 
-        g_assert (xml != NULL);
-        g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
-        g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
+        g_assert (tree != NULL);
+        g_assert ((xml = gtk_object_get_data (GTK_OBJECT (tree), "xml")) != NULL);
+	g_assert ((notebook = GTK_NOTEBOOK (glade_xml_get_widget (xml, "notebook_files"))) != NULL);
 
-	if (!(selection = g_list_first (clist->selection))) gnome_app_message (app, _("Please select at least one file first."));
-        else {
-                if (g_list_length (selection) > 1)
-                        message = g_strdup_printf (_("Do you really want to delete the %i selected files?"), g_list_length (selection));
-                else
-                        message = g_strdup_printf (_("Do you really want to delete the selected file?"));
-                gnome_dialog_run_and_close (GNOME_DIALOG (gnome_app_question_modal (app, message, on_reply, xml)));
-                reply = GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (app), "reply"));
-                if (reply == GNOME_YES) {
-                        while (selection != NULL) {
+        /* Look into folders first. */
+        for (i = 0; i < g_list_length (tree->children); i++) {
+                item = GTK_TREE_ITEM (g_list_nth_data (tree->children, i));
 
-                                /* Retrieve some data we need. */
-                                row = GPOINTER_TO_INT (selection->data);
-                                g_assert ((camera = gtk_clist_get_row_data (clist, row)) != NULL);
-                                gtk_clist_get_text (clist, row, 1, &path);
-                                gtk_clist_get_text (clist, row, 2, &filename);
+                /* Is this item a folder? */
+                if (!(filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) {
 
-                                /* Delete the file and update the file list. */
-                                if (gp_camera_file_delete (camera, path, filename) == GP_OK) {
-                                        gtk_clist_remove (clist, row);
-                                } else {
-                                        gnome_app_error (app, _("Could not delete file!"));
-                                        gtk_clist_unselect_row (clist, row, 0);
-                                }
-
-                                selection = g_list_first (clist->selection);
-                        }
+			/* Delete in subfolder. */
+			if (item->subtree) delete_all_selected (GTK_TREE (item->subtree));
                 }
         }
+
+        /* Files. */
+        for (i = 0; i < g_list_length (tree->selection); i++) {
+                item = GTK_TREE_ITEM (g_list_nth_data (tree->selection, i));
+                if ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) {
+
+			/* Delete. */
+			delete (item);
+		}
+	}
 }
 
+//FIXME: Ask the user before deletion?
+//        if (g_list_length (selection) > 1)
+//                message = g_strdup_printf (_("Do you really want to delete the %i selected files?"), g_list_length (selection));
+//        else
+//                message = g_strdup_printf (_("Do you really want to delete the selected file?"));
+//        gnome_dialog_run_and_close (GNOME_DIALOG (gnome_app_question_modal (app, message, on_reply, xml)));
+//        reply = GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (app), "reply"));
+//	if (reply == GNOME_YES) {
+//                        while (selection != NULL) {
+
+
+void
+delete (GtkTreeItem* item)
+{
+	gchar*	path;
+	gchar*	filename;
+	Camera*	camera;
+
+	g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
+	g_assert ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename")) != NULL);
+	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
+
+	if (gp_camera_file_delete (camera, path, filename) == GP_OK) camera_tree_remove_file (item);
+	else dialog_information (_("Could not delete '%s/%s'!"), path, filename);
+}
 

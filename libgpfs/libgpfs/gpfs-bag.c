@@ -42,6 +42,12 @@ struct _GPFsBag {
 	GPFsBagFuncRemove     f_prop_remove; void *f_data_prop_remove;
 	GPFsBagFuncBagGet     f_bag_get    ; void *f_data_bag_get    ;
 	GPFsBagFuncPropGet    f_prop_get   ; void *f_data_prop_get   ;
+
+	GPFsBag **b;
+	unsigned int b_count;
+
+	GPFsProp **p;
+	unsigned int p_count;
 };
 
 void
@@ -64,7 +70,7 @@ unsigned int
 gpfs_bag_bag_count (GPFsBag *b, GPFsErr *e)
 {
 	CN0(b,e);
-	if (!b->f_bag_count) return 0;
+	if (!b->f_bag_count) return b->b_count;
 	return b->f_bag_count (b, e, b->f_data_bag_count);
 }
 
@@ -72,7 +78,7 @@ unsigned int
 gpfs_bag_prop_count (GPFsBag *b, GPFsErr *e)
 {
 	CN0(b,e);
-	if (!b->f_prop_count) return 0;
+	if (!b->f_prop_count) return b->p_count;
 	return b->f_prop_count (b, e, b->f_data_prop_count);
 }
 
@@ -80,7 +86,7 @@ GPFsBag *
 gpfs_bag_bag_get (GPFsBag *b, GPFsErr *e, unsigned int n)
 {
 	CNN(b,e);
-	if (!b->f_bag_get) return NULL;
+	if (!b->f_bag_get) return (n > b->b_count) ? NULL : b->b[n];
 	return b->f_bag_get (b, e, n, b->f_data_bag_get);
 }
 
@@ -89,12 +95,7 @@ gpfs_bag_prop_get (GPFsBag *b, GPFsErr *e, unsigned int n)
 {
 	CNN(b,e);
 
-	if (!b->f_prop_get) {
-		gpfs_err_set (e, GPFS_ERR_TYPE_NOT_SUPPORTED,
-			_("This property bag does not suport getting "
-			  "property bags."));
-		return NULL;
-	}
+	if (!b->f_prop_get) return (n > b->p_count) ? NULL : b->p[n];
 	return b->f_prop_get (b, e, n, b->f_data_prop_get);
 }
 
@@ -135,6 +136,32 @@ gpfs_bag_bag_add (GPFsBag *b, GPFsErr *e, GPFsBag *n)
 		return;
 	}
 	b->f_bag_add (b, e, n, b->f_data_bag_add);
+	if (!gpfs_err_occurred (e)) gpfs_bag_bag_add_impl (b, n);
+}
+
+void
+gpfs_bag_bag_add_impl (GPFsBag *b, GPFsBag *n)
+{
+	GPFsBag **b_new;
+
+	if (!b || !n) return;
+	b_new = realloc (b->b, sizeof (GPFsBag *) * (b->b_count + 1));
+	if (!b_new) return;
+	b->b = b_new;
+	b->b[b->b_count] = n;
+	b->b_count++;
+}
+
+void
+gpfs_bag_prop_add_impl (GPFsBag *b, GPFsProp *p)
+{
+	GPFsProp **p_new;
+	if (!b || !p) return;
+	p_new = realloc (b->p, sizeof (GPFsProp *) * (b->p_count + 1));
+	if (!p_new) return;
+	b->p = p_new;
+	b->p[b->p_count] = p;
+	b->p_count++;
 }
 
 void
@@ -148,6 +175,7 @@ gpfs_bag_prop_add (GPFsBag *b, GPFsErr *e, GPFsProp *p)
 		return;
 	}
 	b->f_prop_add (b, e, p, b->f_data_prop_add);
+	gpfs_bag_prop_add_impl (b, p);
 }
 
 void

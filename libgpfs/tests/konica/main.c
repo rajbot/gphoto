@@ -58,7 +58,7 @@ main (int argc, char **argv)
 	printf ("... done. Found %i property bag(s).\n", n);
 
 	printf ("Getting first property bag...\n");
-	b = gpfs_obj_bag_get (GPFS_OBJ (fs), NULL, n);
+	b = gpfs_obj_bag_get (GPFS_OBJ (fs), NULL, 0);
 	printf ("... done.\n");
 
 	gpfs_bag_dump (b);

@@ -15,7 +15,9 @@ struct _GPFsErr {
 void gpfs_err_set  (GPFsErr *, GPFsErrType, const char *, ...);
 void gpfs_err_setv (GPFsErr *, GPFsErrType, const char *, va_list args);
 
-#define gpfs_err_init(e)    {if (e) memset (e, 0, sizeof (GPFsErr));}
-#define gpfs_err_clear(e)   {if (e) free (e->msg);}
+unsigned int gpfs_err_occurred (GPFsErr *);
+
+#define gpfs_err_init(e)     {if (e) memset (e, 0, sizeof (GPFsErr));}
+#define gpfs_err_clear(e)    {if (e) free (e->msg);}
 
 #endif

@@ -31,3 +31,9 @@ gpfs_err_set (GPFsErr *e, GPFsErrType t, const char *format, ...)
 	gpfs_err_setv (e, t, format, args);
 	va_end (args);
 }
+
+unsigned int
+gpfs_err_occurred (GPFsErr *e)
+{
+	return ((e) && (e->t != GPFS_ERR_TYPE_NONE)) ? 1 : 0;
+}

@@ -9,16 +9,18 @@ typedef struct _GPFsBag GPFsBag;
 GPFsBag    *gpfs_bag_new      (void);
 
 /* Properties */
-unsigned int gpfs_bag_prop_count  (GPFsBag *, GPFsErr *);
-GPFsProp    *gpfs_bag_prop_get    (GPFsBag *, GPFsErr *, unsigned int);
-void         gpfs_bag_prop_remove (GPFsBag *, GPFsErr *, unsigned int);
-void         gpfs_bag_prop_add    (GPFsBag *, GPFsErr *, GPFsProp *);
+unsigned int gpfs_bag_prop_count    (GPFsBag *, GPFsErr *);
+GPFsProp    *gpfs_bag_prop_get      (GPFsBag *, GPFsErr *, unsigned int);
+void         gpfs_bag_prop_remove   (GPFsBag *, GPFsErr *, unsigned int);
+void         gpfs_bag_prop_add      (GPFsBag *, GPFsErr *, GPFsProp *);
+void         gpfs_bag_prop_add_impl (GPFsBag *, GPFsProp *);
 
 /* Bags */
-unsigned int gpfs_bag_bag_count  (GPFsBag *, GPFsErr *);
-GPFsBag     *gpfs_bag_bag_get    (GPFsBag *, GPFsErr *, unsigned int);
-void         gpfs_bag_bag_remove (GPFsBag *, GPFsErr *, unsigned int);
-void         gpfs_bag_bag_add    (GPFsBag *, GPFsErr *, GPFsBag *);
+unsigned int gpfs_bag_bag_count     (GPFsBag *, GPFsErr *);
+GPFsBag     *gpfs_bag_bag_get       (GPFsBag *, GPFsErr *, unsigned int);
+void         gpfs_bag_bag_remove    (GPFsBag *, GPFsErr *, unsigned int);
+void         gpfs_bag_bag_add       (GPFsBag *, GPFsErr *, GPFsBag *);
+void         gpfs_bag_bag_add_impl  (GPFsBag *, GPFsBag *);
 
 /* Counting */
 typedef unsigned int (* GPFsBagFuncCount) (GPFsBag *, GPFsErr *, void *);

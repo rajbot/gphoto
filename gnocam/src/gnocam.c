@@ -10,7 +10,6 @@
 
 #include <gal/e-paned/e-hpaned.h>
 
-#include "gnocam.h"
 #include "cameras.h"
 #include "frontend.h"
 #include "preferences.h"
@@ -138,6 +137,7 @@ int main (int argc, char *argv[])
 
 	/* Create the window and hpaned. */
 	main_window = GTK_WINDOW (bonobo_window_new (PACKAGE, PACKAGE));
+	gtk_window_set_default_size (main_window, 705, 550);
 	gtk_signal_connect (GTK_OBJECT (main_window), "delete_event", GTK_SIGNAL_FUNC (gtk_main_quit), NULL);
 	gtk_widget_show (GTK_WIDGET (main_paned = E_PANED (e_hpaned_new ())));
 	bonobo_window_set_contents (BONOBO_WINDOW (main_window), GTK_WIDGET (main_paned));

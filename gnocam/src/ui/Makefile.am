@@ -1,7 +1,6 @@
 
 XML_FILES =\
- gnocam-main.xml\
- gnocam-capture.xml
+ gnocam-main.xml
 
 uidir = $(datadir)/gnome/ui
 ui_DATA = $(XML_FILES)

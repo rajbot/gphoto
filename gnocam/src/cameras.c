@@ -17,10 +17,8 @@
 
 #include <gphoto-extensions.h>
 
-#include "gnocam.h"
 #include "cameras.h"
 #include "file-operations.h"
-#include "capture.h"
 
 /**********************/
 /* External Variables */
@@ -37,11 +35,7 @@ extern EPaned*			main_paned;
 /* Prototypes */
 /**************/
 
-void on_capture_preview_activate 	(BonoboUIComponent* component, gpointer folder, const gchar* name);
-void on_capture_image_activate		(BonoboUIComponent* component, gpointer folder, const gchar* name);
-void on_capture_video_activate		(BonoboUIComponent* component, gpointer folder, const gchar* name);
 void on_upload_activate			(BonoboUIComponent* component, gpointer folder, const gchar* name);
-void on_manual_activate 		(BonoboUIComponent* component, gpointer folder, const gchar* name);
 
 void on_drag_data_received                      (GtkWidget* widget, GdkDragContext* context, gint x, gint y, GtkSelectionData* selection_data, guint info, guint time);
 void on_camera_tree_file_drag_data_get          (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data);
@@ -52,45 +46,9 @@ void on_camera_tree_folder_drag_data_get        (GtkWidget* widget, GdkDragConte
 /*************/
 
 void
-on_capture_preview_activate (BonoboUIComponent* component, gpointer folder, const gchar* name)
-{
-	g_return_if_fail (capture_new (gtk_object_get_data (GTK_OBJECT (folder), "camera"), GP_CAPTURE_PREVIEW));
-}
-
-void
-on_capture_image_activate (BonoboUIComponent* component, gpointer folder, const gchar* name)
-{
-        g_return_if_fail (capture_new (gtk_object_get_data (GTK_OBJECT (folder), "camera"), GP_CAPTURE_IMAGE));
-}
-
-void
-on_capture_video_activate (BonoboUIComponent* component, gpointer folder, const gchar* name)
-{
-	g_return_if_fail (capture_new (gtk_object_get_data (GTK_OBJECT (folder), "camera"), GP_CAPTURE_VIDEO));
-}
-
-void
 on_upload_activate (BonoboUIComponent* component, gpointer folder, const gchar* name)
 {
 	upload (GTK_TREE_ITEM (folder), NULL);
-}
-
-void
-on_manual_activate (BonoboUIComponent* component, gpointer folder, const gchar* name)
-{
-	Camera*		camera = gtk_object_get_data (GTK_OBJECT (folder), "camera");
-	CameraText 	manual;
-	gint 		result;
-
-	g_return_if_fail (camera);
-	
-	if ((result = gp_camera_manual (camera, &manual)) == GP_OK) {
-		gnome_ok_dialog_parented (manual.text, main_window);
-	} else {
-		gchar* tmp = g_strdup_printf (_("Could not get camera manual!\n(%s)"), gp_camera_result_as_string (camera, result));
-		gnome_error_dialog_parented (tmp, main_window);
-		g_free (tmp);
-	}
 }
 
 void
@@ -99,12 +57,6 @@ on_camera_tree_file_drag_data_get (GtkWidget* widget, GdkDragContext* context, G
 	/* Get the URI of the tree item. */
 	gchar* tmp = gnome_vfs_uri_to_string (gtk_object_get_data (GTK_OBJECT (widget), "uri"), GNOME_VFS_URI_HIDE_NONE);
 	gtk_selection_data_set (selection_data, selection_data->target, 8, tmp, strlen (tmp));
-}
-
-void
-on_camera_tree_folder_drag_data_get (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data)
-{
-	gnome_ok_dialog (_("Not yet implemented."));
 }
 
 void
@@ -213,48 +165,6 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 	                bonobo_ui_component_add_verb (component, "on_delete_activate", on_delete_activate, item);
 	        }
 	} else {
-
-		/* Root? */
-		if (strcmp (gnome_vfs_uri_get_path (uri), "/") == 0) {
-
-	                /* Manual. */
-	                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-	                xmlSetProp (node_child, "name", "Manual");
-	                xmlSetProp (node_child, "_label", "Manual");
-	                xmlSetProp (node_child, "_tip", "Manual");
-	                xmlSetProp (node_child, "verb", "on_manual_activate");
-	                bonobo_ui_component_add_verb (component, "on_manual_activate", on_manual_activate, item);
-	                xmlAddChild (node, xmlNewNode (ns, "separator"));
-
-        	        /* Capturing? */
-	                if (camera->abilities->capture != GP_CAPTURE_NONE) {
-	                        if (camera->abilities->capture & GP_CAPTURE_PREVIEW) {
-	                                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-	                                xmlSetProp (node_child, "name", "Capture Preview");
-	                                xmlSetProp (node_child, "_label", "Capture Preview");
-	                                xmlSetProp (node_child, "_tip", "Capture a preview");
-	                                xmlSetProp (node_child, "verb", "on_capture_preview_activate");
-	                                bonobo_ui_component_add_verb (component, "on_capture_preview_activate", on_capture_preview_activate, item);
-	                        }
-	                        if (camera->abilities->capture & GP_CAPTURE_IMAGE) {
-	                                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-	                                xmlSetProp (node_child, "name", "Capture Image");
-	                                xmlSetProp (node_child, "_label", "Capture Image");
-	                                xmlSetProp (node_child, "_tip", "Capture an image");
-	                                xmlSetProp (node_child, "verb", "on_capture_image_activate");
-	                                bonobo_ui_component_add_verb (component, "on_capture_image_activate", on_capture_image_activate, item);
-	                        }
-	                        if (camera->abilities->capture & GP_CAPTURE_VIDEO) {
-	                                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
-	                                xmlSetProp (node_child, "name", "Capture Video");
-	                                xmlSetProp (node_child, "_label", "Capture Image");
-	                                xmlSetProp (node_child, "_tip", "Capture a video");
-	                                xmlSetProp (node_child, "verb", "on_capture_video_activate");
-	                                bonobo_ui_component_add_verb (component, "on_capture_video_activate", on_capture_video_activate, item);
-	                        }
-	                        xmlAddChild (node, xmlNewNode (ns, "separator"));
-	                }
-		}
 
 	        /* Upload? */
 	        if (camera->abilities->file_put) {

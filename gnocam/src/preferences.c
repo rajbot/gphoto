@@ -8,7 +8,6 @@
 #include <GnoCam.h>
 
 #include "preferences.h"
-#include "gnocam.h"
 
 /**********************/
 /* External Variables */

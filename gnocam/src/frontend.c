@@ -5,7 +5,6 @@
 #include <glade/glade.h>
 
 #include "frontend.h"
-#include "gnocam.h"
 
 /**********************/
 /* External Variables */

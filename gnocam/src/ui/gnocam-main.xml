@@ -4,7 +4,8 @@
       <menuitem name="Exit" verb="" _label="E_xit" pixtype="stock" pixname="Quit"/>
     </submenu>
     <submenu name="Edit" _label="_Edit"/>
-    <submenu name="View" _label="_View"/>
+    <placeholder name="View"/>
+    <placeholder name="Camera"/>
     <submenu name="Settings" _label="_Settings">
       <menuitem name="Preferences" verb="" _label="_Preferences" pixtype="stock" pixname="Preferences"/>
     </submenu>

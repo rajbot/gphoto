@@ -277,6 +277,7 @@ camera_tree_folder_clean (GtkTreeItem* folder)
 	/* Delete all items of tree. */
 	for (i = g_list_length (GTK_TREE (folder->subtree)->children) - 1; i >= 0; i--) 
 		camera_tree_item_remove (GTK_TREE_ITEM (g_list_nth_data (GTK_TREE (folder->subtree)->children, i)));
+	gtk_object_set_data (GTK_OBJECT (folder), "populated", NULL);
 }
 
 void 
@@ -345,17 +346,20 @@ camera_tree_folder_populate (GtkTreeItem* folder)
 void
 camera_tree_folder_refresh (GtkTreeItem* folder)
 {
+	gboolean populated;
 	gboolean expanded;
 
 	expanded = folder->expanded;
+	populated = (gtk_object_get_data (GTK_OBJECT (folder), "populated") != NULL);
 
 	/* Clean the folder... */
 	camera_tree_folder_clean (folder);
 
 	/* ... and fill it. */
-	camera_tree_folder_populate (folder);
-
-	if (folder->expanded) gtk_tree_item_expand (folder);
+	if (populated) {
+		camera_tree_folder_populate (folder);
+		if (folder->expanded) gtk_tree_item_expand (folder);
+	}
 }
 
 void
@@ -423,18 +427,27 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
 	/* Root items (camera != NULL) differ from non-root items. */
 
 	/* Create the storage. First try "rw", then "r". */
-	CORBA_exception_init (&ev);
 	if (camera) {
 		tmp = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE);
+		CORBA_exception_init (&ev);
 		storage = bonobo_storage_open_full ("camera", tmp, 0664, Bonobo_Storage_READ | Bonobo_Storage_WRITE, &ev);
-		if (BONOBO_EX (&ev)) storage = bonobo_storage_open_full ("camera", tmp, 0664, Bonobo_Storage_READ, &ev);
+		if (BONOBO_EX (&ev)) {
+			CORBA_exception_free (&ev);
+			CORBA_exception_init (&ev);
+			storage = bonobo_storage_open_full ("camera", tmp, 0664, Bonobo_Storage_READ, &ev);
+		}
 		g_free (tmp);
 	} else {
 		tmp = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_basename (uri));
+		CORBA_exception_init (&ev);
 		corba_storage = Bonobo_Storage_openStorage (
 			gtk_object_get_data (GTK_OBJECT (tree->tree_owner), "corba_storage"), tmp, Bonobo_Storage_READ | Bonobo_Storage_WRITE, &ev);
-		if (BONOBO_EX (&ev)) corba_storage = Bonobo_Storage_openStorage (
-			gtk_object_get_data (GTK_OBJECT (tree->tree_owner), "corba_storage"), tmp, Bonobo_Storage_READ, &ev);
+		if (BONOBO_EX (&ev)) {
+			CORBA_exception_free (&ev);
+			CORBA_exception_init (&ev);
+			corba_storage = Bonobo_Storage_openStorage (
+				gtk_object_get_data (GTK_OBJECT (tree->tree_owner), "corba_storage"), tmp, Bonobo_Storage_READ, &ev);
+		}
 		g_free (tmp);
 	}
 	if (BONOBO_EX (&ev)) {

@@ -65,54 +65,66 @@ camera_open_stream (BonoboStorage *storage, const CORBA_char *filename, Bonobo_S
 {
 	BonoboStorageCamera *s = BONOBO_STORAGE_CAMERA (storage);
 	BonoboStreamCamera *stream;
-	gchar* dirname;
-	CameraFile* file;
+	CameraFile* file = NULL;
+	CameraList list;
+	CameraAbilities abilities;
+	gint i;
 
 	printf ("camera_open_stream\n");
 
-	/* Create a new stream. */
-	stream = gtk_type_new (bonobo_stream_camera_get_type ());
-	if (stream == NULL) {
-		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
+	/* Reject some unsupported open modes. */
+	if (mode & (Bonobo_Storage_COMPRESSED | Bonobo_Storage_TRANSACTED)) {
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
 		return NULL;
 	}
+
+	/* Does the camera support upload? */
+	if (mode & (Bonobo_Storage_WRITE | Bonobo_Storage_CREATE)) {
+		CHECK_RESULT (gp_camera_abilities_by_name (s->camera->model, &abilities), ev);
+		if (BONOBO_EX (ev)) return NULL;
+		if (!abilities.file_put) {
+			CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
+			return NULL;
+		}
+	}
+
+	/* Does the requested file exist? */
+	if (mode & Bonobo_Storage_FAILIFEXIST) {
+		CHECK_RESULT (gp_camera_file_list (s->camera, &list, (gchar*) gnome_vfs_uri_get_path (s->uri)), ev);
+		if (BONOBO_EX (ev)) return NULL;
+		for (i = 0; i < gp_list_count (&list); i++) {
+			if (strcmp ((gp_list_entry (&list, i))->name, filename) == 0) {
+				CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NameExists, NULL);
+				return NULL;
+			}
+		}
+	}
+
+	/* Get the file. */
+	if (mode & Bonobo_Storage_READ) {
+		file = gp_file_new ();
+		if (gnome_vfs_uri_get_user_name (s->uri) && (strcmp (gnome_vfs_uri_get_user_name (s->uri), "previews") == 0)) 
+			CHECK_RESULT (gp_camera_file_get_preview (s->camera, file, (gchar*) gnome_vfs_uri_get_path (s->uri), (gchar*) filename), ev);
+		else 
+			CHECK_RESULT (gp_camera_file_get (s->camera, file, (gchar*) gnome_vfs_uri_get_path (s->uri), (gchar*) filename), ev);
+		if (BONOBO_EX (ev)) {
+			gp_file_unref (file);
+			return NULL;
+		}
+	}
+
+	/* Create an empty file. */
+	if ((mode & Bonobo_Storage_WRITE) && !file) file = gp_file_new ();
+
+	/* Create a new stream. */
+	stream = gtk_type_new (bonobo_stream_camera_get_type ());
 
 	/* Store some data in this stream. */
 	stream->uri = gnome_vfs_uri_append_file_name (gnome_vfs_uri_dup (s->uri), filename);
 	stream->camera = s->camera;
 	gp_camera_ref (s->camera);
 	stream->position = 0;
-
-	/* Open mode? */
-	switch (mode) {
-	case Bonobo_Storage_READ:
-
-		/* Get the file. */
-		file = gp_file_new ();
-		dirname = gnome_vfs_uri_extract_dirname (stream->uri);
-		if (gnome_vfs_uri_get_user_name (stream->uri) && (strcmp (gnome_vfs_uri_get_user_name (stream->uri), "previews") == 0)) 
-			CHECK_RESULT (gp_camera_file_get_preview (stream->camera, file, dirname, (gchar*) filename), ev);
-		else
-			CHECK_RESULT (gp_camera_file_get (stream->camera, file, dirname, (gchar*) filename), ev);
-		if (BONOBO_EX (ev)) {
-			gp_file_unref (file);
-			g_free (dirname);
-			bonobo_object_unref (BONOBO_OBJECT (stream));
-			return NULL;
-		}
-		stream->file = file;
-		
-		break;
-	case Bonobo_Storage_WRITE:
-
-		/* Create an empty file. */
-		stream->file = gp_file_new ();
-		break;
-	default:
-		bonobo_object_unref (BONOBO_OBJECT (stream));
-		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
-		return NULL;
-	}
+	stream->file = file;
 
 	return BONOBO_STREAM (bonobo_object_construct (BONOBO_OBJECT (stream), bonobo_stream_corba_object_create (BONOBO_OBJECT (stream))));
 }
@@ -160,9 +172,16 @@ bonobo_storage_camera_open (const char *path, gint flags, gint mode, CORBA_Envir
         Bonobo_Storage corba_storage;
 	gchar* tmp;
 	CameraList list;
+	CameraAbilities abilities;
 
 	printf ("bonobo_storage_camera_open\n");
 
+        /* Reject some unsupported open modes. */
+	if (mode & (Bonobo_Storage_COMPRESSED | Bonobo_Storage_TRANSACTED)) {
+        	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
+        	return NULL;
+        }
+							
 	/* Create the storage. */
         storage = gtk_type_new (bonobo_storage_camera_get_type ());
         corba_storage = bonobo_storage_corba_object_create (BONOBO_OBJECT (storage));
@@ -172,10 +191,20 @@ bonobo_storage_camera_open (const char *path, gint flags, gint mode, CORBA_Envir
 	storage->uri = gnome_vfs_uri_new (path);
 	storage->camera = util_camera_new (storage->uri, ev);
 	if (BONOBO_EX (ev)) {
-		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
 		bonobo_object_unref (BONOBO_OBJECT (storage));
 		return NULL;
 	}
+
+        /* Does the camera support upload? */
+        if (mode & (Bonobo_Storage_WRITE | Bonobo_Storage_CREATE)) { 
+                CHECK_RESULT (gp_camera_abilities_by_name (storage->camera->model, &abilities), ev);
+                if (BONOBO_EX (ev)) return NULL;
+                if (!abilities.file_put) {
+                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
+                        return NULL;
+                }
+        }
 
 	/* Does the folder exist? */
 	tmp = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_path (storage->uri));
@@ -196,26 +225,35 @@ camera_open_storage (BonoboStorage *storage, const CORBA_char *path, Bonobo_Stor
 	BonoboStorageCamera *s = BONOBO_STORAGE_CAMERA (storage);
 	BonoboStorageCamera *storage_new;
 	Bonobo_Storage corba_storage;
-	GnomeVFSURI *uri;
+	gint i;
 	
 	printf ("camera_open_storage (%s)\n", path);
 	
-	/* Does the folder exist? */
-	uri = gnome_vfs_uri_append_path (gnome_vfs_uri_dup (s->uri), path);
-	CHECK_RESULT (gp_camera_folder_list (s->camera, &list, (gchar*) gnome_vfs_uri_get_path (uri)), ev);
-	if (BONOBO_EX (ev)) {
-		gnome_vfs_uri_unref (uri);
+	/* Reject some unsupported open modes. */
+	if (mode & (Bonobo_Storage_COMPRESSED | Bonobo_Storage_TRANSACTED | Bonobo_Storage_WRITE | Bonobo_Storage_CREATE)) {
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
 		return NULL;
+	}
+							
+	/* Does the folder exist? */
+	if (mode & Bonobo_Storage_FAILIFEXIST) {
+		CHECK_RESULT (gp_camera_file_list (s->camera, &list, (gchar*) gnome_vfs_uri_get_path (s->uri)), ev);
+		if (BONOBO_EX (ev)) return NULL;
+		for (i = 0; i < gp_list_count (&list); i++) {
+			if (strcmp ((gp_list_entry (&list, i))->name, path) == 0) {
+				CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NameExists, NULL);
+				return NULL;
+			}
+		}
 	}
 
 	/* Create the storage. */
 	storage_new = gtk_type_new (bonobo_storage_camera_get_type ());
 	corba_storage = bonobo_storage_corba_object_create (BONOBO_OBJECT (storage_new));
 	g_return_val_if_fail (corba_storage != CORBA_OBJECT_NIL, NULL);
-
 	storage_new->camera = s->camera;
 	gp_camera_ref (s->camera);
-	storage_new->uri = uri;
+	storage_new->uri = gnome_vfs_uri_append_path (gnome_vfs_uri_dup (s->uri), path);
 
 	return bonobo_storage_construct (BONOBO_STORAGE (storage_new), corba_storage);
 }
@@ -224,17 +262,11 @@ static void
 camera_erase (BonoboStorage *storage, const CORBA_char *path, CORBA_Environment *ev)
 {
 	BonoboStorageCamera *s = BONOBO_STORAGE_CAMERA (storage);
-	GnomeVFSURI *uri = gnome_vfs_uri_new (path);
-	gchar* tmp;
 
 	printf ("camera_erase\n");
 
 	/* Delete the file. */
-	tmp = gnome_vfs_uri_extract_dirname (uri);
-	CHECK_RESULT (gp_camera_file_delete (s->camera, tmp, (gchar*) gnome_vfs_uri_get_basename (uri)), ev);
-	g_free (tmp);
-
-	gnome_vfs_uri_unref (uri);
+	CHECK_RESULT (gp_camera_file_delete (s->camera, (gchar*) gnome_vfs_uri_get_path (s->uri), (gchar*) path), ev);
 }
 
 static void

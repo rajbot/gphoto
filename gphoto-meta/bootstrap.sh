@@ -107,7 +107,7 @@ installautotools() {
 	base="$(basename "$tarball" "$ext")"
 	cmd cd "${toolsrc}/${base}"
 	cmd ./configure --prefix="${toolroot}"
-	cmd "$MAKE" install
+	cmd "$MAKE" $MAKEOPT install
     done < ${buildtoollist}
     (cd "${toolroot}/bin" && patch -p0 < "${metadir}/gettextize.patch")
 }
@@ -323,6 +323,7 @@ builddist() {
 	    cmd cd "${cvssrc}/${module}"
 
 	    # hack: this directory shouldn't be in CVS
+	    # FIXME: shouldn't we just use "cvs checkout -P" ?
 	    [ "$module" = "exif" ] && [ -d exif/exif ] && cmd rm -rf exif/exif
 	    # hack: gnocam is called GnoCam - or the other way round
 	    [ "$module" = "gnocam" ] && module="GnoCam"
@@ -349,8 +350,8 @@ builddist() {
 			cmd cp -f "${docroot}/man/gphoto2.1" doc/gphoto2.1
 			;;
 		    libgphoto2)	   
-			cmd cp -f "${docroot}/man/gphoto2.3" doc/gphoto2.3
-			cmd cp -f "${docroot}/man/gphoto2_port.3" doc/gphoto2_port.3
+			cmd cp -f "${docroot}/man/libgphoto2.3" doc/libgphoto2.3
+			cmd cp -f "${docroot}/man/libgphoto2_port.3" doc/libgphoto2_port.3
 			;;
 		esac
 	    else
@@ -361,7 +362,7 @@ builddist() {
 	    echo "    # not to me. Or run this with \"echo $0 | at now\"."
 	    cmd ./autogen.sh --enable-maintainer-mode --prefix="${distroot}" ${configopts}
 	    cmd ./configure  --enable-maintainer-mode --prefix="${distroot}" ${configopts}
-	    cmd "$MAKE" dist
+	    cmd "$MAKE" $MAKEOPT dist
 
 	    # create .tar.bz2 source tarball if possible and not done yet
 	    if [ "${compression}" = "bz2" ]
@@ -387,7 +388,7 @@ builddist() {
 	    if [ "$distopts" = "install" ]
 	    then
 		# install if required
-		cmd "$MAKE" install
+		cmd "$MAKE" $MAKEOPT install
 	    else
 		# try to install even if not required
 		if ! "$MAKE" install

@@ -1,0 +1,23 @@
+all:
+	@echo "Generating config.h.in ..."
+	@autoheader
+	@echo "Generating aclocal.m4 ..."
+	@aclocal
+	@echo "Generating Makefile.in and needed scripts ..."
+	@automake --add-missing
+	@echo "Generating configure script ..."
+	@autoconf
+	@echo "Substituting KDE tags in Makefile.in ..."
+	@perl admin/am_edit -padmin
+	@echo
+	@echo "Done !"
+	@echo "You can run './configure' now."
+	@echo
+
+clean:
+	if [ -f src/Makefile ]; then make -C src/ clean; fi
+	-rm -f src/Makefile configure config.status config.log config.cache \
+	confdefs.h src/Makefile.in Makefile.in aclocal.m4 Makefile config.h \
+	stamp-h.in stamp-h config.h.in libtool \
+	admin/config.guess admin/config.sub admin/install-sh \
+	admin/missing admin/mkinstalldirs COPYING INSTALL

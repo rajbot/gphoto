@@ -1,0 +1,34 @@
+dnl Initialize autoconf and automake
+AC_INIT(acinclude.m4)
+AC_CONFIG_AUX_DIR(admin)
+AC_CANONICAL_SYSTEM
+AC_ARG_PROGRAM
+
+AM_INIT_AUTOMAKE(qtkam,0.1a)
+
+KDE_SET_PREFIX
+
+dnl AM_CONFIG_HEADER(config.h)
+
+dnl Checks for programs.
+AC_CHECK_COMPILERS
+KDE_PROG_LIBTOOL
+dnl AC_PROG_CXX
+
+dnl Checks for libgphoto2:
+AC_CHECK_LIB(gphoto2, gp_exit, 
+    [LIBS="$LIBS -lgphoto2"], 
+    [AC_MSG_ERROR("You need libgphoto2")])
+
+dnl Checks for header files.
+dnl AC_CHECK_HEADERS(gphoto2/gphoto2.h,
+dnl gphoto_includes="$gphoto_includes -I/usr/local/include/gphoto2"
+dnl [ AC_MSG_ERROR("Cant find gphoto2 headers")])
+    
+dnl Checks for typedefs, structures, and compiler characteristics.
+
+dnl Output the Makefile
+AC_PATH_KDE
+AC_ARG_PROGRAM
+AM_CONFIG_HEADER(config.h)
+AC_OUTPUT([Makefile src/Makefile])

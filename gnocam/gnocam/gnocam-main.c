@@ -208,22 +208,9 @@ gnocam_main_finalize (GtkObject *object)
 static void
 gnocam_main_class_init (GnoCamMainClass *klass)
 {
-	GtkObjectClass *object_class = GTK_OBJECT_CLASS (klass);
-	POA_GNOME_GnoCam__epv *epv;
-
-	parent_class = gtk_type_class (PARENT_TYPE);
-
-	object_class->destroy = gnocam_main_destroy;
-	object_class->finalize = gnocam_main_finalize;
-
-	epv = &klass->epv;
-	epv->getCamera = impl_GNOME_GnoCam_getCamera;
-	epv->getCameraByName = impl_GNOME_GnoCam_getCameraByName;
-}
-
-static void
-gnocam_main_init (GnoCamMain *gnocam_main)
-{
+	GtkObjectClass *object_class;
+	POA_GNOME_GnoCam__epv *epv; 
+	
 	/* Make sure GConf is initialized. */
 	if (!gconf_is_initialized ()) {
 		GError* gerror = NULL;
@@ -238,7 +225,21 @@ gnocam_main_init (GnoCamMain *gnocam_main)
 		g_message ("Initializing GPhoto...");
 		g_assert (gp_init (GP_DEBUG_NONE) == GP_OK);
 	}
-	
+
+	parent_class = gtk_type_class (PARENT_TYPE);
+
+	object_class = GTK_OBJECT_CLASS (klass);
+	object_class->destroy = gnocam_main_destroy;
+	object_class->finalize = gnocam_main_finalize;
+
+	epv = &klass->epv;
+	epv->getCamera = impl_GNOME_GnoCam_getCamera;
+	epv->getCameraByName = impl_GNOME_GnoCam_getCameraByName;
+}
+
+static void
+gnocam_main_init (GnoCamMain *gnocam_main)
+{
 	gnocam_main->priv = g_new0 (GnoCamMainPrivate, 1);
 	gnocam_main->priv->hash_table = g_hash_table_new (g_str_hash,
 							  g_str_equal);

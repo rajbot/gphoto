@@ -1,9 +1,142 @@
-2000/09/09	Ole Aamot <oka@ping.uio.no>
-	* Makefile.am: Added autogen.sh in EXTRA_DIST
-	* configure.in: Check for libgpio and libgphoto2.
+Fri Sep 22 19:26:26 2000  Lutz Müller  <lutz@lmsmile>
 
-2000/09/08	Lutz Müller <urc8@rz.uni-karlsruhe.de>
-	* Added gnocam.h.
-	* Set prefix to HOME on first startup. (Scott)
-	* Clear progress bar after transaction. (Scott)
-	* Released GnoCam-0.2.
+	* src/.cvsignore, macros/.cvsignore, po/.cvsignore, .cvsignore:
+	And more .cvsignores...
+
+	* src/Makefile.am, src/gnocam.c, src/save.c, configure.in:
+	GnoCam now uses gnome-vfs.
+
+	* src/callbacks.c, src/gnocam.c, src/gnocam.glade, src/save.c, src/save.h:
+	Added popup for file list. Basic structure for save_as is now in code. Implementation yet to follow.
+
+	* src/.cvsignore: Added .cvsignore.
+
+Mon Sep 18 14:40:05 2000  Lutz Müller  <lutz@lmsmile>
+
+	* src/gnocam.glade: Added popup menu.
+
+	* src/Makefile.am, src/callbacks.h, src/preferences.c, src/callbacks.c:
+	Added support for capturing images and videos (via popup menu).
+
+Wed Sep 13 23:21:22 2000  Lutz Müller  <lutz@lmsmile>
+
+	* capplet/capplet-callbacks.c, src/gnocam.glade:
+	gnocam.glade is now without camera properties menu.
+
+	* capplet/Makefile.am, capplet/camera-capplet.c, capplet/capplet.c, capplet/gphoto-extensions.c, Makefile.am, configure.in:
+	capplet should compile now. Camera properties need yet to be reworked.
+
+	* src/Attic/camera_properties.c, src/Attic/camera_properties.h:
+	Removed as settings will be all done via capplet.
+
+	* src/Makefile.am, src/callbacks.c, src/gnocam.c, src/gnocam.h, src/preferences.c, src/save.c:
+	Updated code to fit to changed libgphoto2. Should compile.
+
+	* po/POTFILES.in: Removed camera_preferences.c. Will be capplet.
+
+	* capplet/Makefile.am, capplet/camera-capplet.c, capplet/camera-capplet.desktop, capplet/capplet-callbacks.c, capplet/capplet-callbacks.h, capplet/capplet.c, capplet/capplet.h, capplet/gphoto-extensions.c, capplet/gphoto-extensions.h, capplet/preferences.c, capplet/preferences.h, capplet/properties.c, capplet/properties.h:
+	Added basic structure of the camera-capplet. Yet to be updated in order to compile with the newest libgphoto2.
+
+	* autogen.sh: autogen.sh will run macros/autogen.sh.
+
+Tue Sep 12 22:02:21 2000  scottf  <scottf@lmsmile>
+
+	* macros/Attic/Makefile.in, src/Attic/Makefile.in, Attic/Makefile.in:
+	removed Makefile.in's
+
+	* src/gnocam.glade: Initial revision
+
+	* src/gnocam.glade: import the initial GnoCam distribution 
+
+	* src/save.c: Initial revision
+
+	* src/save.c: import the initial GnoCam distribution 
+
+	* src/preferences.c, src/save.h: Initial revision
+
+	* src/preferences.c, src/save.h:
+	import the initial GnoCam distribution 
+
+	* src/Attic/camera_properties.c, src/preferences.h: Initial revision
+
+	* src/Attic/camera_properties.c, src/preferences.h:
+	import the initial GnoCam distribution 
+
+	* src/Attic/camera_properties.h, src/callbacks.c: Initial revision
+
+	* src/Attic/camera_properties.h, src/callbacks.c:
+	import the initial GnoCam distribution 
+
+	* macros/autogen.sh, src/Attic/Makefile.in, src/Makefile.am, src/gnocam.c, src/gnocam.h:
+	Initial revision
+
+	* macros/autogen.sh, src/Attic/Makefile.in, src/Makefile.am, src/gnocam.c, src/gnocam.h:
+	import the initial GnoCam distribution 
+
+	* macros/gnome-common.m4, macros/gperf-check.m4, macros/linger.m4, macros/need-declaration.m4:
+	Initial revision
+
+	* macros/gnome-common.m4, macros/gperf-check.m4, macros/linger.m4, macros/need-declaration.m4:
+	import the initial GnoCam distribution 
+
+	* macros/gnome-print-check.m4, macros/gnome-pthread-check.m4, macros/gnome-support.m4, macros/gnome-undelfs.m4, macros/gnome-vfs.m4, macros/gnome-x-checks.m4, macros/gnome-xml-check.m4, macros/gnome.m4:
+	Initial revision
+
+	* macros/gnome-print-check.m4, macros/gnome-pthread-check.m4, macros/gnome-support.m4, macros/gnome-undelfs.m4, macros/gnome-vfs.m4, macros/gnome-x-checks.m4, macros/gnome-xml-check.m4, macros/gnome.m4:
+	import the initial GnoCam distribution 
+
+	* macros/gnome-guile-checks.m4, macros/gnome-libgtop-check.m4, macros/gnome-objc-checks.m4, macros/gnome-orbit-check.m4:
+	Initial revision
+
+	* macros/gnome-guile-checks.m4, macros/gnome-libgtop-check.m4, macros/gnome-objc-checks.m4, macros/gnome-orbit-check.m4:
+	import the initial GnoCam distribution 
+
+	* macros/gnome-fileutils.m4, macros/gnome-ghttp-check.m4, macros/gnome-gnorba-check.m4:
+	Initial revision
+
+	* macros/gnome-fileutils.m4, macros/gnome-ghttp-check.m4, macros/gnome-gnorba-check.m4:
+	import the initial GnoCam distribution 
+
+	* macros/curses.m4, macros/gnome-bonobo-check.m4: Initial revision
+
+	* macros/curses.m4, macros/gnome-bonobo-check.m4:
+	import the initial GnoCam distribution 
+
+	* macros/Attic/Makefile.in, macros/Makefile.am, macros/aclocal-include.m4, macros/compiler-flags.m4, po/cat-id-tbl.c:
+	Initial revision
+
+	* macros/Attic/Makefile.in, macros/Makefile.am, macros/aclocal-include.m4, macros/compiler-flags.m4, po/cat-id-tbl.c:
+	import the initial GnoCam distribution 
+
+	* po/GnoCam.pot, po/no.gmo, po/no.po, po/stamp-cat-id: Initial revision
+
+	* po/GnoCam.pot, po/no.gmo, po/no.po, po/stamp-cat-id:
+	import the initial GnoCam distribution 
+
+	* po/ChangeLog, po/Makefile.in.in, po/POTFILES.in: Initial revision
+
+	* po/ChangeLog, po/Makefile.in.in, po/POTFILES.in:
+	import the initial GnoCam distribution 
+
+	* INSTALL, Makefile.am, NEWS, THANKS, TODO, acconfig.h, autogen.sh, configure.in, gnocam.desktop, gnocam.spec.in:
+	Initial revision
+
+	* INSTALL, Makefile.am, NEWS, THANKS, TODO, acconfig.h, autogen.sh, configure.in, gnocam.desktop, gnocam.spec.in:
+	import the initial GnoCam distribution 
+
+	* COPYING, ChangeLog: Initial revision
+
+	* COPYING, ChangeLog: import the initial GnoCam distribution 
+
+	* ABOUT-NLS, AUTHORS: Initial revision
+
+	* ABOUT-NLS, AUTHORS: import the initial GnoCam distribution 
+
+	* aclocal.m4: Initial revision
+
+	* aclocal.m4: import the initial GnoCam distribution 
+
+	* Attic/Makefile.in, README: Initial revision
+
+	* Attic/Makefile.in, README: import the initial GnoCam distribution 
+

@@ -110,19 +110,28 @@ gpio_device *gpio_new(gpio_device_type type)
 		gpio_set_timeout(dev, 5000);
 		break;
 	case GPIO_DEVICE_PARALLEL:
+#ifdef GPIO_PARALLEL
 		sprintf(buf, GPIO_SERIAL_PREFIX, GPIO_SERIAL_RANGE_LOW);
 	        strcpy(settings.parallel.port, buf);
+#endif
 		break;
 	case GPIO_DEVICE_NETWORK:
+#ifdef GPIO_NETWORK
 		gpio_set_timeout(dev, 50000);
+#endif
 		break;
 	case GPIO_DEVICE_USB:
+#ifdef GPIO_USB
 		gpio_set_timeout(dev, 5000);
+#endif
 		break;
 	case GPIO_DEVICE_IEEE1394:
+#ifdef GPIO_IEEE1394
+		/* blah ? */
+#endif
 		break;
 	default:
-		// ERROR!
+		/* ERROR! */
 		break;
 	}
 

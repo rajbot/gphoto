@@ -107,6 +107,7 @@ int gpio_library_load (gpio_device *device, gpio_device_type type) {
 	gpio_ptr_operations ops_func;	
 
 	for (x=0; x<device_count; x++) {
+printf("library: %s \n", device_list[x].library_filename);
 		if (device_list[x].type == type) {
 			/* Open the correct library */
 		        device->library_handle = 

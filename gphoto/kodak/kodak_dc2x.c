@@ -148,6 +148,7 @@ struct Image *kodak_dc2x_get_picture (int picNum, int thumbnail) {
         rewind(jpgfile);
         im = (struct Image*)malloc(sizeof(struct Image));
         im->image = (char *)malloc(sizeof(char)*jpgfile_size);
+  fread(im->image, (size_t)sizeof(char), (size_t)jpgfile_size, jpgfile); 
         strcpy(im->image_type, "jpg");
         im->image_size = (int)jpgfile_size;
         im->image_info_size = 0;
@@ -222,6 +223,7 @@ struct Image *kodak_dc2x_get_picture (int picNum, int thumbnail) {
 	  rewind(jpgfile);
 	  im = (struct Image*)malloc(sizeof(struct Image));
 	  im->image = (char *)malloc(sizeof(char)*jpgfile_size);
+  fread(im->image, (size_t)sizeof(char), (size_t)jpgfile_size, jpgfile); 
 	  strcpy(im->image_type, "jpg");
 	  im->image_size = (int)jpgfile_size;
 	  im->image_info_size = 0;

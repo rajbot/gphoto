@@ -24,8 +24,8 @@ gPhoto 0.4
      Sanyo VPC (G210, G250)
      Sony DSC (F1Hi)
    - Ability to save unaltered image from camera. 	(DONE)
-   - Summary function in all camera libraries
-   - Description function in all camera libraries
+   - Summary function in all camera libraries		(DONE)
+   - Description function in all camera libraries	(DONE)
    - Autoconf/configure 				(DONE)
    - Camera libraries built as shared libraries 	(DONE)
    - GTK 1.2 						(DONE)
@@ -35,13 +35,13 @@ gPhoto 0.4
    - Batch saves 					(DONE)
    - RPM spec files 					(DONE)
    - Updated Manual					(75%)
-   - Better error checking 				(50%)
+   - Better error checking 				(75%)
 
 gPhoto 0.6
    - Camera support for:
    - Asynchronous I/O
    - Common serial I/O library
-   - Progress Bar / status display
+   - Progress Bar / status display			(DONE)
    - Image post processing				(DONE)
    - Make gdk_imlib_load_image_mem really do in memory conversions
    - XML gallery

@@ -29,7 +29,7 @@ int main (int argc, char *argv[])
 	g_assert (gnocam);
 
 	g_message ("Getting default Camera...");
-	camera = GNOME_GnoCam_getCamera (gnocam, "", &ev);
+	camera = GNOME_GnoCam_getCamera (gnocam, &ev);
 	bonobo_object_release_unref (gnocam, NULL);
 	if (BONOBO_EX (&ev))
 		g_error (bonobo_exception_get_text (&ev));
@@ -44,9 +44,13 @@ int main (int argc, char *argv[])
 
 	g_message ("Capturing preview...");
 	stream = GNOME_Camera_captureImage (camera, &ev);
+	g_message ("Releasing camera...");
 	bonobo_object_release_unref (camera, NULL);
+	g_message ("Checking for exception...");
 	if (BONOBO_EX (&ev))
 		g_error (bonobo_exception_get_text (&ev));
+
+	bonobo_object_release_unref (stream, NULL);
 
 	CORBA_exception_free (&ev);
 

@@ -8,9 +8,9 @@
 #include <libgnome/gnome-util.h>
 #include <libgnomeui/gnome-dialog.h>
 
-#include "gnocam-util.h"
 #include "gnocam-capture.h"
 #include "bonobo-storage-camera.h"
+#include "GnoCam.h"
 
 #define PARENT_TYPE BONOBO_X_OBJECT_TYPE
 static BonoboObjectClass *parent_class;
@@ -20,6 +20,23 @@ struct _GnoCamCameraPrivate
 	Camera *camera;
 	BonoboStorage *storage;
 };
+
+#define CHECK_RESULT(result,ev) G_STMT_START{\
+	gint r = result;\
+	if (r < 0) {\
+		switch (r) {\
+		case GP_ERROR_NOT_SUPPORTED:\
+			CORBA_exception_set (ev, CORBA_USER_EXCEPTION,\
+					ex_GNOME_Camera_NotSupported, NULL);\
+			break;\
+		case GP_ERROR_IO:\
+		default:\
+			CORBA_exception_set (ev, CORBA_USER_EXCEPTION,\
+					ex_GNOME_Camera_IOError, NULL);\
+			break;\
+		}\
+	}\
+}G_STMT_END
 
 static Bonobo_Stream
 impl_GNOME_Camera_capturePreview (PortableServer_Servant servant, 
@@ -52,28 +69,42 @@ impl_GNOME_Camera_captureImage (PortableServer_Servant servant,
 {
 	Bonobo_Stream stream;
 	GnoCamCamera *c;
+	GnomeDialog *capture;
 	CameraFilePath path;
 	gchar *full_path;
 
 	c = GNOCAM_CAMERA (bonobo_object_from_servant (servant));
 
 	/* Pop up a preview dialog */
-	if (gnome_dialog_run_and_close (gnocam_capture_new (c->priv->camera))) {
-		CORBA_exception_set (ev, CORBA_USER_EXCEPTION,
-				     ex_Bonobo_IOError, NULL);
+	capture = gnocam_capture_new (c->priv->camera, ev);
+	if (BONOBO_EX (ev))
 		return (CORBA_OBJECT_NIL);
+
+	switch (gnome_dialog_run_and_close (capture)) {
+	case 1:
+		/* Cancel */
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION,
+				     ex_GNOME_Cancelled, NULL);
+		return (CORBA_OBJECT_NIL);
+	default:
+		break;
 	}
 
 	/* Capture the image */
 	CHECK_RESULT (gp_camera_capture (c->priv->camera,
 				GP_OPERATION_CAPTURE_IMAGE, &path), ev);
 	if (BONOBO_EX (ev))
-		return (NULL);
+		return (CORBA_OBJECT_NIL);
 
 	full_path = g_concat_dir_and_file (path.folder, path.name);
+	g_message ("Image is in %s", full_path);
 	stream = Bonobo_Storage_openStream (BONOBO_OBJREF (c->priv->storage),
 					    full_path, Bonobo_Storage_READ, ev);
 	g_free (full_path);
+	if (BONOBO_EX (ev)) {
+		g_message ("Got exception: %s", bonobo_exception_get_text (ev));
+		return (CORBA_OBJECT_NIL);
+	}
 
 	return (stream);
 }

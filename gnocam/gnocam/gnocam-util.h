@@ -23,7 +23,7 @@
                         break;                                                \
                 case GP_ERROR_NOT_SUPPORTED:                                  \
                         CORBA_exception_set (ev, CORBA_USER_EXCEPTION,        \
-				             ex_Bonobo_NotSupported, NULL);   \
+				         ex_Bonobo_NotSupported, NULL); \
                         break;                                                \
                 default:                                                      \
                         CORBA_exception_set (ev, CORBA_USER_EXCEPTION,        \

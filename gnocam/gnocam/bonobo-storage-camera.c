@@ -181,10 +181,19 @@ camera_open_stream (BonoboStorage *s, const CORBA_char *filename,
 
 	storage = BONOBO_STORAGE_CAMERA (s);
 
-	/* Create a new stream. */
-	new = bonobo_stream_camera_new (storage->priv->camera,
-					storage->priv->path, filename,
-					mode, ev);
+	/* Absolute path? */
+	if (*filename == '/') {
+		gchar *dirname = g_dirname (filename);
+
+		new = bonobo_stream_camera_new (storage->priv->camera,
+						dirname, g_basename (filename),
+						mode, ev);
+		g_free (dirname);
+	} else {
+		new = bonobo_stream_camera_new (storage->priv->camera,
+						storage->priv->path, filename,
+						mode, ev);
+	}
 	if (BONOBO_EX (ev))
 		return (NULL);
 	

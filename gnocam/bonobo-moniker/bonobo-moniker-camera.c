@@ -50,7 +50,7 @@ camera_resolve (BonoboMoniker 		    *moniker,
 	name += i;
 
 	/* Get a camera */
-	camera = GNOME_GnoCam_getCamera (gnocam, camera_name, ev);
+	camera = GNOME_GnoCam_getCameraByName (gnocam, camera_name, ev);
 	g_free (camera_name);
 	bonobo_object_release_unref (gnocam, NULL);
 	if (BONOBO_EX (ev))

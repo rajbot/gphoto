@@ -26,7 +26,7 @@ bonobo_moniker_camera_LDADD=\
  $(GPHOTO_LIBS)\
  $(EXTRA_GNOME_LIBS)
 
-$(CORBA_GENERATED):
+$(CORBA_GENERATED): $(top_srcdir)/idl/GnoCam.idl
 	$(ORBIT_IDL) $(top_srcdir)/idl/GnoCam.idl `$(GNOME_CONFIG) --cflags idl`
 
 BUILT_SOURCES = $(CORBA_GENERATED)

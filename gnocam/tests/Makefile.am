@@ -23,7 +23,7 @@ test_gnocam_SOURCES =\
 test_gnocam_LDADD =\
  $(EXTRA_GNOME_LIBS)
 
-$(CORBA_GENERATED):
+$(CORBA_GENERATED): $(top_srcdir)/idl/GnoCam.idl
 	$(ORBIT_IDL) $(top_srcdir)/idl/GnoCam.idl `$(GNOME_CONFIG) --cflags idl`
 
 BUILT_SOURCES = $(CORBA_GENERATED)

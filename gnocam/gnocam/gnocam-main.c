@@ -4,9 +4,11 @@
 
 #include <gconf/gconf-client.h>
 #include <bonobo/bonobo-exception.h>
+#include <libgnomeui/gnome-dialog.h>
 
 #include "gnocam-util.h"
 #include "gnocam-camera.h"
+#include "gnocam-camera-selector.h"
 
 #define PARENT_TYPE BONOBO_X_OBJECT_TYPE
 static BonoboObjectClass *parent_class;
@@ -14,70 +16,151 @@ static BonoboObjectClass *parent_class;
 struct _GnoCamMainPrivate
 {
 	GConfClient *client;
+
 	GHashTable *hash_table;
 };
 
+static void
+initialize_camera (GSList *list, Camera *camera, const gchar *name,
+		   CORBA_Environment *ev)
+{
+	gint i;
+	
+	for (i = 0; i < g_slist_length (list); i += 3)
+		if (!strcmp (g_slist_nth_data (list, i), name))
+			break;
+	if (i >= g_slist_length (list)) {
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION,
+				     ex_GNOME_GnoCam_NotFound, NULL);
+		return;
+	}
+
+	strcpy (camera->model, g_slist_nth_data (list, i + 1));
+	strcpy (camera->port->name, g_slist_nth_data (list, i + 2));
+	CHECK_RESULT (gp_camera_init (camera), ev);
+}
+
 static GNOME_Camera
-impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant, 
-			     const CORBA_char *name,
+impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant,
 			     CORBA_Environment *ev)
 {
 	GnoCamMain *gnocam_main;
 	GnoCamCamera *gnocam_camera;
 	Camera *camera = NULL;
 	GSList *list;
-	gint i;
-	const gchar *model = NULL, *port = NULL;
+	gboolean initialized = FALSE;
+
+	gnocam_main = GNOCAM_MAIN (bonobo_object_from_servant (servant));
+	CHECK_RESULT (gp_camera_new (&camera), ev);
+
+	list = gconf_client_get_list (gnocam_main->priv->client,
+			              "/apps/" PACKAGE "/cameras",
+				      GCONF_VALUE_STRING, NULL);
+
+	/* Auto-detection? */
+	if (gconf_client_get_bool (gnocam_main->priv->client,
+				   "/apps/" PACKAGE "/autodetect", NULL)) {
+		CHECK_RESULT (gp_camera_init (camera), ev);
+		if (BONOBO_EX (ev)) {
+			gp_camera_unref (camera);
+			return (CORBA_OBJECT_NIL);
+		}
+		initialized = TRUE;
+	}
+
+	/* Only one camera? */
+	if (!initialized && (g_slist_length (list) == 3)) {
+		strcpy (camera->model, g_slist_nth_data (list, 1));
+		strcpy (camera->port->name, g_slist_nth_data (list, 2));
+		CHECK_RESULT (gp_camera_init (camera), ev);
+		if (BONOBO_EX (ev)) {
+			gp_camera_unref (camera);
+			return (CORBA_OBJECT_NIL);
+		}
+
+		initialized = TRUE;
+	}
+
+	/* Ask! */
+	if (!initialized) {
+		GnomeDialog *selector;
+		const gchar *name;
+
+		selector = gnocam_camera_selector_new (list);
+		switch (gnome_dialog_run (selector)) {
+		case 1:
+			/* Cancel */
+			CORBA_exception_set (ev, CORBA_USER_EXCEPTION,
+					     ex_GNOME_Cancelled, NULL);
+			gp_camera_unref (camera);
+			return (CORBA_OBJECT_NIL);
+		default:
+			break;
+		}
+		name = gnocam_camera_selector_get_name (
+					GNOCAM_CAMERA_SELECTOR (selector));
+		gnome_dialog_close (selector);
+
+		if (!name) {
+			CORBA_exception_set (ev, CORBA_USER_EXCEPTION,
+					     ex_GNOME_GnoCam_NotFound, NULL);
+			gp_camera_unref (camera);
+			return (CORBA_OBJECT_NIL);
+		}
+		initialize_camera (list, camera, name, ev);
+		if (BONOBO_EX (ev)) {
+			gp_camera_unref (camera);
+			return (CORBA_OBJECT_NIL);
+		}
+	}
+
+	gnocam_camera = gnocam_camera_new (camera, ev);
+	gp_camera_unref (camera);
+
+	if (BONOBO_EX (ev))
+		return (CORBA_OBJECT_NIL);
+
+	return (CORBA_Object_duplicate (BONOBO_OBJREF (gnocam_camera), ev));
+}
+
+static GNOME_Camera
+impl_GNOME_GnoCam_getCameraByName (PortableServer_Servant servant, 
+			           const CORBA_char *name,
+			           CORBA_Environment *ev)
+{
+	GnoCamMain *gnocam_main;
+	GnoCamCamera *gnocam_camera;
+	Camera *camera = NULL;
+	GSList *list;
 
 	g_message ("impl_GNOME_GnoCam_getCamera: %s", name);
 
 	gnocam_main = GNOCAM_MAIN (bonobo_object_from_servant (servant));
-	g_assert (gnocam_main);
+	list = gconf_client_get_list (gnocam_main->priv->client,
+				      "/apps/" PACKAGE "/cameras",
+				      GCONF_VALUE_STRING, NULL);
+
+	if (!*name)
+		return GNOME_GnoCam_getCamera (BONOBO_OBJREF (gnocam_main), ev);
 
 	camera = g_hash_table_lookup (gnocam_main->priv->hash_table, name);
-	if (camera) {
+	if (camera)
 		gp_camera_ref (camera);
-	} else {
-		g_message ("Getting list of configured cameras...");
-		list = gconf_client_get_list (gnocam_main->priv->client,
-					      "/apps/" PACKAGE "/cameras",
-					      GCONF_VALUE_STRING, NULL);
-		if (*name) {
-			for (i = 0; i < g_slist_length (list); i += 3) {
-				if (!strcmp (g_slist_nth_data (list, i), name)){
-					model = g_slist_nth_data (list, i + 1);
-					port = g_slist_nth_data (list, i + 2);
-					break;
-				}
-			}
-		} else if (!*name && g_slist_length (list) >= 3) {
-			model = g_slist_nth_data (list, 1);
-			port = g_slist_nth_data (list, 2);
-		}
-		g_assert (model && port);
-
-		g_message ("Creating camera...");
+	else {
 		CHECK_RESULT (gp_camera_new (&camera), ev);
 		if (BONOBO_EX (ev))
 			return (CORBA_OBJECT_NIL);
-
-		g_message ("Initializing camera...");
-		strcpy (camera->model, model);
-		strcpy (camera->port->name, port);
-		camera->port->speed = 0;
-		CHECK_RESULT (gp_camera_init (camera), ev);
+		initialize_camera (list, camera, name, ev);
 		if (BONOBO_EX (ev)) {
-			g_message ("Initialization failed!");
 			gp_camera_unref (camera);
 			return (CORBA_OBJECT_NIL);
 		}
-		g_message ("Done.");
 	}
-	g_assert (camera);
 
-	g_message ("Trying to create a GnoCamCamera...");
 	gnocam_camera = gnocam_camera_new (camera, ev);
 	gp_camera_unref (camera);
+	if (BONOBO_EX (ev))
+		return (CORBA_OBJECT_NIL);
 
 	return (CORBA_Object_duplicate (BONOBO_OBJREF (gnocam_camera), ev));
 }
@@ -88,6 +171,8 @@ gnocam_main_destroy (GtkObject *object)
 	GnoCamMain *gnocam_main;
 
 	gnocam_main = GNOCAM_MAIN (object);
+
+	gtk_object_unref (GTK_OBJECT (gnocam_main->priv->client));
 
 	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
@@ -130,6 +215,7 @@ gnocam_main_class_init (GnoCamMainClass *klass)
 
 	epv = &klass->epv;
 	epv->getCamera = impl_GNOME_GnoCam_getCamera;
+	epv->getCameraByName = impl_GNOME_GnoCam_getCameraByName;
 }
 
 static void
@@ -153,9 +239,6 @@ gnocam_main_init (GnoCamMain *gnocam_main)
 	gnocam_main->priv = g_new0 (GnoCamMainPrivate, 1);
 	gnocam_main->priv->hash_table = g_hash_table_new (g_str_hash,
 							  g_str_equal);
-	gnocam_main->priv->client = gconf_client_get_default ();
-
-	g_message ("GnoCamMain got initialized!");
 }
 
 BONOBO_X_TYPE_FUNC_FULL (GnoCamMain, GNOME_GnoCam, PARENT_TYPE, gnocam_main);
@@ -168,6 +251,8 @@ gnocam_main_new (void)
 	g_message ("Creating a GnoCamMain...");
 
 	gnocam_main = gtk_type_new (GNOCAM_TYPE_MAIN);
+
+	gnocam_main->priv->client = gconf_client_get_default ();
 
 	return (gnocam_main);
 }

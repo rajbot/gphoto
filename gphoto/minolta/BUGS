@@ -1,0 +1,22 @@
+Some images will return invalid jpegs. This is due to the Dimage V sending
+packets with incorrect length values; I compensate as best I can, and am
+working on a better way to second-guess the camera. Try reloading the image;
+so far, any image that fails will succeed in no more than three attempts.
+
+Attempting to retrieve thumbnails is pointless; right now all that comes
+back is a false jpeg which says "Thumbnails don't work yet." This is due to
+the bizarre bitmap format that the Dimage V returns for thumbnails. I'm
+working on it, but not too hopefully. On that note, if the "image format"
+of "Y:Cr:Cb = 4:2:2" means anything, please let me know.
+
+Several secondary features (like taking a picture, or retrieving the current
+viewfinder contents) don't work. Right now, retrieving full-sized images and
+deleting is really all it does. More will come later, but as the saying goes,
+"release early, release often".
+
+The Dimage V does use EXIFs as the file format, which does contain information
+about the image, such as the time it was captured, the camera make & model, and
+other such data. Currently, I just leave it be. Eventually, I'll borrow the
+code from the Fuji library and make this happen automatically, but in the
+meantime, if you need the EXIF tags, please look into the exifdump program,
+currently distributed in the Fuji directory.

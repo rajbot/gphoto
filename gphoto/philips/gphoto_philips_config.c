@@ -44,6 +44,7 @@ void philips_cfg_page4 ();
 
 struct P_CONFIG_CONTROLS {
 	GtkWidget	*rm_images;
+	GtkWidget	*rm_multi;
 	GtkWidget	*rm_images_sound;
 	GtkWidget	*rm_sound;
 	GtkWidget	*rm_character;
@@ -52,9 +53,15 @@ struct P_CONFIG_CONTROLS {
 	GtkWidget	*fl_on;
 	GtkWidget	*fl_off;
 	GtkWidget	*fl_auto;
+	GtkWidget	*fl_synchro;
+	GtkWidget	*fl_r_auto;
+	GtkWidget	*fl_r_on;
+	GtkWidget	*fl_r_synchro;
 
 	GtkWidget	*res_640;
 	GtkWidget	*res_1280;
+	GtkWidget	*res_900;
+	GtkWidget	*res_1800;
 
 	GtkWidget	*q_fine;
 	GtkWidget	*q_normal;
@@ -66,6 +73,7 @@ struct P_CONFIG_CONTROLS {
 	GtkWidget	*wb_auto;
 	GtkWidget	*wb_bw;
 	GtkWidget	*wb_sepia;
+	GtkWidget	*wb_overcast;
 
 	GtkWidget	*m_on;
 	GtkWidget	*m_off;
@@ -184,7 +192,6 @@ int philips_configure () {
 		error_dialog ( "Could not open camera." );
 		return 0;
 		}
-
 
 	if ( (pcfginfo = philips_getcfginfo ( &error )) == NULL ) {
 		error_dialog ( "Can't get camera configuration." );
@@ -309,18 +316,36 @@ void philips_cfg_page2 ( GtkWidget *notebook, struct P_CONFIG_CONTROLS *controls
 	gtk_widget_show ( frame );
 
 	box = gtk_vbox_new ( FALSE, 5 );
-	controls->res_640 = gtk_radio_button_new_with_label ( NULL, "640 x 480" );
-	gtk_box_pack_start ( GTK_BOX(box), controls->res_640, FALSE, FALSE, 0 );
-	if ( pcfginfo->resolution == 1 )
-		gtk_toggle_button_set_state ( GTK_TOGGLE_BUTTON(controls->res_640), TRUE );
-	gtk_widget_show ( controls->res_640 );
-	group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->res_640) );
-	controls->res_1280 = gtk_radio_button_new_with_label ( group, "1280 x 960" );
-	gtk_box_pack_start ( GTK_BOX(box), controls->res_1280, FALSE, FALSE, 0 );
-	if ( pcfginfo->resolution == 4 )
-		gtk_toggle_button_set_state ( GTK_TOGGLE_BUTTON(controls->res_640), TRUE );
-	gtk_widget_show ( controls->res_1280 );
-	group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->res_1280) );
+	if ( cameraid != 5000 ) {
+		controls->res_640 = gtk_radio_button_new_with_label ( NULL, "640 x 480" );
+		gtk_box_pack_start ( GTK_BOX(box), controls->res_640, FALSE, FALSE, 0 );
+		if ( pcfginfo->resolution == 1 )
+			gtk_toggle_button_set_state ( GTK_TOGGLE_BUTTON(controls->res_640), TRUE );
+		gtk_widget_show ( controls->res_640 );
+		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->res_640) );
+		}
+	if ( cameraid >= 4000 && cameraid != 5000 ) {
+		controls->res_1280 = gtk_radio_button_new_with_label ( group, "1280 x 960" );
+		gtk_box_pack_start ( GTK_BOX(box), controls->res_1280, FALSE, FALSE, 0 );
+		if ( pcfginfo->resolution == 4 )
+			gtk_toggle_button_set_state ( GTK_TOGGLE_BUTTON(controls->res_640), TRUE );
+		gtk_widget_show ( controls->res_1280 );
+		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->res_1280) );
+		}
+	if ( cameraid == 5000 ) {
+		controls->res_900 = gtk_radio_button_new_with_label ( NULL, "900 x 600" );
+		gtk_box_pack_start ( GTK_BOX(box), controls->res_900, FALSE, FALSE, 0 );
+		if ( pcfginfo->resolution == 5 )
+			gtk_toggle_button_set_state ( GTK_TOGGLE_BUTTON(controls->res_900), TRUE );
+		gtk_widget_show ( controls->res_900 );
+		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->res_900) );
+		controls->res_1800 = gtk_radio_button_new_with_label ( NULL, "1800 x 900" );
+		gtk_box_pack_start ( GTK_BOX(box), controls->res_1800, FALSE, FALSE, 0 );
+		if ( pcfginfo->resolution == 6 )
+			gtk_toggle_button_set_state ( GTK_TOGGLE_BUTTON(controls->res_1800), TRUE );
+		gtk_widget_show ( controls->res_1800 );
+		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->res_1800) );
+		}
 	gtk_container_add ( GTK_CONTAINER(frame), box );
 	gtk_widget_show ( box );
 	gtk_box_pack_start ( GTK_BOX(vbox), frame, FALSE, FALSE, 0 );
@@ -398,6 +423,12 @@ void philips_cfg_page3 ( GtkWidget *notebook, struct P_CONFIG_CONTROLS *controls
 		gtk_widget_show ( controls->wb_sepia );
 		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->wb_sepia) );
 		}
+	if ( cameraid == 5000 ) {
+		controls->wb_overcast = gtk_radio_button_new_with_label ( group, "Overcast" );
+		gtk_box_pack_start ( GTK_BOX(box), controls->wb_overcast, FALSE, FALSE, 0 );
+		gtk_widget_show ( controls->wb_overcast );
+		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->wb_overcast) );
+		}
 
 	gtk_container_add ( GTK_CONTAINER(frame), box );
 	gtk_widget_show ( box );
@@ -443,13 +474,16 @@ void philips_cfg_page4 ( GtkWidget *notebook, struct P_CONFIG_CONTROLS *controls
 {
 	GtkWidget	*frame;
 	GtkWidget	*label;
-	GtkWidget	*box, *vbox, *zbox, *fmbox;
+	GtkWidget	*box, *vbox, *zbox, *fmbox, *ybox, *box1;
 	GtkWidget	*scale;
 	GtkObject	*adj;
 	GSList		*group;
 
 	vbox = gtk_hbox_new ( FALSE, 5 );
 
+	/*******************/
+	/* Recording frame */
+	/*******************/
 	frame = gtk_frame_new ( "Recording Mode" );
 	gtk_container_border_width ( GTK_CONTAINER(frame), 10 );
 	gtk_widget_set_usize ( frame, 170, 135 );
@@ -460,22 +494,32 @@ void philips_cfg_page4 ( GtkWidget *notebook, struct P_CONFIG_CONTROLS *controls
 	gtk_box_pack_start ( GTK_BOX(box), controls->rm_images, FALSE, FALSE, 0 );
 	gtk_widget_show ( controls->rm_images );
 	group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->rm_images) );
-	controls->rm_images_sound = gtk_radio_button_new_with_label ( group, "Images+sound" );
-	gtk_box_pack_start ( GTK_BOX(box), controls->rm_images_sound, FALSE, FALSE, 0 );
-	gtk_widget_show ( controls->rm_images_sound );
-	group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->rm_images_sound) );
-	controls->rm_sound = gtk_radio_button_new_with_label ( group, "Sound" );
-	gtk_box_pack_start ( GTK_BOX(box), controls->rm_sound, FALSE, FALSE, 0 );
-	gtk_widget_show ( controls->rm_sound );
-	group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->rm_sound) );
+	if ( cameraid == 5000 ) {
+		controls->rm_multi = gtk_radio_button_new_with_label ( group, "Multi-Shot" );
+		gtk_box_pack_start ( GTK_BOX(box), controls->rm_multi, FALSE, FALSE, 0 );
+		gtk_widget_show ( controls->rm_multi );
+		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->rm_multi) );
+		}
+	if ( (cameraid != 4200) && (cameraid != 5000) ) {
+		controls->rm_images_sound = gtk_radio_button_new_with_label ( group, "Images+sound" );
+		gtk_box_pack_start ( GTK_BOX(box), controls->rm_images_sound, FALSE, FALSE, 0 );
+		gtk_widget_show ( controls->rm_images_sound );
+		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->rm_images_sound) );
+		controls->rm_sound = gtk_radio_button_new_with_label ( group, "Sound" );
+		gtk_box_pack_start ( GTK_BOX(box), controls->rm_sound, FALSE, FALSE, 0 );
+		gtk_widget_show ( controls->rm_sound );
+		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->rm_sound) );
+		}
 	controls->rm_character = gtk_radio_button_new_with_label ( group, "Character" );
 	gtk_box_pack_start ( GTK_BOX(box), controls->rm_character, FALSE, FALSE, 0 );
 	gtk_widget_show ( controls->rm_character );
 	group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->rm_character) );
-	controls->rm_character_sound = gtk_radio_button_new_with_label ( group, "Character+sound" );
-	gtk_box_pack_start ( GTK_BOX(box), controls->rm_character_sound, FALSE, FALSE, 0 );
-	gtk_widget_show ( controls->rm_character_sound );
-	group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->rm_character_sound) );
+	if ( (cameraid != 4200) && (cameraid != 5000) ) {
+		controls->rm_character_sound = gtk_radio_button_new_with_label ( group, "Character+sound" );
+		gtk_box_pack_start ( GTK_BOX(box), controls->rm_character_sound, FALSE, FALSE, 0 );
+		gtk_widget_show ( controls->rm_character_sound );
+		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->rm_character_sound) );
+		}
 	gtk_container_add ( GTK_CONTAINER(frame), box );
 	gtk_widget_show ( box );
 	gtk_box_pack_start ( GTK_BOX(vbox), frame, FALSE, FALSE, 0 );
@@ -484,11 +528,20 @@ void philips_cfg_page4 ( GtkWidget *notebook, struct P_CONFIG_CONTROLS *controls
 	zbox = gtk_vbox_new ( FALSE, 5 );  /* box up flash/macro and zoom */
 	fmbox = gtk_hbox_new ( FALSE, 5 ); /* box up flash and macro */
 
+	/****************/
+	/*  Flash frame */
+	/****************/
 	frame = gtk_frame_new ( "Flash Mode" );
 	gtk_container_border_width ( GTK_CONTAINER(frame), 10 );
-	gtk_widget_set_usize ( frame, 130, 145 );
+	if ( cameraid != 5000 ) {
+		gtk_widget_set_usize ( frame, 130, 145 );
+		}
+	else {
+		gtk_widget_set_usize ( frame, 260, 145 );
+		}
 	gtk_widget_show ( frame );
 
+	ybox = gtk_hbox_new ( FALSE, 5 );
 	box = gtk_vbox_new ( FALSE, 5 );
 	controls->fl_auto = gtk_radio_button_new_with_label ( NULL, "Auto" );
 	gtk_box_pack_start ( GTK_BOX(box), controls->fl_auto, FALSE, FALSE, 0 );
@@ -502,33 +555,68 @@ void philips_cfg_page4 ( GtkWidget *notebook, struct P_CONFIG_CONTROLS *controls
 	gtk_box_pack_start ( GTK_BOX(box), controls->fl_off, FALSE, FALSE, 0 );
 	gtk_widget_show ( controls->fl_off );
 	group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->fl_off) );
-	gtk_container_add ( GTK_CONTAINER(frame), box );
+	if ( cameraid == 5000 ) {
+		controls->fl_synchro = gtk_radio_button_new_with_label ( group, "Synchronized" );
+		gtk_box_pack_start ( GTK_BOX(box), controls->fl_synchro, FALSE, FALSE, 0 );
+		gtk_widget_show ( controls->fl_synchro );
+		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->fl_synchro) );
+		}
+	gtk_box_pack_start ( GTK_BOX(ybox), box, FALSE, FALSE, 0 );
 	gtk_widget_show ( box );
+
+	if ( cameraid == 5000 ) {
+		box1 = gtk_vbox_new ( FALSE, 5 );
+		controls->fl_r_on = gtk_radio_button_new_with_label ( group, "On w/ RedEye" );
+		gtk_box_pack_start ( GTK_BOX(box1), controls->fl_r_on, FALSE, FALSE, 0 );
+		gtk_widget_show ( controls->fl_r_on );
+		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->fl_r_on) );
+		controls->fl_r_auto = gtk_radio_button_new_with_label ( group, "Auto w/ RedEye" );
+		gtk_box_pack_start ( GTK_BOX(box1), controls->fl_r_auto, FALSE, FALSE, 0 );
+		gtk_widget_show ( controls->fl_r_auto );
+		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->fl_r_auto) );
+		controls->fl_r_synchro = gtk_radio_button_new_with_label ( group, "Syncrhonzied w/ RedEye" );
+		gtk_box_pack_start ( GTK_BOX(box1), controls->fl_r_synchro, FALSE, FALSE, 0 );
+		gtk_widget_show ( controls->fl_r_synchro );
+		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->fl_r_synchro) );
+		gtk_box_pack_start ( GTK_BOX(ybox), box1, FALSE, FALSE, 0 );
+		gtk_widget_show ( box1 );
+		}
+	gtk_container_add ( GTK_CONTAINER(frame), ybox );
+	gtk_widget_show ( ybox );
+
 	gtk_box_pack_start ( GTK_BOX(fmbox), frame, FALSE, FALSE, 0 );
 	gtk_widget_show ( fmbox );
 
-	frame = gtk_frame_new ( "Macro Mode" );
-	gtk_container_border_width ( GTK_CONTAINER(frame), 10 );
-	gtk_widget_set_usize ( frame, 130, 105 );
-	gtk_widget_show ( frame );
-
-	box = gtk_vbox_new ( FALSE, 5 );
-	controls->m_on = gtk_radio_button_new_with_label ( NULL, "On" );
-	gtk_box_pack_start ( GTK_BOX(box), controls->m_on, FALSE, FALSE, 0 );
-	gtk_widget_show ( controls->m_on );
-	group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->m_on) );
-	controls->m_off = gtk_radio_button_new_with_label ( group, "Off" );
-	gtk_box_pack_start ( GTK_BOX(box), controls->m_off, FALSE, FALSE, 0 );
-	gtk_widget_show ( controls->m_off );
-	group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->m_off) );
-	gtk_container_add ( GTK_CONTAINER(frame), box );
-	gtk_widget_show ( box );
-	gtk_box_pack_start ( GTK_BOX(fmbox), frame, FALSE, FALSE, 0 );
+	/***************/
+	/* Macro frame */
+	/***************/
+	if ( cameraid != 5000 ) {
+		frame = gtk_frame_new ( "Macro Mode" );
+		gtk_container_border_width ( GTK_CONTAINER(frame), 10 );
+		gtk_widget_set_usize ( frame, 130, 105 );
+		gtk_widget_show ( frame );
+	
+		box = gtk_vbox_new ( FALSE, 5 );
+		controls->m_on = gtk_radio_button_new_with_label ( NULL, "On" );
+		gtk_box_pack_start ( GTK_BOX(box), controls->m_on, FALSE, FALSE, 0 );
+		gtk_widget_show ( controls->m_on );
+		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->m_on) );
+		controls->m_off = gtk_radio_button_new_with_label ( group, "Off" );
+		gtk_box_pack_start ( GTK_BOX(box), controls->m_off, FALSE, FALSE, 0 );
+		gtk_widget_show ( controls->m_off );
+		group = gtk_radio_button_group ( GTK_RADIO_BUTTON(controls->m_off) );
+		gtk_container_add ( GTK_CONTAINER(frame), box );
+		gtk_widget_show ( box );
+		gtk_box_pack_start ( GTK_BOX(fmbox), frame, FALSE, FALSE, 0 );
+		}
+	
 	/* end of packing into fmbox */
-
 	gtk_box_pack_start ( GTK_BOX(zbox), fmbox, FALSE, FALSE, 0 );
 	gtk_widget_show ( zbox );
 
+	/**************/
+	/* Zoom frame */
+	/**************/
 	frame = gtk_frame_new ( "Zoom Level" );
 	gtk_container_border_width ( GTK_CONTAINER(frame), 10 );
 	gtk_widget_set_usize ( frame, 230, 75 );

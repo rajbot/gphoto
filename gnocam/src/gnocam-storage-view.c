@@ -230,7 +230,7 @@ on_node_expanded (ETreeModel* model, ETreePath* parent, gboolean* allow_expanded
 	CORBA_exception_init (&ev);
 
 	/* Get the new storage */
-        storage = Bonobo_Storage_openStorage (value->storage, value->path, storage_view->priv->mode, &ev);
+        storage = Bonobo_Storage_openStorage (value->storage, value->path + 1, storage_view->priv->mode, &ev);
         if (BONOBO_EX (&ev)) {
                 g_warning (_("Could not open storage for '%s': %s!"), value->path, bonobo_exception_get_text (&ev));
                 CORBA_exception_free (&ev);

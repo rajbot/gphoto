@@ -32,6 +32,8 @@ struct _GnoCamFolderPrivate
 	gchar*				path;
 
 	GtkWidget*			widget;
+
+	ETableModel*			model;
 };
 
 #define E_TABLE_SPEC																		\
@@ -240,6 +242,7 @@ upload_file (GnoCamFolder* folder, const gchar* source)
        }
 
        CORBA_exception_free (&ev);
+       gnocam_folder_update (folder);
 }
 
 
@@ -423,7 +426,23 @@ gnocam_folder_hide_menu (GnoCamFolder* folder)
 void
 gnocam_folder_update (GnoCamFolder* folder)
 {
-	g_warning ("Implement gnocam_folder_update!");
+	Bonobo_Storage_DirectoryList*	list;
+	CORBA_Environment		ev;
+
+        /* Get the list of contents */
+	CORBA_exception_init (&ev);
+        list = Bonobo_Storage_listContents (folder->priv->storage, "", Bonobo_FIELD_TYPE | Bonobo_FIELD_CONTENT_TYPE | Bonobo_FIELD_SIZE, &ev);
+        if (BONOBO_EX (&ev)) {
+                g_warning (_("Could not get list of contents for '%s': %s!"), folder->priv->path, bonobo_exception_get_text (&ev));
+                CORBA_exception_free (&ev);
+                return;
+        }
+        CORBA_exception_free (&ev);
+	CORBA_free (folder->priv->list);
+	folder->priv->list = list;
+
+	/* Tell the table to update */
+	e_table_model_changed (folder->priv->model);
 }
 
 gchar*
@@ -608,7 +627,6 @@ gnocam_folder_new (Camera* camera, BonoboStorage* storage, Bonobo_Storage_OpenMo
 	Bonobo_Storage_DirectoryList*   list;
 	const gchar*			directory;
 	CORBA_Environment		ev;
-	ETableModel*			model;
 	ETableExtras*			extras;
 
 	if (*path == '/') directory = path;
@@ -617,7 +635,7 @@ gnocam_folder_new (Camera* camera, BonoboStorage* storage, Bonobo_Storage_OpenMo
 	CORBA_exception_init (&ev);
 
 	/* Create a new storage for this folder */
-	storage_new = Bonobo_Storage_openStorage (BONOBO_OBJREF (storage), path, mode, &ev);
+	storage_new = Bonobo_Storage_openStorage (BONOBO_OBJREF (storage), path + 1, mode, &ev);
 	if (BONOBO_EX (&ev)) {
 		g_warning (_("Could not open storage for '%s': %s!"), path, bonobo_exception_get_text (&ev));
 		CORBA_exception_free (&ev);
@@ -644,14 +662,14 @@ gnocam_folder_new (Camera* camera, BonoboStorage* storage, Bonobo_Storage_OpenMo
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
 
 	/* Create the model */
-	model = e_table_simple_new (col_count, row_count, value_at, set_value_at, is_cell_editable, 
+	new->priv->model = e_table_simple_new (col_count, row_count, value_at, set_value_at, is_cell_editable, 
 		duplicate_value, free_value, initialize_value, value_is_empty, value_to_string, new);
 
 	/* Create the extras */
 	extras = e_table_extras_new ();
 
 	/* Create the table */
-	e_table_construct (E_TABLE (new), model, extras, E_TABLE_SPEC, NULL);
+	e_table_construct (E_TABLE (new), new->priv->model, extras, E_TABLE_SPEC, NULL);
 
 	/* Create menu */
 	gtk_idle_add (create_menu, new);

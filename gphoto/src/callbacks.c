@@ -17,8 +17,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "main.h"
 #include "gphoto.h"
+#include "main.h"
 #include "util.h"
 #include "callbacks.h"
 
@@ -36,7 +36,7 @@ extern struct ImageInfo Images;
 extern struct _Camera *Camera;
 
 extern char	  camera_model[];
-extern char	  serial_port[];
+extern char	  serial_port[20];
 extern int	  post_process;
 extern char	  post_process_script[];
 extern GtkWidget *post_process_pixmap;
@@ -524,32 +524,16 @@ void port_dialog() {
 
         button = gtk_button_new_with_label("Save");
         gtk_widget_show(button);
-        GTK_WIDGET_SET_FLAGS (button, GTK_CAN_DEFAULT);
-        gtk_signal_connect_object(GTK_OBJECT(button), "clicked",
-                            GTK_SIGNAL_FUNC(ok_click),
-                            GTK_OBJECT(dialog));
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
                            button, TRUE, TRUE, 0);
+
         cbutton = gtk_button_new_with_label("Cancel");
         gtk_widget_show(cbutton);
-        GTK_WIDGET_SET_FLAGS (cbutton, GTK_CAN_DEFAULT);
-        gtk_signal_connect_object(GTK_OBJECT(cbutton), "clicked",
-                            GTK_SIGNAL_FUNC(gtk_widget_hide),
-                            GTK_OBJECT(dialog));
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
                            cbutton, TRUE, TRUE, 0);
-	gtk_object_set_data(GTK_OBJECT(dialog), "button", "CANCEL");
-        gtk_widget_show(dialog);
-        gtk_widget_grab_default(button);
 
-	/* Wait for the window to be closed */
-        while (GTK_WIDGET_VISIBLE(dialog))
-                gtk_main_iteration();
-	/* -------------------------------- */
-
-	if (strcmp("CANCEL",
-           (char*)gtk_object_get_data(GTK_OBJECT(dialog), "button"))==0)
-                return;
+	if (wait_for_hide(dialog, button, cbutton) == 0)
+		return;
 
 	dlist = GTK_LIST(list)->selection;
 	if (!dlist) {
@@ -560,8 +544,6 @@ void port_dialog() {
 		(char*)gtk_object_get_data(olist_item,"model"));
 		set_camera(camera_model);
 	}
-	gtk_widget_destroy(list);
-
 
 	if (GTK_WIDGET_STATE(port0) == GTK_STATE_ACTIVE) {
 		sprintf(tempstring, "%s0", serial_port_prefix);
@@ -580,12 +562,9 @@ void port_dialog() {
 		strcpy(serial_port, tempstring);
 	}
 	if (GTK_WIDGET_STATE(other) == GTK_STATE_ACTIVE) {
-		fprintf(conf, "%s\n",
+		sprintf(tempstring, "%s",
 			gtk_entry_get_text(GTK_ENTRY(ent_other)));
-		sprintf(serial_port, "%s",
-			gtk_entry_get_text(GTK_ENTRY(ent_other)));
-	} else {
-		fprintf(conf, "%s\n", serial_port);
+		strcpy(serial_port, tempstring);
 	}
 printf("serial port: %s\n", serial_port);
 	save_config();
@@ -622,11 +601,16 @@ void save_config() {
 	char gphotorc[1024];
 	FILE *conf;
 
+
 	sprintf(gphotorc, "%s/gphotorc", gphotoDir);
 	conf = fopen(gphotorc, "w");
 	fprintf(conf, "%s\n", serial_port);
 	fprintf(conf, "%s\n", camera_model);
 	fprintf(conf, "%s\n", post_process_script);
+
+	printf("serial: %s\n", serial_port);
+	printf("camera: %s\n", camera_model);
+	printf("post:   %s\n", post_process_script);
 	fclose(conf);
 }
 

@@ -30,6 +30,7 @@ int main (int argc, char *argv[]) {
 	GtkWidget *table;
 	GtkWidget *menu_bar;
 	GtkWidget *index_page;
+	GtkWidget *button;
 	GtkWidget *label, *box, *sbox, *pbox;
 	GtkWidget *vseparator;
 	GtkWidget *post_process_button;
@@ -177,10 +178,17 @@ int main (int argc, char *argv[]) {
 	gtk_box_pack_end(GTK_BOX(sbox), vseparator, FALSE, FALSE, 0);
 
 	gtk_widget_show(library_name);
-	gtk_widget_set_usize(library_name, 200, 16);
+/*	gtk_widget_set_usize(library_name, 200, 16);*/
 	gtk_label_set_justify(GTK_LABEL(library_name), GTK_JUSTIFY_LEFT);
-	gtk_box_pack_end(GTK_BOX(sbox), library_name, FALSE, FALSE, 0);
+	button = gtk_button_new();
+	gtk_widget_show(button);
+	gtk_button_set_relief(GTK_BUTTON(button),GTK_RELIEF_NONE);
+	gtk_signal_connect_object(GTK_OBJECT(button), "clicked",
+		GTK_SIGNAL_FUNC(port_dialog), NULL);
+	gtk_container_add(GTK_CONTAINER(button), library_name);
+	gtk_box_pack_end(GTK_BOX(sbox), button, FALSE, FALSE, 0);
 
+	
 
 	pixmap = gdk_pixmap_create_from_xpm_d(mainWin->window, &bitmap,
 					&style->bg[GTK_STATE_NORMAL],

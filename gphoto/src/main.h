@@ -36,7 +36,6 @@ int	   post_process;	/* TRUE/FALSE to post-process   */
 char	   post_process_script[1024]; /* Full path/filename	*/
 GtkWidget *post_process_pixmap; /* Post process pixmap		*/
 
-
 #ifdef  GTK_HAVE_FEATURES_1_1_0
 GtkAccelGroup*  mainag;
 #endif

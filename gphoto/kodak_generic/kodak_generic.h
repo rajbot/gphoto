@@ -14,11 +14,22 @@ typedef enum
    KODAK_CAMERA_NUM_CAMERAS    /* This line must be last! */
 } KODAK_CAMERA_TYPE;
 
+
 /*******************************************************************************
 * For each camera model supported, include the model's register function here.
 *******************************************************************************/
 void kdc240_register(void);
 
+
+/*******************************************************************************
+* Debugging symbols
+*******************************************************************************/
+#undef COMMAND_DEBUG
+#undef DIRECTORY_DEBUG
+#undef HPBS_DEBUG
+#undef PICTURE_INFO_DEBUG
+#undef READ_DEBUG
+#undef SM_DEBUG
 
 /*==============================================================================
 * You should not need to modify anything after this point 
@@ -34,6 +45,9 @@ typedef enum
    FALSE,
    TRUE
 } BOOLEAN;
+
+#define GPHOTO_SUCCESS  1
+#define GPHOTO_FAIL     0
 
 typedef int (*_detect)();
 

@@ -1,3 +1,7 @@
+2001-08-18  Lutz Müller <urc8@rz.uni-karlsruhe.de>
+
+	* gnocam/gnocam-configuration.c: Use gp_widget_get_parent.
+
 2001-08-15  Lutz Müller <urc8@rz.uni-karlsruhe.de>
 	
 	* bonobo-moniker/Makefile.am: Get "make distcheck" working again.

@@ -117,23 +117,16 @@ create_page (GnoCamConfiguration* configuration, CameraWidget* widget)
 static void
 create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 {
-	CameraWidgetType	type;
-	const gchar*		label;
-	const gchar*		info;
-	gchar*			value_char = NULL;
-	gint			value_int = 0;
-	gfloat			value_float = 0.0;
-	gfloat			min = 0.0;
-	gfloat			max = 0.0;
-	gfloat			increment = 0.0;
-	gint			i;
-	gint			result;
-	GtkWidget*		vbox;
-	GtkWidget*		button;
-	GtkWidget*		gtk_widget;
-	GtkWidget*		frame;
-	GtkObject*		adjustment;
-	GSList*			group = NULL;
+	CameraWidget *parent;
+	CameraWidgetType type;
+	const gchar *label;
+	const gchar *info;
+	gchar *value_char = NULL;
+	gfloat value_float = 0.0, min = 0., max = 0., increment = 0.;
+	gint i, result, value_int = 0;
+	GtkWidget *vbox, *button, *gtk_widget, *frame;
+	GtkObject *adjustment;
+	GSList *group = NULL;
 
 	gp_widget_get_label (widget, &label);
 	gp_widget_get_info (widget, &info);
@@ -144,7 +137,8 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 	case GP_WIDGET_SECTION:
 	
 		/* If section, create page */
-		if (type == GP_WIDGET_SECTION) create_page (configuration, widget);
+		if (type == GP_WIDGET_SECTION)
+			create_page (configuration, widget);
 
 		/* Create sub-widgets */
 		for (i = 0; i < gp_widget_count_children (widget); i++) {
@@ -162,43 +156,65 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		gtk_container_set_border_width (GTK_CONTAINER (gtk_widget), 10);
 		button = gtk_button_new_with_label (label);
 		gtk_widget_show (button);
-		gtk_signal_connect (GTK_OBJECT (button), "clicked", GTK_SIGNAL_FUNC (on_button_clicked), widget);
+		gtk_signal_connect (GTK_OBJECT (button), "clicked",
+				GTK_SIGNAL_FUNC (on_button_clicked), widget);
 		gtk_container_add (GTK_CONTAINER (gtk_widget), button);
-		gtk_tooltips_set_tip (configuration->priv->tooltips, button, info, NULL);
+		gtk_tooltips_set_tip (configuration->priv->tooltips, button,
+				      info, NULL);
 		break;
 		
 	case GP_WIDGET_DATE:
 	
-		if ((result = gp_widget_get_value (widget, &value_int)) != GP_OK)
-			g_warning (_("Could not get value of widget '%s': %s!"), label, gp_result_as_string (result));
-		gtk_widget = gnome_date_edit_new ((time_t) value_int, TRUE, TRUE);
-		gtk_signal_connect (GTK_OBJECT (gtk_widget), "date_changed", GTK_SIGNAL_FUNC (on_date_edit_changed), widget);
-		gtk_signal_connect (GTK_OBJECT (gtk_widget), "time_changed", GTK_SIGNAL_FUNC (on_date_edit_changed), widget);
-		gtk_tooltips_set_tip (configuration->priv->tooltips, gtk_widget, info, NULL);
+		result = gp_widget_get_value (widget, &value_int);
+		if (result != GP_OK)
+			g_warning (_("Could not get value of widget '%s': %s!"),
+				   label, gp_result_as_string (result));
+		gtk_widget = gnome_date_edit_new ((time_t) value_int,
+						  TRUE, TRUE);
+		gtk_signal_connect (GTK_OBJECT (gtk_widget), "date_changed",
+				GTK_SIGNAL_FUNC (on_date_edit_changed), widget);
+		gtk_signal_connect (GTK_OBJECT (gtk_widget), "time_changed",
+				GTK_SIGNAL_FUNC (on_date_edit_changed), widget);
+		gtk_tooltips_set_tip (configuration->priv->tooltips, gtk_widget,
+				      info, NULL);
 		break;
 		
 	case GP_WIDGET_TEXT:
 
-		if ((result = gp_widget_get_value (widget, &value_char)) != GP_OK)
-			g_warning (_("Could not get value of widget '%s': %s!"), label, gp_result_as_string (result));
+		result = gp_widget_get_value (widget, &value_char);
+		if (result != GP_OK)
+			g_warning (_("Could not get value of widget '%s': %s!"),
+				   label, gp_result_as_string (result));
 		gtk_widget = gtk_entry_new ();
-		if (value_char) gtk_entry_set_text (GTK_ENTRY (gtk_widget), value_char);
-		gtk_signal_connect (GTK_OBJECT (gtk_widget), "changed", GTK_SIGNAL_FUNC (on_entry_changed), widget);
-		gtk_tooltips_set_tip (configuration->priv->tooltips, gtk_widget, info, NULL);
+		if (value_char)
+			gtk_entry_set_text (GTK_ENTRY (gtk_widget), value_char);
+		gtk_signal_connect (GTK_OBJECT (gtk_widget), "changed",
+				GTK_SIGNAL_FUNC (on_entry_changed), widget);
+		gtk_tooltips_set_tip (configuration->priv->tooltips, gtk_widget,
+				      info, NULL);
 		break;
 	
 	case GP_WIDGET_RANGE:
 
-		if ((result = gp_widget_get_value (widget, &value_float)) != GP_OK)
-			g_warning (_("Could not get value of widget '%s': %s!"), label, gp_result_as_string (result));
-		if ((result = gp_widget_get_range (widget, &min, &max, &increment)) != GP_OK)
-			g_warning (_("Could not get values of range widget '%s': %s!"), label, gp_result_as_string (result));
-		adjustment = gtk_adjustment_new (value_float, min, max, increment, 0, 0);
-		gtk_signal_connect (adjustment, "value_changed", GTK_SIGNAL_FUNC (on_adjustment_value_changed), widget);
+		result = gp_widget_get_value (widget, &value_float);
+		if (result != GP_OK)
+			g_warning (_("Could not get value of widget '%s': %s!"),
+				   label, gp_result_as_string (result));
+		result = gp_widget_get_range (widget, &min, &max, &increment);
+		if (result != GP_OK)
+			g_warning (_("Could not get values of range widget "
+				   "'%s': %s!"), label,
+				   gp_result_as_string (result));
+		adjustment = gtk_adjustment_new (value_float, min, max,
+						 increment, 0, 0);
+		gtk_signal_connect (adjustment, "value_changed",
+			GTK_SIGNAL_FUNC (on_adjustment_value_changed), widget);
 		gtk_widget = gtk_hscale_new (GTK_ADJUSTMENT (adjustment));
 		gtk_scale_set_digits (GTK_SCALE (gtk_widget), 0);
-		gtk_range_set_update_policy (GTK_RANGE (gtk_widget), GTK_UPDATE_DISCONTINUOUS);
-		gtk_tooltips_set_tip (configuration->priv->tooltips, gtk_widget, info, NULL);
+		gtk_range_set_update_policy (GTK_RANGE (gtk_widget),
+					     GTK_UPDATE_DISCONTINUOUS);
+		gtk_tooltips_set_tip (configuration->priv->tooltips,
+				      gtk_widget, info, NULL);
 		break;
 	
 	case GP_WIDGET_MENU:
@@ -245,19 +261,24 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 	gtk_widget_show (frame);
 	gtk_container_add (GTK_CONTAINER (frame), gtk_widget);
 
-	gp_widget_get_type (widget->parent, &type);
+	gp_widget_get_parent (widget, &parent);
+	gp_widget_get_type (parent, &type);
 
 	if (type == GP_WIDGET_SECTION) {
 		gint 	id;
-		
-		gp_widget_get_id (widget->parent, &id);
-		vbox = g_hash_table_lookup (configuration->priv->hash_table, &id);
+
+		gp_widget_get_parent (widget, &parent);
+		gp_widget_get_id (parent, &id);
+		vbox = g_hash_table_lookup (configuration->priv->hash_table,
+					    &id);
 	} else {
 		gint 	id;
 		
 		id = -1;
-		vbox = g_hash_table_lookup (configuration->priv->hash_table, &id);
-		if (!vbox) vbox = create_page (configuration, NULL);
+		vbox = g_hash_table_lookup (configuration->priv->hash_table,
+					    &id);
+		if (!vbox)
+			vbox = create_page (configuration, NULL);
 	}
 	g_return_if_fail (vbox);
 	gtk_box_pack_start (GTK_BOX (vbox), frame, FALSE, FALSE, 0);

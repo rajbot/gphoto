@@ -86,7 +86,7 @@ int main (int argc, char *argv[])
                         PACKAGE " for the first time.\n"
                         PACKAGE " is a small but powerful\n"
                         "front-end to gphoto. Welcome to\n"
-                        "the wunderful world of gphoto!\n\n"
+                        "the wonderful world of gphoto!\n\n"
                         "Before you do anything else, you \n"
                         "should probably first open the \n"
                         "preferences dialog and add a \n"
@@ -126,6 +126,9 @@ int main (int argc, char *argv[])
 	gconf_client_notify_remove (client, notify_id_cameras);
 	gconf_client_notify_remove (client, notify_id_magnification);
 	gconf_client_notify_remove (client, notify_id_interpolation);
+	gerror = NULL;
+	gconf_client_suggest_sync (client, &gerror);
+	if (gerror) g_warning ("GConf Error: %s", gerror->message);
 	gtk_object_unref (GTK_OBJECT (client));
 	return (0);
 }

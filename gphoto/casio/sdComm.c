@@ -106,7 +106,7 @@ sdcDebug(sdcInfo info, int onOff) {
     }
 }
 
-int
+sdcStatus
 sdcOpen(sdcInfo info) {
     if (info == NULL) return(SDC_FAIL);
 
@@ -162,7 +162,7 @@ sdcIsClosed(sdcInfo info) {
     return(info->state == SDC_CLOSED);
 }
 
-int
+sdcStatus
 sdcFlush(sdcInfo info) {
     u_char c;
     fd_set readfds;
@@ -199,7 +199,7 @@ sdcFlush(sdcInfo info) {
     return(SDC_SUCCESS);
 }
 
-int
+sdcStatus
 sdcClose(sdcInfo info) {
     if (info == NULL) return(SDC_FAIL);
 
@@ -285,7 +285,7 @@ readPort(sdcInfo info, unsigned char *readBuf, int len_required) {
     return(read_so_far);
 }
 
-int
+sdcStatus
 sdcReadAll(sdcInfo info, u_char *buf, int *len) {
     if (info->debug) {
 	fprintf(stderr, "Entering sdcReadAll:\n");
@@ -308,7 +308,7 @@ sdcReadAll(sdcInfo info, u_char *buf, int *len) {
     return((*len == 0) ? SDC_FAIL : SDC_SUCCESS);
 }
 
-int
+sdcStatus
 sdcRead(sdcInfo info, u_char *buf, int len_required) {
     int read_count;
     if (info->debug) {
@@ -332,7 +332,7 @@ sdcRead(sdcInfo info, u_char *buf, int len_required) {
     return((read_count != len_required) ? SDC_FAIL : SDC_SUCCESS);
 }
 
-int
+sdcStatus
 sdcWrite(sdcInfo info, u_char *c, int len) {
     int amountWritten;
     
@@ -357,7 +357,7 @@ sdcWrite(sdcInfo info, u_char *c, int len) {
     return(SDC_SUCCESS);
 }
 
-int
+sdcStatus
 sdcSendByte(sdcInfo info, unsigned char c) {
     int status;
     
@@ -384,7 +384,7 @@ sdcGetBaudRate(sdcInfo info) {
     return(info->speed);
 }
 
-static int
+static sdcStatus
 setBaudRateFinish(sdcInfo info) {
 #if HAVE_RTS_IOCTL
     int mode;
@@ -407,7 +407,7 @@ setBaudRateFinish(sdcInfo info) {
 }
 
 #ifdef HAVE_TERMIOS_H
-int
+sdcStatus
 sdcSetBaudRate(sdcInfo info, int baud_rate) {
     /* termios interface */
     struct termios tio;
@@ -439,7 +439,7 @@ sdcSetBaudRate(sdcInfo info, int baud_rate) {
 
 #else HAVE_TERMIOS_H
 #    ifdef HAVE_TERMIO_H
-int
+sdcStatus
 sdcSetBaudRate(sdcInfo info, int baud_rate) {
     if (info->debug) {
 	fprintf(stderr, "Entering sdcSetBaudRate:\n");

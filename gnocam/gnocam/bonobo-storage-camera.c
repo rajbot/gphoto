@@ -12,6 +12,7 @@
 #include "bonobo-storage-camera.h"
 
 #include <bonobo/bonobo-exception.h>
+#include <libgnome/gnome-util.h>
 
 #include "bonobo-stream-camera.h"
 #include "gnocam-util.h"
@@ -53,6 +54,8 @@ camera_get_info (BonoboStorage *s, const CORBA_char *name,
 	gint i;
 
 	storage = BONOBO_STORAGE_CAMERA (s);
+
+	g_message ("Getting info for '%s' (we are in %s)...", name, storage->priv->path);
 
 	/* We only support CONTENT_TYPE, SIZE, and TYPE. Reject all others. */
         if (mask & ~(Bonobo_FIELD_CONTENT_TYPE | 
@@ -203,7 +206,9 @@ camera_list_contents (BonoboStorage *s, const CORBA_char *name,
 	if (!name)
 		full_path = g_strdup (storage->priv->path);
 	else
-		full_path = g_strconcat (storage->priv->path, name, NULL);
+		full_path = g_concat_dir_and_file (storage->priv->path, name);
+
+	g_message ("Trying to assemble info for '%s'...", full_path);
 
 	/* Get folder list. */
 	CHECK_RESULT (gp_camera_folder_list_folders (storage->priv->camera, 

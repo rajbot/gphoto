@@ -64,8 +64,21 @@ camera_resolve (BonoboMoniker 		    *moniker,
 		return (CORBA_OBJECT_NIL);
 
 	/* Storage? */
-	if (!strcmp (requested_interface, "IDL:Bonobo/Storage:1.0"))
-		return (storage);
+	if (!strcmp (requested_interface, "IDL:Bonobo/Storage:1.0")) {
+		Bonobo_Storage sub_storage;
+
+		g_message ("Trying to open storage for '%s'...", name);
+
+		sub_storage = Bonobo_Storage_openStorage (storage, name,
+							  Bonobo_Storage_READ |
+							  Bonobo_Storage_WRITE,
+							  ev);
+		bonobo_object_release_unref (storage, NULL);
+		if (BONOBO_EX (ev))
+			return (CORBA_OBJECT_NIL);
+
+		return (sub_storage);
+	}
 
 	/* Stream? */
 	if (!strcmp (requested_interface, "IDL:Bonobo/Stream:1.0")) {

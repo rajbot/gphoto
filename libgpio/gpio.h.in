@@ -64,7 +64,7 @@ typedef struct {
 	gpio_device_type type;
 	char name[64];
 	char path[64];
-} gpio_device_list;
+} gpio_device_info;
 
 /* Put the settings together in a union */
 typedef union {
@@ -84,7 +84,7 @@ typedef union {
 struct gpio_device;
 typedef struct gpio_device gpio_device;
 struct gpio_operations {
-	int (*list)	(gpio_device_list *, int*);
+	int (*list)	(gpio_device_info *, int*);
 	int (*init)	(gpio_device *);
 	int (*exit)	(gpio_device *);
 	int (*open)	(gpio_device *);
@@ -117,15 +117,44 @@ struct gpio_device {
 /* gpio Core functions
    -------------------------------------------------------------- */
 
-gpio_device_list *gpio_get_device_list ();
-		/* Get a list of available devices
+	int gpio_init		();
+		/* Initializes the library
+			return values:
+				  successful: GPIO_OK
+				unsuccessful: GPIO_ERROR
+		*/
+
+int	     gpio_get_device_count ();
+		/* Get a count of available devices
 			return values:
 				  successful: valid gpio_device_list struct
 				unsuccessful: GPIO_ERROR
 		*/
 
-gpio_device *gpio_new		(int device_number);
+int	     gpio_get_device_info (int device_number, gpio_device_info *info);
+		/* Get information about a device
+			return values:
+				  successful: valid gpio_device_list struct
+				unsuccessful: GPIO_ERROR
+		*/
+
+gpio_device *gpio_new		(gpio_device_type type);
 		/* Create a new device of type "type"
+			return values:
+				  successful: valid gpio_device struct
+				unsuccessful: GPIO_ERROR
+		*/
+
+gpio_device *gpio_new_by_number (int device_number);
+		/* Create a new device from the enumerate device listing
+			return values:
+				  successful: valid gpio_device struct
+				unsuccessful: GPIO_ERROR
+		*/
+
+
+gpio_device *gpio_new_by_port (char *device_port);
+		/* Create a new device from the enumerate device listing
 			return values:
 				  successful: valid gpio_device struct
 				unsuccessful: GPIO_ERROR

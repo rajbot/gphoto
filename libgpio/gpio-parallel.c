@@ -20,11 +20,22 @@
    Boston, MA 02111-1307, USA.
  */
 
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
+
 #include "gpio.h"
 
 /* Parallel prototypes
    --------------------------------------------------------------------- */
-int 		gpio_parallel_list(gpio_device_list *list, int *count);
+int 		gpio_parallel_list(gpio_device_info *list, int *count);
 
 int 		gpio_parallel_init(gpio_device *dev);
 int 		gpio_parallel_exit(gpio_device *dev);
@@ -59,8 +70,30 @@ struct gpio_operations gpio_parallel_operations =
 
 /* Parallel API functions
    --------------------------------------------------------------------- */
-int gpio_parallel_list(gpio_device_list *list, int *count) {
+int gpio_parallel_list(gpio_device_info *list, int *count) {
 
+        char buf[1024];
+        int x, fd, use_int=0, use_char=0;
+
+        if ((strstr(GPIO_PARALLEL_PREFIX, "%i") == NULL) &&
+            (strstr(GPIO_PARALLEL_PREFIX, "%c") == NULL))
+                /* No enumeration values */
+                return (GPIO_ERROR);
+
+        for (x=GPIO_PARALLEL_RANGE_LOW; x<=GPIO_PARALLEL_RANGE_HIGH; x++) {
+                sprintf(buf, GPIO_PARALLEL_PREFIX, x);
+                fd = open (buf, O_RDONLY | O_NDELAY);
+                if (fd != -1) {
+                        close(fd);
+                        list[*count].type = GPIO_DEVICE_PARALLEL;
+                        strcpy(list[*count].path, buf);
+                        sprintf(buf, "Parallel Port %i", x);
+                        strcpy(list[*count].name, buf);
+                        *count += 1;
+                }
+        }
+
+        return (GPIO_OK);
 }
 
 int gpio_parallel_init(gpio_device *dev) {

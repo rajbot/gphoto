@@ -33,7 +33,9 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #include <sys/ioctl.h>
 
 #if HAVE_TERMIOS_H
@@ -55,7 +57,7 @@ static struct sgttyb term_old;
 
 /* Serial prototypes
    ------------------------------------------------------------------ */
-int 		gpio_serial_list(gpio_device_list *list, int *count);
+int 		gpio_serial_list(gpio_device_info *list, int *count);
 
 int 		gpio_serial_init(gpio_device *dev);
 int 		gpio_serial_exit(gpio_device *dev);
@@ -92,10 +94,31 @@ struct gpio_operations gpio_serial_operations =
 /* Serial API functions
    ------------------------------------------------------------------ */
 
-int gpio_serial_list (gpio_device_list *list, int *count) {
+int gpio_serial_list (gpio_device_info *list, int *count) {
 
 	
+	char buf[1024];
+	int x, fd, use_int=0, use_char=0;
 
+	if ((strstr(GPIO_SERIAL_PREFIX, "%i") == NULL) &&
+	    (strstr(GPIO_SERIAL_PREFIX, "%c") == NULL))
+		/* No enumeration values */
+		return (GPIO_ERROR);
+
+	for (x=GPIO_SERIAL_RANGE_LOW; x<=GPIO_SERIAL_RANGE_HIGH; x++) {
+		sprintf(buf, GPIO_SERIAL_PREFIX, x);
+		fd = open (buf, O_RDONLY | O_NDELAY);
+		if (fd != -1) {
+			close(fd);
+			list[*count].type = GPIO_DEVICE_SERIAL;
+			strcpy(list[*count].path, buf);
+			sprintf(buf, "Serial Port %i", x);
+			strcpy(list[*count].name, buf);
+			*count += 1;
+		}
+	}
+
+	return (GPIO_OK);
 }
 
 int gpio_serial_init (gpio_device *dev) {

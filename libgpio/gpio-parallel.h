@@ -5,8 +5,11 @@
 
 /* PARALLEL port prefix for enumeration */
 
+#define	GPIO_PARALLEL_RANGE_LOW		0
+#define	GPIO_PARALLEL_RANGE_HIGH	16
+
 /* Linux */
-#ifdef __linux__
+#ifdef linux
 #define GPIO_PARALLEL_PREFIX "/dev/lp%i"
 #endif
 
@@ -46,8 +49,6 @@ typedef struct {
 extern struct gpio_operations gpio_parallel_operations;
 
 #endif /* _GPIO_PARALLEL_H_ */
-
-
 
 
 

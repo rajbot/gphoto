@@ -5,6 +5,10 @@
 
 /* Serial port prefix for enumeration */
 /* %i for numbers, %c for letters */
+/* also define the low and high values of the range to check for devices */
+
+#define GPIO_SERIAL_RANGE_LOW	0
+#define GPIO_SERIAL_RANGE_HIGH	32
 
 /* Linux */
 #ifdef linux
@@ -60,7 +64,6 @@ extern struct gpio_operations gpio_serial_operations;
 
 
 #endif /* _GPIO_SERIAL_H_ */
-
 
 
 

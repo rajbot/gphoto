@@ -5,14 +5,12 @@
 
 /* socket specific settings */
 typedef struct {
-        char fqdn[128];
-	char ip[20];
+	char address[20];
 } gpio_socket_settings;
 
 extern struct gpio_operations gpio_socket_operations;
 
 #endif /* _GPIO_SOCKET_H_ */
-
 
 
 

@@ -31,8 +31,15 @@
 
 #include "gpio.h"
 
-int gpio_usb_list(gpio_device_list *list, int *count) {
+int gpio_usb_list(gpio_device_info *list, int *count) {
 
+	list[*count].type = GPIO_DEVICE_USB;
+	strcpy(list[*count].name, "Universal Serial Bus");
+	strcpy(list[*count].path, "usb");
+
+	*count += 1;
+
+	return (GPIO_OK);
 }
 
 int gpio_usb_init(gpio_device *dev)

@@ -2,6 +2,7 @@
 #ifndef _GNOCAM_CAMERA_H_
 #define _GNOCAM_CAMERA_H_
 
+#include <gphoto2.h>
 #include <GnoCam.h>
 #include <bonobo.h>
 #include <gconf/gconf-client.h>
@@ -34,15 +35,22 @@ struct _GnoCamCamera {
 
 struct _GnoCamCameraClass {
 	GtkVBoxClass		parent_class;
+
+	void (* folder_updated) (GnoCamCamera* folder, const gchar* path);
 };
 
 GtkType 	gnocam_camera_get_type			(void);
-GtkWidget*	gnocam_camera_new			(const gchar* url, BonoboUIContainer* container, GtkWindow* window, GConfClient* client, CORBA_Environment* ev);
+GtkWidget*	gnocam_camera_new			(const gchar* url, BonoboUIContainer* container, GConfClient* client, CORBA_Environment* ev);
 
 void 		gnocam_camera_set_storage_view_mode 	(GnoCamCamera* camera, GnoCamCameraStorageViewMode mode);
 
 void		gnocam_camera_show_menu			(GnoCamCamera* camera);
 void		gnocam_camera_hide_menu			(GnoCamCamera* camera);
+
+Camera*			gnocam_camera_get_camera	(GnoCamCamera* camera);
+Bonobo_Storage		gnocam_camera_get_storage	(GnoCamCamera* camera);
+GConfClient*		gnocam_camera_get_client	(GnoCamCamera* camera);
+Bonobo_UIContainer	gnocam_camera_get_container	(GnoCamCamera* camera);
 
 END_GNOME_DECLS
 

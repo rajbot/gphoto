@@ -89,7 +89,7 @@ create_camera (gpointer user_data)
 
         /* Get the camera */
         CORBA_exception_init (&ev);
-        widget = gnocam_camera_new (m->priv->url, m->priv->container, GTK_WINDOW (m), m->priv->client, &ev);
+        widget = gnocam_camera_new (m->priv->url, m->priv->container, m->priv->client, &ev);
         if (BONOBO_EX (&ev)) {
                 g_warning (_("Could not display camera widget for camera '%s'!\n(%s)"), m->priv->url, bonobo_exception_get_text (&ev));
                 CORBA_exception_free (&ev);

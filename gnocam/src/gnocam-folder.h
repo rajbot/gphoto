@@ -7,6 +7,8 @@
 #include <gconf/gconf-client.h>
 #include <gal/e-table/e-table.h>
 
+#include "gnocam-camera.h"
+
 BEGIN_GNOME_DECLS
 
 #define GNOCAM_TYPE_FOLDER		(gnocam_folder_get_type ())
@@ -31,12 +33,10 @@ struct _GnoCamFolderClass {
 
 
 GtkType    	gnocam_folder_get_type		(void);
-GtkWidget*	gnocam_folder_new		(Camera* camera, BonoboStorage* storage, Bonobo_Storage_OpenMode mode, const gchar* path, BonoboUIContainer* container, 
-							 GConfClient* client, GtkWindow* window);
+GtkWidget*	gnocam_folder_new		(GnoCamCamera* camera, const gchar* path);
 
 void		gnocam_folder_show_menu		(GnoCamFolder* folder);
 void		gnocam_folder_hide_menu		(GnoCamFolder* folder);
-void		gnocam_folder_update		(GnoCamFolder* folder);
 gchar*		gnocam_folder_get_path		(GnoCamFolder* folder);
 
 END_GNOME_DECLS

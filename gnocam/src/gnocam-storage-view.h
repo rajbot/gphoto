@@ -2,6 +2,8 @@
 #ifndef _GNOCAM_STORAGE_VIEW_H_
 #define _GNOCAM_STORAGE_VIEW_H_
 
+#include "gnocam-camera.h"
+
 #include <bonobo.h>
 #include <gal/e-table/e-table.h>
 
@@ -29,8 +31,6 @@ struct _GnoCamStorageViewClass {
 	void (* directory_selected)	(GnoCamStorageView* storage_view, const gchar* path);
 	void (* file_selected)		(GnoCamStorageView* storage_view, const gchar* path);
 
-	void (* directory_updated)	(GnoCamStorageView* storage_view, const gchar* path);
-
 	void (* dnd_action) 		(GnoCamStorageView* storage_view, GdkDragContext* context, 
 					const gchar* source_data, 
 					const gchar* source_data_type, 
@@ -38,9 +38,7 @@ struct _GnoCamStorageViewClass {
 };
 
 GtkType		gnocam_storage_view_get_type 		(void);
-GtkWidget*	gnocam_storage_view_new			(BonoboStorage* storage, Bonobo_Storage_OpenMode mode);
-
-void		gnocam_storage_view_update_folder	(GnoCamStorageView* storage_view, const gchar* folder);
+GtkWidget*	gnocam_storage_view_new			(GnoCamCamera* camera);
 
 END_GNOME_DECLS
 

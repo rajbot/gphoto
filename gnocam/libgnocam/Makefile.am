@@ -24,6 +24,7 @@ noinst_LTLIBRARIES = libgnocam.la
 
 libgnocam_la_SOURCES =\
  $(CORBA_SOURCES)\
+ bonobo-extenstions.h bonobo-extensions.c\
  gphoto-extensions.h gphoto-extensions.c
 
 libgnocam_la_LIBADD =\

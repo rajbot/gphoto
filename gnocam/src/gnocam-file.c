@@ -15,14 +15,11 @@ static GtkVBoxClass* parent_class;
 
 struct _GnoCamFilePrivate
 {
-	GtkWindow*		window;
-	BonoboUIContainer*	container;
+	Bonobo_UIContainer	container;
 
 	BonoboUIComponent*      component;
 
-	BonoboStorage*		storage;
-
-	GnoCamStorageView*	storage_view;
+	Bonobo_Storage		storage;
 
 	Bonobo_Control		control;
 	GtkWidget*		widget;
@@ -66,48 +63,12 @@ static void	on_config_clicked	(BonoboUIComponent* component, gpointer user_data,
 /********************/
 
 static gint
-set_container (gpointer user_data)
-{
-	GnoCamFile*    	file;
-
-	file = GNOCAM_FILE (user_data);
-
-	if (!file->priv->component) return (TRUE);
-
-	if (file->priv->control) Bonobo_Control_activate (file->priv->control, TRUE, NULL);
-
-	if (bonobo_ui_component_get_container (file->priv->component) == BONOBO_OBJREF (file->priv->container)) return (FALSE);
-
-	bonobo_ui_component_set_container (file->priv->component, BONOBO_OBJREF (file->priv->container));
-
-	return (FALSE);
-}
-
-static gint
-unset_container (gpointer user_data)
-{
-	GnoCamFile*	file;
-
-	file = GNOCAM_FILE (user_data);
-
-	if (!file->priv->component) return (TRUE);
-
-	bonobo_ui_component_unset_container (file->priv->component);
-        if (file->priv->control) Bonobo_Control_activate (file->priv->control, FALSE, NULL);
-
-	return (FALSE);
-}
-	
-static gint
 create_menu (gpointer user_data)
 {
 	GnoCamFile*	file;
 
 	g_return_val_if_fail (user_data, FALSE);
 	file = GNOCAM_FILE (user_data);
-
-	file->priv->component = bonobo_ui_component_new (PACKAGE "File");
-	bonobo_ui_component_set_container (file->priv->component, BONOBO_OBJREF (file->priv->container));
 
         bonobo_ui_component_set_translate (file->priv->component, "/menu/File", GNOCAM_FILE_UI, NULL);
 
@@ -134,7 +95,7 @@ create_error_widget (GnoCamFile* file, CORBA_Environment* ev)
 	g_return_if_fail (file);
 
         /* Create label with error message */
-        tmp = g_strdup_printf (_("Could not display '%s': %s!"), file->priv->path, bonobo_exception_get_text (ev));
+        tmp = g_strdup_printf (_("Could not display '%s' in folder '%s': %s!"), file->priv->filename, file->priv->dirname, bonobo_exception_get_text (ev));
         file->priv->widget = e_clipped_label_new (tmp);
         g_free (tmp);
 	gtk_widget_show (file->priv->widget);
@@ -161,8 +122,11 @@ create_widget (GnoCamFile* file)
 	if ((file->priv->camera->abilities->file_operations & GP_FILE_OPERATION_PREVIEW) && 
 	    gconf_client_get_bool (file->priv->client, "/apps/" PACKAGE "/preview", NULL))
 		mode |= Bonobo_Storage_COMPRESSED;
-	stream = Bonobo_Storage_openStream (BONOBO_OBJREF (file->priv->storage), file->priv->path, mode, &ev);
-        if (BONOBO_EX (&ev)) goto exit_clean;
+	stream = Bonobo_Storage_openStream (file->priv->storage, file->priv->filename, mode, &ev);
+        if (BONOBO_EX (&ev)) {
+		g_warning (_("Could not open stream for file '%s' in folder '%s': %s!"), file->priv->filename, file->priv->dirname, bonobo_exception_get_text (&ev));
+		goto exit_clean;
+	}
         g_return_if_fail (stream);
 
         /* Get information about the stream */
@@ -201,7 +165,7 @@ create_widget (GnoCamFile* file)
 
 	CORBA_exception_free (&ev);
 
-	file->priv->widget = bonobo_widget_new_control_from_objref (file->priv->control, BONOBO_OBJREF (file->priv->container));
+	file->priv->widget = bonobo_widget_new_control_from_objref (file->priv->control, file->priv->container);
 	gtk_widget_show (file->priv->widget);
 	gtk_container_add (GTK_CONTAINER (file), file->priv->widget);
 
@@ -228,6 +192,7 @@ create_widget (GnoCamFile* file)
 static void
 on_delete_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
 {
+	GnoCamCamera*	camera;
 	GnoCamFile*	file;
 	gint		result;
 
@@ -240,8 +205,9 @@ on_delete_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 			gp_camera_get_result_as_string (file->priv->camera, result));
 		return;
 	}
-	
-	gnocam_storage_view_update_folder (file->priv->storage_view, file->priv->dirname);
+
+	camera = GNOCAM_CAMERA (gtk_widget_get_ancestor (GTK_WIDGET (file), GNOCAM_TYPE_CAMERA));
+	gtk_signal_emit_by_name (GTK_OBJECT (camera), "folder_updated", file->priv->dirname);
 }
 
 static void
@@ -265,10 +231,12 @@ on_config_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 {
 	GnoCamFile*	file;
 	GtkWidget*	widget;
+	GtkWindow*	window;
 
 	file = GNOCAM_FILE (user_data);
+	window = GTK_WINDOW (gtk_widget_get_ancestor (GTK_WIDGET (file), GTK_TYPE_WINDOW));
 
-	widget = gnocam_configuration_new (file->priv->camera, file->priv->dirname, file->priv->filename, file->priv->window);
+	widget = gnocam_configuration_new (file->priv->camera, file->priv->dirname, file->priv->filename, window);
 	if (!widget) return;
 	gtk_widget_show (widget);
 }
@@ -280,13 +248,20 @@ on_config_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 void
 gnocam_file_hide_menu (GnoCamFile* file)
 {
-	gtk_idle_add (unset_container, file);
+	if (file->priv->control) Bonobo_Control_activate (file->priv->control, FALSE, NULL);
+	bonobo_ui_component_unset_container (file->priv->component);
 }
 
 void
 gnocam_file_show_menu (GnoCamFile* file)
 {
-	gtk_idle_add (set_container, file);
+	/* Do we already show the menu? */
+	if (bonobo_ui_component_get_container (file->priv->component) == file->priv->container) 
+		return;
+
+	bonobo_ui_component_set_container (file->priv->component, file->priv->container);
+	if (file->priv->control) Bonobo_Control_activate (file->priv->control, TRUE, NULL);
+	gtk_idle_add (create_menu, file);
 }
 
 /****************************/
@@ -345,12 +320,42 @@ gnocam_file_init (GnoCamFile* file)
 }
 
 GtkWidget*
-gnocam_file_new (Camera* camera, BonoboStorage* storage, const gchar* path, BonoboUIContainer* container, GConfClient* client, GtkWindow* window, 
-		 GnoCamStorageView* storage_view)
+gnocam_file_new (GnoCamCamera* camera, const gchar* path)
 {
 	GnoCamFile*		new;
+	Bonobo_Storage		storage;
+	Bonobo_Storage		storage_new;
+	Bonobo_Storage_OpenMode	mode;
+	gchar*			dirname;
+	CORBA_Environment	ev;
+	Camera*			cam;
+	GConfClient*		client;
 
 	g_return_val_if_fail (camera, NULL);
+
+	/* Open the storage */
+	dirname = g_dirname (path);
+	if (!strcmp (dirname, ".")) {
+		g_free (dirname);
+		dirname = g_strdup ("/");
+	}
+	mode = Bonobo_Storage_READ;
+	cam = gnocam_camera_get_camera (camera);
+	client = gnocam_camera_get_client (camera);
+	if ((cam->abilities->file_operations & GP_FILE_OPERATION_PREVIEW) && gconf_client_get_bool (client, "/apps/" PACKAGE "/preview", NULL))
+		mode |= Bonobo_Storage_COMPRESSED;
+	storage = gnocam_camera_get_storage (camera);
+	CORBA_exception_init (&ev);
+	storage_new = Bonobo_Storage_openStorage (storage, dirname + 1, mode, &ev);
+	bonobo_object_release_unref (storage, NULL);
+	if (BONOBO_EX (&ev)) {
+		g_warning (_("Could not open storage for '%s': %s!"), dirname, bonobo_exception_get_text (&ev));
+		gtk_object_unref (GTK_OBJECT (client));
+		g_free (dirname);
+		gp_camera_unref (cam);
+		CORBA_exception_free (&ev);
+		return (NULL);
+	}
 
 	/* Create the widget */
 	new = gtk_type_new (GNOCAM_TYPE_FILE);
@@ -358,22 +363,16 @@ gnocam_file_new (Camera* camera, BonoboStorage* storage, const gchar* path, Bono
 
 	new->priv->filename = g_strdup (g_basename (path));
 	new->priv->path = g_strdup (path);
-	new->priv->container = container;
-	new->priv->window = window;
-	new->priv->storage_view = storage_view;
-	gp_camera_ref (new->priv->camera = camera);
-	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
+	new->priv->container = gnocam_camera_get_container (camera);
+	new->priv->camera = cam;
+	new->priv->client = client;
 	new->priv->cnxn = gconf_client_notify_add (new->priv->client, "/apps/" PACKAGE "/preview", on_preview_changed, new, NULL, NULL);
-	new->priv->storage = storage;
-	
-        /* Dirname? */  
-        new->priv->dirname = g_dirname (path);  
-        if (!strcmp (new->priv->dirname, ".")) {
-                g_free (new->priv->dirname);    
-                new->priv->dirname = g_strdup ("/");    
-        }       
+	new->priv->storage = storage_new;
+	new->priv->dirname = dirname;
 
 	/* Create the menu */
+	new->priv->component = bonobo_ui_component_new (PACKAGE "File");
+	bonobo_ui_component_set_container (new->priv->component, new->priv->container);
 	gtk_idle_add (create_menu, new);
 
 	create_widget (new);

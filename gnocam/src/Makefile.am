@@ -42,5 +42,6 @@ gnocam_LDADD =\
  $(GAL_LIBS)\
  $(GCONF_LIBS)\
  $(GPHOTO_LIBS)\
- ../libgnocam/libgnocam.la
+ ../libgnocam/libgnocam.la\
+ ../bonobo-storage-module/libstorage_camera.la
 

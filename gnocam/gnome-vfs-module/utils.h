@@ -27,6 +27,8 @@ typedef struct {
 } file_handle_t;
 
 typedef struct {
+    	Camera*			camera;
+	gchar*			folder;
 	GSList*			folders;
 	GSList*			files;
 	GnomeVFSFileInfoOptions	options;

@@ -61,16 +61,3 @@ util_pixbuf_lock (void)
 	return (pixbuf);
 }
 
-GdkPixbuf*
-util_pixbuf_unlock (void)
-{
-	static GdkPixbuf*	pixbuf = NULL;
-
-	if (pixbuf) return (pixbuf);
-
-	if (!g_file_exists (IMAGEDIR "/gnocam-unlock.png")) return (NULL);
-
-	pixbuf = scale_pixbuf (gdk_pixbuf_new_from_file (IMAGEDIR "/gnocam-unlock.png"));
-	return (pixbuf);
-}
-

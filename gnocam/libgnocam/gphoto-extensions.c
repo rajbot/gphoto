@@ -125,3 +125,57 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 	return (result);
 }
 
+GnomeVFSResult
+gp_camera_file_get_vfs_info (Camera             *camera, 
+			     const gchar        *folder, 
+			     const gchar        *file, 
+			     GnomeVFSFileInfo   *info)
+{
+	GnomeVFSResult result;
+	CameraFileInfo file_info;
+
+	g_return_val_if_fail (info, GNOME_VFS_ERROR_BAD_PARAMETERS);
+
+	result = GNOME_VFS_RESULT (gp_camera_file_get_info (camera, folder,
+		    					    file, &file_info));
+	if (result != GNOME_VFS_OK)
+	    	return (result);
+
+	/* Name */
+	info->name = g_strdup (file);
+
+	/* Type */
+	info->type = GNOME_VFS_FILE_TYPE_REGULAR; 
+	info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
+
+	/* Mime type */
+	if (file_info.file.fields && GP_FILE_INFO_TYPE) {
+		info->mime_type = g_strdup (file_info.file.type);
+		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+	}
+
+	/* Permissions */
+	if (file_info.file.fields && GP_FILE_INFO_PERMISSIONS) { 
+	    	info->permissions = 0; 
+		if (file_info.file.permissions & GP_FILE_PERM_READ)
+		    	info->permissions = GNOME_VFS_PERM_USER_READ | 
+			    		    GNOME_VFS_PERM_GROUP_READ | 
+					    GNOME_VFS_PERM_OTHER_READ; 
+		if (file_info.file.permissions & GP_FILE_PERM_DELETE)
+		    	info->permissions |= GNOME_VFS_PERM_USER_WRITE | 
+			    		     GNOME_VFS_PERM_GROUP_WRITE |
+					     GNOME_VFS_PERM_OTHER_WRITE;
+		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_PERMISSIONS;
+	}
+
+	/* Size */
+	if (file_info.file.fields && GP_FILE_INFO_SIZE) {
+	    	info->size = file_info.file.size;
+		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_SIZE;
+	}
+
+	return (GNOME_VFS_OK);
+}
+
+
+

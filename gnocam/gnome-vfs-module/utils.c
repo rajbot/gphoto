@@ -18,7 +18,6 @@ file_handle_new (GnomeVFSURI* uri, GnomeVFSOpenMode mode, GnomeVFSContext* conte
         const gchar*            filename;
         gchar*                  dirname = NULL;
         Camera*                 camera = NULL;
-	CameraList		camera_list;
         CameraFile*             file = NULL;
         file_handle_t*          file_handle;
 
@@ -100,7 +99,8 @@ file_handle_free (GnomeVFSMethodHandle* handle)
 }
 
 GnomeVFSMethodHandle*
-directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options, GnomeVFSContext* context, GnomeVFSResult* result)
+directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options, 
+		      GnomeVFSContext* context, GnomeVFSResult* result)
 {
 	Camera* 		camera = NULL;
 	directory_handle_t*	directory_handle;
@@ -166,7 +166,6 @@ directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options, GnomeVF
 	for (i = 0; i < gp_list_count (&camera_list); i++) 
 		files = g_slist_append (files, 
 				g_strdup (gp_list_entry (&camera_list, i)->name));
-	gp_camera_unref (camera);
 
 	/* Create the directory handle. */
 	directory_handle = g_new (directory_handle_t, 1);
@@ -174,6 +173,8 @@ directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options, GnomeVF
 	directory_handle->files = files;
 	directory_handle->options = options;
 	directory_handle->position = 0;
+	directory_handle->camera = camera;
+	directory_handle->folder = g_strdup (gnome_vfs_uri_get_path (uri));
 
 	*result = GNOME_VFS_OK;
 	CAM_VFS_DEBUG (("exiting"));
@@ -193,6 +194,8 @@ directory_handle_free (GnomeVFSMethodHandle* handle)
 	g_slist_free (directory_handle->folders);
 	for (i = 0; i < g_slist_length (directory_handle->files); i++) g_free (g_slist_nth_data (directory_handle->files, i));
 	g_slist_free (directory_handle->files);
+	g_free (directory_handle->folder);
+	gp_camera_unref (directory_handle->camera);
 	g_free (directory_handle);
 	return (GNOME_VFS_OK);
 }

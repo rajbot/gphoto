@@ -7,7 +7,7 @@
 #include <gal/util/e-util.h>
 #include <gal/e-table/e-table.h>
 #include <gal/e-table/e-table-simple.h>
-#include <gal/e-table/e-cell-toggle.h>
+#include <gal/e-table/e-cell-checkbox.h>
 
 #include "utils.h"
 #include "gnocam-configuration.h"
@@ -39,21 +39,28 @@ struct _GnoCamFolderPrivate
 	GHashTable*			hash_table;
 };
 
-#define E_TABLE_SPEC																		\
-"<ETableSpecification>"																		\
-"  <ETableColumn model_col=\"0\" _title=\"Filename\"     expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\"  cell=\"string\"          compare=\"string\"/>"\
-"  <ETableColumn model_col=\"1\" _title=\"Content Type\" expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\"  cell=\"string\"          compare=\"string\"/>"\
-"  <ETableColumn model_col=\"2\" _title=\"Size\"         expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\"  cell=\"size\"            compare=\"string\"/>"\
-"  <ETableColumn model_col=\"3\" _title=\"Permission\"   expansion=\"0.0\" minimum_width=\"20\" resizable=\"false\" cell=\"cell_permission\" compare=\"integer\""\
-"                pixbuf=\"permission\" sortable=\"false\"/>"													\
-"  <ETableState>"																		\
-"    <column source=\"0\"/>"																	\
-"    <column source=\"3\"/>"																	\
-"    <column source=\"1\"/>"																	\
-"    <column source=\"2\"/>"																	\
-"    <grouping/>"																		\
-"  </ETableState>"																		\
-"</ETableSpecification>"
+#define E_TABLE_SPEC "\
+<ETableSpecification>							      \
+  <ETableColumn model_col=\"0\" _title=\"Filename\" expansion=\"1.0\"         \
+                minimum_width=\"20\" resizable=\"true\" cell=\"string\"       \
+                compare=\"string\"/>					      \
+  <ETableColumn model_col=\"1\" _title=\"Content Type\" expansion=\"1.0\"     \
+                minimum_width=\"20\" resizable=\"true\" cell=\"string\"       \
+		compare=\"string\"/>					      \
+  <ETableColumn model_col=\"2\" _title=\"Size\" expansion=\"1.0\"	      \
+		minimum_width=\"20\" resizable=\"true\" cell=\"size\"	      \
+		compare=\"string\"/>					      \
+  <ETableColumn model_col=\"3\" _title=\"Locked\" expansion=\"0.0\"           \
+		minimum_width=\"20\" resizable=\"true\" cell=\"cell_locked\"  \
+		compare=\"integer\" pixbuf=\"locked\"/>		     	      \
+  <ETableState>\
+    <column source=\"0\"/>\
+    <column source=\"3\"/>\
+    <column source=\"1\"/>\
+    <column source=\"2\"/>\
+    <grouping/>\
+  </ETableState>\
+</ETableSpecification>"
 
 #define GNOCAM_FOLDER_UI	 										\
 "<Root>"													\
@@ -586,7 +593,9 @@ value_at (ETableModel* model, gint col, gint row, gpointer user_data)
 	if (!folder->priv->list) return (NULL);
 
 	/* Search our record in the list */
-	for (i = 0; i < row + 1; i++) if (folder->priv->list->_buffer [i].type == Bonobo_STORAGE_TYPE_DIRECTORY) row++;
+	for (i = 0; i < row + 1; i++) 
+		if (folder->priv->list->_buffer [i].type == 
+			Bonobo_STORAGE_TYPE_DIRECTORY) row++;
 
 	switch (col) {
 	case 0: 
@@ -594,22 +603,26 @@ value_at (ETableModel* model, gint col, gint row, gpointer user_data)
 	case 1:
 		return (folder->priv->list->_buffer [row].content_type);
 	case 2:
-		return (GINT_TO_POINTER (folder->priv->list->_buffer [row].size));
+		return (GINT_TO_POINTER (
+			    	folder->priv->list->_buffer [row].size));
 	case 3:
-
-		info = g_hash_table_lookup (folder->priv->hash_table, folder->priv->list->_buffer [row].name);
+		info = g_hash_table_lookup (
+				folder->priv->hash_table, 
+				folder->priv->list->_buffer [row].name);
 		if (!info) return (NULL);
-		if (!(info->file.fields & GP_FILE_INFO_PERMISSIONS)) return (NULL);
-		if (info->file.permissions & GP_FILE_PERM_DELETE) return (GINT_TO_POINTER (1));
+		if (!(info->file.fields & GP_FILE_INFO_PERMISSIONS)) 
+		    	return (NULL);
+		if (info->file.permissions & GP_FILE_PERM_DELETE) 
+		    	return (GINT_TO_POINTER (1));
 		return (GINT_TO_POINTER (0));
-
 	default:
 		return (NULL);
 	}
 }
 
 static void
-set_value_at (ETableModel* model, gint col, gint row, const void* value, gpointer user_data)
+set_value_at (ETableModel *model, gint col, gint row, const void *value, 
+	      gpointer user_data)
 {
 	GnoCamFolder*		folder;
 	gchar*			name_old;
@@ -622,52 +635,68 @@ set_value_at (ETableModel* model, gint col, gint row, const void* value, gpointe
 	g_return_if_fail (folder->priv->list);
 
 	/* Search our record in the list */
-	for (i = 0; i < row + 1; i++) if (folder->priv->list->_buffer [i].type == Bonobo_STORAGE_TYPE_DIRECTORY) row++;
+	for (i = 0; i < row + 1; i++) 
+	    	if (folder->priv->list->_buffer [i].type == 
+			Bonobo_STORAGE_TYPE_DIRECTORY) row++;
 
 	switch (col) {
 	case 0:
-
 		CORBA_exception_init (&ev);
 		name_new = (gchar*) value;
 		name_old = folder->priv->list->_buffer [row].name;
-		Bonobo_Storage_rename (folder->priv->storage, name_old, name_new, &ev);
+		Bonobo_Storage_rename (folder->priv->storage, name_old, 
+				       name_new, &ev);
 		if (BONOBO_EX (&ev)) {
-			g_warning (_("Could not rename '%s' to '%s': %s!"), name_old, name_new, bonobo_exception_get_text (&ev));
+			g_warning (_("Could not rename '%s' to '%s': %s!"), 
+				   name_old, name_new, 
+				   bonobo_exception_get_text (&ev));
 			CORBA_exception_free (&ev);
 			return;
 		}
 		CORBA_exception_free (&ev);
 		CORBA_free (folder->priv->list->_buffer [row].name);
-		folder->priv->list->_buffer [row].name = CORBA_string_dup (value);
+		folder->priv->list->_buffer [row].name = 
+		    				CORBA_string_dup (value);
 		break;
-
 	case 3:
-
-		info = g_hash_table_lookup (folder->priv->hash_table, folder->priv->list->_buffer [row].name);
+printf ("Value: %i\n", (int) value);
+		info = g_hash_table_lookup (
+					folder->priv->hash_table, 
+					folder->priv->list->_buffer [row].name);
 		if (!info) return;
 		if (!(info->file.fields & GP_FILE_INFO_PERMISSIONS)) {
-			g_warning (_("File permissions are not supported by your camera!"));
+			g_warning (_("File permissions are not supported "
+				     "by your camera!"));
 			return;
 		}
 		info->preview.fields = GP_FILE_INFO_NONE;
 		info->file.fields = GP_FILE_INFO_PERMISSIONS;
 		info->file.permissions = GP_FILE_PERM_READ;
-		if (GPOINTER_TO_INT (value) == 1) info->file.permissions |= GP_FILE_PERM_DELETE;
-		result = gp_camera_file_set_info (folder->priv->camera, folder->priv->path, folder->priv->list->_buffer [row].name, info);
+		if (GPOINTER_TO_INT (value) == 1) 
+		    	info->file.permissions |= GP_FILE_PERM_DELETE;
+		result = gp_camera_file_set_info (
+					folder->priv->camera, 
+					folder->priv->path, 
+					folder->priv->list->_buffer [row].name, 
+					info);
 		if (result != GP_OK) {
-			g_warning (_("Could not set file information of file '%s' in folder '%s': %s!"), folder->priv->list->_buffer [row].name, folder->priv->path, 
-				gp_camera_get_result_as_string (folder->priv->camera, result));
+			g_warning (_("Could not set file information "
+				     "of file '%s' in folder '%s': %s!"), 
+				   folder->priv->list->_buffer [row].name, 
+				   folder->priv->path, 
+				   gp_camera_get_result_as_string (
+				       			folder->priv->camera, 
+							result));
 			return;
 		}
 		break;
-
 	default:
 		break;
 	}
 }
 
 static gboolean
-is_cell_editable (ETableModel* model, gint col, gint row, gpointer user_data)
+is_cell_editable (ETableModel *model, gint col, gint row, gpointer user_data)
 {
 	GnoCamFolder*	folder;
 	CameraFileInfo*	info;
@@ -677,18 +706,19 @@ is_cell_editable (ETableModel* model, gint col, gint row, gpointer user_data)
 	g_return_val_if_fail (folder->priv->list, FALSE);
 	
 	/* Search our record in the list */
-	for (i = 0; i < row + 1; i++) if (folder->priv->list->_buffer [i].type == Bonobo_STORAGE_TYPE_DIRECTORY) row++;
+	for (i = 0; i < row + 1; i++) 
+	    	if (folder->priv->list->_buffer [i].type == 
+			Bonobo_STORAGE_TYPE_DIRECTORY) row++;
 
 	switch (col) {
 	case 0:
 		return (TRUE);
 	case 3:
-
-		info = g_hash_table_lookup (folder->priv->hash_table, folder->priv->list->_buffer [row].name);
+		info = g_hash_table_lookup (
+					folder->priv->hash_table, 
+					folder->priv->list->_buffer [row].name);
                 if (!info) return (FALSE);
-		if (info->file.fields & GP_FILE_INFO_PERMISSIONS) return (TRUE);
-		return (FALSE);
-				
+		return (info->file.fields & GP_FILE_INFO_PERMISSIONS);
 	default:
 		return (FALSE);
 	}
@@ -780,7 +810,6 @@ gnocam_folder_new (GnoCamCamera* camera, const gchar* path)
 	ETableExtras*			extras;
 	Camera*				cam;
 	GConfClient*			client;
-	GdkPixbuf*			images [2];
 
 	if (*path == '/') directory = path;
 	else directory = ++path;
@@ -792,12 +821,14 @@ gnocam_folder_new (GnoCamCamera* camera, const gchar* path)
 	mode = Bonobo_Storage_READ;
 	cam = gnocam_camera_get_camera (camera);
 	client = gnocam_camera_get_client (camera);
-	if ((cam->abilities->file_operations & GP_FILE_OPERATION_PREVIEW) && gconf_client_get_bool (client, "/apps/" PACKAGE "/preview", NULL))
+	if ((cam->abilities->file_operations & GP_FILE_OPERATION_PREVIEW) && 
+	    gconf_client_get_bool (client, "/apps/" PACKAGE "/preview", NULL))
 		mode |= Bonobo_Storage_COMPRESSED;
 	storage_new = Bonobo_Storage_openStorage (storage, path + 1, mode, &ev);
 	bonobo_object_release_unref (storage, NULL);
 	if (BONOBO_EX (&ev)) {
-		g_warning (_("Could not open storage for '%s': %s!"), path, bonobo_exception_get_text (&ev));
+		g_warning (_("Could not open storage for '%s': %s!"), path, 
+			   bonobo_exception_get_text (&ev));
 		gtk_object_unref (GTK_OBJECT (client));
 		gp_camera_unref (cam);
 		CORBA_exception_free (&ev);
@@ -810,35 +841,46 @@ gnocam_folder_new (GnoCamCamera* camera, const gchar* path)
 	new->priv->storage = storage_new;
 	new->priv->container = gnocam_camera_get_container (camera);
 	new->priv->client = client;
-	new->priv->cnxn = gconf_client_notify_add (new->priv->client, "/apps/" PACKAGE "/preview", on_preview_changed, new, NULL, NULL);
+	new->priv->cnxn = gconf_client_notify_add (
+					new->priv->client, 
+					"/apps/" PACKAGE "/preview", 
+					on_preview_changed, new, NULL, NULL);
 	new->priv->hash_table = g_hash_table_new (g_str_hash, g_str_equal);
 
 	/* Create the model */
-	new->priv->model = e_table_simple_new (col_count, row_count, value_at, set_value_at, is_cell_editable, 
-		duplicate_value, free_value, initialize_value, value_is_empty, value_to_string, new);
+	new->priv->model = e_table_simple_new (col_count, row_count, 
+					       value_at, set_value_at, 
+					       is_cell_editable, 
+					       duplicate_value, 
+					       free_value, initialize_value, 
+					       value_is_empty, value_to_string, 
+					       new);
 
 	/* Create the extras */
 	extras = e_table_extras_new ();
-	images [0] = util_pixbuf_lock ();
-	images [1] = util_pixbuf_unlock ();
-	e_table_extras_add_pixbuf (extras, "permission", images [0]);
-	e_table_extras_add_cell (extras, "cell_permission", e_cell_toggle_new (0, 2, images));
+	e_table_extras_add_pixbuf (extras, "locked", util_pixbuf_lock ());
+	e_table_extras_add_cell (extras, "cell_locked", 
+				 e_cell_checkbox_new ());
 
 	/* Create the table */
-	e_table_construct (E_TABLE (new), new->priv->model, extras, E_TABLE_SPEC, NULL);
+	e_table_construct (E_TABLE (new), new->priv->model, extras, 
+			   E_TABLE_SPEC, NULL);
 
 	/* Create menu */
 	new->priv->component = bonobo_ui_component_new (PACKAGE "Folder");
-	bonobo_ui_component_set_container (new->priv->component, new->priv->container);
+	bonobo_ui_component_set_container (new->priv->component, 
+					   new->priv->container);
 	create_menu (new);
 
 	/* Fill the table */
 	update_folder (new);
 
-	gtk_signal_connect (GTK_OBJECT (camera), "folder_updated", GTK_SIGNAL_FUNC (on_folder_updated), new);
+	gtk_signal_connect (GTK_OBJECT (camera), "folder_updated", 
+			    GTK_SIGNAL_FUNC (on_folder_updated), new);
 
 	return (GTK_WIDGET (new));
 }
 
-E_MAKE_TYPE (gnocam_folder, "GnoCamFolder", GnoCamFolder, gnocam_folder_class_init, gnocam_folder_init, PARENT_TYPE);
+E_MAKE_TYPE (gnocam_folder, "GnoCamFolder", GnoCamFolder, 
+	     gnocam_folder_class_init, gnocam_folder_init, PARENT_TYPE);
 

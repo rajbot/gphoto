@@ -3,15 +3,15 @@
 SUBDIRS =\
  art\
  idl\
- intl\
  macros\
- po\
  libgnocam\
  bonobo-storage-module\
  bonobo-moniker\
  capplet\
  gnome-vfs-module\
- src
+ src\
+ intl\
+ po
 
 EXTRA_DIST =\
  AUTHORS\

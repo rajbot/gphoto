@@ -8,50 +8,54 @@
 
 BEGIN_GNOME_DECLS
 
-#define CHECK_RESULT(result,ev)         G_STMT_START{                                                                           \
-	gint	r;														\
-																\
-	r = result;														\
-        if (r <= 0) {      													\
-                switch (r) {													\
-                case GP_OK:                                                                                                     \
-                        break;                                                                                                  \
-                case GP_ERROR_IO:                                                                                               \
-                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_IOError, NULL);				\
-                        break;                                                                                                  \
-                case GP_ERROR_DIRECTORY_NOT_FOUND:                                                                              \
-                case GP_ERROR_FILE_NOT_FOUND:                                                                                   \
-                case GP_ERROR_MODEL_NOT_FOUND:                                                                                  \
-                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotFound, NULL);                       \
-                        break;                                                                                                  \
-		case GP_ERROR_DIRECTORY_EXISTS:											\
-                case GP_ERROR_FILE_EXISTS:                                                                                      \
-                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NameExists, NULL);                     \
-                        break;                                                                                                  \
-                case GP_ERROR_NOT_SUPPORTED:                                                                                    \
-                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_NotSupported, NULL);				\
-                        break;                                                                                                  \
-                default:                                                                                                        \
-                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_IOError, NULL);				\
-                        break;                                                                                                  \
-                }                                                                                                               \
+#define CHECK_RESULT(result,ev)         G_STMT_START{			      \
+	gint	r;							      \
+									      \
+	r = result;							      \
+        if (r <= 0) {      						      \
+                switch (r) {						      \
+                case GP_OK:                                                   \
+                        break;                                                \
+                case GP_ERROR_IO:                                             \
+                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION,        \
+					     ex_Bonobo_IOError, NULL);	      \
+                        break;                                                \
+                case GP_ERROR_DIRECTORY_NOT_FOUND:                            \
+                case GP_ERROR_FILE_NOT_FOUND:                                 \
+                case GP_ERROR_MODEL_NOT_FOUND:                                \
+                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION,        \
+					 ex_Bonobo_Storage_NotFound, NULL);   \
+                        break;                                                \
+		case GP_ERROR_DIRECTORY_EXISTS:				      \
+                case GP_ERROR_FILE_EXISTS:                                    \
+                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION, 	      \
+					 ex_Bonobo_Storage_NameExists, NULL); \
+                        break;                                                \
+                case GP_ERROR_NOT_SUPPORTED:                                  \
+                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION,        \
+				             ex_Bonobo_NotSupported, NULL);   \
+                        break;                                                \
+                default:                                                      \
+                        CORBA_exception_set (ev, CORBA_USER_EXCEPTION,        \
+					     ex_Bonobo_IOError, NULL);	      \
+                        break;                                                \
+                }                                                             \
         }                               }G_STMT_END
 
 #define GNOME_VFS_RESULT(result)	(gp_result_as_gnome_vfs_result(result))
 
-
-
-
 GnomeVFSResult 	gp_result_as_gnome_vfs_result 	(gint result);
 
-gint 		gp_camera_new_from_gconf 	(Camera** camera, const gchar* name_or_url);
+GnomeVFSResult	gp_camera_file_get_vfs_info (Camera 		*camera, 
+					     const gchar 	*folder,
+					     const gchar 	*file,
+					     GnomeVFSFileInfo 	*info);
 
-
-
+gint 		gp_camera_new_from_gconf (Camera	**camera, 
+					  const gchar	 *name_or_url);
 
 END_GNOME_DECLS
 
 #endif /* _GPHOTO_EXTENSIONS_H_ */
 
 
-	

@@ -1,5 +1,10 @@
 2001-04-20	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
+	* gnome-vfs-module/*: 
+	* libgnocam/*: Preliminary gp_camera_file_info_* support.
+
+2001-04-20	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
 	* configure.in:
 	* src/gnocam_storage_view.c: Bring API in sync with gal-0.7.99.0
 

@@ -212,7 +212,7 @@ create_menu (GnoCamCamera* camera)
 	}
 }
 
-static int
+int
 gp_frontend_status (Camera* camera, char* status)
 {
         GnoCamCamera*   c;
@@ -224,20 +224,21 @@ gp_frontend_status (Camera* camera, char* status)
         return (GP_OK);
 }
 
-static int
+int
 gp_frontend_message (Camera* camera, char* message)
 {
         gnome_ok_dialog (message);
         return (GP_OK);
 }
 
-static int
+int
 gp_frontend_confirm (Camera* camera, char* message)
 {
         GtkWidget*      widget;
         gint            result;
 
-        widget = gnome_dialog_new (message, GNOME_STOCK_BUTTON_YES, GNOME_STOCK_BUTTON_NO, NULL);
+        widget = gnome_dialog_new (message, GNOME_STOCK_BUTTON_YES, 
+				   GNOME_STOCK_BUTTON_NO, NULL);
         result = gnome_dialog_run_and_close (GNOME_DIALOG (widget));
         gtk_widget_unref (widget);
 
@@ -248,10 +249,22 @@ gp_frontend_confirm (Camera* camera, char* message)
 static void
 disconnect_popup_signals (GnoCamCamera* camera)
 {
-        gtk_signal_disconnect_by_func (GTK_OBJECT (camera->priv->storage_view_vbox), GTK_SIGNAL_FUNC (on_storage_view_vbox_button_release_event), camera);
-        gtk_signal_disconnect_by_func (GTK_OBJECT (camera->priv->storage_view_vbox), GTK_SIGNAL_FUNC (on_storage_view_vbox_map), camera);
-        gtk_signal_disconnect_by_func (GTK_OBJECT (camera->priv->storage_view), GTK_SIGNAL_FUNC (on_storage_view_vbox_button_release_event), camera);
-        gtk_signal_disconnect_by_func (GTK_OBJECT (camera->priv->storage_view_title_bar), GTK_SIGNAL_FUNC (on_popup_storage_view_title_bar_button_clicked), camera);
+        gtk_signal_disconnect_by_func (
+		GTK_OBJECT (camera->priv->storage_view_vbox), 
+		GTK_SIGNAL_FUNC (on_storage_view_vbox_button_release_event), 
+		camera);
+        gtk_signal_disconnect_by_func (
+		GTK_OBJECT (camera->priv->storage_view_vbox), 
+		GTK_SIGNAL_FUNC (on_storage_view_vbox_map), 
+		camera);
+        gtk_signal_disconnect_by_func (
+		GTK_OBJECT (camera->priv->storage_view), 
+		GTK_SIGNAL_FUNC (on_storage_view_vbox_button_release_event), 
+		camera);
+        gtk_signal_disconnect_by_func (
+		GTK_OBJECT (camera->priv->storage_view_title_bar), 
+		GTK_SIGNAL_FUNC(on_popup_storage_view_title_bar_button_clicked),
+		camera);
 }
 
 static void
@@ -259,12 +272,14 @@ popdown_transient_folder_bar (GnoCamCamera* camera)
 {
         gdk_pointer_ungrab (GDK_CURRENT_TIME);
         gtk_grab_remove (camera->priv->storage_view_vbox);
-
-        gnocam_camera_set_storage_view_mode (camera, GNOCAM_CAMERA_STORAGE_VIEW_MODE_HIDDEN);
-
+        gnocam_camera_set_storage_view_mode (
+					camera, 
+					GNOCAM_CAMERA_STORAGE_VIEW_MODE_HIDDEN);
         disconnect_popup_signals (camera);
 
-	e_shell_folder_title_bar_set_toggle_state (E_SHELL_FOLDER_TITLE_BAR (camera->priv->title_bar), FALSE);
+	e_shell_folder_title_bar_set_toggle_state (
+			E_SHELL_FOLDER_TITLE_BAR (camera->priv->title_bar), 
+			FALSE);
 }
 
 static void
@@ -311,9 +326,11 @@ on_configuration_clicked (BonoboUIComponent* component, gpointer user_data, cons
 	GtkWindow*	window;
 
 	camera = GNOCAM_CAMERA (user_data);
-	window = GTK_WINDOW (gtk_widget_get_ancestor (GTK_WIDGET (camera), GTK_TYPE_WINDOW));
+	window = GTK_WINDOW (gtk_widget_get_ancestor (GTK_WIDGET (camera), 
+		    	     GTK_TYPE_WINDOW));
 	
-	widget = gnocam_configuration_new (camera->priv->camera, NULL, NULL, window);
+	widget = gnocam_configuration_new (camera->priv->camera, 
+					   NULL, NULL, window);
 	if (!widget) return;
 	gtk_widget_show (widget);
 }

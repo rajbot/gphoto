@@ -15,7 +15,6 @@
 #include <gphoto-extensions.h>
 #include "utils.h"
 
-static GSList*	list = NULL;
 static GMutex*	client_mutex = NULL;
 
 /**************/
@@ -101,8 +100,8 @@ static GnomeVFSResult do_read (
 	CAM_VFS_DEBUG (("entering"));
 
 	/* Do we have num_bytes left? */
-	CAM_VFS_DEBUG (("num_bytes=%d", num_bytes));
-	CAM_VFS_DEBUG (("file_handle->file->size=%d", file_handle->file->size));
+	CAM_VFS_DEBUG (("num_bytes=%d", (int) num_bytes));
+	CAM_VFS_DEBUG (("file_handle->file->size=%d", (int) file_handle->file->size));
 	if (file_handle->position + num_bytes >= file_handle->file->size) {
 		if ((*bytes_read = file_handle->file->size - file_handle->position) <= 0) {
 			CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_EOF"));
@@ -227,49 +226,63 @@ static GnomeVFSResult do_close_directory (
 
 static GnomeVFSResult do_read_directory (
 	GnomeVFSMethod*                 method,
-	GnomeVFSMethodHandle*           handle,
+	GnomeVFSMethodHandle*           h,
 	GnomeVFSFileInfo*		info,
 	GnomeVFSContext*                context)
 {
-	directory_handle_t*	directory_handle;
+	directory_handle_t*	handle;
 
-	g_return_val_if_fail (directory_handle = (directory_handle_t*) handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
+	g_return_val_if_fail (h, GNOME_VFS_ERROR_BAD_PARAMETERS);
+	handle = (directory_handle_t*) h;
+	
 	g_mutex_lock (client_mutex);
 	CAM_VFS_DEBUG (("entering"));
 	
 	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_NONE;
-	if (directory_handle->position < g_slist_length (directory_handle->folders)) {
+	if (handle->position < g_slist_length (handle->folders)) {
 
 		/* Folder */
-		info->name = g_strdup (g_slist_nth_data (directory_handle->folders, directory_handle->position));
+		info->name = g_strdup (g_slist_nth_data (handle->folders, 
+			    				 handle->position));
 		info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
 		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
-		if (directory_handle->options & GNOME_VFS_FILE_INFO_GET_MIME_TYPE) {
+		if (handle->options & GNOME_VFS_FILE_INFO_GET_MIME_TYPE) {
 			info->mime_type = g_strdup ("x-directory/normal");
 			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
 		}
 		CAM_VFS_DEBUG (("%s is a folder",info->name));
-	} else if (directory_handle->position < g_slist_length (directory_handle->folders) + g_slist_length (directory_handle->files)) {
+	} else if (handle->position < g_slist_length (handle->folders) + 
+				      g_slist_length (handle->files)) {
+		GnomeVFSResult	 result;
+		const gchar 	*file;
 
 		/* File */
-		info->name = g_strdup (g_slist_nth_data (directory_handle->files, directory_handle->position - g_slist_length (directory_handle->folders)));
-		info->type = GNOME_VFS_FILE_TYPE_REGULAR;
-		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
-		if (directory_handle->options & GNOME_VFS_FILE_INFO_GET_MIME_TYPE) {
-			info->mime_type = g_strdup ("image/jpeg");
-			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+		file = g_slist_nth_data (handle->files,
+			handle->position - g_slist_length (handle->folders));
+		result = gp_camera_file_get_vfs_info (handle->camera, 
+						      handle->folder, file, 
+						      info);
+		if (result != GNOME_VFS_OK) {
+		    	
+		    	/* We always have to return GNOME_VFS_OK... */
+			info->name = g_strdup (file);
+
+			/* Type */
+			info->type = GNOME_VFS_FILE_TYPE_REGULAR;
+			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
 		}
 		CAM_VFS_DEBUG (("%s is a file",info->name));
+
 	} else {
-		directory_handle->position = -1;
+		handle->position = -1;
 		g_mutex_unlock (client_mutex);
 		CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_EOF"));
 		return (GNOME_VFS_ERROR_EOF);
 	}
 	GNOME_VFS_FILE_INFO_SET_LOCAL (info, FALSE);
 	
-	directory_handle->position++;
-	CAM_VFS_DEBUG ((" -> (%i) %s", directory_handle->position - 1, info->name));
+	handle->position++;
+	CAM_VFS_DEBUG ((" -> (%i) %s", handle->position - 1, info->name));
 	CAM_VFS_DEBUG (("returning GNOME_VFS_OK"));
 	g_mutex_unlock (client_mutex);
 	return (GNOME_VFS_OK);
@@ -282,32 +295,32 @@ static GnomeVFSResult do_get_file_info (
         GnomeVFSFileInfoOptions         options,
         GnomeVFSContext*                context)
 {
-	gchar*		filename = NULL;
-	gchar*		dirname = NULL;
-	GnomeVFSResult	result;
-	CameraList	camera_list;
-	Camera*		camera = NULL;
-	gint		i;
+	gchar		*filename = NULL;
+	gchar		*dirname = NULL;
+	GnomeVFSResult	 result;
+	CameraList	 camera_list;
+	Camera		*camera = NULL;
+	gint		 i;
+	gboolean	 file;
+	gchar		*url;
 
 	g_mutex_lock (client_mutex);
 	CAM_VFS_DEBUG (("entering"));
-	
-        /* Connect to the camera. */
-        {
-                gchar* url = gnome_vfs_unescape_string (gnome_vfs_uri_get_host_name (uri), NULL);
 
-                if (!url) {
-			CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_HOST_NOT_FOUND"));
-			g_mutex_unlock (client_mutex);
-                        return (GNOME_VFS_ERROR_HOST_NOT_FOUND);
-                }
-                if ((result = GNOME_VFS_RESULT (gp_camera_new_from_gconf (&camera, url))) != GNOME_VFS_OK) {
-                        g_free (url);
-			CAM_VFS_DEBUG (("exiting"));
-			g_mutex_unlock (client_mutex);
-                        return (result);
-                }
-                g_free (url);
+	/* Connect to the camera */
+	url = gnome_vfs_unescape_string (gnome_vfs_uri_get_host_name (uri), 
+					 NULL);
+	if (!url) {
+	    	CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_HOST_NOT_FOUND"));
+		g_mutex_unlock (client_mutex);
+	    	return (GNOME_VFS_ERROR_HOST_NOT_FOUND);
+	}
+	result = GNOME_VFS_RESULT (gp_camera_new_from_gconf (&camera, url));
+	g_free (url);
+	if (result != GNOME_VFS_OK) {
+		CAM_VFS_DEBUG (("exiting"));
+		g_mutex_unlock (client_mutex);
+                return (result);
         }
 
 	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_NONE;
@@ -316,82 +329,72 @@ static GnomeVFSResult do_get_file_info (
 	CAM_VFS_DEBUG (("filename=%s",filename));
 	CAM_VFS_DEBUG (("dirname=%s",dirname));
 	CAM_VFS_DEBUG (("camera->ref_count=%d",camera->ref_count));
+
+	/* File or folder? */
+	file = FALSE;
 	if (filename) {
 
-		/* Check if existent. */
-		if (gp_camera_folder_list_files (camera, dirname, &camera_list) != GP_OK) {
+	    	/* Get the list of files */
+		result = GNOME_VFS_RESULT (gp_camera_folder_list_files (
+			    			camera, dirname, &camera_list));
+		if (result != GNOME_VFS_OK) {
 			gp_camera_unref (camera);
 			CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_GENERIC"));
 			g_mutex_unlock (client_mutex);
-			return (GNOME_VFS_ERROR_GENERIC);
+			return (result);
 		}
+
+		/* Is the file in there? */
 		for (i = 0; i < gp_list_count (&camera_list); i++) 
 			CAM_VFS_DEBUG (("camera_list[%d]->name=%s",
-					i,gp_list_entry (&camera_list, i)->name));
+				i,gp_list_entry (&camera_list, i)->name));
 		for (i = 0; i < gp_list_count (&camera_list); i++)
-			if (!strcmp (filename, gp_list_entry (&camera_list, i)->name))
+			if (!strcmp (filename, 
+				     gp_list_entry (&camera_list, i)->name))
+				break;
+		if (i != gp_list_count (&camera_list))
+		    	file = TRUE;
+	}
+
+	/* If folder, do we have this folder (only if non-root)? */
+	if (!file && strcmp (dirname, "/")) {
+
+	    	/* Get the list of folders */
+	    	result = GNOME_VFS_RESULT (gp_camera_folder_list_folders (
+						camera, dirname, &camera_list));
+		if (result != GNOME_VFS_OK) {
+			gp_camera_unref (camera);
+			CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_GENERIC"));
+			g_mutex_unlock (client_mutex);
+			return (result);
+		}
+
+		/* Is the folder in there? */
+		for (i = 0; i < gp_list_count (&camera_list); i++) 
+			CAM_VFS_DEBUG (("camera_list[%d]->name=%s",
+				i,gp_list_entry (&camera_list, i)->name));
+		for (i = 0; i < gp_list_count (&camera_list); i++) 
+			if (!strcmp (filename, 
+				gp_list_entry (&camera_list, i)->name)) 
 				break;
 		if (i == gp_list_count (&camera_list)) {
-			if (gp_camera_folder_list_folders (camera, dirname, &camera_list) != GP_OK) {
-				gp_camera_unref (camera);
-				CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_GENERIC"));
-				g_mutex_unlock (client_mutex);
-				return (GNOME_VFS_ERROR_GENERIC);
-			}
-			for (i = 0; i < gp_list_count (&camera_list); i++) 
-				CAM_VFS_DEBUG (("camera_list[%d]->name=%s",
-						i,gp_list_entry (&camera_list, i)->name));
-			for (i = 0; i < gp_list_count (&camera_list); i++) 
-				if (!strcmp (filename, gp_list_entry (&camera_list, i)->name)) 
-					break;
-			if (i == gp_list_count (&camera_list)) {
-				gp_camera_unref (camera);
-				CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_NOT_FOUND"));
-				g_mutex_unlock (client_mutex);
-				return (GNOME_VFS_ERROR_NOT_FOUND);
-			}
-			info->name = g_strdup (dirname);
-			info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
-			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
-			if (options & GNOME_VFS_FILE_INFO_GET_MIME_TYPE) {
-				info->mime_type = g_strdup ("x-directory/normal");
-				info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
-			}
-		} else {
-			info->name = g_strdup (filename);
-			CAM_VFS_DEBUG (("info->name=%s",info->name));
-			info->type = GNOME_VFS_FILE_TYPE_REGULAR;
-			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
-			if (options & GNOME_VFS_FILE_INFO_GET_MIME_TYPE) {
-				info->mime_type = g_strdup ("image/png");
-				info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
-			}
-		}
-		gp_camera_unref (camera);
-	} else {
-
-		/* Check if existent (only non-root). */
-		if (strcmp (dirname, "/")) {
-			if (gp_camera_folder_list_folders (camera, dirname, &camera_list) != GP_OK) {
-				gp_camera_unref (camera);
-				CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_GENERIC"));
-				g_mutex_unlock (client_mutex);
-				return (GNOME_VFS_ERROR_GENERIC);
-			}
 			gp_camera_unref (camera);
-			for (i = 0; i < gp_list_count (&camera_list); i++) 
-				CAM_VFS_DEBUG (("camera_list[%d]->name=%s",
-						i,gp_list_entry (&camera_list, i)->name));
-			for (i = 0; i < gp_list_count (&camera_list); i++) 
-				if (!strcmp (dirname, gp_list_entry (&camera_list, i)->name)) 
-					break;
-			if (i == gp_list_count (&camera_list)) {
-				CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_NOT_FOUND"));
-				g_mutex_unlock (client_mutex);
-				return (GNOME_VFS_ERROR_NOT_FOUND);
-			}
+			CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_NOT_FOUND"));
+			g_mutex_unlock (client_mutex);
+			return (GNOME_VFS_ERROR_NOT_FOUND);
 		}
+	}
 
+	if (file) {
+		CAM_VFS_DEBUG (("info->name=%s",filename));
+		result = gp_camera_file_get_vfs_info (camera, dirname, 
+						      filename, info);
+		if (result != GNOME_VFS_OK) {
+		    	gp_camera_unref (camera);
+			g_mutex_unlock (client_mutex);
+		    	return (result);
+		}
+	} else {
 		info->name = g_strdup (dirname);
 		info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
 		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
@@ -400,10 +403,11 @@ static GnomeVFSResult do_get_file_info (
 			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
 		}
 	}
+	gp_camera_unref (camera);
+
 	info->flags = GNOME_VFS_FILE_FLAGS_NONE;
 	GNOME_VFS_FILE_INFO_SET_LOCAL (info, FALSE);
 
-	gp_camera_unref (camera);
 	CAM_VFS_DEBUG (("returning GNOME_VFS_OK"));
 	g_mutex_unlock (client_mutex);
 	return (GNOME_VFS_OK);

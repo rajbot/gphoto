@@ -1,8 +1,7 @@
 imagesdir = $(datadir)/pixmaps
 
 images_DATA =\
- gnocam.png\
- gnocam-unlock.png
+ gnocam.png
 
 EXTRA_DIST =\
  $(images_DATA)

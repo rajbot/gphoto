@@ -1,0 +1,66 @@
+This is a GPL letter that you can use to quickly get the open source message to
+companies. Please try to be nice to the people you are talking to. They often
+don't know what Linux is and will need to 10 about it with their managers
+before they reply.
+
+DO, however, ask them how things are progressing weekly unless they tell you
+not to (then do it monthly ;)
+
+Phill - phill@gnu.org
+
+---- LETTER ----
+
+Dear <company name>
+
+INTRO
+
+I have recently purchased one of your <MODEL> digital cameras and am very happy with it.
+
+OR
+
+I am considering purchasing one of your <MODEL> digital cameras after hearing
+some good reviews about it.
+
+PUNCH LINE
+
+However, I use the open, free GNU/Linux operating system[1] and note that your
+company does not provide open driver support for UNIX systems. Therefore I
+wonder what your companies stance on providing public access to the protocol
+details so an open driver may be written as part of gPhoto[2], a program
+included in the GNU[3] and GNOME[4] environments.
+
+SWEET TALK
+
+I realise this information may be regarded as , however I urge
+<company> to consider the benefits[5] of supporting their customers in this
+way. It would be unfortunate if I had to choose an inferior camera due to lack
+of support from <company>. However, this is what I must do if these details
+cannot be provided openly and allowing open, non-commercial third party drivers
+to be written[2].
+
+OR
+
+I realise this information may be regarded as proprietary, however I urge
+<company> to consider the benefits[5] of supporting their customers in this
+way. It would be unfortunate if I was prevented from  an otherwise excellent
+device on these grounds and I feel my loyalty toward <company> would be
+greatly jeopardised as a result. However, this is what I must do if these
+details cannot be provided openly to allow open, non-commercial third party
+drivers to be written[2].
+
+CLOSE
+
+I look 1 to hearing good news from <company> and hope that you can support
+users like myself in this way.
+
+If you have any questions please do not hesitate to contact me. Below are some reference points that are useful reading to provide a greater insight into this.
+
+<Your name>
+
+References.
+
+1.	www.linux.com / www.redhat.com / www.debian.org
+2.	www.gphoto.org
+3.	www.gnu.org
+4.	www.gnome.org
+5.	www.opensource.org

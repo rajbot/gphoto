@@ -1,64 +1,59 @@
 This file contains any messages produced by compilers while
 running configure, to aid debugging if configure makes a mistake.
 
-configure:530: checking for gcc
-configure:643: checking whether the C compiler (gcc -g -D_GNU_SOURCE -Wall -m486 -DDOCDIR="/usr/local/doc" -I/usr/X11R6/include -I/usr/lib/glib/include -I./icons/ ) works
-configure:659: gcc -o conftest -g -D_GNU_SOURCE -Wall -m486 -DDOCDIR="/usr/local/doc" -I/usr/X11R6/include -I/usr/lib/glib/include -I./icons/   conftest.c  1>&5
-configure:656: warning: return-type defaults to `int'
-configure:685: checking whether the C compiler (gcc -g -D_GNU_SOURCE -Wall -m486 -DDOCDIR="/usr/local/doc" -I/usr/X11R6/include -I/usr/lib/glib/include -I./icons/ ) is a cross-compiler
-configure:690: checking whether we are using GNU C
-configure:699: gcc -E conftest.c
-configure:718: checking whether gcc accepts -g
-configure:750: checking how to run the C preprocessor
-configure:771: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:830: checking for ANSI C header files
-configure:843: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:910: gcc -o conftest -g -D_GNU_SOURCE -Wall -m486 -DDOCDIR="/usr/local/doc" -I/usr/X11R6/include -I/usr/lib/glib/include -I./icons/   conftest.c  1>&5
-configure:941: checking for ANSI C header files
-configure:1048: checking for sys/param.h
-configure:1058: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1048: checking for termios.h
-configure:1058: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1048: checking for termio.h
-configure:1058: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1048: checking for sys/ioctl.h
-configure:1058: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1048: checking for sgtty.h
-configure:1058: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1048: checking for fcntl.h
-configure:1058: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1048: checking for sys/time.h
-configure:1058: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1048: checking for unistd.h
-configure:1058: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1048: checking for ttold.h
-configure:1058: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1054: ttold.h: No such file or directory
+configure:527: checking for gcc
+configure:604: checking whether the C compiler (gcc -g -D_GNU_SOURCE -Wall -m486 -DDOCDIR="/usr/local/doc" -I/usr/X11R6/include -I/usr/lib/glib/include -I./icons/ ) works
+configure:618: gcc -o conftest -g -D_GNU_SOURCE -Wall -m486 -DDOCDIR="/usr/local/doc" -I/usr/X11R6/include -I/usr/lib/glib/include -I./icons/   conftest.c  1>&5
+configure:615: warning: return-type defaults to `int'
+configure:638: checking whether the C compiler (gcc -g -D_GNU_SOURCE -Wall -m486 -DDOCDIR="/usr/local/doc" -I/usr/X11R6/include -I/usr/lib/glib/include -I./icons/ ) is a cross-compiler
+configure:643: checking whether we are using GNU C
+configure:652: gcc -E conftest.c
+configure:667: checking whether gcc accepts -g
+configure:695: checking how to run the C preprocessor
+configure:716: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:756: checking for ANSI C header files
+configure:769: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:836: gcc -o conftest -g -D_GNU_SOURCE -Wall -m486 -DDOCDIR="/usr/local/doc" -I/usr/X11R6/include -I/usr/lib/glib/include -I./icons/   conftest.c  1>&5
+configure:867: checking for ANSI C header files
+configure:974: checking for sys/param.h
+configure:984: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:974: checking for termios.h
+configure:984: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:974: checking for termio.h
+configure:984: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:974: checking for sys/ioctl.h
+configure:984: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:974: checking for sgtty.h
+configure:984: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:974: checking for fcntl.h
+configure:984: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:974: checking for sys/time.h
+configure:984: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:974: checking for unistd.h
+configure:984: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:974: checking for ttold.h
+configure:984: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:980: ttold.h: No such file or directory
 configure: failed program was:
-#line 1053 "configure"
+#line 979 "configure"
 #include "confdefs.h"
 #include <ttold.h>
-configure:1048: checking for ioctl-types.h
-configure:1058: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1054: ioctl-types.h: No such file or directory
-configure: failed program was:
-#line 1053 "configure"
-#include "confdefs.h"
-#include <ioctl-types.h>
-configure:1086: checking for inline
-configure:1100: gcc -c -g -D_GNU_SOURCE -Wall -m486 -DDOCDIR="/usr/local/doc" -I/usr/X11R6/include -I/usr/lib/glib/include -I./icons/  conftest.c 1>&5
+configure:974: checking for ioctl-types.h
+configure:984: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1012: checking for inline
+configure:1026: gcc -c -g -D_GNU_SOURCE -Wall -m486 -DDOCDIR="/usr/local/doc" -I/usr/X11R6/include -I/usr/lib/glib/include -I./icons/  conftest.c 1>&5
 configure: In function `main':
-configure:1096: warning: control reaches end of non-void function
+configure:1022: warning: control reaches end of non-void function
 configure: At top level:
-configure:1096: warning: return-type defaults to `int'
-configure:1126: checking for size_t
-configure:1159: checking for uid_t in sys/types.h
-configure:1193: checking whether time.h and sys/time.h may both be included
-configure:1207: gcc -c -g -D_GNU_SOURCE -Wall -m486 -DDOCDIR="/usr/local/doc" -I/usr/X11R6/include -I/usr/lib/glib/include -I./icons/  conftest.c 1>&5
+configure:1022: warning: return-type defaults to `int'
+configure:1052: checking for size_t
+configure:1085: checking for uid_t in sys/types.h
+configure:1119: checking whether time.h and sys/time.h may both be included
+configure:1133: gcc -c -g -D_GNU_SOURCE -Wall -m486 -DDOCDIR="/usr/local/doc" -I/usr/X11R6/include -I/usr/lib/glib/include -I./icons/  conftest.c 1>&5
 configure: In function `main':
-configure:1203: warning: unused variable `tp'
-configure:1230: checking whether gcc needs -traditional
-configure:1278: checking for setreuid
-configure:1306: gcc -o conftest -g -D_GNU_SOURCE -Wall -m486 -DDOCDIR="/usr/local/doc" -I/usr/X11R6/include -I/usr/lib/glib/include -I./icons/   conftest.c  1>&5
-configure:1333: checking for select
-configure:1361: gcc -o conftest -g -D_GNU_SOURCE -Wall -m486 -DDOCDIR="/usr/local/doc" -I/usr/X11R6/include -I/usr/lib/glib/include -I./icons/   conftest.c  1>&5
+configure:1129: warning: unused variable `tp'
+configure:1156: checking whether gcc needs -traditional
+configure:1204: checking for setreuid
+configure:1232: gcc -o conftest -g -D_GNU_SOURCE -Wall -m486 -DDOCDIR="/usr/local/doc" -I/usr/X11R6/include -I/usr/lib/glib/include -I./icons/   conftest.c  1>&5
+configure:1259: checking for select
+configure:1287: gcc -o conftest -g -D_GNU_SOURCE -Wall -m486 -DDOCDIR="/usr/local/doc" -I/usr/X11R6/include -I/usr/lib/glib/include -I./icons/   conftest.c  1>&5

@@ -8,9 +8,12 @@
 	----------------------------------------------------------------
 
 	$Log$
-	Revision 1.1  1999/05/27 18:32:01  scottf
-	Initial revision
+	Revision 1.2  1999/05/28 13:29:49  phillh
+	*** empty log message ***
 
+	Revision 1.1.1.1  1999/05/27 18:32:01  scottf
+	gPhoto- digital camera utility
+	
 	Revision 1.10  1999/05/09 16:06:53  ole
 	Minor changes.
 	
@@ -118,18 +121,32 @@
 	Probably the hardest decision you will have to make is which camera, 
 	you will buy.  While some expensive ones come with more resolution,
 	they do have tradeoffs.  Most cameras are fantastic, making it a
-	tough decision to choose which camera to buy.  
+	tough decision to choose which camera to buy.
 
-	In general, less expensive cameras are usually much better suited for
-	"general" purpose work.  This is not to say these cameras are not for 
-	professionals.  It is simply to say that they are better suited to 
-	the jobs where you need to get a high quality snapshot, but don't 
-	need extremely high resolution prints.  A good example is using a 
-	camera for web pages photos, or for doing family prints (5x7).  For 
-	web pages, the 1024x768 size is a manageable size which can be 
-	resampled to useable sizes (ie. 320x240, etc.) 1280x1024 would be 
-	overkill here.  Also, the 1024x768 has proven to be more than adequate
-	to print photo quality 5x7 prints using a color printer.  
+	Kodak and Minolta both provide specifications openly for their cameras
+	meaning drivers for them can be written openly. Konica has recently
+	started work on a GPL aplication for BSD/Linux which Phill will
+	incorporate into gPhoto extending the current Konica driver.
+	It is always a great help for potential camera customers to pressure
+	companies into support our work BEFORE you give them your money.
+	Many companies simply don't have time to look at the issues involved
+	unless there is an financial incentive to do so. The more open we can
+	make them, the better gPhoto can be and the more enjoyment you'll get
+	from your camera. The file "CONTACTS" contains a list of company
+	members who you can write to asking for GPL drivers or open
+	specifications. There is a sample letter in "LETTER". Please adjust it
+	slightly before sending it. 100 copies of one letter is not as
+	persuasive as 25 different ones.
+
+	OK, on with the show... In general, less expensive cameras are usually
+	much better suited for "general" purpose work.  This is not to say
+	these cameras are not for professionals.  It is simply to say that they 	are better suited to the jobs where you need to get a high quality
+	snapshot, but don't need extremely high resolution prints.  A good
+	example is using a camera for web pages photos, or for doing family
+	prints (5x7).  For web pages, the 1024x768 size is a manageable size
+	which can be resampled to useable sizes (ie. 320x240, etc.) 1280x1024
+	would be overkill here.  Also, the 1024x768 has proven to be more than
+	adequate to print photo quality 5x7 prints using a color printer.  
 
 	Additionally, some cameras have a higher ISO equivalency (ISO 180), 
 	which means they take better low light photos.  
@@ -180,7 +197,7 @@
           http://www.gnu.org/software/sed/sed.html
 	- GTK+ 1.0+
 	  http://www.gtk.org/
-	- ImageMagick 4.1+
+	- ImageMagick 4.1+ (Not _needed_ but Imlib uses it)
 	- imlib 1.4+ (incl. libjpeg/libpng/libtiff/libz/libungif)
 	  ftp://ftp.labs.redhat.com/pub/imlib/
 	

@@ -1,0 +1,67 @@
+This file contains the emails of company contacts who you should write to for
+camera support. Please be nice to them, often they themselves want to open the
+specifications/drivers but are prevented by decisions above them. The file
+LETTER contains a "hack it up" letter which you can send adding your signature
+to the list.
+
+The tags are obvious except liason. This is the gPhoto member who you should
+send any replies that are interesting to, and any other questions you have
+regarding this process.
+
+Company:	Konica
+Contact:	Toshiki Fujisawa
+Role:		Software Developer
+Email:		fujisawa@konica.co.jp / support@camera.konica.co.jp
+Liason:		phill@gnu.org
+Status:		Konica are writing a GPL driver for the Q-M100 and are open
+		source friendly. Toshiki is very helpful but busy. Speak to			Phill first. The driver will be incorporated into gPhoto by			Phill when it is ready.
+
+Company:	Hewlett Packard
+Contact:	Wayne Coccomo
+Role:		Open Source Advocate
+Email:		WAYNE_CACCAMO@HP-Cupertino-om5.om.hp.com
+Liason:		phill@gnu.org
+Status:		HP use the Konica firmware for their C20/C30 cameras but have
+		not yet provided any details openly for supporting them.
+		Wayne is very Open Source friendly and is HP's Guru on that
+		front.
+
+Company:	Kodak
+Contact:	Developer Relations Page / Joan Gendron
+Role:		Developer Relations Liason
+Email:		Unknown
+Liason:		phill@gnu.org
+Status:		Kodak provide lots of detail on their web site. You'll need
+		to register under the developer relations scheme for access
+		but it is open after that. There is no charge for this.
+
+Company:	Minolta
+Contact:	Gus Hartmann
+Role:		Student ;)
+Email:		hartmann@cs.wisc.edu
+Liason:		phill@gnu.org
+Status:		Gus has some NDA details from Minolta for the Dimage camera.
+		The letter acompanying it reads...
+
+		"In regard to your question, we have no objection that you
+		share this information among the Linux community. Please be
+		advised, however, we are not responsible for any problems and
+		technical support on this matter. We appreciate your
+		understanding of our position in this matter.''
+
+		The letter is signed by the Digital Products Planning Manager.
+
+		If you want more details, get them from Gus. He'll also be able
+		to tell you who he got the details from if you want more.
+
+
+-- Please leave these tags unused for people to cut and paste ;) --
+
+Company:	
+Contact:	
+Role:		
+Email:		
+Liason:		
+Status:		
+
+-- End of cut/paste block --

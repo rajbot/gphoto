@@ -17,6 +17,12 @@ Docdir:		%{prefix}/help
 Requires:	gtk+ >= 1.2.7
 Requires:	gnome-libs >= 1.0.55
 Requires: 	gdk-pixbuf >= 0.9.0
+Requires:	gnome-vfs
+Requires:	libxml2 >= 2.0.0
+Requires:	libglade >= 0.14
+Requires:	GConf >= 0.10
+Requires	libgpio >= 0.0.2
+Requires:	libgphoto2
 
 %description
 %{name} is a small but powerful front-end to gphoto2 for the GNOME desktop.

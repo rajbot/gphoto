@@ -75,16 +75,16 @@ void command_line(int argc, char *argv[])
 	case 'l':
 	    if (argv[i + 1]) {
 		if ((im = (*Camera->get_preview) ()) == 0)
-		    fprintf(stdout, "ERROR: could not get image.\n");
+		    fprintf(stderr, "ERROR: could not get image.\n");
 		else if ((fp = fopen(argv[i + 1], "w"))) {
 		    fwrite(im->image,
 			   (size_t) sizeof(char),
 			   (size_t) im->image_size, fp);
 		    fclose(fp);
 		} else
-		    fprintf(stdout, "ERROR: could not save image.\n");
+		    fprintf(stderr, "ERROR: could not save image.\n");
 	    } else {
-		fprintf(stdout, "ERROR: 'filename' not specified.\n");
+		fprintf(stderr, "ERROR: 'filename' not specified.\n");
 		command_usage();
 	    }
 	    i += 1;
@@ -100,23 +100,23 @@ void command_line(int argc, char *argv[])
 		      =
 		      (*Camera->get_picture) (atoi(argv[i + 1]),
 					      0)) == 0))
-		      fprintf(stdout, "ERROR: could not get image.\n");
+		      fprintf(stderr, "ERROR: could not get image.\n");
 		else if ((fp = fopen(argv[i + 2], "w"))) {
 		    fwrite(im->image,
 			   (size_t) sizeof(char),
 			   (size_t) im->image_size, fp);
 		    fclose(fp);
 		} else {
-		    fprintf(stdout, "ERROR: could not save image.\n");
+		    fprintf(stderr, "ERROR: could not save image.\n");
 		    return;
 		}
 	    } else {
-		fprintf(stdout,
+		fprintf(stderr,
 			"ERROR: '#' and 'filename' not specified.\n");
 		command_usage();
 	    }
-	    fprintf(stdout, "\n");
-	    fflush(stdout);
+	    fprintf(stderr, "\n");
+	    fflush(stderr);
 	    i += 2;
 	    break;
 	case 't':
@@ -129,18 +129,18 @@ void command_line(int argc, char *argv[])
 		    (im =
 		     (*Camera->get_picture) (atoi(argv[i + 1]),
 					     1)) == 0)
-		   fprintf(stdout, "ERROR: could not get image.\n");
+		   fprintf(stderr, "ERROR: could not get image.\n");
 		else if ((fp = fopen(argv[i + 2], "w"))) {
 		    fwrite(im->image,
 			   (size_t) sizeof(char),
 			   (size_t) im->image_size, fp);
 		    fclose(fp);
 		} else {
-		    fprintf(stdout, "ERROR: could not save image.\n");
+		    fprintf(stderr, "ERROR: could not save image.\n");
 		    return;
 		}
 	    } else {
-		fprintf(stdout,
+		fprintf(stderr,
 			"ERROR: '#' and 'filename' not specified.\n");
 		command_usage();
 	    }
@@ -151,7 +151,7 @@ void command_line(int argc, char *argv[])
 	    if (argv[i + 1]) {
 		if (((*Camera->delete_picture) (atoi(argv[i + 1]))
 		     == 0)) {
-		    fprintf(stdout, "Could not delete image.\n");
+		    fprintf(stderr, "ERROR: Could not delete image.\n");
 		    return;
 		} else {
 		    fprintf(stdout,
@@ -159,14 +159,14 @@ void command_line(int argc, char *argv[])
 			    atoi(argv[i + 1]));
 		}
 	    } else {
-		fprintf(stdout, "ERROR: '#' not specified.\n");
+		fprintf(stderr, "ERROR: '#' not specified.\n");
 		command_usage();
 	    }
 	    i += 1;
 	    break;
 	case 'p':
 	    if (!argv[i + 1]) {
-		fprintf(stdout, "ERROR: filename not specified.\n");
+		fprintf(stderr, "ERROR: filename not specified.\n");
 		command_usage();
 	    } else {
 		fprintf(stdout, "Taking picture...\n");
@@ -174,7 +174,7 @@ void command_line(int argc, char *argv[])
 		picNum = (*Camera->take_picture) ();
 
 		if (picNum == 0) {
-		    fprintf(stdout,
+		    fprintf(stderr,
 			    "ERROR: could not take the picture.\n");
 		    return;
 		} else {
@@ -184,7 +184,7 @@ void command_line(int argc, char *argv[])
 		}
 
 		if (((im = (*Camera->get_picture) (picNum, 0)) == 0)) {
-		    fprintf(stdout, "\nERROR: could not get image.\n");
+		    fprintf(stderr, "\nERROR: could not get image.\n");
 		    return;
 		} else {
 		    if ((fp = fopen(argv[i + 1], "w"))) {
@@ -192,7 +192,7 @@ void command_line(int argc, char *argv[])
 			       sizeof(char), (size_t) im->image_size, fp);
 			fclose(fp);
 		    } else {
-			fprintf(stdout, "ERROR: could not save image.\n");
+			fprintf(stderr, "ERROR: could not save image.\n");
 			return;
 		    }
 		}

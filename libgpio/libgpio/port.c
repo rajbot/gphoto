@@ -13,7 +13,9 @@ GPIO_DIR GPIO_OPENDIR (char *dirname) {
 
 	/* Append the wildcard */
 	strcpy(dirn, dirname);
-	strcat(dirn, "\\*");
+	if (dirn[strlen(dirn)-1] != '\\')
+		strcat(dirn, "\\");
+	strcat(dirn, "*");
 
 	d->got_first = 0;
 	d->handle = FindFirstFile(dirn, &(d->search));
@@ -51,12 +53,20 @@ int  GPIO_CLOSEDIR (GPIO_DIR d) {
 
 int GPIO_IS_FILE (char *filename) {
 
-	return (GPIO_OK);
+	struct stat st;
+
+	if (stat(filename, &st)!=0)
+		return 0;
+	return (st.st_mode & _S_IFREG);
 }
 
 int GPIO_IS_DIR (char *dirname) {
 
-	return (GPIO_OK);
+	struct stat st;
+
+	if (stat(dirname, &st)!=0)
+		return 0;
+	return (st.st_mode & _S_IFDIR);
 }
 
 

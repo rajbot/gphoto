@@ -5,10 +5,13 @@
 #ifdef WIN32
 
 #include <windows.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <string.h>
 
-/* Libraries go in the current directory */
-#define IOLIBS "."
+#define IOLIBS					"."
+#define strcasecmp				_stricmp
+
 
 /* Work-around for readdir() */
 typedef struct {
@@ -29,6 +32,8 @@ typedef struct {
 /* Directory-oriented functions */
 #define GPIO_DIR				GPIOWINDIR *
 #define GPIO_DIRENT				WIN32_FIND_DATA *
+#define GPIO_DIR_DELIM			'\\'
+
 
 #else
 
@@ -55,6 +60,7 @@ typedef struct {
 /* Directory-oriented functions */
 #define GPIO_DIR			DIR *
 #define GPIO_DIRENT			struct dirent *
+#define GPIO_DIR_DELIM		'/'
 
 #endif
 

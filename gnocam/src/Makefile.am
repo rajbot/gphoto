@@ -28,6 +28,7 @@ gnocam_SOURCES =\
  gnocam.h gnocam.c\
  callbacks.h callbacks.c\
  gphoto-extensions.h gphoto-extensions.c\
+ information.h information.c\
  preferences.h preferences.c\
  properties.h properties.c\
  save.h save.c

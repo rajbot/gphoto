@@ -18,33 +18,43 @@ description_extract (gchar* description, guint* id, gchar** name, gchar** model,
 {
 	guint 	count = 0;
 	guint 	j;
+	gchar* 	description_copy;
 
 	g_return_val_if_fail (description != NULL, FALSE);
 
         /* Check if description is valid.                 	*/
         /* Example for description:                             */
         /* "1\nMy Camera\nHP PhotoSmart C30\nSerial Port 0\n".  */
-        for (j = 0; description[j] != '\0'; j++) {
-                if (description[j] == '\n') {
-                        description[j] = '\0';
+	description_copy = g_strdup (description);
+        for (j = 0; description_copy[j] != '\0'; j++) {
+                if (description_copy[j] == '\n') {
+                        description_copy[j] = '\0';
                         count++;
                 }
         }
-        g_return_val_if_fail (count == 4, FALSE);
+        g_assert (count == 4);
 
-        *id = (guint) atoi (description);
-        for (j = 0; description[j] != '\0'; j++);
-        *name = g_strdup (&description[++j]);
-        for (; description[j] != '\0'; j++);
-        *model = g_strdup (&description[++j]);
-        for (; description[j] != '\0'; j++);
-        *port = g_strdup (&description[++j]);
-        for (; description[j] != '\0'; j++);
-        *speed = (guint) atoi (&description[++j]);
+        *id = (guint) atoi (description_copy);
+        for (j = 0; description_copy[j] != '\0'; j++);
+        *name = g_strdup (&description_copy[++j]);
+        for (; description_copy[j] != '\0'; j++);
+        *model = g_strdup (&description_copy[++j]);
+        for (; description_copy[j] != '\0'; j++);
+        *port = g_strdup (&description_copy[++j]);
+        for (; description_copy[j] != '\0'; j++);
+        *speed = (guint) atoi (&description_copy[++j]);
+
+	g_free (description_copy);
 
 	return (TRUE);
 }
 
+/**
+ * gp_widget_clone:
+ * @widget: The widget to clone.
+ * 
+ * Returns a clone of the widget (including childs).
+ **/
 CameraWidget*
 gp_widget_clone (CameraWidget* widget)
 {
@@ -127,6 +137,9 @@ gp_widget_clone (CameraWidget* widget)
 
 /**
  * gp_camera_update_by_description:
+ * @xml: xml of main window.
+ * @@camera: The camera to update.
+ * @description: The description of the camera (like "id\nname\nmodel\nport\nspeed").
  *
  * Returns TRUE if update has been successful, FALSE otherwise.
  **/
@@ -242,23 +255,12 @@ gp_camera_update_by_description (GladeXML* xml, Camera** camera, gchar* descript
 			speed_changed = TRUE;
 		}
         }
-	
-	if (port_changed) {
-		//FIXME: Shouldn't we free the old port_info?
+
+	/* If port or speed changed, we initialize the camera with the new settings. */	
+	if (port_changed || speed_changed) {
+//FIXME: Shouldn't we free the old port_info?
 	        if (gp_camera_init (*camera, &port_info) == GP_ERROR) {
 	                gnome_app_error (app, _("Could not initialize camera!"));
-			
-			/* Clean up. */
-			g_free (frontend_data->name);
-			g_free (frontend_data);
-			gp_camera_free (*camera);
-			*camera = NULL;
-			
-			return (FALSE);
-		}
-	} else if (speed_changed) {
-		if (gp_camera_init (*camera, &port_info) == GP_ERROR) {
-			gnome_app_error (app, _("Could not initialize camera!"));
 			
 			/* Clean up. */
 			g_free (frontend_data->name);

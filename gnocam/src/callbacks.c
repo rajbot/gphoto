@@ -357,17 +357,14 @@ on_tree_cameras_selection_changed (GtkWidget *tree)
 	GdkBitmap *bitmap;
 	GladeXML *xml;
 	GnomeApp *app;
-	gchar *text_dummy[2] = {NULL, NULL};
+	gchar *text_dummy[3] = {NULL, NULL, NULL};
 	gchar *path, *file_name;
 	gboolean found;
 	
 	g_assert (tree != NULL);
-	xml = gtk_object_get_data (GTK_OBJECT (tree), "xml");
-	g_assert (xml != NULL);
-	app = GNOME_APP (glade_xml_get_widget (xml, "app"));
-	g_assert (app != NULL);
-	clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"));
-	g_assert (clist != NULL);
+	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (tree), "xml")) != NULL);
+	g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
+	g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"))) != NULL);
 	selection = g_list_first (GTK_TREE_SELECTION (tree));
 	gtk_clist_set_row_height (clist, 70); //FIXME: Move that to an appropriate position.
 
@@ -394,10 +391,8 @@ on_tree_cameras_selection_changed (GtkWidget *tree)
 	/* Look for each selected folder if we have displayed all files. */
 	for (i = 0; i < g_list_length (selection); i++) {
 		item = GTK_WIDGET (g_list_nth_data (selection, i));
-		camera = gtk_object_get_data (GTK_OBJECT (item), "camera");
-		g_assert (camera != NULL);
-		path = gtk_object_get_data (GTK_OBJECT (item), "path");
-		g_assert (path != NULL);
+		g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
+		g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
 
 		/* Get the files. */
 		if (gp_camera_file_list (camera, &camera_list, path) == GP_OK) {
@@ -423,8 +418,7 @@ on_tree_cameras_selection_changed (GtkWidget *tree)
 					found = TRUE;
 				}
 				if (!found) {
-					path = gtk_object_get_data (GTK_OBJECT (item), "path");
-					g_assert (path != NULL);
+					g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
 
 					/* Add entry to list. */
 					gtk_clist_append (clist, text_dummy);

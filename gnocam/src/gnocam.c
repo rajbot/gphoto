@@ -10,6 +10,7 @@
 #include "gnocam.h"
 #include "cameras.h"
 #include "properties.h"
+#include "information.h"
 
 /********************/
 /* Static Variables */
@@ -35,7 +36,7 @@ int gp_frontend_progress (Camera *camera, CameraFile *file, float percentage)
 
 int gp_frontend_message (Camera *camera, char *message)
 {
-	gnome_app_warning (GNOME_APP (glade_xml_get_widget (xml, "app")), message);
+	dialog_information (message);
 	return (GP_OK);
 }
 

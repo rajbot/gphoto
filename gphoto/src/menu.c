@@ -127,6 +127,10 @@ void menu_select (gpointer data, guint action, GtkWidget *widget) {
 		case 31: /* FAQ */
 			faq_dialog();
 			break;
+		case 32: /* Open Directory */
+			set_camera("Browse Directory");
+			makeindex(1);
+			break;
 
 		default:
 	}
@@ -136,7 +140,8 @@ void menu_select (gpointer data, guint action, GtkWidget *widget) {
 
 GtkItemFactoryEntry menu_items[] = {
 	{"/_File",						NULL, 0,		0,	"<Branch>"},
-	{"/File/_Open",					"<control>o", menu_select,	1},
+	{"/File/_Open...",				"<control>o", menu_select,	1},
+	{"/File/Open _Directory...",				NULL, menu_select,	32},
 	{"/File/_Save Image...",			"<control>s", menu_select,	2},
 	{"/File/sep1",						NULL, 0,		0,	"<Separator>"},
 	{"/File/_Print",				"<control>p", menu_select,	3},

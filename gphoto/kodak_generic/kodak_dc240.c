@@ -609,9 +609,15 @@ printf ("kdc240_number_of_pictures_read: last packet = %d\n", bytes_to_copy);
 printf ("kdc240_number_of_pictures_read: buffer = %p\n", buffer->rx_buffer);
 printf ("kdc240_number_of_pictures_read: packet = %p\n", packet);
    memcpy(buffer->rx_buffer + buffer->rx_bytes, packet, bytes_to_copy);
+
+   /* Update the num_entries field the first time through */
+   if (buffer->rx_bytes == 0)
+   {
+      buffer->rx_buffer->num_entries = ntohs(buffer->rx_buffer->num_entries);
+   }
+
    buffer->rx_bytes += bytes_to_copy;
 printf ("kdc240_number_of_pictures_read: new rx_bytes = %d\n", buffer->rx_bytes);
-   buffer->rx_buffer->num_entries = ntohs(buffer->rx_buffer->num_entries);
 
    return retval;
 }

@@ -61,6 +61,13 @@ struct gpio_operations gpio_socket_operations =
    --------------------------------------------------------------------- */
 int gpio_socket_list(gpio_device_info *list, int *count) {
 
+        list[*count].type = GPIO_DEVICE_SOCKET;
+        strcpy(list[*count].name, "TCP/IP Socket");
+        strcpy(list[*count].path, "socket");
+
+        *count += 1;
+
+        return (GPIO_OK);
 }
 
 int gpio_socket_init(gpio_device *dev) {

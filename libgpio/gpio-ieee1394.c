@@ -61,6 +61,14 @@ struct gpio_operations gpio_ieee1394_operations =
    ------------------------------------------------------------------ */
 int gpio_ieee1394_list(gpio_device_info *list, int *count) {
 
+        list[*count].type = GPIO_DEVICE_IEEE1394;
+        strcpy(list[*count].name, "IEEE1394 (Firewire(tm))");
+        strcpy(list[*count].path, "ieee1394");
+
+        *count += 1;
+
+        return (GPIO_OK);
+
 }
 
 int gpio_ieee1394_init(gpio_device *dev) {

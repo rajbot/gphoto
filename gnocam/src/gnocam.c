@@ -20,8 +20,8 @@ static GladeXML *xml;
 /**************/
 
 void app_cameras_update (GladeXML* xml, GConfValue* value);
-void camera_add_to_tree (GladeXML *xml, Camera *camera, gchar *name, gint camera_id, gint position);
-void folder_build (GladeXML *xml, GtkWidget *item, Camera *camera, gint camera_id, gchar *path);
+void camera_add_to_tree (GladeXML *xml, Camera *camera, gint position);
+void folder_build (GladeXML *xml, GtkWidget *item, Camera *camera, gchar *path);
 
 void on_drag_data_received (GtkWidget *widget, GdkDragContext *context, gint x, gint y, GtkSelectionData *selection_data, guint info, guint time);
 
@@ -83,15 +83,16 @@ on_camera_setup_changed (GConfClient* client, guint notify_id, GConfEntry* entry
 	g_assert ((xml = user_data) != NULL);
 
 	if (entry->value == NULL) {
-		//FIXME: What happens here?
-		g_assert_not_reached ();
+		
+		/* No cameras configured. */
+		app_cameras_update (xml, NULL);
 	} else {
 		app_cameras_update (xml, entry->value);
 	}
 }
 
 void
-folder_build (GladeXML *xml, GtkWidget *item, Camera *camera, gint camera_id, gchar *path)
+folder_build (GladeXML *xml, GtkWidget *item, Camera *camera, gchar *path)
 {
         CameraList folder_list;
         CameraListEntry *folder_list_entry;
@@ -103,8 +104,7 @@ folder_build (GladeXML *xml, GtkWidget *item, Camera *camera, gint camera_id, gc
         g_assert (camera != NULL);
         g_assert (path != NULL);
         g_assert (xml != NULL);
-        app = GNOME_APP (glade_xml_get_widget (xml, "app"));
-        g_assert (app != NULL);
+        g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
 
         if (gp_camera_folder_list (camera, &folder_list, path) == GP_OK) {
                 count = gp_list_count (&folder_list);
@@ -124,9 +124,8 @@ folder_build (GladeXML *xml, GtkWidget *item, Camera *camera, gint camera_id, gc
                                 gtk_tree_append (GTK_TREE (subtree), item);
                                 path = g_strdup_printf ("%s/%s", path, folder_list_entry->name);
                                 gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
-				gtk_object_set_data (GTK_OBJECT (item), "camera_id", GINT_TO_POINTER (camera_id));
                                 gtk_object_set_data (GTK_OBJECT (item), "path", path);
-                                folder_build (xml, item, camera, camera_id, path);
+                                folder_build (xml, item, camera, path);
                         }
                 }
         } else {
@@ -135,7 +134,7 @@ folder_build (GladeXML *xml, GtkWidget *item, Camera *camera, gint camera_id, gc
 }
 
 void
-camera_add_to_tree (GladeXML *xml, Camera *camera, gchar *name, gint camera_id, gint position)
+camera_add_to_tree (GladeXML *xml, Camera *camera, gint position)
 {
         gchar *path;
         GnomeApp *app;
@@ -148,12 +147,11 @@ camera_add_to_tree (GladeXML *xml, Camera *camera, gchar *name, gint camera_id, 
 
         g_assert (xml != NULL);
         g_assert (camera != NULL);
-        g_assert (name != NULL);
         g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
         g_assert ((tree = GTK_TREE (glade_xml_get_widget (xml, "tree_cameras"))) != NULL);
 
         path = g_strdup ("/");
-        item = gtk_tree_item_new_with_label (name);
+        item = gtk_tree_item_new_with_label (((frontend_data_t*) camera->frontend_data)->name);
         gtk_widget_show (item);
         if (position == -1) gtk_tree_append (tree, item);
         else gtk_tree_insert (tree, item, position);
@@ -165,16 +163,16 @@ camera_add_to_tree (GladeXML *xml, Camera *camera, gchar *name, gint camera_id, 
         /* Connect the signals. */
 	gtk_signal_connect (GTK_OBJECT (item), "drag_data_received", GTK_SIGNAL_FUNC (on_drag_data_received), NULL);
         gtk_signal_connect (GTK_OBJECT (item), "button_press_event", GTK_SIGNAL_FUNC (on_tree_cameras_button_press_event), NULL);
+
         /* Store some data. */
         gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
-	gtk_object_set_data (GTK_OBJECT (item), "camera_id", GINT_TO_POINTER (camera_id));
         gtk_object_set_data (GTK_OBJECT (item), "path", path);
         gtk_object_set_data (GTK_OBJECT (item), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (item), "checked", GINT_TO_POINTER (1));
         
         /* Do we have folders? */
         if (gp_camera_folder_list (camera, &folder_list, path) == GP_OK) {
-                folder_build (xml, item, camera, camera_id, path);
+                folder_build (xml, item, camera, path);
         } else {
                 gnome_app_error (app, _("Could not get folder list!"));
         }
@@ -184,28 +182,23 @@ void
 app_cameras_update (GladeXML* xml, GConfValue* value)
 {
 	GtkTree*	tree;
-	GSList*		list_cameras;
+	GSList*		list_cameras = NULL;
 	GtkObject*	object;
 	GList*		tree_list;
-	gchar*		camera_description;
 	gchar*		description;
-	gchar*		name;
-	gchar*		model;
-	gchar*		port;
-	gchar*		speed;
-	gint		camera_id;
 	gint		i;
-	gint		count;
 	gint		j;
+	guint		id;
 	Camera*		camera;
 
 	g_assert (xml != NULL);
-	g_assert (value != NULL);
-	g_assert (value->type == GCONF_VALUE_LIST);
-	g_assert (gconf_value_get_list_type (value) == GCONF_VALUE_STRING);	
-        g_assert ((tree = GTK_TREE (glade_xml_get_widget (xml, "tree_cameras"))) != NULL);
+	g_assert ((tree = GTK_TREE (glade_xml_get_widget (xml, "tree_cameras"))) != NULL);
+	if (value) {
+		g_assert (value->type == GCONF_VALUE_LIST);
+		g_assert (gconf_value_get_list_type (value) == GCONF_VALUE_STRING);	
+		list_cameras = gconf_value_get_list (value);
+	}
 
-	list_cameras = gconf_value_get_list (value);
         tree_list = g_list_first (tree->children);
 
         /* Mark each camera in the tree as unchecked. */
@@ -214,54 +207,42 @@ app_cameras_update (GladeXML* xml, GConfValue* value)
 
         for (i = 0; i < g_slist_length (list_cameras); i++) {
                 tree_list = g_list_first (tree->children);
-                count = 0;
                 value = g_slist_nth_data (list_cameras, i);
                 g_assert (value->type == GCONF_VALUE_STRING);
                 description = g_strdup (gconf_value_get_string (value));
-		camera_description = g_strdup (description);
-                for (j = 0; camera_description[j] != '\0'; j++) {
-                        if (camera_description[j] == '\n') {
-                                camera_description[j] = '\0';
-                                count++;
-                        }
-                }
-                g_assert (count == 4);
-                camera_id = atoi (camera_description);
-                for (j = 0; camera_description[j] != '\0'; j++);
-                name = g_strdup (&camera_description[++j]);
-		for (; camera_description[j] != '\0'; j++);
-                model = g_strdup (&camera_description[++j]);
-        	for (; camera_description[j] != '\0'; j++);
-                port = g_strdup (&camera_description[++j]);
-                for (; camera_description[j] != '\0'; j++);
-                speed = g_strdup (&camera_description[++j]);
+
+		/* Get the camera id from the description. 	*/
+		/* Remember, the description is "id\n...	*/
+		id = (guint) atoi (description);
 
 		/* Do we have this camera in the tree? */
                 for (j = 0; j < g_list_length (tree_list); j++) {
                         g_assert (GTK_IS_OBJECT (g_list_nth_data (tree_list, j)));
                         object = GTK_OBJECT (g_list_nth_data (tree_list, j));
-                        if (GPOINTER_TO_INT (gtk_object_get_data (object, "camera_id")) == camera_id) {
-                                //FIXME: Check if the port/speed/model/name changed!
-                                g_assert (GPOINTER_TO_INT (gtk_object_get_data (object, "checked")) == 0);
-                                gtk_object_set_data (object, "checked", GINT_TO_POINTER (1));
-                                break;
+			g_assert ((camera = gtk_object_get_data (object, "camera")) != NULL);
+			if (id == ((frontend_data_t*) camera->frontend_data)->id) {
+
+				/* We found the camera. Do we have to update? */
+				if (gp_camera_update_by_description (xml, &camera, description)) {
+					/* Update the label. */
+					gtk_label_set_text (GTK_LABEL (GTK_BIN (object)->child), ((frontend_data_t*) camera->frontend_data)->name);
+
+					/* Mark camera as checked. */
+	                                g_assert (GPOINTER_TO_INT (gtk_object_get_data (object, "checked")) == 0);
+                	                gtk_object_set_data (object, "checked", GINT_TO_POINTER (1));
+				}
+				break;
                         }
                 }
                 if (j == g_list_length (tree_list)) {
 
                         /* We don't have the camera in the tree (yet). */
-                        camera = gp_camera_new_by_description (description);
-                        if (camera) {
-                                camera_add_to_tree (xml, camera, name, camera_id, -1);
+                        if ((camera = gp_camera_new_by_description (xml, description))) {
+                                camera_add_to_tree (xml, camera, -1);
                         }
                 }
 
-                g_free (camera_description);
 		g_free (description);
-                g_free (name);
-                g_free (model);
-                g_free (port);
-                g_free (speed);
         }
 
         /* Delete all unchecked cameras. */
@@ -305,7 +286,7 @@ int main (int argc, char *argv[])
 	gconf_client_add_dir (client, "/apps/" PACKAGE "", GCONF_CLIENT_PRELOAD_NONE, NULL);
 
 	/* Init gphoto2 backend. */
-	value = gconf_client_get (client, "/app/" PACKAGE "/debug_level", NULL);
+	value = gconf_client_get (client, "/apps/" PACKAGE "/debug_level", NULL);
 	if (value) {
 
 		/* We already have a value for debug_level in the database. */

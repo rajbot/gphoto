@@ -1,4 +1,11 @@
 
+/* Type Definitions */
+
+typedef struct {
+	guint		id;
+	gchar* 		name;
+} frontend_data_t;
+
 /* Prototypes */
 
 int gp_frontend_status (Camera *camera, char *status);

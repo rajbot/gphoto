@@ -671,7 +671,7 @@
       <class>GtkVBox</class>
       <name>vbox1</name>
       <homogeneous>False</homogeneous>
-      <spacing>0</spacing>
+      <spacing>10</spacing>
       <child>
 	<padding>0</padding>
 	<expand>True</expand>

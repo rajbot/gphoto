@@ -65,7 +65,6 @@ struct _GnoCamCameraPrivate
 
 	GtkWidget*			widget;
 
-	guint				hpaned_position;
 	GtkWidget*			title_bar;
 	GtkWidget*			hpaned;
 	GtkWidget*			notebook;
@@ -331,6 +330,7 @@ on_configuration_clicked (BonoboUIComponent* component, gpointer user_data, cons
 	camera = GNOCAM_CAMERA (user_data);
 	
 	widget = gnocam_configuration_new (camera->priv->camera, NULL, NULL, camera->priv->window);
+	if (!widget) return;
 	gtk_widget_show (widget);
 }
 
@@ -357,10 +357,15 @@ static void
 on_size_request (GtkWidget* widget, GtkRequisition* requisition, gpointer user_data)
 {
 	GnoCamCamera*	camera;
+	gint		position;
 
 	camera = GNOCAM_CAMERA (user_data);
+	position = e_paned_get_position (E_PANED (widget));
+	
+	if (!position) return;
+	if (camera->priv->storage_view_mode == GNOCAM_CAMERA_STORAGE_VIEW_MODE_TRANSIENT) return;
 
-	gconf_client_set_int (camera->priv->client, "/apps/" PACKAGE "/hpaned_position_camera", e_paned_get_position (E_PANED (widget)), NULL);
+	gconf_client_set_int (camera->priv->client, "/apps/" PACKAGE "/hpaned_position_camera", position, NULL);
 }
 
 static void
@@ -524,7 +529,7 @@ on_title_bar_toggled (EShellFolderTitleBar* title_bar, gboolean state, void* dat
 	
 		gtk_signal_connect (GTK_OBJECT (camera->priv->storage_view_vbox), "map", GTK_SIGNAL_FUNC (on_storage_view_vbox_map), camera);
 		gtk_widget_show (camera->priv->storage_view_vbox);
-		e_paned_set_position (E_PANED (camera->priv->hpaned), camera->priv->hpaned_position);
+		e_paned_set_position (E_PANED (camera->priv->hpaned), gconf_client_get_int (camera->priv->client, "/apps/" PACKAGE "/hpaned_position_camera", NULL));
 	}
 }
 
@@ -585,12 +590,16 @@ on_storage_view_vbox_map (GtkWidget* widget, void* data)
 static int
 on_storage_view_vbox_button_release_event (GtkWidget* widget, GdkEventButton* button_event, void* data)
 {
-	GnoCamCamera* camera;
+	GnoCamCamera* 	camera;
+	gint		position;
 
 	camera = GNOCAM_CAMERA (data);
+	position = e_paned_get_position (E_PANED (camera->priv->hpaned));
 
-        if (button_event->window == E_PANED (camera->priv->hpaned)->handle)
-                return (FALSE);
+        if (button_event->window == E_PANED (camera->priv->hpaned)->handle) {
+		gconf_client_set_int (camera->priv->client, "/apps/" PACKAGE "/hpaned_position_camera", position, NULL);
+		return (FALSE);
+	}
 
         popdown_transient_folder_bar (camera);
 
@@ -604,17 +613,20 @@ on_storage_view_vbox_button_release_event (GtkWidget* widget, GdkEventButton* bu
 void
 gnocam_camera_set_storage_view_mode (GnoCamCamera* camera, GnoCamCameraStorageViewMode mode)
 {
+	gint	position;
+
+	position = gconf_client_get_int (camera->priv->client, "/apps/" PACKAGE "/hpaned_position_camera", NULL);
+	
 	if (mode == GNOCAM_CAMERA_STORAGE_VIEW_MODE_STICKY) {
 		if (!GTK_WIDGET_VISIBLE (camera->priv->storage_view_vbox)) {
 			gtk_widget_show (camera->priv->storage_view_vbox);
-			e_paned_set_position (E_PANED (camera->priv->hpaned), camera->priv->hpaned_position);
+			e_paned_set_position (E_PANED (camera->priv->hpaned), position);
 		}
 		e_title_bar_set_button_mode (E_TITLE_BAR (camera->priv->storage_view_title_bar), E_TITLE_BAR_BUTTON_MODE_CLOSE);
 		e_shell_folder_title_bar_set_clickable (E_SHELL_FOLDER_TITLE_BAR (camera->priv->title_bar), FALSE);
 	} else {
 		if (GTK_WIDGET_VISIBLE (camera->priv->storage_view_vbox)) {
 	                gtk_widget_hide (camera->priv->storage_view_vbox);
-        	        camera->priv->hpaned_position =  e_paned_get_position (E_PANED (camera->priv->hpaned));
                 	e_paned_set_position (E_PANED (camera->priv->hpaned), 0);
 		}
                 e_title_bar_set_button_mode (E_TITLE_BAR (camera->priv->storage_view_title_bar), E_TITLE_BAR_BUTTON_MODE_PIN);
@@ -716,7 +728,6 @@ gnocam_camera_new (const gchar* url, Bonobo_UIContainer container, GtkWidget* wi
 	gtk_widget_show (new->priv->hpaned = e_hpaned_new ());
 	gtk_signal_connect (GTK_OBJECT (new->priv->hpaned), "size_request", GTK_SIGNAL_FUNC (on_size_request), new);
 	gtk_box_pack_start (GTK_BOX (new->priv->widget), new->priv->hpaned, TRUE, TRUE, 2); 
-	new->priv->hpaned_position = E_PANED (new->priv->hpaned)->child1_size;
 
 	/* Create the notebook */
 	gtk_widget_show (new->priv->notebook = gtk_notebook_new ());
@@ -795,7 +806,6 @@ static void
 gnocam_camera_init (GnoCamCamera* camera)
 {
 	camera->priv = g_new0 (GnoCamCameraPrivate, 1);
-        camera->priv->hpaned_position = 0;
         camera->priv->storage_view_mode = GNOCAM_CAMERA_STORAGE_VIEW_MODE_HIDDEN;
 }
 

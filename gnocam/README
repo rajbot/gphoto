@@ -5,9 +5,9 @@ GNOCAM
 GnoCam was born because I felt a need for a small but powerful frontend to 
 gphoto2 for the GNOME desktop.
 
-GnoCam actually is a quick hack, assembled by code from gtCam and several
-GNOME applications like gedit, gftp, etc. See TODO for a list of things that
-remain to do.
+GnoCam actually is a quick hack. I borrowed code from or got inspired by
+gtCam and several GNOME applications like evolution, EOG, etc. See TODO for 
+a list of things that remain to be done.
 
 GnoCam requires at least the following libraries. Please get the latest 
 version from http://www.gnome.org. 
@@ -18,9 +18,6 @@ version from http://www.gnome.org.
  * gconf
  * xml-i18n-tools
 If you experience compilation errors, don't hesitate to report them.
-
-
-If you feel that GnoCam is worth being developed further, send an e-mail to me.
 
 
 Lutz Müller <urc8@rz.uni-karlsruhe.de>

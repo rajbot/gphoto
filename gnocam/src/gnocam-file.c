@@ -281,6 +281,7 @@ on_config_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 	file = GNOCAM_FILE (user_data);
 
 	widget = gnocam_configuration_new (file->priv->camera, file->priv->dirname, file->priv->filename, file->priv->window);
+	if (!widget) return;
 	gtk_widget_show (widget);
 }
 
@@ -341,6 +342,9 @@ gnocam_file_destroy (GtkObject* object)
 	g_free (file->priv->path);
 	
 	g_free (file->priv);
+	file->priv = NULL;
+
+//	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void

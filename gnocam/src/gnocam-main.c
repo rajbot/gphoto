@@ -71,6 +71,7 @@ struct _GnoCamMainPrivate {
 
 static void 	on_preferences_activate 	(BonoboUIComponent* component, gpointer user_data, const gchar* path);
 static void	on_about_activate		(BonoboUIComponent* component, gpointer user_data, const gchar* path);
+static void	on_exit_activate		(BonoboUIComponent* component, gpointer user_data, const gchar* path);
 
 /**********************/
 /* Internal functions */
@@ -123,7 +124,7 @@ create_menu (gpointer user_data)
 {
 	GnoCamMain*		m;
         BonoboUIVerb            verb [] = {
-                BONOBO_UI_UNSAFE_VERB ("Exit", gtk_main_quit),
+                BONOBO_UI_VERB ("Exit", on_exit_activate),
                 BONOBO_UI_VERB ("Preferences", on_preferences_activate),
                 BONOBO_UI_VERB ("About", on_about_activate),
                 BONOBO_UI_VERB_END};
@@ -226,6 +227,19 @@ on_preferences_activate (BonoboUIComponent* component, gpointer user_data, const
 	gtk_widget_show (gnocam_preferences_new (GTK_WINDOW (m)));
 }
 
+static void
+on_exit_activate (BonoboUIComponent* component, gpointer user_data, const gchar* path)
+{
+	GnoCamMain*	m;
+
+	m = GNOCAM_MAIN (user_data);
+
+	gtk_widget_unref (GTK_WIDGET (m));
+
+	//FIXME: Fix ref leaks.
+	gtk_main_quit ();
+}
+
 /***********************/
 /* Bonobo-Window stuff */
 /***********************/
@@ -244,8 +258,9 @@ gnocam_main_destroy (GtkObject* object)
 	g_hash_table_destroy (m->priv->hash_table);
 	
 	g_free (m->priv);
+	m->priv = NULL;
 
-	(*GTK_OBJECT_CLASS (parent_class)->destroy) (object);
+//	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void

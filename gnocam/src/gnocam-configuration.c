@@ -361,7 +361,7 @@ on_dialog_button_clicked (GtkButton* button, gint button_number, gpointer user_d
 
 	if (button_number == 0) {
 		set_config (configuration);
-		gtk_widget_destroy (GTK_WIDGET (configuration));
+		gtk_widget_unref (GTK_WIDGET (configuration));
 		return;
 	}
 
@@ -371,7 +371,7 @@ on_dialog_button_clicked (GtkButton* button, gint button_number, gpointer user_d
 	}
 
 	if (button_number == 2) {
-		gtk_widget_destroy (GTK_WIDGET (configuration));
+		gtk_widget_unref (GTK_WIDGET (configuration));
 		return;
 	}
 }
@@ -398,8 +398,9 @@ gnocam_configuration_destroy (GtkObject* object)
 	g_hash_table_destroy (configuration->priv->hash_table);
 
 	g_free (configuration->priv);
+	configuration->priv = NULL;
 
-	(*GTK_OBJECT_CLASS (parent_class)->destroy) (object);
+//	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void

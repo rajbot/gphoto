@@ -12,7 +12,7 @@
 #include "gnocam-configuration.h"
 
 #define PARENT_TYPE E_TABLE_TYPE
-static ETableClass* gnocam_folder_parent_class;
+static ETableClass* parent_class;
 
 struct _GnoCamFolderPrivate
 {
@@ -304,7 +304,7 @@ table_selected_row_foreach_save (int model_row, gpointer closure)
 static void
 on_cancel_button_clicked (GtkButton* button, gpointer user_data)
 {
-	gtk_widget_destroy (gtk_widget_get_ancestor (GTK_WIDGET (button), GTK_TYPE_FILE_SELECTION));
+	gtk_widget_unref (gtk_widget_get_ancestor (GTK_WIDGET (button), GTK_TYPE_FILE_SELECTION));
 }
 
 static void
@@ -320,7 +320,7 @@ on_upload_ok_button_clicked (GtkButton* ok_button, gpointer user_data)
 
         upload_file (folder, source);
 
-        gtk_widget_destroy (filesel);
+        gtk_widget_unref (filesel);
 }
 
 static void
@@ -354,6 +354,7 @@ on_config_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 	folder = GNOCAM_FOLDER (user_data);
 
 	widget = gnocam_configuration_new (folder->priv->camera, folder->priv->path, NULL, folder->priv->window);
+	if (!widget) return;
 	gtk_widget_show (widget);
 }
 
@@ -372,7 +373,7 @@ on_save_as_ok_button_clicked (GtkButton* ok_button, gpointer user_data)
 	
 	save_file (folder, name, dest);
 	
-	gtk_widget_destroy (filesel);
+	gtk_widget_unref (filesel);
 }
 
 static void
@@ -494,6 +495,8 @@ gnocam_folder_destroy (GtkObject* object)
 {
 	GnoCamFolder* folder;
 
+printf ("gnocam_folder_destroy\n");
+
 	folder = GNOCAM_FOLDER (object);
 
 	gtk_widget_unref (folder->priv->window);
@@ -509,6 +512,9 @@ gnocam_folder_destroy (GtkObject* object)
 	gtk_object_unref (GTK_OBJECT (folder->priv->client));
 	
 	g_free (folder->priv);
+	folder->priv = NULL;
+
+//	GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void
@@ -519,7 +525,7 @@ gnocam_folder_class_init (GnoCamFolderClass* klass)
 	object_class = GTK_OBJECT_CLASS (klass);
 	object_class->destroy = gnocam_folder_destroy;
 
-	gnocam_folder_parent_class = gtk_type_class (PARENT_TYPE);
+	parent_class = gtk_type_class (PARENT_TYPE);
 }
 
 static void

@@ -9,83 +9,76 @@
 #include "information.h"
 
 /**
- * camera_tree_clean:
+ * camera_tree_folder clean:
  *
  * This function removes all items from a tree and makes sure that 
- * the tree is still connected with its parent.
+ * the tree is still connected with its parent. Any associated
+ * pages in the notebook are removed.
  **/
 void
-camera_tree_clean (GtkTree* tree)
+camera_tree_folder_clean (GtkTreeItem* folder)
 {
-	GtkTreeItem*	item;
 	gint		i;
-	GtkWidget*	owner;
-	gchar*		filename;
-	gchar*		path;
-	GtkWidget*	page;
-	GladeXML*	xml;
-	GtkNotebook*	notebook;
+	GtkTree*	tree;
 
-	g_assert (tree != NULL);
-	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (tree), "xml")) != NULL);	
-	g_assert ((notebook = GTK_NOTEBOOK (glade_xml_get_widget (xml, "notebook_files"))) != NULL);
+	g_assert (folder != NULL);
+	g_assert ((tree = GTK_TREE (folder->subtree)) != NULL);
 
 	/* Delete all items of tree. */
-	owner = tree->tree_owner;
-	for (i = g_list_length (tree->children) - 1; i >= 0; i--) {
-		item = GTK_TREE_ITEM (g_list_nth_data (tree->children, i));
-		g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
-
-		/* Do we have to remove a notebook page? */
-		if ((page = gtk_object_get_data (GTK_OBJECT (item), "page"))) gtk_notebook_remove_page (notebook, gtk_notebook_page_num (notebook, page));
-
-		/* Folder or file? */
-		if ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) {
-			g_free (filename);
-		} else {
-
-			/* It could be that gphoto had been unable to get the file/folder list. */
-			if (item->subtree) {
-				camera_tree_clean (GTK_TREE (item->subtree));
-				gtk_object_unref (GTK_OBJECT (item->subtree));
-			} 
-		}
-
-		/* Clean up. */
-		g_free (path);
-		gtk_container_remove (GTK_CONTAINER (tree), GTK_WIDGET (item));
-	}
-
-	/* Make sure the subtree itself does not get lost. */
-	if (GTK_WIDGET (tree)->parent == NULL) gtk_tree_item_set_subtree (GTK_TREE_ITEM (owner), GTK_WIDGET (tree));
+	for (i = g_list_length (tree->children) - 1; i >= 0; i--) camera_tree_item_remove (GTK_TREE_ITEM (g_list_nth_data (tree->children, i)));
 }
 
 void
-camera_tree_remove_file (GtkTreeItem* item)
+camera_tree_item_remove (GtkTreeItem* item)
 {
 	GladeXML*	xml;
 	gchar*		path;
 	gchar*		filename;
 	GtkNotebook*	notebook;
 	GtkWidget*	page;
+	GtkWidget*	owner;
 	GtkTree*	tree;
+	Camera*		camera;
+	gboolean	root;
 
 	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (item), "xml")) != NULL);
 	g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
 	g_assert ((notebook = GTK_NOTEBOOK (glade_xml_get_widget (xml, "notebook_files"))) != NULL);
-	g_assert ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename")) != NULL);
 	g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
 	g_assert ((tree = GTK_TREE (GTK_WIDGET (item)->parent)) != NULL);
+	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
 
-	if (g_list_length (tree->children) == 1) camera_tree_clean (tree);
-	else {
-                /* Do we have to remove a notebook page? */
-                if ((page = gtk_object_get_data (GTK_OBJECT (item), "page"))) gtk_notebook_remove_page (notebook, gtk_notebook_page_num (notebook, page));
+	/* Root folder needs special care. */
+	root = ((!(filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) && (strcmp ("/", path) == 0));
 
-		/* Remove the item. */
-		g_free (filename);
-		g_free (path);
-		gtk_container_remove (GTK_CONTAINER (tree), GTK_WIDGET (item));
+	/* If item is a folder, clean it. */
+	if (!filename) {
+		g_assert (item->subtree);
+		camera_tree_folder_clean (item);
+		gtk_widget_unref (item->subtree);
+	}
+
+        /* Do we have to remove a notebook page? */
+        if ((page = gtk_object_get_data (GTK_OBJECT (item), "page"))) gtk_notebook_remove_page (notebook, gtk_notebook_page_num (notebook, page));
+
+	/* If it's the root folder, free the camera. */
+	if (root) gp_camera_free (camera);
+
+	/* If this is the last item, we have to make sure we don't loose the 	*/
+	/* tree. Therefore, keep a reference to the tree owner. 		*/
+	owner = tree->tree_owner;
+
+	/* Clean up. */
+	g_free (path);
+	if (filename) g_free (filename);
+	gtk_container_remove (GTK_CONTAINER (tree), GTK_WIDGET (item));
+
+	/* Make sure the tree does not get lost. */
+	if (GTK_WIDGET (tree)->parent == NULL) {
+
+		/* This does only happen with tree items. I hope so. */
+		g_assert (GTK_IS_TREE_ITEM (owner));
+		gtk_tree_item_set_subtree (GTK_TREE_ITEM (owner), GTK_WIDGET (tree));
 	}
 }
 
@@ -141,23 +134,19 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* path)
         } else folder_list_count = gp_list_count (&folder_list);
         gtk_object_set_data (GTK_OBJECT (item), "folder_list_count", GINT_TO_POINTER (folder_list_count));
 
-        /* Do we have files (in the root directory)? */
+        /* Do we have files? */
         if (gp_camera_file_list (camera, &file_list, path) != GP_OK) {
                 dialog_information ("Could not get file list for folder '%s'!", path);
                 file_list_count = 0;
         } else file_list_count = gp_list_count (&file_list);
         gtk_object_set_data (GTK_OBJECT (item), "file_list_count", GINT_TO_POINTER (file_list_count));
 
-        /* Do we have to create a subtree? */
-        if (file_list_count + folder_list_count > 0) {
-
-                /* Create the subtree. Don't populate it yet. */
-                subtree = gtk_tree_new ();
-                gtk_widget_ref (subtree);
-                gtk_widget_show (subtree);
-                gtk_tree_item_set_subtree (item, subtree);
-                gtk_object_set_data (GTK_OBJECT (subtree), "xml", xml);
-        }
+        /* Create the subtree. Don't populate it yet. */
+        subtree = gtk_tree_new ();
+        gtk_widget_ref (subtree);
+        gtk_widget_show (subtree);
+        gtk_tree_item_set_subtree (item, subtree);
+        gtk_object_set_data (GTK_OBJECT (subtree), "xml", xml);
 }
 
 /**
@@ -171,7 +160,7 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
 {
         GSList*         list_cameras = NULL;
         GtkObject*      object;
-	GtkWidget*	item;
+	GtkTreeItem*	item;
         GList*          tree_list;
         gchar*          description;
         gint            i;
@@ -239,20 +228,9 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
         /* Delete all unchecked cameras. */
         tree_list = g_list_first (tree->children);
         for (j = g_list_length (tree_list) - 1; j >= 0; j--) {
-                item = GTK_WIDGET (g_list_nth_data (tree_list, j));
+                item = GTK_TREE_ITEM (g_list_nth_data (tree_list, j));
                 if (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (item), "checked")) == 0) {
-
-			/* Remove subtree. */
-			if (GTK_TREE_ITEM (item)->subtree) {
-				camera_tree_clean (GTK_TREE (GTK_TREE_ITEM (item)->subtree));
-				gtk_object_unref (GTK_OBJECT (GTK_TREE_ITEM (item)->subtree));
-			}
-
-			/* Remove the entry. */
-			gp_camera_free (gtk_object_get_data (GTK_OBJECT (item), "camera"));
-			g_free (gtk_object_get_data (GTK_OBJECT (item), "path"));
-                        gtk_tree_remove_item (tree, item);
-
+			camera_tree_item_remove (item);
                         tree_list = g_list_first (tree->children);
                 }
         }

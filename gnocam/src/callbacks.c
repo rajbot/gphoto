@@ -1,5 +1,6 @@
 #include <config.h>
 #include <gnome.h>
+#include <libgnomevfs/gnome-vfs.h>
 #include <gconf/gconf-client.h>
 #include <glade/glade.h>
 #include <gdk-pixbuf/gdk-pixbuf-loader.h>
@@ -391,16 +392,57 @@ on_tree_item_folder_button_press_event (GtkWidget *widget, GdkEventButton *event
 void
 on_drag_data_received (GtkWidget *widget, GdkDragContext *context, gint x, gint y, GtkSelectionData *selection_data, guint info, guint time)
 {
-        GList *filenames;
-        guint i;
-        gchar *message;
+        GList*			filenames;
+        guint 			i, j, k;
+        gchar*			path;
+	CameraFile*		file;
+	GnomeVFSURI*		uri;
+	GnomeVFSHandle*		handle;
+	GnomeVFSFileSize	bytes_read;
+	GnomeVFSResult		result;
+	guint8			data [1025];
+	Camera*			camera;
 
+	g_assert ((path = gtk_object_get_data (GTK_OBJECT (widget), "path")) != NULL);
+	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (widget), "camera")) != NULL);
+
+	file = gp_file_new ();
+	file->data = g_new (gchar, 1025);
         filenames = gnome_uri_list_extract_filenames (selection_data->data);
         for (i = 0; i < g_list_length (filenames); i++) {
-                message = g_strdup_printf ("Upload not implemented (filename: %s)", (gchar *) g_list_nth_data (filenames, i));
-                gnome_dialog_run_and_close (GNOME_DIALOG (gnome_error_dialog (message)));
-                g_free (message);
+		uri = gnome_vfs_uri_new (g_list_nth_data (filenames, i));
+		if ((result = gnome_vfs_open_uri (&handle, uri, GNOME_VFS_OPEN_READ)) != GNOME_VFS_OK) {
+			dialog_information (
+				_("An error occurred while trying to open file '%s' (%s)."), 
+				g_list_nth_data (filenames, i), 
+				gnome_vfs_result_to_string (result));
+			continue;
+		}
+		j = 0;
+		while (TRUE) {
+			if ((result = gnome_vfs_read (handle, data, 1024, &bytes_read)) != GNOME_VFS_OK) {
+				dialog_information (
+					_("An error occurred while trying to read file '%s' (%s)."), 
+					g_list_nth_data (filenames, i), 
+					gnome_vfs_result_to_string (result));
+				break;
+			}
+			if (bytes_read == 0) break;
+			else if (bytes_read <= 1024) data [bytes_read] = '\0';
+			else g_assert_not_reached ();
+			for (k = 0; k < bytes_read; k++) file->data [k + j] = data [k];
+			file->size = j + bytes_read;
+			file->data = g_renew (gchar, file->data, j + 1024);
+		}
+		if (result != GNOME_VFS_OK) continue;
+		if (gp_camera_file_put (camera, file, path) != GP_OK) 
+			dialog_information (_("Could not put '%s' into folder '%s'!"), (gchar*) g_list_nth_data (filenames, i), path);
+		if (file->data) {
+			g_free (file->data);
+			file->data = NULL;
+		}
         }
+	gp_file_free (file);
         gnome_uri_list_free_strings (filenames);
 }
 
@@ -484,7 +526,7 @@ on_tree_item_collapse (GtkTreeItem* tree_item, gpointer user_data)
 	/* Remove items of subtrees. We do that because we user should 	*/
 	/* be able to get an updated tree by collapsing and reexpanding	*/
 	/* the tree.							*/
-	camera_tree_clean (GTK_TREE (tree_item->subtree));
+	camera_tree_folder_clean (tree_item);
 }
 
 void

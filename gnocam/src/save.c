@@ -304,7 +304,7 @@ delete (GtkTreeItem* item)
 	g_assert ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename")) != NULL);
 	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
 
-	if (gp_camera_file_delete (camera, path, filename) == GP_OK) camera_tree_remove_file (item);
+	if (gp_camera_file_delete (camera, path, filename) == GP_OK) camera_tree_item_remove (item);
 	else dialog_information (_("Could not delete '%s/%s'!"), path, filename);
 }
 

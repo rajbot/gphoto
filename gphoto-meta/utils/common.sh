@@ -19,12 +19,12 @@ toolroot="${metadir}/tool-root"
 toolsrc="${metadir}/tool-src"
 tmpdir="${metadir}/tmp"
 
-function fail {
+fail() {
     echo "${@}"
     exit 1
 }
 
-function cmd {
+cmd() {
     echo "#> ${@}" >&2
     if [ "$1" = "cd" ]
     then

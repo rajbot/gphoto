@@ -65,7 +65,7 @@ function installautotools {
     cmd mkdir -p "${downloads}" "${toolroot}" "${toolsrc}"
     cmd rm -rf "${toolroot}"
 
-    while read tool URL restofline
+    while read tool action URL restofline
     do
 	local tarball
 	tarball="${downloads}/$(basename "$URL")"
@@ -103,14 +103,7 @@ function installautotools {
 	cmd cd "${toolsrc}/${base}"
 	cmd ./configure --prefix="${toolroot}"
 	cmd make install
-    done <<EOF
-m4	ftp://ftp.gnu.org/gnu/m4/m4-1.4.tar.gz
-autoconf	ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.53.tar.${compression}
-automake	ftp://ftp.gnu.org/gnu/automake/automake-1.6.3.tar.${compression}
-libtool		ftp://ftp.gnu.org/gnu/libtool/libtool-1.4.2.tar.gz
-gettext		ftp://ftp.gnu.org/gnu/gettext/gettext-0.11.5.tar.gz
-pkg-config	http://www.freedesktop.org/software/pkgconfig/releases/pkgconfig-0.12.0.tar.gz
-EOF
+    done < build-tool-list
 }
 
 
@@ -129,7 +122,7 @@ function checktools {
     fi
 
     echo "##### Checking for presence of tools..."
-    while read action tool restofline
+    while read tool action restofline
     do
 	if "$tool" --version < /dev/null | grep -i $tool > /dev/null
 	then
@@ -149,18 +142,7 @@ function checktools {
 		exit 225
 	    fi
 	fi
-    done <<EOF
-fatal	cvs
-fatal	grep
-fatal	egrep
-auto	m4
-auto	autoconf
-auto	automake
-auto	gettext
-auto	libtool
-auto	pkg-config
-autocnd	wget
-EOF
+    done < build-tool-list
 
     if "${parm_tools}"
     then

@@ -12,17 +12,14 @@ INCLUDES = \
  -I$(includedir)/src
 
 CFLAGS = @CFLAGS@\
- `gphoto2-config --cflags`\
- `gpio-config --cflags`\
  `gnome-config --cflags libglade gdk_pixbuf gnomeui vfs xml gtkhtml bonobox`\
- `gconf-config --cflags gconf gconf-gtk`
+ `gconf-config --cflags gconf gconf-gtk`\
+ `gphoto2-config --cflags`\
+ `gpio-config --cflags` 
 
 LDFLAGS = @LDFLAGS@\
- `gphoto2-config --libs`\
- `gpio-config --libs`\
  `gnome-config --libs libglade gdk_pixbuf gnomeui vfs xml gtkhtml bonobox`\
  `gconf-config --libs gconf gconf-gtk`
- 
 
 bin_PROGRAMS = gnocam
 
@@ -39,6 +36,10 @@ gnocam_SOURCES =\
  preview.h preview.c\
  properties.h properties.c\
  utils.h utils.c
+
+gnocam_LDFLAGS =\
+ $(GPHOTO2_LIBS)\
+ $(GPIO_LIBS)
 
 glade_DATA = gnocam.glade
 

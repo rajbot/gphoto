@@ -50,20 +50,6 @@ else
 *** Did not find gnome-libs installed.])
 fi
 
-dnl *******************
-dnl html-editor-control
-dnl *******************
-AC_MSG_CHECKING(for html-editor-control)
-if test -x /bin/html-editor-control || test -x /usr/bin/html-editor-control; then
-    AC_MSG_RESULT(found)
-else
-    AC_MSG_ERROR([
-*** You need the html-editor-control for this version of ${PACKAGE}.
-*** Get the latest version of gtkhtml from
-*** http://www.gnome.org. Mirrors can be found at
-*** http://www.gnome.org/mirrors.])
-fi
-
 dnl ******
 dnl bonobo
 dnl ******
@@ -195,6 +181,8 @@ if gnome-config --libs gpio > /dev/null 2>&1; then
     vers=`gnome-config --modversion gpio | awk 'BEGIN { FS = "."; } { printf "%d", ($1 * 1000 + $2) * 1000 + $3;}'`
     if test "$vers" -ge 2; then
         AC_MSG_RESULT(found)
+	GPIO_CFLAGS="`gpio-config --cflags`"
+	GPIO_LIBS="`gpio-config --libs`"
     else
         AC_MSG_ERROR([
 *** You need at least libgpio 0.0.2 for this version of ${PACKAGE}.
@@ -205,6 +193,8 @@ else
 *** You need libgpio for this version of ${PACKAGE}.
 *** Get it from http://sourceforge.net/projects/gphoto/])
 fi
+AC_SUBST(GPIO_CFLAGS)
+AC_SUBST(GPIO_LIBS)
 
 dnl **********
 dnl libgphoto2
@@ -212,11 +202,15 @@ dnl **********
 AC_MSG_CHECKING(for libgphoto2 >= 2.0)
 if gnome-config --libs libgphoto2 > /dev/null 2>&1; then
     AC_MSG_RESULT(found)
+    GPHOTO2_CFLAGS="`gphoto2-config --cflags`"
+    GPHOTO2_LIBS="`gphoto2-config --libs`"
 else
     AC_MSG_ERROR([
 *** You need libgphoto2 for this version of ${PACKAGE}.
 *** Get it from http://sourceforge.net/projects/gphoto/])
 fi
+AC_SUBST(GPHOTO2_CFLAGS)
+AC_SUBST(GPHOTO2_LIBS)
 
 AC_SUBST(CFLAGS)
 AC_SUBST(CPPFLAGS)

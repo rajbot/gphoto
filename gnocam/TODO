@@ -1,14 +1,3 @@
-
-- Design a clean async interface (gnocam/idl/GnoCam.idl) for
-   - capturing
-   - configuration (xml?)
-   - download
-   - feedback (status information!)
-- Enhance the applet to include more functionality (which?)
-- Write a plugin for the gnome-control-center
-- Update EOG to use the new GnoCam.idl and the settings defined
-  by the gnome-control-center-plugin
-- Let gtkam optionally access the camera through gnocam
-- Same with gimp (will make it possible to access the camera 
-  through different programs at the same time)
-- Make the gnome-vfs-module functional
+Write/fix the gnome-vfs-module.
+Add more functionality to the applet.
+Add a plugin for libgphoto2 (i.e. add support for cameras other than konica).

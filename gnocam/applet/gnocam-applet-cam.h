@@ -26,24 +26,6 @@ struct _GnocamAppletCamClass
 GType            gnocam_applet_cam_get_type (void);
 GnocamAppletCam *gnocam_applet_cam_new      (guint size);
 
-void         gnocam_applet_cam_set_manufacturer (GnocamAppletCam *,
-						 const gchar *);
-const gchar *gnocam_applet_cam_get_manufacturer (GnocamAppletCam *);
-
-void         gnocam_applet_cam_set_model (GnocamAppletCam *, const gchar *);
-const gchar *gnocam_applet_cam_get_model (GnocamAppletCam *);
-
-void         gnocam_applet_cam_set_port (GnocamAppletCam *, const gchar *);
-const gchar *gnocam_applet_cam_get_port (GnocamAppletCam *);
-
-void         gnocam_applet_cam_set_name (GnocamAppletCam *, const gchar *);
-const gchar *gnocam_applet_cam_get_name (GnocamAppletCam *);
-
-void     gnocam_applet_cam_set_connect_auto (GnocamAppletCam *, gboolean);
-gboolean gnocam_applet_cam_get_connect_auto (GnocamAppletCam *);
-
-void gnocam_applet_cam_set_size (GnocamAppletCam *, guint);
-
 void gnocam_applet_cam_connect    (GnocamAppletCam *);
 void gnocam_applet_cam_disconnect (GnocamAppletCam *);
 

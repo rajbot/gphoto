@@ -84,23 +84,23 @@ gnocam_applet_load_preferences (GnocamApplet *a)
 		key = g_slist_nth_data (l, i);
 		k = g_strdup_printf ("%s/name", key);
 		s = gconf_client_get_string (client, k, NULL);
-		gnocam_applet_cam_set_name (c, s);
+		g_object_set (c, "name", s, NULL);
 		g_free (s); g_free (k);
 		k = g_strdup_printf ("%s/manufacturer", key);
 		s = gconf_client_get_string (client, k, NULL);
-		gnocam_applet_cam_set_manufacturer (c, s);
+		g_object_set (c, "manufacturer", s, NULL);
 		g_free (s); g_free (k);
 		k = g_strdup_printf ("%s/model", key);
 		s = gconf_client_get_string (client, k, NULL);
-		gnocam_applet_cam_set_model (c, s);
+		g_object_set (c, "model", s, NULL);
 		g_free (s); g_free (k);
 		k = g_strdup_printf ("%s/port", key);
 		s = gconf_client_get_string (client, k, NULL);
-		gnocam_applet_cam_set_port (c, s);
+		g_object_set (c, "port", s, NULL);
 		g_free (s); g_free (k);
 		k = g_strdup_printf ("%s/connect_auto", key);
-		gnocam_applet_cam_set_connect_auto (c,
-				gconf_client_get_bool (client, k, NULL));
+		g_object_set (c, "connect_auto", 
+			gconf_client_get_bool (client, k, NULL), NULL);
 	}
 	g_object_unref (client);
 }
@@ -162,7 +162,7 @@ foreach_func (gpointer key, gpointer value, gpointer user_data)
 	g_return_if_fail (GNOCAM_IS_APPLET_CAM (value));
 	g_return_if_fail (size != NULL);
 
-	gnocam_applet_cam_set_size (GNOCAM_APPLET_CAM (value), *size);
+	g_object_set (value, "size", *size, NULL);
 }
 
 static void
@@ -291,18 +291,8 @@ notify_func (GConfClient *client, guint cnxn_id, GConfEntry *entry,
 		id = g_path_get_dirname (entry->key);
 		c = g_hash_table_lookup (a->priv->cameras, id);
 		if (!c) c = gnocam_applet_add_cam (a, id);
-		if (!strcmp (b, "name"))
-			gnocam_applet_cam_set_name (c,
-				gconf_value_get_string (entry->value));
-		if (!strcmp (b, "model"))
-			gnocam_applet_cam_set_model (c,
-				gconf_value_get_string (entry->value));
-		if (!strcmp (b, "manufacturer"))
-			gnocam_applet_cam_set_manufacturer (c,
-				gconf_value_get_string (entry->value));
-		if (!strcmp (b, "port"))
-			gnocam_applet_cam_set_port (c,
-				gconf_value_get_string (entry->value));
+		g_object_set (c, b, gconf_value_get_string (entry->value),
+			      NULL);
 		g_free (id);
 	}
 }

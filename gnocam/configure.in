@@ -72,8 +72,8 @@ AC_MSG_CHECKING([whether to use gtkhtml])
 if test x"$use_gtkhtml" = xyes; then
     AC_MSG_RESULT([yes])
     if `test ! -z `gnome-config>&1 |grep gtkhtml>/dev/null``; then
-        GTKHTML_CFLAGS=`gnome-config --cflags gtkhtml bonobo` `libglade-config --cflags bonobo`
-        GTKHTML_LIBS=`gnome-config --libs gtkhtml bonobo` `libglade-config --libs bonobo`
+        GTKHTML_CFLAGS="`gnome-config --cflags gtkhtml bonobox` `libglade-config --cflags bonobo`"
+        GTKHTML_LIBS="`gnome-config --libs gtkhtml bonobox` `libglade-config --libs bonobo`"
         CFLAGS="$CFLAGS $GTKHTML_CFLAGS"
         LIBS="$LIBS $GTKHTML_LIBS"
         AC_DEFINE(GNOCAM_USES_GTKHTML,1)

@@ -1,7 +1,7 @@
 ## Specify some includes and versioning
 INCLUDES = -I../ $(VERSION_FLAGS) -I$(top_srcdir)/include
 VERSION_FLAGS = -DLIBGPIO_VERSION=\"@LIBGPIO_VERSION@\"
-CFLAGS = @IOLIB_CFLAGS@ \
+CFLAGS = @CFLAGS@ @IOLIB_CFLAGS@ \
 	-DIOLIBS=\"$(prefix)/lib/gpio\" \
 	-g
 LDFLAGS = @LDFLAGS@ -g -ldl

@@ -27,6 +27,7 @@
    Boston, MA 02111-1307, USA.
  */
 
+#include "config.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -40,6 +41,7 @@
 
 #if HAVE_TERMIOS_H
 #include <termios.h>
+#define CRTSCTS  020000000000
 #else
 #if HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
@@ -47,8 +49,8 @@
 #include <sgtty.h>
 #endif
 
-#include "gpio-serial.h"
-#include "gpio.h"
+#include "../include/gpio-serial.h"
+#include "../include/gpio.h"
 
 #ifdef HAVE_TERMIOS_H
 static struct termios term_old;
@@ -112,7 +114,7 @@ int gpio_library_list (gpio_device_info *list, int *count) {
 
 	
 	char buf[1024], prefix[1024];
-	int x, fd, use_int=0, use_char=0;
+	int x, fd;
 #ifdef linux
 	/* devfs */
 	struct stat s;
@@ -174,7 +176,8 @@ int gpio_serial_init (gpio_device *dev) {
 }
 
 int gpio_serial_exit (gpio_device *dev) {
-
+	/* ... */
+	return GPIO_OK;
 }
 
 int gpio_serial_open(gpio_device * dev)
@@ -252,7 +255,9 @@ int gpio_serial_read(gpio_device * dev, char *bytes, int size)
 	while (readen < size) {
 		/* set timeout value within input loop */
 		timeout.tv_usec = (dev->timeout % 1000) * 1000;
-		timeout.tv_sec = (dev->timeout / 1000);		// = 0 if dev->timeout < 1000
+		timeout.tv_sec = (dev->timeout / 1000);	 /* = 0
+							  * if dev->timeout < 1000
+							  */
 
 
 		rc = select(dev->device_fd + 1, &readfs, NULL, NULL, &timeout);
@@ -420,7 +425,7 @@ int gpio_serial_set_baudrate(gpio_device * dev)
 	tio.c_oflag &= ~OPOST;
 	tio.c_lflag &= ~(ICANON | ISIG | ECHO | ECHONL | ECHOE |
 			 ECHOK | IEXTEN);
-	tio.c_cflag &= ~(CRTSCTS | PARENB | PARODD);
+    	tio.c_cflag &= ~(CRTSCTS | PARENB | PARODD);
 	tio.c_cflag |= CLOCAL | CREAD;
 
 	tio.c_cc[VMIN] = 1;
@@ -521,5 +526,5 @@ int gpio_serial_send_break (gpio_device *dev, int duration) {
 #else
 	/* ioctl */
 #endif
-
+	return 0;
 }

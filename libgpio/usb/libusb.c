@@ -25,13 +25,13 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <sys/param.h>
 #include <dirent.h>
 #include <string.h>
 
 #include <usb.h>
 #include "gpio.h"
 
-// #define GPIO_USB_DEBUG
 
 int gpio_usb_list(gpio_device_info *list, int *count);
 int gpio_usb_init(gpio_device *dev);
@@ -142,8 +142,6 @@ int gpio_usb_open(gpio_device *dev)
 
 int gpio_usb_close(gpio_device *dev)
 {
-	int ret;
-
 #ifdef GPIO_USB_DEBUG
 	printf ("gpio_usb_close() called\n");
 #endif

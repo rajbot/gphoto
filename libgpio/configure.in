@@ -18,13 +18,16 @@ AC_SUBST(LIBGPIO_VERSION_INFO)
 VERSION=$LIBGPIO_VERSION
 
 AM_INIT_AUTOMAKE(libgpio, $VERSION)
+AM_MAINTAINER_MODE
 
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP
 AM_PROG_LIBTOOL
 
-AM_MAINTAINER_MODE
+dnl Turn on debugging and catch GNU features incompatible with ANSI C.
+CFLAGS="$CFLAGS -g -Wall -ansi"
+LDFLAGS="$LDFLAGS -g -Wall -ansi"
 
 dnl Checks for header files.
 AC_HEADER_DIRENT

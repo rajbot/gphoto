@@ -50,6 +50,7 @@ typedef struct {
 
 #include <dirent.h>
 #include <dlfcn.h>
+#include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -80,4 +81,4 @@ GPIO_DIRENT	GPIO_READDIR	(GPIO_DIR d);
 char*		GPIO_FILENAME	(GPIO_DIRENT de);
 int		GPIO_CLOSEDIR	(GPIO_DIR dir);
 int		GPIO_IS_FILE	(char *filename);
-int		GPIO_IS_DIR		(char *dirname);
+int		GPIO_IS_DIR	(char *dirname);

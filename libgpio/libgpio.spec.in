@@ -7,10 +7,10 @@ Name: libgpio
 Version: %ver
 Release: %rel
 Copyright: LGPL
-Group: X11/Libraries
-Source: ftp://ftp.gphoto.org/projects/gphoto/pub/tar/libgpio/libgpio-%{ver}.tar.gz
+Group: System Environment/Libraries
+Source: http://www.gphoto.net/dist/libgpio-%{ver}.tar.gz
 BuildRoot: /var/tmp/libgpio-%{PACKAGE_VERSION}-root
-URL: http://www.gphoto.org/
+URL: http://www.gphoto.net/
 Docdir: %{prefix}/doc
 Requires: libusb
 
@@ -25,7 +25,7 @@ the USB internals.
 
 %package devel
 Summary: Libraries, includes, etc to develop applications using libgpio
-Group: X11/Libraries
+Group: System Environment/Libraries
 Requires: libgpio
 
 %description devel

@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "gpio.h"
+#include "../include/gpio.h"
 #include "library.h"
 
 gpio_device_info device_list[256];

@@ -445,7 +445,7 @@ on_file_selected (GnoCamStorageView* storage_view, const gchar* path, void* data
 
 		/* Get the file */
 		file = gnocam_file_new (camera->priv->camera, camera->priv->storage, g_basename (path), camera->priv->container, 
-			camera->priv->client, camera->priv->window);
+			camera->priv->client, camera->priv->window, GNOCAM_STORAGE_VIEW (camera->priv->storage_view));
 		g_return_if_fail (file);
 		gtk_widget_show (file);
 

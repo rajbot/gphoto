@@ -22,6 +22,8 @@ struct _GnoCamFilePrivate
 
 	BonoboStorage*		storage;
 
+	GnoCamStorageView*	storage_view;
+
 	Bonobo_Control		control;
 	GtkWidget*		widget;
 
@@ -239,7 +241,7 @@ on_delete_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 		return;
 	}
 	
-	g_warning ("Implement: Delete the file from the storage view!");
+	gnocam_storage_view_update_folder (file->priv->storage_view, file->priv->dirname);
 }
 
 static void
@@ -343,7 +345,8 @@ gnocam_file_init (GnoCamFile* file)
 }
 
 GtkWidget*
-gnocam_file_new (Camera* camera, BonoboStorage* storage, const gchar* path, BonoboUIContainer* container, GConfClient* client, GtkWindow* window)
+gnocam_file_new (Camera* camera, BonoboStorage* storage, const gchar* path, BonoboUIContainer* container, GConfClient* client, GtkWindow* window, 
+		 GnoCamStorageView* storage_view)
 {
 	GnoCamFile*		new;
 
@@ -357,6 +360,7 @@ gnocam_file_new (Camera* camera, BonoboStorage* storage, const gchar* path, Bono
 	new->priv->path = g_strdup (path);
 	new->priv->container = container;
 	new->priv->window = window;
+	new->priv->storage_view = storage_view;
 	gp_camera_ref (new->priv->camera = camera);
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
 	new->priv->cnxn = gconf_client_notify_add (new->priv->client, "/apps/" PACKAGE "/preview", on_preview_changed, new, NULL, NULL);

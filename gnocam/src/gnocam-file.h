@@ -6,6 +6,8 @@
 #include <bonobo.h>
 #include <gconf/gconf-client.h>
 
+#include <gnocam-storage-view.h>
+
 BEGIN_GNOME_DECLS
 
 #define GNOCAM_TYPE_FILE		(gnocam_file_get_type ())
@@ -31,7 +33,7 @@ struct _GnoCamFileClass {
 
 GtkType    	gnocam_file_get_type		(void);
 GtkWidget*	gnocam_file_new			(Camera* camera, BonoboStorage* storage, const gchar* path, BonoboUIContainer* container, GConfClient* client, 
-						 GtkWindow* window);
+						 GtkWindow* window, GnoCamStorageView* storage_view);
 
 void 		gnocam_file_show_menu 		(GnoCamFile* file);
 void		gnocam_file_hide_menu		(GnoCamFile* file);

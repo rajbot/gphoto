@@ -7,6 +7,8 @@ categories:
 
 Directory browse library:
 * #1697: directory viewer crash on certain filenames
+* #3238: SIGSEGV opening directory
+* #3619: gphoto core dumps on open directory
 
 Thumbnail Index:
 * #1707: gPhoto
@@ -21,6 +23,15 @@ Live Camera! plugin:
 Progress bar:
 * #2040: No progress-bars makes activity unclear
 
+Canon PowerShot A5:
+* #2721: canon powershot a5 - wrong order in picture list
+
+Canon PowerShot A50:
+* #2474: Canon A50 driver really slow
+* #2477: first image skipped when downloading from Canon A50
+* #3068: problem with canon psa50
+* #3153: first AND last image skipped when downloading from Canon A50
+
 Casio QV30 on FreeBSD-3.1:
 * #1716: Gphoto core dumps after leaving scdRead -
 
@@ -30,6 +41,7 @@ Fuji:
 HP C20 / Konica library:
 * #2191: Program freezes during serial I/O
 * #2192: Take picture not working if camera has no pictures
+* #3336: segmentation fault
 
 Kodak DC-20/25:
 * #1620: gphoto fails to get index from DC-20
@@ -40,7 +52,10 @@ Kodak DC-20/25:
 Kodak (everything else):
 * #1692: gphoto crashes
 
-Kodak DC 210+ (Alt. Serial Permissions)
+Kodak DC 200:
+* #4111: bug DC200 driver
+
+Kodak DC 210+ 
 * #1745: segfault when accessing input device with insuff.
 
 Kodak DC 210+ (sleep mode issues)
@@ -53,13 +68,47 @@ Kodak DC 240:
 * #1708: DC 240 libs makes errors
 * #1916: core dump on 'live camera' with DC240
 
+Kodak DC 280 USB:
+* #4340: gPhoto: no USB connect with Kodak DC280
+
+Nikon Coolpix 950:
+* #4323: strange hardware dependent bug
+
+Philips:
+* #2624: ESP80 - Thumbnails cause core dump
+
+PhotoPC:
+* #3346: gphoto crashes on "Get Thumbnail Index" with 32 MB card of Olympus C-900 Zoom
+* #3480: Problem with PhotoPC and memory expansion
+* #3581: problems with gphoto-0.4.0 on SuSE Linux 6.1 with Olympus Camedia C-1400L
+* #4077: Commandline arg -p returns incomplete jpg with PDC-640
+* #4081: coredump when getting thumbs or images from Olympus D-450Z w/ 32M card
+* #4270: gphoto locking up when downloading multiple images/thumbnails with nikon coolpix 900
+
 Ricoh RDC 300Z:
 * #1682: Segfault after transfering pictures on Ricoh RDC-300Z
+* #3075: mismatched advice
+
+Sony DSC-55E:
+* #4125: Crash on Thumbnail Download
+
+Sony MSAC-SR1:
+* #4465: image not downloaded from Memory Stick
+
+Imlib/convert/memory issues (not likely camlibrary issue):
+* #3603: gphoto gets upset if Imlib fails to load an image
+* #4231: tmp file loading error
+* #4272: GPhoto error
+* #4593: problem with gphoto: bad jpg format?
+* #4601: gphoto RAM utilization improvements seeked?
+* #4651: gphoto 0.4.2 Error
+* #4681: crash when getting thumbnails on D-340R
 
 Portability issues:
 * #1693: compilation problems on solaris
 * #1934: gphoto 0.3.5 fails to compile on Solaris 7 x86
 
+Oddities:
 * #2193: Save to disk can result in strange large file
 
 CLOSING BUGS

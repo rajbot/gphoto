@@ -12,7 +12,6 @@
 #include "frontend.h"
 #include "notification.h"
 #include "preferences.h"
-#include "preview.h"
 #include "file-operations.h"
 
 /********************/
@@ -24,7 +23,6 @@ Bonobo_UIContainer	corba_container = CORBA_OBJECT_NIL;
 BonoboUIComponent*      main_component	= NULL;
 GtkTree*		main_tree 	= NULL;
 GnoCamViewMode		view_mode 	= GNOCAM_VIEW_MODE_PREVIEW;
-GList*			preview_list 	= NULL;
 GtkWindow*		main_window	= NULL;
 gint			counter		= 0;
 EPaned*			main_paned	= NULL;
@@ -240,9 +238,6 @@ int main (int argc, char *argv[])
 
 	/* Start the event loop. */
 	bonobo_main ();
-
-	/* Clean up the previews. */
-	for (i = g_list_length (preview_list) - 1; i >= 0; i--) preview_free (g_list_nth_data (preview_list, i));
 
 	/* Clean up the main window. */
         for (i = g_list_length (main_tree->children) - 1; i >= 0; i--) camera_tree_item_remove (g_list_nth_data (main_tree->children, i));

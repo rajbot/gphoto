@@ -19,7 +19,6 @@
 /**********************/
 
 extern GConfClient* 	gconf_client;
-extern GList*		preview_list;
 extern GtkWindow*	main_window;
 
 /**************/
@@ -57,7 +56,7 @@ on_preview_capture_video_activate (GtkWidget* widget, gpointer user_data)
 void
 on_preview_close_activate (GtkWidget* widget, gpointer user_data)
 {
-	preview_free (GTK_WIDGET (user_data));
+	gtk_widget_destroy (GTK_WIDGET (user_data));
 }
 
 void
@@ -109,7 +108,7 @@ preview_refresh (GtkWidget* preview)
         /* Capture. */
         if ((result = gp_camera_capture (camera, file, &info)) == GP_OK) {
 		if ((old_file = gtk_object_get_data (GTK_OBJECT (preview), "file"))) gp_file_unref (old_file);
-		gtk_object_set_data (GTK_OBJECT (preview), "file", file);
+		gtk_object_set_data_full (GTK_OBJECT (preview), "file", file, (GtkDestroyNotify) gp_file_unref);
 		
 		/* Init exception. */
 		CORBA_exception_init (&ev);
@@ -217,7 +216,7 @@ preview_new (Camera* camera)
 	gtk_widget_show_all (window);
 
         /* Store some data. */
-        gtk_object_set_data (GTK_OBJECT (window), "camera", camera);
+        gtk_object_set_data_full (GTK_OBJECT (window), "camera", camera, (GtkDestroyNotify) gp_camera_unref);
 	gtk_object_set_data (GTK_OBJECT (window), "container", corba_container);
 
 	/* Ref the camera. */
@@ -250,18 +249,6 @@ preview_new (Camera* camera)
 	return (window);
 }
 
-void 
-preview_free (GtkWidget* preview)
-{
-	Camera*		camera;
-
-	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (preview), "camera"));
-
-	/* Clean up. */
-	gp_camera_unref (camera);
-	preview_list = g_list_remove (preview_list, preview);
-	gtk_widget_destroy (preview);
-}
 
 
 

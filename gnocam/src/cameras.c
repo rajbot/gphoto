@@ -30,7 +30,6 @@ extern BonoboUIComponent*	main_component;
 extern Bonobo_UIContainer	corba_container;
 extern GtkTree*			main_tree;
 extern GnoCamViewMode		view_mode;
-extern GList*			preview_list;
 extern GtkWindow*		main_window;
 extern gint			counter;
 extern EPaned*			main_paned;
@@ -84,7 +83,7 @@ on_refresh_activate (BonoboUIComponent* component, gpointer folder, const gchar 
 void
 on_capture_preview_activate (BonoboUIComponent* component, gpointer folder, const gchar* name)
 {
-        preview_list = g_list_append (preview_list, preview_new (gtk_object_get_data (GTK_OBJECT (folder), "camera")));
+	g_return_if_fail (preview_new (gtk_object_get_data (GTK_OBJECT (folder), "camera")));
 }
 
 void
@@ -327,8 +326,6 @@ camera_tree_folder_populate (GtkTreeItem* folder)
 void
 camera_tree_item_remove (GtkTreeItem* item)
 {
-	BonoboUIComponent*	component;
-	CameraWidget*		window;
 	GtkWidget*		owner;
 	GtkTree*		tree;
 	CORBA_Environment	ev;
@@ -337,18 +334,6 @@ camera_tree_item_remove (GtkTreeItem* item)
 	g_return_if_fail (item);
 	g_return_if_fail (tree = GTK_TREE (GTK_WIDGET (item)->parent));
 
-	/* Unref the camera and the URI. */
-	gp_camera_unref (gtk_object_get_data (GTK_OBJECT (item), "camera"));
-	gnome_vfs_uri_unref (gtk_object_get_data (GTK_OBJECT (item), "uri"));
-
-	/* Unref the component. */
-	if ((component = gtk_object_get_data (GTK_OBJECT (item), "component"))) bonobo_object_unref (BONOBO_OBJECT (component));
-
-	/* Unref the configuration windows. */
-	if ((window = gtk_object_get_data (GTK_OBJECT (item), "window_camera"))) gp_widget_unref (window);
-	if ((window = gtk_object_get_data (GTK_OBJECT (item), "window_folder"))) gp_widget_unref (window);
-	if ((window = gtk_object_get_data (GTK_OBJECT (item), "window_file"))) gp_widget_unref (window);
-	
 	/* Unref the storage. */
 	if ((corba_storage = gtk_object_get_data (GTK_OBJECT (item), "corba_storage"))) {
 		CORBA_exception_init (&ev);
@@ -394,9 +379,6 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
 	root = (camera != NULL);
 	if (!camera) g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (tree->tree_owner), "camera"));
 
-	/* The camera is ours. */
-	gp_camera_ref (camera);
-	
 	/* Create the item. */
 	if (root) {
 		item = gtk_tree_item_new_with_label (((frontend_data_t*) camera->frontend_data)->name);
@@ -407,6 +389,14 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
 	}
         gtk_widget_show (item);
         gtk_tree_append (tree, item);
+
+	/* The camera is ours. */
+	gp_camera_ref (camera);
+	gtk_object_set_data_full (GTK_OBJECT (item), "camera", camera, (GtkDestroyNotify) gp_camera_unref);
+
+	/* Ref the uri. */
+	gnome_vfs_uri_ref (uri);
+	gtk_object_set_data_full (GTK_OBJECT (item), "uri", uri, (GtkDestroyNotify) gnome_vfs_uri_unref);
 
         /* For drag and drop. */
         //FIXME: Right now, only drops onto the camera (= root folder) work. Why?!?
@@ -428,8 +418,6 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
         gtk_tree_item_set_subtree (GTK_TREE_ITEM (item), widget);
 
         /* Store some data. */
-        gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
-        gtk_object_set_data (GTK_OBJECT (item), "uri", uri);
         gtk_object_set_data (GTK_OBJECT (item), "checked", GINT_TO_POINTER (1));
 }
 
@@ -447,9 +435,6 @@ camera_tree_file_add (GtkTree* tree, GnomeVFSURI* uri)
 	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (tree->tree_owner), "camera"));
 	g_return_if_fail (corba_storage = gtk_object_get_data (GTK_OBJECT (tree->tree_owner), "corba_storage"));
 
-	/* Ref the camera. */
-	gp_camera_ref (camera);
-
 	/* Ref the storage. */
 	CORBA_exception_init (&ev);
 	Bonobo_Storage_ref (corba_storage, &ev);
@@ -459,6 +444,14 @@ camera_tree_file_add (GtkTree* tree, GnomeVFSURI* uri)
         item = gtk_tree_item_new_with_label (gnome_vfs_uri_get_basename (uri));
         gtk_widget_show (item);
         gtk_tree_append (tree, item);
+
+	/* The camera is ours. */
+	gp_camera_ref (camera);
+	gtk_object_set_data_full (GTK_OBJECT (item), "camera", camera, (GtkDestroyNotify) gp_camera_unref);
+
+	/* Ref the uri. */
+	gnome_vfs_uri_ref (uri);
+	gtk_object_set_data_full (GTK_OBJECT (item), "uri", uri, (GtkDestroyNotify) gnome_vfs_uri_unref);
 
 	/* Drag and Drop */
 	gtk_drag_source_set (item, GDK_BUTTON1_MASK | GDK_BUTTON3_MASK, target_table, 1, GDK_ACTION_COPY);
@@ -471,7 +464,6 @@ camera_tree_file_add (GtkTree* tree, GnomeVFSURI* uri)
 
         /* Store some data. */
         gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
-        gtk_object_set_data (GTK_OBJECT (item), "uri", uri);
         gtk_object_set_data (GTK_OBJECT (item), "corba_storage", corba_storage);
 	gtk_object_set_data (GTK_OBJECT (item), "file", GINT_TO_POINTER (1));
 }
@@ -496,6 +488,7 @@ main_tree_update (GConfValue* value)
 	gint		result;
         Camera*         camera;
 	gboolean	changed;
+	GnomeVFSURI*	uri;
 
 	g_return_if_fail (main_tree);
 
@@ -557,8 +550,10 @@ main_tree_update (GConfValue* value)
 				g_free (tmp);
 			} else {
 				tmp = g_strdup_printf ("camera://%s/", name);
-				camera_tree_folder_add (main_tree, camera, gnome_vfs_uri_new (tmp));
+				uri = gnome_vfs_uri_new (tmp);
 				g_free (tmp);
+				camera_tree_folder_add (main_tree, camera, uri);
+				gnome_vfs_uri_unref (uri);
 				gp_camera_unref (camera);
 			}
                 }
@@ -599,9 +594,15 @@ camera_tree_item_popup_create (GtkTreeItem* item)
         /* Create the component. */
         component = bonobo_ui_component_new_default ();
         bonobo_ui_component_set_container (component, corba_container);
-        gtk_object_set_data (GTK_OBJECT (item), "component", component);
-	gtk_object_set_data (GTK_OBJECT (component), "camera", camera);
-	gtk_object_set_data (GTK_OBJECT (component), "uri", uri);
+        gtk_object_set_data_full (GTK_OBJECT (item), "component", component, (GtkDestroyNotify) bonobo_object_unref);
+	
+	/* Ref the camera. */
+	gp_camera_ref (camera);
+	gtk_object_set_data_full (GTK_OBJECT (component), "camera", camera, (GtkDestroyNotify) gp_camera_unref);
+
+	/* Ref the uri. */
+	gnome_vfs_uri_ref (uri);
+	gtk_object_set_data_full (GTK_OBJECT (component), "uri", uri, (GtkDestroyNotify) gnome_vfs_uri_unref);
 
         /* Prepare the popup. */
         doc = xmlNewDoc ("1.0");
@@ -799,9 +800,9 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 
         /* Store some data. */
         gtk_object_set_data (GTK_OBJECT (item), "menu", menu);
-	gtk_object_set_data (GTK_OBJECT (item), "window_folder", window_folder);
-	gtk_object_set_data (GTK_OBJECT (item), "window_camera", window_camera);
-	gtk_object_set_data (GTK_OBJECT (item), "window_file", window_file);
+	if (window_folder) gtk_object_set_data_full (GTK_OBJECT (item), "window_folder", window_folder, (GtkDestroyNotify) gp_widget_unref);
+	if (window_camera) gtk_object_set_data_full (GTK_OBJECT (item), "window_camera", window_camera, (GtkDestroyNotify) gp_widget_unref);
+	if (window_file) gtk_object_set_data_full (GTK_OBJECT (item), "window_file", window_file, (GtkDestroyNotify) gp_widget_unref);
 
 	/* To make sure the _user_ toggled... */
 	gtk_object_set_data (GTK_OBJECT (component), "done", GINT_TO_POINTER (1));

@@ -38,7 +38,6 @@ void on_fileselection_cancel_button_clicked 	(GtkButton* button, gpointer user_d
 void
 on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 {
-	CameraFile*		file;
 	GtkFileSelection*	fileselection;
 	GnomeVFSURI*		uri;
 
@@ -56,9 +55,7 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 		gnome_vfs_uri_unref (uri);
 		break;
 	case OPERATION_FILE_SAVE: 
-		g_assert ((file = gtk_object_get_data (GTK_OBJECT (button), "file")) != NULL);
-		camera_file_save (file,  gnome_vfs_uri_new (gtk_file_selection_get_filename (fileselection)));
-		gp_file_unref (file);
+		camera_file_save (gtk_object_get_data (GTK_OBJECT (button), "file"),  gnome_vfs_uri_new (gtk_file_selection_get_filename (fileselection)));
 		break;
 	default:
 		g_assert_not_reached ();
@@ -69,24 +66,7 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 void
 on_fileselection_cancel_button_clicked (GtkButton *button, gpointer user_data)
 {
-	GtkFileSelection*	fileselection;
-	CameraFile*		file;
-
-	g_assert ((fileselection = GTK_FILE_SELECTION (glade_xml_get_widget (gtk_object_get_data (GTK_OBJECT (button), "xml_fileselection"), "fileselection"))));
-
-	switch (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (button), "operation"))) {
-	case OPERATION_FILE_UPLOAD:
-		break;
-	case OPERATION_FILE_DOWNLOAD:
-		break;
-	case OPERATION_FILE_SAVE:
-		g_assert ((file = gtk_object_get_data (GTK_OBJECT (button), "file")) != NULL);
-		gp_file_unref (file);
-		break;
-	default:
-		g_assert_not_reached ();
-	}
-	gtk_widget_destroy (GTK_WIDGET (fileselection));
+	gtk_widget_destroy (glade_xml_get_widget (gtk_object_get_data (GTK_OBJECT (button), "xml_fileselection"), "fileselection"));
 }
 
 /*************/
@@ -239,9 +219,7 @@ upload (GtkTreeItem* folder, GnomeVFSURI* uri)
 	        gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_FILE_UPLOAD));
 	
 	        /* Store some data in the cancel button. */
-	        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_cancel_button"))) != NULL);
-	        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
-		gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_FILE_UPLOAD));
+	        gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_cancel_button")), "xml_fileselection", xml_fileselection);
 	
 	        /* Connect the signals. */
 	        glade_xml_signal_autoconnect (xml_fileselection);
@@ -285,21 +263,18 @@ camera_file_save (CameraFile* file, GnomeVFSURI* uri)
 	
 	        /* Store some data in the ok button. */
 	        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_ok_button"))) != NULL);
-	        gtk_object_set_data (object, "file", file);
-	        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
+		gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
 		gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_FILE_SAVE));
+		
+		/* Ref the file. */
+		gp_file_ref (file);
+	        gtk_object_set_data_full (object, "file", file, (GtkDestroyNotify) gp_file_unref);
 	
 	        /* Store some data in the cancel button. */
-	        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_cancel_button"))) != NULL);
-	        gtk_object_set_data (object, "file", file);
-	        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
-		gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_FILE_SAVE));
+	        gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_cancel_button")), "xml_fileselection", xml_fileselection);
 	
 	        /* Connect the signals. */
 	        glade_xml_signal_autoconnect (xml_fileselection);
-	
-		/* The file is ours. */
-		gp_file_ref (file);
 	}
 }
 

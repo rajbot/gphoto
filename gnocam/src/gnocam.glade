@@ -436,6 +436,24 @@
   </widget>
 
   <widget>
+    <class>GtkMenuItem</class>
+    <name>camera_tree_popup_camera_upload_file</name>
+    <signal>
+      <name>activate</name>
+      <handler>on_camera_tree_popup_folder_upload_file_activate</handler>
+      <last_modification_time>Mon, 02 Oct 2000 20:24:03 GMT</last_modification_time>
+    </signal>
+    <label>Upload File</label>
+    <right_justify>False</right_justify>
+  </widget>
+
+  <widget>
+    <class>GtkMenuItem</class>
+    <name>separator5</name>
+    <right_justify>False</right_justify>
+  </widget>
+
+  <widget>
     <class>GtkPixmapMenuItem</class>
     <name>camera_tree_popup_camera_properties</name>
     <signal>
@@ -1245,7 +1263,7 @@
     <signal>
       <name>clicked</name>
       <handler>on_fileselection_ok_button_clicked</handler>
-      <last_modification_time>Wed, 27 Sep 2000 11:16:03 GMT</last_modification_time>
+      <last_modification_time>Mon, 02 Oct 2000 20:41:42 GMT</last_modification_time>
     </signal>
     <stock_button>GNOME_STOCK_BUTTON_OK</stock_button>
   </widget>
@@ -1259,7 +1277,7 @@
     <signal>
       <name>clicked</name>
       <handler>on_fileselection_cancel_button_clicked</handler>
-      <last_modification_time>Wed, 27 Sep 2000 11:15:55 GMT</last_modification_time>
+      <last_modification_time>Mon, 02 Oct 2000 20:41:51 GMT</last_modification_time>
     </signal>
     <stock_button>GNOME_STOCK_BUTTON_CANCEL</stock_button>
   </widget>
@@ -1388,6 +1406,18 @@
 <widget>
   <class>GtkMenu</class>
   <name>camera_tree_popup_folder</name>
+
+  <widget>
+    <class>GtkMenuItem</class>
+    <name>camera_tree_popup_folder_upload_file</name>
+    <signal>
+      <name>activate</name>
+      <handler>on_camera_tree_popup_folder_upload_activate</handler>
+      <last_modification_time>Mon, 02 Oct 2000 20:24:15 GMT</last_modification_time>
+    </signal>
+    <label>Upload file</label>
+    <right_justify>False</right_justify>
+  </widget>
 </widget>
 
 </GTK-Interface>

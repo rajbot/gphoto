@@ -10,3 +10,5 @@ void save_as (GladeXML* xml, Camera* camera, gchar* path, gchar* filename, gbool
 
 void delete (GtkTreeItem* item);
 
+void upload (Camera* camera, gchar* path_orig, gchar* filename);
+

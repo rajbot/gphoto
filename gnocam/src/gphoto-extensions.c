@@ -6,6 +6,7 @@
 #include <glade/glade.h>
 #include "gnocam.h"
 #include "gphoto-extensions.h"
+#include "information.h"
 
 /* Prototypes */
 

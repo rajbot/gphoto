@@ -18,9 +18,9 @@ AC_PATH_X
 dnl Check -ljpeg:
 AC_CHECK_LIB(jpeg, jpeg_start_decompress)
 dnl Check for glib
-AM_PATH_GLIB(1.0.6)
+AM_PATH_GLIB(1.2.0)
 dnl Check for gtk
-AM_PATH_GTK(1.0.6)
+AM_PATH_GTK(1.2.0)
 dnl Check for gdk_imlib
 AM_PATH_GDK_IMLIB(1.4.0)
 

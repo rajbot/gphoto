@@ -85,7 +85,7 @@ function installautotools {
 		ext=".tar.gz"
 		;;
 	    *.tar.bz2)
-		cmd tar xvfj "$tarball"
+		cmd bunzip2 -c "$tarball" | tar xvf -
 		ext=".tar.bz2"
 		;;
 	    *)

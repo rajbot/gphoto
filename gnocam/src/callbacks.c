@@ -59,6 +59,8 @@ void on_camera_tree_popup_file_save_file_as_activate 	(GtkMenuItem* menuitem, gp
 void on_camera_tree_popup_file_save_preview_as_activate (GtkMenuItem* menuitem, gpointer user_data);
 void on_camera_tree_popup_file_save_preview_activate 	(GtkMenuItem* menuitem, gpointer user_data);
 
+void on_camera_tree_popup_camera_manual_activate (GtkMenuItem* menuitem, gpointer user_data);
+
 void on_properties_activate 		(GtkMenuItem* menuitem, gpointer user_data);
 void on_capture_preview_activate	(GtkMenuItem* menuitem, gpointer user_data);
 void on_capture_image_activate 		(GtkMenuItem* menuitem, gpointer user_data);
@@ -263,6 +265,18 @@ on_camera_tree_popup_file_save_preview_as_activate (GtkMenuItem* menuitem, gpoin
 	save (gtk_object_get_data (GTK_OBJECT (menuitem), "item"), TRUE, TRUE, FALSE);
 }
 
+void
+on_camera_tree_popup_camera_manual_activate (GtkMenuItem* menuitem, gpointer user_data)
+{
+	Camera*		camera;
+	CameraText 	manual;
+	
+	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (menuitem), "camera")) != NULL);
+
+	if (gp_camera_manual (camera, &manual) == GP_OK) gnome_app_message (GNOME_APP (glade_xml_get_widget (xml, "app")), manual.text);
+	else dialog_information (_("Could not get camera manual!"));
+}
+
 /***********/
 /* Pop ups */
 /***********/
@@ -357,6 +371,7 @@ on_tree_item_camera_button_press_event (GtkWidget *widget, GdkEventButton *event
                 gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_video")), "item", widget);
                 gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_image")), "item", widget);
                 gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_preview")), "item", widget);
+		gtk_object_set_data  (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_manual")), "camera", camera);
                 gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_properties")), "camera", camera);
                 gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_upload_file")), "item", widget);
 		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_refresh")), "item", widget);

@@ -505,6 +505,19 @@
 
   <widget>
     <class>GtkPixmapMenuItem</class>
+    <name>camera_tree_popup_camera_manual</name>
+    <signal>
+      <name>activate</name>
+      <handler>on_camera_tree_popup_camera_manual_activate</handler>
+      <last_modification_time>Mon, 16 Oct 2000 11:06:18 GMT</last_modification_time>
+    </signal>
+    <label>Manual</label>
+    <right_justify>False</right_justify>
+    <stock_icon>GNOME_STOCK_MENU_BOOK_RED</stock_icon>
+  </widget>
+
+  <widget>
+    <class>GtkPixmapMenuItem</class>
     <name>camera_tree_popup_camera_properties</name>
     <signal>
       <name>activate</name>

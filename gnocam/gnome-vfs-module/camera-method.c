@@ -194,11 +194,11 @@ printf ("ENTER: do_open\n");
 	dirname = gnome_vfs_uri_extract_dirname (uri);
 	filename = gnome_vfs_uri_get_basename (uri);
 	if (gnome_vfs_uri_get_user_name (uri) != NULL)
-		result = GNOME_VFS_RESULT (gp_camera_file_get_preview (camera,
-						dirname, filename, file));
+		result = GNOME_VFS_RESULT (gp_camera_file_get (camera, dirname,
+					filename, GP_FILE_TYPE_PREVIEW, file));
 	else
-		result = GNOME_VFS_RESULT (gp_camera_file_get_file (camera,
-						dirname, filename, file));
+		result = GNOME_VFS_RESULT (gp_camera_file_get (camera, dirname,
+					filename, GP_FILE_TYPE_NORMAL, file));
 	if (result != GNOME_VFS_OK) {
 		gp_file_unref (file);
 		unref_camera (camera);

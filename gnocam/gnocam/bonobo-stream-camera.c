@@ -288,11 +288,11 @@ bonobo_stream_camera_new (Camera            *camera,
 	CHECK_RESULT (gp_file_new (&file), ev);
         if (flags & Bonobo_Storage_READ) {
 		if (flags & Bonobo_Storage_COMPRESSED) {
-			CHECK_RESULT (gp_camera_file_get_preview (camera, 
-						dirname, filename, file), ev);
+			CHECK_RESULT (gp_camera_file_get (camera, dirname,
+				filename, GP_FILE_TYPE_PREVIEW, file), ev);
 		} else {
-			CHECK_RESULT (gp_camera_file_get_file (camera, 
-						dirname, filename, file), ev);
+			CHECK_RESULT (gp_camera_file_get (camera, dirname,
+				filename, GP_FILE_TYPE_NORMAL, file), ev);
 		}
 	}
 	if (BONOBO_EX (ev)) {

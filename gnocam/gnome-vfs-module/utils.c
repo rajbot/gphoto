@@ -138,7 +138,14 @@ directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options,
 	host = gnome_vfs_uri_get_host_name (uri);
 	CAM_VFS_DEBUG (("    host: %s", host));
 
-	dirname = gnome_vfs_uri_extract_dirname (uri);
+	/* If uri is null, then we're looking at dirname=/, else
+	 * the uri path itself is a valid directory.
+	 */
+	if (uri->text == NULL || *(uri->text) == 0)
+	    dirname = gnome_vfs_uri_extract_dirname (uri);
+	else
+	    dirname = g_strdup (gnome_vfs_uri_get_path (uri));
+
 	CAM_VFS_DEBUG (("    dirname: %s", dirname));
 
         preview = (gnome_vfs_uri_get_user_name (uri) &&

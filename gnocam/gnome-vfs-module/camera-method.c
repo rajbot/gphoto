@@ -62,7 +62,7 @@ static GnomeVFSResult do_close (
 	g_return_val_if_fail ((file_handle->mode == GNOME_VFS_OPEN_WRITE) || (file_handle->mode == GNOME_VFS_OPEN_READ), GNOME_VFS_ERROR_BAD_PARAMETERS);
 	
 	if (file_handle->mode == GNOME_VFS_OPEN_WRITE) {
-		result = GNOME_VFS_RESULT (gp_camera_file_put (file_handle->camera, file_handle->file, file_handle->folder));
+		result = GNOME_VFS_RESULT (gp_camera_folder_put_file (file_handle->camera, file_handle->file, file_handle->folder));
 		file_handle_free (handle);
 
 	} else if (file_handle->mode == GNOME_VFS_OPEN_READ) {

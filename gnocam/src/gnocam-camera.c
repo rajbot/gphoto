@@ -57,6 +57,7 @@ struct _GnoCamCameraPrivate
 	BonoboUIComponent*		component;
 	
 	BonoboStorage*			storage;
+	Bonobo_Storage_OpenMode		mode;
 	
         Camera*                 	camera;
 	CameraWidget*                   configuration;
@@ -124,9 +125,11 @@ struct _GnoCamCameraPrivate
 /**************/
 
 static void 	on_manual_clicked 		(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
+#if 0
 static void 	on_capture_preview_clicked 	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 static void	on_capture_image_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 static void	on_capture_video_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
+#endif
 static void	on_configuration_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 
 static void 	on_preview_clicked 	(BonoboUIComponent* component, const gchar* path, Bonobo_UIComponent_EventType type, const gchar* state, gpointer user_data);
@@ -159,7 +162,7 @@ create_menu (gpointer user_data)
         bonobo_ui_component_add_verb (camera->priv->component, "Manual", on_manual_clicked, camera);
 
 	/* Preview? */
-	if (camera->priv->camera->abilities->file_preview) {
+	if (camera->priv->camera->abilities->file_operations & GP_FILE_OPERATION_PREVIEW) {
 		bonobo_ui_component_set_translate (camera->priv->component, "/commands", GNOCAM_CAMERA_UI_PREVIEW_COMMAND, NULL);
 		bonobo_ui_component_set_translate (camera->priv->component, "/menu/View", GNOCAM_CAMERA_UI_PREVIEW, NULL);
 		if (gconf_client_get_bool (camera->priv->client, "/apps/" PACKAGE "/preview", NULL))
@@ -169,6 +172,7 @@ create_menu (gpointer user_data)
                 bonobo_ui_component_add_listener (camera->priv->component, "Preview", on_preview_clicked, camera);
 	}
 
+#if 0
         /* Capture? */
         if (camera->priv->camera->abilities->capture & GP_CAPTURE_IMAGE) {
         	bonobo_ui_component_set_translate (camera->priv->component, "/menu/Camera/Camera", CAPTURE_IMAGE, NULL);
@@ -182,9 +186,10 @@ create_menu (gpointer user_data)
                 bonobo_ui_component_set_translate (camera->priv->component, "/menu/Camera/Camera", CAPTURE_PREVIEW, NULL);
                 bonobo_ui_component_add_verb (camera->priv->component, "CapturePreview", on_capture_preview_clicked, camera);
 	}
+#endif
 
 	/* Configuration? */
-	if (camera->priv->camera->abilities->config & GP_CONFIG_CAMERA) {
+	if (camera->priv->camera->abilities->config == 1) {
 		bonobo_ui_component_set_translate (camera->priv->component, "/menu/Camera/Camera", GNOCAM_CAMERA_UI_CONFIGURATION, NULL);
 		bonobo_ui_component_add_verb (camera->priv->component, "Configuration", on_configuration_clicked, camera);
 	}
@@ -344,6 +349,7 @@ on_manual_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
         else g_message (manual.text);
 }
 
+#if 0
 static void
 on_capture_preview_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
 {
@@ -373,6 +379,7 @@ on_capture_video_clicked (BonoboUIComponent* component, gpointer user_data, cons
 
 	gtk_widget_show (GTK_WIDGET (gnocam_capture_new (camera->priv->camera, GP_CAPTURE_VIDEO, camera->priv->client, camera->priv->window)));
 }
+#endif
 
 static void
 on_file_selected (GnoCamStorageView* storage_view, const gchar* path, void* data)
@@ -432,7 +439,8 @@ on_directory_selected (GnoCamStorageView* storage_view, const gchar* path, void*
 		GtkWidget*	scroll_frame;
 	
 		/* Create the folder */
-		folder = gnocam_folder_new (camera->priv->camera, camera->priv->storage, path, camera->priv->container, camera->priv->client, camera->priv->window);
+		folder = gnocam_folder_new (camera->priv->camera, camera->priv->storage, camera->priv->mode, path, 
+			camera->priv->container, camera->priv->client, camera->priv->window);
 		if (!folder) return;
 		gtk_widget_show (folder);
 
@@ -637,8 +645,9 @@ gnocam_camera_new (const gchar* url, BonoboUIContainer* container, GtkWindow* wi
 	
 	/* Try to get a storage */
 	mode = Bonobo_Storage_READ;
-	if (gconf_client_get_bool (client, "/apps/" PACKAGE "/preview", NULL) && camera->abilities->file_preview) mode |= Bonobo_Storage_COMPRESSED;
-	if (camera->abilities->file_put) mode |= Bonobo_Storage_WRITE;
+	if (gconf_client_get_bool (client, "/apps/" PACKAGE "/preview", NULL) && (camera->abilities->file_operations & GP_FILE_OPERATION_PREVIEW)) 
+		mode |= Bonobo_Storage_COMPRESSED;
+	if (camera->abilities->file_operations & GP_FOLDER_OPERATION_PUT_FILE) mode |= Bonobo_Storage_WRITE;
 	storage = bonobo_storage_open_full ("camera", url, mode, 0664, ev);
 	if (BONOBO_EX (ev)) {
 		gp_camera_unref (camera);
@@ -651,6 +660,7 @@ gnocam_camera_new (const gchar* url, BonoboUIContainer* container, GtkWindow* wi
 	gtk_box_set_homogeneous (GTK_BOX (new), FALSE);
 	gtk_container_set_border_width (GTK_CONTAINER (new), 2);
 	
+	new->priv->mode = mode;
 	new->priv->window = window;
 	gp_camera_ref (new->priv->camera = camera);
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
@@ -699,7 +709,7 @@ gnocam_camera_new (const gchar* url, BonoboUIContainer* container, GtkWindow* wi
 	gtk_box_pack_start (GTK_BOX (new->priv->storage_view_vbox), scroll_frame, TRUE, TRUE, 0);
 
 	/* Create the storage view */
-	new->priv->storage_view = gnocam_storage_view_new (new->priv->storage);
+	new->priv->storage_view = gnocam_storage_view_new (new->priv->storage, new->priv->mode);
 	gtk_widget_show (new->priv->storage_view);
 	gtk_container_add (GTK_CONTAINER (scroll_frame), new->priv->storage_view);
 	gtk_signal_connect (GTK_OBJECT (new->priv->storage_view), "directory_selected", GTK_SIGNAL_FUNC (on_directory_selected), new);

@@ -319,20 +319,21 @@ gnocam_capplet_content_new (CappletWidget* capplet)
 	new->priv->table = e_table_new (new->priv->model, extras, E_TABLE_SPEC, NULL);
 	gtk_object_unref (GTK_OBJECT (extras));
 	gtk_widget_show (new->priv->table);
-	gtk_container_add (GTK_CONTAINER (hbox), new->priv->table);
+	gtk_box_pack_start (GTK_BOX (hbox), new->priv->table, TRUE, TRUE, 10);
 
 	/* Create the buttons */
 	vbuttonbox = gtk_vbutton_box_new ();
+	gtk_button_box_set_layout (GTK_BUTTON_BOX (vbuttonbox), GTK_BUTTONBOX_START);
 	gtk_widget_show (vbuttonbox);
-	gtk_container_add (GTK_CONTAINER (hbox), vbuttonbox);
+	gtk_box_pack_end (GTK_BOX (hbox), vbuttonbox, FALSE, FALSE, 10);
 	button = gtk_button_new_with_label (_("New"));
 	gtk_signal_connect (GTK_OBJECT (button), "clicked", GTK_SIGNAL_FUNC (on_new_clicked), new);
 	gtk_widget_show (button);
-	gtk_container_add (GTK_CONTAINER (vbuttonbox), button);
+	gtk_box_pack_start (GTK_BOX (vbuttonbox), button, FALSE, FALSE, 10);
 	button = gtk_button_new_with_label (_("Delete"));
 	gtk_signal_connect (GTK_OBJECT (button), "clicked", GTK_SIGNAL_FUNC (on_delete_clicked), new);
 	gtk_widget_show (button);
-	gtk_container_add (GTK_CONTAINER (vbuttonbox), button);
+	gtk_box_pack_end (GTK_BOX (vbuttonbox), button, FALSE, FALSE, 10);
 
 	return (GTK_WIDGET (new));
 }

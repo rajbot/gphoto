@@ -222,7 +222,7 @@ gnocam_camera_druid_new (GConfClient* client, GtkWindow* window)
 	gtk_label_set_line_wrap (GTK_LABEL (label), TRUE);
 	gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
 	gtk_widget_show (label);
-	gtk_container_add (GTK_CONTAINER (GNOME_DRUID_PAGE_STANDARD (page)->vbox), label);
+	gtk_box_pack_start (GTK_BOX (GNOME_DRUID_PAGE_STANDARD (page)->vbox), label, FALSE, FALSE, 10);
 
 	frame = gtk_frame_new (_("Model"));
 	gtk_widget_show (frame);
@@ -233,10 +233,10 @@ gnocam_camera_druid_new (GConfClient* client, GtkWindow* window)
 	gtk_container_add (GTK_CONTAINER (frame), hbox);
 	label = gtk_label_new (_("Model:"));
 	gtk_widget_show (label);
-	gtk_container_add (GTK_CONTAINER (hbox), label);
+	gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 10);
 	new->priv->combo_model = GTK_COMBO (gtk_combo_new ());
 	gtk_widget_show (GTK_WIDGET (new->priv->combo_model));
-	gtk_container_add (GTK_CONTAINER (hbox), GTK_WIDGET (new->priv->combo_model));
+	gtk_box_pack_start (GTK_BOX (hbox), GTK_WIDGET (new->priv->combo_model), FALSE, FALSE, 10);
 
 	/* Name */
 	label = gtk_label_new (_("Your camera will be identified by a name. You probably want to use a short, easy to remember name for your camera, for "
@@ -244,21 +244,21 @@ gnocam_camera_druid_new (GConfClient* client, GtkWindow* window)
 	gtk_label_set_line_wrap (GTK_LABEL (label), TRUE);
 	gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
 	gtk_widget_show (label);
-	gtk_container_add (GTK_CONTAINER (GNOME_DRUID_PAGE_STANDARD (page)->vbox), label);
+	gtk_box_pack_start (GTK_BOX (GNOME_DRUID_PAGE_STANDARD (page)->vbox), label, FALSE, FALSE, 10);
 
 	frame = gtk_frame_new (_("Name"));
 	gtk_widget_show (frame);
-	gtk_container_add (GTK_CONTAINER (GNOME_DRUID_PAGE_STANDARD (page)->vbox), frame);
+	gtk_box_pack_start (GTK_BOX (GNOME_DRUID_PAGE_STANDARD (page)->vbox), frame, FALSE, FALSE, 10);
 	hbox = gtk_hbox_new (FALSE, 10);
 	gtk_container_set_border_width (GTK_CONTAINER (hbox), 10);
 	gtk_widget_show (hbox);
 	gtk_container_add (GTK_CONTAINER (frame), hbox);
 	label = gtk_label_new (_("Name:"));
 	gtk_widget_show (label);
-	gtk_container_add (GTK_CONTAINER (hbox), label);
+	gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 10);
 	new->priv->entry_name = GTK_ENTRY (gtk_entry_new ());
 	gtk_widget_show (GTK_WIDGET (new->priv->entry_name));
-	gtk_container_add (GTK_CONTAINER (hbox), GTK_WIDGET (new->priv->entry_name));
+	gtk_box_pack_start (GTK_BOX (hbox), GTK_WIDGET (new->priv->entry_name), FALSE, FALSE, 10);
 
 	/* Second page */
 	page = gnome_druid_page_standard_new ();
@@ -273,20 +273,20 @@ gnocam_camera_druid_new (GConfClient* client, GtkWindow* window)
 	gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
 	gtk_label_set_line_wrap (GTK_LABEL (label), TRUE);
 	gtk_widget_show (label);
-	gtk_container_add (GTK_CONTAINER (GNOME_DRUID_PAGE_STANDARD (page)->vbox), label);
+	gtk_box_pack_start (GTK_BOX (GNOME_DRUID_PAGE_STANDARD (page)->vbox), label, FALSE, FALSE, 10);
 	frame = gtk_frame_new (_("Port"));
 	gtk_widget_show (frame);
-	gtk_container_add (GTK_CONTAINER (GNOME_DRUID_PAGE_STANDARD (page)->vbox), frame);
+	gtk_box_pack_start (GTK_BOX (GNOME_DRUID_PAGE_STANDARD (page)->vbox), frame, FALSE, FALSE, 10);
 	hbox = gtk_hbox_new (FALSE, 10);
 	gtk_container_set_border_width (GTK_CONTAINER (hbox), 10);
 	gtk_widget_show (hbox);
 	gtk_container_add (GTK_CONTAINER (frame), hbox);
 	label = gtk_label_new (_("Port:"));
 	gtk_widget_show (label);
-	gtk_container_add (GTK_CONTAINER (hbox), label);
+	gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 10);
 	new->priv->combo_port = GTK_COMBO (gtk_combo_new ());
 	gtk_widget_show (GTK_WIDGET (new->priv->combo_port));
-	gtk_container_add (GTK_CONTAINER (hbox), GTK_WIDGET (new->priv->combo_port));
+	gtk_box_pack_start (GTK_BOX (hbox), GTK_WIDGET (new->priv->combo_port), FALSE, FALSE, 10);
 
 	/* Finish page */
 	widget = gnome_druid_page_finish_new ();

@@ -120,7 +120,7 @@ camera_commit (BonoboStream* s, CORBA_Environment* ev)
 	
 	stream = BONOBO_STREAM_CAMERA (s);
 	
-	CHECK_RESULT (gp_camera_file_put (stream->priv->camera, stream->priv->file, stream->priv->dirname), ev);
+	CHECK_RESULT (gp_camera_folder_put_file (stream->priv->camera, stream->priv->file, stream->priv->dirname), ev);
 }
 
 static void
@@ -208,7 +208,7 @@ bonobo_stream_camera_new (Camera* camera, const gchar* dirname, const gchar* fil
 	}
 
         /* Does the camera support upload? */
-        if ((mode & (Bonobo_Storage_WRITE | Bonobo_Storage_CREATE)) && (!camera->abilities->file_put)) {
+        if ((mode & (Bonobo_Storage_WRITE | Bonobo_Storage_CREATE)) && (!(camera->abilities->folder_operations & GP_FOLDER_OPERATION_PUT_FILE))) {
 		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
 		return (NULL);
         }

@@ -110,13 +110,13 @@ create_menu (gpointer user_data)
         bonobo_ui_component_set_translate (file->priv->component, "/menu/File", GNOCAM_FILE_UI, NULL);
 
         /* Delete? */
-        if (file->priv->camera->abilities->file_delete) {
+        if (file->priv->camera->abilities->file_operations & GP_FILE_OPERATION_DELETE) {
                 bonobo_ui_component_set_translate (file->priv->component, "/menu/File/FileOperations", GNOCAM_FILE_UI_DELETE, NULL);
                 bonobo_ui_component_add_verb (file->priv->component, "Delete", on_delete_clicked, file);
         }
 
         /* File Configuration? */
-	if (file->priv->camera->abilities->config & GP_CONFIG_FILE) {
+	if (file->priv->camera->abilities->file_operations & GP_FILE_OPERATION_CONFIG) {
 		bonobo_ui_component_set_translate (file->priv->component, "/menu/File/FileOperations", GNOCAM_FILE_UI_CONFIGURATION, NULL);
 		bonobo_ui_component_add_verb (file->priv->component, "Configuration", on_config_clicked, file);
 	}
@@ -156,7 +156,8 @@ create_widget (GnoCamFile* file)
 
         /* Open the stream */
 	mode = Bonobo_Storage_READ;
-	if (file->priv->camera->abilities->file_preview && gconf_client_get_bool (file->priv->client, "/apps/" PACKAGE "/preview", NULL))
+	if ((file->priv->camera->abilities->file_operations & GP_FILE_OPERATION_PREVIEW) && 
+	    gconf_client_get_bool (file->priv->client, "/apps/" PACKAGE "/preview", NULL))
 		mode |= Bonobo_Storage_COMPRESSED;
 	stream = Bonobo_Storage_openStream (BONOBO_OBJREF (file->priv->storage), file->priv->path, mode, &ev);
         if (BONOBO_EX (&ev)) goto exit_clean;

@@ -21,7 +21,7 @@ struct _GnoCamFolderPrivate
 
 	BonoboUIComponent*		component;
 	
-	BonoboStorage*			storage;
+	Bonobo_Storage			storage;
 	Bonobo_Storage_DirectoryList*	list;
 
 	GConfClient*			client;
@@ -151,18 +151,18 @@ create_menu (gpointer user_data)
         bonobo_ui_component_add_verb (folder->priv->component, "SaveAs", on_save_as_clicked, folder);
 
 	/* Do we need a folder-menu? */
-	if (folder->priv->camera->abilities->config & GP_CONFIG_FOLDER)
+	if (folder->priv->camera->abilities->folder_operations & (GP_FOLDER_OPERATION_CONFIG | GP_FOLDER_OPERATION_PUT_FILE))
 		bonobo_ui_component_set_translate (folder->priv->component, "/menu", GNOCAM_FOLDER_UI_FOLDER, NULL);
 
         /* Upload? */
-        if (folder->priv->camera->abilities->file_put) {
+        if (folder->priv->camera->abilities->folder_operations & GP_FOLDER_OPERATION_PUT_FILE) {
                 bonobo_ui_component_set_translate (folder->priv->component, "/menu/File/FileOperations", GNOCAM_FOLDER_UI_UPLOAD_MENUITEM, NULL);
                 bonobo_ui_component_set_translate (folder->priv->component, "/Toolbar/Upload", GNOCAM_FOLDER_UI_UPLOAD_TOOLITEM, NULL);
                 bonobo_ui_component_add_verb (folder->priv->component, "Upload", on_upload_clicked, folder);
         }
 
         /* Folder configuration? */
-	if (folder->priv->camera->abilities->config & GP_CONFIG_FOLDER) {
+	if (folder->priv->camera->abilities->folder_operations & GP_FOLDER_OPERATION_CONFIG) {
 		bonobo_ui_component_set_translate (folder->priv->component, "/menu/Folder/Folder", GNOCAM_FOLDER_UI_CONFIGURATION, NULL);
 		bonobo_ui_component_add_verb (folder->priv->component, "Configuration", on_config_clicked, folder);
 	}
@@ -223,7 +223,7 @@ upload_file (GnoCamFolder* folder, const gchar* source)
         }
 
 	/* Write */
-	dest = Bonobo_Storage_openStream (BONOBO_OBJREF (folder->priv->storage), destination, Bonobo_Storage_WRITE | Bonobo_Storage_FAILIFEXIST, &ev);
+	dest = Bonobo_Storage_openStream (folder->priv->storage, destination, Bonobo_Storage_WRITE | Bonobo_Storage_FAILIFEXIST, &ev);
 	if (BONOBO_EX (&ev)) {
                 g_warning (_("Could not open stream for '%s': %s!"), destination, bonobo_exception_get_text (&ev));
                 CORBA_free (buffer);
@@ -256,9 +256,10 @@ save_file (GnoCamFolder* folder, const gchar* name, const gchar* destination)
 
 	/* Read */
 	mode = Bonobo_Storage_READ;
-        if (folder->priv->camera->abilities->file_preview && gconf_client_get_bool (folder->priv->client, "/apps/" PACKAGE "/preview", NULL))
+        if ((folder->priv->camera->abilities->file_operations & GP_FILE_OPERATION_PREVIEW) && 
+	    gconf_client_get_bool (folder->priv->client, "/apps/" PACKAGE "/preview", NULL))
 		mode |= Bonobo_Storage_COMPRESSED;
-        stream = Bonobo_Storage_openStream (BONOBO_OBJREF (folder->priv->storage), name, mode, &ev);
+        stream = Bonobo_Storage_openStream (folder->priv->storage, name, mode, &ev);
         if (BONOBO_EX (&ev)) {
                 g_warning (_("Could not get stream for '%s': %s!"), name, bonobo_exception_get_text (&ev));
                 CORBA_exception_free (&ev);
@@ -452,25 +453,66 @@ value_at (ETableModel* model, gint col, gint row, gpointer user_data)
 
 	folder = GNOCAM_FOLDER (user_data);
 
-	for (i = 0; i < row + 1; i++)
-		if (folder->priv->list->_buffer [i].type == Bonobo_STORAGE_TYPE_DIRECTORY) row++;
+	/* Search our record in the list */
+	for (i = 0; i < row + 1; i++) if (folder->priv->list->_buffer [i].type == Bonobo_STORAGE_TYPE_DIRECTORY) row++;
 
-	if (col == 0) return (folder->priv->list->_buffer [row].name);
-	if (col == 1) return (folder->priv->list->_buffer [row].content_type);
-	if (col == 2) return (GINT_TO_POINTER (folder->priv->list->_buffer [row].size));
-	
-	return (NULL);
+	switch (col) {
+	case 0: 
+		return (folder->priv->list->_buffer [row].name);
+	case 1:
+		return (folder->priv->list->_buffer [row].content_type);
+	case 2:
+		return (GINT_TO_POINTER (folder->priv->list->_buffer [row].size));
+	default:
+		return (NULL);
+	}
 }
 
 static void
 set_value_at (ETableModel* model, gint col, gint row, const void* value, gpointer user_data)
 {
+	GnoCamFolder*		folder;
+	gchar*			name_old;
+	gchar*			name_new;
+	gint			i;
+	CORBA_Environment	ev;
+
+	folder = GNOCAM_FOLDER (user_data);
+
+	/* Search our record in the list */
+	for (i = 0; i < row + 1; i++) if (folder->priv->list->_buffer [i].type == Bonobo_STORAGE_TYPE_DIRECTORY) row++;
+
+	switch (col) {
+	case 0:
+
+		CORBA_exception_init (&ev);
+		name_new = (gchar*) value;
+		name_old = folder->priv->list->_buffer [row].name;
+		Bonobo_Storage_rename (folder->priv->storage, name_old, name_new, &ev);
+		if (BONOBO_EX (&ev)) {
+			g_warning (_("Could not rename '%s' to '%s': %s!"), name_old, name_new, bonobo_exception_get_text (&ev));
+			CORBA_exception_free (&ev);
+			return;
+		}
+		CORBA_exception_free (&ev);
+		CORBA_free (folder->priv->list->_buffer [row].name);
+		folder->priv->list->_buffer [row].name = CORBA_string_dup (value);
+		return;
+
+	default:
+		return;
+	}
 }
 
 static gboolean
 is_cell_editable (ETableModel* model, gint col, gint row, gpointer user_data)
 {
-	return (FALSE);
+	switch (col) {
+	case 0:
+		return (TRUE);
+	default:
+		return (FALSE);
+	}
 }
 
 static void*
@@ -546,22 +588,35 @@ gnocam_folder_init (GnoCamFolder* folder)
 }
 
 GtkWidget*
-gnocam_folder_new (Camera* camera, BonoboStorage* storage, const gchar* path, BonoboUIContainer* container, GConfClient* client, GtkWindow* window)
+gnocam_folder_new (Camera* camera, BonoboStorage* storage, Bonobo_Storage_OpenMode mode, const gchar* path, 
+		   BonoboUIContainer* container, GConfClient* client, GtkWindow* window)
 {
 	GnoCamFolder*			new;
+	Bonobo_Storage			storage_new;
 	Bonobo_Storage_DirectoryList*   list;
 	const gchar*			directory;
 	CORBA_Environment		ev;
 	ETableModel*			model;
 	ETableExtras*			extras;
 
-	if (!strcmp (path, "/")) directory = path;
-	else directory = g_basename (path);
+	if (*path == '/') directory = path;
+	else directory = ++path;
 
 	CORBA_exception_init (&ev);
-        list = Bonobo_Storage_listContents (BONOBO_OBJREF (storage), directory, Bonobo_FIELD_TYPE, &ev);
+
+	/* Create a new storage for this folder */
+	storage_new = Bonobo_Storage_openStorage (BONOBO_OBJREF (storage), path, mode, &ev);
+	if (BONOBO_EX (&ev)) {
+		g_warning (_("Could not open storage for '%s': %s!"), path, bonobo_exception_get_text (&ev));
+		CORBA_exception_free (&ev);
+		return (NULL);
+	}
+
+	/* Get the list of contents */
+        list = Bonobo_Storage_listContents (storage_new, "", Bonobo_FIELD_TYPE | Bonobo_FIELD_CONTENT_TYPE | Bonobo_FIELD_SIZE, &ev);
         if (BONOBO_EX (&ev)) {
-		g_warning (_("Could not get list of files for '%s': %s!"), path, bonobo_exception_get_text (&ev));
+		g_warning (_("Could not get list of contents for '%s': %s!"), path, bonobo_exception_get_text (&ev));
+		bonobo_object_release_unref (storage_new, NULL);
 		CORBA_exception_free (&ev);
 		return (NULL);
 	}
@@ -571,7 +626,7 @@ gnocam_folder_new (Camera* camera, BonoboStorage* storage, const gchar* path, Bo
 	gp_camera_ref (new->priv->camera = camera);
 	new->priv->window = window;
 	new->priv->path = g_strdup (path);
-	new->priv->storage = storage;
+	new->priv->storage = storage_new;
 	new->priv->list = list;
 	new->priv->container = container;
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));

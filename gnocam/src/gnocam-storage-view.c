@@ -28,8 +28,6 @@
 #include <config.h>
 #endif
 
-#include <gphoto2.h>
-
 #include "gnocam-storage-view.h"
 
 #include <gnome.h>
@@ -55,15 +53,16 @@ static ETableClass* parent_class = NULL;
 
 struct _GnoCamStorageViewPrivate {
 
-	BonoboStorage*	storage;
+	Bonobo_Storage_OpenMode 	mode;
 
-	ETreeModel*	model;
+	ETreeModel*			model;
 };
 
 typedef struct {
 	gchar*		path;
 	gboolean 	directory;
 	ETreePath*	placeholder;
+	Bonobo_Storage	storage;
 } NodeValue;
 
 enum {
@@ -132,9 +131,15 @@ col_count (ETableModel* model, gpointer user_data)
 }
 
 static void
-free_value (ETableModel* model, gint col, gpointer value, gpointer user_data)
+free_value (ETableModel* model, gint col, gpointer val, gpointer user_data)
 {
-	g_free (((NodeValue*) value)->path);
+	NodeValue*	value;
+
+	value = (NodeValue*) val;
+
+	g_free (value->path);
+	bonobo_object_release_unref (value->storage, NULL);
+	
 	g_free (value);
 }
 
@@ -201,6 +206,7 @@ static void
 on_node_expanded (ETreeModel* model, ETreePath* parent, gboolean* allow_expanded, gpointer user_data)
 {
 	GnoCamStorageView*		storage_view;
+	Bonobo_Storage			storage;
 	Bonobo_Storage_DirectoryList*   list;
 	CORBA_Environment               ev;
 	gint                            i;
@@ -220,12 +226,19 @@ on_node_expanded (ETreeModel* model, ETreePath* parent, gboolean* allow_expanded
 		value->placeholder = NULL;
 	}
 
-	/* Get the list of contents */
 	CORBA_exception_init (&ev);
-	if (!strcmp (value->path, "/"))
-		list = Bonobo_Storage_listContents (BONOBO_OBJREF (storage_view->priv->storage), "", Bonobo_FIELD_TYPE, &ev);
-	else
-		list = Bonobo_Storage_listContents (BONOBO_OBJREF (storage_view->priv->storage), value->path + 1, Bonobo_FIELD_TYPE, &ev);
+
+	/* Get the new storage */
+        storage = Bonobo_Storage_openStorage (value->storage, value->path, storage_view->priv->mode, &ev);
+        if (BONOBO_EX (&ev)) {
+                g_warning (_("Could not open storage for '%s': %s!"), value->path, bonobo_exception_get_text (&ev));
+                CORBA_exception_free (&ev);
+                return;
+        }
+
+	/* Get the list of contents */
+	list = Bonobo_Storage_listContents (storage, "", Bonobo_FIELD_TYPE, &ev);
+	bonobo_object_release_unref (storage, NULL);
 	if (BONOBO_EX (&ev)) {
 		g_warning (_("Could not get list of contents for '%s': %s!"), value->path, bonobo_exception_get_text (&ev));
 		CORBA_exception_free (&ev);
@@ -256,6 +269,7 @@ on_node_expanded (ETreeModel* model, ETreePath* parent, gboolean* allow_expanded
 			new_value->placeholder = e_tree_model_node_insert (model, node, 0, NULL);
 		else 
 			new_value->placeholder = NULL;
+		new_value->storage = bonobo_object_dup_ref (value->storage, NULL);
 	}
 
 	CORBA_free (list);
@@ -353,7 +367,7 @@ gnocam_storage_view_init (GnoCamStorageView* storage_view)
 }
 
 GtkWidget*
-gnocam_storage_view_new (BonoboStorage* storage)
+gnocam_storage_view_new (BonoboStorage* storage, Bonobo_Storage_OpenMode mode)
 {
 	GnoCamStorageView*	new;
 	ETableExtras*		extras;
@@ -362,7 +376,7 @@ gnocam_storage_view_new (BonoboStorage* storage)
 	NodeValue*		value;
 
 	new = gtk_type_new (GNOCAM_TYPE_STORAGE_VIEW);
-	new->priv->storage = storage;
+	new->priv->mode = mode;
 
 	/* Create the model */
 	new->priv->model = e_tree_simple_new (col_count, NULL, free_value, NULL, NULL, NULL, etree_icon_at, etree_value_at, NULL, etree_is_editable, new);
@@ -382,6 +396,7 @@ gnocam_storage_view_new (BonoboStorage* storage)
 	value = g_new (NodeValue, 1);
 	value->path = g_strdup ("/");
 	value->directory = TRUE;
+	value->storage = bonobo_object_dup_ref (BONOBO_OBJREF (storage), NULL);
 	root = e_tree_model_node_insert (new->priv->model, NULL, -1, value);
 	e_tree_model_node_set_expanded (new->priv->model, root, FALSE);
 

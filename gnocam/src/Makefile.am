@@ -19,7 +19,6 @@ gnocam_SOURCES =\
  e-shell-folder-title-bar.h e-shell-folder-title-bar.c\
  e-title-bar.h e-title-bar.c\
  gnocam.c\
- gnocam-capture.h gnocam-capture.c\
  gnocam-configuration.h gnocam-configuration.c\
  gnocam-camera.h gnocam-camera.c\
  gnocam-file.h gnocam-file.c\

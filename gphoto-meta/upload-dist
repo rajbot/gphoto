@@ -1,0 +1,12 @@
+#!/bin/sh
+
+base="$(dirname "$0")"
+date="$(env TZ=UTC date -I)"
+sshost="$(cat .sshost)"
+cd "$base" || exit 1
+
+echo "Running upload..."
+rsync -avz --exclude='*.tar.gz' --exclude 'Makefile.am' dist-files/ .htfixupload "${sshost}:n-dimensional.de/snapshots/${date}/"
+echo "Fixing stuff..."
+ssh "${sshost} "n-dimensional.de/snapshots/${date}/.htfixupload"
+echo "Done."

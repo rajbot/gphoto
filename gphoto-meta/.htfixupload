@@ -1,0 +1,28 @@
+#!/bin/sh
+
+chmod 0700 "$0"
+
+base=$(dirname "$0")
+cd "$base" || exit 1
+
+chmod a+r SUPPORTED-CAMERAS
+for file in *.tar.bz2
+do
+    chmod a+r "$file"
+    new="$(basename "$file" ".bz2").gz"
+    if [ -s "$file" ] && [ ! -s "$new" ]
+    then
+	echo "Converting \"$file\" to \"$new\"..."
+	bunzip2 -c "$file" | gzip -c --best > "$new"
+	chmod a+r "$new"
+    fi
+done
+
+chmod 0705 .
+
+cd .. || exit 2
+
+rm -f *.tar.bz2 *.tar.gz SUPPORTED-CAMERAS
+ln -s "$(basename "$base")"/* .
+
+chmod 0705 .

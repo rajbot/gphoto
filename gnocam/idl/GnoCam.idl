@@ -17,9 +17,8 @@ module GNOME {
 		string getInfo ()
 			raises (NotSupported, IOError);
 		
-		/* The path to the new image will be returned. */
-		string captureImage ()
-			raises (Cancelled, NotSupported, IOError);
+		void captureImage ()
+			raises (NotSupported, IOError);
 	};
 
 	interface GnoCam : Bonobo::Unknown {

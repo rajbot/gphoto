@@ -166,7 +166,8 @@ gnocam_capture_new (Camera *camera, CORBA_Environment *ev)
 	new = gtk_type_new (GNOCAM_TYPE_CAPTURE);
 	gnome_dialog_constructv (GNOME_DIALOG (new), _("Capture Image"),
 				 buttons);
-	gnome_dialog_grab_focus (GNOME_DIALOG (new), 0);
+	gnome_dialog_set_default (GNOME_DIALOG (new), 0);
+	gnome_dialog_set_close (GNOME_DIALOG (new), TRUE);
 	
 	new->priv->camera = camera;
 	gp_camera_ref (camera);

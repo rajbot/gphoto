@@ -23,6 +23,14 @@ typedef enum
    STATE_6,
 } NEXT_STATE_TYPE;
 
+typedef enum
+{
+   ERROR_UNKNOWN,
+   ERROR_WRITE,
+   ERROR_READ,
+   ERROR_TIMEOUT
+} ERROR_TYPE;
+
 typedef struct
 {
    int descriptor;
@@ -30,7 +38,7 @@ typedef struct
    int bytes_read;
    unsigned char *(*write_data)(int);
    NEXT_STATE_TYPE (*read_data)(int, unsigned char *);
-   NEXT_STATE_TYPE (*error_handler)(int);
+   NEXT_STATE_TYPE (*error_handler)(int, ERROR_TYPE);
 } STATE_MACHINE_LINE;
 
 typedef struct

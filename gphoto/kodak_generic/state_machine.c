@@ -34,7 +34,6 @@ state_machine_construct
    self = (STATE_MACHINE_INSTANCE *)malloc(sizeof(STATE_MACHINE_INSTANCE));
    if (self == NULL)
    {
-printf ("malloc failed in state machine construct\n");
       return NULL;
    }
 
@@ -116,13 +115,16 @@ state_machine_set_baud
    cfsetispeed(&t, baudconv(baud));
    cfsetospeed(&t, baudconv(baud));
 
-   if (tcsetattr(self->fd, TCSANOW, &t) < 0)
+   if (tcsetattr(self->fd, TCSADRAIN, &t) < 0)
    {
       perror("state_machine_set_baud: tcsetattr");
       return;
    }
 
    self->baud = baud;
+
+   /* Flush the read buffer */
+   tcflush(self->fd, TCIOFLUSH);
 
    return;
 }
@@ -196,10 +198,6 @@ state_machine_run
       unsigned char *buffer = line->write_data(line->descriptor);
       int written;
 
-#if 0
-printf ("state_machine: tx: %d/%d\n",self->num_tx, line->bytes_write);
-#endif
-
       /* Empty the read queue before writing */
       tcflush(self->fd, TCIOFLUSH);
 
@@ -209,7 +207,7 @@ printf ("state_machine: tx: %d/%d\n",self->num_tx, line->bytes_write);
       if (written == -1)
       {
          perror("state_machine_run: write");
-         next_state = line->error_handler(line->descriptor);
+         next_state = line->error_handler(line->descriptor, ERROR_WRITE);
       }
       else
       {
@@ -241,10 +239,6 @@ printf ("state_machine: tx: %d/%d\n",self->num_tx, line->bytes_write);
       tm.tv_sec = 2;
       tm.tv_usec = 0;
 
-#if 0
-printf ("state_machine: rx: %d/%d\n",self->num_rx, line->bytes_read);
-#endif
-
       ret = select (self->fd + 1, &readfds, NULL, NULL, &tm);
       if (ret <= 0)
       {
@@ -253,7 +247,7 @@ printf ("state_machine: rx: %d/%d\n",self->num_rx, line->bytes_read);
             if (errno != EINTR)
             {
                perror("state_machine_run: select");
-               next_state = line->error_handler(line->descriptor);
+               next_state = line->error_handler(line->descriptor, ERROR_UNKNOWN);
             }
             else
             {
@@ -263,7 +257,7 @@ printf ("state_machine: rx: %d/%d\n",self->num_rx, line->bytes_read);
          else
          {
             printf("state_machine_run: select: timeout\n");
-            next_state = line->error_handler(line->descriptor);
+            next_state = line->error_handler(line->descriptor, ERROR_TIMEOUT);
          }
       }
       else
@@ -279,7 +273,7 @@ printf ("state_machine: rx: %d/%d\n",self->num_rx, line->bytes_read);
          if (num == -1)
          {
             perror("state_machine_run: read");
-            next_state = line->error_handler(line->descriptor);
+            next_state = line->error_handler(line->descriptor, ERROR_READ);
          }
          else
          {
@@ -362,6 +356,9 @@ state_machine_assert_break
 
    /* Pause to allow camera to recover */
    sleep(1);
+
+   /* Flush the read buffer */
+   tcflush(self->fd, TCIOFLUSH);
 
    return;
 }

@@ -21,6 +21,7 @@
 ==============================================================================*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "state_machine.h"
 #include "kodak_generic.h"
@@ -56,9 +57,9 @@ void kdc240_baud_command(void);
 
 unsigned char * kdc240_get_command (int);
 NEXT_STATE_TYPE kdc240_read_ack (int, unsigned char *);
-NEXT_STATE_TYPE kdc240_read_ack_error (int);
+NEXT_STATE_TYPE kdc240_read_ack_error (int, ERROR_TYPE);
 NEXT_STATE_TYPE kdc240_read_cmd_complete (int, unsigned char *);
-NEXT_STATE_TYPE kdc240_read_cmd_complete_error (int);
+NEXT_STATE_TYPE kdc240_read_cmd_complete_error (int, ERROR_TYPE);
 
 /*==============================================================================
 * Local Functions
@@ -109,7 +110,8 @@ kdc240_read_ack
 NEXT_STATE_TYPE
 kdc240_read_ack_error
 (
-   int descriptor
+   int descriptor,
+   ERROR_TYPE error
 )
 {
    printf ("kdc240_read_ack_error: read error\n");
@@ -154,7 +156,8 @@ kdc240_read_cmd_complete
 NEXT_STATE_TYPE
 kdc240_read_cmd_complete_error
 (
-   int descriptor
+   int descriptor,
+   ERROR_TYPE error
 )
 {
    printf ("kdc240_read_cmd_complete_error: read error\n");
@@ -205,6 +208,17 @@ kdc240_read_packet_control
 }
 
 NEXT_STATE_TYPE
+kdc240_read_packet_control_error
+(
+   CC_STRUCT_TYPE *cc_struct,
+   ERROR_TYPE error
+)
+{
+   printf ("kdc240_read_packet_control_error: read error\n");
+   return STATE_ABORT;
+}
+
+NEXT_STATE_TYPE
 kdc240_read_packet
 (
    CC_STRUCT_TYPE *cc_struct,
@@ -225,7 +239,6 @@ kdc240_read_packet
    {
       printf ("kdc240_read_packet: checksum error\n");
       cc_struct->packet_response = COMMAND_RESPONSE_ILL_PACKET;
-      cc_struct->rx_func(cc_struct->descriptor, NULL);
    }
    else
    {
@@ -239,13 +252,15 @@ kdc240_read_packet
 NEXT_STATE_TYPE
 kdc240_read_packet_error
 (
-   CC_STRUCT_TYPE *cc_struct
+   CC_STRUCT_TYPE *cc_struct,
+   ERROR_TYPE error
 )
 {
    printf ("kdc240_read_packet_error: read error\n");
+
+   cc_struct->packet_response = COMMAND_RESPONSE_CANCEL;
    cc_struct->rx_func(cc_struct->descriptor, NULL);
-   camera_init = FALSE;
-   return STATE_ABORT;
+   return STATE_NEXT;
 }
 
 unsigned char *
@@ -267,6 +282,10 @@ kdc240_packet_response_done
    if (cc_struct->packet_response == COMMAND_RESPONSE_ILL_PACKET)
    {
       return cc_struct->loop_top;
+   }
+   else if (cc_struct->packet_response == COMMAND_RESPONSE_CANCEL)
+   {
+      return STATE_ABORT;
    }
    else if (cc_struct->resp == CC_RESPONSE_LAST_PACKET)
    {
@@ -350,7 +369,7 @@ static NEXT_STATE_TYPE
 kdc240_read_packet_resp_error
 (
    CC_STRUCT_TYPE *cc_struct,
-   unsigned char *packet
+   ERROR_TYPE error
 )
 {
    free(cc_struct->tx_buffer);
@@ -373,9 +392,11 @@ kdc240_restart
    void
 )  
 {  
+   unsigned char c;
+
    /* Send break */
    state_machine_assert_break(machine);
-   
+
    /* Switch the camera into high gear */
    kdc240_baud_command();
 }
@@ -469,7 +490,7 @@ kdc240_complex_command
          TRANSMIT_COMMAND(desc),
          { (int)cc_struct, 0, 1, NULL,
             (void *)kdc240_read_packet_control,
-            (void *)kdc240_read_packet_error },
+            (void *)kdc240_read_packet_control_error },
          { (int)cc_struct, 0, cc_struct->rx_packet_size + 1, NULL,
             (void *)kdc240_read_packet, (void *)kdc240_read_packet_error },
          { (int)cc_struct, 1, 0, (void *)kdc240_send_packet_response,
@@ -497,7 +518,7 @@ kdc240_complex_command
             (void *)kdc240_read_packet_resp_error },
          { (int)cc_struct, 0, 1, NULL,
             (void *)kdc240_read_packet_control,
-            (void *)kdc240_read_packet_error },
+            (void *)kdc240_read_packet_control_error },
          { (int)cc_struct, 0, cc_struct->rx_packet_size + 1, NULL,
             (void *)kdc240_read_packet, (void *)kdc240_read_packet_error },
          { (int)cc_struct, 1, 0, (void *)kdc240_send_packet_response,

@@ -577,38 +577,31 @@ kdc240_number_of_pictures_read
    if (buffer->rx_bytes == 0)
    {
       num_entries = (packet[0] << 8) | packet[1];
-printf ("kdc240_number_of_pictures_read: first. num_entries = %d\n", num_entries);
       buffer->rx_buffer = (DIRECTORY_PACKET_DATA_TYPE *)
-         malloc((sizeof(DIRECTORY_ENTRY_TYPE) * (num_entries << 1)) + 2);
-printf ("kdc240_number_of_pictures_read: buffer = %p\n", buffer->rx_buffer);
+         malloc((sizeof(DIRECTORY_ENTRY_TYPE) * num_entries) + 2);
    }
    else
    {
-printf ("kdc240_number_of_pictures_read: other. rx_bytes = %d\n", buffer->rx_bytes);
       num_entries = buffer->rx_buffer->num_entries;
    }
 
    bytes_to_copy = (sizeof(DIRECTORY_ENTRY_TYPE) * num_entries) + 2;
-printf ("kdc240_number_of_pictures_read: total size %d\n", bytes_to_copy);
    bytes_to_copy -= buffer->rx_bytes;
-printf ("kdc240_number_of_pictures_read: left %d\n", bytes_to_copy);
 
    if (bytes_to_copy > 256)
    {
       bytes_to_copy = 256;
       retval = CC_RESPONSE_MORE_PACKETS;
-printf ("kdc240_number_of_pictures_read: 256 byte packet\n");
    }
    else
    {
       buffer->valid = TRUE;
       retval = CC_RESPONSE_LAST_PACKET;
-printf ("kdc240_number_of_pictures_read: last packet = %d\n", bytes_to_copy);
    }
 
-printf ("kdc240_number_of_pictures_read: buffer = %p\n", buffer->rx_buffer);
-printf ("kdc240_number_of_pictures_read: packet = %p\n", packet);
-   memcpy(buffer->rx_buffer + buffer->rx_bytes, packet, bytes_to_copy);
+   /* Copy the packet into the buffer */
+   memcpy((unsigned char *)buffer->rx_buffer + buffer->rx_bytes,
+      packet, bytes_to_copy);
 
    /* Update the num_entries field the first time through */
    if (buffer->rx_bytes == 0)
@@ -617,7 +610,6 @@ printf ("kdc240_number_of_pictures_read: packet = %p\n", packet);
    }
 
    buffer->rx_bytes += bytes_to_copy;
-printf ("kdc240_number_of_pictures_read: new rx_bytes = %d\n", buffer->rx_bytes);
 
    return retval;
 }

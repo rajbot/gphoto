@@ -170,7 +170,7 @@ EOF
 	    break
 	fi
     done
-    if [ "$AUTOMAKE_SUFFIX" = "" ]
+    if ! set | grep -q AUTOMAKE_SUFFIX
     then
 	echo "$this: Fatal: automake not found"
 	exit 2
@@ -186,7 +186,7 @@ EOF
 	    break
 	fi
     done
-    if [ "$AUTOCONF_SUFFIX" = "" ]
+    if ! set | grep -q AUTOCONF_SUFFIX
     then
 	echo "$this: Fatal: autoconf not found"
 	exit 2

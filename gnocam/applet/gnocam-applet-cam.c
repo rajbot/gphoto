@@ -259,9 +259,15 @@ action_settings (gpointer callback_data, guint callback_action, GtkWidget *w)
 		CORBA_exception_free (&ev);
 		return;
 	}
-	CORBA_exception_free (&ev);
-	p = gnocam_prefs_new (bag);
+	p = gnocam_prefs_new (bag, &ev);
 	bonobo_object_release_unref (bag, NULL);
+	if (BONOBO_EX (&ev)) {
+		g_warning ("Could not create widget for property bag: %s",
+			   bonobo_exception_get_text (&ev));
+		CORBA_exception_free (&ev);
+		return;
+	}
+	CORBA_exception_free (&ev);
 	gtk_widget_show (GTK_WIDGET (p));
 	d = gtk_dialog_new ();
 	gtk_container_add (GTK_CONTAINER (GTK_DIALOG (d)->vbox),

@@ -119,6 +119,7 @@ libknc/Makefile
 libknc/libknc.pc
 libgphoto2/Makefile
 corba/Makefile
+corba/icons/Makefile
 tests/Makefile
 tests/corba/Makefile
 tests/gp/Makefile

@@ -1,4 +1,9 @@
-INCLUDES = -I$(top_srcdir) $(CORBA_CFLAGS)
+SUBDIRS = icons
+
+INCLUDES =						\
+	-I$(top_srcdir)					\
+	-DICONSDIR="\"$(datadir)/pixmaps/knc/\""	\
+	$(CORBA_CFLAGS)
 
 CORBA_GENERATED = GNOME_C-common.c GNOME_C-stubs.c GNOME_C-skels.c GNOME_C.h
 $(CORBA_GENERATED): $(GNOME_C_IDL)
@@ -13,6 +18,7 @@ endif
 
 knc_SOURCES = $(CORBA_GENERATED)	\
 	knc.c				\
+	knc-c-bag.h	knc-c-bag.c	\
 	knc-c-camera.h	knc-c-camera.c	\
 	knc-c-dir.h	knc-c-dir.c	\
 	knc-c-file.h	knc-c-file.c	\

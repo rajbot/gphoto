@@ -21,8 +21,7 @@ server_DATA     = $(server_in_files:.server.in=.server)
 
 EXTRA_DIST =				\
 	gnocam-applet-marshal.list	\
-	GNOME_GnocamApplet.server.in.in	\
-	gnocam-applet.schemas
+	GNOME_GnocamApplet.server.in.in
 
 GENMARSHAL_GENERATED = gnocam-applet-marshal.c gnocam-applet-marshal.h
 
@@ -33,9 +32,6 @@ $(server_in_files): $(server_in_files:.server.in=.server.in.in)
 
 uidir   = $(datadir)/$(PACKAGE)/ui
 ui_DATA = GNOME_GnocamApplet.xml gnocam-viewer-ui.xml
-
-schemadir   = @GCONF_SCHEMA_FILE_DIR@
-schema_DATA = gnocam-applet.schemas
 
 gnocam-applet-marshal.h: gnocam-applet-marshal.list
 	( @GLIB_GENMARSHAL@ --prefix=gnocam_applet_marshal $(top_srcdir)/applet/gnocam-applet-marshal.list --header > gnocam-applet-marshal.tmp \
@@ -51,7 +47,3 @@ gnocam-applet-marshal.c: gnocam-applet-marshal.h
 BUILT_SOURCES = $(GENMARSHAL_GENERATED)	\
 	GNOME_GnocamApplet.server GNOME_GnocamApplet.server.in
 CLEANFILES = $(BUILT_SOURCES)
-
-install-data-local:
-	GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) $(GCONFTOOL) --makefile-install-rule $(srcdir)/$(schema_DATA) ;
-

@@ -1,6 +1,7 @@
 #include <config.h>
 #include "knc-c-camera.h"
 #include "knc-c-dir.h"
+#include "knc-c-bag.h"
 
 #include <libknc/knc-cntrl.h>
 #include <libknc/knc.h>
@@ -50,6 +51,15 @@ impl_get_dir (PortableServer_Servant servant, CORBA_Environment *ev)
 	return CORBA_Object_duplicate (BONOBO_OBJREF (d), ev);
 }
 
+static GNOME_C_Bag
+impl_get_bag (PortableServer_Servant servant, CORBA_Environment *ev)
+{
+	KncCCamera *c = KNC_C_CAMERA (bonobo_object (servant));
+	KncCBag *b = knc_c_bag_new (c->priv->c, KNC_C_BAG_TYPE_ROOT);
+
+	return CORBA_Object_duplicate (BONOBO_OBJREF (b), ev);
+}
+
 static void
 knc_c_camera_class_init (KncCCameraClass *klass)
 {
@@ -61,6 +71,7 @@ knc_c_camera_class_init (KncCCameraClass *klass)
 	epv->_get_manufacturer = impl_get_manufacturer;
 	epv->_get_model        = impl_get_model;
 	epv->get_dir           = impl_get_dir;
+	epv->get_bag           = impl_get_bag;
 
 	g_class->finalize = knc_c_camera_finalize;
 }

@@ -25,7 +25,7 @@ struct _GnocamPrefsClass {
 };
 
 GType        gnocam_prefs_get_type (void) G_GNUC_CONST;
-GnocamPrefs *gnocam_prefs_new (GNOME_C_Bag);
+GnocamPrefs *gnocam_prefs_new (GNOME_C_Bag, CORBA_Environment *ev);
 
 G_END_DECLS
 

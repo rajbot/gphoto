@@ -87,7 +87,7 @@ knc_c_if_class_init (KncCIfClass *klass)
 	parent_class = g_type_class_peek_parent (klass);
 
 	epv->read = impl_read;
-	epv->get_name = impl_get_name;
+	epv->_get_name = impl_get_name;
 
 	g_class->finalize = knc_c_if_finalize;
 }

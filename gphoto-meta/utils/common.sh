@@ -19,13 +19,6 @@ toolroot="${metadir}/tool-root"
 toolsrc="${metadir}/tool-src"
 tmpdir="${metadir}/tmp"
 
-if gmake --version< /dev/null > /dev/null 2>&1
-then
-	MAKE=gmake
-else
-	MAKE=make
-fi
-
 fail() {
     echo "${@}"
     exit 1

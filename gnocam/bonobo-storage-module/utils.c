@@ -54,12 +54,13 @@ util_camera_new (GnomeVFSURI* uri, CORBA_Environment* ev)
         }
 
 	/* Create the camera. */
-	if (gp_camera_new_by_name (&camera, model) != GP_OK) {
+	if (gp_camera_new (&camera) != GP_OK) {
 		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
 		return NULL;
 	}
 
         /* Make ready for connection. Beware of 'Directory Browse'.*/
+	strcpy (camera->model, model);
         if (!strcmp ("Directory Browse", model)) strcpy (camera->port->path, "");
         else {
                 for (i = 0; i < gp_port_count (); i++) {

@@ -75,9 +75,10 @@ camera_new_by_uri (GnomeVFSURI* uri, GSList* list, GnomeVFSContext* context, Gno
 	g_free (host);
 	if (i == g_slist_length (list)) return (NULL);
 
-	if ((*result = GNOME_VFS_RESULT (gp_camera_new_by_name (&camera, model))) != GNOME_VFS_OK) return (NULL);
+	if ((*result = GNOME_VFS_RESULT (gp_camera_new (&camera))) != GNOME_VFS_OK) return (NULL);
 
         /* Make ready for connection. Beware of 'Directory Browse'.*/
+	strcpy (camera->model, model);
 	if (!strcmp ("Directory Browse", model)) strcpy (camera->port->path, "");
 	else {
 		for (i = 0; i < gp_port_count (); i++) {

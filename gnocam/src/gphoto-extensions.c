@@ -23,7 +23,8 @@ gp_camera_new_by_description (gint id, gchar* name, gchar* model, gchar* port, g
 	g_return_val_if_fail (!*camera, GP_ERROR_BAD_PARAMETERS);
 
 	/* Check the model. */
-	if ((result = gp_camera_new_by_name (camera, model)) != GP_OK) return (result);
+	if ((result = gp_camera_new (camera)) != GP_OK) return (result);
+	strcpy ((*camera)->model, model);
 
 	/* "Directory Browse needs special care. */
 	if (strcmp ("Directory Browse", model) != 0) {

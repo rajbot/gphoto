@@ -2,6 +2,12 @@
 
 . "$(dirname $0)/utils/common.sh" || exit 7
 
+# these are global variables
+PATH="${toolroot}/bin:${PATH}"
+LD_LIBRARY_PATH="${toolroot}/lib:${LD_LIBRARY_PATH}"
+PKG_CONFIG_PATH="/usr/lib/pkgconfig"
+export PATH LD_LIBRARY_PATH PKG_CONFIG_PATH
+
 
 ########################################################################
 # evaluate command line parameters
@@ -120,11 +126,6 @@ function checktools {
 	echo "##### Going to use/build our own tools from/to ${toolroot}"
 	echo "    # If you don't want to use these tools, remove the"
 	echo "    # ${toolroot} directory."
-	# these are global variables
-	PATH="${toolroot}/bin:${PATH}"
-	LD_LIBRARY_PATH="${toolroot}/lib:${LD_LIBRARY_PATH}"
-	PKG_CONFIG_PATH="/usr/lib/pkgconfig"
-	export PATH LD_LIBRARY_PATH PKG_CONFIG_PATH
     fi
 
     echo "##### Checking for presence of tools..."

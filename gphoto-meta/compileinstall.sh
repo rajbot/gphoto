@@ -1,4 +1,10 @@
 #!/bin/sh
+#
+# Unchecked dependencies:
+# - build tool: pkg-config required
+# - exif, gphoto2 requires libpopt, rest can be built without it
+# - libexif-gtk, gexif, gtkam require GTK 2.0, rest can be built without it
+# - 
 
 . "$(dirname $0)/utils/common.sh"
 

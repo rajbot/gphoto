@@ -224,6 +224,11 @@ gp_camera_file_get_vfs_info (Camera             *camera,
 	if (file_info_struct.fields && GP_FILE_INFO_TYPE) {
 		info->mime_type = g_strdup (file_info_struct.type);
 		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+	} else {
+	    	const gchar *mime_type;
+
+		mime_type = gnome_vfs_mime_type_from_name (file);
+	    	info->mime_type = g_strdup (mime_type);
 	}
 
 	/* Permissions */

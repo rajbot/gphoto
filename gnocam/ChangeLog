@@ -1,3 +1,8 @@
+2001-05-01	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
+	* libgnocam/gphoto-extensions.c: Use gnome_vfs_mime_type_from_name 
+	when the camera library doesn't set the mime type.
+
 2001-04-21	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
 	Regarding a suggestion Fabrice Bellet made:

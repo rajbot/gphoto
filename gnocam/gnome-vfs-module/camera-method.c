@@ -303,36 +303,39 @@ static GnomeVFSResult do_get_file_info (
 	gint		 i;
 	gboolean	 file;
 	gboolean	 preview;
-	gchar		*url;
-	const gchar	*host;
+	const gchar	*escaped_host;
+	gchar		*host;
+	gchar		*tmp;
 
 	g_mutex_lock (client_mutex);
 	CAM_VFS_DEBUG (("ENTER"));
+
+	tmp = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE);
+	CAM_VFS_DEBUG (("uri: %s", tmp));
+	g_free (tmp);
 	
-	host = gnome_vfs_uri_get_host_name (uri);
-	CAM_VFS_DEBUG (("  host: %s", host));
-
-	filename = gnome_vfs_uri_get_basename (uri);
-	CAM_VFS_DEBUG (("  filename: %s", filename));
-
-	dirname = gnome_vfs_uri_extract_dirname (uri);
-	CAM_VFS_DEBUG (("  dirname: %s", dirname));
-
-	preview = (gnome_vfs_uri_get_user_name (uri) && 
-		   !strcmp (gnome_vfs_uri_get_user_name (uri), "previews"));
-	CAM_VFS_DEBUG (("  preview: %i", preview));
-	
-	url = gnome_vfs_unescape_string (host, NULL);
-	if (!url) {
-		CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_HOST_NOT_FOUND"));
+	escaped_host = gnome_vfs_uri_get_host_name (uri);
+	if (!escaped_host) {
+	    	CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_HOST_NOT_FOUND"));
 		g_mutex_unlock (client_mutex);
 		return (GNOME_VFS_ERROR_HOST_NOT_FOUND);
 	}
-	CAM_VFS_DEBUG (("  url: %s", url));
+	host = gnome_vfs_unescape_string (escaped_host, NULL);
+	CAM_VFS_DEBUG (("host: %s", host));
 
+	filename = gnome_vfs_uri_get_basename (uri);
+	CAM_VFS_DEBUG (("filename: %s", filename));
+
+	dirname = gnome_vfs_uri_extract_dirname (uri);
+	CAM_VFS_DEBUG (("dirname: %s", dirname));
+
+	preview = (gnome_vfs_uri_get_user_name (uri) && 
+		   !strcmp (gnome_vfs_uri_get_user_name (uri), "previews"));
+	CAM_VFS_DEBUG (("preview: %i", preview));
+	
 	/* Connect to the camera */
-	result = GNOME_VFS_RESULT (gp_camera_new_from_gconf (&camera, url));
-	g_free (url);
+	result = GNOME_VFS_RESULT (gp_camera_new_from_gconf (&camera, host));
+	g_free (host);
 	if (result != GNOME_VFS_OK) {
 		CAM_VFS_DEBUG (("Could not connect to camera!"));
 		g_mutex_unlock (client_mutex);

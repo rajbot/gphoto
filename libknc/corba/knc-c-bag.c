@@ -1,5 +1,6 @@
 #include <config.h>
 #include "knc-c-bag.h"
+#include "knc-c-prop.h"
 
 #define _(s) (s)
 
@@ -81,10 +82,21 @@ impl_get_props (PortableServer_Servant servant, CORBA_Environment *ev)
 {
 	KncCBag *b = KNC_C_BAG (bonobo_object (servant));
 	GNOME_C_PropList *l = GNOME_C_PropList__alloc ();
+	KncCProp *p;
 
 	switch (b->priv->t) {
-	case KNC_C_BAG_TYPE_ROOT:
 	case KNC_C_BAG_TYPE_LOCALIZATION:
+		l->_length = 3;
+		l->_buffer = GNOME_C_PropList_allocbuf (l->_length);
+		p = knc_c_prop_new (b->priv->c,
+				    KNC_C_PROP_TYPE_TV_OUTPUT_FORMAT);
+		l->_buffer[0] = CORBA_Object_duplicate (BONOBO_OBJREF (p), ev);
+		p = knc_c_prop_new (b->priv->c, KNC_C_PROP_TYPE_DATE_FORMAT);
+		l->_buffer[1] = CORBA_Object_duplicate (BONOBO_OBJREF (p), ev);
+		p = knc_c_prop_new (b->priv->c, KNC_C_PROP_TYPE_LANGUAGE);
+		l->_buffer[2] = CORBA_Object_duplicate (BONOBO_OBJREF (p), ev);
+		break;
+	case KNC_C_BAG_TYPE_ROOT:
 	default:
 		l->_length = 0;
 	}

@@ -13,38 +13,50 @@ module C {
 	typedef sequence<unsigned long> IDList;
 	typedef sequence<octet> Icon;
 
-	enum ValType {
-		VAL_TYPE_BOOLEAN,
-		VAL_TYPE_EMPTY,
-		VAL_TYPE_STRING,
-		VAL_TYPE_INTEGER
+	/* Property types */
+	typedef boolean PropBoolean;
+	typedef string PropString;
+	struct PropChoice {
+		long val;
+		sequence<string> vals;
 	};
-
-	union Val switch (ValType) {
-	case VAL_TYPE_BOOLEAN: boolean v_bool;
-	case VAL_TYPE_STRING:  string  v_string;
-	case VAL_TYPE_INTEGER: long    v_integer;
+	struct PropDateTime {
+		long base;
+		long val;
 	};
-
-	struct Range {
+	struct PropRange {
 		double min;
 		double max;
 		double incr;
+		double val;
 	};
 
-	/* Alternative values */
-	struct Alt {
-		sequence<Val>   vals;
-		sequence<Range> ranges;
+	enum ValType {
+		VAL_TYPE_BOOLEAN,
+		VAL_TYPE_STRING,
+		VAL_TYPE_DATE_TIME,
+		VAL_TYPE_RANGE,
+		VAL_TYPE_CHOICE
 	};
-	typedef sequence<Alt> AltList;
+
+	union Val switch (ValType) {
+	case VAL_TYPE_BOOLEAN: PropBoolean p_boolean;
+	case VAL_TYPE_RANGE: PropRange p_range;
+	case VAL_TYPE_STRING: PropString p_string;
+	case VAL_TYPE_DATE_TIME: PropDateTime p_date_time;
+	case VAL_TYPE_CHOICE: PropChoice p_choice;
+	};
 
 	/* A property */
 	interface Prop : Bonobo::Unknown {
 		readonly attribute string  name;
 		readonly attribute string  description;
-		readonly attribute AltList alts;
-		attribute Val val;
+		readonly attribute Val val;
+
+		void set_boolean (in boolean val) raises (Error);
+		void set_string (in string val) raises (Error);
+		void set_long (in long val) raises (Error);
+		void set_double (in double val) raises (Error);
 	};
 	typedef sequence<Prop> PropList;
 

@@ -23,6 +23,7 @@ knc_SOURCES = $(CORBA_GENERATED)	\
 	knc-c-dir.h	knc-c-dir.c	\
 	knc-c-file.h	knc-c-file.c	\
 	knc-c-if.h	knc-c-if.c	\
+	knc-c-prop.h	knc-c-prop.c	\
 	knc-c-mngr.h	knc-c-mngr.c
 knc_LDADD = ../libknc/libknc.la $(CORBA_LIBS)
 

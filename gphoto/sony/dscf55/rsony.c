@@ -15,7 +15,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
- */
+*/
 
 #include <sys/ioctl.h>
 #include <termios.h>
@@ -35,8 +35,42 @@ char serialbuff[64];
 #endif
 
 
-static const char version_string[] = "0.2.0";
+int ReadCommByte(unsigned char *byte);
+int ReadFileByte(unsigned char *byte);
+Packet *ReadPacket(int(*readfunc(unsigned char *)));
+
+
+static const char version_string[] = "0.3.0";
+
+static int MAXTIME = 2;
+
+static unsigned char START_PACKET	= 192;
+static unsigned char END_PACKET		= 193;
+
+char ESC_START_STRING[]	= { 0x7d, 0xe0 };
+char ESC_END_STRING[]	= { 0x7d, 0xe1 };
+char ESC_ESC_STRING[]	= { 0x7d, 0x5d };
+
+
+static FILE	*dsc_global_file_fd;
+
+/*------------------------------------------------------------------------
+*
+* This array contains the expected packet sequence code to to be applied/
+* checked for.
+*
+*
+*/
 static const unsigned char dsc_sequence[] = {14,0,32,34,66,68,100,102,134,136,168,170,202,204,236,238,255};
+
+
+/*------------------------------------------------------------------------
+*
+* This array is used by ReadPacket
+*
+*
+*/
+unsigned char PacketCodes[2] = {192,193};
 
 
 /**************************************************************
@@ -47,17 +81,17 @@ int Converse(Packet *out, unsigned char *str, int len);
 
 
 
-static int MAXTIME = 2;
+#define DSC_INVALID_CHECKSUM	0x40
+#define DSC_INVALID_SEQUENCE	0x41
+#define DSC_RESET_SEQUENCE	0x42
+#define DSC_RESEND_PACKET	0x43
 
-static unsigned int START_PACKET	= 192;
-static unsigned int END_PACKET		= 193;
-static unsigned int IMAGE_JPG		= 0x0C;
-static unsigned int THUMB_JPG		= 0x248;
+#define DSC_ESCAPE_CHAR		0x7d
+#define DSC_START_CHAR		0xc0
+#define DSC_END_CHAR		0xc1
 
-static unsigned char ESCAPE_CHAR	= 0x7d;
 
-#define DSC_INVALID_CHECKSUM 0x40
-#define DSC_INVALID_SEQUENCE 0x41
+
 
 static int PORT_SPEED	= B9600;
 
@@ -69,10 +103,11 @@ static unsigned char		dscf55_controlchar;
 static unsigned short int	dscf55_image_count;
 static unsigned short int	dscf55_sequence_id;
 
-Packet	CameraInvalid = {0, 2, {131,125}, 93};
 
-Packet	ResendPacket = {0, 4, {129,2,'1',0}, 'L'};
-//Packet	CheckSumInvalid = {0, 2, {137,193}, 93};
+
+
+Packet	CameraInvalid =	{0, 2, {131,125}, 93};
+Packet	ResendPacket =	{0, 4, {129,2,'1',0}, 'L'};
  
 
 #if defined(USE_ALL_TYPES)
@@ -96,10 +131,9 @@ static unsigned char	SelectImage[]		= {0,2,48,0,0,0,0};
 static unsigned char	StillImage[] = {0,2,2,0,14,'/','D','C','I','M','/','1','0','0','M','S','D','C','F'};
 
 
-static unsigned char	X5Camera[]		= {0,2,1};
+/*static unsigned char	X5Camera[]		= {0,2,1};*/
+static unsigned char	SendImageCount[]		= {0,2,1};
 static unsigned char	X13Camera[]		= {0,2,18};
-
-
 
 
 
@@ -130,11 +164,8 @@ int sony_dscf55_initialize()
 			printf("Init - Fail %u\n", count+1);
 		}
 
-		if(count<5)
-		{
+		if(count<3)
 			return TRUE;
-		}
-
 	}
 
 	printf("Init - leaving\n");
@@ -178,7 +209,7 @@ int sony_dscf55_take_picture()
 
 /*******************************************************************
 *
-*
+* Return count of images taken.
 *
 */
 int sony_dscf55_number_of_pictures()
@@ -190,13 +221,13 @@ int sony_dscf55_number_of_pictures()
 	if(Converse(&dp, StillImage, 19))
 	{
 
-		if(Converse(&dp, X5Camera, 3))
+		if(Converse(&dp, SendImageCount, 3))
 		{
 			dscf55_image_count = (unsigned short int) dp.buffer[5];
 			return (int) dp.buffer[5];
 		}
 		else
-			fprintf(stderr, "X5Camera Failed\n");
+			fprintf(stderr, "SendImageCount Failed\n");
 
 	}
 	else
@@ -245,13 +276,9 @@ char *sony_dscf55_description()
 *
 *
 */
-int WritePacket(FILE *fp, Packet *p)
+int ReadFileByte(unsigned char *byte)
 {
-	fwrite(&START_PACKET, sizeof(char), 1, fp);
-	fwrite((char *)p->buffer, sizeof(char), p->length, fp);
-	fwrite((char *)&p->checksum, sizeof(char), 1, fp);
-	fwrite(&END_PACKET, sizeof(char), 1, fp);
-	return 0;
+	int status = fread(byte, 1, 1, dsc_global_file_fd);
 }
 
 
@@ -260,40 +287,56 @@ int WritePacket(FILE *fp, Packet *p)
 *
 *
 */
-int ReadFilePacket(FILE *fp, Packet *p)
+Packet *ReadPacket(int(*readfunc(unsigned char *)))
 {
-	unsigned char c;
-	unsigned char last_char;
+	unsigned int n;
+	unsigned int o;
+	unsigned char byte=0;
+	static Packet p;
 
-	while(!feof(fp))
+	p.length = 0;
+
+	for(n=0; n<2; n++)
 	{
-		fread(&c, 1, 1, fp);
-
-		if(START_PACKET == c)
+		for(byte=0;byte!=(unsigned char)PacketCodes[n];)
 		{
-			p->length = 0;
-			break;
+			if(readfunc(&byte) <=0)
+				return (Packet *)0;
+
+			if(n>0)
+				if(DSC_ESCAPE_CHAR == byte)
+				{
+					unsigned char extra;
+
+					readfunc(&extra);
+
+					switch(extra)
+					{
+						case 1:
+						case 7:
+						case 0xe1:
+						case 0xe0:
+							extra &= 0xcf;
+							p.buffer[p.length++]=extra;
+							continue;
+						case 0x5d:
+							p.buffer[p.length++]=byte;
+							continue;
+						default:
+							p.buffer[p.length++]=byte;
+							p.buffer[p.length++]=extra;
+							continue;
+					}
+				}
+				else
+					p.buffer[p.length++]=byte;
 		}
 	}
 
-	fread(&last_char, 1, 1, fp);
+	p.length-=2;
+	p.checksum = p.buffer[p.length];
 
-	while(!feof(fp))
-	{
-		fread(&c, 1, 1, fp);
-
-		if(END_PACKET == c)
-		{
-			p->checksum = last_char;
-			break;
-		}
-
-		p->buffer[p->length++] = last_char;
-
-		last_char = c;
-	}
-
-	return 0;
+	return &p;
 }
 
 
@@ -304,63 +347,20 @@ int ReadFilePacket(FILE *fp, Packet *p)
 */
 int ReadCommsPacket(Packet *dst)
 {
-	unsigned short int count = 0;
-	int length = 128;
-	unsigned char buffer[256];
+	Packet *p;
 
-	dst->length = 0;
+	p = ReadPacket(ReadCommByte);
 
-	do
+	if(p)
 	{
-		length = Read(buffer, &length );
-
-		if(length)
-		{	
-
-			if(buffer[0] == START_PACKET)
-			{
-				memcpy(dst->buffer, buffer+1, length);
-				dst->length += length-1;
-
-				
-				count = 0;
-
-				if(*(buffer+length-1) != END_PACKET)
-					continue;
-
-				dst->length--;
-				dst->checksum = dst->buffer[--dst->length];
-				return 1;
-			}
-			else
-			{
-				if(dst->length)
-				{
-					memcpy(dst->buffer+dst->length, buffer, length);
-					dst->length += length;
-
-					count = 0;
-
-					if(*(buffer+length-1) != END_PACKET)
-						continue;
-
-					dst->length-=2;
-					dst->checksum = dst->buffer[dst->length];
-					return 1;
-				}
-			}
-		}
-		else
-			fprintf(stderr, "Read failed in ReadCommsPacket\n");
-
-		count++;
-	}while(count<MAXTIME);
+		memcpy(dst, p, sizeof(Packet));
+		return 1;
+	}
 
 	return 0;
 }
 
 
-
 /*******************************************************************
 *
 *
@@ -369,99 +369,14 @@ int ReadCommsPacket(Packet *dst)
 unsigned char CalcCheckSum(Packet *p)
 {
 	unsigned short int o = 0;
-	unsigned short int skip = 0;
 	unsigned long int sum = 0;
 
 	sum = 0;
 
 	while(o < p->length)
-	{
-
-		if(ESCAPE_CHAR == p->buffer[o])
-		{
-			if(!skip)
-			{
-				unsigned char extra = p->buffer[o+1];
-
-				switch(p->buffer[o+1])
-				{
-					case 1:
-					case 7:
-					case 0xe1:
-					case 0xe0:
-						extra &= 0xcf;
-						sum += extra;
-						
-						break;
-					case 0x5d:
-						sum += p->buffer[o]; // value, sizeof(char), 1, fp1);
-						break;
-					default:
-						sum += p->buffer[o] + extra;
-						break;
-				}
-
-				skip = 1;
-			}
-		}
-		else
-			if(!skip)
-				sum += p->buffer[o];
-			else
-				skip =0;
-
-
-		o++;
-
-	}
-
-	return 256-(sum&255);
-}
-
-#if defined(OLD_CHECKSUM)
-/*******************************************************************
-*
-*
-*
-*/
-unsigned char CalcCheckSum(Packet *p)
-{
-	unsigned short int o = 0;
-//	unsigned char sum = 0;
-	unsigned int sum = 0;
-
-	while(o != p->length)
 		sum += p->buffer[o++];
 
 	return 256-(sum&255);
-}
-#endif // OLD_CHECKSUM
-
-
-/*******************************************************************
-*
-*
-*
-*/
-int AddCheckSum(Packet *p)
-{
-	for(;;)
-	{
-		unsigned char c = CalcCheckSum(p);
-
-		if(c == END_PACKET)
-		{
-			dscf55_sequence_id = 0;
-
-			p->buffer[0] = dsc_sequence[dscf55_sequence_id];
-			continue;
-		}
-
-		p->checksum = c;
-		break;
-	}
-
-	return TRUE;
 }
 
 
@@ -476,6 +391,14 @@ int MakePacket(Packet *p, unsigned char *buffer, unsigned short int length)
 
 	while(length--)	
 		p->buffer[p->length++] = *(buffer++);
+
+	if(255==dsc_sequence[++dscf55_sequence_id])
+		dscf55_sequence_id = 0;
+
+	p->buffer[0] = dsc_sequence[dscf55_sequence_id++];
+
+	if(255==dsc_sequence[dscf55_sequence_id])
+		dscf55_sequence_id = 0;
 
 	p->checksum = CalcCheckSum(p);
 
@@ -494,6 +417,9 @@ int CheckPacket(Packet *p)
 
 	if(c!=p->checksum)
 		return DSC_INVALID_CHECKSUM;
+
+	if(129==p->buffer[0])
+		return DSC_RESEND_PACKET;
 
 	if(dsc_sequence[dscf55_sequence_id] != p->buffer[0])
 		return DSC_INVALID_SEQUENCE;
@@ -526,7 +452,6 @@ int ComparePacket(Packet *s, Packet *d)
 }
 
 
-
 /*******************************************************************
 *
 *
@@ -534,56 +459,36 @@ int ComparePacket(Packet *s, Packet *d)
 */
 void SendPacket(Packet *p)
 {
+	unsigned short int count;
+
 	Write((char *)&START_PACKET, 1);
-	Write((char *)p->buffer, p->length);
-	Write((char *)&p->checksum, 1);
-	Write((char *)&END_PACKET, 1);
-}
 
+	p->buffer[p->length] = p->checksum;
 
-
-/*******************************************************************
-*
-*	A total hash to get the packet across Ok.
-*
-*/
-int GetPacket(Packet *out, unsigned char *str, int len)
-{
-	Packet	pb[5];
-	Packet resend;
-	int l=len;
-
-	memcpy(&resend, &ResendPacket, sizeof(Packet));
-
-	if(Converse(&pb[0], str, len))
+	for(count=0; count<p->length+1; count++)
 	{
-		int count;
-
-		for(count=1; count<5; count++)
+		switch((unsigned char)p->buffer[count])
 		{
-			int subcount;
+			case DSC_ESCAPE_CHAR:
+				Write(ESC_ESC_STRING, 2);
+				break;
 
-			Converse(&pb[count], &resend, 4);
+			case DSC_START_CHAR:
+				Write(ESC_START_STRING, 2);
+				break;
 
-			for(subcount=0; subcount<count; subcount++)
-			{
-				if(pb[count].length != pb[subcount].length)
-					continue;
+			case DSC_END_CHAR:
+				Write(ESC_END_STRING, 2);
+				break;
 
-				if(!memcmp(&pb[count].buffer+1,&pb[subcount].buffer+1, pb[count].length))
-				{
-					/* we have a match! */
-					return TRUE;
-				}
-			}
+			default:
+				Write((char *)&p->buffer[count], 1);
+				break;
 		}
 	}
 
-	return FALSE;
+	Write((char *)&END_PACKET, 1);
 }
-
-
-
 
 
 /*******************************************************************
@@ -594,158 +499,78 @@ int GetPacket(Packet *out, unsigned char *str, int len)
 int Converse(Packet *out, unsigned char *str, int len)
 {
 	Packet ps;
+	char old_sequence=33;
+	int sequence_count=0;
 	int count;
 
 	MakePacket(&ps, str, len);
 
-	if(129 != ps.buffer[0])
+	for(count=0; count<10; count++)
 	{
 
-		if(255==dsc_sequence[++dscf55_sequence_id])
-			dscf55_sequence_id = 0;
-
-		ps.buffer[0] = dsc_sequence[dscf55_sequence_id++];
-
-		if(255==dsc_sequence[dscf55_sequence_id])
-			dscf55_sequence_id = 0;
-
-		AddCheckSum(&ps);
-	}
-
-	for(count=0; count<4; count++)
-	{
-
-//		printf("Sending Packet\n");
 		SendPacket(&ps);
 
 		if(ReadCommsPacket(out))
 			switch(CheckPacket(out))
 			{
 				case DSC_INVALID_CHECKSUM:
-					printf("Invalid Checksum\n");
+					printf("Checksum invalid\n");
 					ps.buffer[0] = 129;
-					AddCheckSum(&ps);
+					ps.checksum = CalcCheckSum(&ps);
 					break;
+
 				case DSC_INVALID_SEQUENCE:
+					if(old_sequence == out->buffer[0])
+						sequence_count++;
+					else
+						if(0==sequence_count)
+							old_sequence = out->buffer[0];
+
+					if(sequence_count==4)
+					{
+						printf("Attempting to reset sequence id - image may be corrupt.\n");
+						dscf55_sequence_id=0;
+
+						while(dsc_sequence[dscf55_sequence_id] != old_sequence)
+							dscf55_sequence_id++;
+
+						return TRUE;
+					}
+
 					printf("Invalid Sequence\n");
 					ps.buffer[0] = 129;
-					AddCheckSum(&ps);
+					ps.checksum = CalcCheckSum(&ps);
 					break;
+
+				case DSC_RESET_SEQUENCE:
+					dscf55_sequence_id=0;
+					return TRUE;
+		
+				case DSC_RESEND_PACKET:
+					printf("Resending Packet\n");
+					break;
+
 				case TRUE:
 					return TRUE;
+
 				default:
 					printf("Unknown Error\n");
 					break;
 			}
-
+			else
+			{
+/*				printf("Incomplete packet\n"); */
+				ps.buffer[0] = 129;
+				ps.checksum = CalcCheckSum(&ps);
+			}
 	}
+
+	printf("Failed to read packet.\n");
+	exit(0);
 
 	return FALSE;
 }
 
-
-/*******************************************************************
-*
-*
-*
-*/
-int decode_image(char *filename, int image_style)
-{
-	FILE *fp;
-	FILE *fp1;
-	unsigned char	value;
-	int count = 0;
-
-	rename(filename, "/tmp/tempfile");
-
-	fp = fopen("/tmp/tempfile", "rb");
-	fp1 = fopen(filename, "wb");
-
-	if(!(fp && fp1))
-	{
-		if(fp)
-		{
-			fclose(fp);
-			fprintf(stderr, "Could not open image source\n");
-		}
-
-		if(fp1)
-		{
-			fclose(fp1);
-			fprintf(stderr, "Could not open image destination\n");
-		}
-
-		return FALSE;
-	}
-
-	IN_PACKET = 0;
-
-	while(fread(&value, sizeof(char), 1, fp))
-	{
-		if((0==IN_PACKET) && (value==START_PACKET))
-		{
-			char buffer[8];
-
-			IN_PACKET = 1;
-
-			fread(buffer, sizeof(char), 7, fp);
-
-			continue;
-		}
-
-		if(!IN_PACKET)
-			continue;
-
-		if(value == END_PACKET)
-		{
-			/* lose checksum */
-			fseek(fp1, -1L, SEEK_CUR);
-			IN_PACKET = 0;
-			continue;
-		}
-
-		if(0 == count)
-		{
-			fseek(fp, image_style, SEEK_SET);
-			count++;
-			continue;
-		}
-
-		if(ESCAPE_CHAR == value)
-		{
-			unsigned char extra;
-
-			fread(&extra, sizeof(char), 1, fp);
-
-			switch(extra)
-			{
-				case 1:
-				case 7:
-				case 0xe1:
-				case 0xe0:
-					extra &= 0xcf;
-					fwrite(&extra, sizeof(char), 1, fp1);
-					break;
-				case 0x5d:
-					fwrite(&value, sizeof(char), 1, fp1);
-					break;
-				default:
-					fwrite(&value, sizeof(char), 1, fp1);
-					fwrite(&extra, sizeof(char), 1, fp1);
-					break;
-			}
-	
-			continue;
-		}
-
-		fwrite(&value, sizeof(char), 1, fp1);
-	}
-
-	fclose(fp);
-	fclose(fp1);
-
-	return (IN_PACKET==0) ? TRUE : FALSE;
-}
 
 
 
@@ -762,53 +587,46 @@ struct Image *sony_dscf55_get_picture(int imageid, int thumbnail)
 	static FILE *fp;
 	char filename[64];
 	long size;
+	int sc=11; /* count of bytes to skip at start of packet */
 	struct Image *image;
+	FILE *temp;
+	Packet dp;
 
-  	FILE *temp;
-  	Packet dp;
-  
- 	printf("Requested image is %u\n", imageid);
-  
-  	if(PORT_SPEED == B115200)
-  	{
-  		SetTransferRate[3] = 4;
-  		Converse(&dp, SetTransferRate, 4);
-  		dscSetSpeed(B115200);
-  		Converse(&dp, EmptyPacket, 1);
-  	}
-  
-  
-  	if(thumbnail)
-  	{
-  
-  		if(!Converse(&dp, StillImage, 19))
-  			printf("StillImage Failed\n");
-  
-  		if(!Converse(&dp, X5Camera, 3))
-  			printf("X5Camera Failed\n");
-  		
-  		if(!Converse(&dp, X13Camera, 3))
-  			printf("X13Camera Failed\n");
-  
-  		SelectImage[4] = imageid;
-  		Converse(&dp, SelectImage, 7);
-  
-  		sprintf(filename, "/tmp/gphoto_image_%u.jpg", imageid-1);
-  		temp = fopen(filename, "wb");
-  
-  		for(;;)
-  		{
-  			Converse(&dp, SendThumbnail, 4);
-  
-  			WritePacket(temp, &dp);
-  
-  			if(3==dp.buffer[4])
-  				break;
-  		}
-  
-  		fclose(temp);
+	if(PORT_SPEED == B115200)
+	{
+		SetTransferRate[3] = 4;
+		Converse(&dp, SetTransferRate, 4);
+		dscSetSpeed(B115200);
+		Converse(&dp, EmptyPacket, 1);
+		usleep(50000);
+	}
 
-		decode_image(filename, THUMB_JPG);
+	if(thumbnail)
+	{
+
+		sc = 0x247;
+
+		if(!Converse(&dp, StillImage, 19))
+			printf("StillImage Failed\n");
+
+		SelectImage[4] = imageid;
+		Converse(&dp, SelectImage, 7);
+
+		sprintf(filename, "/tmp/gphoto_image_%u.jpg", imageid-1);
+		temp = fopen(filename, "wb");
+
+		for(;;)
+		{
+			Converse(&dp, SendThumbnail, 4);
+
+			fwrite((char *)dp.buffer+sc, sizeof(char), dp.length-sc, temp);
+			sc=7;
+
+			if(3==dp.buffer[4])
+				break;
+		}
+
+		fclose(temp);
 	}
 	else
 	{
@@ -816,19 +634,19 @@ struct Image *sony_dscf55_get_picture(int imageid, int thumbnail)
 
 		sprintf(filename, "/tmp/gphoto_image_%u.jpg", imageid-1);
 
-
 		if(!Converse(&dp, StillImage, 19))
 			printf("StillImage Failed\n");
 
 		temp = fopen(filename, "wb");
-		printf("%s\n", filename);
 
 		SendImage[4] = imageid;
 		Converse(&dp, SendImage, 7);
 
+
 		for(;;)
 		{
-			WritePacket(temp, &dp);
+			fwrite((char *)dp.buffer+sc, sizeof(char), dp.length-sc, temp);
+			sc=7;
 
 			if(3==dp.buffer[4])
 				break;
@@ -837,7 +655,6 @@ struct Image *sony_dscf55_get_picture(int imageid, int thumbnail)
 		}
 
 		fclose(temp);
-		decode_image(filename, IMAGE_JPG);
 	}
 
 	fp = fopen(filename, "r");
@@ -894,12 +711,13 @@ struct _Camera sony_dscf55 = {  sony_dscf55_initialize,
 /*******************************************************************
 *
 *
-*
+
 */
 int sony_dscf55_store_picture(int imageid, char *path)
 {
 	FILE *temp;
 	int f;
+	int sc=11; /* count of bytes to skip at start of packet */
 	char filename[64];
 	long size;
 	Packet dp;
@@ -915,7 +733,7 @@ int sony_dscf55_store_picture(int imageid, char *path)
 	SelectImage[4] = imageid;
 	Converse(&dp, SelectImage, 7);
 
-	sprintf(filename, "%s/%s", path, dp.buffer+5);
+	sprintf(filename, "%s/%11.11s", path, dp.buffer+5);
 	printf("%s\n", filename);
 
 	f = strlen(filename);
@@ -941,14 +759,17 @@ int sony_dscf55_store_picture(int imageid, char *path)
 	temp = fopen(filename, "wb");
 	printf("%s\n", filename);
 
+	usleep(50000);
+
 	SendImage[4] = imageid;
 	Converse(&dp, SendImage, 7);
 
 	for(;;)
 	{
-		WritePacket(temp, &dp);
+		fwrite((char *)dp.buffer+sc, sizeof(char), dp.length-sc, temp);
+		sc=7;
 
-		if(3==dp.buffer[4])
+		if(3==dp.buffer[3])
 			break;
 
 		Converse(&dp, SendNextImagePacket, 4);
@@ -961,7 +782,7 @@ int sony_dscf55_store_picture(int imageid, char *path)
 	dscSetSpeed(B9600);
 	Converse(&dp, EmptyPacket, 1);
 
-	return decode_image(filename, IMAGE_JPG);
+	return 1;
 }
 
 
@@ -1007,7 +828,6 @@ int main(int argc, char *argv[])
 
 	for(count=1; count<=totalpics; count++)
 	{
-
 		int s = sony_dscf55_store_picture(count, path);
 
 		if(!s)
@@ -1015,6 +835,7 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "Error downloading image\n");
 			exit(3);
 		}
+
 	}
 
 

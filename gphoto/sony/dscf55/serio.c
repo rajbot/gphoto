@@ -133,13 +133,37 @@ int Read(unsigned char *buffer, int *length)
 *
 *
 */
-int Write(char *buffer, int length)
+int ReadCommByte(unsigned char *byte)
 {
-	int bytecount  = write(dscf55_fd, buffer, length);
+	int len = read(dscf55_fd, byte, 1);
 
-	if(bytecount == 0 )
+	if(len < 0)
+		perror("Read failed\n");
+
+	return len;
+}
+
+
+/***************************************************************
+*
+*
+*/
+int Write(unsigned char *buffer, int length)
+{
+	int bytecount;
+
+	for(bytecount=0; bytecount<length; bytecount++)
 	{
-		printf("Write failed\n");
+/*
+		if(length==2)
+			printf("{%u}",(unsigned char)*(buffer+bytecount));
+*/
+
+		if(write(dscf55_fd, buffer+bytecount, 1) != 1)
+		{
+			printf("Write failed\n");
+			break;
+		}
 	}
 
 	return bytecount;
@@ -150,7 +174,17 @@ int Write(char *buffer, int length)
 *
 *
 */
-void DumpData(char *buffer, int length)
+void DumpPacket(Packet *p)
+{
+	DumpData(p->buffer, p->length);
+}
+
+
+/***************************************************************
+*
+*
+*/
+void DumpData(unsigned char *buffer, int length)
 {
 	int n=0;
 

@@ -33,11 +33,14 @@
 *  serio.c
 */
 int InitSonyDSCF55(char *serial_port);
-int Write(char *buffer, int length);
-int Read(unsigned char *buffer, int *length);
-void DumpData(char *buffer, int length);
-int SetSpeed(int speed);
 void CloseSonyDSCF55(void);
+
+int Write(unsigned char *buffer, int length);
+int Read(unsigned char *buffer, int *length);
+
+void DumpData(unsigned char *buffer, int length);
+
+int SetSpeed(int speed);
 int dscSetSpeed(int);
 
 

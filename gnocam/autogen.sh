@@ -74,7 +74,7 @@ if test "$DIE" -eq 1; then
     exit 1
 fi
 
-test -f src/gtkam-main.h || {
+test -f gnocam/gnocam-main.h || {
         echo "You must run this script in the top-level $PROJECT directory"
         exit 1
 }

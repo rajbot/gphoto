@@ -16,9 +16,13 @@ AM_PROG_LIBTOOL
 
 AC_ISC_POSIX
 AC_PROG_CC
-AC_PROG_CXX
-AM_PROG_CC_STDC
-AC_HEADER_STDC
+AC_STDC_HEADERS
+
+dnl The following is a hack to get GnoCam to build on gettext-0.10.35 
+dnl systems - BUILD_INCLUDED_LIBINTL is set only in gettext-0.10.37 which is
+dnl the gettext version provided with gphoto2.
+BUILD_INCLUDED_LIBINTL=no
+AC_SUBST(BUILD_INCLUDED_LIBINTL)
 
 GNOME_INIT
 AM_PATH_GTK(1.2.7)
@@ -28,7 +32,7 @@ GNOME_XML_CHECK
 
 dnl Add the languages which your application supports here.
 ALL_LINGUAS="no"
-AM_GNU_GETTEXT
+AM_GNOME_GETTEXT
 gnomelocaledir='${prefix}/${DATADIRNAME}/locale'
 AC_SUBST(gnomelocaledir)
 
@@ -161,42 +165,25 @@ fi
 dnl ******************************
 dnl GConf
 dnl ******************************
-AM_PATH_GCONF(0.12,,,gconf-gtk)
-
-dnl ******************************
-dnl More compiler warnings
-dnl ******************************
-AC_ARG_ENABLE(more-warnings, [  --enable-more-warnings  Maximum compiler warnings], set_more_warnings="$enableval",[set_more_warnings=no])
-warning_flags=
-realsave_CFLAGS="$CFLAGS"
-AC_MSG_CHECKING(for more warnings, including -Werror)
-if test "$GCC" = "yes" -a "$set_more_warnings" != "no"; then
-        AC_MSG_RESULT(yes)
-        warning_flags="-Wall -Wchar-subscripts -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wpointer-arith -Werror"
-        CFLAGS="$warning_flags $CFLAGS"
-
-        for option in -Wsign-promo -Wno-sign-compare; do
-                SAVE_CFLAGS="$CFLAGS"
-                CFLAGS="$CFLAGS $option"
-                AC_MSG_CHECKING([whether gcc understands $option])
-                AC_TRY_COMPILE([], [],
-                        has_option=yes,
-                        has_option=no,)
-                CFLAGS="$SAVE_CFLAGS"
-                AC_MSG_RESULT($has_option)
-                if test $has_option = yes; then
-                  warning_flags="$warning_flags $option"
-                fi
-                unset has_option
-                unset SAVE_CFLAGS
-        done
-        unset option
+AC_MSG_CHECKING(for gconf)
+if gconf-config --version > /dev/null 2>&1; then 
+	AC_MSG_RESULT(found)
+	GCONF_CFLAGS="`gconf-config --cflags gconf-gtk`" 
+	GCONF_LIBS="`gconf-config --libs gconf-gtk`"
+	AC_SUBST(GCONF_CFLAGS)
+	AC_SUBST(GCONF_LIBS)
 else
-        AC_MSG_RESULT(no)
+	AC_MSG_ERROR([
+*** You need GConf for this version of ${PACKAGE}.
+*** Get the latest version from http://www.gnome.org.
+*** Mirrors can be found at http://www.gnome.org/mirrors.])
 fi
-CFLAGS="$realsave_CFLAGS"
-EXTRA_WARNING_CFLAGS="$warning_flags"
-AC_SUBST(EXTRA_WARNING_CFLAGS)
+
+dnl *********************************************
+dnl Keep the code clean - make all warnings fatal
+dnl *********************************************
+CFLAGS="$CFLAGS -Wall -Wchar-subscripts -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wpointer-arith -Werror"
+AC_SUBST(CFLAGS)
 
 dnl **********
 dnl libgphoto2

@@ -29,80 +29,105 @@ struct _BonoboStorageCameraPrivate {
 	gchar*				path;
 };
 
-static Bonobo_StorageInfo*
-camera_get_info (BonoboStorage* s, const CORBA_char* name, const Bonobo_StorageInfoFields mask, CORBA_Environment* ev)
+static Bonobo_StorageInfo *
+camera_get_info (BonoboStorage *s, const CORBA_char *name, 
+		 const Bonobo_StorageInfoFields mask, CORBA_Environment *ev)
 {
-	BonoboStorageCamera*		storage;
-	CameraList			list;
-	gint				i;
+	BonoboStorageCamera *storage;
+	Bonobo_StorageInfo *info;
+	CameraList list;
+	gint i;
 
 	storage = BONOBO_STORAGE_CAMERA (s);
 
-        if (mask & ~(Bonobo_FIELD_CONTENT_TYPE | Bonobo_FIELD_SIZE | Bonobo_FIELD_TYPE)) {
-                CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
+	/* We only support CONTENT_TYPE, SIZE, and TYPE. Reject all others. */
+        if (mask & ~(Bonobo_FIELD_CONTENT_TYPE | 
+		     Bonobo_FIELD_SIZE | 
+		     Bonobo_FIELD_TYPE)) {
+                CORBA_exception_set (ev, CORBA_USER_EXCEPTION, 
+				     ex_Bonobo_Storage_NotSupported, NULL);
                 return (NULL);
         }
 
 	/* Check if this is a file */
-	CHECK_RESULT (gp_camera_folder_list_files (storage->priv->camera, storage->priv->path, &list), ev);
-	if (BONOBO_EX (ev)) return (NULL);
-	for (i = 0; i < gp_list_count (&list); i++) if (!strcmp (gp_list_entry (&list, i)->name, name)) break;
+	CHECK_RESULT (gp_camera_folder_list_files (storage->priv->camera, 
+					storage->priv->path, &list), ev);
+	if (BONOBO_EX (ev)) 
+		return (NULL);
+	for (i = 0; i < gp_list_count (&list); i++) 
+		if (!strcmp (gp_list_entry (&list, i)->name, name)) 
+			break;
 	if (i != gp_list_count (&list)) {
-		Bonobo_StorageInfo*     info;
-
 		info = Bonobo_StorageInfo__alloc ();
 		info->name = CORBA_string_dup (name);
-		if (mask & Bonobo_FIELD_TYPE) info->type = Bonobo_STORAGE_TYPE_REGULAR;
+		if (mask & Bonobo_FIELD_TYPE) 
+			info->type = Bonobo_STORAGE_TYPE_REGULAR;
 
 		if (mask & (Bonobo_FIELD_SIZE | Bonobo_FIELD_CONTENT_TYPE)) {
 			CameraFileInfoStruct	fileinfostruct;
                         CameraFileInfo  	fileinfo;
 	
-			CHECK_RESULT (gp_camera_file_get_info (storage->priv->camera, storage->priv->path, (gchar*) name, &fileinfo), ev);
+			CHECK_RESULT (gp_camera_file_get_info (
+					storage->priv->camera, 
+					storage->priv->path, (gchar*) name, 
+					&fileinfo), ev);
 			if (BONOBO_EX (ev)) {
 				CORBA_free (info);
 				return (NULL);
 			}
 
-                        if (storage->priv->mode & Bonobo_Storage_COMPRESSED) fileinfostruct = fileinfo.preview;
-                        else fileinfostruct = fileinfo.file;
+                        if (storage->priv->mode & Bonobo_Storage_COMPRESSED)
+				fileinfostruct = fileinfo.preview;
+                        else 
+				fileinfostruct = fileinfo.file;
 
-			if (((mask & Bonobo_FIELD_CONTENT_TYPE) && !(fileinfostruct.fields & GP_FILE_INFO_TYPE)) ||
-			    ((mask & Bonobo_FIELD_SIZE) && !(fileinfostruct.fields & GP_FILE_INFO_SIZE))) {
-				CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_NotSupported, NULL);
-				CORBA_free (info);
-				return (NULL);
+			/* Content type */
+			if (mask & Bonobo_FIELD_CONTENT_TYPE) {
+				if (fileinfostruct.fields & GP_FILE_INFO_TYPE)
+					info->content_type = CORBA_string_dup (
+							fileinfostruct.type);
+				else
+					info->content_type = CORBA_string_dup (
+						"application/octet-stream");
 			}
 
-			if ((mask & Bonobo_FIELD_CONTENT_TYPE) && (fileinfostruct.fields & GP_FILE_INFO_TYPE)) 
-				info->content_type = CORBA_string_dup (fileinfostruct.type);
-
-			if ((mask & Bonobo_FIELD_SIZE) && (fileinfostruct.fields & GP_FILE_INFO_SIZE)) 
-                                info->size = fileinfostruct.size;
+			/* Size */
+			if (mask & Bonobo_FIELD_SIZE) {
+				if (fileinfostruct.fields & GP_FILE_INFO_SIZE)
+					info->size = fileinfostruct.size;
+				else
+					info->size = 0;
+			}
                 }
 
 		return (info);
 	}
 
         /* Check if this is a directory */
-        CHECK_RESULT (gp_camera_folder_list_folders (storage->priv->camera, storage->priv->path, &list), ev);
+        CHECK_RESULT (gp_camera_folder_list_folders (storage->priv->camera, 
+					storage->priv->path, &list), ev);
         if (BONOBO_EX (ev)) {
                 return (NULL);
         }
-        for (i = 0; i < gp_list_count (&list); i++) if (!strcmp (gp_list_entry (&list, i)->name, name)) break;
+        for (i = 0; i < gp_list_count (&list); i++) 
+		if (!strcmp (gp_list_entry (&list, i)->name, name)) 
+			break;
         if (i != gp_list_count (&list)) {
-                Bonobo_StorageInfo*     info;
-
                 info = Bonobo_StorageInfo__alloc ();
                 info->name = CORBA_string_dup (name);
-                if (mask & Bonobo_FIELD_SIZE)           info->size = 0;
-                if (mask & Bonobo_FIELD_TYPE)           info->type = Bonobo_STORAGE_TYPE_DIRECTORY;
-                if (mask & Bonobo_FIELD_CONTENT_TYPE)   info->content_type = CORBA_string_dup ("x-directory/normal");
+                if (mask & Bonobo_FIELD_SIZE)
+			info->size = 0;
+                if (mask & Bonobo_FIELD_TYPE)
+			info->type = Bonobo_STORAGE_TYPE_DIRECTORY;
+                if (mask & Bonobo_FIELD_CONTENT_TYPE)
+			info->content_type = CORBA_string_dup (
+							"x-directory/normal");
 
                 return (info);
         }
 
-	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotFound, NULL);
+	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, 
+					ex_Bonobo_Storage_NotFound, NULL);
 	return (NULL);
 }
 
@@ -152,50 +177,71 @@ camera_open_stream (BonoboStorage* s, const CORBA_char* filename, Bonobo_Storage
 	return (BONOBO_STREAM (new));
 }
 
-static Bonobo_Storage_DirectoryList*
-camera_list_contents (BonoboStorage* s, const CORBA_char* name, Bonobo_StorageInfoFields mask, CORBA_Environment* ev)
+static Bonobo_Storage_DirectoryList *
+camera_list_contents (BonoboStorage *s, const CORBA_char *name, 
+		      Bonobo_StorageInfoFields mask, CORBA_Environment *ev)
 {
-	BonoboStorageCamera*		storage;
-	Bonobo_Storage_DirectoryList*	list = NULL;
-	CameraList 			folder_list, file_list;
-	gint 				i;
+	BonoboStorageCamera *storage;
+	Bonobo_Storage_DirectoryList *list = NULL;
+	CameraList folder_list, file_list;
+	gint i;
 
 	storage = BONOBO_STORAGE_CAMERA (s);
 
 	/* Get folder list. */
-	CHECK_RESULT (gp_camera_folder_list_folders (storage->priv->camera, storage->priv->path, &folder_list), ev);
-	if (BONOBO_EX (ev)) return (NULL);
+	CHECK_RESULT (gp_camera_folder_list_folders (storage->priv->camera, 
+					storage->priv->path, &folder_list), ev);
+	if (BONOBO_EX (ev)) 
+		return (NULL);
 
 	/* Get file list. */
-	CHECK_RESULT (gp_camera_folder_list_files (storage->priv->camera, storage->priv->path, &file_list), ev);
-	if (BONOBO_EX (ev)) return (NULL);
+	CHECK_RESULT (gp_camera_folder_list_files (storage->priv->camera, 
+					storage->priv->path, &file_list), ev);
+	if (BONOBO_EX (ev)) 
+		return (NULL);
 
 	/* Set up the list. */
 	list = Bonobo_Storage_DirectoryList__alloc ();
-	list->_length = gp_list_count (&folder_list) + gp_list_count (&file_list);
-	list->_buffer = CORBA_sequence_Bonobo_StorageInfo_allocbuf (list->_length);
+	list->_length = gp_list_count (&folder_list) + 
+						gp_list_count (&file_list);
+	list->_buffer = CORBA_sequence_Bonobo_StorageInfo_allocbuf (
+								list->_length);
 	CORBA_sequence_set_release (list, TRUE);
 
 	/* Directories. */
 	for (i = 0; i < gp_list_count (&folder_list); i++) {
-		list->_buffer [i].name = CORBA_string_dup (gp_list_entry (&folder_list, i)->name);
-		if (mask & Bonobo_FIELD_TYPE)		list->_buffer [i].type = Bonobo_STORAGE_TYPE_DIRECTORY;
-		if (mask & Bonobo_FIELD_SIZE)		list->_buffer [i].size = 0;
-		if (mask & Bonobo_FIELD_CONTENT_TYPE) 	list->_buffer [i].content_type = CORBA_string_dup ("x-directory/normal");
+		list->_buffer [i].name = CORBA_string_dup (
+					gp_list_entry (&folder_list, i)->name);
+		if (mask & Bonobo_FIELD_TYPE)	
+			list->_buffer [i].type = Bonobo_STORAGE_TYPE_DIRECTORY;
+		if (mask & Bonobo_FIELD_SIZE)	
+			list->_buffer [i].size = 0;
+		if (mask & Bonobo_FIELD_CONTENT_TYPE) 
+			list->_buffer [i].content_type = 
+					CORBA_string_dup ("x-directory/normal");
 	}
 
 	/* Files. */
 	for (i = 0; i < gp_list_count (&file_list); i++) {
 		Bonobo_StorageInfo*	info;
 
-		list->_buffer [i + gp_list_count (&folder_list)].name = CORBA_string_dup (gp_list_entry (&file_list, i)->name);
-		list->_buffer [i + gp_list_count (&folder_list)].type = Bonobo_STORAGE_TYPE_REGULAR;
-		info = camera_get_info (s, gp_list_entry (&file_list, i)->name, mask, ev);
-		if (BONOBO_EX (ev)) return (NULL);
+		list->_buffer [i + gp_list_count (&folder_list)].name = 
+			CORBA_string_dup (gp_list_entry (&file_list, i)->name);
+		list->_buffer [i + gp_list_count (&folder_list)].type = 
+						Bonobo_STORAGE_TYPE_REGULAR;
+		info = camera_get_info (s, 
+				gp_list_entry (&file_list, i)->name, mask, ev);
+		if (BONOBO_EX (ev)) 
+			return (NULL);
 
-		if (mask & Bonobo_FIELD_TYPE)		list->_buffer [i + gp_list_count (&folder_list)].type = info->type;
-		if (mask & Bonobo_FIELD_SIZE)		list->_buffer [i + gp_list_count (&folder_list)].size = info->size;
-		if (mask & Bonobo_FIELD_CONTENT_TYPE)	list->_buffer [i + gp_list_count (&folder_list)].content_type = CORBA_string_dup (info->content_type);
+		if (mask & Bonobo_FIELD_TYPE)
+			list->_buffer [i + gp_list_count (&folder_list)].type = 
+								info->type;
+		if (mask & Bonobo_FIELD_SIZE)
+			list->_buffer [i + gp_list_count (&folder_list)].size =
+								info->size;
+		if (mask & Bonobo_FIELD_CONTENT_TYPE)
+			list->_buffer [i + gp_list_count (&folder_list)].content_type = CORBA_string_dup (info->content_type);
 
 		CORBA_free (info);
 	}

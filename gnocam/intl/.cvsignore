@@ -1,8 +1,1 @@
-ChangeLog
-Makefile.in
 Makefile
-VERSION
-*.c
-*.h
-*.sed.in
-*.sed

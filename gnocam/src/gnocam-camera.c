@@ -212,7 +212,7 @@ create_menu (GnoCamCamera* camera)
 	}
 }
 
-int
+static int
 gp_frontend_status (Camera* camera, char* status)
 {
         GnoCamCamera*   c;
@@ -224,14 +224,14 @@ gp_frontend_status (Camera* camera, char* status)
         return (GP_OK);
 }
 
-int
+static int
 gp_frontend_message (Camera* camera, char* message)
 {
         gnome_ok_dialog (message);
         return (GP_OK);
 }
 
-int
+static int
 gp_frontend_confirm (Camera* camera, char* message)
 {
         GtkWidget*      widget;

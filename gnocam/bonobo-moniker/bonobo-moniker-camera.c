@@ -45,6 +45,7 @@ camera_resolve (BonoboMoniker 		    *moniker,
 	if (!strcmp (requested_interface, "IDL:Bonobo/Storage:1.0")) {
 		BonoboStorage* storage;
 
+		g_message ("Opening storage...");
 		storage = bonobo_storage_open_full ("camera", name, 
 						    Bonobo_Storage_READ | 
 						    Bonobo_Storage_WRITE, 
@@ -56,6 +57,7 @@ camera_resolve (BonoboMoniker 		    *moniker,
 		}
 		g_return_val_if_fail (storage, CORBA_OBJECT_NIL);
 
+		g_message ("Returning storage...");
 		return CORBA_Object_duplicate (BONOBO_OBJREF (storage), ev);
 	}
 

@@ -212,6 +212,17 @@ msgid ""
 "SoftwareFoundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.See "
 "http://www.gnu.org for more details on the GNU project."
 msgstr ""
+"To je prosto programje -- Lahko ga spremijate in/ali raz¹irjate, vendar"
+"v skladu z GNU Splo¹no Javno Licenco, ki jo je objavila Fundacija za prosto"
+"programje; lahko uporabite drugo ali (po lastni presoji) katerokoli "  
+"kasnej¹o razlièico licence.\n"
+"Ta program se raz9irja z upanjem, da bi bil uporaben, a BREZ KAKR©NIHKOLI  "
+"JAMSTEV; celo brez implicitnih jamstev USTREZNOSTI ZA PRODAJO ali UPRABNOSTI "
+"ZA DOLOÈEN NAMEN. Za veè podrobnosti si oglejte GNU Splo¹no Javno Licenco." 
+"Zraven tega programa bi morali prejeti GNU Splo¹no javno licenco. Èe je niste,"
+"pi¹ite Fundaciji za prosto programje na naslov: Free software fundation, Inc."
+", 675 Mass Ave, Cambridge, MA 02139, USA. Oglejte si http://www.gnu.org "
+"za veè podrobnosti o projektu GNU."
 
 #: src/callbacks.c:895
 #, c-format
@@ -482,91 +493,93 @@ msgstr ""
 
 #: src/commandline.c:43
 msgid "gPhoto is free GNU software; you can redistribute it and/or\n"
-msgstr ""
+msgstr "gPHoto je prosto GNUjevo programje; lahko ga raz¹irjate in/ali\n"
 
 #: src/commandline.c:45
 msgid "modify it under the terms of the GNU General Public License \n"
-msgstr ""
+msgstr "spreminjate pod pogoji GNU Splo¹ne Javne Licence \n"
 
 #: src/commandline.c:47
 msgid "as published by the Free Software Foundation; either version \n"
-msgstr ""
+msgstr "kot jo je objavila Fundacija za prosto progamje; uporabite lahko\n"
 
 #: src/commandline.c:49
 msgid "2 of the License, or any later version.  Visit gphoto/COPYING\n"
-msgstr ""
+msgstr "drugo ali katerokoli kasnej¹o razlièico Licence. Licenca se nahaja\n"
 
 #: src/commandline.c:51
 msgid ""
 "in the source distribution to read the GNU GPL license terms.\n"
 "\n"
-msgstr ""
+msgstr "v datoteki gphoto/COPYING v distribuciji izvorne kode.\n"
 
 #: src/commandline.c:53
 msgid "Report bugs and camera success to gphoto-devel@gphoto.org.\n"
-msgstr ""
+msgstr "Sporoèite hro¹èe in uspehe s fotoaparati na gphoto-devel@gphoto.org.\n"
 
 #: src/commandline.c:55
 msgid "See http://www.gphoto.org for the latest news and updates.\n"
-msgstr ""
+msgstr "Na http://www.gphoto.org lahko najdete najnovej¹e novice in popravke\n"
 
 #: src/commandline.c:73
 #, c-format
 msgid "%i\n"
-msgstr ""
+msgstr "%i\n"
 
 #: src/commandline.c:78 src/commandline.c:103 src/commandline.c:132
 msgid "ERROR: could not get image.\n"
-msgstr ""
+msgstr "NAPAKA: ne morem dobiti slike.\n"
 
 #: src/commandline.c:85 src/commandline.c:110 src/commandline.c:139
 #: src/commandline.c:195
 msgid "ERROR: could not save image.\n"
-msgstr ""
+msgstr "NAPAKA: ne morem shraniti slike.\n"
 
 #: src/commandline.c:87
 msgid "ERROR: 'filename' not specified.\n"
-msgstr ""
+msgstr "NAPAKA: 'datoteka' ni bila navedena.\n"
 
 #: src/commandline.c:115 src/commandline.c:144
 msgid "ERROR: '#' and 'filename' not specified.\n"
-msgstr ""
+msgstr "NAPAKA '#' in 'datoteka' nista bila navedena.\n"
 
 #: src/commandline.c:154
 msgid "ERROR: Could not delete image.\n"
-msgstr ""
+msgstr "NAPAKA: Ne morem zbrisati slike.\n"
 
 #: src/commandline.c:162
 msgid "ERROR: '#' not specified.\n"
-msgstr ""
+msgstr "NAPAKA: '#' ni bil naveden.\n"
 
 #: src/commandline.c:169
 msgid "ERROR: filename not specified.\n"
-msgstr ""
+msgstr "NAPKA: datoteka ni bila navedena.\n"
 
 #: src/commandline.c:172
 msgid "Taking picture...\n"
-msgstr ""
+msgstr "Slikam...\n"
 
 #: src/commandline.c:178
 msgid "ERROR: could not take the picture.\n"
-msgstr ""
+msgstr "NAPAKA: nisem mogel slikati.\n"
 
 #: src/commandline.c:182
 #, c-format
 msgid "Saving the new image (# %i) as %s: "
-msgstr ""
+msgstr "Shranjujem novo sliko (# %i) kot %s: "
 
 #: src/commandline.c:187
 msgid ""
 "\n"
 "ERROR: could not get image.\n"
 msgstr ""
+"\n"
+"NAPAKA: ne morem dobiti slike.\n"
 
 #: src/developer_dialog.c:136
 #, c-format
 msgid "gPhoto release %s was brought to you by"
-msgstr ""
+msgstr "gPhoto razlièico %s so ustvarili"
 
 #: src/developer_dialog.c:199
 msgid "Web Page"
@@ -589,6 +602,8 @@ msgid ""
 "The gPhoto AUTHORS file appears to be missing!\n"
 "\t      There should be a file called "
 msgstr ""
+"gPhotova datoteka AUTHORS se zdi pogre¹ana!\n"
+"\t      Morala bi obstajati imenovana "
 
 #: src/developer_dialog.c:292
 #, c-format
@@ -597,22 +612,25 @@ msgid ""
 "\t      %s directory.\n"
 "Please check your installation."
 msgstr ""
+" v\n"
+"\t      imeniku %s.\n"
+"Prosim preverite va¹o namestitev."
 
 #: src/gallery.c:212
 msgid "Select an Output Directory..."
-msgstr ""
+msgstr "Izberi izhodni imenik..."
 
 #: src/gallery.c:310
 msgid "Gallery Name:"
-msgstr ""
+msgstr "Ime galerije:"
 
 #: src/gallery.c:323
 msgid "Theme:"
-msgstr ""
+msgstr "Tema:"
 
 #: src/gallery.c:382
 msgid "Output Directory:"
-msgstr ""
+msgstr "Izhodni imenik:"
 
 #: src/gallery.c:393
 msgid "Change..."
@@ -624,15 +642,15 @@ msgstr "Spremeni..."
 #.
 #: src/gallery.c:403
 msgid "Export file as *.shtml?"
-msgstr ""
+msgstr "Izvozi datoteko kot *.shtml"
 
 #: src/gallery.c:407
 msgid "Set table border width to zero for thumbnails?"
-msgstr ""
+msgstr "Za vzorce nastavi ¹irino robu tabele na niè?"
 
 #: src/gallery.c:411
 msgid "Set image border width to zero? (so you don't see the link colors...)"
-msgstr ""
+msgstr "Nastavi ¹irino robu slik na niè? (torej ne vidite barv povezave...)"
 
 #: src/gallery.c:421
 msgid "Create"
@@ -640,13 +658,13 @@ msgstr "Ustvari"
 
 #: src/gallery.c:444
 msgid "You must select a theme!"
-msgstr ""
+msgstr "Izbrati morate temo!"
 
 #. Get the current thumbnail
 #: src/gallery.c:532
 #, c-format
 msgid "Getting Thumbnail #%i..."
-msgstr ""
+msgstr "Dobivam vzorec #%i..."
 
 #: src/gallery.c:538 src/gallery.c:568
 msgid "Not Available"
@@ -655,80 +673,80 @@ msgstr "Ni na voljo"
 #: src/gallery.c:541
 #, c-format
 msgid "<a href=\"picture-%03i.html\">Click Me<\\/a>"
-msgstr ""
+msgstr "<a href=\"slika-%03i.html\">Klikni me<\\/a>"
 
 #: src/gallery.c:548
 #, c-format
 msgid "thumbnail-%03i.%s"
-msgstr ""
+msgstr "vzorec-%03i.%s"
 
 #. Get the current image
 #: src/gallery.c:562
 #, c-format
 msgid "Getting Image #%i..."
-msgstr ""
+msgstr "Dobivam sliko #%i..."
 
 #: src/gallery.c:572
 #, c-format
 msgid "<img alt=\"%03i\" src=\"picture-%03i.%s\">"
-msgstr ""
+msgstr "<img alt=\"%03i\" src=\"slika-%03i.%s\">"
 
 #: src/gallery.c:574
 #, c-format
 msgid "picture-%03i.%s"
-msgstr ""
+msgstr "slika-%03i.%s"
 
 #: src/gallery.c:590 src/gallery.c:595
 #, c-format
 msgid "picture-%03i.html"
-msgstr ""
+msgstr "slika-%03i.html"
 
 #: src/gallery.c:607
 #, c-format
 msgid "%spicture-%03i.html"
-msgstr ""
+msgstr "%sslika-%03i.html"
 
 #: src/gallery.c:630
 #, c-format
 msgid "Loaded file:%s%s in %s"
-msgstr ""
+msgstr "Nalo¾ena datoteka %s%s v %s"
 
 #: src/gallery.c:633
 #, c-format
 msgid "Gallery saved in: %s"
-msgstr ""
+msgstr "Galerija shranjena v: %s"
 
 #: src/img_edit.c:1125
 msgid "Color Adjustment"
-msgstr ""
+msgstr "Nastavitev barv"
 
 #: src/img_edit.c:1126
 msgid "gPhoto - Color Adjustment"
-msgstr ""
+msgstr "gPhoto - Nastavitev barv"
 
 #: src/img_edit.c:1141
 msgid "Colour Settings"
-msgstr ""
+msgstr "Nstavitev barv"
 
 #: src/img_edit.c:1247
 msgid "Gray Controls"
-msgstr ""
+msgstr "Kontorla sivine"
 
 #: src/img_edit.c:1287
 msgid "Red Controls"
-msgstr ""
+msgstr "Kontrola rdeèe"
 
 #: src/img_edit.c:1327
 msgid "Green Controls"
-msgstr ""
+msgstr "Kontrola zelene"
 
 #: src/img_edit.c:1367
 msgid "Blue Controls"
-msgstr ""
+msgstr "Kontrola modre"
 
 #: src/img_edit.c:1408
 msgid "Colour Modifications:"
-msgstr ""
+msgstr "Spremembe barv:"
 
 #: src/img_edit.c:1415
 msgid "Apply"
@@ -744,37 +762,39 @@ msgstr "Ponastavi"
 
 #: src/img_edit.c:1424 src/img_edit.c:1425
 msgid "Reset all the color changes to normal values"
-msgstr ""
+msgstr "Ponastavi vse spremembe barv na obièajne vrednosti"
 
 #: src/img_edit.c:1427
 msgid "Always Apply"
-msgstr ""
+msgstr "Vedno uporabi"
 
 #: src/live.c:28 src/live.c:68
 msgid "Getting live image..."
-msgstr ""
+msgstr "Dobivam ¾ivo sliko..."
 
 #: src/live.c:30 src/live.c:109
 msgid "Could not get preview"
-msgstr ""
+msgstr "Ne morem dobiti vzorca"
 
 #: src/live.c:70
 msgid "Live Camera!"
-msgstr ""
+msgstr "®iva slika!"
 
 #: src/live.c:77
 msgid "Update Picture"
-msgstr ""
+msgstr "Obnovi sliko"
 
 #: src/live.c:84
 msgid "Take Picture"
-msgstr ""
+msgstr "Slikaj"
 
 #: src/main.c:62
 msgid ""
 "\n"
 "Launching Gnome Bugbuddy...\n"
 msgstr ""
+"\n"
+"Poganjam Gnome Bug-buddy...\n"
 
 #: src/main.c:152
 #, c-format
@@ -811,31 +831,31 @@ msgstr "Naslednja stran"
 
 #: src/toolbar.c:104
 msgid "Download Thumbnail Index"
-msgstr ""
+msgstr "Nalo¾i kazalo vzorcev"
 
 #: src/toolbar.c:106
 msgid "Download Empty Index"
-msgstr ""
+msgstr "Nalo¾i prazno kazalo"
 
 #: src/toolbar.c:108
 msgid "Download Selected Images"
-msgstr ""
+msgstr "Nalo¾i izbrane slike"
 
 #: src/toolbar.c:110
 msgid "Delete Selected Images"
-msgstr ""
+msgstr "Zbri¹i izbrane slike"
 
 #: src/toolbar.c:113
 msgid "Halt Download"
-msgstr ""
+msgstr "Ustavi nalaganje"
 
 #: src/toolbar.c:117
 msgid "Rotate Clockwise"
-msgstr ""
+msgstr "Zavrti v smeri urinega kazalca"
 
 #: src/toolbar.c:119
 msgid "Rotate Counter-Clockwise"
-msgstr ""
+msgstr "Zavrti v nasprotni smeri urinega kazalca"
 
 #: src/toolbar.c:121
 msgid "Flip Horizontal"
@@ -858,7 +878,7 @@ msgstr "Barve"
 #.
 #: src/toolbar.c:141
 msgid "Camera Configuration"
-msgstr ""
+msgstr "Nastaviteve fotoaparata"
 
 #: src/toolbar.c:144
 msgid "Help"
@@ -866,11 +886,11 @@ msgstr "Pomoè"
 
 #: src/toolbar.c:146
 msgid "Exit gPhoto"
-msgstr ""
+msgstr "Izhod iz gPhota"
 
 #: src/util.c:56
 msgid "gPhoto Message"
-msgstr ""
+msgstr "gPhoto sporoèilo"
 
 #: src/util.c:127
 msgid "Confirm"
@@ -883,11 +903,11 @@ msgstr "Datoteka %s ¾e obstaja prepi¹em?"
 
 #: src/util.c:349
 msgid "load_image_mem: could not load image\n"
-msgstr ""
+msgstr "load_image_mem: ne morem nalo¾iti slike\n"
 
 #: src/util.c:472
 msgid "Fork failed. Exiting. \n"
-msgstr ""
+msgstr "Fork ni uspel. Zakljuèujem. \n"
 
 
 # Smart report:

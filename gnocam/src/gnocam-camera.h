@@ -44,6 +44,9 @@ GnoCamCamera*	gnocam_camera_new			(const gchar* url, BonoboUIContainer* containe
 void 		gnocam_camera_set_storage_view_mode 	(GnoCamCamera* camera, GnoCamCameraStorageViewMode mode);
 GtkWidget*	gnocam_camera_get_widget 		(GnoCamCamera* camera);
 
+void		gnocam_camera_show_menu			(GnoCamCamera* camera);
+void		gnocam_camera_hide_menu			(GnoCamCamera* camera);
+
 END_GNOME_DECLS
 
 #endif /* _GNOCAM__CAMERA_H_ */

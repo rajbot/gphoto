@@ -13,13 +13,13 @@
 static BonoboWindowClass* parent_class = NULL;
 
 struct _GnoCamCapturePrivate {
+	BonoboUIContainer*	container;
+	BonoboUIComponent*	component;
 
 	GConfClient*		client;
 
 	Camera*			camera;
 	CameraWidget*		configuration;
-
-	Bonobo_UIContainer	container;
 
 	CameraCaptureType	type;
 	gint			duration;
@@ -29,21 +29,19 @@ struct _GnoCamCapturePrivate {
 "<Root>"														\
 "  <menu>"														\
 "    <submenu name=\"File\" _label=\"_File\">"										\
+"      <placeholder name=\"FileOperations\"/>"										\
 "      <menuitem name=\"Close\" verb=\"\" _label=\"_Close\" pixtype=\"stock\" pixname=\"Close\"/>"			\
 "    </submenu>"													\
 "    <submenu name=\"Camera\" _label=\"Camera\">"                         						\
 "      <menuitem name=\"Manual\" _label=\"Manual\" verb=\"\"/>"           						\
-"      <placeholder name=\"separator\"/>"                                 						\
-"      <placeholder name=\"CapturePreview\"/>"                            						\
-"      <placeholder name=\"CaptureImage\"/>"                              						\
-"      <placeholder name=\"CaptureVideo\"/>"                              						\
-"      <placeholder name=\"Configuration\"/>"                             						\
+"      <placeholder name=\"CaptureOperations\" delimit=\"top\"/>"							\
+"      <placeholder name=\"Configuration\" delimit=\"top\"/>"								\
 "    </submenu>"                                                          						\
 "    <submenu name=\"Edit\" _label=\"_Edit\">"                                                                          \
 "       <placeholder/>"                                                                                                 \
 "       <menuitem name=\"BonoboCustomize\" verb=\"\" _label=\"Customi_ze...\" pos=\"bottom\"/>"                         \
 "    </submenu>"                                                                                                        \
-"    <placeholder name=\"View\"/>"											\
+"    <submenu name=\"View\" _label=\"_View\"/>"										\
 "    <submenu name=\"Help\" _label=\"_Help\">"										\
 "      <menuitem name=\"About\" _label=\"_About\" pixtype=\"stock\" pixname=\"About\"/>"				\
 "    </submenu>"													\
@@ -53,13 +51,77 @@ struct _GnoCamCapturePrivate {
 "  </dockitem>"														\
 "</Root>"
 
-#define CAPTURE_IMAGE   "<menuitem name=\"CaptureImage\" _label=\"Capture Image\" verb=\"\"/>"
-#define CAPTURE_PREVIEW "<menuitem name=\"CapturePreview\" _label=\"Capture Preview\" verb=\"\"/>"
-#define CAPTURE_VIDEO   "<menuitem name=\"CaptureVideo\" _label=\"Capture Video\" verb=\"\"/>"
+#define GNOCAM_CAPTURE_UI_IMAGE                                                 \
+"<placeholder name=\"CaptureOperations\">"                                      \
+"  <menuitem name=\"CaptureImage\" _label=\"Capture Image\" verb=\"\"/>"        \
+"</placeholder>"
+
+#define GNOCAM_CAPTURE_UI_PREVIEW						\
+"<placeholder name=\"CaptureOperations\">"                                      \
+"  <menuitem name=\"CapturePreview\" _label=\"Capture Preview\" verb=\"\"/>"    \
+"</placeholder>"
+
+#define GNOCAM_CAPTURE_UI_VIDEO							\
+"<placeholder name=\"CaptureOperations\">"                                      \
+"  <menuitem name=\"CaptureVideo\" _label=\"Capture Video\" verb=\"\"/>"        \
+"</placeholder>"
+
+/**************/
+/* Prototypes */
+/**************/
+
+static void 	on_manual_clicked 		(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
+static void	on_capture_image_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
+static void	on_capture_video_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
+static void	on_capture_preview_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
+static void	on_capture_refresh_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
+static void	on_close_clicked		(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 
 /********************/
 /* Helper functions */
 /********************/
+
+static gint
+create_menu (gpointer user_data)
+{
+	GnoCamCapture*	capture;
+
+	capture = GNOCAM_CAPTURE (user_data);
+
+        /* Create the component */
+        capture->priv->component = bonobo_ui_component_new (PACKAGE "Capture");
+        bonobo_ui_component_set_container (capture->priv->component, BONOBO_OBJREF (capture->priv->container));
+
+        /* Create the menu */
+        bonobo_ui_component_set_translate (capture->priv->component, "/", GNOCAM_CAPTURE_UI, NULL);
+        bonobo_ui_component_add_verb (capture->priv->component, "Manual", on_manual_clicked, capture);
+        bonobo_ui_component_add_verb (capture->priv->component, "Close", on_close_clicked, capture);
+        bonobo_ui_component_add_verb (capture->priv->component, "Refresh", on_capture_refresh_clicked, capture);
+
+        /* Camera Configuration? */
+        if (capture->priv->camera->abilities->config) {
+                gint            result;
+
+                result = gp_camera_config_get (capture->priv->camera, &(capture->priv->configuration));
+                if (result == GP_OK) menu_setup (capture->priv->component, capture->priv->camera, capture->priv->configuration, "/menu/Camera", NULL, NULL);
+        }
+
+        /* Capture? */
+        if (capture->priv->camera->abilities->capture & GP_CAPTURE_IMAGE) {
+                bonobo_ui_component_set_translate (capture->priv->component, "/menu/Camera/CaptureOperations", GNOCAM_CAPTURE_UI_IMAGE, NULL);
+                bonobo_ui_component_add_verb (capture->priv->component, "CaptureImage", on_capture_image_clicked, capture);
+        }
+        if (capture->priv->camera->abilities->capture & GP_CAPTURE_VIDEO) {
+                bonobo_ui_component_set_translate (capture->priv->component, "/menu/Camera/CaptureOperations", GNOCAM_CAPTURE_UI_VIDEO, NULL);
+                bonobo_ui_component_add_verb (capture->priv->component, "CaptureVideo", on_capture_video_clicked, capture);
+        }
+        if (capture->priv->camera->abilities->capture & GP_CAPTURE_PREVIEW) {
+                bonobo_ui_component_set_translate (capture->priv->component, "/menu/Camera/CaptureOperations", GNOCAM_CAPTURE_UI_PREVIEW, NULL);
+                bonobo_ui_component_add_verb (capture->priv->component, "CapturePreview", on_capture_preview_clicked, capture);
+        }
+
+	return (FALSE);
+}
 
 static void 
 do_capture (GnoCamCapture* capture)
@@ -120,7 +182,7 @@ do_capture (GnoCamCapture* capture)
 	/* Create the stream */
 	stream = bonobo_stream_mem_create (file->data, file->size, TRUE, FALSE);
 	gp_file_unref (file);
-	corba_stream = bonobo_object_corba_objref (BONOBO_OBJECT (stream));
+	corba_stream = BONOBO_OBJREF (stream);
 
 	/* Get the persist stream interface */
          persist = Bonobo_Unknown_queryInterface (object, "IDL:Bonobo/PersistStream:1.0", &ev);
@@ -130,6 +192,7 @@ do_capture (GnoCamCapture* capture)
 		message = g_strdup_printf (_("Could not get 'PersistStream' interface!\n(%s)"), bonobo_exception_get_text (&ev));
 		gnome_error_dialog_parented (message, GTK_WINDOW (capture));
 		g_free (message);
+		bonobo_object_unref (BONOBO_OBJECT (stream));
 		CORBA_exception_free (&ev);
                 return;
         }
@@ -137,6 +200,8 @@ do_capture (GnoCamCapture* capture)
 
         /* Load the persist stream */
         Bonobo_PersistStream_load (persist, corba_stream, (const Bonobo_Persist_ContentType) file->type, &ev);
+	bonobo_object_unref (BONOBO_OBJECT (stream));
+	bonobo_object_release_unref (persist, &ev);
         if (BONOBO_EX (&ev)) {
 		gchar*  message;
 		
@@ -147,10 +212,8 @@ do_capture (GnoCamCapture* capture)
 		return;
 	}
 
-	bonobo_object_release_unref (persist, &ev);
-	bonobo_object_unref (BONOBO_OBJECT (stream));
-
-	control = bonobo_moniker_util_qi_return (object, "IDL:Bonobo/Control:1.0", &ev);
+	/* Get the control */
+	control = Bonobo_Unknown_queryInterface (object, "IDL:Bonobo/Control:1.0", &ev);
 	if (BONOBO_EX (&ev)) {
 		gchar*  message;
 
@@ -160,12 +223,18 @@ do_capture (GnoCamCapture* capture)
 		CORBA_exception_free (&ev);
 		return;
 	}
-	CORBA_exception_free (&ev);
 
-	/* Display! */
+	/* Destroy old widget */
 	if ((widget = bonobo_window_get_contents (BONOBO_WINDOW (capture)))) gtk_widget_destroy (widget);
-	gtk_widget_show (widget = bonobo_widget_new_control_from_objref (control, capture->priv->container));
+
+	/* Show new widget */
+	widget = bonobo_widget_new_control_from_objref (control, BONOBO_OBJREF (capture->priv->container));
+	gtk_widget_show (widget);
+	gtk_widget_ref (widget);
         bonobo_window_set_contents (BONOBO_WINDOW (capture), widget);
+
+	Bonobo_Control_activate (control, TRUE, &ev);
+	CORBA_exception_free (&ev);
 }
 
 /*************/
@@ -295,6 +364,9 @@ gnocam_capture_destroy (GtkObject* object)
 
         capture = GNOCAM_CAPTURE (object);
 
+	bonobo_object_unref (BONOBO_OBJECT (capture->priv->component));
+	bonobo_object_unref (BONOBO_OBJECT (capture->priv->container));
+
         gp_camera_unref (capture->priv->camera);
 	if (capture->priv->configuration) gp_widget_unref (capture->priv->configuration);
 	gtk_object_unref (GTK_OBJECT (capture->priv->client));
@@ -326,14 +398,12 @@ GnoCamCapture*
 gnocam_capture_new (Camera* camera, CameraCaptureType type, GConfClient* client)
 {
 	GnoCamCapture*		new;
-	BonoboUIContainer*	container;
-	BonoboUIComponent*	component;
 	gint			w, h;
 
         g_return_val_if_fail (camera, NULL);
 
 	new = gtk_type_new (GNOCAM_TYPE_CAPTURE);
-	new = GNOCAM_CAPTURE (bonobo_window_construct (BONOBO_WINDOW (new), "GnoCamCapture", "GnoCam Capture"));
+	new = GNOCAM_CAPTURE (bonobo_window_construct (BONOBO_WINDOW (new), PACKAGE "Capture", PACKAGE " - Capture"));
 	gtk_signal_connect (GTK_OBJECT (new), "size_request", GTK_SIGNAL_FUNC (on_window_size_request), new);
 	gp_camera_ref (new->priv->camera = camera);
 	new->priv->type = type;
@@ -342,55 +412,22 @@ gnocam_capture_new (Camera* camera, CameraCaptureType type, GConfClient* client)
 	bonobo_ui_engine_config_set_path (bonobo_window_get_ui_engine (BONOBO_WINDOW (new)), "/" PACKAGE "/UIConf/capture");
 
 	/* Create the container */
-	container = bonobo_ui_container_new ();
-	bonobo_ui_container_set_win (container, BONOBO_WINDOW (new));
-	new->priv->container = bonobo_object_corba_objref (BONOBO_OBJECT (container));
-
-	/* Create the component */
-	component = bonobo_ui_component_new ("capture");
-	bonobo_ui_component_set_container (component, new->priv->container);
+	new->priv->container = bonobo_ui_container_new ();
+	bonobo_ui_container_set_win (new->priv->container, BONOBO_WINDOW (new));
 
 	/* Create the menu */
-	bonobo_ui_component_set_translate (component, "/", GNOCAM_CAPTURE_UI, NULL);
-        bonobo_ui_component_add_verb (component, "Manual", on_manual_clicked, new);
-	bonobo_ui_component_add_verb (component, "Close", on_close_clicked, new);
-	bonobo_ui_component_add_verb (component, "Refresh", on_capture_refresh_clicked, new);
-
-        /* Camera Configuration? */
-        if (new->priv->camera->abilities->config) {
-                gint            result;
-
-                result = gp_camera_config_get (new->priv->camera, &(new->priv->configuration));
-                if (result == GP_OK) menu_setup (component, new->priv->camera, new->priv->configuration, "/menu/Camera", NULL, NULL);
-        }
-
-        /* Capture? */
-        if (new->priv->camera->abilities->capture != GP_CAPTURE_NONE) {
-                bonobo_ui_component_set_translate (component, "/menu/Camera/separator", "<separator name=\"separator\"/>", NULL);
-        }
-        if (new->priv->camera->abilities->capture & GP_CAPTURE_IMAGE) {
-                bonobo_ui_component_set_translate (component, "/menu/Camera/CaptureImage", CAPTURE_IMAGE, NULL);
-                bonobo_ui_component_add_verb (component, "CaptureImage", on_capture_image_clicked, new);
-        }
-        if (new->priv->camera->abilities->capture & GP_CAPTURE_VIDEO) {
-                bonobo_ui_component_set_translate (component, "/menu/Camera/CaptureVideo", CAPTURE_VIDEO, NULL);
-                bonobo_ui_component_add_verb (component, "CaptureVideo", on_capture_video_clicked, new);
-        }
-        if (new->priv->camera->abilities->capture & GP_CAPTURE_PREVIEW) {
-                bonobo_ui_component_set_translate (component, "/menu/Camera/CapturePreview", CAPTURE_PREVIEW, NULL);
-                bonobo_ui_component_add_verb (component, "CapturePreview", on_capture_preview_clicked, new);
-        }
+	gtk_idle_add (create_menu, new);
 
         /* Capture. */
 	switch (type) {
 	case GP_CAPTURE_PREVIEW:
-		on_capture_preview_clicked (component, new, NULL);
+		on_capture_preview_clicked (NULL, new, NULL);
 		break;
 	case GP_CAPTURE_IMAGE:
-		on_capture_image_clicked (component, new, NULL);
+		on_capture_image_clicked (NULL, new, NULL);
 		break;
 	case GP_CAPTURE_VIDEO:
-		on_capture_video_clicked (component, new, NULL);
+		on_capture_video_clicked (NULL, new, NULL);
 		break;
 	default:
 		break;

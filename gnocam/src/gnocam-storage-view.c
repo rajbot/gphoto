@@ -374,9 +374,7 @@ gnocam_storage_view_class_init (GnoCamStorageViewClass* klass)
 static void
 gnocam_storage_view_init (GnoCamStorageView* storage_view)
 {
-	storage_view->priv = g_new (GnoCamStorageViewPrivate, 1);
-	storage_view->priv->etree = NULL;
-	storage_view->priv->storage = CORBA_OBJECT_NIL;
+	storage_view->priv = g_new0 (GnoCamStorageViewPrivate, 1);
 }
 
 GtkWidget*

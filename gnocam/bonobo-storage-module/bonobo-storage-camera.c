@@ -78,16 +78,25 @@ camera_list_contents (BonoboStorage* s, const CORBA_char* path, Bonobo_StorageIn
 
 	storage = BONOBO_STORAGE_CAMERA (s);
 
-	if (*path == 0) combined_path = g_strdup (storage->priv->path);
-	else if (!strcmp ("/", storage->priv->path)) combined_path = g_strconcat ("/", path, NULL);
-	else combined_path = g_strconcat (storage->priv->path, G_DIR_SEPARATOR, path, NULL);
-
+	if (*path == 0) {
+		combined_path = g_strdup (storage->priv->path);
+	} else {
+		if (!strcmp (storage->priv->path, "/")) {
+			if (*path == '/') combined_path = g_strdup (path);
+			else combined_path = g_strconcat ("/", path, NULL);
+		} else {
+			if (*path == '/') combined_path = g_strconcat (storage->priv->path, path, NULL);
+			else combined_path = g_strconcat (storage->priv->path, G_DIR_SEPARATOR, path, NULL);
+		}
+	}
+		
 	/* Get folder list. */
 	CHECK_RESULT (gp_camera_folder_list (storage->priv->camera, &folder_list, combined_path), ev);
 	if (BONOBO_EX (ev)) {
 		g_free (combined_path);
 		return (NULL);
 	}
+g_message (" got folder list");
 
 	/* Get file list. */
 	CHECK_RESULT (gp_camera_file_list (storage->priv->camera, &file_list, combined_path), ev);
@@ -95,6 +104,7 @@ camera_list_contents (BonoboStorage* s, const CORBA_char* path, Bonobo_StorageIn
 		g_free (combined_path);
 		return (NULL);
 	}
+g_message ("  got file list");
 
 	/* Set up the list. */
 	list = Bonobo_Storage_DirectoryList__alloc ();

@@ -70,8 +70,6 @@ create_menu (gpointer user_data)
 	g_return_val_if_fail (user_data, FALSE);
 	file = GNOCAM_FILE (user_data);
 
-	/* Create the component */
-	file->priv->component = bonobo_ui_component_new (PACKAGE "File");
 	bonobo_ui_component_set_container (file->priv->component, BONOBO_OBJREF (file->priv->container));
 
         bonobo_ui_component_set_translate (file->priv->component, "/menu/File/FileOperations", GNOCAM_FILE_UI, NULL);
@@ -86,21 +84,6 @@ create_menu (gpointer user_data)
         result = gp_camera_file_config_get (file->priv->camera, &(file->priv->configuration), file->priv->dirname, file->priv->filename);
         if (result == GP_OK) menu_setup (file->priv->component, file->priv->camera, file->priv->configuration, "/menu/File/FileOperations",
                 file->priv->dirname, file->priv->filename);
-
-	return (FALSE);
-}
-
-static gint
-set_container (gpointer user_data)
-{
-	GnoCamFile*	file;
-
-	file = GNOCAM_FILE (user_data);
-
-	if (!file->priv->component) return (TRUE);
-	
-	bonobo_ui_component_set_container (file->priv->component, BONOBO_OBJREF (file->priv->container));
-	if (file->priv->control) Bonobo_Control_activate (file->priv->control, TRUE, NULL);
 
 	return (FALSE);
 }
@@ -122,12 +105,12 @@ create_error_widget (GnoCamFile* file, CORBA_Environment* ev)
 static void
 create_widget (GnoCamFile* file)
 {
-	Bonobo_Stream		stream;
-	Bonobo_Unknown		object;
-	Bonobo_Persist		persist;
+	Bonobo_Stream		stream = CORBA_OBJECT_NIL;
+	Bonobo_Unknown		object = CORBA_OBJECT_NIL;
+	Bonobo_Persist		persist = CORBA_OBJECT_NIL;
 	Bonobo_StorageInfo*	info;
 	gchar*			oaf_requirements;
-	gchar*			mime_type;
+	gchar*			mime_type = NULL;
 	OAF_ActivationID        ret_id;
 	CORBA_Environment	ev;
 
@@ -156,11 +139,7 @@ create_widget (GnoCamFile* file)
 
         /* Get information about the stream */
         info = Bonobo_Stream_getInfo (stream, Bonobo_FIELD_CONTENT_TYPE, &ev);
-        if (BONOBO_EX (&ev)) {
-                Bonobo_Stream_unref (stream, &ev);
-		CORBA_Object_release (stream, &ev);
-                goto exit_clean;
-        }
+        if (BONOBO_EX (&ev)) goto exit_clean;
         g_return_if_fail (info);
         mime_type = g_strdup (info->content_type);
         CORBA_free (info);
@@ -173,43 +152,22 @@ create_widget (GnoCamFile* file)
         /* Activate the object */
 	object = oaf_activate (oaf_requirements, NULL, 0, &ret_id, &ev);
         g_free (oaf_requirements);
-        if (BONOBO_EX (&ev)) {
-		Bonobo_Stream_unref (stream, &ev);
-		CORBA_Object_release (stream, &ev);
-                g_free (mime_type);
-                goto exit_clean;
-        }
+        if (BONOBO_EX (&ev)) goto exit_clean;
         g_return_if_fail (object != CORBA_OBJECT_NIL);
 
         /* Get the persist stream interface */
          persist = Bonobo_Unknown_queryInterface (object, "IDL:Bonobo/PersistStream:1.0", &ev);
-         if (BONOBO_EX (&ev)) {
-		Bonobo_Unknown_unref (object, &ev);
-		CORBA_Object_release (object, &ev);
-		Bonobo_Stream_unref (stream, &ev);
-		CORBA_Object_release (stream, &ev);
-                g_free (mime_type);
-                goto exit_clean;
-        }
+         if (BONOBO_EX (&ev)) goto exit_clean;
         g_return_if_fail (persist != CORBA_OBJECT_NIL);
 
         /* Load the persist stream */
         Bonobo_PersistStream_load (persist, stream, (const Bonobo_Persist_ContentType) mime_type, &ev);
-        Bonobo_PersistStream_unref (persist, &ev);
-	CORBA_Object_release (persist, &ev);
-        Bonobo_Stream_unref (stream, &ev);
-	CORBA_Object_release (stream, &ev);
         g_free (mime_type);
-        if (BONOBO_EX (&ev)) {
-		Bonobo_Unknown_unref (object, &ev);
-		CORBA_Object_release (object, &ev);
-		goto exit_clean;
-	}
+	mime_type = NULL;
+        if (BONOBO_EX (&ev)) goto exit_clean;
 
 	/* Get the control */
 	file->priv->control = Bonobo_Unknown_queryInterface (object, "IDL:Bonobo/Control:1.0", &ev);
-	Bonobo_Unknown_unref (object, &ev);
-	CORBA_Object_release (object, &ev);
         if (BONOBO_EX (&ev)) goto exit_clean;
 	g_return_if_fail (file->priv->control != CORBA_OBJECT_NIL);
 
@@ -223,6 +181,12 @@ create_widget (GnoCamFile* file)
   exit_clean:
 
 	create_error_widget (file, &ev);
+
+	/* Clean up */
+	if (mime_type) g_free (mime_type);
+	if (stream != CORBA_OBJECT_NIL) bonobo_object_release_unref (stream, NULL);
+	if (object != CORBA_OBJECT_NIL) bonobo_object_release_unref (object, NULL);
+	if (persist != CORBA_OBJECT_NIL) bonobo_object_release_unref (persist, NULL);
 	CORBA_exception_free (&ev);
 
 	return;
@@ -276,7 +240,8 @@ gnocam_file_hide_menu (GnoCamFile* file)
 void
 gnocam_file_show_menu (GnoCamFile* file)
 {
-	gtk_idle_add (set_container, file);
+	bonobo_ui_component_set_container (file->priv->component, BONOBO_OBJREF (file->priv->container));
+	if (file->priv->control) Bonobo_Control_activate (file->priv->control, TRUE, NULL);
 }
 
 GtkWidget*
@@ -371,6 +336,7 @@ gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bono
         }       
 
 	/* Create the menu */
+	new->priv->component = bonobo_ui_component_new (PACKAGE "File");
 	gtk_idle_add (create_menu, new);
 
 	create_widget (new);

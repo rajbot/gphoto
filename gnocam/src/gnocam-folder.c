@@ -56,12 +56,12 @@ struct _GnoCamFolderPrivate
 #define GNOCAM_FOLDER_UI_UPLOAD_MENUITEM			\
 "<placeholder name=\"Upload\">"					\
 "  <menuitem name=\"Upload\" _label=\"Upload\" verb=\"\"/>"	\
-"</placeholder/>"
+"</placeholder>"
 
 #define GNOCAM_FOLDER_UI_UPLOAD_TOOLITEM                        \
 "<placeholder name=\"Upload\">"                                 \
 "  <toolitem name=\"Upload\" _label=\"Upload\" verb=\"\"/>"     \
-"</placeholder/>"
+"</placeholder>"
 
 /**************/
 /* Prototypes */
@@ -84,8 +84,6 @@ create_menu (gpointer user_data)
 	g_return_val_if_fail (user_data, FALSE);
 	folder = GNOCAM_FOLDER (user_data);
 
-	/* Create the component */
-	folder->priv->component = bonobo_ui_component_new (PACKAGE "Folder");
 	bonobo_ui_component_set_container (folder->priv->component, BONOBO_OBJREF (folder->priv->container));
 	
         bonobo_ui_component_freeze (folder->priv->component, NULL);
@@ -106,20 +104,6 @@ create_menu (gpointer user_data)
         if (result == GP_OK) menu_setup (folder->priv->component, folder->priv->camera, folder->priv->configuration, "/menu/Folder/Folder", folder->priv->path, NULL);
 
         bonobo_ui_component_thaw (folder->priv->component, NULL);
-
-	return (FALSE);
-}
-
-static gint
-set_container (gpointer user_data)
-{
-	GnoCamFolder*	folder;
-
-	folder = GNOCAM_FOLDER (user_data);
-	
-	if (!folder->priv->component) return (TRUE);
-
-	bonobo_ui_component_set_container (folder->priv->component, BONOBO_OBJREF (folder->priv->container));
 
 	return (FALSE);
 }
@@ -245,7 +229,9 @@ on_save_as_clicked (BonoboUIComponent* component, gpointer user_data, const gcha
 void
 gnocam_folder_show_menu (GnoCamFolder* folder)
 {
-	gtk_idle_add (set_container, folder);
+	g_return_if_fail (folder);
+
+	bonobo_ui_component_set_container (folder->priv->component, BONOBO_OBJREF (folder->priv->container));
 }
 
 void
@@ -315,6 +301,7 @@ gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bo
 	CORBA_exception_init (&ev);
         list = Bonobo_Storage_listContents (storage, directory, Bonobo_FIELD_TYPE, &ev);
         if (BONOBO_EX (&ev)) {
+		g_warning (_("Could not get list of files for '%s': %s!"), path, bonobo_exception_get_text (&ev));
 		CORBA_exception_free (&ev);
 		return (NULL);
 	}
@@ -344,6 +331,7 @@ gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bo
         }
 
 	/* Create menu */
+	new->priv->component = bonobo_ui_component_new (PACKAGE "Folder");
 	gtk_idle_add (create_menu, new);
 
 	return (new);

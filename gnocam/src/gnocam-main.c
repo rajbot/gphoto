@@ -22,7 +22,16 @@ struct _GnoCamMainPrivate {
 
 	GConfClient*		client;
 
+	GHashTable*		hash_table;
+
 	GtkWidget*		hpaned;
+	GtkWidget*		notebook;
+	GtkWidget*		shortcut_bar;
+
+	GnoCamCamera*		camera;
+
+	gchar*			url;
+	gint			item;
 };
 
 #define GNOCAM_MAIN_UI														\
@@ -69,6 +78,53 @@ static void	on_about_activate		(BonoboUIComponent* component, gpointer user_data
 /**********************/
 
 static gint
+create_camera (gpointer user_data)
+{
+	GnoCamMain*		m;
+	GnoCamCamera*		camera;
+	CORBA_Environment	ev;
+	GtkWidget*		widget;
+
+	m = GNOCAM_MAIN (user_data);
+	g_return_val_if_fail (m->priv->url, FALSE);
+
+        /* Get the camera */
+        CORBA_exception_init (&ev);
+        camera = gnocam_camera_new (m->priv->url, m->priv->container, GTK_WINDOW (m), m->priv->client, &ev);
+        if (BONOBO_EX (&ev)) {
+                gchar*  message;
+
+                message = g_strdup_printf (_("Could not display camera widget for camera '%s'!\n(%s)"), m->priv->url, bonobo_exception_get_text (&ev));
+                gnome_error_dialog_parented (message, GTK_WINDOW (m));
+                g_free (message);
+                CORBA_exception_free (&ev);
+		g_free (m->priv->url);
+		m->priv->url = NULL;
+                return (FALSE);
+        }
+        CORBA_exception_free (&ev);
+        g_return_val_if_fail (camera, FALSE);
+
+        /* Get the widget */
+        widget = gnocam_camera_get_widget (camera);
+        g_return_val_if_fail (widget, FALSE);
+        gtk_widget_show (widget);
+        gtk_widget_ref (widget);
+
+        /* Append the page, store the page number */
+        gtk_notebook_append_page (GTK_NOTEBOOK (m->priv->notebook), widget, NULL);
+        gtk_object_set_data (GTK_OBJECT (camera), "page", GINT_TO_POINTER (gtk_notebook_page_num (GTK_NOTEBOOK (m->priv->notebook), widget)));
+
+        g_hash_table_insert (m->priv->hash_table, g_strdup (m->priv->url), camera);
+	g_free (m->priv->url);
+	m->priv->url = NULL;
+
+	gtk_signal_emit_by_name (GTK_OBJECT (m->priv->shortcut_bar), "item_selected", NULL, 0, m->priv->item);
+
+	return (FALSE);
+}
+
+static gint
 create_menu (gpointer user_data)
 {
 	GnoCamMain*	m;
@@ -81,8 +137,6 @@ create_menu (gpointer user_data)
 	g_return_val_if_fail (user_data, FALSE);
 	m = GNOCAM_MAIN (user_data);
 
-	/* Create component */
-        m->priv->component = bonobo_ui_component_new (PACKAGE "main");
         bonobo_ui_component_set_container (m->priv->component, BONOBO_OBJREF (m->priv->container));
 	
         bonobo_ui_component_freeze (m->priv->component, NULL);
@@ -126,36 +180,31 @@ on_shortcut_bar_item_selected (EShortcutBar* shortcut_bar, GdkEvent* event, gint
 {
 	GnoCamMain*		m;
 	GnoCamCamera*		camera;
-        gchar*          	url;
-        gchar*          	name;
-        GtkWidget*      	widget;
-	CORBA_Environment	ev;
+        gchar*          	url = NULL;
+        gchar*          	name = NULL;
 
-	g_return_if_fail (m = GNOCAM_MAIN (user_data));
+	m = GNOCAM_MAIN (user_data);
 
         /* Get information about the item. */
         e_shortcut_model_get_item_info (shortcut_bar->model, group_num, item_num, &url, &name);
 	g_free (name);
 
-	CORBA_exception_init (&ev);
-	camera = gnocam_camera_new (url, m->priv->container, GTK_WINDOW (m), m->priv->client, &ev);
-	if (BONOBO_EX (&ev)) {
-		gchar*	message;
-
-		message = g_strdup_printf (_("Could not display camera widget for camera '%s'!\n(%s)"), url, bonobo_exception_get_text (&ev));
-		gnome_error_dialog_parented (message, GTK_WINDOW (m));
-		g_free (message);
-		g_free (url);
-		CORBA_exception_free (&ev);
+        camera = g_hash_table_lookup (m->priv->hash_table, url);
+        if (!camera) {
+		if (m->priv->url) g_free (m->priv->url);
+		m->priv->url = url;
+		m->priv->item = item_num;
+		gtk_idle_add (create_camera, m);
 		return;
-	}
+        }
 	g_free (url);
-	CORBA_exception_free (&ev);
-	g_return_if_fail (camera);
 
-	gtk_widget_show (widget = gnocam_camera_get_widget (camera));
-	gtk_container_remove (GTK_CONTAINER (m->priv->hpaned), E_PANED (m->priv->hpaned)->child2);
-	e_paned_pack2 (E_PANED (m->priv->hpaned), widget, TRUE, TRUE);
+	if (m->priv->camera) gnocam_camera_hide_menu (m->priv->camera);
+	m->priv->camera = camera;
+        gnocam_camera_show_menu (camera);
+
+        /* Display the (new) page */
+        gtk_notebook_set_page (GTK_NOTEBOOK (m->priv->notebook), GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (camera), "page")));
 }
 
 static void
@@ -192,6 +241,8 @@ gnocam_main_destroy (GtkObject* object)
 	gtk_object_unref (GTK_OBJECT (m->priv->client));
 	bonobo_object_unref (BONOBO_OBJECT (m->priv->component));
 	bonobo_object_unref (BONOBO_OBJECT (m->priv->container));
+
+	g_hash_table_destroy (m->priv->hash_table);
 	
 	g_free (m->priv);
 
@@ -218,7 +269,7 @@ gnocam_main_init (GnoCamMain* m)
 GnoCamMain*
 gnocam_main_new (GConfClient* client)
 {
-	GtkWidget*		widget;
+	GtkWidget*		label;
 	GnoCamMain*		new;
 	gint			position, w, h;
 
@@ -227,26 +278,34 @@ gnocam_main_new (GConfClient* client)
 	gtk_signal_connect (GTK_OBJECT (new), "size_request", GTK_SIGNAL_FUNC (on_window_size_request), new);
 	gtk_signal_connect (GTK_OBJECT (new), "destroy", GTK_SIGNAL_FUNC (gtk_main_quit), new);
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
+	new->priv->hash_table = g_hash_table_new (g_str_hash, g_str_equal);
 
 	/* Create the hpaned */
         gtk_widget_show (new->priv->hpaned = e_hpaned_new ());
 	gtk_signal_connect (GTK_OBJECT (new->priv->hpaned), "size_request", GTK_SIGNAL_FUNC (on_size_request), new);
         bonobo_window_set_contents (BONOBO_WINDOW (new), new->priv->hpaned);
 
-	/* Create label */
-	gtk_widget_show (widget = e_clipped_label_new (_("(No camera selected)")));
-	e_paned_add2 (E_PANED (new->priv->hpaned), widget);
+	/* Create the notebook */
+	gtk_widget_show (new->priv->notebook = gtk_notebook_new ());
+        gtk_notebook_set_show_border (GTK_NOTEBOOK (new->priv->notebook), FALSE);
+        gtk_notebook_set_show_tabs (GTK_NOTEBOOK (new->priv->notebook), FALSE);
+        e_paned_pack2 (E_PANED (new->priv->hpaned), new->priv->notebook, TRUE, FALSE);
+
+        /* Create label for empty page */
+        gtk_widget_show (label = e_clipped_label_new (_("(No camera selected)")));
+        gtk_notebook_append_page (GTK_NOTEBOOK (new->priv->notebook), label, NULL);
 
         /* Create the shortcut bar. */
-	gtk_widget_show (widget = gnocam_shortcut_bar_new ());
-        e_paned_add1 (E_PANED (new->priv->hpaned), widget);
-        gtk_signal_connect (GTK_OBJECT (widget), "item_selected", (GtkSignalFunc) on_shortcut_bar_item_selected, new);
+	gtk_widget_show (new->priv->shortcut_bar = gnocam_shortcut_bar_new ());
+        e_paned_add1 (E_PANED (new->priv->hpaned), new->priv->shortcut_bar);
+        gtk_signal_connect (GTK_OBJECT (new->priv->shortcut_bar), "item_selected", (GtkSignalFunc) on_shortcut_bar_item_selected, new);
 	
 	/* Create the container */
 	bonobo_object_ref (BONOBO_OBJECT (new->priv->container = bonobo_ui_container_new ()));
 	bonobo_ui_container_set_win (new->priv->container, BONOBO_WINDOW (new));
 
 	/* Create the menu */
+	new->priv->component = bonobo_ui_component_new (PACKAGE "main");
 	gtk_idle_add (create_menu, new);
 
 	/* Set the default settings */

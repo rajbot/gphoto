@@ -140,8 +140,6 @@ create_menu (gpointer user_data)
 	g_return_val_if_fail (user_data, FALSE);
 	camera = GNOCAM_CAMERA (user_data);
 
-	/* Create the component */
-	camera->priv->component = bonobo_ui_component_new (PACKAGE "Camera");
 	bonobo_ui_component_set_container (camera->priv->component, BONOBO_OBJREF (camera->priv->container));
 	
 	bonobo_ui_component_freeze (camera->priv->component, NULL);
@@ -593,6 +591,22 @@ gnocam_camera_get_widget (GnoCamCamera* camera)
 	return (camera->priv->widget);
 }
 
+void
+gnocam_camera_show_menu (GnoCamCamera* camera)
+{
+	g_return_if_fail (camera);
+
+	bonobo_ui_component_set_container (camera->priv->component, BONOBO_OBJREF (camera->priv->container));
+}
+
+void
+gnocam_camera_hide_menu (GnoCamCamera* camera)
+{
+	g_return_if_fail (camera);
+	
+	bonobo_ui_component_unset_container (camera->priv->component);
+}
+
 /*************************/
 /* Bonobo-X-Object stuff */
 /*************************/
@@ -686,6 +700,7 @@ gnocam_camera_new (const gchar* url, BonoboUIContainer* container, GtkWindow* pa
 	gtk_signal_connect (GTK_OBJECT (new->priv->storage_view), "file_selected", GTK_SIGNAL_FUNC (on_file_selected), new);
 
         /* Create the menu */
+	new->priv->component = bonobo_ui_component_new (PACKAGE "Camera");
 	gtk_idle_add (create_menu, new);
 
 	/* Select the selected file/folder */
@@ -709,7 +724,7 @@ gnocam_camera_destroy (GtkObject* object)
 	
 	camera = GNOCAM_CAMERA (object);
 
-	Bonobo_Storage_unref (camera->priv->storage, NULL);
+	bonobo_object_release_unref (camera->priv->storage, NULL);
 	bonobo_object_unref (BONOBO_OBJECT (camera->priv->component));
 	bonobo_object_unref (BONOBO_OBJECT (camera->priv->container));
 

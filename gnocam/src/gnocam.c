@@ -73,11 +73,14 @@ int main (int argc, char *argv[])
 	/* Redirect messages */
 	g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_MESSAGE | G_LOG_LEVEL_INFO, log_handler, widget);
 	
-	/* Do we already have a prefix stored in our preferences? */
+	/* Is this a first time run? */
 	if (!gconf_client_get_string (client, "/apps/" PACKAGE "/prefix", NULL)) {
 		
 		/* Set prefix to HOME by default. */
 		gconf_client_set_string (client, "/apps/" PACKAGE "/prefix", g_get_home_dir (), NULL);
+
+		/* Set view mode to preview by default */
+		gconf_client_set_bool (client, "/apps/" PACKAGE "/preview", TRUE, NULL);
 
 		/* Popup a welcome message. */
 		g_message (WELCOME);

@@ -8,6 +8,12 @@ AM_ACLOCAL_INCLUDE(macros)
 
 GNOME_INIT
 
+dnl ******************
+dnl Initialize libtool
+dnl ******************
+AM_DISABLE_STATIC
+AM_PROG_LIBTOOL
+
 AC_ISC_POSIX
 AC_PROG_CC
 AC_PROG_CXX
@@ -243,6 +249,7 @@ macros/Makefile
 po/Makefile.in
 src/Makefile
 src/ui/Makefile
+gnome-vfs-module/Makefile
 ])
 
 dnl *********************

@@ -1,4 +1,4 @@
-SUBDIRS = intl macros src po doc
+SUBDIRS = intl macros src po doc gnome-vfs-module
 
 EXTRA_DIST =\
  README\

@@ -42,7 +42,7 @@ preview_refresh (Camera* camera)
         if (gp_camera_capture (camera, file, &info) == GP_OK) {
 		if ((old_file = gtk_object_get_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview")), "file"))) gp_file_free (old_file);
 		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview")), "file", file);
-		update_pixmap (GTK_PIXMAP (glade_xml_get_widget (xml_preview, "app_preview_pixmap")), file);
+		pixmap_set (GTK_PIXMAP (glade_xml_get_widget (xml_preview, "app_preview_pixmap")), file);
         } else {
                 dialog_information (_("Could not get preview from camera '%s'!"), frontend_data->name);
                 gp_file_free (file);

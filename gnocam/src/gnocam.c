@@ -14,6 +14,7 @@
 #include "information.h"
 #include "frontend.h"
 #include "notification.h"
+#include "stock.h"
 
 /********************/
 /* Global Variables */
@@ -66,6 +67,9 @@ int main (int argc, char *argv[])
 		gconf_value_free (value);
 	} else gp_init (GP_DEBUG_NONE);
 	gp_frontend_register (gp_frontend_status, gp_frontend_progress, gp_frontend_message, gp_frontend_confirm, gp_frontend_prompt);
+
+	/* We borrow the zoom icons from eog. */
+	stock_init ();
 
 	/* Load the interface. */
 	if (!(xml = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "app")))

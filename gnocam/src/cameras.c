@@ -1,6 +1,8 @@
 /**
  * This file should be called utils.c or so.
- * I'll change the name some day. 
+ * I'll change the name some day.
+ * 
+ * Should this file be split up? 
  */
 
 #include <config.h>
@@ -28,7 +30,7 @@ extern GConfClient*	client;
 /* Prototypes */
 /**************/
 
-void on_drag_data_received                      (GtkWidget* widget, GdkDragContext*context, gint x, gint y, GtkSelectionData* selection_data, guint info, guint time);
+void on_drag_data_received                      (GtkWidget* widget, GdkDragContext* context, gint x, gint y, GtkSelectionData* selection_data, guint info, guint time);
 void on_camera_tree_file_drag_data_get          (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data);
 void on_camera_tree_folder_drag_data_get        (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data);
 
@@ -76,26 +78,6 @@ on_drag_data_received (GtkWidget *widget, GdkDragContext *context, gint x, gint 
 /*************/
 /* Functions */
 /*************/
-
-void
-camera_tree_folder_notebook_pages_remove (GtkTreeItem* folder)
-{
-	gint		i;
-	GtkTree*	tree;
-	GtkTreeItem*	item;
-	GtkWidget*	page;
-	GtkNotebook*	notebook;
-
-	g_assert (folder != NULL);
-	g_assert ((tree = GTK_TREE (folder->subtree)) != NULL);
-	g_assert ((notebook = GTK_NOTEBOOK (glade_xml_get_widget (xml, "notebook_files"))) != NULL);
-
-	for (i = g_list_length (tree->children) - 1; i >= 0; i--) {
-		item = GTK_TREE_ITEM (g_list_nth_data (tree->children, i));
-		if (item->subtree) camera_tree_folder_notebook_pages_remove (item);
-		if ((page = gtk_object_get_data (GTK_OBJECT (item), "page"))) gtk_notebook_remove_page (notebook, gtk_notebook_page_num (notebook, page));
-	}
-}
 
 void
 camera_tree_folder_clean (GtkTreeItem* folder)
@@ -186,10 +168,10 @@ camera_tree_folder_refresh (GtkTreeItem* folder)
 void
 camera_tree_item_remove (GtkTreeItem* item)
 {
+	GladeXML*		xml_page;
 	gchar*			path;
 	gchar*			filename;
 	GtkNotebook*		notebook;
-	GtkWidget*		page;
 	GtkWidget*		owner;
 	GtkTree*		tree;
 	Camera*			camera;
@@ -213,7 +195,7 @@ camera_tree_item_remove (GtkTreeItem* item)
 	}
 
         /* Do we have to remove a notebook page? */
-        if ((page = gtk_object_get_data (GTK_OBJECT (item), "page"))) gtk_notebook_remove_page (notebook, gtk_notebook_page_num (notebook, page));
+        if ((xml_page = gtk_object_get_data (GTK_OBJECT (item), "xml_page"))) page_remove (xml_page);
 
 	/* If it's the root folder, unref the camera. */
 	if (root) {
@@ -337,12 +319,100 @@ camera_tree_file_add (GtkTree* tree, Camera* camera, gchar* path, gchar* filenam
 	gtk_signal_connect (GTK_OBJECT (item), "drag_data_get", GTK_SIGNAL_FUNC (on_camera_tree_file_drag_data_get), NULL);
 }
 
-/**
- * camera_tree_update:
- *
- * This function adjusts the camera tree to reflect the current settings
- * as indicated in value.
- **/
+void
+pixmap_set (GtkPixmap* pm, CameraFile* file)
+{
+        GdkPixbuf*              pixbuf;
+        GdkPixbufLoader*        loader;
+        GdkPixmap*              pixmap;
+        GdkBitmap*              bitmap;
+	gfloat*			magnification;
+
+	g_assert (pm != NULL);
+	g_return_if_fail (pm != NULL);
+	g_assert ((loader = gdk_pixbuf_loader_new ()) != NULL);
+
+	/* Make sure the magnification is already there. */
+	if (!(magnification = gtk_object_get_data (GTK_OBJECT (pm), "magnification"))) {
+		magnification = g_new (gfloat, 1);
+		*magnification = 1.0;
+		 gtk_object_set_data (GTK_OBJECT (pm), "magnification", magnification);
+	}
+
+	/* Create the pixmap. */
+	if (gdk_pixbuf_loader_write (loader, file->data, file->size)) {
+		if ((pixbuf = gtk_object_get_data (GTK_OBJECT (pm), "pixbuf")) != NULL) gdk_pixbuf_unref (pixbuf);
+                gdk_pixbuf_loader_close (loader);
+                g_assert ((pixbuf = gdk_pixbuf_loader_get_pixbuf (loader)) != NULL);
+                gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 127);
+                gtk_pixmap_set (pm, pixmap, bitmap);
+		gtk_object_set_data (GTK_OBJECT (pm), "pixbuf", pixbuf);
+        } else dialog_information (_("Could not load image '%s'!"), file->name);
+
+	/* Scale it according to gconf's values. */
+	pixmap_rescale (pm, NULL);
+}
+
+void
+pixmap_rescale (GtkPixmap* pm, gfloat* magnification)
+{
+        GdkInterpType           interpolation = 0;
+        GConfValue*             value;
+        GdkPixbuf*              pixbuf;
+        GdkPixmap*              pixmap;
+        GdkBitmap*              bitmap;
+	gfloat*			magnification_absolute;
+
+	g_assert (pm != NULL);
+	if ((pixbuf = gtk_object_get_data (GTK_OBJECT (pm), "pixbuf"))) {
+
+		/* Magnification? */
+		g_assert ((magnification_absolute = gtk_object_get_data (GTK_OBJECT (pm), "magnification")) != NULL);
+		if (magnification) {
+			*magnification_absolute *= *magnification;
+		} else {
+	                value = gconf_client_get_without_default (client, "/apps/" PACKAGE "/magnification", NULL);
+	                if (value) {
+	                        g_assert (value->type = GCONF_VALUE_FLOAT);
+	                        *magnification_absolute = gconf_value_get_float (value);
+	                }
+		}
+		if (!((gint) (*magnification_absolute * gdk_pixbuf_get_width (pixbuf)) * (gint) (*magnification_absolute * gdk_pixbuf_get_height (pixbuf)))) { 
+			dialog_information (_("Can't scale down to zero!"));
+			return;
+		}
+
+                /* Interpolation? */
+                value = gconf_client_get_without_default (client, "/apps/" PACKAGE "/interpolation", NULL);
+                if (value) {
+                        g_assert (value->type = GCONF_VALUE_INT);
+                        switch (gconf_value_get_int (value)) {
+                        case 0:
+                                interpolation = GDK_INTERP_NEAREST;
+                                break;
+                        case 1:
+                                interpolation = GDK_INTERP_TILES;
+                                break;
+                        case 2:
+                                interpolation = GDK_INTERP_BILINEAR;
+                                break;
+                        case 3:
+                                interpolation = GDK_INTERP_HYPER;
+                                break;
+                        default:
+                                g_assert_not_reached ();
+                        }
+                } else interpolation = GDK_INTERP_BILINEAR;
+
+                gdk_pixbuf_render_pixmap_and_mask (gdk_pixbuf_scale_simple (
+                        pixbuf,
+                        *magnification_absolute * gdk_pixbuf_get_width (pixbuf),
+                        *magnification_absolute * gdk_pixbuf_get_height (pixbuf),
+                        interpolation), &pixmap, &bitmap, 127);
+                gtk_pixmap_set (pm, pixmap, bitmap);
+	}
+}
+
 void
 camera_tree_update (GtkTree* tree, GConfValue* value)
 {
@@ -422,76 +492,22 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
 }
 
 void
-update_pixmap (GtkPixmap* pm, CameraFile* file)
+camera_tree_rescale_pixmaps (GtkTree* tree)
 {
-	GdkInterpType		interpolation = 0;
-	gfloat			magnification;
-	GConfValue*		value;
-        GdkPixbuf*              pixbuf;
-        GdkPixbufLoader*        loader;
-        GdkPixmap*              pixmap;
-        GdkBitmap*              bitmap;
-
-	g_assert (file != NULL);
-	g_assert (pm != NULL);
-
-        g_assert ((loader = gdk_pixbuf_loader_new ()) != NULL);
-        if (gdk_pixbuf_loader_write (loader, file->data, file->size)) {
-                gdk_pixbuf_loader_close (loader);
-                g_assert ((pixbuf = gdk_pixbuf_loader_get_pixbuf (loader)) != NULL);
-
-                /* Magnification? */
-                value = gconf_client_get_without_default (client, "/apps/" PACKAGE "/magnification", NULL);
-                if (value) {
-                        g_assert (value->type = GCONF_VALUE_FLOAT);
-                        magnification = gconf_value_get_float (value);
-                } else magnification = 1;
-
-                /* Interpolation? */
-                value = gconf_client_get_without_default (client, "/apps/" PACKAGE "/interpolation", NULL);
-                if (value) {
-                        g_assert (value->type = GCONF_VALUE_INT);
-                        switch (gconf_value_get_int (value)) {
-                        case 0:
-                                interpolation = GDK_INTERP_NEAREST;
-                                break;
-                        case 1:
-                                interpolation = GDK_INTERP_TILES;
-                                break;
-                        case 2:
-                                interpolation = GDK_INTERP_BILINEAR;
-                                break;
-                        case 3:
-                                interpolation = GDK_INTERP_HYPER;
-                                break;
-                        default:
-                                g_assert_not_reached ();
-                        }
-                } else interpolation = GDK_INTERP_BILINEAR;
-                gdk_pixbuf_render_pixmap_and_mask (gdk_pixbuf_scale_simple (
-                        pixbuf,
-                        magnification * gdk_pixbuf_get_width (pixbuf),
-                        magnification * gdk_pixbuf_get_height (pixbuf),
-                        interpolation), &pixmap, &bitmap, 127);
-                gdk_pixbuf_unref (pixbuf);
-                gtk_pixmap_set (pm, pixmap, bitmap);
-        } else dialog_information (_("Could not load image '%s'!"), file->name);
-}
-
-void
-camera_tree_update_pixmaps (GtkTree* tree)
-{
+	GladeXML*	xml_page;
         GtkTreeItem*    item;
         gint            i;
-	GtkPixmap*	pixmap;
 
 	g_assert (tree != NULL);
 
         for (i = 0; i < g_list_length (tree->children); i++) {
                 item = GTK_TREE_ITEM (g_list_nth_data (tree->children, i));
-                if (item->subtree) camera_tree_update_pixmaps (GTK_TREE (item->subtree));
-                else if ((pixmap = gtk_object_get_data (GTK_OBJECT (item), "pixmap"))) 
-			update_pixmap (pixmap, gtk_object_get_data (GTK_OBJECT (item), "preview"));
+                if (item->subtree) camera_tree_rescale_pixmaps (GTK_TREE (item->subtree));
+                else if (gtk_object_get_data (GTK_OBJECT (item), "filename")) {
+			if ((xml_page = gtk_object_get_data (GTK_OBJECT (item), "xml_page"))) {
+				pixmap_rescale (GTK_PIXMAP (glade_xml_get_widget (xml_page, "pixmap_preview")), NULL);
+			}
+		}
         }
 } 
 
@@ -516,4 +532,23 @@ app_clean_up (void)
 		camera_tree_item_remove (g_list_nth_data (tree->children, i));
 	}
 }
+
+void
+page_remove (GladeXML* xml_page)
+{
+	GtkWidget*	page;
+	GtkNotebook*	notebook;
+	GdkPixbuf*	pixbuf;
+
+	g_assert (xml_page != NULL);
+	g_assert ((notebook = GTK_NOTEBOOK (glade_xml_get_widget (xml, "notebook_files"))) != NULL);
+
+	if (!(page = glade_xml_get_widget (xml_page, "table_camera"))) 
+		if (!(page = glade_xml_get_widget (xml_page, "table_folder"))) 
+			if (!(page = glade_xml_get_widget (xml_page, "table_file"))) 
+				g_assert_not_reached ();
+	if ((pixbuf = gtk_object_get_data (GTK_OBJECT (glade_xml_get_widget (xml_page, "pixmap_preview")), "pixbuf"))) gdk_pixbuf_unref (pixbuf);
+        gtk_notebook_remove_page (notebook, gtk_notebook_page_num (notebook, page));
+}
+
 

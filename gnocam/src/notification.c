@@ -45,7 +45,7 @@ on_preview_setup_changed (GConfClient* client, guint notify_id, GConfEntry* entr
 	g_assert ((tree = GTK_TREE (glade_xml_get_widget (xml, "tree_cameras"))) != NULL);
 
 	/* Redraw the pixmaps in the notebook. */
-        camera_tree_update_pixmaps (GTK_TREE (glade_xml_get_widget (xml, "tree_cameras")));
+        camera_tree_rescale_pixmaps (GTK_TREE (glade_xml_get_widget (xml, "tree_cameras")));
 
 	/* Redraw the pixmaps in the preview apps (if any). */
 	for (i = 0; i < g_list_length (tree->children); i++) {
@@ -54,7 +54,7 @@ on_preview_setup_changed (GConfClient* client, guint notify_id, GConfEntry* entr
 		if (frontend_data->xml_preview) {
 			g_assert ((pixmap = GTK_PIXMAP (glade_xml_get_widget (frontend_data->xml_preview, "app_preview_pixmap"))) != NULL);
 			if ((file = gtk_object_get_data (GTK_OBJECT (glade_xml_get_widget (frontend_data->xml_preview, "app_preview")), "file")))
-				update_pixmap (pixmap, file);
+				pixmap_rescale (pixmap, NULL);
 		}
 	}
 }

@@ -17,10 +17,12 @@
 		<item value="IDL:Bonobo/Control:1.0"/>
 		<item value="IDL:Bonobo/Unknown:1.0"/>
 	</oaf_attribute>
-	<oaf_attribute name="name" type="string" _value="Camera Applet"/>
-	<oaf_attribute name="description" type="string" _value="Camera Applet"/>
-	<oaf_attribute name="panel:category" type="string" _value="Utility"/>
-	<oaf_attribute name="panel:icon" type="string" value="@DATADIR@/pixmaps/gnocam-camera1.png"/>
+	<oaf_attribute name="name" type="string" _value="Camera List"/>
+	<oaf_attribute name="description" type="string"
+			_value="Quick access to digital cameras"/>
+	<oaf_attribute name="panel:category" type="string" _value="Multimedia"/>
+	<oaf_attribute name="panel:icon" type="string"
+		value="@DATADIR@/pixmaps/@PACKAGE@/gnocam-camera1.png"/>
 
 </oaf_server>
 

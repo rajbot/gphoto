@@ -200,38 +200,40 @@ notify_func (GConfClient *client, guint cnxn_id, GConfEntry *entry,
 	/* Which setting changed? */
 	s = g_basename (gconf_entry_get_key (entry));
 	if (!entry->value) {
-		if (!gnocam_capplet_get_iter (c, &iter, s)) return;
-		gtk_list_store_remove (c->priv->s, &iter);
-		ch = g_hash_table_lookup (c->priv->h, s);
-		if (ch) gtk_object_destroy (GTK_OBJECT (ch));
+	    if (!gnocam_capplet_get_iter (c, &iter, s)) return;
+	    gtk_list_store_remove (c->priv->s, &iter);
+	    ch = g_hash_table_lookup (c->priv->h, s);
+	    if (ch) gtk_object_destroy (GTK_OBJECT (ch));
 	} else {
-		id = g_strdup (entry->key);
-		id[strlen (id) - strlen (g_basename (id)) - 1] = '\0';
-		if (!gnocam_capplet_get_iter (c, &iter, id)) {
-			gtk_list_store_append (c->priv->s, &iter);
-			gtk_list_store_set (c->priv->s, &iter, COL_ID, id,
-					    COL_IS_EDITABLE, TRUE, -1);
-		}
-		if (!strcmp (s, "name")) {
-			name = gconf_client_get_string (c->priv->c,
-					entry->key, NULL);
-			gtk_list_store_set (c->priv->s, &iter,
-					    COL_NAME, name, -1);
-			g_free (name); g_free (id);
-			gtk_tree_view_columns_autosize (c->priv->tv);
-			return;
-		}
-		ch = g_hash_table_lookup (c->priv->h, id);
-		g_free (id);
-		if (!ch) return;
+	    id = g_strdup (entry->key);
+	    id[strlen (id) - strlen (g_basename (id)) - 1] = '\0';
+	    if (!gnocam_capplet_get_iter (c, &iter, id)) {
+		gtk_list_store_append (c->priv->s, &iter);
+		gtk_list_store_set (c->priv->s, &iter, COL_ID, id,
+				    COL_IS_EDITABLE, TRUE, -1);
+	    }
+	    if (!strcmp (s, "name")) {
+		name = gconf_client_get_string (c->priv->c, entry->key, NULL);
+		gtk_list_store_set (c->priv->s, &iter, COL_NAME, name, -1);
+		g_free (name); g_free (id);
+		gtk_tree_view_columns_autosize (c->priv->tv);
+		return;
+	    }
+	    ch = g_hash_table_lookup (c->priv->h, id);
+	    g_free (id);
+	    if (!ch) return;
+	    if (!strcmp (s, "manufacturer")) {
 		t = gconf_client_get_string (c->priv->c, entry->key, NULL);
-		if (!strcmp (s, "manufacturer"))
-			gnocam_chooser_set_manufacturer (ch, t);
-		else if (!strcmp (s, "model"))
-			gnocam_chooser_set_model (ch, t);
-		else if (!strcmp (s, "port"))
-			gnocam_chooser_set_port (ch, t);
-		g_free (t);
+		gnocam_chooser_set_manufacturer (ch, t); g_free (t);
+	    } else if (!strcmp (s, "model")) {
+		t = gconf_client_get_string (c->priv->c, entry->key, NULL);
+		gnocam_chooser_set_model (ch, t); g_free (t);
+	    } else if (!strcmp (s, "port")) {
+		t = gconf_client_get_string (c->priv->c, entry->key, NULL);
+		gnocam_chooser_set_port (ch, t); g_free (t);
+	    } else if (!strcmp (s, "connect_auto"))
+		gnocam_chooser_set_connect_auto (ch,
+			gconf_client_get_bool (c->priv->c, entry->key, NULL));
 	}
 }
 
@@ -263,6 +265,8 @@ gnocam_capplet_delete (GnocamCapplet *c, GtkTreeIter *iter)
 	gconf_client_unset (c->priv->c, key, NULL); g_free (key);
 	key = g_strdup_printf ("%s/port", id);
 	gconf_client_unset (c->priv->c, key, NULL); g_free (key);
+	key = g_strdup_printf ("%s/connect_auto", id);
+	gconf_client_unset (c->priv->c, key, NULL); g_free (key);
 	gconf_client_unset (c->priv->c, id, NULL);
 	g_free (id);
 	gconf_client_suggest_sync (c->priv->c, NULL);
@@ -273,6 +277,7 @@ on_changed (GnocamChooser *ch, GnocamCapplet *c)
 {
 	gchar *key;
 	const gchar *id, *s;
+	gboolean b;
 
 	g_return_if_fail (GNOCAM_IS_CAPPLET (c));
 	g_return_if_fail (GNOCAM_IS_CHOOSER (ch));
@@ -298,6 +303,10 @@ on_changed (GnocamChooser *ch, GnocamCapplet *c)
 		gconf_client_set_string (c->priv->c, key, s, NULL);
 		g_free (key);
 	}
+	b = gnocam_chooser_get_connect_auto (ch);
+	key = g_strdup_printf ("%s/connect_auto", id);
+	gconf_client_set_bool (c->priv->c, key, b, NULL);
+	g_free (key);
 }
 
 static void
@@ -318,7 +327,7 @@ gnocam_capplet_edit (GnocamCapplet *c, GtkTreeIter *iter)
 	GValue v = {0, };
 	GtkWidget *d;
 	GnocamChooser *ch;
-	gchar *key, *id;
+	gchar *key, *id, *s;
 
 	g_return_if_fail (GNOCAM_IS_CAPPLET (c));
 
@@ -337,17 +346,17 @@ gnocam_capplet_edit (GnocamCapplet *c, GtkTreeIter *iter)
 				(GDestroyNotify) g_free);
 	g_hash_table_insert (c->priv->h, g_strdup (id), ch);
 	key = g_strdup_printf ("%s/manufacturer", id);
-	gnocam_chooser_set_manufacturer (ch,
-		gconf_client_get_string (c->priv->c, key, NULL));
-	g_free (key);
+	s = gconf_client_get_string (c->priv->c, key, NULL);
+	gnocam_chooser_set_manufacturer (ch, s); g_free (s); g_free (key);
 	key = g_strdup_printf ("%s/model", id);
-	gnocam_chooser_set_model (ch,
-		 gconf_client_get_string (c->priv->c, key, NULL));
-	g_free (key);
+	s = gconf_client_get_string (c->priv->c, key, NULL);
+	gnocam_chooser_set_model (ch, s); g_free (s); g_free (key);
 	key = g_strdup_printf ("%s/port", id);
-	gnocam_chooser_set_port (ch,
-		 gconf_client_get_string (c->priv->c, key, NULL));
-	g_free (key);
+	s = gconf_client_get_string (c->priv->c, key, NULL);
+	gnocam_chooser_set_port (ch, s); g_free (s); g_free (key);
+	key = g_strdup_printf ("%s/connect_auto", id);
+	gnocam_chooser_set_connect_auto (ch,
+		gconf_client_get_bool (c->priv->c, key, NULL)); g_free (key);
 }
 
 static void
@@ -517,7 +526,8 @@ gnocam_capplet_new (GConfClient *client)
 	gtk_widget_show (hbox = gtk_hbox_new (FALSE, 5));
 	gtk_box_set_spacing (GTK_BOX (hbox), 5);
 	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (c)->vbox), hbox,
-			    TRUE, TRUE, 10);
+			    TRUE, TRUE, 0);
+	gtk_container_set_border_width (GTK_CONTAINER (hbox), 5);
 
 	/* Create the logo */
 	image = gtk_image_new_from_file (IMAGEDIR "/gnocam-camera2.png");

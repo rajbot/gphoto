@@ -1,6 +1,6 @@
 INCLUDES = 					\
  -I$(top_srcdir)				\
- -DIMAGEDIR=\"$(prefix)/share/pixmaps\"		\
+ -DIMAGEDIR=\"$(datadir)/pixmaps/$(PACKAGE)/\"	\
  -DGNOME_LOCALEDIR=\""$(datadir)/locale"\"	\
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
  $(GNOCAM_CAPPLET_CFLAGS)

@@ -1,3 +1,8 @@
+2002-10-25  Lutz Müller <lutz@users.sourceforge.net>
+
+	* gphoto2-ftp/gphoto2-ftp-[list,retr,cwd].c: Implement capturing
+	  previews.
+
 2002-10-24  Lutz Müller <lutz@users.sourceforge.net>
 
 	* gphoto2-ftp/gphoto2-ftp-list.c: Support capturing images.

@@ -22,6 +22,9 @@
 #include "gphoto2-ftp-retr.h"
 
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
 #include <syslog.h>
 
 #include <gphoto2-camera.h>
@@ -39,11 +42,12 @@ int
 gf_retr (GFParams *params, const char *filename)
 {
 	CameraFile *file = NULL;
-	int r;
+	int r = GP_OK;
 	GFConn *conn;
-	const char *data;
+	const char *data, *name;
 	unsigned long int size;
-	unsigned int i;
+	int i;
+	char *folder = NULL;
 
 	if (!filename || !*filename) {
 		fprintf (stdout, "501 No file name.\r\n");
@@ -51,9 +55,49 @@ gf_retr (GFParams *params, const char *filename)
 		return (0);
 	}
 
-	gp_file_new (&file);
-	r = gp_camera_file_get (params->camera, params->folder, filename,
-				GP_FILE_TYPE_NORMAL, file, NULL);
+	for (i = strlen (filename) - 1; i >= 0; i--)
+		if (filename[i] == '/')
+			break;
+
+	folder = malloc (strlen (params->folder) + 1 + strlen (filename) + 1);
+	if (!folder) {
+		fprintf (stdout, "501 Not enough memory.\r\n");
+		fflush (stdout);
+		return (0);
+	}
+	memset (folder, 0, strlen (params->folder) + 1 +
+			   strlen (filename) + 1);
+
+	if (i >= 0) {
+		if (filename[0] == '/')
+			strncpy (folder, filename, i + 1);
+		else {
+			strcpy (folder, params->folder);
+			if (folder[strlen (folder) - 1] != '/')
+				strcat (folder, "/");
+			strncat (folder, filename, i);
+		}
+		if (folder[strlen (folder) - 1] == '/')
+			folder[strlen (folder) - 1] = '\0';
+	} else
+		strcpy (folder, params->folder);
+
+	filename += i + 1;
+
+	if (params->file)
+		gp_file_get_name (params->file, &name);
+
+	if (name && (!strcmp (folder, "/capture-preview") &&
+		     !strcmp (filename, name))) {
+		file = params->file;
+		gp_file_ref (params->file);
+	} else {
+		gp_file_new (&file);
+		r = gp_camera_file_get (params->camera, folder, filename,
+					GP_FILE_TYPE_NORMAL, file, NULL);
+	}
+
+	free (folder);
 	if (r < 0) {
 		gp_file_unref (file);
 		return (r);

@@ -24,6 +24,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <syslog.h>
 
@@ -120,6 +121,8 @@ gf_list (GFParams *params, const char *args)
 	unsigned int n = 0;
 	int r;
 	CameraFilePath path;
+	const char *name;
+	char *folder = NULL;
 
 	/* Process options. */
 	while (args && (*args == '-')) {
@@ -172,7 +175,22 @@ gf_list (GFParams *params, const char *args)
 	if (!conn)
 		return (-1);
 
-	if (args && !strcmp (args, "/capture-image")) {
+	folder = malloc (strlen (params->folder) + 1 +
+			 (args ? strlen (args) : 0) + 1);
+	if (folder) {
+		if (args && args[0] == '/')
+			strcpy (folder, args);
+		else {
+			strcpy (folder, params->folder);
+			if (args && strlen (args)) {
+				if (folder[strlen (folder) - 1] != '/')
+					strcat (folder, "/");
+				strcat (folder, args);
+			}
+		}
+	}
+
+	if (folder && !strcmp (folder, "/capture-image")) {
 		r = gp_camera_capture (params->camera, GP_CAPTURE_IMAGE,
 				       &path, NULL);
 		if (r < 0) {
@@ -187,8 +205,26 @@ gf_list (GFParams *params, const char *args)
 			gf_conn_write (conn, "\r\n", 2);
 			n = 1;
 		}
+	} else if (folder && !strcmp (folder, "/capture-preview")) {
+		if (params->file) {
+			gp_file_unref (params->file);
+			params->file = NULL;
+		}
+		gp_file_new (&params->file);
+		r = gp_camera_capture_preview (params->camera, params->file,
+					       NULL);
+		if (r < 0) {
+			syslog (LOG_INFO, "Could not capture preview: '%s'",
+				gp_result_as_string (r));
+		} else {
+			gp_file_get_name (params->file, &name);
+			gf_conn_write (conn, name, strlen (name));
+			gf_conn_write (conn, "\r\n", 2);
+			n = 1;
+		}
 	} else
-		n = gf_list_folder (params, options, conn, NULL);
+		n = gf_list_folder (params, options, conn, folder);
+	free (folder);
 
 	gf_conn_close (conn);
 

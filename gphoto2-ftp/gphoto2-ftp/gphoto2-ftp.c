@@ -200,6 +200,7 @@ ExitError:
 	gp_abilities_list_free (params.al);
 	gp_port_info_list_free (params.il);
 	gp_camera_unref (params.camera);
+	gp_file_unref (params.file);
 	free (params.camera);
 	syslog (LOG_INFO, "Error: 1");
 	return (1);
@@ -208,6 +209,7 @@ ExitOk:
 	gp_abilities_list_free (params.al);
 	gp_port_info_list_free (params.il);
 	gp_camera_unref (params.camera);
+	gp_file_unref (params.file);
 	free (params.camera);
 	return (0);
 }

@@ -98,8 +98,10 @@ gf_cwd (GFParams *params, const char *path)
 	if ((strlen (new_path) > 1) && new_path[strlen (new_path) - 1] == '/')
 		new_path[strlen (new_path) - 1] = '\0';
 
-	if (gp_camera_folder_list_files (params->camera, new_path,
-					 &list, NULL) < 0) {
+	if (strcmp (new_path, "/capture-image") &&
+	    strcmp (new_path, "/capture-preview") &&
+	    (gp_camera_folder_list_files (params->camera, new_path,
+					  &list, NULL) < 0)) {
 		fprintf (stdout, "530 Can not change directory to "
 			 "'%s'.\r\n", new_path);
 		fflush (stdout);

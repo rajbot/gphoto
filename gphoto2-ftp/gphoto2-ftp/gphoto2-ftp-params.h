@@ -38,6 +38,7 @@ struct _GFParams {
 	Camera *camera;
 	CameraAbilitiesList *al;
 	GPPortInfoList *il;
+	CameraFile *file;
 	char *folder;
 
 	int idletime;

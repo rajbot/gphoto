@@ -1,0 +1,48 @@
+gPhoto 0.4.2
+
+December 05, 1999
+
+For immidiate release.
+
+The gPhoto project members announce the release of gPhoto 0.4.2, 
+the GNU digital camera application, on December 5th 1999.
+
+gPhoto is a digital camera software application for free Unix-like
+systems such as Debian GNU/Linux and RedHat Linux, written by
+Scott Fritzinger <scottf@scs.unr.edu> -- with assistance from
+developers around the world. It is freely available and distributed on
+the terms of the GNU General Public License. The GNU GPL is
+intended to guarantee freedom to share and change software such
+as gPhoto--to make sure it is free for all its users.
+
+gPhoto 0.4.2 ships with 16 different camera libraries and supports 90+
+different digital still camera models, from Agfa, Apple, Canon, Casio,
+Chinon, Epson, Fuji, Hewlett Packard, Kodak, Konica, Minolta, Mustek,
+Nikon, Olympus, Panasonic, Philips, Polaroid, Ricoh, Sanyo, and Sony.
+Check http://www.gphoto.org/devel.html for a list of supported camera 
+models.
+
+Casio, Kodak, Minolta, Mustek, and Konica provide free, open camera
+communication specifications. The gPhoto developers encourage other
+vendors to also release specs to their latest and upcoming digital
+camera models. It is always a great help for potential camera
+customers to ask companies if they support gPhoto before you invest in
+a camera.
+
+The file ``CONTACTS'' in the distribution contains a list of companies
+that you can write to asking for GPL drivers or camera specifications.
+
+Availability:
+  * Source: ftp://ftp.gphoto.org/projects/gphoto/pub/tar/stable/gphoto-0.4.2.tar.gz
+  * RPM i386: ftp://ftp.gphoto.org/projects/gphoto/pub/rpm/i386/gphoto-0.4.2-1.i386.rpm
+  * SRPM: ftp://ftp.gphoto.org/projects/gphoto/pub/rpm/SRPMS/gphoto-0.4.2-1.src.rpm
+ 
+Requirements
+  * X11 Window system: [20]ftp://ftp.xfree86.org/pub/XFree86/3.3.5/
+  * GNU sed: [21]ftp://gnudist.gnu.org/pub/gnu/sed/sed-3.02.tar.gz
+  * GTK+ 1.2+: [22]ftp://ftp.gtk.org/pub/gtk/v1.2/gtk+-1.2.5.tar.gz
+  * glib 1.2+: [23]ftp://ftp.gtk.org/pub/gtk/v1.2/glib-1.2.5.tar.gz
+  * imlib 1.8+: ftp://www.rasterman.com/pub/enlightenment/enlightenment/imlib-1.8.1.tar.gz
+       
+Check the gPhoto project's web site at http://www.gphoto.org for more
+details on the effort.

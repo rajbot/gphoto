@@ -17,6 +17,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
+
 #include "config.h"
 #include "gphoto.h"
 #include "main.h"
@@ -29,9 +33,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <stdlib.h>
-#ifdef HAVE_SYS_PARAM_H
-#include <sys/param.h>
-#endif
 
 #include "post_processing_on.xpm"
 #include "post_processing_off.xpm"
@@ -96,9 +97,7 @@ void set_camera (char *model) {
 		    if (!command_line_mode)
 			gtk_label_set(GTK_LABEL(library_name),
 				      cameras[i].name);
-		    else 
-			printf("set_camera: %s\n", cameras[i].name);
-		    
+
 		    Camera = cameras[i].library;
 
 		    if ((*Camera->initialize)() != 0) {

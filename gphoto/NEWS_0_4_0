@@ -1,0 +1,147 @@
+gPhoto 0.4.0 NEWS -- new libraries and important changes.  Oct 04 1999
+
+Please report bugs to the Bug Tracking System (http://bugs.gnome.org)
+Mail source diff patches and comments to: <gphoto-devel@gphoto.org>
+
+
+AVAILABILITY
+
+* ftp://ftp.gphoto.org/projects/gphoto/pub/tar/stable/gphoto-0.4.0.tar.gz
+
+i386/src RPMs (built on RedHat 6.0) of 0.4.0 are also available:
+
+* ftp://ftp.gphoto.org/projects/gphoto/pub/rpm/i386/gphoto-0.4.0-1.i386.rpm
+* ftp://ftp.gphoto.org/projects/gphoto/pub/rpm/SRPMS/gphoto-0.4.0-1.src.rpm
+
+'slink' packages (for the i386, m68k, powerpc and alpha architectures) for
+gphoto-0.4.0 will soon be available from a local Debian GNU/Linux mirror.
+
+
+REQUIREMENTS
+
+* X11 Window system: ftp://ftp.xfree86.org/pub/XFree86/3.3.5/
+* GNU sed: ftp://gnudist.gnu.org/pub/gnu/sed/sed-3.02.tar.gz
+* GTK+ 1.2+: ftp://ftp.gtk.org/pub/gtk/v1.2/gtk+-1.2.5.tar.gz
+* glib 1.2+: ftp://ftp.gtk.org/pub/gtk/v1.2/glib-1.2.5.tar.gz
+* imlib 1.8+: ftp://www.rasterman.com/pub/enlightenment/enlightenment/imlib-1.8.1.tar.gz
+
+
+NEWS
+
+* Canon PowerShot A5 support (Oct 03 1999)
+
+Ole W. Saastad <o.w.saastad@kjemi.uio.no>
+has done some additions to the Canon A50 
+library, for Canon PowerShot A5 support.
+
+
+* Sony DSC 55E still library (Oct 02 1999)
+
+Mark Davies <mdavies@dial.pipex.com> has written a 
+Sony DSC 55E still library.
+
+
+* Konica QM 100/200 library and FreeBSD/Linux patches (Oct 02 1999)
+
+Toshiki Fujisawa <gphoto@fujisaw.gr.jp> from Development Dept. Camera
+& Digital Imaging Division at Konica Corporation has released free 
+sample source code for Q-M100/Q-M200 under the GPL.
+
+See http://www.konica.co.jp/qscan/open-source-en.html for details.
+
+Mr. Fujisawa also submitted a patch that makes the latest gPhoto 
+release compile on FreeBSD 3.2.  Instructions for FreeBSD-3.2R:
+
+   # cd xxx/packages-3.2-release/All
+   # pkg_add gmake-3.77.tgz
+   # pkg_add automake-1.4.tgz
+   # pkg_add autoconf-2.13.tgz
+   # pkg_add jpeg-6b
+   # pkg_add glib-1.2.3
+   # pkg_add gtk-1.2.3
+   # pkg_add imlib-1.9.4
+   # ln -s /dev/cuaa0 /dev/ttyS0
+   # chmod 666 /dev/cuaa0
+
+
+* Mustek MDC 800 driver (Sept 28, 1999)
+
+Pedro Miguel Caria <pmiguel@maquina.com> and Jose Gabriel Marcelino
+<gabriel@maquina.com> have written a gPhoto driver for the Mustek 
+MDC 800 digital camera.  The base code was done in a few hours and 
+gphoto integration was done in 2 days. You get to see the results 
+right away.
+
+* Canon A50 driver (Aug 29, 1999)
+
+Despite Canon Inc's lack of co-operation on releasing specifications,
+we're happy to announce that this release has a free Canon A50 driver.
+
+Werner Almesberger <almesber@lrc.di.epfl.ch> reports that it's the
+work of Wolfgang Reissnegger and himself.  Most of the details were
+found by staring at Ray Newman's A5 traces. Also, the analysis of the
+PS350 protocol by Anne Bezemer was quite helpful for understanding the
+overall design.  (Ole W. Saastad <Ole.W.Saastad@chem.sintef.no> works
+on gPhoto support for the Canon PowerShot A5, based on this library.)
+
+
+* Kodak DC240 serial/USB driver (Aug 27, 1999)
+
+Randy D. Scott <scottr@wwa.com> has implemented a Kodak DC240 
+library based on open specifications from Eastman Kodak, Inc.
+
+David Brownell <david-b@pacbell.net> has got gPhoto and Linux 2.3
+kernel support talking to his DC-240 over USB.   You'll need a new
+driver in your Linux kernel. (2.3 development.  2.3.14 works, but
+grab the latest from ftp://ftp.kernel.org/pub/linux/kernel/v2.3/ )
+
+
+CAMERA SUPPORT
+
+gPhoto 0.4.0 ships with 16 different camera libraries and supports 80+
+different digital still camera models, from Agfa, Apple, Canon, Casio,
+Chinon, Epson, Fuji, Hewlett Packard, Kodak, Konica, Minolta, Mustek, 
+Nikon, Olympus, Panasonic, Philips, Polaroid, Ricoh, Sanyo, and Sony.
+Check http://www.gphoto.org/cameras.php3 for a list of camera models.
+
+
+VENDOR SUPPORT
+
+Casio, Kodak, Minolta, Mustek, and Konica provide free, open camera
+communication specifications.  The gPhoto developers encourage other
+vendors to also release specs to their latest digital camera models.
+
+It is always a great help for potential camera customers to ask
+companies if they support gPhoto before you invest in a camera.
+
+Many companies don't have time to look at the issues involved unless 
+there is an financial incentive to do so.  The more open we can make
+them, the better gPhoto can be and the more enjoyment you'll get from 
+your digital camera.
+
+The file ``CONTACTS'' in the distribution contains a list of companies
+that you can write to asking for GPL drivers or camera specifications.
+
+
+MAILINGLISTS
+
+<gphoto-devel@gphoto.org>
+  is the developer mailinglist, with bug reports, camera
+  reports, etc.  If you would like to get involved in
+  gPhoto development, then you may want to read it.
+  Subscribe at http://lists.styx.net/mailman/listinfo/gphoto-devel/
+
+<gphoto-kodak@gphoto.org>
+  is a list for gPhoto Kodak library discussion. 
+  Subscribe at http://lists.styx.net/mailman/listinfo/gphoto-kodak/
+
+<gphoto@gphoto.org >
+  is a general list where gPhoto user issues are discussed, 
+  and announcements are posted by the gPhoto contributors.
+  Subscribe at http://lists.styx.net/mailman/listinfo/gphoto/ 
+
+Check http://www.gphoto.org/ for more details on the gPhoto effort.
+
+
+Happy shooting,
+The gPhoto team

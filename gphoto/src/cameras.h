@@ -12,6 +12,7 @@ extern struct _Camera kodak;
 extern struct _Camera mustek_mdc800;
 extern struct _Camera ricoh_300z;
 extern struct _Camera olympus;
+extern struct _Camera samsung800k;
 extern struct _Camera sony_dscf1;
 extern struct _Camera sony_dscf55;
 extern struct _Camera sony_msac_sr1;
@@ -118,6 +119,7 @@ struct Model cameras[] = {
 	{"Ricoh RDC-4300", &philips},
 	{"Ricoh RDC-5000", &philips},
 	{"Samsung Kenox SSC-350N", &fuji},
+	{"Samsung 800K", &samsung800k},
 	{"Sanyo VPC-G210", &olympus},
 	{"Sanyo VPC-G200", &olympus},
 	{"Sanyo VPC-G250", &olympus},

@@ -1,0 +1,216 @@
+********NOTE***********************************************************
+This document is outdated. please check the libgpio/ directory, and the
+gpio.h file, along with the example test.c file for the new specs and
+API.
+		-Scott
+***********************************************************************
+
+
+gPhoto I/O library				 (Rev. 3 2000-01-18)
+--------------------------------------------------------------------
+
+This is a description of the gPhoto I/O library. It currently
+handles serial port and USB communications, but IEEE1394 is
+planned. Additionally, it is written to be as portable as possible.
+
+The benefit to using this library would be that all communications can be
+done quickly and without worry for device specific functions; all devices 
+are abstracted to a point, allowing you to read/write to a device using
+the same interface. For example, you can set all the options on the serial
+port easily, and then read/write to that device. Additionally, you could
+easily switch over to a USB device, and read/write without having to learn
+the USB internals nor write code which specifically handles serial and/or
+USB communications on a variety of OS'.
+
+The whole idea behind this is simplicity. It should be easy to write a
+program that uses any sort of serial-based device. This will take the
+hassle out of playing with low-level configurations and actually just get
+on to writing the core of the application.
+
+This library is object-based, using the gpio_device struct.
+
+Initialization
+--------------------------------------------------------------------
+
+	gpio_device* gpio_device_new (GpioDeviceType);
+		Creates a new gpio_device, using the specified device
+		type (GPIO_DEVICE_SERIAL, GPIO_DEVICE_USB, etc...)
+
+		Return Values:
+			unsuccessful: GPIO_ERROR
+			  successful: valid gpio_device struct
+
+	int gpio_set_configuration (gpio_device *dev, gpio_config config);
+
+ 		Initializes the library, setting the I/O device, and the
+		device specific options via the gpio_config variable
+		(described below). This handles all the resetting of the
+		I/O devices and upon return, the selected device is ready
+		for reading and writing. This can be called safely within
+		a program to "reset" the library to a new configuration.
+
+		Return Values:
+			unsuccessful: GPIO_ERROR
+			  successful: GPIO_OK
+
+	gpio_config gpio_get_configuration (gpio_device *dev);
+
+		Returns the current configuration of the I/O library.
+
+		Return Values:
+			unsuccessful: GPIO_ERROR
+			  successful: gpio_config structure
+
+The gpio_config struct, specifies the I/O device, as well as options for
+that particular device.
+
+	typedef struct {
+		char port[128];
+		int  speed;
+		int  bits;
+		int  parity;
+		int  stopbits;
+	} gpio_serial_settings;
+
+	typedef struct {
+		int  bus;
+		int  device;
+		int  inep;
+		int  outep;
+		int  config;
+		int  interface;
+		int  altsetting;
+	} gpio_usb_settings;
+
+	typedef union {
+		gpio_serial_settings	serial;
+		gpio_usb_settings	usb;
+	} gpio_device_settings;
+
+	struct gpio_device {
+		GpioDeviceType type;	   /* GPIO_DEVICE_SERIAL, 
+					      GPIO_DEVICE_USB,
+					      GPIO_DEVICE_1394 */
+		struct gpio_operations *ops;
+
+		gpio_device_settings settings;
+		gpio_device_settings settings_saved;
+
+		int device_fd;
+		int timeout; /* in milli seconds */
+	}
+
+Reading/Writing
+--------------------------------------------------------------------
+
+int gpio_read (gpio_device *dev, char *bytes, int size);
+
+	Reads up to "size" bytes into "bytes", and return the number
+	bytes read.
+
+	Return Values:
+		unsuccessful: GPIO_ERROR
+		  successful: number of bytes read
+
+int gpio_write (gpio_device *dev, char *bytes, int size);
+
+	Writes "bytes" which is "size" bytes long to the device.
+
+	Return Values:
+		unsuccessful: GPIO_ERROR
+		  successful: number of bytes written.
+
+Helpers
+--------------------------------------------------------------------
+
+int gpio_make_crc (char *bytes, int bytes_size, int size, int polynomial);
+
+	This will generate a CRC for "bytes" using the characteristic
+	polynomial specified by "polynomial". The returned CRC will be
+	"size" bytes long.
+	(Note: enum type for polynomial? or just simple OR'ing of numbers
+	for flags. Like x^7, x^4, x^2 would be 128|16|4, or create an
+	enum for GPIO_CRC_128_16_4? that might be too involved.)
+
+	Return Values:
+		unsuccessful: GPIO_ERROR
+		  successful: valid crc	
+
+int gpio_make_checksum (char *bytes, int bytes_size, int size, int type);
+
+	Calculates a checksum for "bytes", "size" bytes long, using
+	the algorithm specified by "type". This will automatically
+	(Note: there are quite a few checksum types. we need to compile
+	a list of the types and the algorithms. For example, a simple
+	checksum, which is straight adding of the bytes, would be of type
+	GPIO_CHECKSUM_SIMPLE.)
+
+	Return Values:
+		unsuccessful: GPIO_ERROR
+		  successful: valid checksum
+
+Serial Example
+--------------------------------------------------------------------
+
+Let's say we wanted to write the text "Hello", followed by a simple
+checksum to device ttyS1 (serial port 2). We then want to read the reply
+from the same device.
+
+
+#include <gphoto_io.h>
+#include <string.h>
+
+int main (int argc, char **argv)
+{
+	char *send_message = "Hello World";
+	char *recv_message;
+	char *checksum;
+	char bytes[16];
+	int  size;
+	gpio_config conf;
+	gpio_device *dev;
+	GpioSerialDevice serdev;
+
+	dev = gpio_device_new(GPIO_DEVICE_SERIAL);
+
+	/* serial device configuration */
+	/* Note: this syntax is probably wrong. please correct */
+	conf.type 	= GPIO_DEVICE_SERIAL;
+	serdev.port     = "/dev/ttyS1";	/* port 2. just an example */
+	serdev.speed    = 57600;	/* 57600 bps	 */
+ 	serdev.bits     = 8;		/* 8 bits	 */
+ 	serdev.parity   = 0;		/* no parity	 */
+	serdev.stopbits = 1;		/* 1 stop bit	 */
+	conf.settings   = serdev;
+
+	/* set the serial device configuration */
+	gpio_set_configuration (dev, conf); 
+
+	/* make a 2 byte checksum for our message */
+	checksum = gpio_make_checksum (send_message, strlen(send_message),
+		   2, GPIO_CHECKSUM_SIMPLE);
+
+	sprintf (bytes, "%s%s", send_message, checksum);
+
+	/* write the output bytes to the serial device  */
+	gpio_write (dev, bytes, strlen(bytes));
+
+	/* read the response from the device which might be up to
+	   32 bytes */
+	size = gpio_read(dev, recv_message, 32);
+	printf("Received: %s which is %i bytes.\n", recv_message, size);
+
+	free(checksum);
+	free(recv_message);
+}
+
+
+TO-DO
+--------------------------------------------------------------------
+
+	* compile-time issues
+--------------------------------------------------------------------
+ Author: Scott Fritzinger
+         Johannes Erdfelt
+   Date: January 18, 2000
+   Rev.: 3

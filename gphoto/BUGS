@@ -60,12 +60,6 @@ Portability issues:
 * #1693: compilation problems on solaris
 * #1934: gphoto 0.3.5 fails to compile on Solaris 7 x86
 
-Serial permissions:
-* #2013: serial port issues
-
-Documentation:
-* #2014: minor documentation inconsistency
-
 * #2193: Save to disk can result in strange large file
 
 CLOSING BUGS

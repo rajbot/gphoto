@@ -1,8 +1,12 @@
 # $Id$
 #
 # $Log$
-# Revision 1.1  1999/05/27 18:32:06  scottf
-# Initial revision
+# Revision 1.2  1999/05/28 20:24:07  ole
+# Gallery themes now installs correctly.
+# Changed the URL for Help - FAQs entry.
+#
+# Revision 1.1.1.1  1999/05/27 18:32:06  scottf
+# gPhoto- digital camera utility
 #
 # Revision 1.38  1999/05/10 18:03:04  mmartin
 # Added the color adjustment dialog ripped (with permission) from Electric Eyes,
@@ -120,7 +124,7 @@ install:
 	cp ../MANUAL $(DOCDIR)/gphoto-0.3/
 	cp ../FAQ $(DOCDIR)/gphoto-0.3/
 	cp ../NEWS $(DOCDIR)/gphoto-0.3/
-	cp -R ../gallery $(GPHOTODIR)/gphoto
+	cp -R ../gallery $(GPHOTODIR)
 	cp ../directory/libgphoto_dir.so $(GPHOTODIR)/drivers
 	cp ../konica/libgphoto_konica_qm100.so $(GPHOTODIR)/drivers
 	cp ../casio/libgphoto_casio_qv.so $(GPHOTODIR)/drivers

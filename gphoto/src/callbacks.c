@@ -730,7 +730,7 @@ Tips and Tricks
 }
 
 void faq_dialog() {
-   error_dialog("Please visit http://www.gphoto.org/pub/FAQ for the current FAQ list.");
+   error_dialog("Please visit http://www.gphoto.org/help.php3 for the current FAQ list.");
 }
  
 void about_dialog() {

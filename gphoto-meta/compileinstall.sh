@@ -96,7 +96,7 @@ compileinstall() {
 		    cmd tar xvfz "${tarball}"
 		    ;;
 		*.tar.bz2)
-		    cmd bzip2 -z -c "${tarball}" | tar xvf  -
+		    cmd bzip2 -d -c "${tarball}" | tar xvf  -
 		    ;;
 	    esac
 	    cmd cd "${srcdir}/${base}"

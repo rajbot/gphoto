@@ -6,7 +6,8 @@ sshost="$(cat .sshost)"
 cd "$base" || exit 1
 
 echo "Running upload..."
-rsync -avz --exclude='*.tar.gz' --exclude 'Makefile.am' dist-files/ .htfixupload "${sshost}:n-dimensional.de/snapshots/${date}/"
+rsync -avz dist-files/*.tar.bz2 "${sshost}:n-dimensional.de/snapshots/${date}/bz2/"
+rsync -avz .htfixupload "${sshost}:n-dimensional.de/snapshots/${date}/"
 echo "Fixing stuff..."
 ssh "${sshost} "n-dimensional.de/snapshots/${date}/.htfixupload"
 echo "Done."

@@ -5,11 +5,27 @@ chmod 0700 "$0"
 base=$(dirname "$0")
 cd "$base" || exit 1
 
+if [ -d "bz2" ]
+then
+    mkdir -p gz
+    chmod 0705 gz
+    chmod 0705 bz2
+fi
+
+for d in bz2 gz
+do
+    if cd $d
+    then
+	ln -s ../SUPPORTED-CAMERAS
+    fi
+done
+
 chmod a+r SUPPORTED-CAMERAS
-for file in *.tar.bz2
+
+for file in *.tar.bz2 bz2/*.tar.bz2
 do
     chmod a+r "$file"
-    new="$(basename "$file" ".bz2").gz"
+    new="$(echo "$file" | sed -e 's/bz2/gz/g')"
     if [ -s "$file" ] && [ ! -s "$new" ]
     then
 	echo "Converting \"$file\" to \"$new\"..."
@@ -22,7 +38,7 @@ chmod 0705 .
 
 cd .. || exit 2
 
-rm -f *.tar.bz2 *.tar.gz SUPPORTED-CAMERAS
+rm -f *.tar.bz2 *.tar.gz SUPPORTED-CAMERAS bz2 gz
 ln -s "$(basename "$base")"/* .
 
 chmod 0705 .

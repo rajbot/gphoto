@@ -111,7 +111,7 @@ struct Image *dir_get_picture (int picture_number, int thumbnail) {
 		im = (struct Image*)malloc(sizeof(struct Image));
 		im->image = imagedata;
 		im->image_size = imagesize;
-		im->image_info_size = 0;
+		im->image_info_size = 2;
 		strcpy(im->image_type, type);
 		return (im);
 	}
@@ -147,7 +147,10 @@ struct Image *dir_get_picture (int picture_number, int thumbnail) {
 	im = (struct Image*)malloc(sizeof(struct Image));
 	im->image = imagedata;
 	im->image_size = imagesize;
-	im->image_info_size = 0;
+	im->image_info_size = 2;
+	im->image_info = (char **)malloc(sizeof(char*)*2);
+	im->image_info[0] = "Name";
+	im->image_info[1] = strdup(dir_images[picture_number-1]);
 	strcpy(im->image_type, type);
 	return (im);
 }

@@ -846,10 +846,10 @@ void insert_thumbnail(struct ImageInfo *node) {
 	error_dialog(error);
 	return;
   }
-  sprintf(info, "Picture #%i                             \n", i); 
+  sprintf(info, "Picture #%i\n", i); 
   /* it looks like the tooltips set wrapping by the first line */
   for (x=0; x<im->image_info_size; x+=2) {
-	sprintf(tag, "%s: %s\n",im->image_info[x],im->image_info[x+1]);
+	sprintf(tag, "%s:%s\n",im->image_info[x],im->image_info[x+1]);
 	strcat(info, tag);
   }
 

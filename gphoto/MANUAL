@@ -1,129 +1,249 @@
-$Id$
+------------------------
+gPhoto 0.4 User's Manual
+------------------------
 
-$Log$
-Revision 1.3  1999/06/22 15:30:09  scottf
-updated the MANUAL (fixed the log that actually showed ten dashes,
-	messing up the way the manual was displayed :)
-hopefully fixed the kodak dc2x, ricoh, and konica libs.
-minor /src revisions.
+gPhoto has been written to be as intuitive as possible from the start of
+the project.
 
-Revision 1.2  1999/06/18 18:17:25  scottf
-updated the manual_dialog to read from DOCDIC/MANUAL. it expects the
-beginning of the relevant manual text to begin with ten dashes
+			-----------------
+			Setting up gPhoto
+------------------------=================------------------------
+When you first run gPhoto, you will be given a dialog to select a
+serial port, and a camera model. Choose your camera, and the correct
+serial port, and then click "save" to then save the information. If you
+need to change the settings later, go to the "Configure" menu, and choose
+"Select Port-Camera Model".
 
-Revision 1.1.1.1  1999/05/27 18:32:01  scottf
-gPhoto- digital camera utility
 
-Revision 1.2  1999/05/05 19:48:51  ole
-Initial revision
+			----------------
+			Using the Camera
+------------------------================------------------------
 
-----------
+Getting a Thumbnail index:
+	The thumbnail index is a "preview" of what is on the camera.
+	It lets you select which images to download. In gPhoto, it
+	is possible to get two different types of an index:
 
-gPhoto 0.1-DR User's Manual
----------------------------
+		Thumbnails:
+			Picture previews show up in the index.
+			This lets you see the available pictures right
+			away, and select which images to download by
+			clicking on the thumbnail.
 
-gPhoto was designed to be as intuitive as possible. The toolbar provides
-shortcuts to many of the features listed below.
+		No Thumbnails:
+			This is a LOT faster than getting an index with
+			thumbnails, and especially handy if you want
+			to get a few pictures. A button is provided in the
+			index for each picture on the camera, but there is
+			no thumbnail shown. To view the thumbnail, 
+			double-click on the empty button. You can choose
+			images to download even if there is no thumbnail
+			by just clicking on the button to select it.
 
-Getting Thumbnails/Previews
----------------------------
-	In the "Camera" menu, select "Get Index"
+	These options are available in the Camera menu, under "Get Index"
+	and also as buttons in the toolbar.
 
-Downloading Images
-------------------
-	After getting the index, select the images you want to download
-	by clicking on them (border will turn red). Then, in the
-	"Camera" menu, select "Get Selected Images".
+Downloading Pictures/Thumbnails:
+	Once you have selected which pictures to download in the index,
+	you can then actually download the images and/or thumbnails
+	two different ways.
 
-Manipulating Images
--------------------
-	After downloading an image, view it by clicking on its tab.
-	Then, click the desired manipulation. Available are
-	rotate clockwise, rotate counter-clockwise, flip horizontal,
-	flip vertical, and resize.
+		Open in Window:
+			This will load the selected pictures in the gPhoto
+			window. You can then alter them, or save them as
+			a different format. A note to the professional
+			photographers: this will not preserve the EXIF
+			tags in the image file.
 
-	* For intensive image manipulation, fire up the GIMP!
+		Save to disk:
+			This takes the pictures you have selected and
+			saves them directly to disk. You will be prompted
+			for a directory to save the images to, as well
+			as a "filename prefix". The prefix is a word or
+			two that might describe the images, which is 
+			then appended with the number of the picture.
+			For example: if you selected pictures 1 and 2 to
+			be saved to disk, and you entered a prefix of
+			"MyCat", then the images would be saved as
+			"MyCat-001.jpg" and "MyCat-002.jpg".
+			(the extension depends on the camera library)
+	
+	It is possible to save the pictures, and/or the thumbnails as
+	well, in case you want to create an index of your images using
+	the thumbnails. These options are available in the "Camera"
+	menu, under "Get Selected". The "Images" menu from there only
+	saves the images; the "thumbnails" menu only saves the thumbnails,
+	and the "Both" menu saves both the thumbnails AND the images.
 
-Send to the GIMP
-----------------
-	Not currently supported.
 
-Saving Images
--------------
-	Click on the tab of the image you want to save, and select
-	"Save" from the "File" menu. Select the directory you want
-	to save the image in, and type in a name for the image.
-	The extension will determine which format the image is saved
-	in.
+Deleting Pictures from the Camera:
+	To delete pictures from the camera, you will need to get
+	an index, and then select the pictures you want to delete.
+	In the "Camera" menu, select "Delete Selected Images". You
+	will then be prompted to confirm whether you want to delete
+	the pictures. There is also a toolbar button to delete the
+	selected images.
 
-	Example: image.jpg
+	Please note: some cameras do not allow pictures to be deleted
+	by a remote program. You will be given an error window if 
+	deleting images is not supported.
 
-	Supported: jpg gif png tif (and others...)
-	(whatever is supported by your installation of imlib)
 
-Batch Saving
-------------
+Taking a Picture through gPhoto:
+	In the "Camera" menu, you can select "Take Picture" to have
+	gPhoto tell your camera to take a picture. 
 
-	Select "Batch Save" from the "File" menu. Then, select the
-	directory that will store all the images and click "OK".
+	Please note: some cameras do not allow pictures to be taken
+	by a remote program. You will be given an error window if 
+	taking a picture is not supported.
 
-	* Currently, gPhoto only supports saving ALL images and/or
-	  thumbnails.
+Configuring your Camera:
+	From the "Configure" menu, you can select "Configure Camera"
+	to set various values and options on your camera. This
+	is very dependent on the camera library, and will result
+	in different options for different cameras.
 
-	* Pictures are all stored as JPEG images by default.
+Getting a Summary of Your Camera:
+	A summary of your camera will give you a brief description
+	of the state of your camera. For example, it might display
+	the number of pictures taken, the number of pictures remaining,
+	the battery status, or any other information that could be
+	obtained. This function is very dependent on the camera library
+	and therefore different cameras will return different
+	pieces of information.
 
-Printing Images
----------------
-	Click on the tab of the image you want to print, and select
-	"Print" from the "File" menu.
-	Note: it might take a minute for the image to print, depending
-	on how fast the image is spooled.
+			------------------
+			Directory Browsing
+------------------------==================-----------------------
 
-Closing Downloaded Images
--------------------------
-	Click on the tab of the image you want to close, and select
-	"Close" from the "File" menu.
+It is now possible in gPhoto to browse entire directories of images. In
+the "File" menu, select "Open Directory...". You can then select the
+directory to open within gPhoto. You will then see an index of the images
+in that directory.
 
-Deleting Images from the Camera
--------------------------------
-	In the image index, select the images you wish to remove from
-	the camera by clicking on the thumnail (border will turn red).
-	Then, from the "Camera" menu, select "Delete Selected Images".
-	A confirmation will appear. Click "yes" or "no".
+The important thing to note is that the directory browsing mode works the
+same as getting pictures from the camera. You select the images you want
+to open in the index, then select an option from "Get Selected" under the
+camera menu, or from the toolbar, to open the selected images in the
+directory. You can open a different directory by selecting "Get Index"
+from the "Camera" menu or toolbar as well.
 
-Selecting the Serial Port
--------------------------
-	Select "Select Port" from the "Camera" menu.
+All of the same functionality that you have with the camera options are
+present in the directory browse mode, with the exception of 
+"Take Picture", "Delete Selected Images", and the "Live Preview" plug-in
+(Note that the HTML gallery generator will work!).
 
-Configuring the Camera
-----------------------
-	Select "Configure" from the "Camera" menu.
+			--------------
+			Editing Images
+------------------------==============------------------------
 
-Live preview plugin
--------------------
-        Select "Live cam" from the "Plugins" menu.
-	Click on "Take picture" to update preview.
+To edit an image, you need to first have the image opened in gPhoto.
+This can be done either by getting pictures from the camera and
+selecting "Open in window", or by opening images from the "Open" option in 
+the "File" menu 
 
-Command line mode
------------------
-	The command-line mode must be specified at run time
-        with the "-c" parameter.
+Under the "Edit" menu, you will see two different options to edit opened
+images.
 
-	$ gphoto -c filename
-	where "filename" is the path and image name (+ extension)
-	to save a preview snapshot.
+	Image Orientation:
+		Options for rotating (clockwise, counter-clockwise),
+		and flipping (horizontal, vertical).
 
-	Example:
-	$ gphoto -c /home/httpd/html/livepic.jpg
+	Image Dimension:
+		Options for scaling. You can either use the quick
+		scaling to half or double size, or just click on
+		"Scale" to specify your own size. In the scaling
+		dialog, you can enter the desired width and height,
+		and choose to maintain the aspect ratio (length and
+		width proportions) by selecting "Constrain Proportions".
 
-	The command line mode is handy, if you want to set up a web
-	camera, and use gphoto in a script, e.g. with Perl/PHP. :-)
-					  
-Tips and Tricks
----------------
-	* Make sure your camera is connected and turned ON. :-)
-	* If something fails (getting index, configuring camera, ...)
-	  try again. There are some things that need to be done still
-	  to make sure the camera does what you want it to do.
-	* Have fun, and give us feedback if your camera fail or succeed
-          to <gphoto-devel@lists.styx.net>.  Thanks for using gPhoto!
+Toolbar buttons exist for all but two (double/half scaling) of the above
+editing options.
+
+			--------------------
+			Saving Opened Images
+------------------------====================-----------------------
+
+You can choose to save one or all of the opened images. Under the "File"
+menu, select "Save Opened Image(s)". There is also a toolbar icon.
+
+In the dialog, choose a directory to save the image(s) in.
+
+If you only want to save the image you are currently viewing, then don't
+click the "Save all opened images", and type in the full filename to save
+the current image as. You can use different file extensions to specify
+different file formats, meaning if you want to save the image as a GIF,
+give it the ".gif" extension; for JPEG, use the ".jpg" extension; and so
+on.
+
+If you want to save ALL the opened images, select "Save all
+opened images", and type in a filename prefix to give all the opened
+images. Again, when the images are saved, the prefix is appended with an
+image number, and a ".jpg" extension. For example: a filename prefix of
+"MyCat" for 2 opened images would save the pictures as "MyCat-001.jpg" and
+"MyCat-002.jpg".
+
+			-----------------
+			Printing Pictures
+------------------------=================-----------------------
+
+Printing pictures is rather straight-forward. Have the image you want to
+print opened in gPhoto, and select "Print" from the "File" menu. There is
+also a toolbar icon for this.
+
+In the "Print Image" dialog, you can specify the command to give "lpr" to
+print the image. The name of a temporary file will be appended to the end
+of the command, so use of the "-r" flag to remove the file after printing
+is probably desired. If that flag is not present, you will have a spare
+picture in your $HOME/.gphoto directory. Options to give lpr could include
+specifying which spool to print to, as well as any other lpr flags you
+could need.
+
+The workings of lpr are outside the scope of this document. The default
+print command that you are given should work fine on most systems given
+that lpr is working properly. For more information on lpr, and other
+linux-related printing questions, please read the PRINTING-HOWTO.
+
+			--------
+			Plug-Ins			
+------------------------========-----------------------
+
+Currently, there are 2 plug-ins included in gPhoto:
+
+	Live Camera!:
+		This allows you to see what your camera currently
+		sees. It also provides a button to take a picture
+		in case you like what you see.
+
+	HTML Gallery:
+		You can create Web galleries from the selected images
+		in the index. In the HTML gallery dialog, you can enter
+		a 'Gallery Name' is a title for the gallery. You will then
+		need to select a theme. The current gPhoto distribution
+		contains three gallery 'themes' which are used as
+		templates when creating your gallery. Finally, you just
+		need to select a directory to save all the images and
+		pages in. For an example gallery, head to
+		http://www.gphoto.org/webserver
+		(which shows an example of the very nice CSSTheme theme)
+
+		For more information on creating your OWN gallery themes,
+		please visit http://www.gphoto.org/docs.php3 and
+		view the "HTML Gallery engine specs".
+
+			----------------
+			More Information
+------------------------================-----------------------
+
+The first place you look for any information regarding gPhoto should be
+the gPhoto web site at http://www.gphoto.org
+
+E-mail support can be obtained by mailing gphoto@gphoto.org
+This is a mailing list which you can subscribe to. Head to
+http://www.gphoto.org/lists.php3 and subscribe to the gphoto list.
+
+
+---------------------------------------------------------------
+Send Changes and Corrections to:
+	Author: Scott Fritzinger (scottf@unr.edu)
+	  Date: June 24, 1999

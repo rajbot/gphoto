@@ -69,7 +69,7 @@ camera_open_stream (BonoboStorage *storage, const CORBA_char *filename, Bonobo_S
 	gint i;
 
 	/* Reject some unsupported open modes. */
-	if (mode & (Bonobo_Storage_COMPRESSED | Bonobo_Storage_TRANSACTED)) {
+	if (mode & Bonobo_Storage_TRANSACTED) {
 		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
 		return NULL;
 	}
@@ -99,7 +99,7 @@ camera_open_stream (BonoboStorage *storage, const CORBA_char *filename, Bonobo_S
 	/* Get the file. */
 	if (mode & Bonobo_Storage_READ) {
 		file = gp_file_new ();
-		if (gnome_vfs_uri_get_user_name (s->uri) && (strcmp (gnome_vfs_uri_get_user_name (s->uri), "previews") == 0)) 
+		if (mode & Bonobo_Storage_COMPRESSED) 
 			CHECK_RESULT (gp_camera_file_get_preview (s->camera, file, (gchar*) gnome_vfs_uri_get_path (s->uri), (gchar*) filename), ev);
 		else 
 			CHECK_RESULT (gp_camera_file_get (s->camera, file, (gchar*) gnome_vfs_uri_get_path (s->uri), (gchar*) filename), ev);
@@ -116,6 +116,7 @@ camera_open_stream (BonoboStorage *storage, const CORBA_char *filename, Bonobo_S
 	stream = gtk_type_new (bonobo_stream_camera_get_type ());
 
 	/* Store some data in this stream. */
+	stream->mode = mode;
 	stream->uri = gnome_vfs_uri_append_file_name (gnome_vfs_uri_dup (s->uri), filename);
 	stream->camera = s->camera;
 	gp_camera_ref (s->camera);

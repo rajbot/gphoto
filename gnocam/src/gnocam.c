@@ -87,25 +87,25 @@ on_manual_activate (GtkWidget* widget, gpointer user_data)
 void 
 on_save_previews_activate (GtkWidget* widget, gpointer user_data)
 {
-        save_all_selected (main_tree, TRUE, FALSE, FALSE);
+        save_all_selected (main_tree, TRUE, FALSE);
 }
 
 void
 on_save_previews_as_activate (GtkWidget* widget, gpointer user_data)
 {
-	save_all_selected (main_tree, TRUE, TRUE, FALSE);
+	save_all_selected (main_tree, TRUE, TRUE);
 }
 
 void
 on_save_files_activate (GtkWidget* widget, gpointer user_data)
 {
-	save_all_selected (main_tree, FALSE, FALSE, FALSE);
+	save_all_selected (main_tree, FALSE, FALSE);
 }
 
 void 
 on_save_files_as_activate (GtkWidget* widget, gpointer user_data)
 {
-	save_all_selected (main_tree, FALSE, TRUE, FALSE);
+	save_all_selected (main_tree, FALSE, TRUE);
 }
 
 void 

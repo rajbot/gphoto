@@ -23,6 +23,8 @@ struct _BonoboStreamCamera {
 
 	GnomeVFSURI* uri;
 
+	gint mode;
+
 	Camera *camera;
 
 	CameraFile *file;

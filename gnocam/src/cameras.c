@@ -190,6 +190,7 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 	Bonobo_Control		control;
 	GtkWidget*		widget;
 	GtkPaned*		paned;
+	GnomeVFSURI*		uri;
 
 	g_return_if_fail (item);
 	g_return_if_fail (paned = GTK_PANED (glade_xml_get_widget (xml_main, "main_hpaned")));
@@ -205,9 +206,13 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 
 //FIXME: Until monikers can resolve "camera:", we first have to save the file.
 
-	/* Get the control. */
-	save (item, (view_mode == GNOCAM_VIEW_MODE_PREVIEW), FALSE, TRUE);
+	/* Save the file temporarily. */
 	tmp = g_strdup_printf ("file:%s/%s", g_get_tmp_dir (), gnome_vfs_uri_get_basename (gtk_object_get_data (GTK_OBJECT (item), "uri")));
+	uri = gnome_vfs_uri_new (tmp);
+	download (item, uri, (view_mode == GNOCAM_VIEW_MODE_PREVIEW));
+	gnome_vfs_uri_unref (uri);
+
+	/* Get the control. */
 	control = bonobo_get_object (tmp, "IDL:Bonobo/Control:1.0", &ev);
 	g_free (tmp);
 	if (BONOBO_EX (&ev)) {

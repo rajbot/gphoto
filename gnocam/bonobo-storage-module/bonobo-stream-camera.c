@@ -245,6 +245,7 @@ bonobo_stream_camera_open (const char *path, gint flags, gint mode, CORBA_Enviro
 	}
 
 	/* Connect to the camera. */
+	stream->mode = mode;
 	stream->uri = gnome_vfs_uri_new (path);
 	stream->camera = util_camera_new (stream->uri, ev);
 	if (BONOBO_EX (ev)) {
@@ -255,7 +256,7 @@ bonobo_stream_camera_open (const char *path, gint flags, gint mode, CORBA_Enviro
 	/* Get the file. */
 	stream->file = gp_file_new ();
 	dirname = gnome_vfs_uri_extract_dirname (stream->uri);
-	if (gnome_vfs_uri_get_user_name (stream->uri) && (strcmp (gnome_vfs_uri_get_user_name (stream->uri), "previews") == 0)) 
+	if (mode & Bonobo_Storage_COMPRESSED)
 		CHECK_RESULT (gp_camera_file_get_preview (stream->camera, stream->file, dirname, (gchar*) gnome_vfs_uri_get_basename (stream->uri)), ev);
 	else
 		CHECK_RESULT (gp_camera_file_get (stream->camera, stream->file, dirname, (gchar*) gnome_vfs_uri_get_basename (stream->uri)), ev);

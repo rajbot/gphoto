@@ -16,6 +16,7 @@ version from http://www.gnome.org.
  * libglade
  * gnome-vfs
  * gconf
+ * xml-i18n-tools
 If you experience compilation errors, don't hesitate to report them.
 
 

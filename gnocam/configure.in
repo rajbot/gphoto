@@ -5,8 +5,7 @@ AM_CONFIG_HEADER(config.h)
 
 AM_MAINTAINER_MODE
 AM_ACLOCAL_INCLUDE(macros)
-
-GNOME_INIT
+AM_PROG_XML_I18N_TOOLS
 
 dnl ******************
 dnl Initialize libtool
@@ -20,18 +19,17 @@ AC_PROG_CXX
 AM_PROG_CC_STDC
 AC_HEADER_STDC
 
+GNOME_INIT
+AM_PATH_GTK(1.2.7)
 GNOME_COMPILE_WARNINGS
+GNOME_X_CHECKS
+GNOME_XML_CHECK
 
 dnl Add the languages which your application supports here.
 ALL_LINGUAS="no"
 AM_GNU_GETTEXT
-
-dnl Set PACKAGE_LOCALE_DIR in config.h.
-if test "x${prefix}" = "xNONE"; then
-    AC_DEFINE_UNQUOTED(PACKAGE_LOCALE_DIR, "${ac_default_prefix}/${DATADIRNAME}/locale")
-else
-    AC_DEFINE_UNQUOTED(PACKAGE_LOCALE_DIR, "${prefix}/${DATADIRNAME}/locale")
-fi
+gnomelocaledir='${prefix}/${DATADIRNAME}/locale'
+AC_SUBST(gnomelocaledir)
 
 dnl **********
 dnl gnome-libs

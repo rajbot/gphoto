@@ -65,10 +65,8 @@ int gp_frontend_prompt (Camera *camera, CameraWidget *window)
 static void
 on_camera_setup_changed (GConfClient* client, guint notify_id, GConfEntry* entry, gpointer user_data)
 {
-	GladeXML*	xml;
 	GtkTree*	tree;
 
-	g_assert ((xml = user_data) != NULL);
 	g_assert ((tree = GTK_TREE (glade_xml_get_widget (xml, "tree_cameras"))) != NULL);
 
 	if (entry->value == NULL) {
@@ -176,8 +174,8 @@ int main (int argc, char *argv[])
                 gconf_value_free (value);
         }
 
-	/* Notification in case the camera setup changes. */
-	notify_id_cameras = gconf_client_notify_add (client, "/apps/" PACKAGE "/cameras", on_camera_setup_changed, xml, NULL, NULL);
+	/* Notifications. */
+	notify_id_cameras = gconf_client_notify_add (client, "/apps/" PACKAGE "/cameras", on_camera_setup_changed, NULL, NULL, NULL);
 
 	/* Drag'n drop stuff. */
 //FIXME

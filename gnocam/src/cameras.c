@@ -1,10 +1,12 @@
 //This file should be called camera-tree.c or so.
 //I'll change the name some day. 
 
+#include <config.h>
 #include <gnome.h>
 #include <glade/glade.h>
 #include <gphoto2.h>
 #include <gconf/gconf-client.h>
+#include <gdk-pixbuf/gdk-pixbuf-loader.h>
 #include "gphoto-extensions.h"
 #include "callbacks.h"
 #include "gnocam.h"
@@ -243,5 +245,4 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
                 }
         }
 }
-
 

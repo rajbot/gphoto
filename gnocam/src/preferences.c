@@ -20,6 +20,7 @@ static GConfChangeSet*	revert_change_set = NULL;
 /**********************/
 
 extern GConfClient*     client;
+extern GladeXML*	xml;
 
 /**************/
 /* Prototypes */
@@ -36,7 +37,10 @@ void on_dialog_preferences_button_cancel_clicked 	(GtkButton *button, gpointer u
 
 void on_clist_cameras_row_selection_changed (GtkWidget *clist, gint row, gint column, GdkEventButton *event, gpointer user_data);
 
-void on_entry_prefix_changed (GtkEditable* editable, gpointer user_data);
+void on_entry_prefix_changed 		(GtkEditable* editable, gpointer user_data);
+void on_entry_interpolation_changed 	(GtkEditable* editable, gpointer user_data);
+
+void on_adjustment_magnification_value_changed (GtkAdjustment* adjustment, gpointer user_data);
 
 gboolean on_combo_entry_model_focus_out_event 	(GtkWidget *widget, GdkEventFocus *event, gpointer user_data);
 
@@ -259,6 +263,42 @@ on_entry_prefix_changed (GtkEditable* editable, gpointer user_data)
 		if (*prefix != '0') gconf_change_set_set_string (change_set, "/apps/" PACKAGE "/prefix", prefix);
 		else gconf_change_set_unset (change_set, "/apps/" PACKAGE "/prefix");
                         
+		dialog_preferences_update_sensitivity ();
+	}
+}
+
+void
+on_adjustment_magnification_value_changed (GtkAdjustment* adjustment, gpointer user_data)
+{
+	/* Did the user really change something? */
+	if (gtk_object_get_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences")), "done")) {
+		gconf_change_set_set_int (change_set, "/apps/" PACKAGE "/magnification", adjustment->value);
+		dialog_preferences_update_sensitivity ();
+	}
+}
+
+void
+on_entry_interpolation_changed (GtkEditable* editable, gpointer user_data)
+{
+	gchar*		interpolation_string;
+	GtkEntry*	entry;
+	gint		interpolation = 0;
+
+	g_assert (editable != NULL);
+	g_assert ((entry = GTK_ENTRY (glade_xml_get_widget (xml_preferences, "entry_interpolation"))) != NULL);
+	
+	/* Did the user really change something? */
+	if (gtk_object_get_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences")), "done")) {
+
+		/* Tell gconf about the change. */
+		interpolation_string = gtk_entry_get_text (entry);
+		if (strcmp (interpolation_string, "Nearest") == 0) interpolation = 0;
+		else if (strcmp (interpolation_string, "Tiles") == 0) interpolation = 1;
+		else if (strcmp (interpolation_string, "Bilinear") == 0) interpolation = 2;
+		else if (strcmp (interpolation_string, "Hyper") == 0) interpolation = 3;
+		else g_assert_not_reached ();
+		gconf_change_set_set_int (change_set, "/apps/" PACKAGE "/interpolation", interpolation);
+
 		dialog_preferences_update_sensitivity ();
 	}
 }
@@ -492,34 +532,58 @@ dialog_preferences_populate ()
 	GConfValue*	value;
 	GSList*		list_cameras;
 
-	g_assert (client != NULL);
-	g_assert (xml_preferences != NULL);
-
         /* Get gconf's value for prefix. */
-        value = gconf_client_get (client, "/apps/" PACKAGE "/prefix", NULL);
-        if (value) {
+        if ((value = gconf_client_get (client, "/apps/" PACKAGE "/prefix", NULL))) {
                 g_assert (value->type == GCONF_VALUE_STRING);
                 dialog_preferences_prefix_update ((gchar*) gconf_value_get_string (value));
                 gconf_value_free (value);
         }
 
         /* Get gconf's value for debug level. */
-        value = gconf_client_get (client, "/apps/" PACKAGE "/debug_level", NULL);
-        if (value) {
+        if ((value = gconf_client_get (client, "/apps/" PACKAGE "/debug_level", NULL))) {
                 g_assert (value->type == GCONF_VALUE_INT);
                 dialog_preferences_debug_level_update (gconf_value_get_int (value));
                 gconf_value_free (value);
         }
 
         /* Get gconf's values for cameras. */
-        value = gconf_client_get (client, "/apps/" PACKAGE "/cameras", NULL);
-        if (value) {
+        if ((value = gconf_client_get (client, "/apps/" PACKAGE "/cameras", NULL))) {
                 g_assert (value->type == GCONF_VALUE_LIST);
                 list_cameras = gconf_value_get_list (value);
 		g_assert (gconf_value_get_list_type (value) == GCONF_VALUE_STRING);
 		dialog_preferences_cameras_update (list_cameras);
                 gconf_value_free (value);
         }
+
+	/* Get the settings for previews. */
+	if ((value = gconf_client_get (client, "/apps/" PACKAGE "/interpolation", NULL))) {
+		g_assert (value->type = GCONF_VALUE_INT);
+		switch (gconf_value_get_int (value)) {
+		case 0:
+			gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "entry_interpolation")), "Nearest");
+			break;
+		case 1:
+			gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "entry_interpolation")), "Tiles");
+			break;
+		case 2:
+			gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "entry_interpolation")), "Bilinear");
+			break;
+		case 3:
+			gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "entry_interpolation")), "Hyper");
+			break;
+		default:
+			g_assert_not_reached ();
+		}
+		gconf_value_free (value);
+	}
+	if ((value = gconf_client_get (client, "/apps/" PACKAGE "/magnification", NULL))) {
+		g_assert (value->type = GCONF_VALUE_INT);
+		gtk_adjustment_set_value (
+			gtk_range_get_adjustment (GTK_RANGE (glade_xml_get_widget (xml_preferences, "hscale_magnification"))), 
+			gconf_value_get_int (value));
+		gconf_value_free (value);
+	}
+		
 }
 
 void
@@ -645,6 +709,7 @@ preferences ()
 	GtkWindow*	window;
 	gchar*		name;
 	CameraPortInfo 	info;
+	GtkAdjustment*	adjustment;
 
 	/* Check if preferences dialog is already open. */
 	if (!xml_preferences) {
@@ -655,6 +720,8 @@ preferences ()
 
 		/* Connect the signals. */
 		glade_xml_signal_autoconnect (xml_preferences);
+		adjustment = gtk_range_get_adjustment (GTK_RANGE (glade_xml_get_widget (xml_preferences, "hscale_magnification")));
+		gtk_signal_connect (GTK_OBJECT (adjustment), "value_changed", GTK_SIGNAL_FUNC (on_adjustment_magnification_value_changed), NULL);
 	
 		/* Store some data we need afterwards. */
 		gtk_object_set_data (GTK_OBJECT (window), "xml_preferences", xml_preferences);

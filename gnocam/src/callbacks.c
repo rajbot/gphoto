@@ -19,6 +19,7 @@
 /**********************/
 
 extern GladeXML*	xml;
+extern GConfClient*	client;
 
 /******************************************************************************/
 /* Prototypes                                                                 */
@@ -423,6 +424,9 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
         GdkBitmap*		bitmap;
 	CameraText*		buffer;
 	gint			folder_count, file_count;
+	gint			magnification;
+	GdkInterpType		interpolation;
+	GConfValue*		value;
 
 	g_assert ((notebook = GTK_NOTEBOOK (glade_xml_get_widget (xml, "notebook_files"))) != NULL);
 	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
@@ -433,24 +437,25 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 	if ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) {
 
 		/* Set up the basic structure of the notebook page. */
-                page = gtk_vbox_new (FALSE, 10);
-                hbox = gtk_hbox_new (FALSE, 0);
+                page = gtk_vbox_new (FALSE, 5);
+		gtk_container_set_border_width (GTK_CONTAINER (page), 5);
+                hbox = gtk_hbox_new (FALSE, 5);
                 gtk_container_add (GTK_CONTAINER (page), hbox);
 
                 /* Basic description. */
                 label = gtk_label_new ("Camera:\nPath:\nFilename:");
                 gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
-                gtk_container_add (GTK_CONTAINER (hbox), label);
+		gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 0);
                 text = g_strdup_printf ("%s\n%s\n%s", ((frontend_data_t*) camera->frontend_data)->name, path, filename);
                 label = gtk_label_new (text);
                 gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
-                gtk_container_add (GTK_CONTAINER (hbox), label);
+		gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 0);
                 g_free (text);
 
                 /* Widget for preview. */
                 window = gtk_scrolled_window_new (NULL, NULL);
                 gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (window), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-                gtk_container_add (GTK_CONTAINER (hbox), window);
+		gtk_box_pack_start (GTK_BOX (hbox), window, TRUE, TRUE, 0);
                 viewport = gtk_viewport_new (NULL, NULL);
                 gtk_container_add (GTK_CONTAINER (window), viewport);
 
@@ -476,10 +481,44 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 	                if (gdk_pixbuf_loader_write (loader, file->data, file->size)) {
 	                        gdk_pixbuf_loader_close (loader);
 	                        pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
-	                        gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 127);
+
+				/* Magnification? */
+				value = gconf_client_get_without_default (client, "/apps/" PACKAGE "/magnification", NULL);
+				if (value) {
+					g_assert (value->type = GCONF_VALUE_INT);
+					magnification = gconf_value_get_int (value);
+				} else magnification = 1;
+				
+				/* Interpolation? */
+				value = gconf_client_get_without_default (client, "/apps/" PACKAGE "/interpolation", NULL);
+				if (value) {
+					g_assert (value->type = GCONF_VALUE_INT);
+					switch (gconf_value_get_int (value)) {
+					case 0:
+						interpolation = GDK_INTERP_NEAREST;
+						break;
+					case 1: 
+						interpolation = GDK_INTERP_TILES;
+						break;
+					case 2: 
+						interpolation = GDK_INTERP_BILINEAR;
+						break;
+					case 3:
+						interpolation = GDK_INTERP_HYPER;
+						break;
+					default: 
+						g_assert_not_reached ();
+					}
+				} else interpolation = GDK_INTERP_BILINEAR;
+	                        gdk_pixbuf_render_pixmap_and_mask (gdk_pixbuf_scale_simple (
+					pixbuf, 
+					magnification * gdk_pixbuf_get_width (pixbuf), 
+					magnification * gdk_pixbuf_get_height (pixbuf), 
+					interpolation), &pixmap, &bitmap, 127);
 	                        gdk_pixbuf_unref (pixbuf);
 	                        widget = gtk_pixmap_new (pixmap, bitmap);
 	                        gtk_container_add (GTK_CONTAINER (viewport), widget);
+				gtk_object_set_data (GTK_OBJECT (item), "pixmap", pixmap);
 	
 				/* Clist for exif tags. */
 //				widget = gtk_clist_new (1);

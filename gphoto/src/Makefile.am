@@ -1,19 +1,10 @@
 ## Process this file with automake to create a GNU Makefile
 
-CFLAGS = -O2 -Wall
-
 SUBDIRS = icons
 
 bin_PROGRAMS = gphoto
 
-# photo_CFLAGS = @CFLAGS@
-
-# photo_LDADD = -ljpeg -lxml -lgmodule -lglib -ldl
-# photo_LDFLAGS = -rdynamic
-
-# photo_SOURCES = photo.c photo.h
-
-gphoto_CFLAGS = @CFLAGS@ -I$(srcdir)/icons @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@
+CFLAGS = @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@ -O2 -Wall -I$(srcdir)/icons
 
 gphoto_LDADD = ../konica/libgphoto_konica_qm100.la \
 	../konica_qmxxx/libgphoto_konica_qmxxx.la \

@@ -1,8 +1,8 @@
 <Root>
   <popups>
     <popup name="button3">
-      <menuitem name="ItemAdd" verb="Add" _label="_Add..."/>
-      <separator/>
+      <menuitem name="Item 4" verb="Preferences" _label="_Preferences"
+      		pixtype="stock" pixname="gtk-preferences"/>
       <menuitem name="Item 5" verb="About" _label="_About..."
                 pixtype="stock" pixname="gnome-stock-about"/>
     </popup>

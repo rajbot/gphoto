@@ -427,6 +427,21 @@ gnocam_applet_capture_cb (BonoboUIComponent *uic, GnocamApplet *a,
 #endif
 
 static void
+gnocam_applet_prefs_cb (BonoboUIComponent *uic, GnocamApplet *a,
+			const char *verbname)
+{
+	GError *e = NULL;
+	gchar *argv[] = {"camera-capplet", NULL};
+
+	g_spawn_async (NULL, argv, NULL, G_SPAWN_SEARCH_PATH,
+		       NULL, NULL, NULL, &e);
+	if (e) {
+		g_warning ("Could not start capplet: %s", e->message);
+		g_error_free (e);
+	}
+}
+
+static void
 gnocam_applet_about_cb (BonoboUIComponent *uic, GnocamApplet *a,
 			const char *verbname)
 {
@@ -474,6 +489,7 @@ gnocam_applet_about_cb (BonoboUIComponent *uic, GnocamApplet *a,
 }
 
 static const BonoboUIVerb gnocam_applet_menu_verbs[] = {
+	BONOBO_UI_UNSAFE_VERB ("Preferences", gnocam_applet_prefs_cb),
 	BONOBO_UI_UNSAFE_VERB ("About", gnocam_applet_about_cb),
 	BONOBO_UI_VERB_END
 };

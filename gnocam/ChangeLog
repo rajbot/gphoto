@@ -1,3 +1,7 @@
+2003-02-03  Lutz Mueller <lutz@users.sourceforge.net>
+
+	* applet/*: Add a link to the capplet.
+
 2003-02-02  Lutz Mueller <lutz@users.sourceforge.net>
 
 	* capplet/*: Watch out for changes done using the capplet.

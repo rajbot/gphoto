@@ -85,8 +85,8 @@ create_menu (gpointer user_data)
 	folder = GNOCAM_FOLDER (user_data);
 
 	/* Create the component */
-        folder->priv->component = bonobo_ui_component_new (PACKAGE "Folder");
-        bonobo_ui_component_set_container (folder->priv->component, BONOBO_OBJREF (folder->priv->container));
+	folder->priv->component = bonobo_ui_component_new (PACKAGE "Folder");
+	bonobo_ui_component_set_container (folder->priv->component, BONOBO_OBJREF (folder->priv->container));
 	
         bonobo_ui_component_freeze (folder->priv->component, NULL);
 	
@@ -116,6 +116,8 @@ set_container (gpointer user_data)
 	GnoCamFolder*	folder;
 
 	folder = GNOCAM_FOLDER (user_data);
+	
+	if (!folder->priv->component) return (TRUE);
 
 	bonobo_ui_component_set_container (folder->priv->component, BONOBO_OBJREF (folder->priv->container));
 
@@ -269,6 +271,7 @@ gnocam_folder_destroy (GtkObject* object)
 
 	folder = GNOCAM_FOLDER (object);
 
+	bonobo_object_unref (BONOBO_OBJECT (folder->priv->container));
 	bonobo_object_unref (BONOBO_OBJECT (folder->priv->component));
 
 	if (folder->priv->configuration) gp_widget_unref (folder->priv->configuration);
@@ -321,7 +324,7 @@ gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bo
 	gp_camera_ref (new->priv->camera = camera);
 	new->priv->path = g_strdup (path);
 	new->priv->storage = storage;
-	new->priv->container = container;
+	bonobo_object_ref (BONOBO_OBJECT (new->priv->container = container));
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
 
 	/* Create the scroll-frame */

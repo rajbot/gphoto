@@ -27,7 +27,7 @@ typedef struct {
 static void on_button_clicked 		(BonoboUIComponent *uic, gpointer user_data, const char *cname);
 static void on_togglebutton_clicked	(BonoboUIComponent* uic, const char* path, Bonobo_UIComponent_EventType type, const char* state, gpointer user_data);
 
-void menu_prepare       (CameraWidget* widget, xmlNodePtr popup, xmlNsPtr ns);
+void menu_prepare       (BonoboUIComponent* component, CameraWidget* widget, xmlNodePtr popup, xmlNsPtr ns);
 void menu_fill          (BonoboUIComponent* component, Camera* camera, const gchar* path, CameraWidget* window, CameraWidget* widget, gchar* folder, gchar* file);
 
 /********************/
@@ -151,21 +151,22 @@ void
 menu_setup (BonoboUIComponent* component, Camera* camera, CameraWidget* widget, const gchar* path, gchar* folder, gchar* file)
 {
         gchar*          tmp = NULL;
-        xmlDocPtr       doc = xmlNewDoc ("1.0");
-        xmlNsPtr        ns = xmlNewGlobalNs (doc, "xxx", "xxx"); 
+        xmlDocPtr       doc;
+        xmlNsPtr        ns;
         xmlNodePtr      node, child;
         gint            i;
 
+	doc = xmlNewDoc ("1.0");
+	ns = xmlNewGlobalNs (doc, "xxx", "xxx");
 	node = xmlNewNode (ns, "placeholder");
 	xmlSetProp (node, "name", "Configuration");
         xmlDocSetRootElement (doc, node);
-
 	child = xmlNewNode (ns, "submenu");
 	xmlSetProp (child, "name", "Configuration");
 	xmlSetProp (child, "_label", "Configuration");
 	xmlAddChild (node, child);
-	
-        menu_prepare (widget, child, ns);
+
+        menu_prepare (component, widget, child, ns);
 
         /* Send it to the component. */
         xmlDocDumpMemory (doc, (xmlChar**) &tmp, &i);
@@ -179,11 +180,14 @@ menu_setup (BonoboUIComponent* component, Camera* camera, CameraWidget* widget, 
 	g_free (tmp);
 }
 
+#define TOGGLE 	"<cmd name=\"%i\" _tip=\"%s\" _label=\"%s\" type=\"toggle\" state=\"%i\"/>"
+#define RADIO	"<cmd name=\"%i\" _tip=\"%s\" _label=\"%s\" type=\"radio\" state=\"%i\"/>"
+
 void 
-menu_prepare (CameraWidget* widget, xmlNodePtr menu, xmlNsPtr ns)
+menu_prepare (BonoboUIComponent* component, CameraWidget* widget, xmlNodePtr menu, xmlNsPtr ns)
 {
 	CameraWidget*		child;
-	gint 			i, value_int;
+	gint 			i, value_int, result;
 	xmlNodePtr		node;
 	gchar*			id;
 	gchar*			tmp;
@@ -199,7 +203,7 @@ menu_prepare (CameraWidget* widget, xmlNodePtr menu, xmlNsPtr ns)
 			xmlSetProp (node, "name", id);
 			xmlSetProp (node, "_label", gp_widget_label (child));
 			xmlSetProp (node, "_tip", gp_widget_label (child));
-			menu_prepare (child, node, ns);
+			menu_prepare (component, child, node, ns);
 			break;
 		case GP_WIDGET_TEXT:
 		case GP_WIDGET_MENU:
@@ -220,15 +224,13 @@ menu_prepare (CameraWidget* widget, xmlNodePtr menu, xmlNsPtr ns)
 		case GP_WIDGET_TOGGLE:
 			xmlAddChild (menu, node = xmlNewNode (ns, "menuitem"));
 			xmlSetProp (node, "name", id);
-			xmlSetProp (node, "_tip", gp_widget_label (child));
-			xmlSetProp (node, "_label", gp_widget_label (child));
-			xmlSetProp (node, "type", "toggle");
 			xmlSetProp (node, "verb", id);
-			if (gp_widget_value_get (child, &value_int) == GP_OK) {
-				tmp = g_strdup_printf ("%i", value_int);
-				xmlSetProp (node, "state", tmp);
-				g_free (tmp);
-			}
+			value_int = 0;
+			if ((result = gp_widget_value_get (child, &value_int)) != GP_OK) 
+				g_warning (_("Could not get value for widget '%s': %s!"), gp_widget_label (child), gp_result_as_string (result));
+			tmp = g_strdup_printf (TOGGLE, gp_widget_id (child), gp_widget_label (child), gp_widget_label (child), value_int);
+			bonobo_ui_component_set_translate (component, "/commands", tmp, NULL);
+			g_free (tmp);
 			break;
 		default:
 			g_warning ("Encountered unsupported widget!");

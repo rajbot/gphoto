@@ -20,9 +20,7 @@ struct _GnoCamFilePrivate
 	Bonobo_Storage		storage;
 
 	Bonobo_Control		control;
-	Bonobo_Unknown		object;
 	GtkWidget*		widget;
-	gboolean		error;
 
 	GConfClient*		client;
 	guint			cnxn;
@@ -72,8 +70,10 @@ create_menu (gpointer user_data)
 	g_return_val_if_fail (user_data, FALSE);
 	file = GNOCAM_FILE (user_data);
 
-        file->priv->component = bonobo_ui_component_new ("GnoCamFile");
-        bonobo_ui_component_set_container (file->priv->component, BONOBO_OBJREF (file->priv->container));
+	/* Create the component */
+	file->priv->component = bonobo_ui_component_new (PACKAGE "File");
+	bonobo_ui_component_set_container (file->priv->component, BONOBO_OBJREF (file->priv->container));
+
         bonobo_ui_component_set_translate (file->priv->component, "/menu/File/FileOperations", GNOCAM_FILE_UI, NULL);
 
         /* Delete? */
@@ -97,23 +97,12 @@ set_container (gpointer user_data)
 
 	file = GNOCAM_FILE (user_data);
 
+	if (!file->priv->component) return (TRUE);
+	
 	bonobo_ui_component_set_container (file->priv->component, BONOBO_OBJREF (file->priv->container));
-	if (!file->priv->error && file->priv->control) Bonobo_Control_activate (file->priv->control, TRUE, NULL);
+	if (file->priv->control) Bonobo_Control_activate (file->priv->control, TRUE, NULL);
 
 	return (FALSE);
-}
-
-static void
-create_widget_from_control (GnoCamFile* file)
-{
-	/* Unref old widget */
-	if (file->priv->widget) gtk_widget_unref (file->priv->widget);
-
-	/* Get new widget */
-	file->priv->widget = bonobo_widget_new_control_from_objref (file->priv->control, BONOBO_OBJREF (file->priv->container));
-	gtk_widget_ref (file->priv->widget);
-
-	file->priv->error = FALSE;
 }
 
 static void
@@ -123,27 +112,36 @@ create_error_widget (GnoCamFile* file, CORBA_Environment* ev)
 
 	g_return_if_fail (file);
 
-	if (file->priv->widget) gtk_widget_unref (file->priv->widget);
-
         /* Create label with error message */
         tmp = g_strdup_printf (_("Could not display '%s': %s!"), file->priv->path, bonobo_exception_get_text (ev));
         file->priv->widget = e_clipped_label_new (tmp);
         gtk_widget_ref (file->priv->widget);
         g_free (tmp);
-
-	file->priv->error = TRUE;
 }
 
 static void
 create_widget (GnoCamFile* file)
 {
 	Bonobo_Stream		stream;
+	Bonobo_Unknown		object;
 	Bonobo_Persist		persist;
 	Bonobo_StorageInfo*	info;
 	gchar*			oaf_requirements;
 	gchar*			mime_type;
 	OAF_ActivationID        ret_id;
 	CORBA_Environment	ev;
+
+	/* Clean up */
+	if (file->priv->control != CORBA_OBJECT_NIL) {
+		CORBA_exception_init (&ev);
+		Bonobo_Control_activate (file->priv->control, FALSE, &ev);
+		file->priv->control = CORBA_OBJECT_NIL;
+		CORBA_exception_free (&ev);
+	}
+	if (file->priv->widget != NULL) {
+		gtk_widget_unref (file->priv->widget);
+		file->priv->widget = NULL;
+	}
 
 	CORBA_exception_init (&ev);
 
@@ -173,7 +171,7 @@ create_widget (GnoCamFile* file)
                 "repo_ids.has ('IDL:Bonobo/PersistStream:1.0')", mime_type);
 
         /* Activate the object */
-	file->priv->object = oaf_activate (oaf_requirements, NULL, 0, &ret_id, &ev);
+	object = oaf_activate (oaf_requirements, NULL, 0, &ret_id, &ev);
         g_free (oaf_requirements);
         if (BONOBO_EX (&ev)) {
 		Bonobo_Stream_unref (stream, &ev);
@@ -181,14 +179,13 @@ create_widget (GnoCamFile* file)
                 g_free (mime_type);
                 goto exit_clean;
         }
-        g_return_if_fail (file->priv->object != CORBA_OBJECT_NIL);
+        g_return_if_fail (object != CORBA_OBJECT_NIL);
 
         /* Get the persist stream interface */
-         persist = Bonobo_Unknown_queryInterface (file->priv->object, "IDL:Bonobo/PersistStream:1.0", &ev);
+         persist = Bonobo_Unknown_queryInterface (object, "IDL:Bonobo/PersistStream:1.0", &ev);
          if (BONOBO_EX (&ev)) {
-		Bonobo_Unknown_unref (file->priv->object, &ev);
-		CORBA_Object_release (file->priv->object, &ev);
-		file->priv->object = CORBA_OBJECT_NIL;
+		Bonobo_Unknown_unref (object, &ev);
+		CORBA_Object_release (object, &ev);
 		Bonobo_Stream_unref (stream, &ev);
 		CORBA_Object_release (stream, &ev);
                 g_free (mime_type);
@@ -204,24 +201,22 @@ create_widget (GnoCamFile* file)
 	CORBA_Object_release (stream, &ev);
         g_free (mime_type);
         if (BONOBO_EX (&ev)) {
-		Bonobo_Unknown_unref (file->priv->object, &ev);
-		CORBA_Object_release (file->priv->object, &ev);
-		file->priv->object = CORBA_OBJECT_NIL;
+		Bonobo_Unknown_unref (object, &ev);
+		CORBA_Object_release (object, &ev);
 		goto exit_clean;
 	}
 
-	file->priv->control = Bonobo_Unknown_queryInterface (file->priv->object, "IDL:Bonobo/Control:1.0", &ev);
-        if (BONOBO_EX (&ev)) {
-		Bonobo_Unknown_unref (file->priv->object, &ev);
-		CORBA_Object_release (file->priv->object, &ev);
-		file->priv->object = CORBA_OBJECT_NIL;
-		goto exit_clean;
-	}
+	/* Get the control */
+	file->priv->control = Bonobo_Unknown_queryInterface (object, "IDL:Bonobo/Control:1.0", &ev);
+	Bonobo_Unknown_unref (object, &ev);
+	CORBA_Object_release (object, &ev);
+        if (BONOBO_EX (&ev)) goto exit_clean;
 	g_return_if_fail (file->priv->control != CORBA_OBJECT_NIL);
 
 	CORBA_exception_free (&ev);
 
-	create_widget_from_control (file);
+	file->priv->widget = bonobo_widget_new_control_from_objref (file->priv->control, BONOBO_OBJREF (file->priv->container));
+	gtk_widget_ref (file->priv->widget);
 
 	return;
 
@@ -260,77 +255,10 @@ static void
 on_preview_changed (GConfClient *client, guint cnxn_id, GConfEntry* entry, gpointer user_data)
 {
 	GnoCamFile*	file;
-        Bonobo_Stream           stream;
-        Bonobo_StorageInfo*     info;
-        Bonobo_Persist          persist;
-        gchar*                  mime_type;
-        CORBA_Environment       ev;
 
 	file = GNOCAM_FILE (user_data);
 
-	if (file->priv->object == CORBA_OBJECT_NIL) {
-		create_widget (file);
-		gtk_signal_emit (GTK_OBJECT (file), signals [WIDGET_CHANGED]);
-		return;
-	}
-
-        CORBA_exception_init (&ev);
-
-        /* Open the stream */
-        if (gconf_client_get_bool (file->priv->client, "/apps/" PACKAGE "/preview", NULL)) {
-                stream = Bonobo_Storage_openStream (file->priv->storage, file->priv->path, Bonobo_Storage_READ | Bonobo_Storage_COMPRESSED, &ev);
-        } else {
-                stream = Bonobo_Storage_openStream (file->priv->storage, file->priv->path, Bonobo_Storage_READ, &ev);
-        }
-        if (BONOBO_EX (&ev)) goto exit_clean;
-        g_return_if_fail (stream);
-
-        /* Get information about the stream */
-        info = Bonobo_Stream_getInfo (stream, Bonobo_FIELD_CONTENT_TYPE, &ev);
-        if (BONOBO_EX (&ev)) {
-                Bonobo_Stream_unref (stream, &ev);
-                CORBA_Object_release (stream, &ev);
-                goto exit_clean;
-        }
-        g_return_if_fail (info);
-        mime_type = g_strdup (info->content_type);
-        CORBA_free (info);
-
-        /* Get the persist stream interface */
-	persist = Bonobo_Unknown_queryInterface (file->priv->object, "IDL:Bonobo/PersistStream:1.0", &ev);
-         if (BONOBO_EX (&ev)) {
-                Bonobo_Stream_unref (stream, &ev);
-                CORBA_Object_release (stream, &ev);
-                g_free (mime_type);
-                goto exit_clean;
-        }
-	g_return_if_fail (persist != CORBA_OBJECT_NIL);
-
-        /* Load the persist stream */
-        Bonobo_PersistStream_load (persist, stream, (const Bonobo_Persist_ContentType) mime_type, &ev);
-        Bonobo_PersistStream_unref (persist, &ev);
-        CORBA_Object_release (persist, &ev);
-        Bonobo_Stream_unref (stream, &ev);
-        CORBA_Object_release (stream, &ev);
-        g_free (mime_type);
-	if (BONOBO_EX (&ev)) goto exit_clean;
-
-        CORBA_exception_free (&ev);
-
-	if (file->priv->error) {
-		create_widget_from_control (file);
-		gtk_signal_emit (GTK_OBJECT (file), signals [WIDGET_CHANGED]);
-	}
-
-        return;
-
-  exit_clean:
-
-	if (file->priv->control) Bonobo_Control_activate (file->priv->control, FALSE, NULL);
-	create_error_widget (file, &ev);
-        CORBA_exception_free (&ev);
-
-	/* Tell the world */
+	create_widget (file);
 	gtk_signal_emit (GTK_OBJECT (file), signals [WIDGET_CHANGED]);
 }
 
@@ -342,7 +270,7 @@ void
 gnocam_file_hide_menu (GnoCamFile* file)
 {
 	bonobo_ui_component_unset_container (file->priv->component);
-	if (!file->priv->error && file->priv->control) Bonobo_Control_activate (file->priv->control, FALSE, NULL);
+	if (file->priv->control) Bonobo_Control_activate (file->priv->control, FALSE, NULL);
 }
 
 void
@@ -368,6 +296,7 @@ gnocam_file_destroy (GtkObject* object)
 
 	file = GNOCAM_FILE (object);
 
+	bonobo_object_unref (BONOBO_OBJECT (file->priv->container));
 	bonobo_object_unref (BONOBO_OBJECT (file->priv->component));
 
 	if (file->priv->control) {
@@ -375,12 +304,7 @@ gnocam_file_destroy (GtkObject* object)
 		CORBA_Object_release (file->priv->control, NULL);
 	}
 
-	if (file->priv->object != CORBA_OBJECT_NIL) {
-		Bonobo_Control_unref (file->priv->object, NULL);
-		CORBA_Object_release (file->priv->object, NULL);
-	}
-
-	gtk_widget_unref (file->priv->widget);
+	if (file->priv->widget) gtk_widget_unref (file->priv->widget);
 
 	gp_camera_unref (file->priv->camera);
 	if (file->priv->configuration) gp_widget_unref (file->priv->configuration);
@@ -420,6 +344,7 @@ gnocam_file_init (GnoCamFile* file)
 {
 	file->priv = g_new0 (GnoCamFilePrivate, 1);
 	file->priv->widget = NULL;
+	file->priv->control = CORBA_OBJECT_NIL;
 }
 
 GnoCamFile*
@@ -432,12 +357,12 @@ gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bono
 	new = gtk_type_new (GNOCAM_TYPE_FILE);
 	new->priv->filename = g_strdup (g_basename (path));
 	new->priv->path = g_strdup (path);
-	new->priv->container = container;
+	bonobo_object_ref (BONOBO_OBJECT (new->priv->container = container));
 	gp_camera_ref (new->priv->camera = camera);
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
 	new->priv->cnxn = gconf_client_notify_add (client, "/apps/" PACKAGE "/preview", on_preview_changed, new, NULL, NULL);
 	new->priv->storage = storage;
-
+	
         /* Dirname? */  
         new->priv->dirname = g_dirname (path);  
         if (!strcmp (new->priv->dirname, ".")) {

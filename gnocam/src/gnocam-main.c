@@ -27,6 +27,9 @@ struct _GnoCamMainPrivate {
 
 #define GNOCAM_MAIN_UI														\
 "<Root>"															\
+"  <commands>"															\
+"    <cmd name=\"Preview\" _label=\"Preview\" _tip=\"View previews only\" type=\"toggle\"/>"					\
+"  </commands>"															\
 "  <menu>"															\
 "    <submenu name=\"File\" _label=\"_File\">"											\
 "      <placeholder name=\"FileOperations\"/>"											\
@@ -40,7 +43,7 @@ struct _GnoCamMainPrivate {
 "    </submenu>"														\
 "    <placeholder name=\"Edit\"/>"												\
 "    <submenu name=\"View\" _label=\"_View\">"											\
-"      <menuitem name=\"Preview\" _label=\"Preview\" verb=\"\" type=\"toggle\" hidden=\"1\" pos=\"top\"/>"			\
+"      <placeholder name=\"Preview\" pos=\"top\"/>"										\
 "    </submenu>"														\
 "    <submenu name=\"Settings\" _label=\"_Settings\">"										\
 "      <menuitem name=\"Preferences\" verb=\"\" _label=\"_Preferences\" pixtype=\"stock\" pixname=\"Preferences\"/>"		\
@@ -78,12 +81,16 @@ create_menu (gpointer user_data)
 	g_return_val_if_fail (user_data, FALSE);
 	m = GNOCAM_MAIN (user_data);
 
+	/* Create component */
         m->priv->component = bonobo_ui_component_new (PACKAGE "main");
         bonobo_ui_component_set_container (m->priv->component, BONOBO_OBJREF (m->priv->container));
+	
         bonobo_ui_component_freeze (m->priv->component, NULL);
+	
         bonobo_ui_engine_config_set_path (bonobo_window_get_ui_engine (BONOBO_WINDOW (m)), "/" PACKAGE "/UIConf/main");
         bonobo_ui_component_set_translate (m->priv->component, "/", GNOCAM_MAIN_UI, NULL);
         bonobo_ui_component_add_verb_list_with_data (m->priv->component, verb, m);
+
         bonobo_ui_component_thaw (m->priv->component, NULL);
 
 	return (FALSE);
@@ -184,6 +191,7 @@ gnocam_main_destroy (GtkObject* object)
 
 	gtk_object_unref (GTK_OBJECT (m->priv->client));
 	bonobo_object_unref (BONOBO_OBJECT (m->priv->component));
+	bonobo_object_unref (BONOBO_OBJECT (m->priv->container));
 	
 	g_free (m->priv);
 
@@ -235,9 +243,8 @@ gnocam_main_new (GConfClient* client)
         gtk_signal_connect (GTK_OBJECT (widget), "item_selected", (GtkSignalFunc) on_shortcut_bar_item_selected, new);
 	
 	/* Create the container */
-	new->priv->container = bonobo_ui_container_new ();
+	bonobo_object_ref (BONOBO_OBJECT (new->priv->container = bonobo_ui_container_new ()));
 	bonobo_ui_container_set_win (new->priv->container, BONOBO_WINDOW (new));
-//	bonobo_object_unref (BONOBO_OBJECT (new->priv->container));
 
 	/* Create the menu */
 	gtk_idle_add (create_menu, new);

@@ -103,6 +103,7 @@ int main (int argc, char *argv[]) {
 
 	filesel_cwd = (char *)malloc(sizeof(char)*1024);
 	getcwd(filesel_cwd, 1024);
+	strcat(filesel_cwd, "/");
 
 	gphotoDir = getenv("HOME");
 	sprintf(gphotoDir, "%s/.gphoto", gphotoDir);

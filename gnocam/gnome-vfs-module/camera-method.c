@@ -513,8 +513,8 @@ static gboolean do_is_local (
         GnomeVFSMethod*                 method,
 	const GnomeVFSURI*              uri)
 {
-	g_print ("CAMERA: do_is_local (%s)\n", gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE));
-	return (FALSE);
+	/* 'Directory Browse' is something different. */
+	return (!strcmp (gnome_vfs_uri_get_host_name (uri), "Directory Browse"));
 }
 
 static GnomeVFSResult do_make_directory (

@@ -32,12 +32,13 @@
 #    ifdef HAVE_TERMIO_H
 #    include <termio.h>
 #    else HAVE_TERMIO_H
-#        ifdef HAVE_SYS_IOCTL_H
-#        include <sys/ioctl.h>
-#        endif /* HAVE_SYS_IOCTL_H */
 #    include <sgtty.h>
 #    endif /* HAVE_TERMIO_H */
 #endif /* HAVE_TERMIOS_H */
+
+#ifdef HAVE_SYS_IOCTL_H
+#include <sys/ioctl.h>
+#endif /* HAVE_SYS_IOCTL_H */
 
 #ifdef HAVE_IOCTL_TYPES_H
 #include <ioctl-types.h>

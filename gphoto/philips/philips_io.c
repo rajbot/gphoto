@@ -946,9 +946,6 @@ char *philips_getthumb(n, size)
 
 	if ( philips_mode != 0 ) philips_set_mode ( 0 );
 
-	/* try and fix thumbnail problems on RDC-5000 */
-	if ( *cameraid == 5000 ) philips_init_query();
-
 	buf[0] = n & 0xff;
 	buf[1] = (n >> 8) & 0xff;
 
@@ -1492,57 +1489,70 @@ struct	CAM_DATA	*cam_data;   /* data returned by camera */
 	size_t	i, x;
 	int		err = 0;
 	u_char	send_buff[260];
+	int		retry = 0;
 
-	philips_flush (); /* make sure camera is ready for command */
-	/* generate crc sent at the end of the packet */
-	crc = updcrc (cmd & 0xff, crc);
-	crc = updcrc (len & 0xff, crc);
-
-	/* send the command type packet header */
-	tbuf[0] = 0x10;
-	tbuf[1] = 0x02;
-	tbuf[2] = cmd;
-	tbuf[3] = len & 0xff;
-	if ( len == 0x10 ) {
-		tbuf[4] = len & 0xff;
-		if ( philips_put (tbuf, 5, 0) ) return ( -1 );
-		}
-	else {
-		if ( philips_put (tbuf, 4, 0) ) return ( -2 );
-		}
-
-	/* send the command */
-	for (i = 0, x = 0; i < len; i++) {
-		send_buff[x] = data[i];
-		crc = updcrc (data[i] & 0xff, crc); /* calculate crc */
-		/* 0x10 must be escaped */
-		if (data[i] == 0x10) {
-			x++;
-			send_buff[x] = data[i];
+	while ( retry < PHILIPS_RESENDS ) {
+		philips_flush (); /* make sure camera is ready for command */
+		/* generate crc sent at the end of the packet */
+		crc = updcrc (cmd & 0xff, crc);
+		crc = updcrc (len & 0xff, crc);
+	
+		/* send the command type packet header */
+		tbuf[0] = 0x10;
+		tbuf[1] = 0x02;
+		tbuf[2] = cmd;
+		tbuf[3] = len & 0xff;
+		if ( len == 0x10 ) {
+			tbuf[4] = len & 0xff;
+			if ( philips_put (tbuf, 5, 0) ) return ( -1 );
 			}
-		x++;
-		}
-	err = philips_put ( &send_buff[0], x, 0 );
-	if ( err ) return ( -3 );
+		else {
+			if ( philips_put (tbuf, 4, 0) ) return ( -2 );
+			}
 
-	/* send the crc identifier */
-	tbuf[0] = 0x10;
-	if ( cam_data->ack_only ) 
-		tbuf[1] = 0x17;
-	else
-		tbuf[1] = 0x03;
+		/* send the command */
+		for (i = 0, x = 0; i < len; i++) {
+			send_buff[x] = data[i];
+			crc = updcrc (data[i] & 0xff, crc); /* calculate crc */
+			/* 0x10 must be escaped */
+			if (data[i] == 0x10) {
+				x++;
+				send_buff[x] = data[i];
+				}
+			x++;
+			}
+		err = philips_put ( &send_buff[0], x, 0 );
+		if ( err ) return ( -3 );
 
-	tbuf[2] = crc & 0x00ff;   /* CRC value */
-	tbuf[3] = (crc & 0xff00) >> 8; /* CRC value */
+		/* send the crc identifier */
+		tbuf[0] = 0x10;
+		if ( cam_data->ack_only ) 
+			tbuf[1] = 0x17;
+		else
+			tbuf[1] = 0x03;
+	
+		tbuf[2] = crc & 0x00ff;   /* CRC value */
+		tbuf[3] = (crc & 0xff00) >> 8; /* CRC value */
 
-	tbuf[4] = len + 2;  /* length of data */
-	tbuf[5] = blkno;    /* block number */
-	if ( philips_put (tbuf, 6, 0) ) return ( -4 );
+		tbuf[4] = len + 2;  /* length of data */
+		tbuf[5] = blkno;    /* block number */
+		if ( philips_put (tbuf, 6, 0) ) return ( -4 );
 
-	if ( (err = philips_getpacket(cam_data)) ) {
-		/* Something went wrong, return error */
+		if ( (err = philips_getpacket ( cam_data )) ) {
+			/* Something went wrong, retry ? */
+			retry++;
+			}
+		else {
+			/* Everything's ok, don't want to retry */
+			retry = PHILIPS_RESENDS + 2;
+			}
+		} /* end of retry while loop */
+
+	if ( err ) {
+		dprintf ( (stderr, "Unable to get packet from camera after %d tries.", retry) );
 		return ( err );
 		}
+
 	if ( (! cam_data->ack_only) && (cam_data->class != cmd) ) {
 		fprintf ( stderr, "execcmd: returned command class (%x) != sent command class (%x), not good!\n", cam_data->class, cmd );
 		fprintf ( stderr, "class = %x\n", cam_data->class );

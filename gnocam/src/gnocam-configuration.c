@@ -20,6 +20,10 @@ struct _GnoCamConfigurationPrivate {
 
 	gchar*		dirname;
 	gchar*		filename;
+
+	GHashTable*	hash_table;
+
+	GtkWidget*	notebook;
 };
 
 /********************/
@@ -41,6 +45,57 @@ set_config (GnoCamConfiguration* configuration)
         if (result != GP_OK)
                 g_warning (_("Could not set configuration of '%s'!\n(%s)"), 
 			gp_widget_label (configuration->priv->widget), gp_camera_result_as_string (configuration->priv->camera, result));
+}
+
+static void
+create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
+{
+	CameraWidgetType	type;
+	gint			i;
+	GtkWidget*		vbox;
+	GtkWidget*		label;
+	GtkWidget*		gtk_widget;
+	GtkWidget*		frame;
+
+	type = gp_widget_type (widget);
+
+	switch (type) {
+	case GP_WIDGET_WINDOW:
+	
+		for (i = 0; i < gp_widget_child_count (widget); i++) {
+			create_widgets (configuration, gp_widget_child (widget, i));
+		}
+		return;
+		
+	case GP_WIDGET_SECTION:
+	
+		label = gtk_label_new (gp_widget_label (widget));
+		gtk_widget_show (label);
+		vbox = gtk_vbox_new (FALSE, 5);
+		gtk_widget_show (vbox);
+		g_hash_table_insert (configuration->priv->hash_table, gp_widget_label (widget), vbox);
+		gtk_notebook_append_page (GTK_NOTEBOOK (configuration->priv->notebook), vbox, label);
+		return;
+		
+	case GP_WIDGET_BUTTON:
+		gtk_widget = gtk_button_new_with_label (gp_widget_label (widget));
+		break;
+	default:
+		gtk_widget = gtk_button_new_with_label ("Implement!");
+		break;
+	}
+	
+	gtk_widget_show (gtk_widget);
+	frame = gtk_frame_new (gp_widget_label (widget));
+	gtk_widget_show (frame);
+	gtk_container_add (GTK_CONTAINER (frame), gtk_widget);
+
+	if (gp_widget_type (widget->parent) == GP_WIDGET_SECTION) {
+		vbox = g_hash_table_lookup (configuration->priv->hash_table, gp_widget_label (widget->parent));
+		gtk_container_add (GTK_CONTAINER (vbox), frame);
+	} else {
+		//Orphans
+	}
 }
 
 /*************/
@@ -90,6 +145,8 @@ gnocam_configuration_destroy (GtkObject* object)
 	gp_widget_unref (configuration->priv->widget);
 	gp_camera_unref (configuration->priv->camera);
 
+	g_hash_table_destroy (configuration->priv->hash_table);
+
 	g_free (configuration->priv);
 
 	(*GTK_OBJECT_CLASS (parent_class)->destroy) (object);
@@ -119,7 +176,6 @@ gnocam_configuration_new (Camera* camera, const gchar* dirname, const gchar* fil
 	gint			result;
 	CameraWidget*		widget = NULL;
 	const gchar*            buttons [] = {GNOME_STOCK_BUTTON_OK, GNOME_STOCK_BUTTON_APPLY, GNOME_STOCK_BUTTON_CANCEL, NULL};
-	GtkWidget*		notebook;
 
 	g_return_val_if_fail (camera, NULL);
 
@@ -141,6 +197,7 @@ gnocam_configuration_new (Camera* camera, const gchar* dirname, const gchar* fil
 	new = gtk_type_new (GNOCAM_TYPE_CONFIGURATION);
 	gp_camera_ref (new->priv->camera = camera);
 	new->priv->widget = widget;
+	new->priv->hash_table = g_hash_table_new (g_str_hash, g_str_equal);
 	gtk_widget_ref (new->priv->parent = parent);
 	gnome_dialog_constructv (GNOME_DIALOG (new), gp_widget_label (new->priv->widget), buttons);
 	gnome_dialog_set_close (GNOME_DIALOG (new), FALSE);
@@ -149,8 +206,11 @@ gnocam_configuration_new (Camera* camera, const gchar* dirname, const gchar* fil
 	gtk_signal_connect (GTK_OBJECT (new), "clicked", GTK_SIGNAL_FUNC (on_button_clicked), new);
 
 	/* Create the notebook */
-	gtk_widget_show (notebook = gtk_notebook_new ());
-	gtk_container_add (GTK_CONTAINER (GNOME_DIALOG (new)->vbox), notebook);
+	gtk_widget_show (new->priv->notebook = gtk_notebook_new ());
+	gtk_container_add (GTK_CONTAINER (GNOME_DIALOG (new)->vbox), new->priv->notebook);
+
+	/* Fill the notebook */
+	create_widgets (new, new->priv->widget);
 
 	return (GTK_WIDGET (new));
 }

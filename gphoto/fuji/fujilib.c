@@ -318,7 +318,7 @@ rd_pkt:
 #ifdef FUJI_DEBUG
 			printf("Recd %d of %d\n",fuji_count,fuji_size);
 #endif
-			update_progress((fuji_count/fuji_size>1)?1.0:
+			update_progress((1.0*fuji_count/fuji_size>1.0)?1.0:
 						1.0*fuji_count/fuji_size);
 
 		};
@@ -495,7 +495,7 @@ int get_picture_info(int num,char *name){
 	   * recent Exif specs, n_off can be either 3 or 4.
 	   */
 	  if (has_cmd[0x17])   fuji_size=dc_picture_size(num);
-	  else fuji_size=65000;  /* this is an educated guess for DS7...*/
+	  else fuji_size=70000;  /* this is an overestimation for DS7 */
 	  return (fuji_size);
 };
 
@@ -638,10 +638,13 @@ int download_picture(int n,int thumb,struct Image *im)
 	}
 	else fuji_size=10500;  /* Probly not same for all cams, better way? */
 	im->image_size=fuji_size;
-	im->image=malloc(fuji_size);
+	im->image=malloc(fuji_size);  /* Provide some headroom */
 	
 	t1 = times(0);
+#ifdef FUJI_DEBUG
 	if (cmd2(0, (thumb?0:0x02), n, im->image)==-1) return(-1);
+	printf("%4d actual bytes vs %4d bytes\n", fuji_count , im->image_size);
+#endif
 	im->image_size=fuji_count;
 	t2 = times(0);
 #ifdef FUJI_DEBUG
@@ -805,7 +808,7 @@ struct Image *fuji_get_picture (int picture_number,int thumbnail){
   printf("fuji_get_picture called for #%d %s\n",picture_number,
 	 thumbnail?"thumb":"photo");
 #endif
-  if (fuji_init()) goto bugout;
+  if (fuji_init()) return(0);/*goto bugout*/;
   if (thumbnail)
     sprintf(tmpfname, "%s/gphoto-thumbnail-%i-%i.jpg",
 	    gphotoDir, getpid(),fuji_piccount);
@@ -815,7 +818,7 @@ struct Image *fuji_get_picture (int picture_number,int thumbnail){
   };
   fuji_piccount++;
 
-  if (download_picture(picture_number,thumbnail,newimage)) goto bugout;
+  if (download_picture(picture_number,thumbnail,newimage)) return(0);/*goto bugout;*/
 
   buffer=newimage->image;
   /* Work on the tags...*/
@@ -862,12 +865,13 @@ struct Image *fuji_get_picture (int picture_number,int thumbnail){
   reset_serial(); /* Wish this wasn't necessary...*/
   return(newimage);
 
+  /*
 bugout:
   imlibimage = gdk_imlib_create_image_from_xpm_data(blank_xpm);
   newimage->image=(char *)blank_xpm;
-  reset_serial(); /* Wish this wasn't necessary...*/
+  reset_serial();
   return(newimage);
-
+*/
 };
 
 int fuji_delete_image (int picture_number){

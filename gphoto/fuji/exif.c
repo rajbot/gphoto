@@ -158,10 +158,10 @@ int togphotostr(exifparser *exifdata,int ifdnum,int tagnum, char** tagnam,char**
   int i,tag,numtags,tagtype,count,typelen,tmp1,tmp2;
   char tmpstr[256];
 
-  *tagnam=*data="";
+  *tagnam=*data=NULL;
   thistag=exifdata->ifds[ifdnum]+tagnum*12+2;
   tag=lilend(thistag,2);          /* tag identifier */
-  *tagnam=tagname(tag);
+  *tagnam=strdup(tagname(tag));
   tagtype=lilend(thistag+2,2);    /* tag type */
   count = lilend(thistag+4, 4);   /* how many */
   typelen=exif_sizetab[tagtype-1];/* length of this type */

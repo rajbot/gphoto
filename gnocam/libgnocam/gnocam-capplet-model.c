@@ -25,7 +25,8 @@ struct _GnoCamCappletModelPrivate
 };
 
 static void
-notify_cameras (GConfClient *client, guint cnxn_id, GConfEntry *entry, gpointer data)
+notify_cameras (GConfClient *client, guint cnxn_id,
+		GConfEntry *entry, gpointer data)
 {
 	GnoCamCappletModel *model;
 	gint		    i;
@@ -33,18 +34,19 @@ notify_cameras (GConfClient *client, guint cnxn_id, GConfEntry *entry, gpointer 
 	model = GNOCAM_CAPPLET_MODEL (data);
 
 	/* Free the current list */ 
-	for (i = 0; i < g_slist_length (model->priv->list); i++) g_free (g_slist_nth_data (model->priv->list, i)); 
+	for (i = 0; i < g_slist_length (model->priv->list); i++)
+		g_free (g_slist_nth_data (model->priv->list, i)); 
 	g_slist_free (model->priv->list); 
 	
 	/* Get the new list */ 
-	model->priv->list = gconf_client_get_list (model->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, NULL); 
+	model->priv->list = gconf_client_get_list (model->priv->client,
+						   "/apps/" PACKAGE "/cameras",
+						   GCONF_VALUE_STRING, NULL); 
 	
 	e_table_model_changed (E_TABLE_MODEL (model)); 
 
 	if (model->priv->capplet)
 		capplet_widget_state_changed (model->priv->capplet, TRUE);
-	else
-		gnocam_capplet_model_ok (model);
 }
 
 /*****************/
@@ -133,11 +135,15 @@ static void
 append_row (ETableModel *m, ETableModel *source, gint row)
 {
 	GnoCamCappletModel *model;
-	gint		    col;
+	gint   col;
+	gchar *name;
 
 	model = GNOCAM_CAPPLET_MODEL (m);
 
-	for (col = 0; col < 3; col++) model->priv->list = g_slist_append (model->priv->list, g_strdup (e_table_model_value_at (source, col, row)));
+	for (col = 0; col < 3; col++) {
+		name = g_strdup (e_table_model_value_at (source, col, row));
+		model->priv->list = g_slist_append (model->priv->list, name);
+	}
 
 	e_table_model_changed (m);
 
@@ -154,19 +160,25 @@ append_row (ETableModel *m, ETableModel *source, gint row)
 void
 gnocam_capplet_model_ok (GnoCamCappletModel *model)
 {
-	gconf_client_set_list (model->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, model->priv->list, NULL);
+	gconf_client_set_list (model->priv->client,
+			       "/apps/" PACKAGE "/cameras",
+			       GCONF_VALUE_STRING, model->priv->list, NULL);
 }
 
 void
 gnocam_capplet_model_cancel (GnoCamCappletModel *model)
 {
-	gconf_client_set_list (model->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, model->priv->backup, NULL);
+	gconf_client_set_list (model->priv->client,
+			       "/apps/" PACKAGE "/cameras",
+			       GCONF_VALUE_STRING, model->priv->backup, NULL);
 }
 
 void
 gnocam_capplet_model_try (GnoCamCappletModel *model)
 {
-	gconf_client_set_list (model->priv->client, "/apps/" PACKAGE "/cameras", GCONF_VALUE_STRING, model->priv->list, NULL);
+	gconf_client_set_list (model->priv->client,
+		               "/apps/" PACKAGE "/cameras",
+			       GCONF_VALUE_STRING, model->priv->list, NULL);
 }
 
 void
@@ -175,7 +187,8 @@ gnocam_capplet_model_revert (GnoCamCappletModel* model)
 	gint i;
 
 	/* Free the current list */ 
-	for (i = 0; i < g_slist_length (model->priv->list); i++) g_free (g_slist_nth_data (model->priv->list, i)); 
+	for (i = 0; i < g_slist_length (model->priv->list); i++)
+		g_free (g_slist_nth_data (model->priv->list, i)); 
 	g_slist_free (model->priv->list); 
 	
 	gconf_client_set_list (model->priv->client,

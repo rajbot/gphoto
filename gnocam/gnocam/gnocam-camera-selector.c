@@ -100,7 +100,7 @@ gnocam_camera_selector_new (void)
 	gtk_box_pack_start (GTK_BOX (vbox), pixmap, FALSE, FALSE, 0);
 	check = gtk_check_button_new_with_label (_("Do not ask again"));
 	gtk_widget_show (check);
-	gtk_box_pack_start (GTK_BOX (vbox), check, TRUE, TRUE, 0);
+	gtk_box_pack_end (GTK_BOX (vbox), check, TRUE, TRUE, 0);
 	gtk_signal_connect (GTK_OBJECT (check), "toggled", 
 			    GTK_SIGNAL_FUNC (on_check_toggled), selector);
 
@@ -133,7 +133,7 @@ gnocam_camera_selector_get_name (GnoCamCameraSelector *selector)
 	table = GNOCAM_CAPPLET_TABLE_SCROLLED (selector->priv->table)->table;
 
 	if (e_table_selected_count (table) != 1)
-		g_warning ("More than one entry selected!");
+		g_warning ("Not exactly one entry selected!");
 
 	e_table_selected_row_foreach (table, foreach_name, selector);
 

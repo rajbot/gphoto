@@ -1,5 +1,11 @@
 2001-07-31	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
+	* gnocam/gnocam-camera-selector.c: Make UI nicer. Fix error message.
+	* libgnocam/gnocam-capplet-model.c: Don't loop forever if table is
+	changed.
+
+2001-07-31	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
 	* capplet/*: Moved some stuff to ...
 	* libgnocam/*: Here is some code that is used by the ...
 	* gnocam/gnocam-camera-selector.c

@@ -33,6 +33,7 @@
 #include "../src/gphoto.h"
 
 #include <sys/time.h>
+#include <string.h>
 #include "print.h"
 #include "rs232.h"
 #include "usb.h"

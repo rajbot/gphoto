@@ -1,6 +1,6 @@
 SUBDIRS = dist-files utils
 
-EXTRA_DIST = README bootstrap.sh clean.sh autogen.sh compileinstall.sh cvs-module-list cvs-module-list-candidates
+EXTRA_DIST = README bootstrap.sh clean.sh autogen.sh compileinstall.sh cvs-module-list cvs-module-list-candidates build-tool-list
 
 install-exec-local: buildstuff
 

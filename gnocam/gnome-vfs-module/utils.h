@@ -23,8 +23,6 @@ typedef struct {
 /* Prototypes */
 /**************/
 
-GnomeVFSResult GNOME_VFS_RESULT (int result);
-
 GnomeVFSMethodHandle*	directory_handle_new (
 				GnomeVFSURI* 		uri,
 				GnomeVFSFileInfoOptions options, 

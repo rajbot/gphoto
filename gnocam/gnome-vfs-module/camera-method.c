@@ -87,32 +87,11 @@ static GnomeVFSResult do_get_file_info_from_handle (
 static gboolean do_is_local (
 	GnomeVFSMethod*			method,
 	const GnomeVFSURI*		uri);
-static GnomeVFSResult do_make_directory (
-	GnomeVFSMethod*			method,
-	GnomeVFSURI*			uri,
-	guint				perm,
-	GnomeVFSContext*		context);
-static GnomeVFSResult do_remove_directory (
-	GnomeVFSMethod*			method,
-	GnomeVFSURI*			uri,
-	GnomeVFSContext*		context);
-static GnomeVFSResult do_move (
-	GnomeVFSMethod*			method,
-	GnomeVFSURI*			old_uri,
-	GnomeVFSURI*			new_uri,
-	gboolean			force_replace,
-	GnomeVFSContext*		context);
 static GnomeVFSResult do_check_same_fs (
 	GnomeVFSMethod*			method,
 	GnomeVFSURI*			a,
 	GnomeVFSURI*			b,
 	gboolean*			same_fs_return,
-	GnomeVFSContext*		context);
-static GnomeVFSResult do_set_file_info (
-	GnomeVFSMethod*			method,
-	GnomeVFSURI*			uri,
-	const GnomeVFSFileInfo*		file_info,
-	GnomeVFSSetFileInfoMask		mask,
 	GnomeVFSContext*		context);
 
 /********************/
@@ -135,12 +114,12 @@ static GnomeVFSMethod method = {
 	do_get_file_info,
 	do_get_file_info_from_handle,
 	do_is_local,
-	do_make_directory,
-	do_remove_directory,
-	do_move,
+	NULL, 				/* do_make_directory */
+	NULL, 				/* do_remove_directory		*/
+	NULL, 				/* do_move */
 	NULL, 				/* do_unlink			*/
 	do_check_same_fs,
-	do_set_file_info,
+	NULL, 				/* do_set_file_info		*/
 	NULL, 				/* do_truncate			*/
 	NULL,				/* do_find_directory 		*/
 	NULL};				/* do_create_symbolic_link	*/
@@ -479,36 +458,6 @@ static gboolean do_is_local (
 	return (!strcmp (gnome_vfs_uri_get_host_name (uri), "Directory Browse"));
 }
 
-static GnomeVFSResult do_make_directory (
-	GnomeVFSMethod*                 method,
-	GnomeVFSURI*                    uri,
-	guint                           perm,
-	GnomeVFSContext*                context)
-{
-	g_print ("do_make_directory\n");
-	return (GNOME_VFS_ERROR_NOT_SUPPORTED);
-}
-
-static GnomeVFSResult do_remove_directory (
-	GnomeVFSMethod*                 method,
-	GnomeVFSURI*                    uri,
-	GnomeVFSContext*                context)
-{
-	g_print ("do_remove_directory\n");
-	return (GNOME_VFS_ERROR_NOT_SUPPORTED);
-}
-
-static GnomeVFSResult do_move (
-	GnomeVFSMethod*                 method,
-	GnomeVFSURI*                    old_uri,
-	GnomeVFSURI*                    new_uri,
-	gboolean                        force_replace,
-	GnomeVFSContext*                context)
-{
-	g_print ("do_move\n");
-	return (GNOME_VFS_ERROR_NOT_SUPPORTED);
-}
-
 static GnomeVFSResult do_check_same_fs (
 	GnomeVFSMethod*                 method,
 	GnomeVFSURI*                    a,
@@ -520,15 +469,5 @@ static GnomeVFSResult do_check_same_fs (
 	return (GNOME_VFS_OK);
 }
 
-static GnomeVFSResult do_set_file_info (
-	GnomeVFSMethod*                 method,
-	GnomeVFSURI*                    uri,
-	const GnomeVFSFileInfo*         file_info,
-	GnomeVFSSetFileInfoMask         mask,
-	GnomeVFSContext*                context)
-{
-	g_print ("do_set_file_info\n");
-	return (GNOME_VFS_ERROR_NOT_SUPPORTED);
-}
 
 

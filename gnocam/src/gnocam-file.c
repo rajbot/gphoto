@@ -8,12 +8,15 @@
 
 #include "e-clipped-label.h"
 #include "utils.h"
+#include "gnocam-configuration.h"
 
 #define PARENT_TYPE BONOBO_X_OBJECT_TYPE
 static BonoboObjectClass* gnocam_file_parent_class;
 
 struct _GnoCamFilePrivate
 {
+	GtkWidget*		window;
+
 	Bonobo_UIContainer	container;
 	BonoboUIComponent*      component;
 
@@ -51,11 +54,17 @@ static unsigned int signals[LAST_SIGNAL] = { 0 };
 "  <menuitem name=\"delete\" _label=\"Delete\" verb=\"\" pixtype=\"stock\" pixname=\"Delete\"/>"	\
 "</placeholder>"
 
+#define GNOCAM_FILE_UI_CONFIGURATION						\
+"<placeholder name=\"Configuration\">"						\
+"  <menuitem name=\"Configuration\" _label=\"Configuration\" verb=\"\"/>"	\
+"</placeholder>"								\
+
 /**************/
 /* Prototypes */
 /**************/
 
 static void 	on_delete_clicked 	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
+static void	on_config_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 
 /********************/
 /* Helper functions */
@@ -65,7 +74,6 @@ static gint
 create_menu (gpointer user_data)
 {
 	GnoCamFile*	file;
-	gint		result;
 
 	g_return_val_if_fail (user_data, FALSE);
 	file = GNOCAM_FILE (user_data);
@@ -81,9 +89,10 @@ create_menu (gpointer user_data)
         }
 
         /* File Configuration? */
-        result = gp_camera_file_config_get (file->priv->camera, &(file->priv->configuration), file->priv->dirname, file->priv->filename);
-        if (result == GP_OK) menu_setup (file->priv->component, file->priv->camera, file->priv->configuration, "/menu/File/FileOperations",
-                file->priv->dirname, file->priv->filename);
+	if (file->priv->camera->abilities->config & GP_CONFIG_FILE) {
+		bonobo_ui_component_set_translate (file->priv->component, "/menu/File/FileOperations", GNOCAM_FILE_UI_CONFIGURATION, NULL);
+		bonobo_ui_component_add_verb (file->priv->component, "Configuration", on_config_clicked, file);
+	}
 
 	return (FALSE);
 }
@@ -244,6 +253,18 @@ on_preview_changed (GConfClient *client, guint cnxn_id, GConfEntry* entry, gpoin
 	gtk_signal_emit (GTK_OBJECT (file), signals [WIDGET_CHANGED]);
 }
 
+static void
+on_config_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
+{
+	GnoCamFile*	file;
+	GtkWidget*	widget;
+
+	file = GNOCAM_FILE (user_data);
+
+	widget = gnocam_configuration_new (file->priv->camera, file->priv->dirname, file->priv->filename, file->priv->window);
+	gtk_widget_show (widget);
+}
+
 /*****************/
 /* Our functions */
 /*****************/
@@ -278,6 +299,8 @@ gnocam_file_destroy (GtkObject* object)
 	GnoCamFile* file;
 
 	file = GNOCAM_FILE (object);
+
+	gtk_widget_unref (file->priv->window);
 
 	bonobo_object_release_unref (file->priv->container, NULL);
 	bonobo_object_unref (BONOBO_OBJECT (file->priv->component));
@@ -331,7 +354,7 @@ gnocam_file_init (GnoCamFile* file)
 }
 
 GnoCamFile*
-gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bonobo_UIContainer container, GConfClient* client)
+gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bonobo_UIContainer container, GConfClient* client, GtkWidget* window)
 {
 	GnoCamFile*		new;
 
@@ -341,6 +364,7 @@ gnocam_file_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bono
 	new->priv->filename = g_strdup (g_basename (path));
 	new->priv->path = g_strdup (path);
 	new->priv->container = bonobo_object_dup_ref (container, NULL);
+	gtk_widget_ref (new->priv->window = window);
 	gp_camera_ref (new->priv->camera = camera);
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
 	new->priv->cnxn = gconf_client_notify_add (client, "/apps/" PACKAGE "/preview", on_preview_changed, new, NULL, NULL);

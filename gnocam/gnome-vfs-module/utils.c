@@ -12,37 +12,6 @@
 /* Functions */
 /*************/
 
-GnomeVFSResult
-GNOME_VFS_RESULT (int result)
-{
-	switch (result) {
-	case GP_OK:
-		return (GNOME_VFS_OK);
-	case GP_ERROR:
-		return (GNOME_VFS_ERROR_GENERIC);
-	case GP_ERROR_BAD_PARAMETERS:
-		return (GNOME_VFS_ERROR_BAD_PARAMETERS);
-	case GP_ERROR_IO:
-		return (GNOME_VFS_ERROR_IO);
-	case GP_ERROR_CORRUPTED_DATA:
-		return (GNOME_VFS_ERROR_CORRUPTED_DATA);
-	case GP_ERROR_FILE_EXISTS:
-		return (GNOME_VFS_ERROR_FILE_EXISTS);
-	case GP_ERROR_NO_MEMORY:
-		return (GNOME_VFS_ERROR_NO_MEMORY);
-	case GP_ERROR_MODEL_NOT_FOUND:
-		return (GNOME_VFS_ERROR_HOST_HAS_NO_ADDRESS);
-	case GP_ERROR_NOT_SUPPORTED:
-		return (GNOME_VFS_ERROR_NOT_SUPPORTED);
-	case GP_ERROR_DIRECTORY_NOT_FOUND:
-		return (GNOME_VFS_ERROR_NOT_FOUND);
-	case GP_ERROR_FILE_NOT_FOUND:
-		return (GNOME_VFS_ERROR_NOT_FOUND);
-	default:
-		return (GNOME_VFS_ERROR_GENERIC);
-	}
-}
-
 GnomeVFSMethodHandle*
 file_handle_new (GnomeVFSURI* uri, GnomeVFSOpenMode mode, GnomeVFSContext* context, GnomeVFSResult* result)
 {

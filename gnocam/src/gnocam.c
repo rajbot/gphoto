@@ -14,20 +14,25 @@
 
 #include "gnocam-main.h"
 
+/***************/
+/* Log-Handler */
+/***************/
+
+static void
+log_handler (const gchar* log_domain, GLogLevelFlags log_level, const gchar* message, gpointer user_data)
+{
+	GtkWindow*	window;
+
+	window = GTK_WINDOW (user_data);
+
+	if (log_level & G_LOG_LEVEL_ERROR & G_LOG_LEVEL_CRITICAL) gnome_error_dialog_parented (message, window);
+	else if (log_level & G_LOG_LEVEL_WARNING) gnome_warning_dialog_parented (message, window);
+	else if (log_level & G_LOG_LEVEL_INFO & G_LOG_LEVEL_MESSAGE) gnome_ok_dialog_parented (message, window);
+}
+
 /*************/
 /* Functions */
 /*************/
-
-static gint
-create_app (gpointer user_data)
-{
-	GConfClient*	client;
-
-	client = GCONF_CLIENT (user_data);
-	gtk_widget_show (GTK_WIDGET (gnocam_main_new (client)));
-
-	return (FALSE);
-}
 
 static void
 load_settings (GConfClient* client)
@@ -85,6 +90,7 @@ int main (int argc, char *argv[])
 	GError*			gerror = NULL;
 	gint			result;
 	GConfClient*		client;
+	GtkWidget*		widget;
 
 	/* Use translated strings. */
 	bindtextdomain (PACKAGE, GNOME_LOCALEDIR);
@@ -108,9 +114,17 @@ int main (int argc, char *argv[])
 	/* Init GConf */
 	if (!gconf_init (argc, argv, &gerror)) g_error ("Could not initialize gconf: %s", gerror->message);
 	g_return_val_if_fail (client = gconf_client_get_default (), 1);
-	
+
 	load_settings (client);
-	gtk_idle_add (create_app, client);
+
+	/* Create app */
+	widget = gnocam_main_new (client);
+	gtk_widget_show (widget);
+
+        /* Redirect messages */
+//	g_log_set_handler (G_LOG_DOMAIN, 
+//	        G_LOG_LEVEL_ERROR | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_MESSAGE | G_LOG_LEVEL_INFO,
+//	        log_handler, widget);
 
 	/* Start the event loop. */
 	bonobo_main ();

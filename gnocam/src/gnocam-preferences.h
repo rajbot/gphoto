@@ -1,6 +1,6 @@
 
-#ifndef GNOCAM_PREFERENCES_H_
-#define GNOCAM_PREFERENCES_H_
+#ifndef _GNOCAM_PREFERENCES_H_
+#define _GNOCAM_PREFERENCES_H_
 
 #include <gnome.h>
 

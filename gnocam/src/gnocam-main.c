@@ -87,7 +87,7 @@ create_camera (gpointer user_data)
 
         /* Get the camera */
         CORBA_exception_init (&ev);
-        camera = gnocam_camera_new (m->priv->url, m->priv->container, GTK_WINDOW (m), m->priv->client, &ev);
+        camera = gnocam_camera_new (m->priv->url, m->priv->container, GTK_WIDGET (m), m->priv->client, &ev);
         if (BONOBO_EX (&ev)) {
                 gchar*  message;
 
@@ -267,7 +267,7 @@ gnocam_main_init (GnoCamMain* m)
 	m->priv = g_new0 (GnoCamMainPrivate, 1);
 }
 
-GnoCamMain*
+GtkWidget*
 gnocam_main_new (GConfClient* client)
 {
 	BonoboUIContainer*	container;
@@ -318,7 +318,7 @@ gnocam_main_new (GConfClient* client)
 	position = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/hpaned_position_main", NULL);
 	if (position) e_paned_set_position (E_PANED (new->priv->hpaned), position);
 
-	return (new);
+	return (GTK_WIDGET (new));
 }
 
 E_MAKE_TYPE (gnocam_main, "GnoCamMain", GnoCamMain, gnocam_main_class_init, gnocam_main_init, PARENT_TYPE)

@@ -28,7 +28,7 @@ struct _GnoCamMainClass {
 };
 
 GtkType		gnocam_main_get_type 	(void);
-GnoCamMain*	gnocam_main_new 	(GConfClient* client);
+GtkWidget*	gnocam_main_new 	(GConfClient* client);
 
 END_GNOME_DECLS
 

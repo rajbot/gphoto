@@ -114,11 +114,7 @@ on_druidpagestandard_model_prepare (GnomeDruidPage* page, GtkWidget* druid)
 		model = g_strdup (gtk_entry_get_text (entry));
                 gtk_combo_set_popdown_strings (combo, list);
 		gtk_entry_set_text (entry, model);
-        } else {
-                gchar* tmp = g_strdup_printf (_("Could not get number of supported models!\n(%s)"), gp_result_as_string (number_of_models));
-                gnome_error_dialog_parented (tmp, window);
-                g_free (tmp);
-        }
+        } else g_warning (_("Could not get number of supported models!\n(%s)"), gp_result_as_string (number_of_models));
 }
 
 void
@@ -144,9 +140,7 @@ on_druidpagestandard_port_prepare (GnomeDruidPage* page, GtkWidget* druid)
         if ((result = gp_camera_abilities_by_name (gtk_entry_get_text (entry_model), &abilities)) == GP_OK) {
                 for (i = 0; i < gp_port_count_get (); i++) {
                         if ((result = gp_port_info_get (i, &info)) != GP_OK) {
-                                gchar* tmp = g_strdup_printf (_("Could not get information about port number %i!\n(%s)"), i, gp_result_as_string (result));
-                                gnome_error_dialog_parented (tmp, window);
-                                g_free (tmp);
+				g_warning (_("Could not get information about port number %i!\n(%s)"), i, gp_result_as_string (result));
 				continue;
                         }
                         if (    ((info.type == GP_PORT_SERIAL) && (SERIAL_SUPPORTED (abilities.port))) ||
@@ -160,11 +154,7 @@ on_druidpagestandard_port_prepare (GnomeDruidPage* page, GtkWidget* druid)
 		port = g_strdup (gtk_entry_get_text (entry_port));
                 gtk_combo_set_popdown_strings (combo, list);
 		gtk_entry_set_text (entry_port, port);
-        } else {
-                gchar* tmp = g_strdup_printf (_("Could not get abilities for model '%s'!\n(%s)"), gtk_entry_get_text (entry_model), gp_result_as_string (result));
-                gnome_error_dialog_parented (tmp, window);
-                g_free (tmp);
-        }
+        } else g_warning (_("Could not get abilities for model '%s'!\n(%s)"), gtk_entry_get_text (entry_model), gp_result_as_string (result));
 }
 
 void
@@ -309,7 +299,7 @@ gnocam_preferences_new (GtkWindow* parent)
 	const gchar*		buttons [] = {GNOME_STOCK_BUTTON_OK, NULL};
 	gchar*			titles [] = {_("Name"), _("Model"), _("Port"), NULL};
 
-	new = gtk_type_new (gnocam_preferences_get_type ());
+	new = gtk_type_new (GNOCAM_TYPE_PREFERENCES);
 	gnome_dialog_constructv (GNOME_DIALOG (new), _(PACKAGE " - Preferences"), buttons);
 	gnome_dialog_set_close (GNOME_DIALOG (new), TRUE);
 	new->priv->client = gconf_client_get_default ();

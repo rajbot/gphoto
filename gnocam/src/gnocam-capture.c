@@ -147,11 +147,7 @@ do_capture (GnoCamCapture* capture)
         /* Capture. */
         result = gp_camera_capture (capture->priv->camera, file, &info);
 	if (result != GP_OK) {
-		gchar* 	message;
-		
-		message = g_strdup_printf (_("Could not capture!\n(%s)"), gp_camera_result_as_string (capture->priv->camera, result));
-		gnome_error_dialog_parented (message, GTK_WINDOW (capture));
-		g_free (message);
+		g_warning (_("Could not capture!\n(%s)"), gp_camera_result_as_string (capture->priv->camera, result));
 		gp_file_unref (file);
 		return;
 	}
@@ -168,11 +164,7 @@ do_capture (GnoCamCapture* capture)
         object = oaf_activate (oaf_requirements, NULL, 0, &ret_id, &ev);
         g_free (oaf_requirements);
         if (BONOBO_EX (&ev)) {
-		gchar*	message;
-		
-		message = g_strdup_printf (_("Could not get object capable of handling file of type %s!\n(%s)"), file->type, bonobo_exception_get_text (&ev));
-		gnome_error_dialog_parented (message, GTK_WINDOW (capture));
-		g_free (message);
+		g_warning (_("Could not get object capable of handling file of type %s!\n(%s)"), file->type, bonobo_exception_get_text (&ev));
 		CORBA_exception_free (&ev);
 		gp_file_unref (file);
                 return;
@@ -187,11 +179,7 @@ do_capture (GnoCamCapture* capture)
 	/* Get the persist stream interface */
          persist = Bonobo_Unknown_queryInterface (object, "IDL:Bonobo/PersistStream:1.0", &ev);
          if (BONOBO_EX (&ev)) {
-	 	gchar*	message;
-		
-		message = g_strdup_printf (_("Could not get 'PersistStream' interface!\n(%s)"), bonobo_exception_get_text (&ev));
-		gnome_error_dialog_parented (message, GTK_WINDOW (capture));
-		g_free (message);
+	 	g_warning (_("Could not get 'PersistStream' interface!\n(%s)"), bonobo_exception_get_text (&ev));
 		bonobo_object_unref (BONOBO_OBJECT (stream));
 		CORBA_exception_free (&ev);
                 return;
@@ -203,11 +191,7 @@ do_capture (GnoCamCapture* capture)
 	bonobo_object_unref (BONOBO_OBJECT (stream));
 	bonobo_object_release_unref (persist, &ev);
         if (BONOBO_EX (&ev)) {
-		gchar*  message;
-		
-		message = g_strdup_printf (_("Could not load stream!\n(%s)"), bonobo_exception_get_text (&ev));
-		gnome_error_dialog_parented (message, GTK_WINDOW (capture));
-		g_free (message);
+		g_warning (_("Could not load stream!\n(%s)"), bonobo_exception_get_text (&ev));
 		CORBA_exception_free (&ev);
 		return;
 	}
@@ -215,11 +199,7 @@ do_capture (GnoCamCapture* capture)
 	/* Get the control */
 	control = Bonobo_Unknown_queryInterface (object, "IDL:Bonobo/Control:1.0", &ev);
 	if (BONOBO_EX (&ev)) {
-		gchar*  message;
-
-		message = g_strdup_printf (_("Could not get control!\n(%s)"), bonobo_exception_get_text (&ev));
-		gnome_error_dialog_parented (message, GTK_WINDOW (capture));
-		g_free (message);
+		g_warning (_("Could not get control!\n(%s)"), bonobo_exception_get_text (&ev));
 		CORBA_exception_free (&ev);
 		return;
 	}
@@ -263,15 +243,11 @@ on_manual_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 
         result = gp_camera_manual (capture->priv->camera, &manual);
         if (result != GP_OK) {
-		gchar*	message;
-		
-		message = g_strdup_printf (_("Could not get camera manual!\n(%s)"), gp_camera_result_as_string (capture->priv->camera, result));
-		gnome_error_dialog_parented (message, GTK_WINDOW (capture));
-                g_free (message);
+		g_warning (_("Could not get camera manual!\n(%s)"), gp_camera_result_as_string (capture->priv->camera, result));
 		return;
         }
 
-        gnome_ok_dialog_parented (manual.text, GTK_WINDOW (capture));
+        g_message (manual.text);
 }
 
 static void

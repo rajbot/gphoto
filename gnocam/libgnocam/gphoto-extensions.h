@@ -1,9 +1,10 @@
 
-#ifndef GPHOTO_EXTENSIONS_H
-#define GPHOTO_EXTENSIONS_H
+#ifndef _GPHOTO_EXTENSIONS_H_
+#define _GPHOTO_EXTENSIONS_H_
 
 #include <gphoto2.h>
 #include <bonobo.h>
+#include <libgnomevfs/gnome-vfs.h>
 
 BEGIN_GNOME_DECLS
 
@@ -32,11 +33,21 @@ BEGIN_GNOME_DECLS
                 }                                                                                                               \
         }                               }G_STMT_END
 
-gint gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url);
+#define GNOME_VFS_RESULT(result)	(gp_result_as_gnome_vfs_result(result))
+
+
+
+
+GnomeVFSResult 	gp_result_as_gnome_vfs_result 	(gint result);
+
+gint 		gp_camera_new_from_gconf 	(Camera** camera, const gchar* name_or_url);
+
+
+
 
 END_GNOME_DECLS
 
-#endif
+#endif /* _GPHOTO_EXTENSIONS_H_ */
 
 
 	

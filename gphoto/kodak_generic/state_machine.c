@@ -256,8 +256,20 @@ state_machine_run
          }
          else
          {
-            printf("state_machine_run: select: timeout\n");
-            next_state = line->error_handler(line->descriptor, ERROR_TIMEOUT);
+            printf("state_machine_run: select: timeout after %d bytes (out of %d)\n",
+                self->num_rx, line->bytes_read);
+
+            if (self->rx_buffer != NULL)
+            {
+               /* Make timeout errors look like checksum errors */
+               next_state = STATE_INVALID;
+            }
+            else
+            {
+               /* Report the error if no data has been received yet */
+               next_state = line->error_handler(line->descriptor,
+                  ERROR_TIMEOUT);
+            }
          }
       }
       else

@@ -27,7 +27,7 @@
    Boston, MA 02111-1307, USA.
  */
 
-#include "config.h"
+//#include "config.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -60,26 +60,26 @@ static struct sgttyb term_old;
 
 /* Serial prototypes
    ------------------------------------------------------------------ */
-int 		gpio_serial_init(gpio_device *dev);
-int 		gpio_serial_exit(gpio_device *dev);
+int             gpio_serial_init(gpio_device *dev);
+int             gpio_serial_exit(gpio_device *dev);
 
-int 		gpio_serial_open(gpio_device *dev);
-int 		gpio_serial_close(gpio_device *dev);
+int             gpio_serial_open(gpio_device *dev);
+int             gpio_serial_close(gpio_device *dev);
 
-int 		gpio_serial_read(gpio_device *dev, char *bytes, int size);
-int 		gpio_serial_write(gpio_device *dev, char *bytes, int size);
+int             gpio_serial_read(gpio_device *dev, char *bytes, int size);
+int             gpio_serial_write(gpio_device *dev, char *bytes, int size);
 
-int 		gpio_serial_update (gpio_device *dev);
+int             gpio_serial_update (gpio_device *dev);
 
 /* Specific */
-int		gpio_serial_get_pin(gpio_device *dev, int pin);
-int     	gpio_serial_set_pin(gpio_device *dev, int pin, int level); 
-int		gpio_serial_send_break (gpio_device *dev, int duration);
+int             gpio_serial_get_pin(gpio_device *dev, int pin);
+int             gpio_serial_set_pin(gpio_device *dev, int pin, int level);
+int             gpio_serial_send_break (gpio_device *dev, int duration);
 
 
 /* private */
-int 		gpio_serial_set_baudrate(gpio_device *dev);
-static speed_t 	gpio_serial_baudconv(int rate);
+int             gpio_serial_set_baudrate(gpio_device *dev);
+static speed_t  gpio_serial_baudconv(int rate);
 
 /* Dynamic library functions
    --------------------------------------------------------------------- */
@@ -94,7 +94,7 @@ gpio_operations *gpio_library_operations () {
         gpio_operations *ops;
 
         ops = (gpio_operations*)malloc(sizeof(gpio_operations));
-	memset(ops, 0, sizeof(gpio_operations));
+        memset(ops, 0, sizeof(gpio_operations));
 
         ops->init   = gpio_serial_init;
         ops->exit   = gpio_serial_exit;
@@ -112,217 +112,217 @@ gpio_operations *gpio_library_operations () {
 
 int gpio_library_list (gpio_device_info *list, int *count) {
 
-	
-	char buf[1024], prefix[1024];
-	int x, fd;
+
+        char buf[1024], prefix[1024];
+        int x, fd;
 #ifdef linux
-	/* devfs */
-	struct stat s;
+        /* devfs */
+        struct stat s;
 #endif
 #ifdef OS2
         int rc,fh,option;
 #endif
 
-	/* Copy in the serial port prefix */
-	strcpy(prefix, GPIO_SERIAL_PREFIX);
+        /* Copy in the serial port prefix */
+        strcpy(prefix, GPIO_SERIAL_PREFIX);
 
 #ifdef linux
-	/* devfs */
-	if (stat("/dev/tts", &s)==0)
-		strcpy(prefix, "/dev/tts/%i");
+        /* devfs */
+        if (stat("/dev/tts", &s)==0)
+                strcpy(prefix, "/dev/tts/%i");
 #endif
-	for (x=GPIO_SERIAL_RANGE_LOW; x<=GPIO_SERIAL_RANGE_HIGH; x++) {
-		sprintf(buf, prefix, x);
+        for (x=GPIO_SERIAL_RANGE_LOW; x<=GPIO_SERIAL_RANGE_HIGH; x++) {
+                sprintf(buf, prefix, x);
 #ifdef OS2
-	   rc = DosOpen(buf,&fh,&option,0,0,1,OPEN_FLAGS_FAIL_ON_ERROR|OPEN_SHARE_DENYREADWRITE,0);
-	   DosClose(fh);
-	   if(rc==0) {
+           rc = DosOpen(buf,&fh,&option,0,0,1,OPEN_FLAGS_FAIL_ON_ERROR|OPEN_SHARE_DENYREADWRITE,0);
+           DosClose(fh);
+           if(rc==0) {
 #endif
-		fd = open (buf, O_RDONLY | O_NDELAY);
-		if (fd != -1) {
-			close(fd);
-			list[*count].type = GPIO_DEVICE_SERIAL;
-			strcpy(list[*count].path, buf);
-			sprintf(buf, "Serial Port %i", x);
-			strcpy(list[*count].name, buf);
-			list[*count].argument_needed = 0;
-			*count += 1;
-		}
+                fd = open (buf, O_RDONLY | O_NDELAY);
+                if (fd != -1) {
+                        close(fd);
+                        list[*count].type = GPIO_DEVICE_SERIAL;
+                        strcpy(list[*count].path, buf);
+                        sprintf(buf, "Serial Port %i", x);
+                        strcpy(list[*count].name, buf);
+                        list[*count].argument_needed = 0;
+                        *count += 1;
+                }
 #ifdef OS2
-	   }
+           }
 #endif
-	}
+        }
 
-	return (GPIO_OK);
+        return (GPIO_OK);
 }
 
 /* Serial API functions
    ------------------------------------------------------------------ */
 
 int gpio_serial_init (gpio_device *dev) {
-	/* save previous setttings in to dev->settings_saved */
+        /* save previous setttings in to dev->settings_saved */
 #if HAVE_TERMIOS_H
-	if (tcgetattr(dev->device_fd, &term_old) < 0) {
-		perror("tcgetattr");
-		return GPIO_ERROR;
-	}
+        if (tcgetattr(dev->device_fd, &term_old) < 0) {
+                perror("tcgetattr");
+                return GPIO_ERROR;
+        }
 #else
-	if (ioctl(dev->device_fd, TIOCGETP, &term_old) < 0) {
-		perror("ioctl(TIOCGETP)");
-		return GPIO_ERROR;
-	}
+        if (ioctl(dev->device_fd, TIOCGETP, &term_old) < 0) {
+                perror("ioctl(TIOCGETP)");
+                return GPIO_ERROR;
+        }
 #endif
-	return GPIO_OK;
+        return GPIO_OK;
 }
 
 int gpio_serial_exit (gpio_device *dev) {
-	/* ... */
-	return GPIO_OK;
+        /* ... */
+        return GPIO_OK;
 }
 
 int gpio_serial_open(gpio_device * dev)
 {
 
 #ifdef __FreeBSD__
-	dev->device_fd = open(dev->settings.serial.port, O_RDWR | O_NOCTTY | O_NONBLOCK);
+        dev->device_fd = open(dev->settings.serial.port, O_RDWR | O_NOCTTY | O_NONBLOCK);
 #else
-	dev->device_fd = open(dev->settings.serial.port, O_RDWR | O_NOCTTY | O_SYNC | O_NONBLOCK);
+        dev->device_fd = open(dev->settings.serial.port, O_RDWR | O_NOCTTY | O_SYNC | O_NONBLOCK);
 #endif
-	if (dev->device_fd == -1) {
-		fprintf(stderr, "gpio_serial_open: failed to open ");
-		perror(dev->settings.serial.port);
-		return GPIO_ERROR;
-	}
+        if (dev->device_fd == -1) {
+                fprintf(stderr, "gpio_serial_open: failed to open ");
+                perror(dev->settings.serial.port);
+                return GPIO_ERROR;
+        }
 
-/*	if (ioctl (dev->device_fd, TIOCMBIC, &RTS) <0) {
-		perror("ioctl(TIOCMBIC)");
-		return GPIO_ERROR;
-	} */
-	return GPIO_OK;
+/*      if (ioctl (dev->device_fd, TIOCMBIC, &RTS) <0) {
+                perror("ioctl(TIOCMBIC)");
+                return GPIO_ERROR;
+        } */
+        return GPIO_OK;
 }
 
 int gpio_serial_close(gpio_device * dev)
 {
-	if (close(dev->device_fd) == -1) {
-		perror("gpio_serial_close: tried closing device file descriptor");
-		return GPIO_ERROR;
-	}
-	return GPIO_OK;
+        if (close(dev->device_fd) == -1) {
+                perror("gpio_serial_close: tried closing device file descriptor");
+                return GPIO_ERROR;
+        }
+        return GPIO_OK;
 }
 
 int gpio_serial_write(gpio_device * dev, char *bytes, int size)
 {
-	int len, ret;
+        int len, ret;
 
-	len = 0;
-	while (len < size) {	/* Make sure we write all data while handling */
-		/* the harmless errors */
-		if ((ret = write(dev->device_fd, bytes, size - len)) == -1)
-			switch (errno) {
-			case EAGAIN:
-			case EINTR:
-				ret = 0;
-				break;
-			default:
-				perror("gpio_serial_write");
-				return GPIO_ERROR;
-			}
-		len += ret;
-	}
+        len = 0;
+        while (len < size) {    /* Make sure we write all data while handling */
+                /* the harmless errors */
+                if ((ret = write(dev->device_fd, bytes, size - len)) == -1)
+                        switch (errno) {
+                        case EAGAIN:
+                        case EINTR:
+                                ret = 0;
+                                break;
+                        default:
+                                perror("gpio_serial_write");
+                                return GPIO_ERROR;
+                        }
+                len += ret;
+        }
 
-	/* wait till all bytes are really sent */
+        /* wait till all bytes are really sent */
 #ifndef OS2
 #if HAVE_TERMIOS_H
-	tcdrain(dev->device_fd);
+        tcdrain(dev->device_fd);
 #else
-	ioctl(dev->device_fd, TCDRAIN, 0);
+        ioctl(dev->device_fd, TCDRAIN, 0);
 #endif
 #endif
-	return GPIO_OK;
+        return GPIO_OK;
 }
 
 
 int gpio_serial_read(gpio_device * dev, char *bytes, int size)
 {
-	struct timeval timeout;
-	fd_set readfs;		/* file descriptor set */
-	int readen = 0;
-	int rc;
+        struct timeval timeout;
+        fd_set readfs;          /* file descriptor set */
+        int readen = 0;
+        int rc;
 
-	FD_ZERO(&readfs);
-	FD_SET(dev->device_fd, &readfs);
+        FD_ZERO(&readfs);
+        FD_SET(dev->device_fd, &readfs);
 
-	while (readen < size) {
-		/* set timeout value within input loop */
-		timeout.tv_usec = (dev->timeout % 1000) * 1000;
-		timeout.tv_sec = (dev->timeout / 1000);	 /* = 0
-							  * if dev->timeout < 1000
-							  */
+        while (readen < size) {
+                /* set timeout value within input loop */
+                timeout.tv_usec = (dev->timeout % 1000) * 1000;
+                timeout.tv_sec = (dev->timeout / 1000);  /* = 0
+                                                          * if dev->timeout < 1000
+                                                          */
 
 
-		rc = select(dev->device_fd + 1, &readfs, NULL, NULL, &timeout);
+                rc = select(dev->device_fd + 1, &readfs, NULL, NULL, &timeout);
 /*              if ( (rc == 0) && (readen == 0)) { */
-		/* Timeout before reading anything */
+                /* Timeout before reading anything */
 /*                printf("gpio_serial_read (timeout)\n"); */
 /*                return GPIO_TIMEOUT; */
 /*              } */
-		if (0 == rc) {
-			return GPIO_TIMEOUT;
-		}
-		if (FD_ISSET(dev->device_fd, &readfs)) {
-			int now = read(dev->device_fd, bytes, size - readen);
+                if (0 == rc) {
+                        return GPIO_TIMEOUT;
+                }
+                if (FD_ISSET(dev->device_fd, &readfs)) {
+                        int now = read(dev->device_fd, bytes, size - readen);
 
-			if (now < 0) {
-				perror("gpio_serial_read (read fails)");
-				return GPIO_ERROR;
-			} else {
-				bytes += now;
-				readen += now;
-			}
-		} else {
-			perror("gpio_serial_read (tty timeout)");
-			return GPIO_ERROR;
-		}
-	}
-	return readen;
+                        if (now < 0) {
+                                perror("gpio_serial_read (read fails)");
+                                return GPIO_ERROR;
+                        } else {
+                                bytes += now;
+                                readen += now;
+                        }
+                } else {
+                        perror("gpio_serial_read (tty timeout)");
+                        return GPIO_ERROR;
+                }
+        }
+        return readen;
 }
 
 /*
  * Get the status of the lines of the serial port
- * 
+ *
  */
 int gpio_serial_get_pin(gpio_device * dev, int pin)
 {
-	int j, bit;
+        int j, bit;
 
-	switch(pin) {
-		case PIN_RTS:
-			bit = TIOCM_RTS;
-			break;
-		case PIN_DTR:
-			bit = TIOCM_DTR;
-			break;
-		case PIN_CTS:
-			bit = TIOCM_CTS;
-			break;
-		case PIN_DSR:
-			bit = TIOCM_DSR;
-			break;
-		case PIN_CD:
-			bit = TIOCM_CD;
-			break;
-		case PIN_RING:
-			bit = TIOCM_RNG;
-			break;
-		default:
-			return GPIO_ERROR;
-	}
-	
-	if (ioctl(dev->device_fd, TIOCMGET, &j) < 0) {
-		perror("gpio_serial_status (Getting hardware status bits)");
-		return GPIO_ERROR;
-	}
-	return (j & bit);
+        switch(pin) {
+                case PIN_RTS:
+                        bit = TIOCM_RTS;
+                        break;
+                case PIN_DTR:
+                        bit = TIOCM_DTR;
+                        break;
+                case PIN_CTS:
+                        bit = TIOCM_CTS;
+                        break;
+                case PIN_DSR:
+                        bit = TIOCM_DSR;
+                        break;
+                case PIN_CD:
+                        bit = TIOCM_CD;
+                        break;
+                case PIN_RING:
+                        bit = TIOCM_RNG;
+                        break;
+                default:
+                        return GPIO_ERROR;
+        }
+
+        if (ioctl(dev->device_fd, TIOCMGET, &j) < 0) {
+                perror("gpio_serial_status (Getting hardware status bits)");
+                return GPIO_ERROR;
+        }
+        return (j & bit);
 }
 
 /*
@@ -333,48 +333,48 @@ int gpio_serial_get_pin(gpio_device * dev, int pin)
 */
 int gpio_serial_set_pin(gpio_device * dev, int pin, int level)
 {
-	int bit,request;
+        int bit,request;
 
-	switch(pin) {
-		case PIN_RTS:
-			bit = TIOCM_RTS;
-			break;
-		case PIN_DTR:
-			bit = TIOCM_DTR;
-			break;
-		case PIN_CTS:
-			bit = TIOCM_CTS;
-			break;
-		case PIN_DSR:
-			bit = TIOCM_DSR;
-			break;
-		case PIN_CD:
-			bit = TIOCM_CD;
-			break;
-		case PIN_RING:
-			bit = TIOCM_RNG;
-			break;
-		default:
-			return GPIO_ERROR;
-	}
-	
-	switch(level) {
-		case 0:
-			request = TIOCMBIS;
-			break;
-		case 1:
-			request = TIOCMBIC;
-			break;
-		default:
-			return GPIO_ERROR;
-	}	
+        switch(pin) {
+                case PIN_RTS:
+                        bit = TIOCM_RTS;
+                        break;
+                case PIN_DTR:
+                        bit = TIOCM_DTR;
+                        break;
+                case PIN_CTS:
+                        bit = TIOCM_CTS;
+                        break;
+                case PIN_DSR:
+                        bit = TIOCM_DSR;
+                        break;
+                case PIN_CD:
+                        bit = TIOCM_CD;
+                        break;
+                case PIN_RING:
+                        bit = TIOCM_RNG;
+                        break;
+                default:
+                        return GPIO_ERROR;
+        }
 
-	if (ioctl (dev->device_fd, request, &bit) <0) {
+        switch(level) {
+                case 0:
+                        request = TIOCMBIS;
+                        break;
+                case 1:
+                        request = TIOCMBIC;
+                        break;
+                default:
+                        return GPIO_ERROR;
+        }
+
+        if (ioctl (dev->device_fd, request, &bit) <0) {
         perror("ioctl(TIOCMBI[CS])");
         return GPIO_ERROR;
     }
 
-	return GPIO_OK;	
+        return GPIO_OK;
 }
 
 /*
@@ -383,17 +383,17 @@ int gpio_serial_set_pin(gpio_device * dev, int pin, int level)
  */
 int gpio_serial_update(gpio_device * dev)
 {
-	memcpy(&dev->settings, &dev->settings_pending, sizeof(dev->settings));
+        memcpy(&dev->settings, &dev->settings_pending, sizeof(dev->settings));
 
-	if (dev->device_fd != 0) {
-		if (gpio_serial_close(dev) == GPIO_ERROR)
-			return GPIO_ERROR;
-		if (gpio_serial_open(dev) == GPIO_ERROR)
-			return GPIO_ERROR;
+        if (dev->device_fd != 0) {
+                if (gpio_serial_close(dev) == GPIO_ERROR)
+                        return GPIO_ERROR;
+                if (gpio_serial_open(dev) == GPIO_ERROR)
+                        return GPIO_ERROR;
 
-		return gpio_serial_set_baudrate(dev);
-	}
-	return GPIO_OK;
+                return gpio_serial_set_baudrate(dev);
+        }
+        return GPIO_OK;
 }
 
 /*
@@ -405,126 +405,126 @@ int gpio_serial_update(gpio_device * dev)
 int gpio_serial_set_baudrate(gpio_device * dev)
 {
 #if HAVE_TERMIOS_H
-	struct termios tio;
+        struct termios tio;
 
-	if (tcgetattr(dev->device_fd, &tio) < 0) {
-		perror("tcgetattr");
-		return GPIO_ERROR;
-	}
-	tio.c_cflag = (tio.c_cflag & ~CSIZE) | CS8;
+        if (tcgetattr(dev->device_fd, &tio) < 0) {
+                perror("tcgetattr");
+                return GPIO_ERROR;
+        }
+        tio.c_cflag = (tio.c_cflag & ~CSIZE) | CS8;
 
-	/* Set into raw, no echo mode */
+        /* Set into raw, no echo mode */
 #if defined(__FreeBSD__) || defined(__NetBSD__)
-	tio.c_iflag &= ~(IGNBRK | IGNCR | INLCR | ICRNL |
-			 IXANY | IXON | IXOFF | INPCK | ISTRIP);
+        tio.c_iflag &= ~(IGNBRK | IGNCR | INLCR | ICRNL |
+                         IXANY | IXON | IXOFF | INPCK | ISTRIP);
 #else
-	tio.c_iflag &= ~(IGNBRK | IGNCR | INLCR | ICRNL | IUCLC |
-			 IXANY | IXON | IXOFF | INPCK | ISTRIP);
+        tio.c_iflag &= ~(IGNBRK | IGNCR | INLCR | ICRNL | IUCLC |
+                         IXANY | IXON | IXOFF | INPCK | ISTRIP);
 #endif
-	tio.c_iflag |= (BRKINT | IGNPAR);
-	tio.c_oflag &= ~OPOST;
-	tio.c_lflag &= ~(ICANON | ISIG | ECHO | ECHONL | ECHOE |
-			 ECHOK | IEXTEN);
-    	tio.c_cflag &= ~(CRTSCTS | PARENB | PARODD);
-	tio.c_cflag |= CLOCAL | CREAD;
+        tio.c_iflag |= (BRKINT | IGNPAR);
+        tio.c_oflag &= ~OPOST;
+        tio.c_lflag &= ~(ICANON | ISIG | ECHO | ECHONL | ECHOE |
+                         ECHOK | IEXTEN);
+        tio.c_cflag &= ~(CRTSCTS | PARENB | PARODD);
+        tio.c_cflag |= CLOCAL | CREAD;
 
-	tio.c_cc[VMIN] = 1;
-	tio.c_cc[VTIME] = 0;
+        tio.c_cc[VMIN] = 1;
+        tio.c_cc[VTIME] = 0;
 
-	cfsetispeed(&tio, gpio_serial_baudconv(dev->settings.serial.speed));
-	cfsetospeed(&tio, gpio_serial_baudconv(dev->settings.serial.speed));
+        cfsetispeed(&tio, gpio_serial_baudconv(dev->settings.serial.speed));
+        cfsetospeed(&tio, gpio_serial_baudconv(dev->settings.serial.speed));
 
-	if (tcsetattr(dev->device_fd, TCSANOW, &tio) < 0) {
-		perror("tcsetattr");
-		return GPIO_ERROR;
-	}
-	if (fcntl(dev->device_fd, F_SETFL, 0) < 0) {	/* clear O_NONBLOCK */
-		perror("fcntl F_SETFL");
-		return -1;
-	}
+        if (tcsetattr(dev->device_fd, TCSANOW, &tio) < 0) {
+                perror("tcsetattr");
+                return GPIO_ERROR;
+        }
+        if (fcntl(dev->device_fd, F_SETFL, 0) < 0) {    /* clear O_NONBLOCK */
+                perror("fcntl F_SETFL");
+                return -1;
+        }
 #else
-	struct sgttyb ttyb;
+        struct sgttyb ttyb;
 
-	if (ioctl(dev->device_fd, TIOCGETP, &ttyb) < 0) {
-		perror("ioctl(TIOCGETP)");
-		return GPIO_ERROR;
-	}
-	ttyb.sg_ispeed = dev->settings.serial.speed;
-	ttyb.sg_ospeed = dev->settings.serial.speed;
-	ttyb.sg_flags = 0;
+        if (ioctl(dev->device_fd, TIOCGETP, &ttyb) < 0) {
+                perror("ioctl(TIOCGETP)");
+                return GPIO_ERROR;
+        }
+        ttyb.sg_ispeed = dev->settings.serial.speed;
+        ttyb.sg_ospeed = dev->settings.serial.speed;
+        ttyb.sg_flags = 0;
 
-	if (ioctl(dev->device_fd, TIOCSETP, &ttyb) < 0) {
-		perror("ioctl(TIOCSETP)");
-		return GPIO_ERROR;
-	}
+        if (ioctl(dev->device_fd, TIOCSETP, &ttyb) < 0) {
+                perror("ioctl(TIOCSETP)");
+                return GPIO_ERROR;
+        }
 #endif
 
-	return GPIO_OK;
+        return GPIO_OK;
 }
 
 /* Called to convert a int baud to the POSIX enum value */
 static speed_t gpio_serial_baudconv(int baud)
 {
 #define BAUDCASE(x)     case (x): { ret = B##x; break; }
-	speed_t ret;
+        speed_t ret;
 
-	ret = (speed_t) baud;
-	switch (baud) {
-		/* POSIX defined baudrates */
-		BAUDCASE(0);
-		BAUDCASE(50);
-		BAUDCASE(75);
-		BAUDCASE(110);
-		BAUDCASE(134);
-		BAUDCASE(150);
-		BAUDCASE(200);
-		BAUDCASE(300);
-		BAUDCASE(600);
-		BAUDCASE(1200);
-		BAUDCASE(1800);
-		BAUDCASE(2400);
-		BAUDCASE(4800);
-		BAUDCASE(9600);
-		BAUDCASE(19200);
-		BAUDCASE(38400);
+        ret = (speed_t) baud;
+        switch (baud) {
+                /* POSIX defined baudrates */
+                BAUDCASE(0);
+                BAUDCASE(50);
+                BAUDCASE(75);
+                BAUDCASE(110);
+                BAUDCASE(134);
+                BAUDCASE(150);
+                BAUDCASE(200);
+                BAUDCASE(300);
+                BAUDCASE(600);
+                BAUDCASE(1200);
+                BAUDCASE(1800);
+                BAUDCASE(2400);
+                BAUDCASE(4800);
+                BAUDCASE(9600);
+                BAUDCASE(19200);
+                BAUDCASE(38400);
 
-		/* non POSIX values */
+                /* non POSIX values */
 #ifdef B7200
-		BAUDCASE(7200);
+                BAUDCASE(7200);
 #endif
 #ifdef B14400
-		BAUDCASE(14400);
+                BAUDCASE(14400);
 #endif
 #ifdef B28800
-		BAUDCASE(28800);
+                BAUDCASE(28800);
 #endif
 #ifdef B57600
-		BAUDCASE(57600);
+                BAUDCASE(57600);
 #endif
 #ifdef B115200
-		BAUDCASE(115200);
+                BAUDCASE(115200);
 #endif
 #ifdef B230400
-		BAUDCASE(230400);
+                BAUDCASE(230400);
 #endif
 
-	default:
-		fprintf(stderr, "baudconv: baudrate %d is undefined; using as is\n", baud);
-	}
+        default:
+                fprintf(stderr, "baudconv: baudrate %d is undefined; using as is\n", baud);
+        }
 
-	return ret;
+        return ret;
 #undef BAUDCASE
 }
 
 int gpio_serial_send_break (gpio_device *dev, int duration) {
 
-	/* Duration is in seconds */
+        /* Duration is in seconds */
 
 #if HAVE_TERMIOS_H
-	tcsendbreak(dev->device_fd, duration / 3);
-	tcdrain(dev->device_fd);
+        tcsendbreak(dev->device_fd, duration / 3);
+        tcdrain(dev->device_fd);
 #else
-	/* ioctl */
+        /* ioctl */
 #endif
-	return 0;
+        return 0;
 }

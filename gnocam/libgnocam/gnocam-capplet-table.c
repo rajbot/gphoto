@@ -275,7 +275,7 @@ gnocam_capplet_table_new (CappletWidget *capplet)
 	ECell *popup_cell;
 	GList *list;
 	gint number, i;
-	gchar buffer [1024];
+	const char *buffer;
 	CameraPortInfo info;
 
 	table = gtk_type_new (GNOCAM_TYPE_CAPPLET_TABLE);
@@ -305,7 +305,7 @@ gnocam_capplet_table_new (CappletWidget *capplet)
 	list = NULL;
 	number = gp_camera_count ();
 	for (i = 0; i < number; i++)
-		if (gp_camera_name (i, buffer) == GP_OK)
+		if (gp_camera_name (i, &buffer) == GP_OK)
 			list = g_list_append (list, g_strdup (buffer));
 	e_cell_combo_set_popdown_strings (E_CELL_COMBO (popup_cell), list);
 	e_cell_popup_set_child (E_CELL_POPUP (popup_cell), cell);

@@ -540,9 +540,32 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 
 		/* We've got a file. Get the preview from the camera. */
                 file = gp_file_new ();
+
+		/* Set up the basic structure of the notebook page. */
+                page = gtk_vbox_new (FALSE, 10);
+                hbox = gtk_hbox_new (FALSE, 0);
+                gtk_container_add (GTK_CONTAINER (page), hbox);
+
+                /* Basic description. */
+                label = gtk_label_new ("Camera:\nPath:\nFilename:");
+                gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
+                gtk_container_add (GTK_CONTAINER (hbox), label);
+                text = g_strdup_printf ("%s\n%s\n%s", ((frontend_data_t*) camera->frontend_data)->name, path, filename);
+                label = gtk_label_new (text);
+                gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
+                gtk_container_add (GTK_CONTAINER (hbox), label);
+                g_free (text);
+
+                /* Widget for preview. */
+                window = gtk_scrolled_window_new (NULL, NULL);
+                gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (window), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+                gtk_container_add (GTK_CONTAINER (hbox), window);
+                viewport = gtk_viewport_new (NULL, NULL);
+                gtk_container_add (GTK_CONTAINER (window), viewport);
+
 	        if (gp_camera_file_get_preview (camera, file, path, filename) != GP_OK) {
 			dialog_information (_("Could not get preview of file '%s/%s' from the camera!"), path, filename);
-			page = gtk_label_new ("?"); //FIXME: Do something nicer here...
+			gtk_container_add (GTK_CONTAINER (viewport), gtk_label_new ("?"));
 		} else {
 
                         /* Process the image. */
@@ -553,28 +576,6 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
                                 pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
                                 gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 127);
                                 gdk_pixbuf_unref (pixbuf);
-				
-				/* Set up a nice notebook page. */
-				page = gtk_vbox_new (FALSE, 10);
-				hbox = gtk_hbox_new (FALSE, 0);
-				gtk_container_add (GTK_CONTAINER (page), hbox);
-
-				/* Basic description. */
-				label = gtk_label_new ("Camera:\nPath:\nFilename:");
-				gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
-				gtk_container_add (GTK_CONTAINER (hbox), label);
-				text = g_strdup_printf ("%s\n%s\n%s", ((frontend_data_t*) camera->frontend_data)->name, path, filename);
-				label = gtk_label_new (text);
-				gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
-				gtk_container_add (GTK_CONTAINER (hbox), label);
-				g_free (text);
-
-                                /* Widget for preview. */
-                                window = gtk_scrolled_window_new (NULL, NULL);
-                                gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (window), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-				gtk_container_add (GTK_CONTAINER (hbox), window);
-                                viewport = gtk_viewport_new (NULL, NULL);
-                                gtk_container_add (GTK_CONTAINER (window), viewport);
                                 widget = gtk_pixmap_new (pixmap, bitmap);
                                 gtk_container_add (GTK_CONTAINER (viewport), widget);
 
@@ -587,7 +588,7 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 
                         } else {
                                 dialog_information (_("Could not load image '%s/%s'!"), path, filename);
-				page = gtk_label_new ("?"); //FIXME: Do something nicer here...
+				gtk_container_add (GTK_CONTAINER (viewport), gtk_label_new ("?"));
                         }
                 }
 
@@ -612,6 +613,7 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 
 	gtk_widget_show_all (page);
 	gtk_notebook_append_page (notebook, page, label);
+	gtk_notebook_set_page (notebook, gtk_notebook_page_num (notebook, page));
 	gtk_object_set_data (GTK_OBJECT (item), "page", page);
 }
 

@@ -19,8 +19,11 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
- * Revision 1.1  1999/05/27 18:32:07  scottf
- * Initial revision
+ * Revision 1.2  1999/06/04 15:37:33  gdr
+ * Fix for DOCDIR directory.
+ *
+ * Revision 1.1.1.1  1999/05/27 18:32:07  scottf
+ * gPhoto- digital camera utility
  *
  * Revision 1.10  1999/05/09 15:23:38  ole
  * AUTHORS for developers, CREDITS for beta-testers. :-)
@@ -81,11 +84,11 @@ developer_dialog_create ()
     {
 #ifdef  GTK_HAVE_FEATURES_1_1_0
       gchar  *   temp;
-      temp = g_strdup_printf ("%s/%s" G_DIR_SEPARATOR_S "%s",
-			      DOCDIR, "gphoto-0.3/", FILE_NAME);
+      temp = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "%s",
+			      DOCDIR, FILE_NAME);
 #else
       char temp[128];
-      sprintf(temp, "%s/gphoto/%s", DOCDIR, FILE_NAME);
+      sprintf(temp, "%s/%s", DOCDIR, FILE_NAME);
 #endif
 
       read_developer_file (temp);
@@ -253,9 +256,13 @@ read_developer_file (char *filename)
   fp = fopen (filename, "r");
   if (!fp)
     {
-      store_developer ("The gPhoto AUTHORS file appears to be missing!\n"
-		       "There should be a file called " FILE_NAME " in the\n"
-		       "/usr/doc/gphoto directory.\nPlease check your installation.");
+      char msg[1024];	
+      sprintf(msg,
+              "The gPhoto AUTHORS file appears to be missing!\n"
+	      "There should be a file called " FILE_NAME " in the\n"
+	      "%s directory.\nPlease check your installation.",
+	      DOCDIR);
+      store_developer(msg);
       return;
     }
   

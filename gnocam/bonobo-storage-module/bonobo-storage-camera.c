@@ -96,7 +96,6 @@ camera_list_contents (BonoboStorage* s, const CORBA_char* path, Bonobo_StorageIn
 		g_free (combined_path);
 		return (NULL);
 	}
-g_message (" got folder list");
 
 	/* Get file list. */
 	CHECK_RESULT (gp_camera_file_list (storage->priv->camera, &file_list, combined_path), ev);
@@ -104,7 +103,6 @@ g_message (" got folder list");
 		g_free (combined_path);
 		return (NULL);
 	}
-g_message ("  got file list");
 
 	/* Set up the list. */
 	list = Bonobo_Storage_DirectoryList__alloc ();

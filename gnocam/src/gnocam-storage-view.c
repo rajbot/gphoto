@@ -290,8 +290,7 @@ insert_folders_and_files (GnoCamStorageView* storage_view, ETreePath* parent, co
 		else
 			data->path = g_strdup_printf ("%s/%s", path, list->_buffer [i].name);
 		data->directory = (list->_buffer [i].type == Bonobo_STORAGE_TYPE_DIRECTORY);
-		node = e_tree_model_node_insert_id (storage_view->priv->etree, parent, -1, data->path, data->path);
-		e_tree_model_node_set_data (storage_view->priv->etree, node, (gpointer) data);
+		node = e_tree_model_node_insert (storage_view->priv->etree, parent, i, data);
 		
 		e_tree_model_node_set_expanded (storage_view->priv->etree, parent, TRUE);
 		e_tree_model_node_set_compare_function (storage_view->priv->etree, node, treepath_compare);
@@ -395,8 +394,7 @@ gnocam_storage_view_new (Bonobo_Storage storage)
 	data = g_new (NodeData, 1);
 	data->path = g_strdup ("/");
 	data->directory = TRUE;
-	new->priv->root_node = e_tree_model_node_insert (new->priv->etree, NULL, -1, "/");
-	e_tree_model_node_set_data (new->priv->etree, new->priv->root_node, data);
+	new->priv->root_node = e_tree_model_node_insert (new->priv->etree, NULL, -1, data);
 	
 	/* Create extras */
 	extras = e_table_extras_new ();

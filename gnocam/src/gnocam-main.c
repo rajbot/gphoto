@@ -17,7 +17,7 @@
 static BonoboWindowClass* parent_class = NULL;
 
 struct _GnoCamMainPrivate {
-	BonoboUIContainer*	container;
+	Bonobo_UIContainer	container;
 	BonoboUIComponent*	component;
 
 	GConfClient*		client;
@@ -127,7 +127,7 @@ create_camera (gpointer user_data)
 static gint
 create_menu (gpointer user_data)
 {
-	GnoCamMain*	m;
+	GnoCamMain*		m;
         BonoboUIVerb            verb [] = {
                 BONOBO_UI_UNSAFE_VERB ("Exit", gtk_main_quit),
                 BONOBO_UI_VERB ("Preferences", on_preferences_activate),
@@ -137,7 +137,7 @@ create_menu (gpointer user_data)
 	g_return_val_if_fail (user_data, FALSE);
 	m = GNOCAM_MAIN (user_data);
 
-        bonobo_ui_component_set_container (m->priv->component, BONOBO_OBJREF (m->priv->container));
+        bonobo_ui_component_set_container (m->priv->component, m->priv->container);
 	
         bonobo_ui_component_freeze (m->priv->component, NULL);
 	
@@ -240,7 +240,7 @@ gnocam_main_destroy (GtkObject* object)
 
 	gtk_object_unref (GTK_OBJECT (m->priv->client));
 	bonobo_object_unref (BONOBO_OBJECT (m->priv->component));
-	bonobo_object_unref (BONOBO_OBJECT (m->priv->container));
+	bonobo_object_release_unref (m->priv->container, NULL);
 
 	g_hash_table_destroy (m->priv->hash_table);
 	
@@ -269,6 +269,7 @@ gnocam_main_init (GnoCamMain* m)
 GnoCamMain*
 gnocam_main_new (GConfClient* client)
 {
+	BonoboUIContainer*	container;
 	GtkWidget*		label;
 	GnoCamMain*		new;
 	gint			position, w, h;
@@ -301,8 +302,9 @@ gnocam_main_new (GConfClient* client)
         gtk_signal_connect (GTK_OBJECT (new->priv->shortcut_bar), "item_selected", (GtkSignalFunc) on_shortcut_bar_item_selected, new);
 	
 	/* Create the container */
-	bonobo_object_ref (BONOBO_OBJECT (new->priv->container = bonobo_ui_container_new ()));
-	bonobo_ui_container_set_win (new->priv->container, BONOBO_WINDOW (new));
+	container = bonobo_ui_container_new ();
+	bonobo_ui_container_set_win (container, BONOBO_WINDOW (new));
+	new->priv->container = BONOBO_OBJREF (container);
 
 	/* Create the menu */
 	new->priv->component = bonobo_ui_component_new (PACKAGE "main");

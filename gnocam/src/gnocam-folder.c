@@ -14,7 +14,7 @@ static BonoboObjectClass* gnocam_folder_parent_class;
 
 struct _GnoCamFolderPrivate
 {
-	BonoboUIContainer*	container;
+	Bonobo_UIContainer	container;
 	Bonobo_Storage		storage;
 	BonoboUIComponent*	component;
 
@@ -84,7 +84,7 @@ create_menu (gpointer user_data)
 	g_return_val_if_fail (user_data, FALSE);
 	folder = GNOCAM_FOLDER (user_data);
 
-	bonobo_ui_component_set_container (folder->priv->component, BONOBO_OBJREF (folder->priv->container));
+	bonobo_ui_component_set_container (folder->priv->component, folder->priv->container);
 	
         bonobo_ui_component_freeze (folder->priv->component, NULL);
 	
@@ -231,7 +231,7 @@ gnocam_folder_show_menu (GnoCamFolder* folder)
 {
 	g_return_if_fail (folder);
 
-	bonobo_ui_component_set_container (folder->priv->component, BONOBO_OBJREF (folder->priv->container));
+	bonobo_ui_component_set_container (folder->priv->component, folder->priv->container);
 }
 
 void
@@ -257,7 +257,7 @@ gnocam_folder_destroy (GtkObject* object)
 
 	folder = GNOCAM_FOLDER (object);
 
-	bonobo_object_unref (BONOBO_OBJECT (folder->priv->container));
+	bonobo_object_release_unref (folder->priv->container, NULL);
 	bonobo_object_unref (BONOBO_OBJECT (folder->priv->component));
 
 	if (folder->priv->configuration) gp_widget_unref (folder->priv->configuration);
@@ -286,7 +286,7 @@ gnocam_folder_init (GnoCamFolder* folder)
 }
 
 GnoCamFolder*
-gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, BonoboUIContainer* container, GConfClient* client)
+gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bonobo_UIContainer container, GConfClient* client)
 {
 	GnoCamFolder*			new;
 	Bonobo_Storage_DirectoryList*   list;
@@ -311,7 +311,7 @@ gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bo
 	gp_camera_ref (new->priv->camera = camera);
 	new->priv->path = g_strdup (path);
 	new->priv->storage = storage;
-	bonobo_object_ref (BONOBO_OBJECT (new->priv->container = container));
+	new->priv->container = bonobo_object_dup_ref (container, NULL);
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
 
 	/* Create the scroll-frame */

@@ -72,22 +72,45 @@
 	    <widget>
 	      <class>GtkPixmapMenuItem</class>
 	      <name>save_previews</name>
+	      <accelerator>
+		<modifiers>0</modifiers>
+		<key>GDK_P</key>
+		<signal>activate</signal>
+	      </accelerator>
 	      <signal>
 		<name>activate</name>
 		<handler>on_save_previews_activate</handler>
 		<last_modification_time>Thu, 07 Sep 2000 21:04:40 GMT</last_modification_time>
 	      </signal>
-	      <label>Save Previews</label>
+	      <label>Save _Previews</label>
 	      <right_justify>False</right_justify>
 	      <stock_icon>GNOME_STOCK_MENU_SAVE</stock_icon>
 	    </widget>
 
 	    <widget>
 	      <class>GtkPixmapMenuItem</class>
+	      <name>save_preview_as</name>
+	      <accelerator>
+		<modifiers>0</modifiers>
+		<key>GDK_p</key>
+		<signal>activate</signal>
+	      </accelerator>
+	      <signal>
+		<name>activate</name>
+		<handler>on_save_preview_as_activate</handler>
+		<last_modification_time>Fri, 22 Sep 2000 18:31:15 GMT</last_modification_time>
+	      </signal>
+	      <label>Save Preview As...</label>
+	      <right_justify>False</right_justify>
+	      <stock_icon>GNOME_STOCK_MENU_SAVE_AS</stock_icon>
+	    </widget>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
 	      <name>save_files</name>
 	      <accelerator>
-		<modifiers>GDK_CONTROL_MASK</modifiers>
-		<key>GDK_S</key>
+		<modifiers>0</modifiers>
+		<key>GDK_F</key>
 		<signal>activate</signal>
 	      </accelerator>
 	      <signal>
@@ -95,9 +118,40 @@
 		<handler>on_save_files_activate</handler>
 		<last_modification_time>Thu, 07 Sep 2000 21:00:27 GMT</last_modification_time>
 	      </signal>
-	      <label>_Save Files</label>
+	      <label>Save _Files</label>
 	      <right_justify>False</right_justify>
 	      <stock_icon>GNOME_STOCK_MENU_SAVE</stock_icon>
+	    </widget>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>save_file_as</name>
+	      <accelerator>
+		<modifiers>0</modifiers>
+		<key>GDK_f</key>
+		<signal>activate</signal>
+	      </accelerator>
+	      <signal>
+		<name>activate</name>
+		<handler>on_save_file_as_activate</handler>
+		<last_modification_time>Fri, 22 Sep 2000 18:12:37 GMT</last_modification_time>
+	      </signal>
+	      <label>Save File As...</label>
+	      <right_justify>False</right_justify>
+	      <stock_icon>GNOME_STOCK_MENU_SAVE_AS</stock_icon>
+	    </widget>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>delete</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_delete_activate</handler>
+		<last_modification_time>Fri, 22 Sep 2000 18:11:32 GMT</last_modification_time>
+	      </signal>
+	      <label>_Delete</label>
+	      <right_justify>False</right_justify>
+	      <stock_icon>GNOME_STOCK_MENU_TRASH</stock_icon>
 	    </widget>
 
 	    <widget>
@@ -208,6 +262,20 @@
 	<widget>
 	  <class>GtkButton</class>
 	  <child_name>Toolbar:button</child_name>
+	  <name>button_save_preview_as</name>
+	  <tooltip>Save selected previews</tooltip>
+	  <signal>
+	    <name>clicked</name>
+	    <handler>on_button_save_preview_as_clicked</handler>
+	    <last_modification_time>Fri, 22 Sep 2000 18:37:41 GMT</last_modification_time>
+	  </signal>
+	  <label>Save Preview As...</label>
+	  <stock_pixmap>GNOME_STOCK_PIXMAP_SAVE_AS</stock_pixmap>
+	</widget>
+
+	<widget>
+	  <class>GtkButton</class>
+	  <child_name>Toolbar:button</child_name>
 	  <name>button_save_files</name>
 	  <tooltip>Save selected files</tooltip>
 	  <signal>
@@ -222,14 +290,28 @@
 	<widget>
 	  <class>GtkButton</class>
 	  <child_name>Toolbar:button</child_name>
-	  <name>button_delete_files</name>
+	  <name>button_save_file_as</name>
+	  <tooltip>Save selected previews</tooltip>
+	  <signal>
+	    <name>clicked</name>
+	    <handler>on_button_save_file_as_clicked</handler>
+	    <last_modification_time>Fri, 22 Sep 2000 18:37:51 GMT</last_modification_time>
+	  </signal>
+	  <label>Save File As...</label>
+	  <stock_pixmap>GNOME_STOCK_PIXMAP_SAVE_AS</stock_pixmap>
+	</widget>
+
+	<widget>
+	  <class>GtkButton</class>
+	  <child_name>Toolbar:button</child_name>
+	  <name>button_delete</name>
 	  <tooltip>Delete selected files</tooltip>
 	  <signal>
 	    <name>clicked</name>
-	    <handler>on_button_delete_files_clicked</handler>
-	    <last_modification_time>Thu, 07 Sep 2000 21:13:34 GMT</last_modification_time>
+	    <handler>on_button_delete_clicked</handler>
+	    <last_modification_time>Fri, 22 Sep 2000 18:31:40 GMT</last_modification_time>
 	  </signal>
-	  <label>Delete Files</label>
+	  <label>Delete</label>
 	  <stock_pixmap>GNOME_STOCK_PIXMAP_TRASH</stock_pixmap>
 	</widget>
       </widget>
@@ -279,6 +361,11 @@
 	    <name>drag_data_get</name>
 	    <handler>on_clist_files_drag_data_get</handler>
 	    <last_modification_time>Tue, 05 Sep 2000 18:36:07 GMT</last_modification_time>
+	  </signal>
+	  <signal>
+	    <name>button_press_event</name>
+	    <handler>on_clist_files_button_press_event</handler>
+	    <last_modification_time>Fri, 22 Sep 2000 17:43:25 GMT</last_modification_time>
 	  </signal>
 	  <columns>3</columns>
 	  <column_widths>49,52,52</column_widths>
@@ -1085,6 +1172,105 @@
     </signal>
     <label>Capture Video</label>
     <right_justify>False</right_justify>
+  </widget>
+</widget>
+
+<widget>
+  <class>GtkMenu</class>
+  <name>menu_clist_files_popup</name>
+
+  <widget>
+    <class>GtkPixmapMenuItem</class>
+    <name>clist_files_popup_save_previews</name>
+    <accelerator>
+      <modifiers>0</modifiers>
+      <key>GDK_P</key>
+      <signal>activate</signal>
+    </accelerator>
+    <signal>
+      <name>activate</name>
+      <handler>on_save_previews_activate</handler>
+      <last_modification_time>Fri, 22 Sep 2000 17:57:11 GMT</last_modification_time>
+    </signal>
+    <label>Save _Preview(s)</label>
+    <right_justify>False</right_justify>
+    <stock_icon>GNOME_STOCK_MENU_SAVE</stock_icon>
+  </widget>
+
+  <widget>
+    <class>GtkMenuItem</class>
+    <name>clist_files_popup_save_preview_as</name>
+    <accelerator>
+      <modifiers>0</modifiers>
+      <key>GDK_p</key>
+      <signal>activate</signal>
+    </accelerator>
+    <signal>
+      <name>activate</name>
+      <handler>on_save_preview_as_activate</handler>
+      <last_modification_time>Fri, 22 Sep 2000 17:57:33 GMT</last_modification_time>
+    </signal>
+    <label>Save Preview As...</label>
+    <right_justify>False</right_justify>
+  </widget>
+
+  <widget>
+    <class>GtkMenuItem</class>
+    <name>separator2</name>
+    <right_justify>False</right_justify>
+  </widget>
+
+  <widget>
+    <class>GtkMenuItem</class>
+    <name>clist_files_popup_save_files</name>
+    <accelerator>
+      <modifiers>0</modifiers>
+      <key>GDK_F</key>
+      <signal>activate</signal>
+    </accelerator>
+    <signal>
+      <name>activate</name>
+      <handler>on_save_files_activate</handler>
+      <last_modification_time>Fri, 22 Sep 2000 17:58:09 GMT</last_modification_time>
+    </signal>
+    <label>Save _File(s)</label>
+    <right_justify>False</right_justify>
+  </widget>
+
+  <widget>
+    <class>GtkMenuItem</class>
+    <name>clist_files_popup_save_file_as</name>
+    <accelerator>
+      <modifiers>0</modifiers>
+      <key>GDK_f</key>
+      <signal>activate</signal>
+    </accelerator>
+    <signal>
+      <name>activate</name>
+      <handler>on_save_file_as_activate</handler>
+      <last_modification_time>Fri, 22 Sep 2000 17:59:19 GMT</last_modification_time>
+    </signal>
+    <label>Save File As...</label>
+    <right_justify>False</right_justify>
+  </widget>
+
+  <widget>
+    <class>GtkMenuItem</class>
+    <name>separator3</name>
+    <right_justify>False</right_justify>
+  </widget>
+
+  <widget>
+    <class>GtkPixmapMenuItem</class>
+    <name>clist_files_popup_delete</name>
+    <signal>
+      <name>activate</name>
+      <handler>on_delete_activate</handler>
+      <last_modification_time>Fri, 22 Sep 2000 17:59:33 GMT</last_modification_time>
+    </signal>
+    <label>_Delete</label>
+    <right_justify>False</right_justify>
+    <stock_icon>GNOME_STOCK_MENU_TRASH</stock_icon>
   </widget>
 </widget>
 

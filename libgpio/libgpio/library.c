@@ -1,3 +1,5 @@
+#include <sys/types.h>
+#include <dirent.h>
 #include <dlfcn.h>
 #include <stdio.h>
 
@@ -67,9 +69,10 @@ int gpio_library_list_load(char *filename, int loaded[], gpio_device_info *list,
 int gpio_library_list (gpio_device_info *list, int *count) {
 
 	DIR *d;
-	int loaded[256], x;
-	struct dirent *de;
+	int loaded[256];
+	int x;
 	char buf[1024];
+	struct dirent *de;
 
 	*count = 0;
 

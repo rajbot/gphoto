@@ -24,6 +24,7 @@ LDFLAGS = @LDFLAGS@\
 bin_PROGRAMS = gnocam
 
 gnocam_SOURCES =\
+ cameras.h cameras.c\
  gnocam.h gnocam.c\
  callbacks.h callbacks.c\
  gphoto-extensions.h gphoto-extensions.c\

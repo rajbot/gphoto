@@ -2,3 +2,4 @@ src/callbacks.c
 src/gnocam.c
 src/preferences.c
 src/save.c
+src/cameras.c

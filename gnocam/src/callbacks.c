@@ -8,6 +8,7 @@
 #include "preferences.h"
 #include "save.h"
 #include "gnocam.h"
+#include "callbacks.h"
 
 /******************************************************************************/
 /* Prototypes                                                                 */
@@ -423,6 +424,22 @@ on_clist_files_button_press_event (GtkWidget *widget, GdkEventButton *event, gpo
 /**********************/
 /* Camera tree stuff. */
 /**********************/
+
+void
+on_drag_data_received (GtkWidget *widget, GdkDragContext *context, gint x, gint y, GtkSelectionData *selection_data, guint info, guint time)
+{
+        GList *filenames;
+        guint i;
+        gchar *message;
+
+        filenames = gnome_uri_list_extract_filenames (selection_data->data);
+        for (i = 0; i < g_list_length (filenames); i++) {
+                message = g_strdup_printf ("Upload not implemented (filename: %s)", (gchar *) g_list_nth_data (filenames, i));
+                gnome_dialog_run_and_close (GNOME_DIALOG (gnome_error_dialog (message)));
+                g_free (message);
+        }
+        gnome_uri_list_free_strings (filenames);
+}
 
 void
 on_tree_cameras_selection_changed (GtkWidget *tree)

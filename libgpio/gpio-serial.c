@@ -97,14 +97,26 @@ struct gpio_operations gpio_serial_operations =
 int gpio_serial_list (gpio_device_info *list, int *count) {
 
 	
-	char buf[1024];
+	char buf[1024], prefix[1024];
 	int x, fd, use_int=0, use_char=0;
+#ifdef linux
+	/* devfs */
+	struct stat s;
+#endif
 #ifdef OS2
         int rc,fh,option;
 #endif
 
+	/* Copy in the serial port prefix */
+	strcpy(prefix, GPIO_SERIAL_PREFIX);
+
+#ifdef linux
+	/* devfs */
+	if (stat("/dev/tts", &s)==0)
+		strcpy(prefix, "/dev/tts/%i");
+#endif
 	for (x=GPIO_SERIAL_RANGE_LOW; x<=GPIO_SERIAL_RANGE_HIGH; x++) {
-		sprintf(buf, GPIO_SERIAL_PREFIX, x);
+		sprintf(buf, prefix, x);
 #ifdef OS2
               rc = DosOpen(buf,&fh,&option,0,0,1,OPEN_FLAGS_FAIL_ON_ERROR|OPEN_SHARE_DENYREADWRITE,0);
               DosClose(fh);

@@ -72,14 +72,27 @@ struct gpio_operations gpio_parallel_operations =
    --------------------------------------------------------------------- */
 int gpio_parallel_list(gpio_device_info *list, int *count) {
 
-        char buf[1024];
+        char buf[1024], prefix[1024];
         int x, fd, use_int=0, use_char=0;
+#ifdef linux
+	/* devfs */	
+	struct stat s;
+#endif
+
 #ifdef OS2
         int rc,fh,option;
 #endif
 
+	strcpy(prefix, GPIO_PARALLEL_PREFIX);
+
+#ifdef linux
+	/* devfs */	
+	if (stat("/dev/parports", &s) == 0)
+		strcpy(prefix, "/dev/parports/%i");
+#endif
+
         for (x=GPIO_PARALLEL_RANGE_LOW; x<=GPIO_PARALLEL_RANGE_HIGH; x++) {
-                sprintf(buf, GPIO_PARALLEL_PREFIX, x);
+                sprintf(buf, prefix, x);
                 #ifdef OS2
                 rc = DosOpen(buf,&fh,&option,0,0,1,OPEN_FLAGS_FAIL_ON_ERROR|OPEN_SHARE_DENYREADWRITE,0);
                 if(rc==0)

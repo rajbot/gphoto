@@ -455,8 +455,15 @@ builddist() {
     done < "${cvsmodulelist}"
 
     # create list of supported cameras
-    ( TZ=UTC date; echo; gphoto2 --version; echo; gphoto2 --list-cameras ) \
-	> "${distdir}/SUPPORTED-CAMERAS"
+    (
+	echo "========================================================================"
+	TZ=UTC date
+	echo "========================================================================"
+	gphoto2 --version
+        echo "========================================================================"
+	gphoto2 --list-cameras
+	echo "========================================================================"
+    ) > "${distdir}/SUPPORTED-CAMERAS"
 }
 
 

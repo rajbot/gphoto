@@ -6,6 +6,7 @@
 #include "gnocam.h"
 #include "utils.h"
 #include "cameras.h"
+#include "information.h"
 
 /**************/
 /* Prototypes */

@@ -57,7 +57,7 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 		break;
 	case OPERATION_FILE_SAVE: 
 		g_assert ((file = gtk_object_get_data (GTK_OBJECT (button), "file")) != NULL);
-		camera_file_save (file,  gtk_file_selection_get_filename (fileselection));
+		camera_file_save (file,  gnome_vfs_uri_new (gtk_file_selection_get_filename (fileselection)));
 		gp_file_unref (file);
 		break;
 	case OPERATION_GALLERY_OPEN:
@@ -125,33 +125,25 @@ upload (GtkTreeItem* folder, gchar* filename)
 	GtkObject*		object;
         gint			k;
 	glong			j;
-        GnomeVFSURI*            uri;
-        GnomeVFSHandle*         handle;
+	GnomeVFSHandle*         handle;
         GnomeVFSFileSize        bytes_read;
         GnomeVFSResult          result;
+	GnomeVFSURI*		uri = NULL;
         guint8                  data [1025];
 	CameraFile*		file;
 
-	g_assert (folder != NULL);
-	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (folder), "camera")) != NULL);
-	g_assert ((path = gtk_object_get_data (GTK_OBJECT (folder), "path")) != NULL);
+	g_return_if_fail (folder);
+	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (folder), "camera"));
+	g_return_if_fail (path = gtk_object_get_data (GTK_OBJECT (folder), "path"));
 
-	if (filename) {
-
+	if (uri) {
+		uri = gnome_vfs_uri_new (filename);
+	
 		/* Read the data and upload the file. */
 		file = gp_file_new ();
 	        file->data = NULL;
+		strcpy (file->name, gnome_vfs_uri_get_basename (uri));
 
-		/* Quick hack to get the filename excluding path. */
-		for (k = strlen (filename) - 1; k >= 0; k--) {
-			if (filename[k] == '/') {
-				k++;
-				break;
-			}
-		}
-		strcpy (file->name, &filename[k]);
-
-	        uri = gnome_vfs_uri_new (filename);
 	        if ((result = gnome_vfs_open_uri (&handle, uri, GNOME_VFS_OPEN_READ)) != GNOME_VFS_OK) {
 	                dialog_information (_("An error occurred while trying to open file '%s' (%s)."), filename, gnome_vfs_result_to_string (result));
 	        } else {
@@ -176,9 +168,14 @@ upload (GtkTreeItem* folder, gchar* filename)
 				camera_tree_folder_refresh (folder);
 			} else {
 				dialog_information (_("An error occurred while trying to read file '%s' (%s)."), filename, gnome_vfs_result_to_string (result));
-	                        gp_file_free (file);
 			}
 		}
+		
+		/* Clean up. */
+		gp_camera_unref (camera);
+		gp_file_unref (file);
+		gnome_vfs_uri_unref (uri);
+		
 	} else {
 
 	        /* Ask the user for a filename. Pop up the file selection dialog. */
@@ -207,34 +204,41 @@ upload (GtkTreeItem* folder, gchar* filename)
 void
 camera_file_upload (Camera* camera, gchar* path, CameraFile* file)
 {
+	g_return_if_fail (camera);
+	g_return_if_fail (path);
+	g_return_if_fail (file);
+	
         if (gp_camera_file_put (camera, file, path) != GP_OK) dialog_information (_("Could not upload file '%s' into folder '%s'!"), file->name, path);
-
-	/* Clean up. */
-        gp_file_free (file);
-	gp_camera_unref (camera);
 }
 
 void
-camera_file_save (CameraFile* file, gchar* filename)
+camera_file_save (CameraFile* file, GnomeVFSURI* uri)
 {
         GnomeVFSResult          result;
         GnomeVFSHandle*         handle;
-        GnomeVFSURI*            uri;
         GnomeVFSFileSize        file_size;
 
-        g_assert (file != NULL);
-        g_assert (filename != NULL);
+        g_return_if_fail (file);
+        g_return_if_fail (uri);
 
-        /* Let gnome-vfs save the file. */
-        uri = gnome_vfs_uri_new (filename);
+	/* Save the file. */
         if ((result = gnome_vfs_create_uri (&handle, uri, GNOME_VFS_OPEN_WRITE, FALSE, 0644)) != GNOME_VFS_OK) {
-                dialog_information (_("An error occurred while trying to open file '%s' for write access (%s)."), filename, gnome_vfs_result_to_string (result));
+                dialog_information (
+			_("An error occurred while trying to open file '%s' for write access (%s)."), 
+			gnome_vfs_uri_get_basename (uri), 
+			gnome_vfs_result_to_string (result));
         } else {
                 if ((result = gnome_vfs_write (handle, file->data, file->size, &file_size)) != GNOME_VFS_OK) {
-                        dialog_information (_("An error occurred while trying to write into file '%s' (%s)."), filename, gnome_vfs_result_to_string (result));
+                        dialog_information (
+				_("An error occurred while trying to write into file '%s' (%s)."), 
+				gnome_vfs_uri_get_basename (uri),
+				gnome_vfs_result_to_string (result));
                 }
                 if ((result = gnome_vfs_close (handle)) != GNOME_VFS_OK) {
-                        dialog_information (_("An error occurred while trying to close the file '%s' (%s)."), filename, gnome_vfs_result_to_string (result));
+                        dialog_information (
+				_("An error occurred while trying to close the file '%s' (%s)."), 
+				gnome_vfs_uri_get_basename (uri), 
+				gnome_vfs_result_to_string (result));
                 }
         }
 }
@@ -245,7 +249,7 @@ camera_file_save_as (CameraFile* file)
 	GladeXML*		xml_fileselection;
         GtkObject*              object;
 
-        g_assert (file != NULL);
+        g_return_if_fail (file);
 
         /* Pop up the file selection dialog. */
         g_assert ((xml_fileselection = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "fileselection")) != NULL);
@@ -267,6 +271,9 @@ camera_file_save_as (CameraFile* file)
 
         /* Connect the signals. */
         glade_xml_signal_autoconnect (xml_fileselection);
+
+	/* The file is ours. */
+	gp_file_ref (file);
 }
 
 void 
@@ -314,6 +321,7 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 	Camera*		camera;
 	GConfValue*	value;
 	gint		return_status;
+	GnomeVFSURI*	uri = NULL;
 
 	g_assert (item != NULL);
 	g_assert (!(save_as && temporary));
@@ -323,8 +331,11 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
         g_assert ((value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL)));
         g_assert (value->type == GCONF_VALUE_STRING);
 
+	/* Assemble the uri. */
 	if (temporary) filename_user = g_strdup_printf ("file:%s/%s", g_get_tmp_dir (), filename);
 	else filename_user = g_strdup_printf ("%s/%s", gconf_value_get_string (value), filename);
+	uri = gnome_vfs_uri_new (filename_user);
+	g_free (filename_user);
 
 	/* Check if we already have the file. */
 	if (preview) file = gtk_object_get_data (GTK_OBJECT (item), "preview");
@@ -348,17 +359,13 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 
 	/* Save the file. */
 	if (file) {
-		gp_file_ref (file);
 		if (save_as) camera_file_save_as (file);
-		else {
-			camera_file_save (file, filename_user);
-			gp_file_unref (file);
-		}
+		else camera_file_save (file, uri);
 	}
 
 	/* Clean up. */
+	gnome_vfs_uri_unref (uri);
 	gp_frontend_progress (camera, NULL, 0.0);
-	g_free (filename_user);
 }
 
 void

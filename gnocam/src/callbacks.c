@@ -3,6 +3,7 @@
 #include <glade/glade.h>
 #include <gphoto2.h>
 #include <gconf/gconf-client.h>
+#include <libgnomevfs/gnome-vfs.h>
 #include "file-operations.h"
 #include "gnocam.h"
 #include "information.h"

@@ -10,6 +10,7 @@
 #include <gtkhtml/gtkhtml.h>
 #include <bonobo.h>
 #include <bonobo/bonobo-stream-memory.h>
+#include <libgnomevfs/gnome-vfs.h>
 #include "gnocam.h"
 #include "file-operations.h"
 #include "information.h"

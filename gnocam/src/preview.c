@@ -6,6 +6,7 @@
 #include <gconf/gconf-client.h>
 #include <bonobo.h>
 #include <bonobo/bonobo-stream-memory.h>
+#include <libgnomevfs/gnome-vfs.h>
 #include "information.h"
 #include "gnocam.h"
 #include "preview.h"
@@ -146,6 +147,7 @@ preview_save (GtkWidget* preview)
 	CameraFile*		file;
 	GConfValue*		value;
 	gchar*			filename;
+	GnomeVFSURI*		uri;
 
 	g_assert ((preview));
 	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (preview), "camera")));
@@ -154,9 +156,9 @@ preview_save (GtkWidget* preview)
 		g_assert ((value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL)));
 		g_assert (value->type == GCONF_VALUE_STRING);
 		filename = g_strdup_printf ("%s/%s", gconf_value_get_string (value), file->name);
-		gp_file_ref (file);
-		camera_file_save (file, filename);
+		uri = gnome_vfs_uri_new (filename);
 		g_free (filename);
+		camera_file_save (file, uri);
         }
 }
 

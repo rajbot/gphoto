@@ -13,6 +13,7 @@
 #include <parser.h>
 #include <bonobo.h>
 #include <bonobo/bonobo-stream-memory.h>
+#include <libgnomevfs/gnome-vfs.h>
 #include "gphoto-extensions.h"
 #include "gnocam.h"
 #include "cameras.h"
@@ -271,12 +272,16 @@ on_camera_tree_file_drag_data_get (GtkWidget* widget, GdkDragContext* context, G
 {
 	gchar*		filename;
 	CameraFile*	file;
+	GnomeVFSURI*	uri;
 
-	if (!(file = gtk_object_get_data (GTK_OBJECT (widget), "file"))) g_assert ((file = gtk_object_get_data (GTK_OBJECT (widget), "preview")) != NULL);
+	if (!(file = gtk_object_get_data (GTK_OBJECT (widget), "file"))) g_return_if_fail (file = gtk_object_get_data (GTK_OBJECT (widget), "preview"));
+
+	/* Save the file temporarily. */
 	filename = g_strdup_printf ("file:%s/%s", g_get_tmp_dir (), file->name);
-	camera_file_save (file, filename);
+	uri = gnome_vfs_uri_new (filename);
+	camera_file_save (file, uri);
+	gnome_vfs_uri_unref (uri);
 	gtk_selection_data_set (selection_data, selection_data->target, 8, filename, strlen (filename));
-	g_free (filename);
 }
 
 void
@@ -288,18 +293,17 @@ on_camera_tree_folder_drag_data_get (GtkWidget* widget, GdkDragContext* context,
 void
 on_drag_data_received (GtkWidget *widget, GdkDragContext *context, gint x, gint y, GtkSelectionData *selection_data, guint info, guint time)
 {
-        GList*                  filenames;
+        GList*                  filenames = NULL;
         guint                   i;
-        gchar*                  path;
-        Camera*                 camera;
+	Camera*			camera;
 
-        g_assert ((path = gtk_object_get_data (GTK_OBJECT (widget), "path")) != NULL);
-        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (widget), "camera")) != NULL);
+	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (widget), "camera"));
 
         filenames = gnome_uri_list_extract_filenames (selection_data->data);
         for (i = 0; i < g_list_length (filenames); i++) {
-                upload (GTK_TREE_ITEM (widget), g_list_nth_data (filenames, i));
-        }
+		gp_camera_ref (camera);
+		upload (GTK_TREE_ITEM (widget), g_list_nth_data (filenames, i));
+	}
         gnome_uri_list_free_strings (filenames);
 }
 

@@ -314,7 +314,7 @@ gnocam_capplet_edit (GnocamCapplet *c, GtkTreeIter *iter)
 	GValue v = {0, };
 	GtkWidget *d;
 	GnocamChooser *ch;
-	gchar *et;
+	gchar *k, *key;
 
 	g_return_if_fail (GNOCAM_IS_CAPPLET (c));
 
@@ -330,13 +330,28 @@ gnocam_capplet_edit (GnocamCapplet *c, GtkTreeIter *iter)
 	gtk_widget_show (GTK_WIDGET (ch = gnocam_chooser_new ()));
 	g_signal_connect (ch, "changed", G_CALLBACK (on_changed), c);
 	g_signal_connect (ch, "destroy", G_CALLBACK (on_destroy), c);
-	et = gconf_unescape_key (g_value_get_string (&v),
-				 strlen (g_value_get_string (&v)));
+	g_object_set_data_full (G_OBJECT (ch), "name",
+		g_strdup (g_value_get_string (&v)), (GDestroyNotify) g_free);
+	g_hash_table_insert (c->priv->h,
+		g_strdup (g_value_get_string (&v)), ch);
+	key = gconf_escape_key (g_value_get_string (&v),
+				strlen (g_value_get_string (&v)));
 	g_value_unset (&v);
-	g_object_set_data_full (G_OBJECT (ch), "name", g_strdup (et),
-				(GDestroyNotify) g_free);
-	g_hash_table_insert (c->priv->h, et, ch);
-	g_assert (g_hash_table_lookup (c->priv->h, et));
+	k = g_strdup_printf ("/desktop/gnome/cameras/%s", key);
+	g_free (key);
+	key = g_strdup_printf ("%s/manufacturer", k);
+	gnocam_chooser_set_manufacturer (ch,
+		gconf_client_get_string (c->priv->c, key, NULL));
+	g_free (key);
+	key = g_strdup_printf ("%s/model", k);
+	gnocam_chooser_set_model (ch,
+		 gconf_client_get_string (c->priv->c, key, NULL));
+	g_free (key);
+	key = g_strdup_printf ("%s/port", k);
+	gnocam_chooser_set_port (ch,
+		 gconf_client_get_string (c->priv->c, key, NULL));
+	g_free (key);
+	g_free (k);
 }
 
 static void

@@ -146,16 +146,18 @@ function checktools {
 	fi
     done < ${buildtoollist}
 
-    if test -d "$toolroot"
-    then
-	echo "##### Going to use/build our own tools from/to ${toolroot}"
-	echo "    # If you don't want to use these tools, remove the"
-	echo "    # ${toolroot} directory."
-    fi
-
-    if "${autoinstall}" || ( "${parm_tools" && [ ! -d "$toolroot" ] )
+    if "${autoinstall}"
     then
 	installautotools
+    elif "$parm_tools"
+	if [ -d "$toolroot" ]
+	then
+	    echo "##### Going to use/build our own tools from/to ${toolroot}"
+	    echo "    # If you don't want to use these tools, remove the"
+	    echo "    # ${toolroot} directory."
+	else
+	    installautotools
+	fi
     fi
 
     # no need for autodetection if we installed our own version

@@ -84,10 +84,9 @@ AC_SUBST(GNOCAM_LIBS)
 dnl ---------------------------------------------------------------------------
 dnl Makefiles
 dnl ---------------------------------------------------------------------------
-AC_OUTPUT([ m4/Makefile 
+AC_OUTPUT([
 Makefile
 art/Makefile
-po/Makefile.in
 idl/Makefile
 applet/Makefile
 gnocam/Makefile

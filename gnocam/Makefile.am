@@ -1,10 +1,7 @@
-SUBDIRS = m4 art gnocam applet po tests intl
+SUBDIRS = m4 art gnocam applet tests
 
-EXTRA_DIST = config.rpath \
+EXTRA_DIST = \
  AUTHORS\
  README\
  THANKS\
  TODO
-
-
-ACLOCAL_AMFLAGS = -I m4

@@ -426,5 +426,6 @@ unsigned int exif_header_parse(exifparser *exifdat){
     return(-1);
   };
   exifdat->exiflen=exifdat->header[5]+(exifdat->header[4]<<8)-8;
+  if (exif_debug) fprintf(stderr,"Exif length is %ld\n",exifdat->exiflen);
   return exifdat->exiflen;
 };

@@ -63,8 +63,11 @@ main(int argc, char** argv){
   };
 
   fd=fopen(argv[i],"r");
-  printf("Parsing %s:\n",argv[i]);
-  if (!fd) return(0);
+  printf("Opening %s:\n",argv[i]);
+  if (!fd) {
+    printf("File not found\n");
+    return(0);
+  };
 
   fread(tmpbuff,1,12,fd);
 

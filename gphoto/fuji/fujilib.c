@@ -78,9 +78,9 @@ struct pict_info {
 	short transferred;
 };
 
-int fuji_initialized=0;  /* MGM */
-int fuji_count;               /* MGM */
-int fuji_size;           /* MGM */
+int fuji_initialized=0; 
+int fuji_count;
+int fuji_size;
 int fuji_piccount;       /* For unique filename to Defeat the ImLib Cache */
 int devfd = -1;
 int maxnum;
@@ -94,6 +94,8 @@ int pending_input = 0;
 struct pict_info *pinfo = NULL;
 
 unsigned char answer[5000];
+static char *fuji_buffer;
+long fuji_maxbuf=200000;
 int answer_len = 0;
 
 static int get_raw_byte (void)
@@ -269,7 +271,7 @@ bad_frame:
 }
 
 
-int cmd (int len, unsigned char *data, char *indata)
+int cmd (int len, unsigned char *data)
 {
 	int i, c, timeout=50;
 	fuji_count=0;
@@ -311,14 +313,17 @@ rd_pkt:
 			exit(1);
 		}
 		put_byte(0x06);
-		if (indata != NULL) {
-		  memcpy(indata+fuji_count,answer+4,answer_len-4);
-			fuji_count+=answer_len-4;
-			if (fuji_debug){
-			  printf("Recd %d of %d\n",fuji_count,fuji_size);
-			};
-			update_progress((1.0*fuji_count/fuji_size>1.0)?1.0:
-						1.0*fuji_count/fuji_size);
+		if (fuji_buffer != NULL) {
+		  if ((fuji_count+answer_len-4)<fuji_maxbuf){
+		    memcpy(fuji_buffer+fuji_count,answer+4,answer_len-4);
+		    fuji_count+=answer_len-4;
+		  } else fprintf(stderr,"fujilib: buffer overflow\n");
+		    
+		  if (fuji_debug){
+		    printf("Recd %d of %d\n",fuji_count,fuji_size);
+		  };
+		  update_progress((1.0*fuji_count/fuji_size>1.0)?1.0:
+				  1.0*fuji_count/fuji_size);
 
 		};
 		/* More packets ? */
@@ -331,50 +336,50 @@ rd_pkt:
 	return(-1);
 }
 
-int cmd0 (int c0, int c1, char* indata)
+int cmd0 (int c0, int c1)
 {
 	unsigned char b[4];
 
 	b[0] = c0; b[1] = c1;
 	b[2] = b[3] = 0;
-	return cmd(4, b, indata);
+	return cmd(4, b);
 }
 
-int cmd1 (int c0, int c1, int arg, char* indata)
+int cmd1 (int c0, int c1, int arg)
 {
 	unsigned char b[5];
 
 	b[0] = c0; b[1] = c1;
 	b[2] =  1; b[3] =  0;
 	b[4] = arg;
-	return cmd(5, b, indata);
+	return cmd(5, b);
 }
 
-int cmd2 (int c0, int c1, int arg, char *indata)
+int cmd2 (int c0, int c1, int arg)
 {
 	unsigned char b[6];
 
 	b[0] = c0; b[1] = c1;
 	b[2] =  2; b[3] =  0;
 	b[4] = arg; b[5] = arg>>8;
-	return cmd(6, b, indata);
+	return cmd(6, b);
 }
 
 char* dc_version_info (void)
 {
-	cmd0 (0, 0x09, NULL);
+	cmd0 (0, 0x09);
 	return answer+4;
 }
 
 char* dc_camera_type (void)
 {
-	cmd0 (0, 0x29, NULL);
+	cmd0 (0, 0x29);
 	return answer+4;
 }
 
 char* dc_camera_id (void)
 {
-	cmd0 (0, 0x80, NULL);
+	cmd0 (0, 0x80);
 	return answer+4;
 }
 
@@ -390,14 +395,14 @@ int dc_set_camera_id (const char *id)
 	b[2] = n;
 	b[3] = 0;
 	memcpy(b+4, id, n);
-	return cmd(n+4, b, NULL);
+	return cmd(n+4, b);
 }
 
 char* dc_get_date (void)
 {
 	char *fmtdate = answer+50;
 	
-	cmd0 (0, 0x84, NULL);
+	cmd0 (0, 0x84);
 	strcpy(fmtdate, "YYYY/MM/DD HH:MM:SS");
 	memcpy(fmtdate,    answer+4,   4);	/* year */
 	memcpy(fmtdate+5,  answer+8,   2);	/* month */
@@ -419,54 +424,54 @@ int dc_set_date (struct tm *pt)
 	b[1] = 0x86;
 	b[2] = strlen(b+4);	/* should be 14 */
 	b[3] = 0;
-	return cmd(4+b[2], b, NULL);
+	return cmd(4+b[2], b);
 }
 
 int dc_get_flash_mode (void)
 {
-	cmd0 (0, 0x30, NULL);
+	cmd0 (0, 0x30);
 	return answer[4];
 }
 
 int dc_set_flash_mode (int mode)
 {
-	cmd1 (0, 0x32, mode, NULL);
+	cmd1 (0, 0x32, mode);
 	return answer[4];
 }
 
 int dc_nb_pictures (void)
 {
-	if (cmd0 (0, 0x0b, NULL)) return(-1);
+	if (cmd0 (0, 0x0b)) return(-1);
 	return answer[4] + (answer[5]<<8);
 }
 
 char *dc_picture_name (int i)
 {
-	cmd2 (0, 0x0a, i, NULL);
+	cmd2 (0, 0x0a, i);
 	return answer+4;
 }
 
 int dc_picture_size (int i)
 {
-	cmd2 (0, 0x17, i, NULL);
+	cmd2 (0, 0x17, i);
 	return answer[4] + (answer[5] << 8) + (answer[6] << 16) + (answer[7] << 24);
 }
 
 int charge_flash (void)
 {
-	cmd2 (0, 0x34, 200, NULL);
+	cmd2 (0, 0x34, 200);
 	return answer[4];
 }
 
 int take_picture (void)
 {
-	cmd0 (0, 0x27, NULL);
+	cmd0 (0, 0x27);
 	return answer[4] + (answer[5] << 8) + (answer[6] << 16) + (answer[7] << 24);
 }
 
 int del_frame (int i)
 {
-	cmd2 (0, 0x19, i, NULL);
+	cmd2 (0, 0x19, i);
 	return answer[4];
 }
 
@@ -475,7 +480,7 @@ void get_command_list (void)
 	int i;
 
 	memset(has_cmd, 0, 256);
-	if (cmd0 (0, 0x4c, NULL)) return ;
+	if (cmd0 (0, 0x4c)) return ;
 	for (i = 4; i < answer_len; i++)
 	  has_cmd[answer[i]] = 1;
 	/*		has_cmd[i] = 1;*/
@@ -496,8 +501,8 @@ int get_picture_info(int num,char *name){
 	   */
 	  if (has_cmd[0x17])   fuji_size=dc_picture_size(num);
 	  else {
-	    if (fuji_debug)
 	    fuji_size=70000;  /* this is an overestimation for DS7 */
+	    if (fuji_debug)
 	    fprintf(stderr,"Image size not obtained, guessing %d\n",fuji_size);
 	  };
 	  return (fuji_size);
@@ -599,18 +604,18 @@ void set_max_speed (void)
 
 #ifdef B115200
 	speed = B115200;
-	cmd1(1, 7, 8, NULL);
+	cmd1(1, 7, 8);
 	if (answer[4] == 0)
 		goto change_speed;
 #endif
 #ifdef B57600
 	speed = B57600;
-	cmd1(1, 7, 7, NULL);
+	cmd1(1, 7, 7);
 	if (answer[4] == 0)
 		goto change_speed;
 #endif
 	speed = B38400;
-	cmd1(1, 7, 6, NULL);
+	cmd1(1, 7, 6);
 	if (answer[4] == 0)
 		goto change_speed;
 
@@ -637,22 +642,19 @@ int download_picture(int n,int thumb,struct Image *im)
 		if (fuji_debug) fprintf(stderr,"%3d   %12s  \n", n, name);
 	}
 	else fuji_size=10500;  /* Probly not same for all cams, better way ? */
-	im->image_size=fuji_size;
-	im->image=malloc(fuji_size*2);  /* Provide some headroom */
 	
 	t1 = times(0);
-	if (cmd2(0, (thumb?0:0x02), n, im->image)==-1) return(-1);
+	if (cmd2(0, (thumb?0:0x02), n/*,fuji_buffer*/)==-1) goto die_gracefully;
 
 	if (fuji_debug) fprintf(stderr,
-				"Download %s:%4d actual bytes vs %4d bytes\n", 
-			       (thumb?"thumbnail":"picture"),fuji_count , 
-			       im->image_size);
-	if (im->image_size>(fuji_count*2)) {
-	  free(im->image);
-	  im->image=NULL;
-	  return(-1);
-	};
-	im->image_size=fuji_count;
+		"Download %s:%4d actual bytes vs expected %4d bytes\n", 
+		       (thumb?"thumbnail":"picture"),fuji_count ,fuji_size);
+
+	im->image_size=fuji_count+(thumb?128:0);/*leave room for thumb-decode*/
+	im->image=malloc(im->image_size);
+	if (im->image==NULL) goto die_gracefully;
+	memcpy(im->image,fuji_buffer,im->image_size);
+
 	t2 = times(0);
 
 	if (fuji_debug){
@@ -668,11 +670,18 @@ int download_picture(int n,int thumb,struct Image *im)
 	  };
 	};
 	return(0);
+
+ die_gracefully:	  /* when life gets rough */
+	if (im->image!=NULL) free(im->image);
+	im->image_size=0;
+	im->image=NULL;
+	return(-1);
+
 }
 
 int dc_free_memory (void)
 {
-	cmd0 (0, 0x1B, NULL);
+	cmd0 (0, 0x1B);
 	return answer[5] + (answer[6]<<8) + (answer[7]<<16) + (answer[8]<<24);
 }
 
@@ -738,7 +747,7 @@ int upload_pic (const char *picname)
 	buffer[2] = 12;
 	buffer[3] = 0;
 	memcpy(buffer+4, picname, 12);
-	cmd(16, buffer, NULL);
+	cmd(16, buffer);
 	if (answer[4] != 0) {
 		fprintf(stderr, "  rejected by the camera\n");
 		return 0;
@@ -775,10 +784,24 @@ int fuji_init(){
 
 	if (fuji_debug) printf("Initializing %s\n",serial_port);
 
+	/*	read_fuji_config(); */
+	fuji_maxbuf=200000; /* This should be camera dependent */
+
+
 	if (init_serial(serial_port)==-1) return(-1);
 
 	set_max_speed();
+
 	if (!fuji_initialized){
+	  fuji_buffer=malloc(fuji_maxbuf);
+	  if (fuji_buffer==NULL) {
+	    fprintf(stderr,"Memory allocation error\n");
+	    return(-1);
+	  } else if (/*fuji_debug*/1) {
+	    fprintf(stderr,"Allocated %ld bytes to main buffer\n",fuji_maxbuf);
+	  };
+	  
+	  /* could ID camera here and set the relevent variables... */
 	        get_command_list();
 	  /* For now assume that the user wil not use 2 different fuji cams
 	     in one session */
@@ -788,8 +811,8 @@ int fuji_init(){
 
 	  /* load_fuji_options() */
 	        fuji_initialized=1;  
-    };
-      
+	};
+
     return(0);
 };
 
@@ -961,10 +984,10 @@ struct Image *fuji_get_preview (){
     return ( 0 );
   }
 
-  newimage->image=malloc(100000); /* What a hack!!!*/
-
-  cmd0(0, 0x64, NULL);
-  cmd0(0, 0x62, newimage->image);
+  cmd0(0, 0x64);
+  cmd0(0, 0x62);
+  newimage->image=malloc(fuji_count); /* What a hack!!!*/
+  memcpy(newimage->image,fuji_buffer,fuji_count);
 
   return(newimage);
 };

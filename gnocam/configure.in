@@ -10,7 +10,7 @@ AC_STDC_HEADERS
 
 AM_MAINTAINER_MODE
 
-CFLAGS="$CFLAGS -Wall -Wchar-subscripts -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wpointer-arith -Werror"
+CFLAGS="$CFLAGS -Wall -Wchar-subscripts -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wpointer-arith"
 LDFLAGS="$LDFLAGS -g -Wall"
 AC_SUBST(CFLAGS)
 AC_SUBST(LDFLAGS)
@@ -24,8 +24,8 @@ dnl ---------------------------------------------------------------------------
 dnl Internationalization: We need gettext and intltool
 dnl ---------------------------------------------------------------------------
 ALL_LINGUAS="no"
-AM_GNU_GETTEXT
-AC_PROG_INTLTOOL
+AM_GLIB_GNU_GETTEXT
+AC_PROG_INTLTOOL([0.18])
 
 dnl ---------------------------------------------------------------------------
 dnl gtk+
@@ -35,6 +35,13 @@ AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
 
 dnl ---------------------------------------------------------------------------
+dnl panel
+dnl ---------------------------------------------------------------------------
+PKG_CHECK_MODULES(APPLET, libpanelapplet-2.0)
+AC_SUBST(APPLET_CFLAGS)
+AC_SUBST(APPLET_LIBS)
+
+dnl ---------------------------------------------------------------------------
 dnl gconf
 dnl ---------------------------------------------------------------------------
 PKG_CHECK_MODULES(GCONF, gconf-2.0)
@@ -42,17 +49,16 @@ AC_SUBST(GCONF_CFLAGS)
 AC_SUBST(GCONF_LIBS)
 
 dnl ---------------------------------------------------------------------------
+dnl ORBit
+dnl ---------------------------------------------------------------------------
+AM_PATH_ORBIT2([], [], [ORBit-2.0 required])
+
+dnl ---------------------------------------------------------------------------
 dnl bonobo
 dnl ---------------------------------------------------------------------------
 PKG_CHECK_MODULES(BONOBO, libbonobo-2.0)
 AC_SUBST(BONOBO_CFLAGS)
 AC_SUBST(BONOBO_LIBS)
-BONOBO_IDLDIR="`$PKG_CONFIG --variable=idldir libbonobo-2.0`"
-AC_SUBST(BONOBO_IDLDIR)
-BONOBO_ACT_IDLDIR="`$PKG_CONFIG --variable=idldir bonobo-activation-2.0`"
-AC_SUBST(BONOBO_ACT_IDLDIR)
-ORBIT_IDL="`$PKG_CONFIG --variable=orbit_idl ORBit-2.0`"
-AC_SUBST(ORBIT_IDL)
 
 dnl ---------------------------------------------------------------------------
 dnl gnome-vfs
@@ -78,13 +84,13 @@ AC_SUBST(GNOCAM_LIBS)
 dnl ---------------------------------------------------------------------------
 dnl Makefiles
 dnl ---------------------------------------------------------------------------
-AC_OUTPUT([
+AC_OUTPUT([ m4/Makefile 
 Makefile
 art/Makefile
 po/Makefile.in
 idl/Makefile
+applet/Makefile
 gnocam/Makefile
-gnome-vfs-module/Makefile
 tests/Makefile
 ])
 

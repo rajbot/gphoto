@@ -6,28 +6,34 @@ INCLUDES =\
  -DGNOMELOCALEDIR=\""$(datadir)/locale"\"\
  $(APPLET_CFLAGS)
 
-bin_PROGRAMS=gnocam-applet
+libexec_PROGRAMS = gnocam-applet
 
-CORBA_GENERATED = GnoCam.h GnoCam-common.c GnoCam-skels.c GnoCam-stubs.c
+CORBA_GENERATED = GnoCam.h GnoCam-common.c GnoCam-stubs.c
 
 gnocam_applet_SOURCES =\
  $(CORBA_GENERATED)\
- gnocam-applet.c
+ gnocam-applet.c gnocam-applet.h \
+ main.c
 
 $(CORBA_GENERATED): $(top_srcdir)/idl/GnoCam.idl
-	$(ORBIT_IDL) $(top_srcdir)/idl/GnoCam.idl `$(GNOME_CONFIG) --cflags idl`
-
-BUILT_SOURCES=$(CORBA_GENERATED)
-CLEANFILES=$(CORBA_GENERATED)
+	$(ORBIT_IDL) --noskels \
+		-I`$(PKG_CONFIG) --variable=idldir libbonobo-2.0` \
+		-I`$(PKG_CONFIG) --variable=idldir bonobo-activation-2.0` \
+		$(top_srcdir)/idl/GnoCam.idl
 
 gnocam_applet_LDADD = $(APPLET_LIBS)
 
-sysdir=$(datadir)/applets/Multimedia
-sys_predata=gnocam-applet.desktop.in
-sys_DATA=$(sys_predata:.desktop.in=.desktop)
-@XML_I18N_MERGE_DESKTOP_RULE@
+serverdir       = $(libdir)/bonobo/servers
+server_in_files = GNOME_GnoCamApplet.server.in
+server_DATA     = $(server_in_files:.server.in=.server)
 
-gnorbadir=$(sysconfdir)/CORBA/servers
-gnorba_DATA=gnocam-applet.gnorba
+EXTRA_DIST = GNOME_GnoCamApplet.server.in.in
 
-EXTRA_DIST=gnocam-applet.gnorba gnocam-applet.desktop
+@INTLTOOL_SERVER_RULE@
+
+$(server_in_files): $(server_in_files:.server.in=.server.in.in)
+	sed -e "s|\@LIBEXECDIR\@|$(libexecdir)|; s|\@PREFIX\@|$(prefix)|;" $< > $@
+
+BUILT_SOURCES = $(CORBA_GENERATED) \
+	GNOME_GnoCamApplet.server GNOME_GnoCamApplet.server.in
+CLEANFILES = $(BUILT_SOURCES)

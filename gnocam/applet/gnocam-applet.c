@@ -1,6 +1,93 @@
 #include <config.h>
-#include <applet-widget.h>
+#include "gnocam-applet.h"
 
+#include <stdlib.h>
+#include <string.h>
+
+#ifdef ENABLE_NLS
+#  include <libintl.h>
+#  undef _
+#  define _(String) dgettext (PACKAGE, String)
+#  ifdef gettext_noop
+#    define N_(String) gettext_noop (String)
+#  else
+#    define N_(String) (String)
+#  endif
+#else
+#  define textdomain(String) (String)
+#  define gettext(String) (String)
+#  define dgettext(Domain,Message) (Message)
+#  define dcgettext(Domain,Message,Type) (Message)
+#  define bindtextdomain(Domain,Directory) (Domain)
+#  define _(String) (String)
+#  define N_(String) (String)
+#endif
+
+#define PARENT_TYPE PANEL_TYPE_APPLET
+static PanelAppletClass *parent_class;
+
+static void
+gnocam_applet_finalize (GObject *object)
+{
+	GnoCamApplet *a = GNOCAM_APPLET (object);
+
+	g_free (a->priv);
+
+	G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gnocam_applet_class_init (gpointer g_class, gpointer class_data)
+{
+	GObjectClass *gobject_class;
+
+	gobject_class = G_OBJECT_CLASS (g_class);
+	gobject_class->finalize = gnocam_applet_finalize;
+
+	parent_class = g_type_class_peek_parent (g_class);
+}
+
+static void
+gnocam_applet_init (GTypeInstance *instance, gpointer g_class)
+{
+	GnoCamApplet *a = GNOCAM_APPLET (instance);
+
+	a = NULL;
+}
+
+GType
+gnocam_applet_get_type (void)
+{
+	static GType type = 0;
+
+	if (!type) {
+		GTypeInfo ti;
+
+		memset (&ti, 0, sizeof (GTypeInfo));
+		ti.class_size    = sizeof (GnoCamAppletClass);
+		ti.class_init    = gnocam_applet_class_init;
+		ti.instance_size = sizeof (GnoCamApplet);
+		ti.instance_init = gnocam_applet_init;
+
+		type = g_type_register_static (PARENT_TYPE, "GnoCamApplet",
+					       &ti, 0);
+	}
+
+	return (type);
+}
+
+GnoCamApplet *
+gnocam_applet_new (void)
+{
+	GnoCamApplet *a;
+
+	a = g_object_new (GNOCAM_TYPE_APPLET, NULL);
+
+	return (a);
+}
+
+
+#if 0
 #include <gtk/gtksignal.h>
 #include <gtk/gtktoolbar.h>
 #include <gtk/gtkpixmap.h>
@@ -150,3 +237,5 @@ main (int argc, char **argv)
 
 	return (0);
 }
+
+#endif

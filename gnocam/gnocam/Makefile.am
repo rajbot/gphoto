@@ -1,16 +1,14 @@
 INCLUDES =\
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
- -DBONOBO_DISABLE_DEPRECATED\
  -DLOCALEDIR=\""$(prefix)/$(DATADIRNAME)/locale"\"\
- -DGTK_DISABLE_DEPRECATED\
  $(GNOCAM_CFLAGS)
 
 bin_PROGRAMS=gnocam
 
-CORBA_SOURCES = GnoCam.h GnoCam-common.c GnoCam-stubs.c	GnoCam-skels.c
+CORBA_GENERATED = GnoCam.h GnoCam-common.c GnoCam-stubs.c GnoCam-skels.c
 
 gnocam_SOURCES =					\
- $(CORBA_SOURCES)					\
+ $(CORBA_GENERATED)					\
  bonobo-storage-camera.c bonobo-storage-camera.h	\
  bonobo-stream-camera.c bonobo-stream-camera.h		\
  main.c							\
@@ -20,26 +18,24 @@ gnocam_SOURCES =					\
 
 gnocam_LDADD = $(GNOCAM_LIBS)
 
-idls = $(top_srcdir)/idl/GnoCam.idl
-idl_flags =\
- -I$(BONOBO_IDLDIR) -I$(BONOBO_ACT_IDLDIR) -I$(top_srcdir)/idl\
- -D__GNOME_GnoCam_COMPILATION
-
-$(CORBA_SOURCES): $(idls)
-	$(ORBIT_IDL)   $(top_srcdir)/idl/GnoCam.idl $(idl_flags)
-
-GnoCam.h: $(idls)
+$(CORBA_GENERATED): $(top_srcdir)/idl/GnoCam.idl
+	$(ORBIT_IDL) -I`$(PKG_CONFIG) --variable=idldir libbonobo-2.0` \
+		-I`$(PKG_CONFIG) --variable=idldir bonobo-activation-2.0` \
+		$(top_srcdir)/idl/GnoCam.idl
 
 serverdir = $(libdir)/bonobo/servers
-server_in_files = GNOME_GnoCam.server.in.in
-server_DATA = $(server_in_files:.server.in.in=.server)
-$(server_in_files:.server.in.in=.server.in): $(server_in_files)
-	sed -e "s|\@LIBEXECDIR\@|$(libexecdir)|" $< > $@
+server_in_files = GNOME_GnoCam.server.in
+server_DATA = $(server_in_files:.server.in=.server)
+
+EXTRA_DIST = GNOME_GnoCam.server.in.in
+
 @INTLTOOL_SERVER_RULE@
 
-BUILT_SOURCES = $(CORBA_SOURCES)
-CLEANFILES   += $(BUILT_SOURCES) $(server_DATA)
-EXTRA_DIST    = $(server_in_files)
+$(server_in_files): $(server_in_files:.server.in=.server.in.in)
+	sed -e "s|\@PREFIX\@|$(prefix)|" $< > $@
+
+BUILT_SOURCES = $(CORBA_GENERATED) GNOME_GnoCam.server.in GNOME_GnoCam.server
+CLEANFILES   += $(CORBA_GENERATED) GNOME_GnoCam.server.in GNOME_GnoCam.server
 
 dist-hook:
 	cd $(distdir); rm -f $(BUILT_SOURCES)

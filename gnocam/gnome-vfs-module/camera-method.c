@@ -1,6 +1,5 @@
 #include <config.h>
 #include <gphoto2.h>
-#include <gtk/gtkmain.h>
 #include <libgnome/gnome-defs.h>
 #include <libgnomevfs/gnome-vfs-context.h>
 #include <libgnomevfs/gnome-vfs-handle.h>
@@ -927,7 +926,7 @@ vfs_module_shutdown (GnomeVFSMethod *method)
 	il = NULL;
 
 	/* Unref client */
-	gtk_object_unref (GTK_OBJECT (client));
+	g_object_unref (G_OBJECT (client));
 	client = NULL;
 }
 

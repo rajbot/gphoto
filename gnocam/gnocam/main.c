@@ -48,7 +48,8 @@ main (int argc, char **argv)
 	bind_textdomain_codeset (PACKAGE, "UTF-8");
 	textdomain (PACKAGE);
 
-	BONOBO_FACTORY_INIT ("gnocam", VERSION, &argc, argv);
+	if (!bonobo_init (&argc, argv))
+		g_error (_("Could not initialize Bonobo"));
 
 	return (bonobo_generic_factory_main ("OAFIID:GNOME_GnoCam_Factory",
 					     gnocam_factory, NULL));

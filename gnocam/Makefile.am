@@ -1,8 +1,10 @@
-SUBDIRS = art gnocam gnome-vfs-module po tests
+SUBDIRS = m4 art gnocam applet po tests intl
 
-EXTRA_DIST =\
+EXTRA_DIST = config.rpath \
  AUTHORS\
  README\
  THANKS\
  TODO
 
+
+ACLOCAL_AMFLAGS = -I m4

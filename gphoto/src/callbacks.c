@@ -87,13 +87,8 @@ void set_camera (char *model) {
 
 void configure_call() {
 
-	if (Camera != NULL) {
-		if ((*Camera->configure)() == 0) {
-	  		error_dialog("No configuration options.");
-		}
-	} else {
-	  	error_dialog("No configuration options.");
-	}
+	if ((*Camera->configure)() == 0)
+	 	error_dialog("No configuration options.");
 }
 
 void mail_image_call() {
@@ -106,7 +101,6 @@ void takepicture_call() {
 	int picNum;
 
 	update_status("Taking picture...");
-printf("Calling the take_picture function!");
 	picNum = (*Camera->take_picture)();
 
 	if (picNum == 0) {
@@ -204,9 +198,8 @@ void savepictodisk (int picNum, int thumbnail, char *prefix) {
 	 * #picNum to disk as prefix.(returned image extension)
 	 */
 
-	FILE *fp;
 	struct Image *im = NULL; 
-	char fname[1024], error[32], process[1024];
+	char fname[1024], error[32], process[1024], confirm[1024];
 
 	if ((im = (*Camera->get_picture)(picNum, thumbnail)) == 0) {
 		sprintf(error, "Could not save #%i", picNum);
@@ -214,10 +207,16 @@ void savepictodisk (int picNum, int thumbnail, char *prefix) {
 		return;
 	}
 	sprintf(fname, "%s.%s", prefix, im->image_type);
-	save_image(fname, im);
-	if (post_process) {
-		sprintf(process, post_process_script, fname);
-		system(process);
+	if (save_image(fname, im) == 0) {
+		sprintf(confirm, "File %s exists. Overwrite?", fname);
+		if (confirm_dialog(confirm)) {
+			remove(fname);
+			(void)save_image(fname, im);
+			if (post_process) {
+				sprintf(process, post_process_script, fname);
+				system(process);
+			}
+		}
 	}
 	free_image(im);
 }
@@ -251,37 +250,30 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 		/* Get an output directory */
 		filesel = gtk_directory_selection_new(
 				"Select a directory to store the images...");
-		gtk_window_set_position (GTK_WINDOW (filesel), 
-			GTK_WIN_POS_CENTER);
-
-		label = gtk_label_new("Enter the file prefix for the images:");
-		gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
+		label = gtk_label_new("Filename prefix:");
 		gtk_widget_show(label);
-		gtk_box_pack_start_defaults(GTK_BOX(
-			GTK_FILE_SELECTION(filesel)->main_vbox), label);
-		gtk_box_reorder_child(GTK_BOX(
-			GTK_FILE_SELECTION(filesel)->main_vbox), label, 5);
+		gtk_box_pack_end_defaults(GTK_BOX(GTK_FILE_SELECTION(
+			filesel)->main_vbox), label);
 
-	        entry = gtk_entry_new();
-	        gtk_widget_show(entry);
-	        gtk_entry_set_max_length(GTK_ENTRY(entry), 25);
-		gtk_box_pack_start_defaults(GTK_BOX(
-			GTK_FILE_SELECTION(filesel)->main_vbox), entry);
-		gtk_box_reorder_child(GTK_BOX(
-			GTK_FILE_SELECTION(filesel)->main_vbox), entry, 6);
-	
+		entry = gtk_entry_new();
+		gtk_widget_show(entry);
+		gtk_box_pack_end_defaults(GTK_BOX(GTK_FILE_SELECTION(
+			filesel)->main_vbox), entry);
 		/* if they clicked cancel, return  ------------- */
 		if (wait_for_hide(filesel, GTK_FILE_SELECTION(filesel)->ok_button, 
 		    GTK_FILE_SELECTION(filesel)->cancel_button) == 0)
 			return;
 	        /* --------------------------------------------- */
 
+		if (!GTK_IS_OBJECT(filesel))
+			return;
 		filesel_dir = gtk_file_selection_get_filename(
 				GTK_FILE_SELECTION(filesel));
-	        strcpy(filesel_cwd, filesel_dir);
+	        sprintf(filesel_cwd, "%s", filesel_dir);
 		filesel_prefix = gtk_entry_get_text(GTK_ENTRY(entry));
 		sprintf(saveselectedtodisk_dir, "%s%s", filesel_dir,
 			filesel_prefix);
+		free(filesel_dir);
 		gtk_widget_destroy(filesel);
 	}
 
@@ -594,7 +586,6 @@ void port_dialog() {
 			gtk_entry_get_text(GTK_ENTRY(ent_other)));
 		strcpy(serial_port, tempstring);
 	}
-printf("serial port: %s\n", serial_port);
 	save_config();
 	gtk_widget_destroy(dialog);	
 }
@@ -651,17 +642,12 @@ Version Information
 
 Current Version: %s
 
-This developer's release should be much more stable than
-the pre-release. A lot has changed internally, and we
-are moving ahead and preparing to add support for many
-different cameras.
-
-There are more features (i.e. manipulation, batch save, ...)
-and it should get the index a lot faster.
+New features all over the place. Please see
+the ChangeLog for more information.
 
 As always, report bugs gphoto-devel@lists.styx.net
 
-Thanx much. :)
+Thanx much.
 ", VERSION);
 
 	error_dialog(msg);
@@ -724,37 +710,12 @@ void usersmanual_dialog() {
 }
 
 void faq_dialog() {
-   error_dialog("Please visit http://www.gphoto.org/help.php3 for the current FAQ list.");
+   error_dialog(
+"Please visit http://www.gphoto.org/help.php3 
+for the current FAQ list.");
 }
- 
-void about_dialog() {
-    char msg[1024];
-   
-  sprintf(msg, "
-gPhoto version %s Developer's Release
-
-Copyright (C) 1998-99  Scott Fritzinger <scottf@scs.unr.edu>
-                       Matt Martin <matt.martin@ieee.org>
-                       Del Simmons <del@freespeech.com>
-                       Bob Paauwe <bpaauwe@bobsplace.com>
-                       Cliff Wright <cliff@snipe444.org>
-                       Phill Hugo <phill@gphoto.org>
-		       Gary Ross <gdr@hooked.net>
-                       Beat Christen <spiff@longstreet.ch>
-                       Brent D. Metz <bmetz@vt.edu>
-                       Warren Baird <wjbaird@bigfoot.com>
-                       Ole K. Aamot <oleaa@ifi.uio.no>
-
-gPhoto uses the PhotoPC library (libeph_io).
-Copyright (c) 1997,1998 Eugene G. Crosser <crosser@average.org>
-Copyright (c) 1998 Bruce D. Lightner (DOS/Windows support)
-
-Visit http://www.gphoto.org/ for updates.", VERSION);
-
-  error_dialog(msg);
-}
- 
- void show_license() {
+  
+void show_license() {
    
   error_dialog("
 This program is free software; you can redistribute it and/or modify
@@ -1110,13 +1071,26 @@ void closepic () {
 
 void save_opened_image (int i, char *filename) {
 
+	FILE *f;
 	int x=0;
+	char confirm[1024];
 
 	struct ImageMembers *node = &Images;
+
+	if (f = fopen(filename, "r")) {
+		fclose(f);
+		sprintf(confirm, "File %s exists. Overwrite?", filename);
+		if (confirm_dialog(confirm))
+			remove (filename);
+		   else
+			return;
+	}
+
 	while (x < i) {
 		node = node->next;
 		x++;
 	}
+	
 	if (gdk_imlib_save_image(node->imlibimage,filename, NULL) == 0) {
 		error_dialog(
 		"Could not save image. Please make

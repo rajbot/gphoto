@@ -16,6 +16,8 @@ void error_dialog(char *Error);
 
 void message_window(char *titel, char *message, GtkJustification  jtype);
 
+int confirm_dialog (char *message);
+
 void ok_click (GtkWidget *dialog);
 
 int wait_for_hide (GtkWidget *dialog, GtkWidget *ok_button,
@@ -27,7 +29,7 @@ GdkImlibImage *gdk_imlib_load_image_mem(char *image, int size);
 
 void free_image(struct Image *im);
 
-void save_image(char *filename, struct Image *im);
+int save_image(char *filename, struct Image *im);
 
 void free_imagemembers (struct ImageMembers *im);
 

@@ -40,6 +40,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.16  1999/07/02 19:53:29  scottf
+ * fixing saveselectedtodisk bug
+ *
  * Revision 1.15  1999/07/01 22:26:22  scottf
  * fixed up the html gallery dialog
  * fixed up the live Camera dialog
@@ -213,6 +216,7 @@ void gallery_main() {
 	int i=0, j=0, num_selected = 0;
 	char outputdir[1024], theme[32];
 	char filename[1024], filename2[1024], cp[1024], error[32], statmsg[128];
+	char confirm[1024];
 	struct Image *im;
 
 	GList *dlist;
@@ -417,7 +421,7 @@ Please install/move gallery themes there.");
 	node = &Thumbnails;
 	while (node->next != NULL) {
 		int loaded;	
-		int picnum;	
+		int picnum;
 		node = node->next;
 		sprintf(filename, "%sindex.html", outputdir);	
 		if (GTK_TOGGLE_BUTTON(node->button)->active) {
@@ -445,7 +449,14 @@ Please install/move gallery themes there.");
 				sprintf(thumbnail_number, "%03i", i+1);
 				sprintf(filename2, "%s%s", outputdir,
 					thumbnail_filename);
-				save_image(filename2, im);
+				if (save_image(filename2, im) == 0) {
+					sprintf(confirm, 
+				"File %s exists. Overwrite?", filename2);
+					if (confirm_dialog(confirm)) {
+						remove(filename2);
+						save_image(filename2, im);
+					}
+				}	
 				free_image(im);
 			}
 			/* Get the current image */
@@ -466,7 +477,14 @@ Please install/move gallery themes there.");
 				sprintf(picture_number, "%03i", i+1);
 				sprintf(filename2, "%s%s", outputdir,
 					picture_filename);
-				save_image(filename2, im);
+				if (save_image(filename2, im) == 0) {
+					sprintf(confirm, 
+				"File %s exists. Overwrite?", filename2);
+					if (confirm_dialog(confirm)) {
+						remove(filename2);
+						save_image(filename2, im);
+					}
+				}	
 				free_image(im);
 			}
 			if (i+1 == num_selected)

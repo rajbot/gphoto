@@ -51,6 +51,7 @@ void error_dialog(char *Error) {
         GtkWidget *dialog, *label, *button;
 
         dialog = gtk_dialog_new();
+	GTK_WINDOW(dialog)->type = GTK_WINDOW_DIALOG;
         gtk_window_set_title(GTK_WINDOW(dialog), "gPhoto Message");
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
         gtk_container_border_width(GTK_CONTAINER(dialog), 5);
@@ -90,6 +91,7 @@ void message_window(char *title, char *message, GtkJustification  jtype )
         GtkWidget *dialog, *label, *button;
 
         dialog = gtk_dialog_new();
+	GTK_WINDOW(dialog)->type = GTK_WINDOW_DIALOG;
         gtk_window_set_title(GTK_WINDOW(dialog), title);
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
         gtk_container_border_width(GTK_CONTAINER(dialog), 5);
@@ -108,6 +110,43 @@ void message_window(char *title, char *message, GtkJustification  jtype )
         gtk_widget_show(button);   
         gtk_widget_show(dialog);
         gtk_widget_grab_default (button);
+}
+
+int confirm_dialog (char *message) {
+
+	/* Displays the message, along with a Yes and No button.
+	 * returns 1 if yes is clicked
+	 * returns 0 if no  is clicked
+	 */
+
+	GtkWidget *dialog, *label, *yes, *no;
+	int retval=0;
+
+	dialog = gtk_dialog_new();
+	gtk_window_set_title(GTK_WINDOW(dialog), "Confirm");
+	GTK_WINDOW(dialog)->type = GTK_WINDOW_DIALOG;
+
+	label = gtk_label_new(message);
+	gtk_widget_show(label);
+	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+		label);
+
+	yes = gtk_button_new_with_label("Yes");
+	gtk_widget_show(yes);
+	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
+		yes);
+
+	no = gtk_button_new_with_label("No");
+	gtk_widget_show(no);
+	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
+		no);
+
+	gtk_widget_show(dialog);
+
+	retval = wait_for_hide(dialog, yes, no);
+	if (dialog)
+		gtk_widget_destroy(dialog);
+	return (retval);
 }
 
 void ok_click (GtkWidget *dialog) {
@@ -185,10 +224,20 @@ void free_image (struct Image *im) {
 		free (im);
 }
 
-void save_image (char *filename, struct Image *im) {
+int save_image (char *filename, struct Image *im) {
+
+	/* returns:
+	 *	0: image saved
+	 *	1: image not save (file exists)
+	 */
 
 	char errormsg[1024];
 	FILE *fp;
+
+	if (fp = fopen (filename, "r")) {
+		fclose(fp);
+		return 0;
+	}
 
 	if (fp = fopen (filename, "w"))
 	{
@@ -197,10 +246,12 @@ void save_image (char *filename, struct Image *im) {
 	}
 	else
 	{
-		snprintf(errormsg,1024,"The image couldn't be saved to %s because of the following error: %s",filename,sys_errlist[errno]);
-
+		snprintf(errormsg,1024,
+"The image couldn't be saved to %s because of the following error: 
+ %s",filename,sys_errlist[errno]);
 		error_dialog(errormsg);
 	}
+	return 1;
 }
 
 void gtk_directory_selection_update(GtkWidget *entry, GtkWidget *dirsel) {

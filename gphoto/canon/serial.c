@@ -19,6 +19,7 @@
 #include <sys/time.h>
 #include <errno.h>
 #include <sys/ioctl.h>
+#include <string.h>
 
 #include "util.h"
 #include "psa50.h"
@@ -114,7 +115,6 @@ int canon_serial_init(const char *devname)
 {
 #ifdef GPIO_USB
     char msg[65536];
-    char mem;
     char buffer[65536];
     gpio_device_settings settings;
     struct usb_device *udev;
@@ -240,7 +240,7 @@ int canon_serial_restore()
  *
  ****************************************************************************/
 
-int canon_serial_send(const unsigned char *buf, int len, int sleep)
+int canon_serial_send(char *buf, int len, int sleep)
 {
 	int i;
     dump_hex("canon_serial_send()", buf, len);

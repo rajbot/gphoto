@@ -3,14 +3,19 @@
 #include <glade/glade.h>
 #include <gphoto2.h>
 #include <parser.h>
-#include "information.h"
 #include "properties.h"
 #include "gnocam.h"
 #include "gphoto-extensions.h"
 
-/******************************************************************************/
-/* Prototypes                                                                 */
-/******************************************************************************/
+/**********************/
+/* External Variables */
+/**********************/
+
+GtkWindow*	main_window;
+
+/**************/
+/* Prototypes */
+/**************/
 
 void on_entry_changed (GtkEditable *editable, gpointer user_data);
 void on_adjustment_value_changed (GtkAdjustment *adjustment, gpointer user_data);
@@ -61,11 +66,15 @@ on_radiobutton_toggled (GtkToggleButton *togglebutton, gpointer user_data)
 void on_properties_apply (GnomePropertyBox *propertybox, gint arg, gpointer user_data)
 {
 	Camera*		camera;
+	gint		result;
+	gchar*		message;
 
 	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (propertybox), "camera")) != NULL);
 
-	if (gp_camera_config (camera) != GP_OK) {
-                dialog_information (_("Could not set camera properties!"));
+	if ((result = gp_camera_config (camera)) != GP_OK) {
+		message = g_strdup_printf (_("Could not set camera properties!\n(%s)"), gp_camera_result_as_string (camera, result));
+                gnome_error_dialog_parented (message, main_window);
+		g_free (message);
 		gnome_property_box_changed (propertybox);
 	}
 }

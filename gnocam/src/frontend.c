@@ -2,16 +2,15 @@
 #include <glade/glade.h>
 #include <gphoto2.h>
 #include "frontend.h"
-#include "information.h"
 #include "gnocam.h"
 #include "properties.h"
-#include "information.h"
 
 /**********************/
 /* External Variables */
 /**********************/
 
 extern GladeXML*	xml_main;
+extern GtkWindow*	main_window;
 
 /*************/
 /* Functions */
@@ -36,7 +35,7 @@ int gp_frontend_progress (Camera *camera, CameraFile *file, float percentage)
 
 int gp_frontend_message (Camera *camera, char *message)
 {
-        dialog_information (message);
+	gnome_ok_dialog_parented (message, main_window);
         return (GP_OK);
 }
 

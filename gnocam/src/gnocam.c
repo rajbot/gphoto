@@ -179,6 +179,7 @@ int main (int argc, char *argv[])
 
 	/* Create the window. We cannot do it with libglade as bonobo-support in libglade misses some features like toolbars and menus. */
 	gtk_widget_show (GTK_WIDGET (main_window = GTK_WINDOW (bonobo_window_new (PACKAGE, PACKAGE))));
+	gtk_signal_connect (GTK_OBJECT (main_window), "delete_event", GTK_SIGNAL_FUNC (gtk_main_quit), NULL);
 	g_assert ((xml_main = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "main_vbox")));
 	gtk_widget_show (widget = glade_xml_get_widget (xml_main, "main_vbox"));
 	bonobo_window_set_contents (BONOBO_WINDOW (main_window), widget);

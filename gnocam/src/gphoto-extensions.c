@@ -4,7 +4,6 @@
 #include <gconf/gconf-client.h>
 #include "gnocam.h"
 #include "gphoto-extensions.h"
-#include "information.h"
 
 /**********************/
 /* External Variables */

@@ -34,7 +34,6 @@ gnocam_SOURCES =\
  gallery.h gallery.c\
  gnocam.h gnocam.c\
  gphoto-extensions.h gphoto-extensions.c\
- information.h information.c\
  notification.h notification.c\
  preferences.h preferences.c\
  preview.h preview.c\

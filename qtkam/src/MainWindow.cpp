@@ -7,7 +7,6 @@
 #include <kimageio.h>
 #include <kiconloader.h>
 #include <kfiledialog.h>
-//#include <kprogress.h>
 #include <ktoolbarbutton.h>
 #include <klocale.h>
 #include <kaction.h>
@@ -17,7 +16,6 @@
 #include <qiconview.h>
 #include <qwidget.h>
 #include <qfiledialog.h>
-#include <qprogressbar.h>
 
 #include "MainWindow.h"
 #include "MainWindow.moc"
@@ -65,8 +63,6 @@ void MainWindow::initWidgets()
     /* Construct Actions */
     saveAction = KStdAction::save(this, SLOT(saveSelected()),this); 
     quitAction = KStdAction::quit(this, SLOT(close()),this);
-    /*selectWorkDirAction = new KAction(i18n("Set &Working Directory"),
-                    CTRL + Key_W, this, SLOT(selectWorkDir()), this);*/
     deleteAction = new KAction(i18n("Delete"), "edittrash",
                     Key_Delete, this, SLOT(deleteSelected()), this);
     downloadThumbsAction = new KAction(i18n("Download Thumbs"), "queue",
@@ -109,8 +105,6 @@ void MainWindow::initWidgets()
     fileMenu = new KPopupMenu();
     saveAction->plug(fileMenu);
     deleteAction->plug(fileMenu);
-    //fileMenu->insertSeparator();
-    //selectWorkDirAction->plug(fileMenu);
     fileMenu->insertSeparator();
     quitAction->plug(fileMenu);
 
@@ -145,7 +139,6 @@ void MainWindow::initWidgets()
     menuBar()->insertItem(i18n("&Help"), help);
    
     /* Create toolbar */
-    /*initCameraAction->plug(toolBar());*/
     downloadThumbsAction->plug(toolBar());
     saveAction->plug(toolBar());
     deleteAction->plug(toolBar());
@@ -181,28 +174,42 @@ void MainWindow::initCamera()
     } 
 }
 
+
+/**
+ * Saves the selected pictures.
+ * First pops up a dialog box asking for the target dir. Then pops up 
+ * a progress dialog for feedback.
+ */
 void MainWindow::saveSelected() 
 {
     /* Select target */
     selectWorkDir();
 
-    /* Create new progress dialog */
-    /* FIXME: Doesn't seem to work. Put GPInterface in a separate thread ? */
-    QProgressDialog* progress = new QProgressDialog(this);
-    
+    /* Create a progress dialog */
+    QProgressDialog* progress = new QProgressDialog(
+        i18n("Downloading ..."), i18n("Cancel"), 100, this, "progress", TRUE);
+    progress->setCaption("Download");
     connect(GPMessenger::instance(),SIGNAL(progressChanged(int)),
             progress,SLOT(setProgress(int)));
-    
-    for (QIconViewItem *i = iconView->firstItem(); i; i = i->nextItem()) {
+    progress->setAutoReset(false);
+    progress->setAutoClose(false); 
+    progress->setProgress(0);
+    KApplication::kApplication()->processEvents();
+     
+    /* Download all pictures */
+    for (QIconViewItem *i = iconView->firstItem(); 
+                    i && !progress->wasCancelled(); i = i->nextItem() ) {
         if (i->isSelected()) {
-            statusBar()->message("Downloading " + i->text());
-            progress->setLabelText(i->text());
+            /* Update progress dialog */
+            progress->setLabelText(i18n("Downloading ") + i->text() + "...");
+
+            /* Download picture */
             GPInterface::downloadPicture(i->text(),"/");
-            statusBar()->clear();
         }
     } 
-    
-    statusBar()->message(i18n("Done"),MESSAGE_TIME);
+
+    progress->setProgress(100);
+    delete progress;
 }
 
 
@@ -293,10 +300,10 @@ void MainWindow::deleteSelected()
         i18n("Are you sure you want to delete the selected pictures ?"), 
         i18n("Delete")) == KMessageBox::Yes) {
 
-        statusBar()->message(i18n("Deleting pictures ..."));
         try {
         for (QIconViewItem *i = iconView->firstItem();i; i=i->nextItem()) {
             if (i->isSelected()) {
+                statusBar()->message(i18n("Deleting ") + i->text() + " ...");
                 GPInterface::deletePicture(i->text(),"/");
                 delete i;
                 iconView->arrangeItemsInGrid();

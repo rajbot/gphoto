@@ -1,6 +1,9 @@
 /*
  *      Copyright (C) 1999 Randy Scott <scottr@wwa.com>
  *
+ *      Linux USB support from David Brownell <david-b@pacbell.net>.
+ *
+ *
  *      This program is free software; you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published 
  *      the Free Software Foundation; either version 2 of the License, or
@@ -32,6 +35,14 @@
 /*==============================================================================
 * Preprocessor defines
 ==============================================================================*/
+
+/*
+ * Splitting reads/writes of messages doesn't work with USB, but I'm leaving
+ * that serial-only code in for the moment so it's easy to turn it back on
+ * in emergencies.  Eventually the split message code should go.
+ */
+#undef DC2XX_SPLIT_MESSAGES
+
 #define TRANSMIT_COMMAND(desc) \
   { (desc), 8, 1, kdc240_get_command, kdc240_read_ack, kdc240_read_ack_error }
 
@@ -192,6 +203,7 @@ kdc240_baud_switch
    return STATE_NEXT;
 }
 
+#ifdef DC2XX_SPLIT_MESSAGES
 NEXT_STATE_TYPE
 kdc240_read_packet_control
 (
@@ -222,6 +234,7 @@ kdc240_read_packet_control_error
    printf ("kdc240_read_packet_control_error: read error\n");
    return STATE_ABORT;
 }
+#endif
 
 NEXT_STATE_TYPE
 kdc240_read_packet
@@ -231,10 +244,23 @@ kdc240_read_packet
 )
 {
    int i;
-   int checksum;
+   int checksum = 0;
 
-   checksum = 0;
+#ifndef DC2XX_SPLIT_MESSAGES
+   if (*packet != 0x01)
+   {
+      printf ("kdc240_read_packet_control: bad control 0x%02X\n", *packet);
+      cc_struct->rx_func(cc_struct->descriptor, NULL);
+      camera_init = FALSE;
+      return STATE_ABORT;
+   }
+
+   checksum_errors = 0;
+
+   for (i = 1; i <= cc_struct->rx_packet_size; i++)
+#else
    for (i = 0; i < cc_struct->rx_packet_size; i++)
+#endif
    {
       checksum ^= packet[i];
    }
@@ -255,8 +281,14 @@ kdc240_read_packet
    else
    {
       cc_struct->packet_response = COMMAND_RESPONSE_CORRECT;
+#ifdef DC2XX_SPLIT_MESSAGES
       cc_struct->resp = cc_struct->rx_func(cc_struct->descriptor, packet);
+#else
+      cc_struct->resp = cc_struct->rx_func(cc_struct->descriptor, packet + 1);
+#endif
    }
+
+   checksum_errors = 0;
 
    return STATE_NEXT;
 }
@@ -268,6 +300,11 @@ kdc240_read_packet_error
    ERROR_TYPE error
 )
 {
+#ifndef DC2XX_SPLIT_MESSAGES
+   /* XXX previously just returned ABORT if couldn't read 1st byte  */
+#warning "If not using USB, missing camera won't ABORT quickly..."
+#endif 
+
    printf ("kdc240_read_packet_error: read error\n");
 
    cc_struct->packet_response = COMMAND_RESPONSE_CANCEL;
@@ -309,6 +346,7 @@ kdc240_packet_response_done
    }
 }
 
+#ifdef DC2XX_SPLIT_MESSAGES
 static unsigned char *
 kdc240_send_packet_control
 (
@@ -328,6 +366,7 @@ kdc240_packet_control_done
 {
    return STATE_NEXT;
 }
+#endif
 
 static unsigned char *
 kdc240_send_packet
@@ -338,13 +377,23 @@ kdc240_send_packet
    unsigned char *data;
    unsigned char *buffer;
    int checksum;
+   int len = cc_struct->tx_packet_size + 1;
    int i;
 
-   buffer = (unsigned char *)malloc(cc_struct->tx_packet_size + 1);
+#ifndef	DC2XX_SPLIT_MESSAGES
+   len++;
+#endif
+
+   buffer = (unsigned char *)malloc(len);
    data = cc_struct->tx_func(cc_struct->descriptor);
 
    checksum = 0;
+#ifndef	DC2XX_SPLIT_MESSAGES
+   buffer [0] = 0x80;
+   for (i = 1; i <= cc_struct->tx_packet_size; i++)
+#else
    for (i = 0; i < cc_struct->tx_packet_size; i++)
+#endif
    {
       buffer[i] = data[i];
       checksum ^= data[i];
@@ -404,11 +453,21 @@ kdc240_restart
    void
 )  
 {  
-   /* Send break */
-   state_machine_assert_break(machine);
+   /* If we are using USB, there is no need to initialize the camera */
+   if (machine->is_usb)
+   {
+      camera_init = TRUE;
+   }
 
-   /* Switch the camera into high gear */
-   kdc240_baud_command();
+   /* Else, we need to fool around to make sure the camera is going */
+   else
+   {
+      /* Send break */
+      state_machine_assert_break(machine);
+
+      /* Switch the camera into high gear */
+      kdc240_baud_command();
+   }
 }
 
 /*******************************************************************************
@@ -494,20 +553,34 @@ kdc240_complex_command
    desc = kodak_command_vcreate(camera, command, ap);
    va_end(ap);
 
+   /*
+    * Check to see if the command is not going to be transmitting any
+    * packets but will expect X packets returned from the camera.
+    */
    if (cc_struct->tx_func == NULL)
    {
       STATE_MACHINE_LINE lines[] = {
          TRANSMIT_COMMAND(desc),
+#ifdef DC2XX_SPLIT_MESSAGES
          { (int)cc_struct, 0, 1, NULL,
             (void *)kdc240_read_packet_control,
             (void *)kdc240_read_packet_control_error },
          { (int)cc_struct, 0, cc_struct->rx_packet_size + 1, NULL,
             (void *)kdc240_read_packet, (void *)kdc240_read_packet_error },
+#else
+         { (int)cc_struct, 0, cc_struct->rx_packet_size + 2, NULL,
+            (void *)kdc240_read_packet, (void *)kdc240_read_packet_error },
+#endif
          { (int)cc_struct, 1, 0, (void *)kdc240_send_packet_response,
             (void *)kdc240_packet_response_done, NULL },
          COMMAND_COMPLETE(desc)
       };
+
+#ifdef DC2XX_SPLIT_MESSAGES
       STATE_MACHINE_PROGRAM program = { 5, lines };
+#else
+      STATE_MACHINE_PROGRAM program = { 4, lines };
+#endif
 
       cc_struct->loop_top = STATE_1;
 
@@ -517,10 +590,16 @@ kdc240_complex_command
          /* Loop until done */
       }
    }
-   else
+
+   /*
+    * Else, check to see if this is a command where we will transmit a
+    * single packet and then receive X packets from the camera.
+    */
+   else if (cc_struct->rx_func != NULL)
    {
       STATE_MACHINE_LINE lines[] = {
          TRANSMIT_COMMAND(desc),
+#ifdef DC2XX_SPLIT_MESSAGES
          { (int)cc_struct, 1, 0, (void *)kdc240_send_packet_control,
             (void *)kdc240_packet_control_done, NULL },
          { (int)cc_struct, cc_struct->tx_packet_size + 1, 1,
@@ -531,13 +610,60 @@ kdc240_complex_command
             (void *)kdc240_read_packet_control_error },
          { (int)cc_struct, 0, cc_struct->rx_packet_size + 1, NULL,
             (void *)kdc240_read_packet, (void *)kdc240_read_packet_error },
+#else
+         { (int)cc_struct, cc_struct->tx_packet_size + 2, 1,
+            (void *)kdc240_send_packet, (void *)kdc240_read_packet_resp,
+            (void *)kdc240_read_packet_resp_error },
+         { (int)cc_struct, 0, cc_struct->rx_packet_size + 2, NULL,
+            (void *)kdc240_read_packet, (void *)kdc240_read_packet_error },
+#endif
          { (int)cc_struct, 1, 0, (void *)kdc240_send_packet_response,
             (void *)kdc240_packet_response_done, NULL },
          COMMAND_COMPLETE(desc)
       };
-      STATE_MACHINE_PROGRAM program = { 7, lines };
 
+#ifdef DC2XX_SPLIT_MESSAGES
+      STATE_MACHINE_PROGRAM program = { 7, lines };
       cc_struct->loop_top = STATE_3;
+#else
+      STATE_MACHINE_PROGRAM program = { 5, lines };
+      cc_struct->loop_top = STATE_2;
+#endif
+
+      state_machine_program(machine, &program);
+      while (state_machine_run(machine))
+      {
+         /* Loop until done */
+      }
+   }
+
+   /*
+    * Else, this is a command where a single packet is transmitted to the
+    * camera but no packets are returned.
+    */
+   else
+   {
+      STATE_MACHINE_LINE lines[] = {
+         TRANSMIT_COMMAND(desc),
+#ifdef DC2XX_SPLIT_MESSAGES
+         { (int)cc_struct, 1, 0, (void *)kdc240_send_packet_control,
+            (void *)kdc240_packet_control_done, NULL },
+         { (int)cc_struct, cc_struct->tx_packet_size + 1, 1,
+            (void *)kdc240_send_packet, (void *)kdc240_read_packet_resp,
+            (void *)kdc240_read_packet_resp_error },
+#else
+         { (int)cc_struct, cc_struct->tx_packet_size + 2, 1,
+            (void *)kdc240_send_packet, (void *)kdc240_read_packet_resp,
+            (void *)kdc240_read_packet_resp_error },
+#endif
+         COMMAND_COMPLETE(desc)
+      };
+
+#ifdef DC2XX_SPLIT_MESSAGES
+      STATE_MACHINE_PROGRAM program = { 4, lines };
+#else
+      STATE_MACHINE_PROGRAM program = { 3, lines };
+#endif
 
       state_machine_program(machine, &program);
       while (state_machine_run(machine))

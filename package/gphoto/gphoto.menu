@@ -1,2 +1,0 @@
-?package(gphoto):needs=x11 section="Apps/Graphics" title="gphoto" \
-        command="/usr/bin/gphoto"

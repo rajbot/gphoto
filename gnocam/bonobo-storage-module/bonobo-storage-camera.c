@@ -38,26 +38,6 @@ camera_open_stream (BonoboStorage *storage, const CORBA_char *path, Bonobo_Stora
 	return bonobo_stream_camera_open (path, 0664, mode, ev);
 }
 
-/*
- * Creates the Gtk object and the corba server bound to it
- */
-static BonoboStorage *
-do_bonobo_storage_camera_create (const char *path)
-{
-	BonoboStorageCamera *storage_camera;
-	Bonobo_Storage corba_storage;
-
-	storage_camera = gtk_type_new (bonobo_storage_camera_get_type ());
-	
-	corba_storage = bonobo_storage_corba_object_create (BONOBO_OBJECT (storage_camera));
-	if (corba_storage == CORBA_OBJECT_NIL) {
-		bonobo_object_unref (BONOBO_OBJECT (storage_camera));
-		return NULL;
-	}
-
-	return bonobo_storage_construct (BONOBO_STORAGE (storage_camera), corba_storage);
-}
-
 static void
 camera_rename (BonoboStorage *storage, const CORBA_char *path, const CORBA_char *new_path, CORBA_Environment *ev)
 {
@@ -94,7 +74,18 @@ camera_list_contents (BonoboStorage *storage, const CORBA_char *path, Bonobo_Sto
 static BonoboStorage *
 bonobo_storage_camera_open (const char *path, gint flags, gint mode, CORBA_Environment *ev)
 {
-	return do_bonobo_storage_camera_create (path);
+        BonoboStorageCamera *storage;
+        Bonobo_Storage corba_storage;
+
+        storage = gtk_type_new (bonobo_storage_camera_get_type ());
+
+        corba_storage = bonobo_storage_corba_object_create (BONOBO_OBJECT (storage));
+        if (corba_storage == CORBA_OBJECT_NIL) {
+                bonobo_object_unref (BONOBO_OBJECT (storage));
+                return NULL;
+        }
+
+        return bonobo_storage_construct (BONOBO_STORAGE (storage), corba_storage);
 }
 
 static BonoboStorage *

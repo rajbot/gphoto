@@ -36,12 +36,12 @@ struct _GPFsProp {
 	} alt;
 };
 
-GPFsProp *gpfs_prop_new   (const char *id, const char *name,
-			   const char *description, GPFsVal *);
+GPFsProp *gpfs_prop_new   (unsigned int id, const char *name,
+			   const char *description, GPFsVal);
 
-const char *gpfs_prop_get_id          (GPFsProp *);
-const char *gpfs_prop_get_name        (GPFsProp *);
-const char *gpfs_prop_get_description (GPFsProp *);
+unsigned int gpfs_prop_get_id          (GPFsProp *);
+const char  *gpfs_prop_get_name        (GPFsProp *);
+const char  *gpfs_prop_get_description (GPFsProp *);
 
 void      gpfs_prop_get_val (GPFsProp *, GPFsErr *, GPFsVal *);
 void      gpfs_prop_set_val (GPFsProp *, GPFsErr *, GPFsVal *);

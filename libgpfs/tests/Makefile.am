@@ -1,3 +1,5 @@
+SUBDIRS = konica
+
 INCLUDES= 					\
 	-I$(top_srcdir)				\
 	-I$(top_srcdir)/intl			\

@@ -51,6 +51,28 @@ else
 	AC_MSG_RESULT([no])
 fi
 AM_GNU_GETTEXT([external])
+dnl ---------------------------------------------------------------------------
+dnl Build the test program using the konica driver?
+dnl ---------------------------------------------------------------------------
+try_konica=false
+have_konica=false
+konica_msg="no (default)"
+AC_ARG_WITH(konica, [  --with-konica            Compile the konica test program],[
+	if test x$withval = xyes; then
+		try_konica=true
+	fi])
+if $try_konica; then
+	AC_PATH_PROG(GP_PORT_CONFIG,gphoto2-port-config)
+	if test -n "${GP_PORT_CONFIG}"; then
+		have_konica=true
+		konica_msg="yes"
+		KONICA_CFLAGS=`$GP_PORT_CONFIG --cflags`
+		KONICA_LIBS=`$GP_PORT_CONFIG --libs`
+	fi
+fi
+AM_CONDITIONAL(HAVE_KONICA,$have_konica)
+AC_SUBST(KONICA_LIBS)
+AC_SUBST(KONICA_CFLAGS)
 
 dnl ---------------------------------------------------------------------------
 dnl Turn on debugging and all warnings when using gcc
@@ -65,6 +87,7 @@ Makefile
 libgpfs/Makefile
 libgpfs/libgpfs.pc
 tests/Makefile
+tests/konica/Makefile
 ])
 
 echo "
@@ -74,4 +97,6 @@ Configuration (libgpfs):
 	Source code location:      ${srcdir}
 	Version:                   ${VERSION}
 	Compiler:                  ${CC}
+
+	Konica test program:       ${konica_msg}
 "

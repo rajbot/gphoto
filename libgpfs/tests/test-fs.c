@@ -56,24 +56,24 @@ func_prop_get (GPFsBag *b, GPFsErr *e, unsigned int n, void *ud)
 		gpfs_val_init (&v);
 		v.t = GPFS_VAL_TYPE_UINT;
 		v.v.v_uint = sizeof ("Hello world!");
-		i = gpfs_prop_new ("size", _("Size"),
-				_("The size of the file"), &v);
+		i = gpfs_prop_new (0, _("Size"),
+				_("The size of the file"), v);
 		gpfs_val_clear (&v);
 		break;
 	case 1:
 		gpfs_val_init (&v);
 		v.t = GPFS_VAL_TYPE_STRING;
 		v.v.v_string = strdup (_("Some interface"));
-		i = gpfs_prop_new ("description", _("Description"),
-				_("The description of the interface"), &v);
+		i = gpfs_prop_new (1, _("Description"),
+				_("The description of the interface"), v);
 		gpfs_val_clear (&v);
 		break;
 	case 2:
 		gpfs_val_init (&v);
 		v.t = GPFS_VAL_TYPE_STRING;
 		v.v.v_string = strdup ("image/png");
-		i = gpfs_prop_new ("mime_type", _("Mime type"),
-				_("The mime type of the file"), &v);
+		i = gpfs_prop_new (2, _("Mime type"),
+				_("The mime type of the file"), v);
 		gpfs_val_clear (&v);
 		i->t = GPFS_ALT_TYPE_VALS;
 		i->alt.vals.vals_count = 2;

@@ -55,9 +55,7 @@ gpfs_bag_set_func_prop_count (GPFsBag *b, GPFsBagFuncCount f, void *f_data)
 GPFsBag *
 gpfs_bag_new (void)
 {
-	GPFsObj *o;
-
-	o = gpfs_obj_new (sizeof (GPFsBag));
+	GPFsObj *o = gpfs_obj_new (sizeof (GPFsBag));
 	if (!o) return NULL;
 	return (GPFsBag *) o;
 }
@@ -66,13 +64,7 @@ unsigned int
 gpfs_bag_bag_count (GPFsBag *b, GPFsErr *e)
 {
 	CN0(b,e);
-
-	if (!b->f_bag_count) {
-		gpfs_err_set (e, GPFS_ERR_TYPE_NOT_SUPPORTED,
-			_("This property bag does not support counting "
-			  "property bags."));
-		return 0;
-	}
+	if (!b->f_bag_count) return 0;
 	return b->f_bag_count (b, e, b->f_data_bag_count);
 }
 
@@ -80,13 +72,7 @@ unsigned int
 gpfs_bag_prop_count (GPFsBag *b, GPFsErr *e)
 {
 	CN0(b,e);
-
-	if (!b->f_prop_count) {
-		gpfs_err_set (e, GPFS_ERR_TYPE_NOT_SUPPORTED,
-			_("This property bag does not support counting "
-			  "properties."));
-		return 0;
-	}
+	if (!b->f_prop_count) return 0;
 	return b->f_prop_count (b, e, b->f_data_prop_count);
 }
 
@@ -94,13 +80,7 @@ GPFsBag *
 gpfs_bag_bag_get (GPFsBag *b, GPFsErr *e, unsigned int n)
 {
 	CNN(b,e);
-
-	if (!b->f_bag_get) {
-		gpfs_err_set (e, GPFS_ERR_TYPE_NOT_SUPPORTED,
-			_("This property bag does not support getting "
-			  "property bags."));
-		return NULL;
-	}
+	if (!b->f_bag_get) return NULL;
 	return b->f_bag_get (b, e, n, b->f_data_bag_get);
 }
 
@@ -183,13 +163,13 @@ gpfs_bag_dump (GPFsBag *b)
 	n = gpfs_bag_prop_count (b, NULL);
 	for (i = 0; i < n; i++) {
 		p = gpfs_bag_prop_get (b, NULL, i);
-		gpfs_prop_dump (p);
+		if (p) gpfs_prop_dump (p);
 	}
 	printf ("(2) Property bags\n");
 	n = gpfs_bag_bag_count (b, NULL);
 	for (i = 0; i < n; i++) {
 		bag = gpfs_bag_bag_get (b, NULL, i);
-		gpfs_bag_dump (bag);
+		if (bag) gpfs_bag_dump (bag);
 	}
 }
 

@@ -8,6 +8,7 @@ typedef struct _GPFsVal GPFsVal;
 struct _GPFsVal {
 	GPFsValType t;
 	union {
+		char         v_char;
 		int          v_int;
 		unsigned int v_uint;
 		char        *v_string;

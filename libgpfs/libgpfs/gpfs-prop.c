@@ -24,7 +24,8 @@
 
 struct _GPFsPropPriv 
 {
-	unsigned char *id, *name, *description;
+	unsigned int id;
+	char *name, *description;
 
 	GPFsPropFuncSetVal f_set_val; void *f_data_set_val;
 
@@ -37,7 +38,6 @@ gpfs_prop_free (GPFsObj *o)
 	unsigned int n;
 	GPFsProp *prop = (GPFsProp *) o;
 
-	free (prop->priv->id);
 	free (prop->priv->name);
 	free (prop->priv->description);
 	gpfs_val_clear (&prop->priv->val);
@@ -54,8 +54,8 @@ gpfs_prop_free (GPFsObj *o)
 }
 
 GPFsProp *
-gpfs_prop_new (const char *id, const char *name, const char *description,
-	       GPFsVal *v)
+gpfs_prop_new (unsigned int id, const char *name, const char *description,
+	       GPFsVal v)
 {
 	GPFsObj *o;
 
@@ -66,10 +66,10 @@ gpfs_prop_new (const char *id, const char *name, const char *description,
 	if (!((GPFsProp *) o)->priv) {free (o); return NULL;}
 	memset (((GPFsProp *) o)->priv, 0, sizeof (GPFsPropPriv));
 
-	((GPFsProp *) o)->priv->id          = strdup (id);
+	((GPFsProp *) o)->priv->id          = id;
 	((GPFsProp *) o)->priv->name        = strdup (name);
 	((GPFsProp *) o)->priv->description = strdup (description);
-	gpfs_val_copy (&((GPFsProp *) o)->priv->val, v);
+	gpfs_val_copy (&((GPFsProp *) o)->priv->val, &v);
 
 	return (GPFsProp *) o;
 }
@@ -86,10 +86,10 @@ gpfs_prop_get_name (GPFsProp *i)
 	return i ? i->priv->name : NULL;
 }
 
-const char *
+unsigned int
 gpfs_prop_get_id (GPFsProp *i)
 {
-	return i ? i->priv->name : NULL;
+	return i ? i->priv->id : 0;
 }
 
 void
@@ -137,7 +137,7 @@ gpfs_prop_dump (GPFsProp *i)
 	GPFsVal v;
 	unsigned int n;
 
-	printf ("Property '%s':\n", gpfs_prop_get_id (i));
+	printf ("Property %i:\n", gpfs_prop_get_id (i));
 	printf (" - Name: '%s'\n", gpfs_prop_get_name (i));
 	printf (" - Description: '%s'\n", gpfs_prop_get_description (i));
 	gpfs_val_init (&v);
@@ -152,6 +152,9 @@ gpfs_prop_dump (GPFsProp *i)
 		break;
 	case GPFS_VAL_TYPE_INT:
 		printf (" - Value: %i\n", v.v.v_int);
+		break;
+	case GPFS_VAL_TYPE_CHAR:
+		printf (" - Value: '%c'\n", v.v.v_char);
 		break;
 	default:
 		printf (" - Value unknown\n");

@@ -1,5 +1,9 @@
 2002-12-18  Lutz Müller <lutz@users.sourceforge.net>
 
+	* tests/konica: New.
+
+2002-12-18  Lutz Müller <lutz@users.sourceforge.net>
+
 	* libgpfs/gpfs.[c,h]: Now a GPFsObj, too.
 
 2002-12-17  Lutz Müller <lutz@users.sourceforge.net>

@@ -117,6 +117,14 @@ gpfs_obj_bag_count (GPFsObj *o, GPFsErr *e)
 	return o->priv->f_bag_count (o, e, o->priv->f_bag_count_data);
 }
 
+GPFsBag *
+gpfs_obj_bag_get (GPFsObj *o, GPFsErr *e, unsigned int n)
+{
+	CNV(o,e);
+	if (!o->priv->f_bag_get) return NULL;
+	return o->priv->f_bag_get (o, e, n, o->priv->f_bag_get_data);
+}
+
 void
 gpfs_obj_set_func_bag_count (GPFsObj *o, GPFsObjFuncBagCount f, void *f_data)
 {

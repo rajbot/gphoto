@@ -1,0 +1,23 @@
+<oaf_info>
+
+  <oaf_server iid="OAFIID:GNOME_GnoCam_Factory" type="exe" location="gnocam">
+    <oaf_attribute name="repo_ids" type="stringv">
+      <item value="IDL:GNOME/GenericFactory:1.0"/>
+    </oaf_attribute>
+    <oaf_attribute name="name" type="string" 
+                   _value="GnoCam Camera factory"/>
+    <oaf_attribute name="description" type="string"
+                   _value="GnoCam Camera factory"/>
+  </oaf_server>
+  
+  <oaf_server iid="OAFIID:GNOME_GnoCam" type="factory"
+              location="OAFIID:GNOME_GnoCam_Factory">
+    <oaf_attribute name="repo_ids" type="stringv">
+      <item value="IDL:Bonobo/Unknown:1.0"/>
+    </oaf_attribute>
+    <oaf_attribute name="name" type="string" _value="GnoCam"/>
+    <oaf_attribute name="description" type="string" _value="GnoCam"/>
+  </oaf_server>
+
+</oaf_info>
+  

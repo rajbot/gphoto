@@ -1,0 +1,7 @@
+GNOME_GnoCam.oaf
+GnoCam*
+Makefile.in
+Makefile.am
+*.lo
+*.o
+gnocam

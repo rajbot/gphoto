@@ -1,0 +1,22 @@
+<Root>
+  <menu>
+    <submenu name="File" _label="_File">
+      <menuitem name="Open" verb="Open" _label="Open" _tip="Open a gallery" pixtype="stock" pixname="Open"/>
+      <menuitem name="SaveAs" verb="SaveAs" _label="Save As..." _tip="Save this gallery" pixtype="stock" pixname="Save"/>
+      <separator/>
+      <menuitem name="Close" verb="Close" _label="Close"/>
+      <menuitem name="Exit" verb="Exit" _label="Exit"/>
+    </submenu>
+    <submenu name="Edit">
+      <menuitem name="Clear" verb="Clear" _label="Clear" _tip="Clear this gallery"/>
+      <separator/>
+    </submenu>
+    <submenu name="Help" _label="_Help">
+      <menuitem name="About" verb="About" _label="About"/>
+    </submenu>
+  </menu>
+  <dockitem name="Toolbar">
+    <toolitem name="SaveAs" verb="SaveAs" _label="Save As" _tip="Save this gallery" pixtype="stock" pixname="Save"/>
+    <separator/>
+  </dockitem>
+</Root>

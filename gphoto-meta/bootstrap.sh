@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 
-source "$(dirname $0)/utils/common.sh" || exit 7
+. "$(dirname $0)/utils/common.sh" || exit 7
 
 
 ########################################################################

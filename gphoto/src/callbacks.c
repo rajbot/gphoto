@@ -1674,7 +1674,8 @@ in the Help menu for more information. ");
 	if (wait_for_hide(dialog, ok, cancel) == 0)
 		return;
 
-	if (strstr(gtk_entry_get_text(GTK_ENTRY(script)), "%s") == NULL) {
+	if ((strstr(gtk_entry_get_text(GTK_ENTRY(script)), "%s") == NULL)
+	   && GTK_TOGGLE_BUTTON(pp)->active) {
 		error_dialog(
 "Missing \"%s\" in the post-processing entry.
 This is required so the post-processing program

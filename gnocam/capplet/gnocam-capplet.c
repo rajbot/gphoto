@@ -586,14 +586,14 @@ gnocam_capplet_new (GConfClient *client)
 
 	/* Add the close button */
 	gtk_widget_show (b = gtk_button_new_from_stock (GTK_STOCK_CLOSE));
-	gtk_box_pack_end (GTK_BOX (GTK_DIALOG (c)->action_area), b,
-			  FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (c)->action_area), b,
+			    FALSE, FALSE, 0);
 	g_signal_connect (b, "clicked", G_CALLBACK (on_close_clicked), c);
 
 	/* Add the help button */
 	gtk_widget_show (b = gtk_button_new_from_stock (GTK_STOCK_HELP));
-	gtk_box_pack_end (GTK_BOX (GTK_DIALOG (c)->action_area), b,
-			  FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (c)->action_area), b,
+			    FALSE, FALSE, 0);
 	g_signal_connect (b, "clicked", G_CALLBACK (on_help_clicked), c);
 
 	/* Load the current settings. */

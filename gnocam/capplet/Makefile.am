@@ -4,7 +4,10 @@ INCLUDES = 					\
  -I$(top_srcdir)				\
  -DIMAGEDIR=\"$(datadir)/pixmaps/$(PACKAGE)/\"	\
  -DGNOME_LOCALEDIR=\""$(datadir)/locale"\"	\
- -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
+ -DG_LOG_DOMAIN=\"$(PACKAGE)\"			\
+ -DGNOCAM_GLADE_DIR=\"$(GNOCAM_GLADE_DIR)\"	\
+ -DGNOCAM_SRCDIR=\"$(top_srcdir)\"		\
+ -DGNOCAM_DATADIR=\""$(datadir)"\"		\
  $(GNOCAM_CAPPLET_CFLAGS)
 
 CORBA_GENERATED = GNOME_C-common.c GNOME_C-stubs.c GNOME_C.h
@@ -17,7 +20,7 @@ $(CORBA_GENERATED): $(top_srcdir)/idl/GNOME_C.idl
 bin_PROGRAMS = gnocam-capplet
 gnocam_capplet_LDADD = $(top_builddir)/libgnocam/libgnocam.la	\
 	$(GNOCAM_CAPPLET_LIBS)
-gnocam_capplet_SOURCES =
+gnocam_capplet_SOURCES =			\
 	gnocam-capplet.c gnocam-capplet.h	\
 	main.c 					\
 	$(CORBA_GENERATED)			\

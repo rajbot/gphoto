@@ -21,7 +21,7 @@ main (int argc, char** argv)
 	textdomain (PACKAGE);
 
 	gnome_program_init ("camera-capplet", VERSION, LIBGNOMEUI_MODULE, argc,
-			    argv, NULL);
+		argv, GNOME_PARAM_APP_DATADIR, GNOCAM_DATADIR, NULL);
 
 	/* Get the gconf-client */
 	client = gconf_client_get_default ();

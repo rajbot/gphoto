@@ -431,7 +431,7 @@ gnocam_applet_prefs_cb (BonoboUIComponent *uic, GnocamApplet *a,
 			const char *verbname)
 {
 	GError *e = NULL;
-	gchar *argv[] = {"camera-capplet", NULL};
+	gchar *argv[] = {"gnocam-capplet", NULL};
 
 	g_spawn_async (NULL, argv, NULL, G_SPAWN_SEARCH_PATH,
 		       NULL, NULL, NULL, &e);

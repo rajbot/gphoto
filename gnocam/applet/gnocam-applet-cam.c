@@ -3,7 +3,6 @@
 #include "gnocam/i18n.h"
 
 #include <libgnocam/GNOME_C.h>
-#include <libgnocam/gnocam-chooser.h>
 #include <libgnocam/gnocam-util.h>
 
 #include <gtk/gtkimage.h>
@@ -46,7 +45,6 @@ struct _GnocamAppletCamPriv
 
 	/* Dialogs */
 	GtkWidget *prefs;
-	GnocamChooser *chooser;
 
 	GdkPixbuf *p_connected;
 	GdkPixbuf *p_disconnected;

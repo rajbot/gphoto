@@ -133,7 +133,7 @@ long	*cameraid;
 	 * communications with the camera. The camera returns 00 00 01
 	 * We don't know what it means but do it anyway for completness
 	 * sake. */
-	philips_init_query();
+	if ( *cameraid != 5000 ) philips_init_query();
 
 	/* Get the current camera mode */
 	philips_mode = philips_get_mode ();

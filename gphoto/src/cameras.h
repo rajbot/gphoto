@@ -38,7 +38,7 @@ struct Model cameras[] = {
 	{"Kodak DC25", &kodak_dc2x},
 	{"Kodak DC200+", &kodak_dc210},
 	{"Kodak DC210", &kodak_dc210},
-        {"Kodak (everything else)", &kodak},
+        {"Kodak DC240", &kodak},
 	{"Konica QM100", &konica_qm100},
 	{"Konica QM100V", &konica_qm100},
 	{"Minolta Dimage V", &dimage_v},

@@ -44,12 +44,23 @@ INCLUDES = -I.. -I$(top_srcdir)/intl
 COMPILE = $(CC) -c $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $(XCFLAGS)
 
 SOURCES = cat-id-tbl.c
-POFILES = 
-GMOFILES = 
+POFILES =  no.po
+GMOFILES =  no.gmo
 DISTFILES = ChangeLog Makefile.in.in POTFILES.in $(PACKAGE).pot \
 stamp-cat-id $(POFILES) $(GMOFILES) $(SOURCES)
 
 POTFILES = \
+	../src/callbacks.c \
+	../src/commandline.c \
+	../src/developer_dialog.c \
+	../src/gallery.c \
+	../src/gphoto.c \
+	../src/img_edit.c \
+	../src/live.c \
+	../src/main.c \
+	../src/menu.c \
+	../src/toolbar.c \
+	../src/util.c
 
 CATALOGS = 
 CATOBJEXT = .gmo

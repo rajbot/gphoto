@@ -27,4 +27,4 @@
 #
 CVSROOT	${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} hun@users.sourceforge.net
 DEFAULT	${CVSROOT}/CVSROOT/syncmail -q -R gphoto-devel@lists.sourceforge.net -u %{sVv} gphoto-cvs@lists.sourceforge.net
-ALL	$CVSROOT/CVSROOT/ciabot %{}
+#ALL	$CVSROOT/CVSROOT/ciabot %{}

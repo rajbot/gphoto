@@ -30,7 +30,7 @@ int gp_frontend_status (Camera *camera, char *status)
 
 int gp_frontend_progress (Camera *camera, CameraFile *file, float percentage)
 {
-	gtk_progress_set_percentage (GTK_PROGRESS (glade_xml_get_widget (xml_main, "main_progressbar")), percentage);
+	gtk_progress_set_percentage (GTK_PROGRESS (glade_xml_get_widget (xml_main, "main_progressbar")), percentage/100.0);
         return (GP_OK);
 }
 

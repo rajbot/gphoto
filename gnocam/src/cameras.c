@@ -85,16 +85,16 @@ on_tree_item_file_button_press_event (GtkWidget *widget, GdkEventButton *event, 
         gchar*          path;
         gchar*          filename;
 
-        g_assert (event != NULL);
-        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (widget), "camera")) != NULL);
-        g_assert ((filename = gtk_object_get_data (GTK_OBJECT (widget), "filename")) != NULL);
-        g_assert ((path = gtk_object_get_data (GTK_OBJECT (widget), "path")) != NULL);
+        g_return_val_if_fail (event, FALSE);
+	g_return_val_if_fail (camera = gtk_object_get_data (GTK_OBJECT (widget), "camera"), FALSE);
+	g_return_val_if_fail (filename = gtk_object_get_data (GTK_OBJECT (widget), "filename"), FALSE);
+	g_return_val_if_fail (path = gtk_object_get_data (GTK_OBJECT (widget), "path"), FALSE);
 
         /* Did the user right-click? */
         if (event->button == 3) {
 
                 /* Create the dialog. */
-                g_assert ((xml_popup = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "camera_tree_popup_file")) != NULL);
+                g_return_val_if_fail (xml_popup = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "camera_tree_popup_file"), FALSE);
 
                 /* Store some data. */
                 gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_file_save_preview")), "item", widget);
@@ -121,15 +121,15 @@ on_tree_item_folder_button_press_event (GtkWidget *widget, GdkEventButton *event
         Camera*         camera;
         gchar*          path;
 
-        g_assert (event != NULL);
-        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (widget), "camera")) != NULL);
-        g_assert ((path = gtk_object_get_data (GTK_OBJECT (widget), "path")) != NULL);
+        g_return_val_if_fail (event, FALSE);
+        g_return_val_if_fail (camera = gtk_object_get_data (GTK_OBJECT (widget), "camera"), FALSE);
+        g_return_val_if_fail (path = gtk_object_get_data (GTK_OBJECT (widget), "path"), FALSE);
 
         /* Did the user right-click? */
         if (event->button == 3) {
 
                 /* Create the dialog. */
-                g_assert ((xml_popup = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "camera_tree_popup_folder")) != NULL);
+                g_return_val_if_fail (xml_popup = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "camera_tree_popup_folder"), FALSE);
 
                 /* Store some data. */
                 gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_folder_upload_file")), "item", widget);

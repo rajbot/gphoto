@@ -27,12 +27,12 @@
 /* Global Variables */
 /********************/
 
-GConfClient*		gconf_client = NULL;
-BonoboObjectClient*	viewer_client = NULL;
-GtkTree*		main_tree = NULL;
-GnoCamViewMode		view_mode = GNOCAM_VIEW_MODE_PREVIEW;
-GList*			preview_list = NULL;
-GladeXML*		xml_main = NULL;
+GConfClient*		gconf_client 	= NULL;
+BonoboObjectClient*	viewer_client 	= NULL;
+GtkTree*		main_tree 	= NULL;
+GnoCamViewMode		view_mode 	= GNOCAM_VIEW_MODE_PREVIEW;
+GList*			preview_list 	= NULL;
+GladeXML*		xml_main 	= NULL;
 
 /***************/
 /* Prototypes. */
@@ -166,17 +166,14 @@ int main (int argc, char *argv[])
 	/* Init GNOME, glade, gnome-vfs, gconf. */
 	gnome_init (PACKAGE, VERSION, argc, argv);
 	oaf_init (argc, argv);
-	g_assert (bonobo_init (CORBA_OBJECT_NIL, CORBA_OBJECT_NIL, CORBA_OBJECT_NIL));
+	g_return_val_if_fail (bonobo_init (CORBA_OBJECT_NIL, CORBA_OBJECT_NIL, CORBA_OBJECT_NIL), 1);
 	glade_gnome_init ();
-	if (!gnome_vfs_init ()) {
-		gnome_error_dialog (_("Could not initialize gnome-vfs!"));
-		return (1);
-	}
+	g_return_val_if_fail (gnome_vfs_init (), 1);
 	if (!gconf_init (argc, argv, &gerror)) {
 		gnome_error_dialog (g_strdup_printf (_("Could not initialize gconf!\n\n%s"), gerror->message));
 		return (1);
 	}
-        gconf_client = gconf_client_get_default ();
+        g_return_val_if_fail (gconf_client = gconf_client_get_default (), 1);
 	gconf_client_add_dir (gconf_client, "/apps/" PACKAGE "", GCONF_CLIENT_PRELOAD_NONE, NULL);
 
 	/* Init gphoto2 backend with debug level as stored in database.	*/ 

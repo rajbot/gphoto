@@ -38,230 +38,119 @@
 	}								\
 }
 
-#if 0
+KncCntrlRes
+knc_erase_image (KncCntrl *c, KncCamRes *r, unsigned long n, KncSource s)
+{
+        unsigned char sb[] = {0, 0x80, 0, 0, s, s >> 8, 0, 0, 0, 0};
+        unsigned char rb[1024];
+        unsigned int rbs = sizeof (rb);
+	KncCntrlProt prot = knc_cntrl_prot (c);
+
+	if (prot & KNC_CNTRL_PROT_LONG_ID) {
+		sb[6] = n >> 16;
+		sb[7] = n >> 24;
+		sb[8] = n;
+		sb[9] = n >> 8;
+		CR (knc_cntrl_transmit (c, sb, 10, rb, &rbs));
+	} else {
+		sb[6] = n;
+		sb[7] = n >> 8;
+		CR (knc_cntrl_transmit (c, sb, 8, rb, &rbs));
+	}
+	CCR (r,rb,rbs);
+	CS (rbs, 4);
+        return KNC_CNTRL_RES_OK;
+}
 
 KncCntrlRes
-knc_erase_image (KncCntrl *p, int image_id_long, unsigned long image_id)
+knc_format (KncCntrl *c, KncCamRes *r, KncSource s)
 {
-        /************************************************/
-        /* Command to erase one image.                  */
-        /*                                              */
-        /* 0x00: Byte 0 of command identifier           */
-        /* 0x80: Byte 1 of command identifier           */
-        /* 0x00: Reserved                               */
-        /* 0x00: Reserved                               */
-        /* 0xXX: Byte 0 of p ID                    */
-        /*              0x02: Flash memory card         */
-        /* 0xXX: Byte 1 of p ID                    */
-        /*              0x00: Flash memory card         */
-        /* 0xXX: Byte 3 of image ID (QM200 only)        */
-        /* 0xXX: Byte 4 of image ID (QM200 only)        */
-        /* 0xXX: Byte 0 of image ID                     */
-        /* 0xXX: Byte 1 of image ID                     */
-        /*                                              */
-        /* Return values:                               */
-        /* 0x00: Byte 0 of command identifier           */
-        /* 0x80: Byte 1 of command identifier           */
-        /* 0xXX: Byte 0 of return status                */
-        /* 0xXX: Byte 1 of return status                */
-        /************************************************/
-        unsigned char sb[] = {0x00, 0x80, 0x00, 0x00, 0x02,
-                       0x00, 0x00, 0x00, 0x00, 0x00};
-        unsigned char *rb = NULL;
-        unsigned int rbs;
-	KncCntrlRes r;
+        const unsigned char sb[] = {0x10, 0x80, 0, 0, s, s >> 8};
+        unsigned char rb[1024];
+        unsigned int rbs = sizeof (rb);
 
-        if (!image_id_long) {
-                sb[6] = image_id;
-                sb[7] = image_id >> 8;
-		CRF (l_send_receive (p, sb, 8, &rb, &rbs,
-							0, NULL, NULL), rb);
-        } else {
-                sb[6] = image_id >> 16;
-                sb[7] = image_id >> 24;
-                sb[8] = image_id;
-                sb[9] = image_id >> 8;
-		CRF (l_send_receive (p, sb, 10, &rb, &rbs, 0, NULL, NULL), rb);
-        }
-
-        free (rb);
-	r.t = KNC_RES_TYPE_NONE;
-        return r;
+	CR (knc_cntrl_transmit (c, sb, sizeof (sb), rb, &rbs));
+	CCR (r,rb,rbs);
+	CS (rbs, 4);
+	return KNC_CNTRL_RES_OK;
 }
 
 
 KncCntrlRes
-knc_format_memory_card (KncCntrl *p)
+knc_erase_all (KncCntrl *c, KncCamRes *r, KncSource s, unsigned int *n)
 {
-        /************************************************/
-        /* Command to format the memory card.           */
-        /*                                              */
-        /* 0x10: Byte 0 of command identifier           */
-        /* 0x80: Byte 1 of command identifier           */
-        /* 0x00: Reserved                               */
-        /* 0x00: Reserved                               */
-        /* 0xXX: Byte 0 of p ID                    */
-        /*              0x02: Flash memory card         */
-        /* 0xXX: Byte 1 of p ID                    */
-        /*              0x00: Flash memory card         */
-        /*                                              */
-        /* Return values:                               */
-        /* 0x10: Byte 0 of command identifier           */
-        /* 0x80: Byte 1 of command identifier           */
-        /* 0xXX: Byte 0 of return status                */
-        /* 0xXX: Byte 1 of return status                */
-        /************************************************/
-        unsigned char sb[] = {0x10, 0x80, 0x00, 0x00, 0x02, 0x00};
-        unsigned char *rb = NULL;
-        unsigned int rbs;
-	KncCntrlRes r;
+	const unsigned char sb[] = {0x20, 0x80, 0, 0, s, s >> 8};
+        unsigned char rb[1024];
+        unsigned int rbs = sizeof (rb);
 
-	CRF (l_send_receive (p, sb, 6, &rb, &rbs, 0, NULL, NULL), rb);
-
-        free (rb);
-	r.t = KNC_RES_TYPE_NONE;
-        return r;
+	CR (knc_cntrl_transmit (c, sb, sizeof (sb), rb, &rbs));
+	CCR (r,rb,rbs);
+	CS (rbs, 6);
+	if (n) *n = (rb[5] << 8) | rb[4];
+	return KNC_CNTRL_RES_OK;
 }
 
-
 KncCntrlRes
-knc_erase_all (KncCntrl *p, 
-	     unsigned int *number_of_images_not_erased)
+knc_set_prot (KncCntrl *c, KncCamRes *r, unsigned long n, KncSource s,
+	      KncProt p)
 {
-        /************************************************/
-        /* Command to erase all images in the camera,   */
-        /* except the protected ones.                   */
-        /*                                              */
-        /* 0x20: Byte 0 of command identifier           */
-        /* 0x80: Byte 1 of command identifier           */
-        /* 0x00: Reserved                               */
-        /* 0x00: Reserved                               */
-        /* 0xXX: Byte 0 of p ID                    */
-        /*              0x02: Flash memory card         */
-        /* 0xXX: Byte 1 of p ID                    */
-        /*              0x00: Flash memory card         */
-        /*                                              */
-        /* Return values:                               */
-        /* 0x20: Byte 0 of command identifier           */
-        /* 0x80: Byte 1 of command identifier           */
-        /* 0xXX: Byte 0 of return status                */
-        /* 0xXX: Byte 1 of return status                */
-        /* Following bytes only in case of success.     */
-        /* 0xXX: Byte 0 of number of images not erased  */
-        /* 0xXX: Byte 1 of number of images not erased  */
-        /************************************************/
-        unsigned char sb[] = {0x20, 0x80, 0x00, 0x00, 0x02, 0x00};
-        unsigned char *rb = NULL;
-        unsigned int rbs;
-	KncCntrlRes r;
+        unsigned char sb[] = {0x30, 0x80, 0, 0, s, s >> 8, 0, 0, 0, 0, 0, 0, 0};
+        unsigned char rb[1024];
+        unsigned int rbs = sizeof (rb);
+	KncCntrlProt prot = knc_cntrl_prot (c);
 
-	CHECK_NULL (number_of_images_not_erased);
-
-	CRF (l_send_receive (p, sb, 6, &rb, &rbs, 0, NULL, NULL), rb);
-
-	*number_of_images_not_erased = (rb[5] << 8) | rb[4];
-        free (rb);
-	r.t = KNC_RES_TYPE_NONE;
-        return r;
+        if (prot & KNC_CNTRL_PROT_LONG_ID) {
+		sb[ 6] = n >> 16;
+		sb[ 7] = n >> 24;
+		sb[ 8] = n;
+		sb[ 9] = n >> 8;
+		sb[10] = p;
+		sb[11] = p >> 8;
+		CR (knc_cntrl_transmit (c, sb, 12, rb, &rbs));
+	} else {
+		sb[6] = n;
+		sb[7] = n >> 8;
+		sb[8] = p;
+		sb[9] = p >> 8;
+		CR (knc_cntrl_transmit (c, sb, 10, rb, &rbs));
+	}
+	CCR (r,rb,rbs);
+	CS (rbs, 4);
+	return KNC_CNTRL_RES_OK;
 }
 
-
 KncCntrlRes
-knc_set_protect_status (KncCntrl *p,  int image_id_long,
-		      unsigned long image_id, int protected)
-{
-        /************************************************/
-        /* Command to set the protect status of one     */
-        /* image.                                       */
-        /*                                              */
-        /* 0x30: Byte 0 of command identifier           */
-        /* 0x80: Byte 1 of command identifier           */
-        /* 0x00: Reserved                               */
-        /* 0x00: Reserved                               */
-        /* 0xXX: Byte 0 of p ID                    */
-        /*              0x02: Flash memory card         */
-        /* 0xXX: Byte 1 of p ID                    */
-        /*              0x00: Flash memory card         */
-        /* 0xXX: Byte 3 of image ID (QM200 only)        */
-        /* 0xXX: Byte 4 of image ID (QM200 only)        */
-        /* 0xXX: Byte 0 of image ID                     */
-        /* 0xXX: Byte 1 of image ID                     */
-        /* 0xXX: Byte 0 of protect status               */
-        /*              0x00: not protected             */
-        /*              0x01: protected                 */
-        /* 0x00: Byte 1 of protect status               */
-        /*                                              */
-        /* Return values:                               */
-        /* 0x30: Byte 0 of command identifier           */
-        /* 0x80: Byte 1 of command identifier           */
-        /* 0xXX: Byte 0 of return status                */
-        /* 0xXX: Byte 1 of return status                */
-        /************************************************/
-        unsigned char sb[] = {0x30, 0x80, 0x00, 0x00, 0x02, 0x00,
-                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-        unsigned char *rb = NULL;
-        unsigned int rbs;
-	KncCntrlRes r;
-
-        if (!image_id_long) {
-                if (protected) sb[8] = 0x01;
-                sb[6] = image_id;
-                sb[7] = image_id >> 8;
-		CRF (l_send_receive (p, sb, 10, &rb, &rbs,
-						0, NULL, NULL), rb);
-        } else {
-                if (protected) sb[10] = 0x01;
-                sb[6] = image_id >> 16;
-                sb[7] = image_id >> 24;
-                sb[8] = image_id;
-                sb[9] = image_id >> 8;
-		CRF (l_send_receive (p, sb, 12, &rb, &rbs,
-						0, NULL, NULL), rb);
-        }
-
-        free (rb);
-	r.t = KNC_RES_TYPE_NONE;
-        return r;
-}
-#endif
-
-KncCntrlRes
-knc_get_image (KncCntrl *c, unsigned long n, KncSource s, KncImage t,
-	       KncCamRes *r)
+knc_get_image (KncCntrl *c, KncCamRes *r, unsigned long n, KncSource s,
+	       KncImage t)
 {
 	unsigned char sb[] = {t, 0x88, 0, 0, s, s >> 8, 0, 0, 0, 0};
         unsigned char rb[1024];
-        unsigned int sbs, rbs = sizeof (rb);
-	KncCntrlProt prot;
+        unsigned int rbs = sizeof (rb);
+	KncCntrlProt prot = knc_cntrl_prot (c);
 
-	prot = knc_cntrl_prot (c);
 	if (!(prot & KNC_CNTRL_PROT_LONG_ID)) {
                 sb[6] = n;
                 sb[7] = n >> 8;
-		sbs = 8;
+		CR (knc_cntrl_transmit (c, sb, 8, rb, &rbs));
         } else {
                 sb[6] = n >> 16;
                 sb[7] = n >> 24;
                 sb[8] = n;
                 sb[9] = n >> 8;
-		sbs = 10;
+		CR (knc_cntrl_transmit (c, sb, 10, rb, &rbs));
         }
-	CR (knc_cntrl_transmit (c, sb, sbs, rb, &rbs));
 	CCR (r,rb,rbs);
 	CS (rbs, 4);
-
         return KNC_CNTRL_RES_OK;
 }
 
 KncCntrlRes
-knc_get_image_info (KncCntrl *c, unsigned long n, KncCamRes *r, KncImageInfo *i)
+knc_get_image_info (KncCntrl *c, KncCamRes *r, unsigned long n, KncImageInfo *i)
 {
 	char sb[] = {0x20, 0x88, 0x0, 0x0, 0x2, 0x0, 0x0, 0x0, 0x0, 0x0};
         unsigned char rb[1024];
         unsigned int rbs = sizeof (rb);
-	KncCntrlProt prot;
-
-	prot = knc_cntrl_prot (c);
+	KncCntrlProt prot = knc_cntrl_prot (c);
 
 	if (!(prot & KNC_CNTRL_PROT_LONG_ID)) {
                 sb[6] = n;
@@ -345,195 +234,82 @@ knc_get_info (KncCntrl *c, KncCamRes *r, KncInfo *i)
 	return KNC_CNTRL_RES_OK;
 }
 
-#if 0
-
 KncCntrlRes
-knc_get_status (KncCntrl *p,  KStatus *status)
+knc_get_status (KncCntrl *c, KncCamRes *r, KncStatus *s)
 {
-        /************************************************/
-        /* Command to get the status of the camera.     */
-        /*                                              */
-        /* 0x20: Byte 0 of command identifier           */
-        /* 0x90: Byte 1 of command identifier           */
-        /* 0x00: Reserved                               */
-        /* 0x00: Reserved                               */
-        /* (...)                                        */
-        /*                                              */
-        /* You can add pairs of additional bytes. If    */
-        /* those are all 0x00, then nothing will        */
-        /* change. If at least one deviates, all        */
-        /* individual pieces of the status information  */
-        /* will be returned as being zero.              */
-        /*                                              */
-        /* Return values:                               */
-        /* 0x20: Byte 0 of command identifier           */
-        /* 0x90: Byte 1 of command identifier           */
-        /* 0xXX: Byte 0 of return status                */
-        /* 0xXX: Byte 1 of return status                */
-        /* Following bytes only in case of success.     */
-        /* 0xXX: Result of self test                    */
-        /*              0x00: Self test passed          */
-        /*              other: Self test failed         */
-        /* 0xXX: Power level                            */
-        /*              0x00: Low                       */
-        /*              0x01: Normal                    */
-        /*              0x02: High                      */
-        /* 0xXX: Power source                           */
-        /*              0x00: Battery                   */
-        /*              0x01: AC                        */
-        /* 0xXX: Card status                            */
-        /*              0x07: Card                      */
-        /*              0x12: No card                   */
-        /* 0xXX: Display                                */
-        /*              0x00: built in                  */
-        /*              0x02: TV                        */
-        /* 0xXX: Byte 0 of card size                    */
-        /* 0xXX: Byte 1 of card size                    */
-        /* 0xXX: Byte 0 of pictures in camera           */
-        /* 0xXX: Byte 1 of left pictures in camera      */
-        /* 0xXX: Year                                   */
-        /* 0xXX: Month                                  */
-        /* 0xXX: Day                                    */
-        /* 0xXX: Hour                                   */
-        /* 0xXX: Minute                                 */
-        /* 0xXX: Second                                 */
-        /* 0xXX: Byte 0 of bit rates                    */
-        /* 0xXX: Byte 1 of bit rates                    */
-        /* 0xXX: Byte 0 of bit flags                    */
-        /* 0xXX: Byte 1 of bit flags                    */
-        /* 0xXX: Flash                                  */
-        /* 0xXX: Resolution                             */
-        /* 0xXX: Focus                                  */
-        /* 0xXX: Exposure                               */
-        /* 0xXX: Byte 0 of total pictures               */
-        /* 0xXX: Byte 1 of total pictures               */
-        /* 0xXX: Byte 0 of total strobes                */
-        /* 0xXX: Byte 1 of total strobes                */
-        /************************************************/
         unsigned char sb[] = {0x20, 0x90, 0x00, 0x00, 0x00, 0x00};
-        unsigned char *rb = NULL;
-        unsigned int rbs;
-	KncCntrlRes r;
+        unsigned char rb[1024];
+        unsigned int rbs = sizeof (rb);
 
-	CHECK_NULL (status);
-
-        CRF (l_send_receive (p, sb, 6, &rb, &rbs, 0, NULL, NULL), rb);
-	
-	status->self_test_result = (rb[5] << 8) | rb[4];
-	status->power_level      = rb[6];
-	status->power_source     = rb[7];
-	status->card_status      = rb[8];
-	status->display          = rb[9];
-	status->card_size        = (rb[11] << 8) | rb[10];
-	status->pictures         = (rb[13] << 8) | rb[12];
-	status->pictures_left    = (rb[15] << 8) | rb[14];
-	status->date.year        = rb[16];
-	status->date.month       = rb[17];
-	status->date.day         = rb[18];
-	status->date.hour        = rb[19];
-	status->date.minute      = rb[20];
-	status->date.second      = rb[21];
-	status->bit_rate         = (rb[23] << 8) | rb[22];
-	status->bit_flags        = (rb[25] << 8) | rb[24];
-	status->flash            = rb[26];
-	status->resolution       = rb[27];
-	status->focus            = rb[28];
-	status->exposure         = rb[29];
-	status->total_pictures   = (rb[31] << 8) | rb[30];
-	status->total_strobes    = (rb[33] << 8) | rb[32];
-
-        free (rb);
-	r.t = KNC_RES_TYPE_NONE;
-        return r;
+	CR (knc_cntrl_transmit (c, sb, sizeof (sb), rb, &rbs));
+	CCR (r,rb,rbs);
+	CS (rbs, 34);
+	if (s) {
+		s->self_test_result = (rb[5] << 8) | rb[4];
+		s->power_level      = rb[6];
+		s->power_source     = rb[7];
+		s->card_status      = rb[8];
+		s->display          = rb[9];
+		s->card_size        = (rb[11] << 8) | rb[10];
+		s->pictures         = (rb[13] << 8) | rb[12];
+		s->pictures_left    = (rb[15] << 8) | rb[14];
+		s->date.year        = rb[16];
+		s->date.month       = rb[17];
+		s->date.day         = rb[18];
+		s->date.hour        = rb[19];
+		s->date.minute      = rb[20];
+		s->date.second      = rb[21];
+		s->bit_rate         = (rb[23] << 8) | rb[22];
+		s->bit_flags        = (rb[25] << 8) | rb[24];
+		s->flash            = rb[26];
+		s->resolution       = rb[27];
+		s->focus            = rb[28];
+		s->exposure         = rb[29];
+		s->total_pictures   = (rb[31] << 8) | rb[30];
+		s->total_strobes    = (rb[33] << 8) | rb[32];
+	}
+	return KNC_CNTRL_RES_OK;
 }
 
 KncCntrlRes
-knc_get_date_and_time (KncCntrl *p,  KDate *date)
+knc_get_date_and_time (KncCntrl *c, KncCamRes *r, KncDate *d)
 {
-        /************************************************/
-        /* Command to get the date and time from the    */
-        /* camera.                                      */
-        /*                                              */
-        /* 0x30: Byte 0 of command identifier           */
-        /* 0x90: Byte 1 of command identifier           */
-        /* 0x00: Reserved                               */
-        /* 0x00: Reserved                               */
-        /*                                              */
-        /* Return values:                               */
-        /* 0x30: Byte 0 of command identifier           */
-        /* 0x90: Byte 1 of command identifier           */
-        /* 0xXX: Byte 0 of return status                */
-        /* 0xXX: Byte 1 of return status                */
-        /* Following bytes only in case of success.     */
-        /* 0xXX: Year                                   */
-        /* 0xXX: Month                                  */
-        /* 0xXX: Day                                    */
-        /* 0xXX: Hour                                   */
-        /* 0xXX: Minute                                 */
-        /* 0xXX: Second                                 */
-        /************************************************/
-        unsigned char sb[] = {0x30, 0x90, 0x00, 0x00};
-        unsigned char *rb = NULL;
-        unsigned int rbs;
-	KncCntrlRes r;
+        const unsigned char sb[] = {0x30, 0x90, 0x00, 0x00};
+        unsigned char rb[1024];
+        unsigned int rbs = sizeof (rb);
 
-        CRF (l_send_receive (p, sb, 4, &rb, &rbs, 0, NULL, NULL), rb);
-	date->year   = rb[4];
-	date->month  = rb[5];
-	date->day    = rb[6];
-	date->hour   = rb[7];
-	date->minute = rb[8];
-	date->second = rb[9];
-
-        free (rb);
-	r.t = KNC_RES_TYPE_NONE;
-        return r;
+	CR (knc_cntrl_transmit (c, sb, sizeof (sb), rb, &rbs));
+	CCR (r,rb,rbs);
+	CS (rbs, 10);
+	if (d) {
+		d->year = rb[4];
+		d->month  = rb[5];
+		d->day    = rb[6];
+		d->hour   = rb[7];
+		d->minute = rb[8];
+		d->second = rb[9];
+	}
+	return KNC_CNTRL_RES_OK;
 };
 
 KncCntrlRes
-knc_get_preferences (KncCntrl *p, KPreferences *preferences)
+knc_get_prefs (KncCntrl *c, KncCamRes *r, KncPrefs *p)
 {
-        /************************************************/
-        /* Command to get the preferences from the      */
-        /* camera.                                      */
-        /*                                              */
-        /* 0x40: Byte 0 of command identifier           */
-        /* 0x90: Byte 1 of command identifier           */
-        /* 0x00: Reserved                               */
-        /* 0x00: Reserved                               */
-        /*                                              */
-        /* Return values:                               */
-        /* 0x40: Byte 0 of command identifier           */
-        /* 0x90: Byte 1 of command identifier           */
-        /* 0xXX: Byte 0 of return status                */
-        /* 0xXX: Byte 1 of return status                */
-        /* Following bytes only in case of success.     */
-        /* 0xXX: Byte 0 of shutoff time                 */
-        /* 0xXX: Byte 1 of shutoff time                 */
-        /* 0xXX: Byte 0 of self timer time              */
-        /* 0xXX: Byte 1 of self timer time              */
-        /* 0xXX: Byte 0 of beep                         */
-        /* 0xXX: Byte 1 of beep                         */
-        /* 0xXX: Byte 0 of slide show interval          */
-        /* 0xXX: Byte 1 of slide show interval          */
-        /************************************************/
-        unsigned char sb[] = {0x40, 0x90, 0x00, 0x00};
-        unsigned char *rb = NULL;
-        unsigned int rbs;
-	KncCntrlRes r;
+	const unsigned char sb[] = {0x40, 0x90, 0x00, 0x00};
+        unsigned char rb[1024];
+        unsigned int rbs = sizeof (rb);
 
-        CRF (l_send_receive (p, sb, 4, &rb, &rbs, 0, NULL, NULL), rb);
-	preferences->shutoff_time           = rb[4];
-	preferences->self_timer_time        = rb[5];
-	preferences->beep                   = rb[6];
-	preferences->slide_show_interval    = rb[7];
-
-        free (rb);
-	r.t = KNC_RES_TYPE_NONE;
-        return r;
+	CR (knc_cntrl_transmit (c, sb, sizeof (sb), rb, &rbs));
+	CCR (r,rb,rbs);
+	CS (rbs, 10);
+	if (p) {
+		p->shutoff_time           = rb[4];
+		p->self_timer_time        = rb[5];
+		p->beep                   = rb[6];
+		p->slide_show_interval    = rb[7];
+	}
+	return KNC_CNTRL_RES_OK;
 }
-
-#endif
 
 KncCntrlRes
 knc_set_io_pref (KncCntrl *c, KncCamRes *r, KncBitRate *br, KncBitFlag *bf)
@@ -552,122 +328,57 @@ knc_set_io_pref (KncCntrl *c, KncCamRes *r, KncBitRate *br, KncBitFlag *bf)
         return KNC_CNTRL_RES_OK;
 }
 
-#if 0
-
 KncCntrlRes
-knc_set_date_and_time (KncCntrl *p, KDate date)
+knc_set_date_and_time (KncCntrl *c, KncCamRes *r, KncDate d)
 {
-        /************************************************/
-        /* Command to set date and time of the camera.  */
-        /*                                              */
-        /* 0xb0: Byte 0 of command identifier           */
-        /* 0x90: Byte 1 of command identifier           */
-        /* 0x00: Reserved                               */
-        /* 0x00: Reserved                               */
-        /* 0xXX: Year   (0x00 to 0x25, 0x60 to 0x63)    */
-        /* 0xXX: Month  (0x01 to 0x0C)                  */
-        /* 0xXX: Day    (0x01 to 0x1F)                  */
-        /* 0xXX: Hour   (0x00 to 0x17)                  */
-        /* 0xXX: Minute (0x00 to 0x3b)                  */
-        /* 0xXX: Second (0x00 to 0x3b)                  */
-        /*                                              */
-        /* Return values:                               */
-        /* 0xb0: Byte 0 of command identifier           */
-        /* 0x90: Byte 1 of command identifier           */
-        /* 0xXX: Byte 0 of return status                */
-        /* 0xXX: Byte 1 of return status                */
-        /************************************************/
-        unsigned char sb[10];
-        unsigned char *rb = NULL;
-        unsigned int rbs;
-	KncCntrlRes r;
+	const unsigned char sb[] = {0xb0, 0x90, 0, 0, d.year, d.month, d.day,
+				    d.hour, d.minute, d.second};
+        unsigned char rb[1024];
+        unsigned int rbs = sizeof (rb);
 
-	sb[0] = 0xb0;
-	sb[1] = 0x90;
-	sb[2] = 0x00; /* reserved */
-	sb[3] = 0x00; /* reserved */
-        sb[4] = date.year;
-        sb[5] = date.month;
-        sb[6] = date.day;
-        sb[7] = date.hour;
-        sb[8] = date.minute;
-        sb[9] = date.second;
-	CRF (l_send_receive (p, sb, 10, &rb, &rbs, 0, NULL, NULL), rb);
-        free (rb);
-	r.t = KNC_RES_TYPE_NONE;
-        return r;
-}
-
-
-KncCntrlRes
-knc_set_preference (KncCntrl *p, KPreference preference, unsigned int value)
-{
-        /* Return values:                               */
-        /* 0xc0: Byte 0 of command identifier           */
-        /* 0x90: Byte 1 of command identifier           */
-        /* 0xXX: Byte 0 of return status                */
-        /* 0xXX: Byte 1 of return status                */
-        unsigned char sb[8];
-        unsigned char *rb = NULL;
-        unsigned int rbs;
-	KncCntrlRes r;
-
-	sb[0] = 0xc0;
-	sb[1] = 0x90;
-	sb[2] = 0x00; /* reserved */
-	sb[3] = 0x00; /* reserved */
-	sb[4] = preference >> 0;
-	sb[5] = preference >> 8;
-	sb[6] = value >> 0;
-	sb[7] = value >> 8;
-	CRF (l_send_receive (p, sb, 8, &rb, &rbs, 0, NULL, NULL), rb);
-        free (rb);
-	r.t = KNC_RES_TYPE_NONE;
-        return r;
+	CR (knc_cntrl_transmit (c, sb, sizeof (sb), rb, &rbs));
+	CCR (r,rb,rbs);
+	CS (rbs, 4);
+	return KNC_CNTRL_RES_OK;
 }
 
 KncCntrlRes
-knc_reset_preferences (KncCntrl *p)
+knc_set_pref (KncCntrl *c, KncCamRes *r, KncPref p, unsigned int v)
 {
-        /************************************************/
-        /* Command to reset the preferences of the      */
-        /* camera.                                      */
-        /*                                              */
-        /* 0xc1: Byte 0 of command identifier           */
-        /* 0x90: Byte 1 of command identifier           */
-        /* 0x00: Reserved                               */
-        /* 0x00: Reserved                               */
-        /*                                              */
-        /* Return values:                               */
-        /* 0xc1: Byte 0 of command identifier           */
-        /* 0x90: Byte 1 of command identifier           */
-        /* 0xXX: Byte 0 of return status                */
-        /* 0xXX: Byte 1 of return status                */
-        /************************************************/
-        unsigned char sb[] = {0xc1, 0x90, 0x00, 0x00};
-        unsigned char *rb = NULL;
-        unsigned int rbs;
-	KncCntrlRes r;
+	const unsigned char sb[] = {0xc0, 0x90, 0, 0, p, p >> 8, v, v >> 8};
+        unsigned char rb[1024];
+        unsigned int rbs = sizeof (rb);
 
-	CRF (l_send_receive (p, sb, 4, &rb, &rbs, 0, NULL, NULL), rb);
-        free (rb);
-	r.t = KNC_RES_TYPE_NONE;
-	return r;
+	CR (knc_cntrl_transmit (c, sb, sizeof (sb), rb, &rbs));
+	CCR (r,rb,rbs);
+	CS (rbs, 4);
+	return KNC_CNTRL_RES_OK;
 }
-#endif
 
 KncCntrlRes
-knc_take_picture (KncCntrl *c, KncSource s, KncCamRes *r, KncImageInfo *i)
+knc_reset_prefs (KncCntrl *c, KncCamRes *r)
+{
+        const unsigned char sb[] = {0xc1, 0x90, 0x00, 0x00};
+        unsigned char rb[1024];
+        unsigned int rbs = sizeof (rb);
+
+	CR (knc_cntrl_transmit (c, sb, sizeof (sb), rb, &rbs)); 
+	CCR (r,rb,rbs);
+	CS (rbs, 4); 
+	return KNC_CNTRL_RES_OK;
+}
+
+KncCntrlRes
+knc_take_picture (KncCntrl *c, KncCamRes *r, KncSource s, KncImageInfo *i)
 {
 	const unsigned char sb[] = {0x00, 0x91, 0x00, 0x00, s, s >> 8};
         unsigned char rb[1024];;
         unsigned int rbs;
-	KncCntrlProt prot;
+	KncCntrlProt prot = knc_cntrl_prot (c);
 
 	CR (knc_cntrl_transmit (c, sb, sizeof (sb), rb, &rbs));
 	CCR (r,rb,rbs);
 	if (i) {
-		prot = knc_cntrl_prot (c);
 		if (prot & KNC_CNTRL_PROT_LONG_ID) {
 			CS (rbs, 12);
 			i->id = (rb[5] << 24) | (rb[4] << 16) |
@@ -685,7 +396,7 @@ knc_take_picture (KncCntrl *c, KncSource s, KncCamRes *r, KncImageInfo *i)
 }
 
 KncCntrlRes
-knc_loc_tv_output_format_set (KncCntrl *c, KncTVOutputFormat f, KncCamRes *r)
+knc_loc_tv_output_format_set (KncCntrl *c, KncCamRes *r, KncTVOutputFormat f)
 {
 	const unsigned char sb[] = {0, 0x92, 0, 0, 0x01, 0, f, f >> 8};
         unsigned char rb[1024];
@@ -698,7 +409,7 @@ knc_loc_tv_output_format_set (KncCntrl *c, KncTVOutputFormat f, KncCamRes *r)
 }
 
 KncCntrlRes
-knc_loc_date_format_set (KncCntrl *c, KncDateFormat f, KncCamRes *r)
+knc_loc_date_format_set (KncCntrl *c, KncCamRes *r, KncDateFormat f)
 {
 	const unsigned char sb[] = {0, 0x92, 0, 0, 0x02, 0, f, f >> 8};
         unsigned char rb[1024];
@@ -713,8 +424,8 @@ knc_loc_date_format_set (KncCntrl *c, KncDateFormat f, KncCamRes *r)
 #define PACKET_SIZE 1024
 
 KncCntrlRes
-knc_loc_data_put (KncCntrl *c, const unsigned char *d, unsigned long ds,
-		  KncCamRes *r)
+knc_loc_data_put (KncCntrl *c, KncCamRes *r, const unsigned char *d,
+		  unsigned long ds)
 {
         unsigned char rb[1024];
         unsigned int rbs = sizeof (rb);

@@ -160,7 +160,7 @@ main (int argc, char **argv)
 	CR (knc_get_preview (c, &r, KNC_PREVIEW_NO));
 
 	printf ("Requesting information about the first image...\n");
-	CR (knc_get_image_info (c, 1, &r, &kii));
+	CR (knc_get_image_info (c, &r, 1, &kii));
 	if (r) printf ("### Error 0x%04x: '%s!\n", r, knc_cam_res_name (r));
 	else {
 		printf (" - ID %li\n", kii.id);
@@ -169,8 +169,7 @@ main (int argc, char **argv)
 	}
 
 	printf ("Downloading preview of first image...\n");
-	CR (knc_get_image (c, kii.id, KNC_SOURCE_CARD, KNC_IMAGE_THUMB,
-			   NULL));
+	CR (knc_get_image (c, NULL, kii.id, KNC_SOURCE_CARD, KNC_IMAGE_THUMB));
 	knc_cntrl_unref (c);
 	gp_port_free (p);
 

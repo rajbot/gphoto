@@ -164,7 +164,7 @@ knc_cntrl_read_packet (KncCntrl *c, unsigned char *rb, unsigned int *rbs,
 			break;
 		}
 		b = ACK; r = knc_cntrl_write (c, &b, 1); if (r) break;
-		r = knc_cntrl_read (c, buf, sizeof (buf), 1, &read);
+		r = knc_cntrl_read (c, buf, sizeof (buf), 100, &read);
 		if (r) break;
 
 		/*

@@ -9,10 +9,12 @@ GnoCam actually is a quick hack. I borrowed code from or got inspired by
 gtCam and several GNOME applications like evolution, EOG, etc. See TODO for 
 a list of things that remain to be done.
 
-GnoCam requires at least the following libraries. Please get the latest 
-version from http://www.gnome.org. 
+GnoCam requires at least the following libraries and programs. Please get 
+the latest version from http://www.gnome.org. 
  * gnome-libs
  * bonobo
+ * bonobo-conf
+ * EOG
  * libglade
  * gnome-vfs
  * gconf

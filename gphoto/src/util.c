@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 extern int command_line_mode;
 
@@ -145,11 +146,20 @@ void free_image (struct Image *im) {
 
 void save_image (char *filename, struct Image *im) {
 
+	char errormsg[1024];
 	FILE *fp;
 
-	fp = fopen (filename, "w");
-	fwrite (im->image, (size_t)sizeof(char), (size_t)im->image_size, fp);
-	fclose (fp);
+	if (fp = fopen (filename, "w"))
+	{
+		fwrite (im->image, (size_t)sizeof(char), (size_t)im->image_size, fp);
+		fclose (fp);
+	}
+	else
+	{
+		snprintf(errormsg,1024,"The image couldn't be saved to %s because of the following error: %s",filename,sys_errlist[errno]);
+
+		error_dialog(errormsg);
+	}
 }
 
 GdkImlibImage *gdk_imlib_load_image_mem(char *image, int size) {

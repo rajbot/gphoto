@@ -13,6 +13,7 @@
 #include <qiconview.h>
 #include <qwidget.h>
 #include <qfiledialog.h>
+#include <qprogressbar.h>
 
 #include "MainWindow.h"
 #include "MainWindow.moc"
@@ -37,8 +38,8 @@ MainWindow::MainWindow() : KMainWindow()
     /* Check if a camera is configured */
     if (GPInterface::getCamera().isNull())
         selectCamera();
-
-    statusBar()->message(i18n("Camera not ready"));
+    else 
+        statusBar()->message(i18n("Camera not ready"));
 }
 
 
@@ -60,8 +61,11 @@ void MainWindow::initWidgets()
     iconView = new KIconView(this);
     iconView->setMode(KIconView::Select);
     iconView->setSelectionMode(KIconView::Multi);
+    iconView->setAutoArrange(true);
     connect(iconView,SIGNAL(selectionChanged()),
             this,SLOT(selectionChanged()));
+    connect(iconView,SIGNAL(moved()),
+            iconView,SLOT(arrangeItemsInGrid()));
     
     /* FIXME: Iconviews don't support background pixmaps ? */
     /*iconView->setBackgroundPixmap( KApplication::kApplication()->iconLoader()->loadIcon("canvas",KIcon::Desktop));
@@ -188,7 +192,14 @@ void MainWindow::downloadThumbs()
 {
     
     iconView->clear();
-    GPInterface::downloadThumbs(iconView);
+    try {
+        QProgressBar* bar=new QProgressBar(statusBar());
+        statusBar()->addWidget(bar);
+        GPInterface::downloadThumbs(iconView);
+    }
+    catch (QString str) {
+        KMessageBox::error(this, str);
+    }
     /*new QIconViewItem(iconView,0,"Testje", 
             GPInterface::downloadThumb(0));
     new QIconViewItem(iconView,0,"Testje 2",

@@ -565,7 +565,7 @@ camera_init (Camera *camera, GPContext *context)
 {
 	int i;
 	GPPortSettings s;
-	unsigned int speeds[] = {115200, 9600, 57600, 38400, 19200, 
+	unsigned int speeds[] = {115200, 9600, 57600, 38400, 19200,
 				 4800, 2400, 1200, 600, 300};
 
 	/* We only support serial cameras. */
@@ -608,9 +608,9 @@ camera_init (Camera *camera, GPContext *context)
 		return (GP_ERROR_IO);
 	}
 #if 0
-//Ideally, we need to reset the speed to the speed that we encountered
-//after each operation (multiple programs accessing the camera). However,
-//that takes quite a bit of time for HP cameras...
+/* Ideally, we need to reset the speed to the speed that we encountered
+   after each operation (multiple programs accessing the camera). However,
+   that takes quite a bit of time for HP cameras... */
                 camera->pl->speed = speeds[i];
 #endif
 

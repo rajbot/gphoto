@@ -223,7 +223,7 @@ knc_cntrl_read_packet (KncCntrl *c, unsigned char *rb, unsigned int *rbs,
 #ifdef __GCC__
 # warning Fix checksum!
 #endif
-//		if (buf[1] != checksum) goto TryAgain;
+		/* if (buf[1] != checksum) goto TryAgain; */
 
 		b = ACK; r = knc_cntrl_write (c, &b, 1); if (r) break;
 		r = knc_cntrl_read (c, &b, 1, 0, &read); if (r) break;

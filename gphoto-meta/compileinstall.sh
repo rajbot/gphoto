@@ -65,6 +65,11 @@ compileinstall() {
     export PATH="${instroot}/bin:${PATH}"
     while read module restofline
     do
+	# FIXME: Hack. gphoto2-manual requires relatively exotic tools.
+	#if [ "$module" = "gphoto2-manual" ]
+	#then
+	#    continue
+	#fi
 	# unpack gz if available, else bz2 (this is faster :-)
 	for tarball in "${distdir}/${module}-"[0-9]*.tar.{gz,bz2}
 	do

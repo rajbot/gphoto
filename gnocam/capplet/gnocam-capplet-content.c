@@ -7,6 +7,7 @@
 #include <gal/util/e-util.h>
 #include <gal/e-table/e-table.h>
 #include <gal/e-table/e-table-simple.h>
+#include <gal/e-table/e-table-scrolled.h>
 #include <gal/e-table/e-cell-text.h>
 #include <gal/e-table/e-cell-popup.h>
 #include <gal/e-table/e-cell-combo.h>
@@ -32,10 +33,10 @@ struct _GnoCamCappletContentPrivate {
 };
 
 #define E_TABLE_SPEC                                                                                                                                            \
-"<ETableSpecification>"																		\
+"<ETableSpecification click-to-add=\"true\" draw-grid=\"true\" _click-to-add-message=\"* Click here to add a camera *\">"					\
 "  <ETableColumn model_col=\"0\" _title=\"Name\"  expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"string\" compare=\"string\"/>"		\
 "  <ETableColumn model_col=\"1\" _title=\"Model\" expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"string\" compare=\"string\"/>"		\
-"  <ETableColumn model_col=\"2\" _title=\"Port\"  expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"string\" compare=\"string\"/>"			\
+"  <ETableColumn model_col=\"2\" _title=\"Port\"  expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"string\" compare=\"string\"/>"		\
 "  <ETableState>"                                                                                                                                               \
 "    <column source=\"0\"/>"                                                                                                                                    \
 "    <column source=\"1\"/>"                                                                                                                                    \
@@ -110,7 +111,7 @@ on_delete_clicked (GtkButton* button, gpointer user_data)
 
 	content = GNOCAM_CAPPLET_CONTENT (user_data);
 
-	e_table_selected_row_foreach (E_TABLE (content->priv->table), table_selected_row_foreach_delete, content);
+	e_table_selected_row_foreach (e_table_scrolled_get_table (E_TABLE_SCROLLED (content->priv->table)), table_selected_row_foreach_delete, content);
 }
 
 /***********/
@@ -171,24 +172,40 @@ duplicate_value (ETableModel* model, gint col, const void* value, gpointer user_
 static void
 free_value (ETableModel* model, gint col, void* value, gpointer user_data)
 {
+	g_free (value);
 }
 
 static void*
 initialize_value (ETableModel* model, gint col, gpointer user_data)
 {
-        return (NULL);
+        return (g_strdup (""));
 }
 
 static gboolean
 value_is_empty (ETableModel* model, gint col, const void* value, gpointer user_data)
 {
-        return (value == NULL);
+	return !(value && *(gchar*)value);
 }
 
 static gchar*
 value_to_string (ETableModel* model, gint col, const void* value, gpointer user_data)
 {
         return (g_strdup (value));
+}
+
+static void
+append_row (ETableModel* model, ETableModel* source, int row, gpointer user_data)
+{
+	GnoCamCappletContent*	content;
+	gint			col;
+
+	g_return_if_fail (user_data);
+	content = GNOCAM_CAPPLET_CONTENT (user_data);
+
+	for (col = 0; col < 3; col++) g_slist_append (content->priv->list, g_strdup (e_table_model_value_at (source, col, row)));
+	
+	e_table_model_changed (model);
+	capplet_widget_state_changed (content->priv->capplet, TRUE);
 }
 
 /*****************/
@@ -316,14 +333,14 @@ gnocam_capplet_content_new (CappletWidget* capplet)
 	/* Create the model */
 	new->priv->model = e_table_simple_new (col_count, row_count, value_at, set_value_at, is_cell_editable, 
 		duplicate_value, free_value, initialize_value, value_is_empty, value_to_string, new);
+	E_TABLE_SIMPLE (new->priv->model)->append_row = append_row;
 
 	/* Create the extras */
         extras = e_table_extras_new ();
 
 	/* Create the cell for port */
-//	child = e_cell_text_new (NULL, GTK_JUSTIFY_LEFT);
-//	cell = e_cell_popup_new ();
-//	e_cell_popup_set_child (E_CELL_POPUP (cell), child);
+//	cell = e_cell_combo_new ();
+//	e_cell_combo_set_popdown_strings (E_CELL_COMBO (cell), g_list_append (NULL, "Hello World!"));
 //	e_table_extras_add_cell (extras, "port", cell);
 
 	/* Create the cell for model */
@@ -333,7 +350,7 @@ gnocam_capplet_content_new (CappletWidget* capplet)
 //	e_table_extras_add_cell (extras, "model", cell);
 
 	/* Create the table */
-	new->priv->table = e_table_new (new->priv->model, extras, E_TABLE_SPEC, NULL);
+	new->priv->table = e_table_scrolled_new (new->priv->model, extras, E_TABLE_SPEC, NULL);
 	gtk_object_unref (GTK_OBJECT (extras));
 	gtk_widget_show (new->priv->table);
 	gtk_box_pack_start (GTK_BOX (hbox), new->priv->table, TRUE, TRUE, 10);

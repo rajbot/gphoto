@@ -1,10 +1,12 @@
-CCFLAGS=-O2 -c -I.. -I..\include -Zmtd -Zcrtdll -Zbin-files -D__ST_MT_ERRNO_ -I. -DOS2 -DHAVE_TERMIOS_H
+CCFLAGS=-O2 -c -I.. -I..\include -Zmtd -Zcrtdll -Zbin-files -D__ST_MT_ERRNO_ -I. -DOS2 -DHAVE_TERMIOS_H -Iinclude
 CC=gcc
 MKLIB=ar r
 
 
 all: start \
   lib \
+  serial\
+  parallel\
   end
 
 start:
@@ -12,25 +14,36 @@ start:
   @echo   Entering:      $(MAKEDIR)
   @echo   using CCFLAGS: $(CCFLAGS)
   @echo ****
+  @if not exist obj md obj
 
 end:
   @echo ****
   @echo   Done: $(MAKEDIR)
   @echo ****
 
+
+serial:
+  @cd serial
+  @nmake /nologo -f makefile.os2
+  @cd..
+
+parallel:
+  @cd parallel
+  @nmake /nologo -f makefile.os2
+  @cd..
+
+#network:
+#  @cd network
+#  @nmake /nologo -f makefile.os2
+#  @cd..
+
 lib: ..\lib\libgpio.a
 
-..\obj\gpio.o: gpio.c
+obj\gpio.o: libgpio\gpio.c
   @$(CC) -o $@ $** $(CCFLAGS)
 
-..\obj\gpio-serial.o: serial/unix.c
+obj\library.o: libgpio\library.c
   @$(CC) -o $@ $** $(CCFLAGS)
 
-..\obj\gpio-parallel.o: parallel/linux-raw.c
-  @$(CC) -o $@ $** $(CCFLAGS)
-
-..\obj\gpio-network.o: network/bsdsocket.c
-  @$(CC) -o $@ $** $(CCFLAGS)
-
-..\lib\libgpio.a: ..\obj\gpio.o ..\obj\gpio-serial.o ..\obj\gpio-parallel.o ..\obj\gpio-network.o
+..\lib\libgpio.a: obj\gpio.o obj\library.o
   @$(MKLIB) $@ $**

@@ -9,7 +9,11 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#define BROWSER "netscape"
+
 extern int command_line_mode;
+extern char filesel_cwd[];
+extern GtkWidget *browse_button;
 
 /* Read in gdk_imlib_load_image_mem for note
 struct decom_JPEG_error_mgr {
@@ -305,3 +309,67 @@ METHODDEF(void) decom_term (j_decompress_ptr cinfo) {
 	return;
 }
 */
+
+void url_send_browser (char *url) {
+	char *buf;
+	buf = malloc(256);
+	snprintf(buf, 256, "%s -remote 'openURL(%s)'", BROWSER, url);
+	popen(buf, "r");
+	free (buf);
+}
+
+void browse_gallery() {
+	char *buf;
+	buf = malloc(256);
+	snprintf(buf, 256, "file:%sindex.html", filesel_cwd);
+	url_send_browser (buf);
+	free (buf);
+}
+
+void browse_help() {
+	url_send_browser ("http://www.gphoto.org/help.php3");
+}
+
+void browse_gphoto() {
+	url_send_browser ("http://www.gphoto.org/");
+}
+
+void browse_feedback() {
+	url_send_browser ("http://www.gphoto.org/feedback.php3");
+}
+
+void browse_news() {
+	url_send_browser ("http://www.gphoto.org/news.php3");
+}
+
+void browse_download() {
+	url_send_browser ("http://www.gphoto.org/download.php3");
+}
+
+void browse_cameras() {
+	url_send_browser ("http://www.gphoto.org/cameras.php3");
+}
+
+void browse_supporting() {
+	url_send_browser ("http://www.gphoto.org/supporting.php3");
+}
+
+void browse_discussion() {
+	url_send_browser ("http://www.gphoto.org/lists.php3");
+}
+
+void browse_team() {
+	url_send_browser ("http://www.gphoto.org/team.php3");
+}
+
+void browse_themes() {
+	url_send_browser ("http://www.gphoto.org/themes.php3");
+}
+
+void browse_links() {
+	url_send_browser ("http://www.gphoto.org/links.php3");
+}
+
+void browse_todo() {
+	url_send_browser ("http://www.gphoto.org/todo.php3");
+}

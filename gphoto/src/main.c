@@ -244,6 +244,7 @@ int main (int argc, char *argv[]) {
 	if (!has_rc) {
 		/* put anything here to do on the first run */
 	  developer_dialog_create();
+	  browse_gphoto();
 	  error_dialog("Could not load config file.\nResetting to defaults");
 	}
 	gtk_main();

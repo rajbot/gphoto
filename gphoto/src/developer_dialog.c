@@ -19,6 +19,17 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.5  1999/06/21 18:04:11  ole
+ * 1999-06-21  Ole Aamot  <oleaa@ifi.uio.no>
+ *
+ * 	* callbacks.c: changed activate_button(..) a bit
+ * 	* developer_dialog.c: added a clickable webpage button. :o)
+ * 	* gallery.c: added browse_gallery();
+ * 	* main.c: added browse_gphoto();
+ * 	* menu.c: added menu-links to www.gphoto.org (loads in a BROWSER)
+ * 	* toolbar.c: added/changed icons (by tigert) for the plugins
+ * 	* util.c: added url_send_browser(..), and browse_* web routines.
+ *
  * Revision 1.4  1999/06/18 15:57:35  gdr
  * Get version number from configure.in rather than hardcode it in a string.
  *
@@ -74,13 +85,14 @@ int show_developer = TRUE;
 int last_developer = -1;
 
 extern char *gphotoDir;
+extern void browse_team();
 
 void
 developer_dialog_create ()
 {
   GtkWidget *vbox, *hbox1, *hbox2, *bbox, *vbox_bbox2, *bbox2;
   GtkWidget *frame, *preview;
-  GtkWidget *button_close, *button_next, *button_prev;
+  GtkWidget *button_close, *button_next, *button_prev, *button_team;
   guchar *   utemp;
   guchar *   src;
   guchar *   dest;
@@ -168,6 +180,14 @@ developer_dialog_create ()
       gtk_box_pack_start (GTK_BOX (hbox1), developer_label, TRUE, TRUE, 3);
       gtk_widget_show (developer_label);
 
+
+      button_team = gtk_button_new_with_label ("Web Page");
+      GTK_WIDGET_UNSET_FLAGS (button_team, GTK_RECEIVES_DEFAULT);
+      gtk_signal_connect (GTK_OBJECT (button_team), "clicked",
+			  GTK_SIGNAL_FUNC (browse_team), NULL);
+      gtk_container_add (GTK_CONTAINER (bbox2), button_team);
+      gtk_widget_show (button_team);
+      
       button_prev = gtk_button_new_with_label ("Previous");
       GTK_WIDGET_UNSET_FLAGS (button_prev, GTK_RECEIVES_DEFAULT);
       gtk_signal_connect (GTK_OBJECT (button_prev), "clicked",

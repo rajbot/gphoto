@@ -40,6 +40,17 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.8  1999/06/21 18:04:12  ole
+ * 1999-06-21  Ole Aamot  <oleaa@ifi.uio.no>
+ *
+ * 	* callbacks.c: changed activate_button(..) a bit
+ * 	* developer_dialog.c: added a clickable webpage button. :o)
+ * 	* gallery.c: added browse_gallery();
+ * 	* main.c: added browse_gphoto();
+ * 	* menu.c: added menu-links to www.gphoto.org (loads in a BROWSER)
+ * 	* toolbar.c: added/changed icons (by tigert) for the plugins
+ * 	* util.c: added url_send_browser(..), and browse_* web routines.
+ *
  * Revision 1.7  1999/06/19 15:32:57  ole
  * Generated SUPPORTED from http://www.gphoto.org/cameras.php3
  *
@@ -89,9 +100,12 @@
 #include <sys/dir.h>
 
 extern GtkWidget *index_window;
+extern GtkWidget *browse_button;
+
 extern struct ImageInfo Thumbnails;
 extern struct ImageInfo Images;
 extern struct _Camera *Camera;
+
 extern char filesel_cwd[];
 
 /* initialize some tags */
@@ -106,6 +120,8 @@ char picture_filename[128];
 char picture_number[5];
 char picture_next[128];
 char picture_previous[128];
+
+extern browse_gallery();
 
 void gallery_change_dir(GtkWidget *widget, GtkWidget *label) {
 
@@ -167,7 +183,7 @@ void gallery_main() {
 
 	int i=0, j=0, num_selected = 0;
 	char outputdir[1024], theme[32];
-	char filename[1024], filename2[1024], cp[1024], error[32];
+	char filename[1024], filename2[1024], cp[1024], error[32], statmsg[128];
 	struct Image *im;
 
 	GList *dlist;
@@ -198,6 +214,7 @@ Then, re-run the HTML Gallery.");
 	if (num_selected == 0) {
 		error_dialog(
 			"You need to select images to add\nto the gallery.");
+		deactivate_button(browse_button);
 		return;
 	}
 
@@ -460,5 +477,8 @@ Please install/move gallery themes there.");
 		theme);			
 	gallery_parse_tags(filename, filename2);
 	gtk_widget_destroy(dialog);
-	update_status("Done saving Gallery.");
+	browse_gallery();
+	sprintf(statmsg, "Loaded file:%sindex.html in %s", filesel_cwd, BROWSER);
+	update_status(statmsg);
+	activate_button(browse_button);
 }

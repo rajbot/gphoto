@@ -124,14 +124,43 @@ void menu_select (gpointer data, guint action, GtkWidget *widget) {
 		case 30: /* Users manual */
 			usersmanual_dialog();
 			break;
-		case 31: /* FAQ */
-			faq_dialog();
+		case 31: /* Online Help */
+			browse_help();
 			break;
 		case 32: /* Open Directory */
 			set_camera("Browse Directory");
 			makeindex(1);
 			break;
-
+		case 33: /* Online News */
+			browse_news();
+			break;
+		case 34: /* Online Updates */
+			browse_download();
+			break;
+		case 35: /* Online Cameras */
+			browse_cameras();
+			break;
+		case 36: /* Online Supporting */
+			browse_supporting();
+			break;
+		case 37: /* Online Discussion */
+			browse_discussion();
+			break;
+		case 38: /* Online Team */
+			browse_team();
+			break;
+		case 39: /* Online Themes */
+			browse_themes();
+			break;
+		case 40: /* Online Links */
+			browse_links();
+			break;
+		case 41: /* Online To Do */
+			browse_todo();
+			break;
+		case 42: /* Online Feedback */
+			browse_feedback();
+			break;
 		default:
 	}
 }
@@ -196,7 +225,20 @@ GtkItemFactoryEntry menu_items[] = {
 	{"/Help/_License",					NULL, menu_select,	28},
 	{"/Help/_Version",					NULL, menu_select,	29},
 	{"/Help/_User's Manual",				NULL, menu_select,	30},
-	{"/Help/_How do I...",					NULL, menu_select,	31},
+	{"/Help/sep4",					NULL, 0, 		0,	"<Separator>"},
+	{"/Help/_www.gphoto.org",				NULL, 0,		0, 	"<Branch>"},
+	{"/Help/www.gphoto.org/Hel_p",				        NULL, menu_select,	31},
+	{"/Help/www.gphoto.org/Ne_ws",			                NULL, menu_select,	33},
+	{"/Help/www.gphoto.org/Updates_",			        NULL, menu_select,	34},
+	{"/Help/www.gphoto.org/Cameras_",			        NULL, menu_select,	35},
+	{"/Help/www.gphoto.org/Supporting_",			        NULL, menu_select,	36},
+	{"/Help/www.gphoto.org/Di_scussion",			        NULL, menu_select,	37},
+	{"/Help/www.gphoto.org/Devel. Team_",			        NULL, menu_select,	38},
+	{"/Help/www.gphoto.org/Themes_",			        NULL, menu_select,	39},
+	{"/Help/www.gphoto.org/Lin_ks",			        NULL, menu_select,	40},
+	{"/Help/www.gphoto.org/To Do_",			        NULL, menu_select,	41},
+	{"/Help/www.gphoto.org/Feed_back",			        NULL, menu_select,	42},
+
 };
 
 

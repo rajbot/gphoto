@@ -6,6 +6,8 @@ void set_camera (char *model);
 int  load_config();
 void save_config();
 void configure_call();
+void mail_image_call();
+void web_browse_call();
 void takepicture_call();
 void del_pics (GtkWidget *dialog, GtkObject *button);
 void del_dialog ();

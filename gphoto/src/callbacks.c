@@ -40,6 +40,7 @@ extern struct _Camera *Camera;
 extern struct Model cameras[];
 extern GtkWidget *library_name;
 extern GtkWidget *notebook;
+extern GtkWidget *stop_button;
 
 extern char	  camera_model[];
 extern char	  serial_port[];
@@ -91,6 +92,14 @@ void configure_call() {
 	} else {
 	  	error_dialog("No configuration options.");
 	}
+}
+
+void mail_image_call() {
+	error_dialog("Mail image needs to be implemented!");
+}
+
+void web_browse_call() {
+	error_dialog("Web browsing needs to be implemented!");
 }
 
 void takepicture_call() {
@@ -901,8 +910,8 @@ void makeindex (int getthumbs) {
 	GtkStyle *style;
 	GtkWidget *vbox;
 
-	extern activate_stop_button();
-	extern deactivate_stop_button();
+	extern activate_button(GtkWidget *cur_button);
+	extern deactivate_button(GtkWidget *cur_button);
 
 	struct ImageInfo *node = &Thumbnails;
 
@@ -927,10 +936,10 @@ fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
 	}
 
 	okDownload = 1;
-	activate_stop_button();
+	activate_button(stop_button);
 	for (i=1; i<=num_pictures_taken; i++) {
 		if (!okDownload) {
-			deactivate_stop_button();
+			deactivate_button(stop_button);
 			update_progress(0);
 			update_status("Download cancelled.");
 			return;
@@ -985,7 +994,7 @@ fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
 				 GTK_FILL,GTK_FILL,5,5);
 		update_progress((float)i/(float)num_pictures_taken);
 	}
-	deactivate_stop_button();
+	deactivate_button(stop_button);
 	update_progress(0);
 	update_status("Done getting index.");	
 }
@@ -1011,8 +1020,9 @@ void getpics (char *pictype) {
 	char status[256];
 	int i=0;
 	int x=0, y=0;	
-	extern activate_stop_button();
-        extern deactivate_stop_button();
+
+	extern activate_button(GtkWidget *cur_button);
+        extern deactivate_button(GtkWidget *cur_button);
 
 	struct ImageInfo *node = &Thumbnails;
 	
@@ -1029,7 +1039,7 @@ void getpics (char *pictype) {
 	node = &Thumbnails;
 	update_progress(0);
 	okDownload = 1;
-	activate_stop_button();
+	activate_button(stop_button);
 	while (node->next != NULL && okDownload) {
 		node = node->next; i++;
 		if (GTK_TOGGLE_BUTTON(node->button)->active) {
@@ -1056,7 +1066,7 @@ void getpics (char *pictype) {
 		update_status("Done downloading.");
 	   else
 		update_status("Download halted.");
-	deactivate_stop_button();
+	deactivate_button(stop_button);
 	update_progress(0);
 }
 

@@ -5,13 +5,14 @@
 
 <title>Digital Photo HOWTO</title>
 <subtitle>A brief overview of existing Digital Cameras,
-CCDs, chipsets and various digital imaging device systems that
+CCDs, chip sets and various digital imaging device systems that
 work with GNU/Linux systems.</subtitle>
 
 <authorgroup>
-<corpauthor>The gPhoto Project (<htmlurl url="http://www.gphoto.org" name="www.gphoto.org">)</corpauthor>
+<corpauthor>The gPhoto Project (<ulink url="http://www.gphoto.org">www.gphoto.org</ulink>)
+</corpauthor>
 <othercredit><authorblurb>
-<para>Ole Aamot (<htmlurl url="mailto:ole@gnu.org" name="ole@gnu.org">), Oslo/Norway</para>
+<para>Ole Aamot (<ulink url="mailto:ole@gnu.org">ole@gnu.org</ulink>), Oslo/Norway</para>
 </authorblurb></othercredit>
 </authorgroup>
 
@@ -41,22 +42,30 @@ digital photo applications and technology.</para>
     <sect1>
     <title>Acknowledgements</title>
 
-    <para>Much of this information was provided from <htmlurl
-    url="http://www.gphoto.org" name="gPhoto"> (GNU Photo) developers and
-    users, the <htmlurl url="news:rec.photo.digital"
-    name="rec.photo.digital"> group on GNUsenet, and input from digital 
-    photo fans worldwide.</para>
+    <para>Much of this information was provided from <ulink 
+    url="http://www.gphoto.org">gPhoto</ulink> (GNU Photo) developers and
+    users, the <ulink url="news:rec.photo.digital">rec.photo.digital</ulink>
+    group on GNUsenet, and input from digital photo fans worldwide.</para>
 
-    <para>Thanks to the <htmlurl
-    url="ftp://metalab.unc.edu/pub/Linux/utils/text/sgml-tools-0.99.0.tar.gz"
-    name="SGML Tools"> package, this HOWTO is available in several
-    formats, all generated from a common source file.</para>
+    <para>This document was written in SGML, and utilizes the DocBook
+    dtd, so it is available in several formats, all generated from a
+    common source file.</para>
+
+    <para>I used a couple of good sites to help you learn DocBook. First,
+    Mark Galassi has a good <ulink
+    url="http://nis-www.lanl.gov/~rosalia/mydocs/docbook-intro/docbook-intro.html">
+    tutorial </ulink>on getting started. Second, Norman Walsh has put
+    the quick reference guide to his forthcoming book on DocBook on his
+    <ulink
+    url="http://nwalsh.com/docbook/defguide/qr/quickref.htm">web site</ulink>.
+    </para>
 
     <para>New versions of this document will be periodically posted to the
-    <htmlurl url="news:rec.digital.photo" name="rec.digital.photo"> 
+    <ulink url="news:rec.digital.photo" name="rec.digital.photo"> 
     GNUsenet newsgroup. They will also be uploaded to various anonymous
-    ftp sites that archive such information including
-    <url url="ftp://metalab.unc.edu/pub/Linux/docs/HOWTO/">.</para>
+    FTP sites that archive such information including
+    <ulink url="ftp://metalab.unc.edu/pub/Linux/docs/HOWTO/"
+    >ftp://metalab.unc.edu/pub/Linux/docs/HOWTO/</ulink>.</para>
 
     </sect1>
 
@@ -65,7 +74,7 @@ digital photo applications and technology.</para>
 
     <para>I rely on you, the reader, to make this HOWTO useful. If you
     have any suggestions, corrections, or comments, please send them to me,
-    <htmlurl url="mailto:ole@gnu.org" name="ole@gnu.org">, and
+    <ulink url="mailto:ole@gnu.org">ole@gnu.org</ulink>, and
     I will try to incorporate them in the next revision.</para>
 
     <para>I am also willing to answer general questions on digital photo under 
@@ -85,9 +94,11 @@ digital photo applications and technology.</para>
     <sect1>
     <title>Distribution Policy</title>
 
-    <para>Copyright (c) 1999 by Ole Kristian Aamot. This document may be
-    distributed under the terms set forth in the OPL license at <url
-    url="http://www.opencontent.org/opl.html">.</para>
+    <para>
+    Copyright (c) 1999 by Ole Kristian Aamot. This document may be
+    distributed under the terms set forth in the OPL license at <ulink
+    url="http://www.opencontent.org/opl.html">http://www.opencontent.org/opl.html</ulink>.
+    </para>
     </sect1>
 
   <chapter>
@@ -146,7 +157,7 @@ digital photo applications and technology.</para>
     application requires the highest  possible image quality, your
     best bet is to use a film camera and then scan the processed
     photo.  You'll be better off using digital cameras for screen-oriented 
-    applications such as e-mail attachments and for nonprofessional 
+    applications such as e-mail attachments and for non-professional 
     printing applications.</para>
 
     <para>There are dramatic differences among digital cameras.
@@ -168,14 +179,14 @@ digital photo applications and technology.</para>
       can't lose. Most cameras provide good image quality in a wide variety 
       of conditions.</para>
 
-      <para>Filmless photography also offers many other advantages. Most
+      <para>Film-less photography also offers many other advantages. Most
       digital cameras store pictures on tiny removable memory cards,
       eliminating the expense associated with buying and processing
       film. You can balance file size against image quality by setting
       the resolution and compression level of each picture, and many
-      digital cameras provide both a conventional glass viewfinder
+      digital cameras provide both a conventional glass view-finder
       and an LCD that lets you compose photographs, review stored
-      pictures, and use onscreen menus to adjust settings. Photos
+      pictures, and use on-screen menus to adjust settings. Photos
       appear on the screen only a few seconds after you shoot them,
       and if you're unhappy with what you see, they can be easily
       deleted. Stored photographs are normally downloaded through a

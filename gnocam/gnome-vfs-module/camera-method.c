@@ -50,6 +50,7 @@ typedef struct {
 static GSList *cameras = NULL;
 static GConfClient *client = NULL;
 static CameraAbilitiesList *al = NULL;
+static GPPortInfoList *il = NULL;
 
 G_LOCK_DEFINE_STATIC (cameras);
 
@@ -66,7 +67,8 @@ get_camera (GnomeVFSURI *uri, Camera **camera)
 	GSList *list, *sl;
 	guint i;
 	GnomeVFSResult result;
-	int m;
+	int m, p;
+	GPPortInfo info;
 
 	g_return_val_if_fail (uri, GNOME_VFS_ERROR_BAD_PARAMETERS);
 	g_return_val_if_fail (camera, GNOME_VFS_ERROR_BAD_PARAMETERS);
@@ -98,23 +100,35 @@ printf ("No. Camera isn't in cache.\n");
 					   "/apps/" PACKAGE "/autodetect",
 					   NULL) &&
 		    (g_slist_length (list) == 3)) {
+
+			/* Model */
 			m = gp_abilities_list_lookup_model (al,
 						g_slist_nth_data (list, 1));
 			gp_abilities_list_get_abilities (al, m, &abilities);
 			gp_camera_set_abilities (*camera, abilities);
-			gp_camera_set_port_name (*camera,
-						 g_slist_nth_data (list, 2));
+			
+			/* Port */
+			p = gp_port_info_list_lookup_name (il,
+						g_slist_nth_data (list, 2));
+			gp_port_info_list_get_info (il, p, &info);
+			gp_camera_set_port_info (*camera, info);
 		}
 	} else 
 		for (i = 0; i < g_slist_length (list); i += 3)
 			if (!strcmp (g_slist_nth_data (list, i), host)) {
+
+				/* Model */
 				m = gp_abilities_list_lookup_model (al,
 					g_slist_nth_data (list, i + 1));
 				gp_abilities_list_get_abilities (al, m,
 								&abilities);
 				gp_camera_set_abilities (*camera, abilities);
-				gp_camera_set_port_name (*camera, 
+
+				/* Port */
+				p = gp_port_info_list_lookup_name (il,
 					g_slist_nth_data (list, i + 2));
+				gp_port_info_list_get_info (il, p, &info);
+				gp_camera_set_port_info (*camera, info);
 printf ("Found %s in database!\n", host);
 			}
 
@@ -875,6 +889,9 @@ vfs_module_init (const gchar *method_name, const gchar *args)
 	gp_abilities_list_new (&al);
 	gp_abilities_list_load (al);
 
+	gp_port_info_list_new (&il);
+	gp_port_info_list_load (il);
+
         return (&method);
 }
 
@@ -897,6 +914,9 @@ vfs_module_shutdown (GnomeVFSMethod *method)
 
 	gp_abilities_list_free (al);
 	al = NULL;
+
+	gp_port_info_list_free (il);
+	il = NULL;
 
 	/* Unref client */
 	gtk_object_unref (GTK_OBJECT (client));

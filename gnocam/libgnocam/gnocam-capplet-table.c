@@ -12,6 +12,7 @@
 struct _GnoCamCappletTablePrivate
 {
 	CameraAbilitiesList *al;
+	GPPortInfoList *il;
 
 	ETableModel *model;
 };
@@ -48,6 +49,11 @@ gnocam_capplet_table_destroy (GtkObject *object)
 	if (table->priv->al) {
 		gp_abilities_list_free (table->priv->al);
 		table->priv->al = NULL;
+	}
+
+	if (table->priv->il) {
+		gp_port_info_list_free (table->priv->il);
+		table->priv->il = NULL;
 	}
 
 	GTK_OBJECT_CLASS (parent_class)->destroy (object);
@@ -92,7 +98,8 @@ configure_camera (GnoCamCappletTable *table, guint number)
 	const gchar *model, *port;
 	GtkWidget *widget;
 	gint result;
-	int m;
+	int m, p;
+	GPPortInfo info;
 
 	model = e_table_model_value_at (table->priv->model, 1, number);
 	port  = e_table_model_value_at (table->priv->model, 2, number);
@@ -118,7 +125,9 @@ configure_camera (GnoCamCappletTable *table, guint number)
 
 	/* Set the port */
 	if (*port) {
-		result = gp_camera_set_port_name (camera, port);
+		p = gp_port_info_list_lookup_name (table->priv->il, port);
+		gp_port_info_list_get_info (table->priv->il, p, &info);
+		result = gp_camera_set_port_info (camera, info);
 		if (result < 0) {
 			g_warning ("Could not set port: %s",
 				   gp_result_as_string (result));
@@ -165,7 +174,8 @@ get_info (GnoCamCappletTable *table, guint number)
 	const gchar *model, *port;
 	gint result;
 	CameraText text;
-	int m;
+	int m, p;
+	GPPortInfo info;
 
 	model = e_table_model_value_at (table->priv->model, 1, number);
 	port  = e_table_model_value_at (table->priv->model, 2, number);
@@ -191,7 +201,9 @@ get_info (GnoCamCappletTable *table, guint number)
 
 	/* Set the port */
 	if (*port) {
-		result = gp_camera_set_port_name (camera, port);
+		p = gp_port_info_list_lookup_name (table->priv->il, port);
+		gp_port_info_list_get_info (table->priv->il, p, &info);
+		result = gp_camera_set_port_info (camera, info);
 		if (result < 0) {
 			g_warning ("Could not set port: %s",
 				   gp_result_as_string (result));
@@ -346,6 +358,8 @@ gnocam_capplet_table_new (CappletWidget *capplet)
 
 	gp_abilities_list_new (&(table->priv->al));
 	gp_abilities_list_load (table->priv->al);
+	gp_port_info_list_new (&(table->priv->il));
+	gp_port_info_list_load (table->priv->il);
 
 	/* Create the model */
 	table->priv->model = gnocam_capplet_model_new (capplet);
@@ -357,9 +371,10 @@ gnocam_capplet_table_new (CappletWidget *capplet)
 	cell = e_cell_text_new (NULL, GTK_JUSTIFY_LEFT);
 	popup_cell = e_cell_combo_new ();
 	list = NULL;
-	number = gp_port_core_count ();
+	number = gp_port_info_list_count (table->priv->il);
 	for (i = 0; i < number; i++)
-		if (gp_port_core_get_info (i, &info) == GP_OK)
+		if (gp_port_info_list_get_info (table->priv->il, i, &info)
+								== GP_OK)
 			list = g_list_append (list, g_strdup (info.name));
 	e_cell_combo_set_popdown_strings (E_CELL_COMBO (popup_cell), list);
 	e_cell_popup_set_child (E_CELL_POPUP (popup_cell), cell);

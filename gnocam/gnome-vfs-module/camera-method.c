@@ -139,7 +139,6 @@ unref_camera (Camera *camera)
 	GSList *sl;
 #endif
 
-printf ("Unrefing camera with ref_count = %i...\n", camera->ref_count);
 	gp_camera_unref (camera);
 
 #if 0
@@ -240,6 +239,7 @@ static GnomeVFSResult do_create (
         GnomeVFSContext       *context)
 {
 	Camera *camera;
+	CameraAbilities a;
 	FileHandle *file_handle;
 	GnomeVFSResult result;
 
@@ -251,8 +251,8 @@ static GnomeVFSResult do_create (
 		return (result);
 	}
 
-	if (!(camera->abilities->folder_operations &
-					GP_FOLDER_OPERATION_PUT_FILE)) {
+	gp_camera_get_abilities (camera, &a);
+	if (!(a.folder_operations & GP_FOLDER_OPERATION_PUT_FILE)) {
 		unref_camera (camera);
 		G_UNLOCK (cameras);
 		return (GNOME_VFS_ERROR_NOT_SUPPORTED);

@@ -26,7 +26,9 @@ module GNOME {
 
 	module GnoCam {
 
-		exception Cancelled {};
+		exception NotSupported {};
+		exception IOError {};
+		exception NotFound {};
 
 		interface Camera : Bonobo::Unknown {
 			/* The Camera can be accessed through BonoboStorage */
@@ -39,7 +41,7 @@ module GNOME {
 			string getInfo ()
 				raises (NotSupported, IOError);
 
-			void captureImage ()
+			string captureImage ()
 				raises (NotSupported, IOError);
 		};
 
@@ -54,8 +56,6 @@ module GNOME {
 			PortList  getPortList  ();
 
 			Camera getCamera ()
-				raises (NotFound, Cancelled);
-			Camera getCameraByModel (in string model)
 				raises (NotFound);
 			Camera getCameraByModelAndPort (in string model,
 						        in string port)

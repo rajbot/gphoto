@@ -32,8 +32,6 @@ static BonoboObjectClass *parent_class;
 
 struct _GnoCamCameraPrivate
 {
-	Camera *camera;
-	
 	BonoboEventSource *event_source;
 };
 
@@ -62,7 +60,7 @@ impl_GNOME_Camera_getInfo (PortableServer_Servant servant,
 	CameraText text;
 
 	c = GNOCAM_CAMERA (bonobo_object_from_servant (servant));
-	CR (gp_camera_get_manual (c->priv->camera, &text, NULL), ev);
+	CR (gp_camera_get_manual (c->camera, &text, NULL), ev);
 	if (BONOBO_EX (ev))
 		return (NULL);
 
@@ -82,7 +80,7 @@ impl_GNOME_Camera_capturePreview (PortableServer_Servant servant,
 
 	c = GNOCAM_CAMERA (bonobo_object_from_servant (servant));
 	CR (gp_file_new (&file), ev);
-	CR (gp_camera_capture_preview (c->priv->camera, file), ev);
+	CR (gp_camera_capture_preview (c->camera, file), ev);
 	if (BONOBO_EX (ev)) {
 		gp_file_unref (file);
 		g_message ("Returning...");
@@ -136,7 +134,7 @@ do_capture (gpointer data)
 
 	CORBA_exception_init (&ev);
 
-	CR (gp_camera_capture (c->priv->camera,
+	CR (gp_camera_capture (c->camera,
 				GP_OPERATION_CAPTURE_IMAGE, &path), &ev);
 	if (BONOBO_EX (&ev)) {
 		txt = g_strdup_printf (_("Could not capture image: %s"),
@@ -208,7 +206,7 @@ impl_GNOME_Camera_captureImage (PortableServer_Servant servant,
 	c = GNOCAM_CAMERA (bonobo_object_from_servant (servant));
 
 	g_message ("Creating GnoCamCapture...");
-	capture = gnocam_capture_new (c->priv->camera, ev);
+	capture = gnocam_capture_new (c->camera, ev);
 	if (BONOBO_EX (ev))
 		return;
 
@@ -227,9 +225,9 @@ gnocam_camera_finalize (GObject *object)
 	GnoCamCamera *gc = GNOCAM_CAMERA (object);
 
 	if (gc->priv) {
-		if (gc->priv->camera) {
-			gp_camera_unref (gc->priv->camera);
-			gc->priv->camera = NULL;
+		if (gc->camera) {
+			gp_camera_unref (gc->camera);
+			gc->camera = NULL;
 		}
 		g_free (gc->priv);
 		gc->priv = NULL;
@@ -279,7 +277,7 @@ gnocam_camera_new (Camera *camera, CORBA_Environment *ev)
 
 	gc = g_object_new (GNOCAM_TYPE_CAMERA, NULL);
 
-	gc->priv->camera = camera;
+	gc->camera = camera;
 	gp_camera_ref (camera);
 
 	g_message ("Adding interfaces...");

@@ -131,23 +131,21 @@ on_connect_toggled (GtkToggleButton *button, GnoCamPrefs *p)
 }
 
 static void
-on_model_changed (GtkEntry *entry, GnoCamPrefs *p)
+on_model_changed (GtkEntry *e, GnoCamPrefs *p)
 {
 	g_return_if_fail (GNOCAM_IS_PREFS (p));
-	g_return_if_fail (GTK_IS_ENTRY (entry));
+	g_return_if_fail (GTK_IS_ENTRY (e));
 
-	g_signal_emit (p, signals[MODEL_CHANGED], 0,
-		       gtk_entry_get_text (entry));
+	g_signal_emit (p, signals[MODEL_CHANGED], 0, gtk_entry_get_text (e));
 }
 
 static void
-on_port_changed (GtkEntry *entry, GnoCamPrefs *p)
+on_port_changed (GtkEntry *e, GnoCamPrefs *p)
 {
 	g_return_if_fail (GNOCAM_IS_PREFS (p));
-	g_return_if_fail (GTK_IS_ENTRY (entry));
+	g_return_if_fail (GTK_IS_ENTRY (e));
 
-	g_signal_emit (p, signals[PORT_CHANGED], 0,
-		       gtk_entry_get_text (entry));
+	g_signal_emit (p, signals[PORT_CHANGED], 0, gtk_entry_get_text (e));
 }
 
 static void

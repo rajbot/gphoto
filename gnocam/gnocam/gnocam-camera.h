@@ -23,6 +23,8 @@ typedef struct _GnoCamCameraClass    	GnoCamCameraClass;
 struct _GnoCamCamera {
 	BonoboObject parent;
 
+	Camera *camera;
+
 	GnoCamCameraPrivate *priv;
 };
 

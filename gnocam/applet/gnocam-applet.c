@@ -17,6 +17,7 @@
 
 #include <gconf/gconf-client.h>
 
+#include <bonobo/bonobo-moniker-util.h>
 #include <bonobo/bonobo-exception.h>
 
 #include <panel-applet-gconf.h>
@@ -47,6 +48,9 @@
 #define PARENT_TYPE G_TYPE_OBJECT
 static GObjectClass *parent_class;
 
+static void gnocam_applet_report_error (GnoCamApplet *, CORBA_Environment *);
+static void gnocam_applet_disconnect   (GnoCamApplet *);
+
 typedef struct _GnoCamPreferences GnoCamPreferences;
 struct _GnoCamPreferences {
 	gboolean camera_automatic;
@@ -62,14 +66,90 @@ struct _GnoCamAppletPrivate
 	GNOME_GnoCam_Camera camera;
 
 	PanelApplet *applet;
+
+	GtkWidget *image;
 };
+
+static void
+gnocam_applet_update (GnoCamApplet *a)
+{
+	GdkPixbuf *p;
+	BonoboUIComponent *c;
+
+	g_return_if_fail (GNOCAM_IS_APPLET (a));
+
+	p = gdk_pixbuf_new_from_file (a->priv->camera != CORBA_OBJECT_NIL ?
+			IMAGEDIR "gnocam-camera1.png" : 
+			IMAGEDIR "gnocam-camera-disconnected.png", NULL);
+	if (!p)
+		return;
+	gdk_pixbuf_scale_simple (p, panel_applet_get_size (a->priv->applet),
+				    panel_applet_get_size (a->priv->applet),
+				    GDK_INTERP_NEAREST);
+	gtk_image_set_from_pixbuf (GTK_IMAGE (a->priv->image), p);
+	gdk_pixbuf_unref (p);
+
+	/* Update the menu */
+	c = panel_applet_get_popup_component (a->priv->applet);
+	bonobo_ui_component_set_prop (c, "/commands/Connect",
+		"hidden", (a->priv->camera != CORBA_OBJECT_NIL) ? "1" : "0",
+		NULL);
+	bonobo_ui_component_set_prop (c, "/commands/Disconnect",
+		"hidden", (a->priv->camera != CORBA_OBJECT_NIL) ? "0": "1",
+		NULL);
+	bonobo_ui_component_set_prop (c, "/commands/Capture",
+		"sensitive", (a->priv->camera != CORBA_OBJECT_NIL) ? "1" : "0",
+		NULL);
+}
 
 static void
 gnocam_applet_connect (GnoCamApplet *a)
 {
+	CORBA_Environment ev;
+	Bonobo_Unknown o;
+
 	g_return_if_fail (GNOCAM_IS_APPLET (a));
 
-	g_message ("Implement!");
+	CORBA_exception_init (&ev);
+
+	o = bonobo_get_object ("OAFIID:GNOME_GnoCam", "Bonobo/Unknown", &ev);
+	if (BONOBO_EX (&ev)) {
+		gnocam_applet_report_error (a, &ev);
+		CORBA_exception_free (&ev);
+		return;
+	}
+
+	/* Terminate any existing connection. */
+	gnocam_applet_disconnect (a);
+
+	if (a->priv->prefs.camera_automatic)
+		a->priv->camera = GNOME_GnoCam_Factory_getCamera (o, &ev);
+	else
+		a->priv->camera = GNOME_GnoCam_Factory_getCameraByModelAndPort (
+			o, a->priv->prefs.model ? a->priv->prefs.model : "",
+			   a->priv->prefs.port  ? a->priv->prefs.port  : "",
+			   &ev);
+	bonobo_object_release_unref (o, NULL);
+	if (BONOBO_EX (&ev)) {
+		gnocam_applet_report_error (a, &ev);
+		CORBA_exception_free (&ev);
+		return;
+	}
+
+	CORBA_exception_free (&ev);
+
+	gnocam_applet_update (a);
+}
+
+static void
+gnocam_applet_disconnect (GnoCamApplet *a)
+{
+	if (a->priv->camera != CORBA_OBJECT_NIL) {
+		bonobo_object_release_unref (a->priv->camera, NULL);
+		a->priv->camera = CORBA_OBJECT_NIL;
+	}
+
+	gnocam_applet_update (a);
 }
 
 static void
@@ -203,11 +283,56 @@ on_prefs_port_changed (GnoCamPrefs *prefs, const gchar *port, GnoCamApplet *a)
 }
 
 static void
+gnocam_applet_capture_cb (BonoboUIComponent *uic, GnoCamApplet *a,
+			  const char *verbname)
+{
+	CORBA_Environment ev;
+	CORBA_char *path;
+	Bonobo_Storage st;
+	Bonobo_Stream s;
+
+	CORBA_exception_init (&ev);
+
+	path = GNOME_GnoCam_Camera_captureImage (a->priv->camera, &ev);
+	if (BONOBO_EX (&ev)) {
+		gnocam_applet_report_error (a, &ev);
+		CORBA_exception_free (&ev);
+		return;
+	}
+
+	st = Bonobo_Unknown_queryInterface (a->priv->camera,
+					    "IDL:Bonobo/Storage:1.0", &ev);
+	if (BONOBO_EX (&ev)) {
+		gnocam_applet_report_error (a, &ev);
+		CORBA_exception_free (&ev);
+		CORBA_free (path);
+		return;
+	}
+
+	s = Bonobo_Storage_openStream (st, path, Bonobo_Storage_READ, &ev);
+	bonobo_object_release_unref (st, NULL);
+	CORBA_free (path);
+	if (BONOBO_EX (&ev)) {
+		gnocam_applet_report_error (a, &ev);
+		CORBA_exception_free (&ev);
+		return;
+	}
+
+	g_message ("FIXME: Show the image!");
+
+	bonobo_object_release_unref (s, NULL);
+
+	CORBA_exception_free (&ev);
+}
+
+static void
 gnocam_applet_properties_cb (BonoboUIComponent *uic, GnoCamApplet *a,
-			     const char verbname)
+			     const char *verbname)
 {
 	static GnoCamPrefs *prefs = NULL;
 	CORBA_Environment ev;
+
+	g_return_if_fail (GNOCAM_IS_APPLET (a));
 
 	if (prefs) {
 		gtk_window_present (GTK_WINDOW (prefs));
@@ -248,12 +373,32 @@ gnocam_applet_properties_cb (BonoboUIComponent *uic, GnoCamApplet *a,
 }
 
 static void
+gnocam_applet_connect_cb (BonoboUIComponent *uic, GnoCamApplet *a,
+			  const char *verbname)
+{
+	g_return_if_fail (GNOCAM_IS_APPLET (a));
+
+	gnocam_applet_connect (a);
+}
+
+static void
+gnocam_applet_disconnect_cb (BonoboUIComponent *uic, GnoCamApplet *a,
+			     const char *verbname)
+{
+	g_return_if_fail (GNOCAM_IS_APPLET (a));
+
+	gnocam_applet_disconnect (a);
+}
+
+static void
 gnocam_applet_about_cb (BonoboUIComponent *uic, GnoCamApplet *a,
 			const char *verbname)
 {
 	static GtkWidget *about = NULL;
 	GdkPixbuf *pixbuf;
 	GError *e = NULL;
+
+	g_return_if_fail (GNOCAM_IS_APPLET (a));
 
 	static const gchar *authors[] = {
 		"Lutz Mueller <lutz@users.sourceforge.net>",
@@ -292,7 +437,16 @@ gnocam_applet_about_cb (BonoboUIComponent *uic, GnoCamApplet *a,
 	gtk_widget_show (about);
 }
 
+static void
+on_change_size (PanelApplet *applet, gint size, GnoCamApplet *a)
+{
+	gnocam_applet_update (a);
+};
+
 static const BonoboUIVerb gnocam_applet_menu_verbs[] = {
+	BONOBO_UI_UNSAFE_VERB ("Connect", gnocam_applet_connect_cb),
+	BONOBO_UI_UNSAFE_VERB ("Disconnect", gnocam_applet_disconnect_cb),
+	BONOBO_UI_UNSAFE_VERB ("Capture", gnocam_applet_capture_cb),
 	BONOBO_UI_UNSAFE_VERB ("Props", gnocam_applet_properties_cb),
 	BONOBO_UI_UNSAFE_VERB ("About", gnocam_applet_about_cb),
 	BONOBO_UI_VERB_END
@@ -302,7 +456,6 @@ GnoCamApplet *
 gnocam_applet_new (PanelApplet *applet)
 {
 	GnoCamApplet *a;
-	GtkWidget *w;
 
 	g_return_val_if_fail (PANEL_IS_APPLET (applet), NULL);
 
@@ -314,11 +467,17 @@ gnocam_applet_new (PanelApplet *applet)
 		"GNOME_GnoCamApplet.xml", NULL, gnocam_applet_menu_verbs, a);
 
 	/* Setup widget. */
-	w = gtk_image_new_from_file (IMAGEDIR "gnocam-camera1.png");
-	gtk_widget_show (w);
-	gtk_container_add (GTK_CONTAINER (a->priv->applet), w);
-	gtk_widget_show (GTK_WIDGET (a->priv->applet));
+	a->priv->image= gtk_image_new ();
+	gtk_widget_show (a->priv->image);
+	gtk_container_add (GTK_CONTAINER (a->priv->applet), a->priv->image);
+	gnocam_applet_update (a);
 
+	/* Setup the applet. */
+	gtk_widget_show (GTK_WIDGET (a->priv->applet));
+	g_signal_connect (a->priv->applet, "change_size",
+			  G_CALLBACK (on_change_size), a);
+
+	gnocam_applet_update (a);
 	gnocam_applet_load_preferences (a);
 
 	return (a);
@@ -352,156 +511,3 @@ gnocam_applet_get_type (void)
 
         return (type);
 }
-
-#if 0
-#include <gtk/gtksignal.h>
-#include <gtk/gtktoolbar.h>
-#include <gtk/gtkpixmap.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
-#include <libgnome/gnome-exec.h>
-#include <liboaf/liboaf.h>
-#include <bonobo/bonobo-main.h>
-#include <bonobo/bonobo-event-source.h>
-#include <bonobo/bonobo-exception.h>
-
-#include "GnoCam.h"
-
-#if 0
-static void
-listener_cb (BonoboListener *listener, gchar *event_name, CORBA_any *any,
-	     CORBA_Environment *ev, gpointer data)
-{
-	GNOME_Camera camera;
-	gchar *msg;
-
-	camera = data;
-
-	if (!strcmp (event_name, "GNOME/Camera:CaptureImage:Action")) {
-		msg = g_strdup_printf (_("Image is available at '%s'."),
-				       BONOBO_ARG_GET_STRING (any));
-		gnome_ok_dialog (msg);
-		g_free (msg);
-	}
-
-	bonobo_object_release_unref (camera, NULL);
-}
-#endif
-
-static gboolean
-do_capture (gpointer data)
-{
-	CORBA_Environment ev;
-	CORBA_Object gnocam;
-	GNOME_Camera camera;
-
-	CORBA_exception_init (&ev);
-	gnocam = oaf_activate_from_id ("OAFIID:GNOME_GnoCam", 0, NULL, &ev);
-	if (BONOBO_EX (&ev)) {
-		gnome_error_dialog (_("Could not start GnoCam!"));
-		CORBA_exception_free (&ev);
-		return (FALSE);
-	}
-
-	camera = GNOME_GnoCam_getCamera (gnocam, &ev);
-	bonobo_object_release_unref (gnocam, NULL);
-	if (BONOBO_EX (&ev)) {
-		gnome_error_dialog (_("Could not get camera!"));
-		CORBA_exception_free (&ev);
-		return (FALSE);
-	}
-
-#if 0
-	bonobo_event_source_client_add_listener (camera, listener_cb, 
-				"GNOME/Camera:CaptureImage", &ev, camera); 
-	if (BONOBO_EX (&ev)) {
-		gnome_error_dialog (_("Could not get event source!"));
-		CORBA_exception_free (&ev);
-		bonobo_object_release_unref (camera, NULL);
-		return (FALSE);
-	}
-#endif
-
-	GNOME_Camera_captureImage (camera, &ev);
-	if (BONOBO_EX (&ev)) {
-		gnome_error_dialog (_("Could not capture image!"));
-		bonobo_object_release_unref (camera, NULL);
-		CORBA_exception_free (&ev);
-		return (FALSE);
-	}
-
-	return (FALSE);
-}
-
-static void
-on_capture_image_clicked (GtkButton *button)
-{
-	gtk_idle_add (do_capture, NULL);
-}
-
-static void
-on_show_contents_clicked (GtkButton *button)
-{
-	int argc = 2;
-	char * const argv [] = {"eog", "camera:/"};
-	
-	if (gnome_execute_async (NULL, argc, argv) == -1)
-		g_warning ("Could not start EOG!");
-}
-
-int
-main (int argc, char **argv)
-{
-	GtkWidget *applet, *image, *toolbar;
-	GdkPixbuf *pixbuf;
-	GdkPixmap *pixmap;
-	GdkBitmap *bitmap;
-	CORBA_ORB orb;
-
-	bindtextdomain (PACKAGE, GNOMELOCALEDIR);
-	textdomain (PACKAGE);
-
-	applet_widget_init ("gnocam_capplet", VERSION, argc, argv,
-			    NULL, 0, NULL);
-
-	orb = oaf_init (argc, argv);
-	if (!bonobo_init (orb, NULL, NULL))
-		g_error ("Can not initialize bonobo!");
-
-	applet = applet_widget_new ("gnocam_capplet");
-	if (!applet)
-		g_error ("Cannot create GnoCam applet!");
-
-	toolbar = gtk_toolbar_new (GTK_ORIENTATION_HORIZONTAL,
-				   GTK_TOOLBAR_ICONS);
-	gtk_widget_show (toolbar);
-	applet_widget_add (APPLET_WIDGET (applet), toolbar);
-
-	pixbuf = gdk_pixbuf_new_from_file (IMAGEDIR "/gnocam-small.xpm");
-	gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 1);
-	gdk_pixbuf_unref (pixbuf); 
-	image = gtk_pixmap_new (pixmap, bitmap);
-	gtk_toolbar_append_element (GTK_TOOLBAR (toolbar),
-				    GTK_TOOLBAR_CHILD_BUTTON, NULL,
-				    _("Capture image"), _("Capture image"),
-				    NULL, image,
-				    GTK_SIGNAL_FUNC (on_capture_image_clicked),
-				    NULL);
-	pixbuf = gdk_pixbuf_new_from_file (IMAGEDIR "/gnocam-folder.png");
-	gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 1);
-	gdk_pixbuf_unref (pixbuf);
-	image = gtk_pixmap_new (pixmap, bitmap); 
-	gtk_toolbar_append_element (GTK_TOOLBAR (toolbar),
-				    GTK_TOOLBAR_CHILD_BUTTON, NULL,
-				    _("Show contents"), _("Show contents"),
-				    NULL, image,
-				    GTK_SIGNAL_FUNC (on_show_contents_clicked),
-				    NULL);
-
-	gtk_widget_show (applet);
-
-	applet_widget_gtk_main ();
-
-	return (0);
-}
-
-#endif

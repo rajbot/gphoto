@@ -33,12 +33,13 @@ gnocam_factory (BonoboGenericFactory *this, const char *oaf_iid,
 {
 	GnoCamMain *m;
 
-	g_message ("Trying to create a new GnoCamMain...");
+g_message ("Trying to create a new GnoCamMain...");
 
 	if (!strcmp (oaf_iid, "OAFIID:GNOME_GnoCam")) {
 		m = gnocam_main_new ();
 		if (!m)
 			return NULL;
+g_message ("Done. Returning GnoCamMain.");
 		return (BONOBO_OBJECT (m));
 	} else {
 		g_message ("Unknown OAFIID '%s'.", oaf_iid);

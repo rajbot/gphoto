@@ -2,7 +2,7 @@
 INCLUDES =					\
  -I$(top_srcdir)				\
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"			\
- -DIMAGEDIR=\"$(prefix)/share/pixmaps/\"		\
+ -DIMAGEDIR=\"$(datadir)/pixmaps/$(PACKAGE)/\"	\
  -DUIDIR="\"$(datadir)/$(PACKAGE)/ui/\""	\
  -DGNOMELOCALEDIR=\""$(datadir)/locale"\"	\
  $(APPLET_CFLAGS)

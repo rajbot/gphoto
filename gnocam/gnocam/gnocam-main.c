@@ -34,7 +34,7 @@ static BonoboObjectClass *parent_class;
 
 struct _GnoCamMainPrivate
 {
-	GHashTable *hash_table;
+	GList *cached_cameras;
 };
 
 static GNOME_GnoCam_Factory_ModelList *
@@ -82,7 +82,6 @@ impl_GNOME_GnoCam_Factory_getPortList (PortableServer_Servant servant,
 	gp_port_info_list_new (&il);
 	gp_port_info_list_load (il);
 	n = MAX (0, gp_port_info_list_count (il));
-	g_message ("%i port(s) available.", n);
 
 	list = GNOME_GnoCam_Factory_PortList__alloc ();
 	list->_buffer = CORBA_sequence_CORBA_string_allocbuf (n);
@@ -100,31 +99,10 @@ impl_GNOME_GnoCam_Factory_getPortList (PortableServer_Servant servant,
 }
 
 static void
-initialize_camera (Camera *camera, const gchar *name,
-		   CORBA_Environment *ev)
+on_camera_destroy (BonoboObject *object, GnoCamMain *m)
 {
-	gint i;
-	CameraAbilitiesList *al;
-	CameraAbilities a;
-
-	g_message ("Looking for %s...", name);
-	gp_abilities_list_new (&al);
-	gp_abilities_list_load (al, NULL);
-	for (i = 0; i < gp_abilities_list_count (al); i++) {
-		gp_abilities_list_get_abilities (al, i, &a);
-		if (!strcmp (a.model, name))
-			break;
-	}
-	if (i >= gp_abilities_list_count (al)) {
-		CORBA_exception_set (ev, CORBA_USER_EXCEPTION,
-				     ex_GNOME_GnoCam_Factory_NotFound, NULL);
-		return;
-	}
-	gp_abilities_list_free (al);
-
-	g_message ("Trying to initialize %s...", name);
-	CR (gp_camera_set_abilities (camera, a), ev);
-	CR (gp_camera_init (camera, NULL), ev);
+	m->priv->cached_cameras = g_list_remove (m->priv->cached_cameras,
+						 object);
 }
 
 static GNOME_GnoCam_Camera
@@ -135,124 +113,110 @@ impl_GNOME_GnoCam_Factory_getCamera (PortableServer_Servant servant,
 	GnoCamCamera *gc;
 	Camera *camera = NULL;
 
-	g_message ("impl_GNOME_GnoCam_getCamera");
-
 	gm = GNOCAM_MAIN (bonobo_object_from_servant (servant));
+
+	/* Tell libgphoto2 to create and initialize a camera. */
 	CR (gp_camera_new (&camera), ev);
 	if (BONOBO_EX (ev))
 		return (CORBA_OBJECT_NIL);
+	CR (gp_camera_init (camera, NULL), ev);
+	if (BONOBO_EX (ev)) {
+		gp_camera_unref (camera);
+		return (CORBA_OBJECT_NIL);
+	}
 
-	/* Ask! */
-	g_warning ("Not implemented!");
-	gp_camera_unref (camera);
-	return (CORBA_OBJECT_NIL);
-#if 0
-			GnomeDialog *selector;
-			const gchar *name;
-			gint button;
-	
-			selector = gnocam_camera_selector_new ();
-			do {
-				button = gnome_dialog_run (selector);
-				if (button == 1) {
-					/* Cancel */
-					gnome_dialog_close (selector);
-					CORBA_exception_set (ev,
-						CORBA_USER_EXCEPTION,
-						ex_GNOME_Cancelled, NULL);
-					gp_camera_unref (camera);
-					return (CORBA_OBJECT_NIL);
-				} else if (button == 0) {
-					break;
-				} else {
-					g_warning ("Unhandled button: %i",
-						   button);
-				}
-			} while (TRUE);
-	
-			name = gnocam_camera_selector_get_name (
-					GNOCAM_CAMERA_SELECTOR (selector));
-			gnome_dialog_close (selector);
-			while (gtk_events_pending ())
-				gtk_main_iteration ();
-
-			/* It can well be that the user clicked autodetect */
-			if (gconf_client_get_bool (gm->priv->client,
-						"/apps/" PACKAGE "/autodetect",
-						NULL)) {
-				CR (gp_camera_init (camera, NULL), ev);
-				if (BONOBO_EX (ev)) {
-					gp_camera_unref (camera);
-					return (CORBA_OBJECT_NIL);
-				}
-			} else if (!name) {
-				CORBA_exception_set (ev, CORBA_USER_EXCEPTION,
-					ex_GNOME_GnoCam_Factory_NotFound,
-						     NULL);
-				gp_camera_unref (camera);
-				return (CORBA_OBJECT_NIL);
-			} else {
-				initialize_camera (camera, name, ev);
-				if (BONOBO_EX (ev)) {
-					gp_camera_unref (camera);
-					return (CORBA_OBJECT_NIL);
-				}
-			}
-#endif
-
+	/* We have our own idea of what is a camera. */
 	gc = gnocam_camera_new (camera, ev);
 	gp_camera_unref (camera);
 	if (BONOBO_EX (ev))
 		return (CORBA_OBJECT_NIL);
+
+	gm->priv->cached_cameras = g_list_append (gm->priv->cached_cameras, gc);
+	g_signal_connect (gc, "destroy", G_CALLBACK (on_camera_destroy), gm);
 
 	return (CORBA_Object_duplicate (BONOBO_OBJREF (gc), ev));
 }
 
 static GNOME_GnoCam_Camera
-impl_GNOME_GnoCam_Factory_getCameraByModel (PortableServer_Servant servant, 
-		const CORBA_char *model, CORBA_Environment *ev)
+impl_GNOME_GnoCam_Factory_getCameraByModelAndPort (
+		PortableServer_Servant servant, 
+		const CORBA_char *model, const CORBA_char *port,
+		CORBA_Environment *ev)
 {
 	GnoCamMain *gm;
-	GnoCamCamera *gc;
+	GnoCamCamera *gc = NULL;
 	Camera *camera = NULL;
+	guint i;
+	CameraAbilities a;
+	CameraAbilitiesList *al = NULL;
+	GPPortInfoList *il = NULL;
+	GPPortInfo info;
+	int m, p;
 
-	g_message ("impl_GNOME_GnoCam_getCamera: %s", model);
+g_message ("getCameraByModelAndPort (model '%s', port '%s')", model, port);
 
 	gm = GNOCAM_MAIN (bonobo_object_from_servant (servant));
 
-	if (!model)
+	if (!model || !strlen (model) || !port || !strlen (port))
 		return GNOME_GnoCam_Factory_getCamera (BONOBO_OBJREF (gm), ev);
 
-	camera = g_hash_table_lookup (gm->priv->hash_table, model);
-	if (!camera) {
-		CR (gp_camera_new (&camera), ev);
-		if (BONOBO_EX (ev))
-			return (CORBA_OBJECT_NIL);
-		initialize_camera (camera, model, ev);
-		if (BONOBO_EX (ev)) {
-			gp_camera_unref (camera);
-			return (CORBA_OBJECT_NIL);
+	for (i = 0; i < g_list_length (gm->priv->cached_cameras); i++) {
+		gc = g_list_nth_data (gm->priv->cached_cameras, i);
+		gp_camera_get_abilities (gc->camera, &a);
+		if (!strcmp (a.model, model)) {
+			gp_camera_get_port_info (gc->camera, &info);
+			if (!strcmp (port, info.name) || 
+			    !strcmp (port, info.path))
+				break;
 		}
-		g_hash_table_insert (gm->priv->hash_table,
-				     g_strdup (model), camera);
+	}
+	if (i < g_list_length (gm->priv->cached_cameras)) {
+		bonobo_object_ref (gc);
+		return CORBA_Object_duplicate (BONOBO_OBJREF (gc), ev);
+	}
+
+	memset (&a, 0, sizeof (CameraAbilities));
+	gp_abilities_list_new (&al);
+	gp_abilities_list_load (al, NULL);
+	m = gp_abilities_list_lookup_model (al, model);
+	gp_abilities_list_get_abilities (al, m, &a);
+	gp_abilities_list_free (al);
+
+	memset (&info, 0, sizeof (GPPortInfo));
+	gp_port_info_list_new (&il);
+	gp_port_info_list_load (il);
+	p = gp_port_info_list_lookup_name (il, port);
+	if (p < 0)
+		p = gp_port_info_list_lookup_path (il, port);
+	gp_port_info_list_get_info (il, p, &info);
+	gp_port_info_list_free (il);
+
+	CR (gp_camera_new (&camera), ev);
+	if (BONOBO_EX (ev))
+		return (CORBA_OBJECT_NIL);
+	CR (gp_camera_set_abilities (camera, a), ev);
+	if (BONOBO_EX (ev)) {
+		gp_camera_unref (camera);
+		return (CORBA_OBJECT_NIL);
+	}
+	CR (gp_camera_set_port_info (camera, info), ev);
+	if (BONOBO_EX (ev)) {
+		gp_camera_unref (camera);
+		return (CORBA_OBJECT_NIL);
+	}
+	CR (gp_camera_init (camera, NULL), ev);
+	if (BONOBO_EX (ev)) {
+		gp_camera_unref (camera);
+		return (CORBA_OBJECT_NIL);
 	}
 
 	gc = gnocam_camera_new (camera, ev);
-	if (BONOBO_EX (ev))
+	if (BONOBO_EX (ev)) {
+		gp_camera_unref (camera);
 		return (CORBA_OBJECT_NIL);
+	}
 
 	return (CORBA_Object_duplicate (BONOBO_OBJREF (gc), ev));
-}
-
-static gboolean
-foreach_func (gpointer key, gpointer value, gpointer user_data)
-{
-	Camera *camera;
-
-	camera = value;
-	gp_camera_unref (camera);
-
-	return (TRUE);
 }
 
 static void
@@ -261,11 +225,11 @@ gnocam_main_finalize (GObject *object)
 	GnoCamMain *gm = GNOCAM_MAIN (object);
 
 	if (gm->priv) {
-		if (gm->priv->hash_table) {
-			g_hash_table_foreach_remove (gm->priv->hash_table,
-						     foreach_func, NULL);
-			g_hash_table_destroy (gm->priv->hash_table);
-			gm->priv->hash_table = NULL;
+		if (gm->priv->cached_cameras) {
+			g_warning ("Still %i cameras in cache!",
+				   g_list_length (gm->priv->cached_cameras));
+			g_list_free (gm->priv->cached_cameras);
+			gm->priv->cached_cameras = NULL;
 		}
 
 		g_free (gm->priv);
@@ -287,26 +251,22 @@ gnocam_main_class_init (GnoCamMainClass *klass)
 	object_class->finalize = gnocam_main_finalize;
 
 	epv = &klass->epv;
-	epv->getModelList     = impl_GNOME_GnoCam_Factory_getModelList;
-	epv->getPortList      = impl_GNOME_GnoCam_Factory_getPortList;
-	epv->getCamera        = impl_GNOME_GnoCam_Factory_getCamera;
-	epv->getCameraByModel = impl_GNOME_GnoCam_Factory_getCameraByModel;
+	epv->getModelList            = impl_GNOME_GnoCam_Factory_getModelList;
+	epv->getPortList             = impl_GNOME_GnoCam_Factory_getPortList;
+	epv->getCamera               = impl_GNOME_GnoCam_Factory_getCamera;
+	epv->getCameraByModelAndPort = impl_GNOME_GnoCam_Factory_getCameraByModelAndPort;
 }
 
 static void
 gnocam_main_init (GnoCamMain *gm)
 {
 	gm->priv = g_new0 (GnoCamMainPrivate, 1);
-
-	gm->priv->hash_table = g_hash_table_new (g_str_hash, g_str_equal);
 }
 
 GnoCamMain *
 gnocam_main_new (void)
 {
 	GnoCamMain *gm;
-
-	g_message ("Creating a GnoCamMain...");
 
 	gm = g_object_new (GNOCAM_TYPE_MAIN, NULL);
 

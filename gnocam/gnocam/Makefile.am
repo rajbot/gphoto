@@ -33,6 +33,7 @@ GnoCam.h: $(idls)
 serverdir = $(libdir)/bonobo/servers
 server_in_files = GNOME_GnoCam.server.in
 server_DATA = $(server_in_files:.server.in=.server)
+@INTLTOOL_SERVER_RULE@
 
 BUILT_SOURCES=$(CORBA_SOURCES)
 CLEANFILES += $(BUILT_SOURCES) $(server_DATA)

@@ -25,7 +25,7 @@ dnl Internationalization: We need gettext and intltool
 dnl ---------------------------------------------------------------------------
 ALL_LINGUAS="no"
 AM_GNU_GETTEXT
-dnl AC_PROG_INTLTOOL
+AC_PROG_INTLTOOL
 
 dnl ---------------------------------------------------------------------------
 dnl gtk+

@@ -5,4 +5,4 @@ SUBDIRS = konica casio philips fuji photopc kodak ricoh sony \
 
 doc_DATA = AUTHORS COPYING CREDITS ChangeLog FAQ MANUAL NEWS README THEMES
 
-EXTRA_DIST = INSTALL PROGRAMMERS
+EXTRA_DIST = INSTALL PROGRAMMERS TODO configure

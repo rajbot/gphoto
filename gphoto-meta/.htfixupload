@@ -48,3 +48,6 @@ ln -s "$(basename "$base")"/SUPPORTED-CAMERAS SUPPORTED-CAMERAS
 
 chmod 0604 .htaccess
 chmod 0705 .
+
+[ -f 00README ] && touch 00README
+

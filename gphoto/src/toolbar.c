@@ -41,7 +41,7 @@ void add_to_toolbar (GtkWidget *mainWin, gchar *tooltipText,
     tooltip = gtk_tooltips_new();
     gtk_tooltips_set_tip(tooltip,button,tooltipText, NULL);
     gtk_signal_connect_object(GTK_OBJECT(button), "clicked",
-			      f, (gpointer)data);
+			      f, data);
     style = gtk_widget_get_style(mainWin);
     pixmap = gdk_pixmap_create_from_xpm_d(mainWin->window,&bitmap,
 					  &style->bg[GTK_STATE_NORMAL],

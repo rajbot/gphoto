@@ -35,6 +35,8 @@ extern struct ImageInfo Thumbnails;
 extern struct ImageInfo Images;
 extern struct _Camera *Camera;
 
+extern char	  camera_model[];
+extern char	  serial_port[];
 extern int	  post_process;
 extern char	  post_process_script[];
 extern GtkWidget *post_process_pixmap;
@@ -188,7 +190,7 @@ void savepictodisk (int picNum, int thumbnail, char *prefix) {
 
 	FILE *fp;
 	struct Image *im = NULL; 
-	char fname[1024], error[32];
+	char fname[1024], error[32], process[1024];
 
 	if ((im = (*Camera->get_picture)(picNum, thumbnail)) == 0) {
 		sprintf(error, "Could not save #%i", picNum);
@@ -197,6 +199,10 @@ void savepictodisk (int picNum, int thumbnail, char *prefix) {
 	}
 	sprintf(fname, "%s.%s", prefix, im->image_type);
 	save_image(fname, im);
+	if (post_process) {
+		sprintf(process, post_process_script, fname);
+		system(process);
+	}
 	free_image(im);
 }
 
@@ -293,7 +299,8 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 void appendpic (int picNum, int thumbnail, int fromCamera, char *fileName) {
 
 	int w, h;
-	char fname[15], error[32], *openName;
+	char fname[15], error[32], process[1024],
+	     imagename[1024],*openName;
 	
 	GtkWidget *scrwin, *label;
 	GdkPixmap *pixmap;
@@ -315,10 +322,20 @@ void appendpic (int picNum, int thumbnail, int fromCamera, char *fileName) {
 		}
 		node->imlibimage =  gdk_imlib_load_image_mem(im->image,
 							im->image_size);
-		free_image(im);}
+		free_image(im);
+		if (post_process) {
+			sprintf(imagename, "%s/gphoto-image-%i.jpg",
+				gphotoDir, picNum);
+			sprintf(process, post_process_script, imagename);
+			gdk_imlib_save_image(node->imlibimage,
+				imagename, NULL);
+			gdk_imlib_kill_image(node->imlibimage);
+			system(process);
+			node->imlibimage = gdk_imlib_load_image(imagename);
+			remove(imagename);
+		}}
 	   else
 		node->imlibimage = gdk_imlib_load_image(fileName);
-
 	w = node->imlibimage->rgb_width;
         h = node->imlibimage->rgb_height;
         gdk_imlib_render(node->imlibimage, w, h);
@@ -381,7 +398,7 @@ void port_dialog() {
 	GtkObject *olist_item;
 
 	FILE *conf;
-	char gphotorc[1024], serial_port_prefix[20], tempstring[20];
+	char serial_port_prefix[20], tempstring[20];
 	int i=0;
 
 #ifdef linux
@@ -545,9 +562,6 @@ void port_dialog() {
 	}
 	gtk_widget_destroy(list);
 
-	sprintf(gphotorc, "%s/gphotorc", gphotoDir);
-
-	conf = fopen(gphotorc, "w");
 
 	if (GTK_WIDGET_STATE(port0) == GTK_STATE_ACTIVE) {
 		sprintf(tempstring, "%s0", serial_port_prefix);
@@ -574,9 +588,46 @@ void port_dialog() {
 		fprintf(conf, "%s\n", serial_port);
 	}
 printf("serial port: %s\n", serial_port);
+	save_config();
+	gtk_widget_destroy(dialog);	
+}
+
+int  load_config() {
+
+	char fname[1024];
+	FILE *conf;
+
+        sprintf(fname, "%s/gphotorc", gphotoDir);
+        conf = fopen(fname, "r");
+        if (!conf)
+                return (0);
+           else {
+                fgets(fname, 100, conf);
+                strncpy(serial_port, fname, strlen(fname)-1);
+                fgets(fname, 100, conf);
+                strncpy(camera_model, fname, strlen(fname)-1);
+                fgets(fname, 100, conf);
+                strncpy(post_process_script, fname, strlen(fname)-1);
+                fclose(conf);
+        }
+
+	if (strcmp(camera_model, post_process_script) == 0)
+		sprintf(post_process_script, "");
+
+	return (1);
+}
+
+void save_config() {
+
+	char gphotorc[1024];
+	FILE *conf;
+
+	sprintf(gphotorc, "%s/gphotorc", gphotoDir);
+	conf = fopen(gphotorc, "w");
+	fprintf(conf, "%s\n", serial_port);
 	fprintf(conf, "%s\n", camera_model);
+	fprintf(conf, "%s\n", post_process_script);
 	fclose(conf);
-	gtk_widget_destroy(dialog);
 }
 
 void version_dialog() {
@@ -1032,7 +1083,7 @@ void getindex_empty () {
 }
 
 /* get selected pictures */
-void getpics (GtkWidget *widget, char *type) {
+void getpics (char *pictype) {
 
 	char status[256];
 	int i=0;
@@ -1056,21 +1107,21 @@ void getpics (GtkWidget *widget, char *type) {
 		node = node->next; i++;
 		if (GTK_TOGGLE_BUTTON(node->button)->active) {
 			y++;
-			
-/*
-			gtk_toggle_button_set_state(
-				GTK_TOGGLE_BUTTON(node->button),
-				FALSE);
-*/
-			if (strcmp("i", type) == 0) {
+			if ((strcmp("i", pictype) == 0) ||
+			    (strcmp("ti", pictype) == 0)) {
 				sprintf(status, "Getting Image #%i...", i);
 				update_status(status);
-				appendpic(i, 0, TRUE, NULL);}
-			   else {
+				appendpic(i, 0, TRUE, NULL);
+			}
+			if ((strcmp("t", pictype) == 0) ||
+			    (strcmp("ti", pictype) == 0)) {			
 				appendpic(i, 1, TRUE, NULL);
 				sprintf(status, "Getting Thumbnail #%i...", i);
 				update_status(status);
 			}
+			gtk_toggle_button_set_state(
+				GTK_TOGGLE_BUTTON(node->button),
+				FALSE);
 			update_progress((float)y/(float)x);
 		}
 	}
@@ -1550,7 +1601,7 @@ void save_images (gpointer data, guint action, GtkWidget *widget) {
 
 void open_images (gpointer data, guint action, GtkWidget *widget) {
 
-	getpics(widget, "i");
+	getpics("i");
 }
 
 void save_thumbs (gpointer data, guint action, GtkWidget *widget) {
@@ -1560,20 +1611,18 @@ void save_thumbs (gpointer data, guint action, GtkWidget *widget) {
 
 void open_thumbs (gpointer data, guint action, GtkWidget *widget) {
 
-	getpics(widget, "t");
+	getpics("t");
 }
 
 void save_both (gpointer data, guint action, GtkWidget *widget) {
 
-	saveselectedtodisk(widget, "t");
-	saveselectedtodisk(widget, "in");
+	saveselectedtodisk(widget, "ti");
 		/* don't prompt for directory when saving images */
 }
 
 void open_both (gpointer data, guint action, GtkWidget *widget) {
 
-	getpics(widget, "t");
-	getpics(widget, "i");
+	getpics("ti");
 }
 
 
@@ -1599,21 +1648,21 @@ void post_process_change (GtkWidget *widget, GtkWidget *win) {
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
 		cancel);
 
-	pp = gtk_toggle_button_new_with_label("Enable post-processing");
+	pp = gtk_check_button_new_with_label("Enable post-processing");
 	gtk_widget_show(pp);
 	if (post_process)
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(pp), TRUE);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), pp,
 		FALSE, FALSE, 0);
 
-	label = gtk_label_new("Program to run:");
+	label = gtk_label_new("Post-processing program:");
 	gtk_widget_show(label);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
-		FALSE, FALSE, 0);
+		TRUE, TRUE, 0);
 	
-
 	script = gtk_entry_new();
 	gtk_widget_show(script);
+	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
 	gtk_entry_set_text(GTK_ENTRY(script), post_process_script);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), script,
 		FALSE, FALSE, 0);
@@ -1624,8 +1673,9 @@ with the full path to the selected image. Please make sure the
 script exists.
 Example: /usr/local/bin/datestamp %s");
 	gtk_widget_show(label);
+	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
-		FALSE, FALSE, 0);
+		TRUE, TRUE, 4);
 
 	gtk_widget_show(dialog);
 
@@ -1635,16 +1685,19 @@ Example: /usr/local/bin/datestamp %s");
 
 	style = gtk_widget_get_style(win);
 
-	/* We are turning on post_process'ing */
-	pixmap = gdk_pixmap_create_from_xpm_d(win->window, &bitmap,
-                 &style->bg[GTK_STATE_NORMAL],(gchar **)post_processing_off_xpm);
-        gtk_pixmap_set(GTK_PIXMAP(post_process_pixmap), pixmap, bitmap);
-	post_process = 0;
-
-
-	/* We are turning on post_process'ing */
-	post_process = 1;
-	pixmap = gdk_pixmap_create_from_xpm_d(win->window, &bitmap,
-                 &style->bg[GTK_STATE_NORMAL],(gchar **)post_processing_on_xpm);
+	post_process = (int)GTK_TOGGLE_BUTTON(pp)->active;
+	sprintf(post_process_script, "%s",
+		gtk_entry_get_text(GTK_ENTRY(script)));
+	save_config();
+	if (post_process)
+		/* We are turning on post_process'ing */
+		pixmap = gdk_pixmap_create_from_xpm_d(win->window, &bitmap,
+                 	&style->bg[GTK_STATE_NORMAL],
+			(gchar **)post_processing_on_xpm);
+	   else
+		/* We are turning off post_process'ing */
+		pixmap = gdk_pixmap_create_from_xpm_d(win->window, &bitmap,
+                	&style->bg[GTK_STATE_NORMAL],
+			(gchar **)post_processing_off_xpm);
         gtk_pixmap_set(GTK_PIXMAP(post_process_pixmap), pixmap, bitmap);
 }

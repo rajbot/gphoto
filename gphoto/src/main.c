@@ -24,7 +24,7 @@
 
 int main (int argc, char *argv[]) {
 
-	int no_rc=0;
+	int has_rc=0;
 
 	GtkWidget *mainWin;
 	GtkWidget *table;
@@ -71,18 +71,7 @@ int main (int argc, char *argv[]) {
 	sprintf(gphotoDir, "%s/.gphoto", gphotoDir);
 	(void)mkdir(gphotoDir, 0744);
 
-	/* Load config options------------------------------------ */
-	sprintf(fname, "%s/gphotorc", gphotoDir);
-	conf = fopen(fname, "r");
-	if (!conf)
-		no_rc = 1;
-	   else {
-		fgets(fname, 100, conf);
-		strncpy(serial_port, fname, strlen(fname)-1);
-		fgets(fname, 100, conf);
-		strncpy(camera_model, fname, strlen(fname)-1);
-		fclose(conf);
-	}
+	has_rc = load_config();
 
 	library_name = gtk_label_new("");
 	set_camera(camera_model);
@@ -158,7 +147,6 @@ int main (int argc, char *argv[]) {
 	gtk_box_pack_end(GTK_BOX(sbox), vseparator, FALSE, FALSE, 0);
 
 	post_process = 0;
-	sprintf(post_process_script, "");
 	post_process_button = gtk_button_new();
 	gtk_widget_show(post_process_button);
 	gtk_button_set_relief(GTK_BUTTON(post_process_button),GTK_RELIEF_NONE);
@@ -221,7 +209,7 @@ int main (int argc, char *argv[]) {
 
 	/* If not command-line mode... --------------------------- */
 	gtk_widget_show(mainWin);
-	if (no_rc) {
+	if (!has_rc) {
 	  port_dialog();
 	  developer_dialog_create();
 	}

@@ -38,9 +38,9 @@ void on_fileselection_cancel_button_clicked 	(GtkWidget* widget, gpointer user_d
 void
 on_fileselection_ok_button_clicked (GtkWidget* widget, gpointer user_data)
 {
-	GnomeVFSURI*		uri;
+	GnomeVFSURI* uri = gnome_vfs_uri_new (gtk_file_selection_get_filename (GTK_FILE_SELECTION (gtk_widget_get_ancestor (widget, GTK_TYPE_FILE_SELECTION))));
 
-	g_return_if_fail (uri = gnome_vfs_uri_new (gtk_file_selection_get_filename (GTK_FILE_SELECTION (gtk_widget_get_ancestor (widget, GTK_TYPE_FILE_SELECTION)))));
+	g_return_if_fail (uri);
 
 	switch (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (widget), "operation"))) {
 	case OPERATION_FILE_UPLOAD:
@@ -74,22 +74,18 @@ on_fileselection_cancel_button_clicked (GtkWidget* widget, gpointer user_data)
 void
 download (GtkTreeItem* folder, GnomeVFSURI* uri, gboolean preview)
 {
-        GtkObject*              object;
-        GladeXML*               xml_fileselection;
-        gchar*                  tmp;
-	gchar*			name;
-        CORBA_Environment       ev;
-        CORBA_Environment       dummy;
-	Bonobo_Storage		corba_storage;
-        Bonobo_Stream           corba_stream_source;
-        BonoboStream*           stream_destination;
-        Bonobo_Stream_iobuf*    buffer;
-        gint                    mode;
+	g_return_if_fail (folder);
+	
+	if (uri) {
+        	CORBA_Environment       ev;
+	        CORBA_Environment       dummy;
+		Bonobo_Storage		corba_storage = gtk_object_get_data (GTK_OBJECT (folder), "corba_storage");
+	        Bonobo_Stream           corba_stream_source;
+	        BonoboStream*           stream_destination;
+	        Bonobo_Stream_iobuf*    buffer;
+	        gint                    mode;
         
-        g_return_if_fail (folder);
-	g_return_if_fail (corba_storage = gtk_object_get_data (GTK_OBJECT (folder), "corba_storage"));
-        
-        if (uri) {
+        	g_return_if_fail (corba_storage);
 
                 /* Init exception. */
                 CORBA_exception_init (&ev);
@@ -116,8 +112,8 @@ download (GtkTreeItem* folder, GnomeVFSURI* uri, gboolean preview)
 
                 /* Display error message (if any). */
                 if (BONOBO_EX (&ev)) {
-			name = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_basename (uri));
-                        tmp = g_strdup_printf (_("Could not download the file '%s'!\n(%s)"), name, bonobo_exception_get_text (&ev));
+			gchar* name = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_basename (uri));
+                        gchar* tmp = g_strdup_printf (_("Could not download the file '%s'!\n(%s)"), name, bonobo_exception_get_text (&ev));
 			g_free (name);
                         gnome_error_dialog_parented (tmp, main_window);
                         g_free (tmp);
@@ -128,12 +124,12 @@ download (GtkTreeItem* folder, GnomeVFSURI* uri, gboolean preview)
                 CORBA_exception_free (&dummy);
 
         } else {
-
-                /* Ask the user for a filename. Pop up the file selection dialog. */
-                g_assert ((xml_fileselection = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "fileselection")) != NULL);
+	
+		/* Ask the user for a filename. Pop up the file selection dialog. */
+		GladeXML* xml_fileselection = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "fileselection");
 
                 /* Store some data in the ok button. */
-                g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_ok_button"))) != NULL);
+        	GtkObject* object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_ok_button"));
                 gtk_object_set_data (object, "folder", folder);
 		if (preview) gtk_object_set_data (object, "preview", GINT_TO_POINTER (1));
                 gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_FILE_DOWNLOAD));
@@ -146,20 +142,18 @@ download (GtkTreeItem* folder, GnomeVFSURI* uri, gboolean preview)
 void
 upload (GtkTreeItem* folder, GnomeVFSURI* uri)
 {
-	GladeXML*		xml_fileselection;
-	GtkObject*		object;
-	gchar*			tmp;
-	CORBA_Environment	ev;
-	CORBA_Environment	dummy;
-	Bonobo_Storage		corba_storage;
-	Bonobo_Stream		corba_stream_source;
-	Bonobo_Stream		corba_stream_destination;
-	Bonobo_Stream_iobuf*	buffer;
-
 	g_return_if_fail (folder);
-	g_return_if_fail (corba_storage = gtk_object_get_data (GTK_OBJECT (folder), "corba_storage"));
 
 	if (uri) {
+		gchar*			tmp;
+		CORBA_Environment	ev;
+		CORBA_Environment	dummy;
+		Bonobo_Storage		corba_storage = gtk_object_get_data (GTK_OBJECT (folder), "corba_storage");
+		Bonobo_Stream		corba_stream_source;
+		Bonobo_Stream		corba_stream_destination;
+		Bonobo_Stream_iobuf*	buffer;
+
+		g_return_if_fail (corba_storage);
 
 		/* Init exception. */
 		CORBA_exception_init (&ev);
@@ -205,10 +199,10 @@ upload (GtkTreeItem* folder, GnomeVFSURI* uri)
 	} else {
 
 	        /* Ask the user for a filename. Pop up the file selection dialog. */
-	        g_assert ((xml_fileselection = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "fileselection")) != NULL);
+		GladeXML* xml_fileselection = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "fileselection");
 	
 	        /* Store some data in the ok button. */
-	        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_ok_button"))) != NULL);
+		GtkObject* object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_ok_button"));
 	        gtk_object_set_data (object, "folder", folder);
 	        gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_FILE_UPLOAD));
 	
@@ -220,17 +214,13 @@ upload (GtkTreeItem* folder, GnomeVFSURI* uri)
 void
 camera_file_save (CameraFile* file, GnomeVFSURI* uri)
 {
-        GnomeVFSResult          result;
-        GnomeVFSHandle*         handle;
-        GnomeVFSFileSize        file_size;
-	gchar*			message;
-	GtkObject*		object;
-	GladeXML*		xml_fileselection;
-
-        g_return_if_fail (file);
+	g_return_if_fail (file);
 
 	if (uri) {
-	
+	        GnomeVFSResult          result;
+	        GnomeVFSHandle*         handle;
+	        GnomeVFSFileSize        file_size;
+
 		/* Save the file. */
 	        if ((result = gnome_vfs_create_uri (&handle, uri, GNOME_VFS_OPEN_WRITE, FALSE, 0644)) == GNOME_VFS_OK) {
 	                if ((result = gnome_vfs_write (handle, file->data, file->size, &file_size)) == GNOME_VFS_OK) result = gnome_vfs_close (handle);
@@ -239,7 +229,7 @@ camera_file_save (CameraFile* file, GnomeVFSURI* uri)
 
 		/* Report errors (if any). */
 		if (result != GNOME_VFS_OK) {
-			message = g_strdup_printf (_("Could not save file!\n(%s)"), gnome_vfs_result_to_string (result));
+			gchar* message = g_strdup_printf (_("Could not save file!\n(%s)"), gnome_vfs_result_to_string (result));
 			gnome_error_dialog_parented (message, main_window);
 			g_free (message);
 		}
@@ -247,14 +237,14 @@ camera_file_save (CameraFile* file, GnomeVFSURI* uri)
 	} else {
 
 	        /* Pop up the file selection dialog. */
-	        g_assert ((xml_fileselection = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "fileselection")) != NULL);
+		GladeXML* xml_fileselection = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "fileselection");
 
-	        /* Suggest the filename. */
-	        gtk_file_selection_set_filename (GTK_FILE_SELECTION (glade_xml_get_widget (xml_fileselection, "fileselection")), file->name);
-	
 	        /* Store some data in the ok button. */
-	        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_ok_button"))) != NULL);
+		GtkObject* object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_ok_button"));
 		gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_FILE_SAVE));
+
+		/* Suggest the filename. */
+		gtk_file_selection_set_filename (GTK_FILE_SELECTION (glade_xml_get_widget (xml_fileselection, "fileselection")), file->name);
 		
 		/* Ref the file. */
 		gp_file_ref (file);
@@ -284,10 +274,8 @@ save_all_selected (GtkTree* tree, gboolean preview, gboolean save_as)
 	/* Save files. */
 	for (i = 0; i < g_list_length (tree->selection); i++) {
 		item = GTK_TREE_ITEM (g_list_nth_data (tree->selection, i));
-		if (!item->subtree) {
-			if (save_as) download (item, NULL, preview);
-			else save (item, preview);
-		}
+		if (save_as) download (item, NULL, preview);
+		else save (item, preview);
 	}
 }
 
@@ -315,7 +303,6 @@ delete (GtkTreeItem* item)
 {
 	CORBA_Environment	ev;
 	gchar*			file;
-	gchar* 			tmp;
 	Bonobo_Storage		corba_storage;
 	GnomeVFSURI*		uri;
 
@@ -329,7 +316,7 @@ delete (GtkTreeItem* item)
 	file = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_basename (uri));
 	Bonobo_Storage_erase (corba_storage, file, &ev);
 	if (BONOBO_EX (&ev)) {
-	        tmp = g_strdup_printf (_("Could not erase '%s'!\n(%s)"), file, bonobo_exception_get_text (&ev));
+		gchar* tmp = g_strdup_printf (_("Could not erase '%s'!\n(%s)"), file, bonobo_exception_get_text (&ev));
 	        gnome_error_dialog_parented (tmp, main_window);
 	        g_free (tmp);
 	} else gtk_container_remove (GTK_CONTAINER (GTK_WIDGET (item)->parent), GTK_WIDGET (item));

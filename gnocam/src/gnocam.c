@@ -102,7 +102,6 @@ int main (int argc, char *argv[])
 	GError*			gerror = NULL;
 	GConfValue*		value = NULL;
 	guint 			notify_id_cameras;
-	gchar*			prefix = NULL;
 	GtkWidget*		widget;
 	GtkWidget*		menu;
 	GtkWidget*		menu_item;
@@ -143,7 +142,7 @@ int main (int argc, char *argv[])
 		gp_init (gconf_value_get_int (value));
 		gconf_value_free (value);
 	} else gp_init (GP_DEBUG_NONE);
-	gp_frontend_register (gp_frontend_status, gp_frontend_progress, gp_frontend_message, NULL, NULL);
+	gp_frontend_register (gp_frontend_status, gp_frontend_progress, gp_frontend_message, gp_frontend_confirm, NULL);
 
 	/* Create the window. */
 	gtk_widget_show (GTK_WIDGET (main_window = GTK_WINDOW (bonobo_window_new (PACKAGE, PACKAGE))));
@@ -186,6 +185,7 @@ int main (int argc, char *argv[])
 
 	/* Do we already have a prefix in the database? */
 	if (!(value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL))) {
+		gchar*	prefix;
 		
 		/* Set prefix to HOME by default. */
 		value = gconf_value_new (GCONF_VALUE_STRING);

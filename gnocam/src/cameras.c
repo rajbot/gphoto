@@ -133,14 +133,13 @@ on_manual_activate (BonoboUIComponent* component, gpointer folder, const gchar* 
 	Camera*		camera;
 	CameraText 	manual;
 	gint 		result;
-	gchar*		tmp;
 
 	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (folder), "camera"));
 	
 	if ((result = gp_camera_manual (camera, &manual)) == GP_OK) {
 		gnome_ok_dialog_parented (manual.text, main_window);
 	} else {
-		tmp = g_strdup_printf (_("Could not get camera manual!\n(%s)"), gp_camera_result_as_string (camera, result));
+		gchar* tmp = g_strdup_printf (_("Could not get camera manual!\n(%s)"), gp_camera_result_as_string (camera, result));
 		gnome_error_dialog_parented (tmp, main_window);
 		g_free (tmp);
 	}
@@ -225,10 +224,8 @@ on_tree_item_deselect (GtkTreeItem* item, gpointer user_data)
 void
 on_camera_tree_file_drag_data_get (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data)
 {
-	gchar*		tmp;
-
 	/* Get the URI of the tree item. */
-	tmp = gnome_vfs_uri_to_string (gtk_object_get_data (GTK_OBJECT (widget), "uri"), GNOME_VFS_URI_HIDE_NONE);
+	gchar* tmp = gnome_vfs_uri_to_string (gtk_object_get_data (GTK_OBJECT (widget), "uri"), GNOME_VFS_URI_HIDE_NONE);
 	gtk_selection_data_set (selection_data, selection_data->target, 8, tmp, strlen (tmp));
 }
 
@@ -260,12 +257,9 @@ on_drag_data_received (GtkWidget *widget, GdkDragContext *context, gint x, gint 
 void
 camera_tree_folder_clean (GtkTreeItem* folder)
 {
-	gint				i;
 	Bonobo_Storage_DirectoryList*	list;
 	Bonobo_Storage			corba_storage;
 	CORBA_Environment		ev;
-	gchar*				tmp;
-	gchar*				name;
 	GnomeVFSURI*			uri;
 	GtkWidget*			tree;
 
@@ -276,6 +270,7 @@ camera_tree_folder_clean (GtkTreeItem* folder)
 
 	/* Delete all items of subtree. Then, delete the subtree.*/
 	if (folder->subtree) {
+		gint i;
 		for (i = g_list_length (GTK_TREE (folder->subtree)->children) - 1; i >= 0; i--) {
 			gtk_container_remove (GTK_CONTAINER (folder->subtree), GTK_WIDGET (g_list_nth_data (GTK_TREE (folder->subtree)->children, i)));
 		}
@@ -286,8 +281,8 @@ camera_tree_folder_clean (GtkTreeItem* folder)
 	CORBA_exception_init (&ev);
 	list = Bonobo_Storage_listContents (corba_storage, "", Bonobo_FIELD_TYPE, &ev);
 	if (BONOBO_EX (&ev)) {
-		name = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_basename (uri));
-		tmp = g_strdup_printf (_("Could not get list of contents for folder '%s'!\n(%s)"), name, bonobo_exception_get_text (&ev));
+		gchar* name = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_basename (uri));
+		gchar* tmp = g_strdup_printf (_("Could not get list of contents for folder '%s'!\n(%s)"), name, bonobo_exception_get_text (&ev));
 		g_free (name);
 		gnome_error_dialog_parented (tmp, main_window);
 		g_free (tmp);
@@ -306,9 +301,6 @@ void
 camera_tree_folder_populate (GtkTreeItem* folder)
 {
 	GnomeVFSURI*			uri;
-	gchar*				path;
-	gchar*				tmp;
-        gint                    	i;
 	Bonobo_Storage_DirectoryList* 	list;
 	CORBA_Environment		ev;
 	Bonobo_Storage			corba_storage;
@@ -320,6 +312,7 @@ camera_tree_folder_populate (GtkTreeItem* folder)
 	CORBA_exception_init (&ev);
 	list = Bonobo_Storage_listContents (corba_storage, "", Bonobo_FIELD_TYPE, &ev);
 	if (!BONOBO_EX (&ev)) {
+		int i;
 		for (i = 0; i < list->_length; i++) {
 			switch (list->_buffer [i].type) {
 			case Bonobo_STORAGE_TYPE_DIRECTORY:
@@ -334,8 +327,8 @@ camera_tree_folder_populate (GtkTreeItem* folder)
 		}
 		//FIXME: Do I have to free 'list'?
 	} else {
-		path = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_path (uri));
-		tmp = g_strdup_printf ("Could not get contents of folder '%s'!\n(%s)", path, bonobo_exception_get_text (&ev));
+		gchar* path = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_path (uri));
+		gchar* tmp = g_strdup_printf ("Could not get contents of folder '%s'!\n(%s)", path, bonobo_exception_get_text (&ev));
 		g_free (path);
 		gnome_error_dialog_parented (tmp, main_window);
 		g_free (tmp);
@@ -350,7 +343,6 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
 {
 	GtkWidget*		item;
 	gboolean		root;
-	gchar*			tmp;
 	GtkTargetEntry 		target_table[] = {{"text/uri-list", 0, 0}};
 
 	g_return_if_fail (tree);
@@ -363,7 +355,7 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
 	/* Create the item. */
 	if (root) gtk_widget_show (item = gtk_tree_item_new_with_label (((frontend_data_t*) camera->frontend_data)->name));
 	else {
-		tmp = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_basename (uri));
+		gchar* tmp = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_basename (uri));
 		gtk_widget_show (item = gtk_tree_item_new_with_label (tmp));
 		g_free (tmp);
 	}
@@ -455,20 +447,15 @@ main_tree_update (GConfValue* value)
 	xmlDocPtr	doc;
 	xmlNodePtr	node;
         GSList*         list_cameras = NULL;
-	GtkTreeItem*	item;
 	gchar*		xml;
         gchar*          id;
-	gchar*		label;
 	gchar*		name;
 	gchar*		model;
 	gchar*		port;
 	gchar*		speed;
-	gchar*		tmp;
         gint            i;
         gint            j;
-	gint		result;
         Camera*         camera;
-	gboolean	changed;
 	GnomeVFSURI*	uri;
 
 	g_return_if_fail (main_tree);
@@ -480,12 +467,11 @@ main_tree_update (GConfValue* value)
         }
 
         /* Mark each camera in the tree as unchecked. */
-        for (i = 0; i < g_list_length (main_tree->children); i++) 
-		gtk_object_set_data (GTK_OBJECT (g_list_nth_data (main_tree->children, i)), "checked", NULL);
+        for (i = 0; i < g_list_length (main_tree->children); i++) gtk_object_set_data (GTK_OBJECT (g_list_nth_data (main_tree->children, i)), "checked", NULL);
 
 	/* Investigate if the new cameras are in the tree. */
         for (i = 0; i < g_slist_length (list_cameras); i++) {
-                value = g_slist_nth_data (list_cameras, i);
+        	value = g_slist_nth_data (list_cameras, i);
                 g_assert (value->type == GCONF_VALUE_STRING);
 		xml = g_strdup (gconf_value_get_string (value));
 		if (!(doc = xmlParseMemory (xml, strlen (xml)))) continue;
@@ -503,17 +489,15 @@ main_tree_update (GConfValue* value)
 
                 /* Do we have this camera in the tree? */
                 for (j = 0; j < g_list_length (main_tree->children); j++) {
-			item = GTK_TREE_ITEM (g_list_nth_data (main_tree->children, j));
+			GtkTreeItem* item = GTK_TREE_ITEM (g_list_nth_data (main_tree->children, j));
                 	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
                         if (atoi (id) == ((frontend_data_t*) camera->frontend_data)->id) {
+				gchar* label;
 
                                 /* We found the camera. Changed? */
 				gtk_label_get (GTK_LABEL (GTK_BIN (item)->child), &label);
-				changed = (strcmp (label, name) != 0);
-				changed = changed || (strcmp (camera->model, model) != 0);
-				changed = changed || (strcmp (camera->port->name, port) != 0);
-				changed = changed || (atoi (speed) != camera->port->speed);
-				if (changed) {
+				if ((strcmp (label, name) != 0) || (strcmp (camera->model, model) != 0) || 
+					(strcmp (camera->port->name, port) != 0) || (atoi (speed) != camera->port->speed)) {
 
 					/* We simply remove the camera and add a new one to the tree. */
 					gtk_container_remove (GTK_CONTAINER (main_tree), GTK_WIDGET (item));
@@ -522,15 +506,16 @@ main_tree_update (GConfValue* value)
                         }
                 }
                 if (j == g_list_length (main_tree->children)) {
+			gint result;
 
                         /* We don't have the camera in the tree (yet). */
 			camera = NULL;
                         if ((result = gp_camera_new_by_description (atoi (id), name, model, port, atoi (speed), &camera)) != GP_OK) {
-				tmp = g_strdup_printf (_("Could not connect to the camera!\n(%s)"), gp_camera_result_as_string (camera, result));
+				gchar* tmp = g_strdup_printf (_("Could not connect to the camera!\n(%s)"), gp_camera_result_as_string (camera, result));
 				gnome_error_dialog_parented (tmp, main_window);
 				g_free (tmp);
 			} else {
-				tmp = g_strdup_printf ("camera://%s/", name);
+				gchar* tmp = g_strdup_printf ("camera://%s/", name);
 				uri = gnome_vfs_uri_new (tmp);
 				g_free (tmp);
 				camera_tree_folder_add (main_tree, camera, uri);
@@ -545,8 +530,8 @@ main_tree_update (GConfValue* value)
 
         /* Delete all unchecked cameras. */
         for (j = g_list_length (main_tree->children) - 1; j >= 0; j--) {
-                item = GTK_TREE_ITEM (g_list_nth_data (main_tree->children, j));
-        	if (!gtk_object_get_data (GTK_OBJECT (item), "checked")) gtk_container_remove (GTK_CONTAINER (main_tree), GTK_WIDGET (item));
+		GtkWidget* item = g_list_nth_data (main_tree->children, j);
+        	if (!gtk_object_get_data (GTK_OBJECT (item), "checked")) gtk_container_remove (GTK_CONTAINER (main_tree), item);
         }
 }
 
@@ -800,7 +785,6 @@ camera_tree_item_storage_create (GtkTreeItem* item)
 {
 	GnomeVFSURI*		uri;
 	gchar*			tmp;
-	gchar*			path;
 	BonoboStorage*		storage = NULL;
 	Bonobo_Storage		corba_storage = CORBA_OBJECT_NIL;
 	Bonobo_Storage		corba_storage_parent;
@@ -842,7 +826,7 @@ camera_tree_item_storage_create (GtkTreeItem* item)
                 g_free (tmp);
         }
         if (BONOBO_EX (&ev)) {
-                path = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_path (uri));
+                gchar* path = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_path (uri));
                 tmp = g_strdup_printf (_("Could not get storage for folder '%s'!\n(%s)"), path, bonobo_exception_get_text (&ev));
                 g_free (path);
                 gnome_error_dialog_parented (tmp, main_window);

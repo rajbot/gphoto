@@ -529,9 +529,66 @@ int oly_delete_image (int picNum) {
 	return (1);
 }
 
+char oly_summary_text[1024];
+
+
 char *oly_summary() {
 
-	return("Needs to be done.");
+	unsigned long l;
+	char *s;
+	off_t s_size;
+
+	sprintf(oly_summary_text, "");
+
+	s = (char*)malloc(sizeof(char)*2048);
+
+	oly_open_camera();
+
+	eph_getint(iob, 3, &l);
+	sprintf(oly_summary_text, "%sShutter: %lu\n", 
+		oly_summary_text, l);
+
+	eph_getint(iob, 6, &l);
+	sprintf(oly_summary_text, "%sColor Mode: %s\n", oly_summary_text,
+		(l==1)?"Color":(l==2)?"B/W":"Unknown");
+
+	eph_getint(iob, 10, &l);
+	sprintf(oly_summary_text, "%sFrames Taken: %lu\n", 
+		oly_summary_text, l);
+
+	eph_getint(iob, 11, &l);
+	sprintf(oly_summary_text, "%sFrames Left: %lu\n",
+		oly_summary_text, l);
+
+	eph_getint(iob, 16, &l);
+	sprintf(oly_summary_text, "%sBattery: %lu%%\n", 
+		oly_summary_text, l);
+
+	eph_getint(iob, 28, &l);
+	sprintf(oly_summary_text, "%sFree Memory: %lu bytes\n", 
+		oly_summary_text, l);
+
+	s_size = 2048; s[0] = '\0';
+	eph_getvar(iob, 0x19, &s, &s_size);
+	sprintf(oly_summary_text, "%sSerial #: %s\n", oly_summary_text, s);
+
+	s_size = 2048; s[0] = '\0';
+	eph_getvar(iob, 0x1a, &s, &s_size);
+	sprintf(oly_summary_text, "%sVersion: %s\n", oly_summary_text, s);
+	
+	s_size = 2048; s[0] = '\0';
+	eph_getvar(iob, 0x1b, &s, &s_size);
+	sprintf(oly_summary_text, "%sModel: %s\n", oly_summary_text, s);
+
+	s_size = 2048; s[0] = '\0';
+	eph_getvar(iob, 48, &s, &s_size);
+	sprintf(oly_summary_text, "%sManufacturer: %s\n", oly_summary_text, s);
+
+	free(s);
+
+	oly_close_camera();
+
+	return (oly_summary_text);
 }
 
 char *oly_description() {

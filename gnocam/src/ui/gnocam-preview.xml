@@ -1,7 +1,7 @@
 <Root>
   <menu>
     <submenu name="File" _label="_File">
-      <menuitem name="Refresh" verb="" _label="Refresh" pixtype="stock" pixname="Revert"/>
+      <menuitem name="Refresh" verb="" _label="Refresh" pixtype="stock" pixname="Refresh"/>
       <menuitem name="Save" verb="" _label="Save" pixtype="stock" pixname="Save"/>
       <menuitem name="SaveAs" verb="" _label="Save As" pixtype="stock" pixname="Save As"/>
       <separator/>
@@ -23,9 +23,9 @@
       <menuitem name="About" _label="_About" pixtype="stock" pixname="About"/>
     </submenu>
   </menu>
-  <dockitem name="Toolbar">
-    <toolitem name="Refresh" verb="" _label="Refresh" pixtype="stock" pixname="Revert"/>
-    <toolitem name="Save" verb="" _label="Save" pixtype="stock" pixname="Save"/>
-    <toolitem name="SaveAs" verb="" _label="Save As" pixtype="stock" pixname="Save As"/>
+  <dockitem name="Toolbar" homogenous="0" look="icons">
+    <toolitem name="Refresh" verb="" _label="Refresh" _tip="Refresh" pixtype="stock" pixname="Refresh"/>
+    <toolitem name="Save" verb="" _label="Save" _tip="Save" pixtype="stock" pixname="Save"/>
+    <toolitem name="SaveAs" verb="" _label="Save As" _tip="Save As" pixtype="stock" pixname="Save As"/>
   </dockitem>
 </Root>

@@ -20,13 +20,13 @@
       <menuitem name="About" verb="" _label="_About" pixtype="stock" pixname="About"/>
     </submenu>
   </menu>
-  <dockitem name="Toolbar">
+  <dockitem name="Toolbar" homogenous="0" look="icons">
     <control name="ViewMode" _tip="View Mode"/>
     <separator/>
-    <toolitem name="SavePreviews" verb="" _label="Save Previews" pixtype="stock" pixname="Save"/>
-    <toolitem name="SavePreviewsAs" verb="" _label="Save Previews As" pixtype="stock" pixname="Save As"/>
-    <toolitem name="SaveFiles" verb="" _label="Save Files" pixtype="stock" pixname="Save"/>
-    <toolitem name="SaveFilesAs" verb="" _label="Save Files As" pixtype="stock" pixname="Save As"/>
-    <toolitem name="Delete" verb="" _label="Delete" pixtype="stock" pixname="Trash"/>
+    <toolitem name="SavePreviews" verb="" _label="Save Previews" _tip="Save Previews" pixtype="stock" pixname="Save"/>
+    <toolitem name="SavePreviewsAs" verb="" _label="Save Previews As" _tip="Save Previews As" pixtype="stock" pixname="Save As"/>
+    <toolitem name="SaveFiles" verb="" _label="Save Files" _tip="Save Files" pixtype="stock" pixname="Save"/>
+    <toolitem name="SaveFilesAs" verb="" _label="Save Files As" _tip="Save Files As" pixtype="stock" pixname="Save As"/>
+    <toolitem name="Delete" verb="" _label="Delete" _tip="Delete" pixtype="stock" pixname="Trash"/>
   </dockitem>
 </Root>

@@ -17,7 +17,7 @@
       <menuitem name="About" verb="" _label="_About" pixtype="stock" pixname="About"/>
     </submenu>
   </menu>
-  <dockitem name="Toolbar">
+  <dockitem name="Toolbar" homogenous="0" look="icons">
     <toolitem name="SaveAs" verb="" _label="Save As" _tip="Save this gallery" pixtype="stock" pixname="Save As"/>
     <separator/>
   </dockitem>

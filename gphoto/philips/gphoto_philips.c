@@ -35,7 +35,7 @@
 
 extern char *Philips_models[];
 long cameraid; /* this should be global or returned */
-char	*philips_processThumb ( char *thumbdata );
+char	*philips_processThumb ( char *thumbdata, int *Size );
 
 extern philips_configure ();
 
@@ -145,11 +145,11 @@ struct Image *philips_get_picture (int picNum, int thumbnail) {
 			return ( NULL );
 			}
 		
-		thumbData = philips_processThumb ( picData );
+		thumbData = philips_processThumb ( picData, &Size );
 		free ( picData );
 
 		image->image = thumbData;
-		image->image_size = sizeof(thumbData);
+		image->image_size = Size;
 		image->image_info = NULL;
 		image->image_info_size = 0;
 		strcpy ( image->image_type, "pgm" );
@@ -301,12 +301,13 @@ char *philips_summary ()
  *
  */
 
- char	*philips_processThumb ( char *thumbdata ) {
+ char	*philips_processThumb ( char *thumbdata, int *Size ) {
  	
 	char	*postprocess;
 	int		index, state, x;
 
-	postprocess = (char *)malloc ( 4813 );
+	*Size = 4813;
+	postprocess = (char *)malloc ( *Size );
 
 	if ( postprocess == NULL )
 		return ( NULL );

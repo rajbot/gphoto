@@ -4,8 +4,8 @@
 
 #include <gphoto2.h>
 #include <bonobo.h>
-#include <GnoCam.h>
 #include <gconf/gconf-client.h>
+#include <gal/e-table/e-table.h>
 
 BEGIN_GNOME_DECLS
 
@@ -20,26 +20,22 @@ typedef struct _GnoCamFolderPrivate	GnoCamFolderPrivate;
 typedef struct _GnoCamFolderClass	GnoCamFolderClass;
 
 struct _GnoCamFolder {
-	BonoboXObject		parent;
+	ETable			parent;
 
 	GnoCamFolderPrivate*	priv;
 };
 
 struct _GnoCamFolderClass {
-	BonoboXObjectClass              parent_class;
-	POA_GNOME_GnoCam_folder__epv	epv;
+	ETableClass		parent_class;
 };
 
 
-GtkType    		gnocam_folder_get_type		(void);
-GnoCamFolder*		gnocam_folder_new		(Camera* camera, Bonobo_Storage storage, const gchar* path, Bonobo_UIContainer container, 
+GtkType    	gnocam_folder_get_type		(void);
+GtkWidget*	gnocam_folder_new		(Camera* camera, Bonobo_Storage storage, const gchar* path, Bonobo_UIContainer container, 
 							 GConfClient* client, GtkWidget* window);
 
-void			gnocam_folder_show_menu		(GnoCamFolder* folder);
-void			gnocam_folder_hide_menu		(GnoCamFolder* folder);
-
-GtkWidget*      	gnocam_folder_get_widget        (GnoCamFolder* folder);
-
+void		gnocam_folder_show_menu		(GnoCamFolder* folder);
+void		gnocam_folder_hide_menu		(GnoCamFolder* folder);
 
 END_GNOME_DECLS
 

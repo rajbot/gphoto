@@ -80,6 +80,28 @@ set_config (GnoCamConfiguration* configuration)
 			gp_widget_label (configuration->priv->widget), gp_camera_result_as_string (configuration->priv->camera, result));
 }
 
+static GtkWidget*
+create_page (GnoCamConfiguration* configuration, CameraWidget* widget)
+{
+	GtkWidget*	label;
+	GtkWidget*	vbox;
+	gint		id;
+
+	if (widget) id = gp_widget_id (widget);
+	else id = -1;
+
+	if (widget) label = gtk_label_new (gp_widget_label (widget));
+	else label = gtk_label_new (_("Others"));
+	gtk_widget_show (label);
+	vbox = gtk_vbox_new (FALSE, 10);
+	gtk_container_set_border_width (GTK_CONTAINER (vbox), 10);
+	gtk_widget_show (vbox);
+	g_hash_table_insert (configuration->priv->hash_table, &id, vbox);
+	gtk_notebook_append_page (GTK_NOTEBOOK (configuration->priv->notebook), vbox, label);
+
+	return (vbox);
+}
+
 static void
 create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 {
@@ -94,7 +116,6 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 	gint			id;
 	gint			result;
 	GtkWidget*		vbox;
-	GtkWidget*		label;
 	GtkWidget*		button;
 	GtkWidget*		gtk_widget;
 	GtkWidget*		frame;
@@ -108,15 +129,8 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 	case GP_WIDGET_WINDOW:
 	case GP_WIDGET_SECTION:
 	
-		if (type == GP_WIDGET_SECTION) {
-			label = gtk_label_new (gp_widget_label (widget));
-			gtk_widget_show (label);
-			vbox = gtk_vbox_new (FALSE, 10);
-			gtk_container_set_border_width (GTK_CONTAINER (vbox), 10);
-			gtk_widget_show (vbox);
-			g_hash_table_insert (configuration->priv->hash_table, &id, vbox);
-			gtk_notebook_append_page (GTK_NOTEBOOK (configuration->priv->notebook), vbox, label);
-		}
+		/* If section, create page */
+		if (type == GP_WIDGET_SECTION) create_page (configuration, widget);
 
 		/* Create sub-widgets */
 		for (i = 0; i < gp_widget_child_count (widget); i++) create_widgets (configuration, gp_widget_child (widget, i));
@@ -177,6 +191,15 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		}
 		break;
 	
+	case GP_WIDGET_TOGGLE:
+
+		if ((result = gp_widget_value_get (widget, &value_int)) != GP_OK)
+			g_warning (_("Could not get value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+
+		gtk_widget = gtk_check_button_new_with_label (gp_widget_label (widget));
+		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (gtk_widget), (value_int != 0));
+		break;
+	
 	default:
 		g_warning (_("Widget '%s' is of unknown type!"), gp_widget_label (widget));
 		return;
@@ -192,7 +215,10 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		vbox = g_hash_table_lookup (configuration->priv->hash_table, &id);
 		gtk_container_add (GTK_CONTAINER (vbox), frame);
 	} else {
-		//Orphans
+		id = -1;
+		vbox = g_hash_table_lookup (configuration->priv->hash_table, &id);
+		if (!vbox) vbox = create_page (configuration, NULL);
+		gtk_container_add (GTK_CONTAINER (vbox), frame);
 	}
 }
 

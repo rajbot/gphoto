@@ -123,29 +123,38 @@ camera_list_contents (BonoboStorage* s, const CORBA_char* path, Bonobo_StorageIn
 		CORBA_Environment               ev_int;
 		BonoboStreamCamera*		stream;
 		Bonobo_StorageInfo*		info;
-		
-		CORBA_exception_init (&ev_int);
-		stream = bonobo_stream_camera_new (storage->priv->camera, combined_path, gp_list_entry (&file_list, i)->name, storage->priv->mode, &ev_int);
-		if (BONOBO_EX (&ev_int)) {
-			g_warning ("Could not get information about file %s in directory %s: %s", 
-				gp_list_entry (&file_list, i)->name, combined_path, bonobo_exception_get_text (&ev_int));
-			CORBA_exception_free (&ev_int);
-			list->_length--;
-			continue;
-		}
-		info = Bonobo_Stream_getInfo (BONOBO_OBJREF (stream), Bonobo_FIELD_CONTENT_TYPE | Bonobo_FIELD_SIZE | Bonobo_FIELD_TYPE, &ev_int);
-		if (BONOBO_EX (&ev_int)) {
-			CORBA_exception_free (&ev_int);
+
+		//GPhoto can't get information about a file...
+		//This has to be fixed in GPhoto
+		if (storage->priv->mode & Bonobo_Storage_COMPRESSED) {
+			CORBA_exception_init (&ev_int);
+			stream = bonobo_stream_camera_new (storage->priv->camera, combined_path, gp_list_entry (&file_list, i)->name, storage->priv->mode, &ev_int);
+			if (BONOBO_EX (&ev_int)) {
+				g_warning ("Could not get information about file %s in directory %s: %s", 
+					gp_list_entry (&file_list, i)->name, combined_path, bonobo_exception_get_text (&ev_int));
+				CORBA_exception_free (&ev_int);
+				list->_length--;
+				continue;
+			}
+			info = Bonobo_Stream_getInfo (BONOBO_OBJREF (stream), Bonobo_FIELD_CONTENT_TYPE | Bonobo_FIELD_SIZE | Bonobo_FIELD_TYPE, &ev_int);
+			if (BONOBO_EX (&ev_int)) {
+				CORBA_exception_free (&ev_int);
+				bonobo_object_unref (BONOBO_OBJECT (stream));
+				list->_length--;
+				continue;
+			}
+			list->_buffer [i + gp_list_count (&folder_list)].name = CORBA_string_dup (info->name);
+			list->_buffer [i + gp_list_count (&folder_list)].type = info->type;
+			list->_buffer [i + gp_list_count (&folder_list)].size = info->size;
+			list->_buffer [i + gp_list_count (&folder_list)].content_type = CORBA_string_dup (info->content_type);
 			bonobo_object_unref (BONOBO_OBJECT (stream));
-			list->_length--;
-			continue;
+			CORBA_exception_free (&ev_int);
+		} else {
+			list->_buffer [i + gp_list_count (&folder_list)].name = CORBA_string_dup (gp_list_entry (&file_list, i)->name);
+			list->_buffer [i + gp_list_count (&folder_list)].type = Bonobo_STORAGE_TYPE_REGULAR;
+			list->_buffer [i + gp_list_count (&folder_list)].size = 0;
+			list->_buffer [i + gp_list_count (&folder_list)].content_type = CORBA_string_dup ("");
 		}
-		list->_buffer [i + gp_list_count (&folder_list)].name = CORBA_string_dup (info->name);
-		list->_buffer [i + gp_list_count (&folder_list)].type = info->type;
-		list->_buffer [i + gp_list_count (&folder_list)].size = info->size;
-		list->_buffer [i + gp_list_count (&folder_list)].content_type = CORBA_string_dup (info->content_type);
-		bonobo_object_unref (BONOBO_OBJECT (stream));
-		CORBA_exception_free (&ev_int);
 	}
 	g_free (combined_path);
 
@@ -168,7 +177,7 @@ bonobo_storage_camera_open (const gchar* path, gint flags, gint mode, CORBA_Envi
 	for (path += 2; *path != 0; path++) if (*path == '/') break;
 	
 	/* Create the storage. */
-        new = bonobo_storage_camera_new (camera, path, mode, ev);
+        new = bonobo_storage_camera_new (camera, path, flags, ev);
 	gp_camera_unref (camera);
 	if (BONOBO_EX (ev)) return (NULL);
 	g_return_val_if_fail (new, NULL);
@@ -206,10 +215,10 @@ bonobo_storage_camera_new (Camera* camera, const gchar* path, Bonobo_Storage_Ope
 	g_return_val_if_fail (path, NULL);
 
 	/* Reject unsupported open modes. */
-//	if (mode & Bonobo_Storage_TRANSACTED) {
-//		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
-//		return (NULL);
-//	}
+	if (mode & Bonobo_Storage_TRANSACTED) {
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
+		return (NULL);
+	}
 	if ((mode & Bonobo_Storage_COMPRESSED) && !camera->abilities->file_preview) {
 		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
 		return (NULL);

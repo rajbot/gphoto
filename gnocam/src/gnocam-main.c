@@ -89,11 +89,7 @@ create_camera (gpointer user_data)
         CORBA_exception_init (&ev);
         camera = gnocam_camera_new (m->priv->url, m->priv->container, GTK_WIDGET (m), m->priv->client, &ev);
         if (BONOBO_EX (&ev)) {
-                gchar*  message;
-
-                message = g_strdup_printf (_("Could not display camera widget for camera '%s'!\n(%s)"), m->priv->url, bonobo_exception_get_text (&ev));
-                gnome_error_dialog_parented (message, GTK_WINDOW (m));
-                g_free (message);
+                g_warning (_("Could not display camera widget for camera '%s'!\n(%s)"), m->priv->url, bonobo_exception_get_text (&ev));
                 CORBA_exception_free (&ev);
 		g_free (m->priv->url);
 		m->priv->url = NULL;
@@ -112,8 +108,7 @@ create_camera (gpointer user_data)
         gtk_notebook_append_page (GTK_NOTEBOOK (m->priv->notebook), widget, NULL);
         gtk_object_set_data (GTK_OBJECT (camera), "page", GINT_TO_POINTER (gtk_notebook_page_num (GTK_NOTEBOOK (m->priv->notebook), widget)));
 
-        g_hash_table_insert (m->priv->hash_table, g_strdup (m->priv->url), camera);
-	g_free (m->priv->url);
+        g_hash_table_insert (m->priv->hash_table, m->priv->url, camera);
 	m->priv->url = NULL;
 
 	gtk_signal_emit_by_name (GTK_OBJECT (m->priv->shortcut_bar), "item_selected", NULL, 0, m->priv->item);
@@ -134,6 +129,7 @@ create_menu (gpointer user_data)
 	g_return_val_if_fail (user_data, FALSE);
 	m = GNOCAM_MAIN (user_data);
 
+	m->priv->component = bonobo_ui_component_new (PACKAGE "Main");
         bonobo_ui_component_set_container (m->priv->component, m->priv->container);
 	
         bonobo_ui_component_freeze (m->priv->component, NULL);
@@ -308,8 +304,7 @@ gnocam_main_new (GConfClient* client)
 	new->priv->container = BONOBO_OBJREF (container);
 
 	/* Create the menu */
-	new->priv->component = bonobo_ui_component_new (PACKAGE "main");
-	gtk_idle_add (create_menu, new);
+	create_menu (new);
 
 	/* Set the default settings */
 	w = gconf_client_get_int (new->priv->client, "/apps/" PACKAGE "/width_main", NULL);

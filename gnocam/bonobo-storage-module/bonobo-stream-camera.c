@@ -42,6 +42,8 @@ camera_get_info (BonoboStream* s, const Bonobo_StorageInfoFields mask, CORBA_Env
 	info->type = Bonobo_STORAGE_TYPE_REGULAR;
 	info->name = CORBA_string_dup (stream->priv->filename);
 	info->content_type = CORBA_string_dup (stream->priv->file->type);
+printf ("Returning info: %s, %s, %i\n", info->name, info->type, info->size);
+printf ("  was: %s, %s, %i\n", stream->priv->filename, stream->priv->file->type, stream->priv->file->size);
 
 	return (info);
 }

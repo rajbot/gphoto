@@ -173,7 +173,9 @@ bonobo_stream_camera_class_init (BonoboStreamCameraClass* klass)
 static void
 bonobo_stream_camera_init (BonoboStreamCamera* stream)
 {
-	stream->priv = g_new (BonoboStreamCameraPrivate, 1);
+	stream->priv = g_new0 (BonoboStreamCameraPrivate, 1);
+
+	stream->priv->position = 0;
 }
 
 BonoboStream*
@@ -220,6 +222,9 @@ bonobo_stream_camera_new (Camera            *camera,
     	BonoboObject	   *object;
 	BonoboStreamCamera *new;
 	Bonobo_Stream	    corba_new;
+	CameraList          list;
+	CameraFile         *file;
+	gint i;
 
         /* Reject some unsupported flags. */ 
 	if (flags & Bonobo_Storage_TRANSACTED) { 
@@ -237,56 +242,53 @@ bonobo_stream_camera_new (Camera            *camera,
 		return (NULL);
         }
 
-	new = gtk_type_new (BONOBO_STREAM_CAMERA_TYPE);
-	new->priv->dirname = g_strdup (dirname);
-	new->priv->filename = g_strdup (filename);
-	new->priv->mode = flags;
-	new->priv->position = 0;
-	new->priv->camera = camera;
-	new->priv->file = gp_file_new ();
-	gp_camera_ref (camera);
+	/* You cannot do a gp_camera_file_get_file() if you have not 
+	 * performed a gp_camera_folder_list_files() previously to populate 
+	 * the filesystem struct of the driver. 
+	 */
+	CHECK_RESULT (gp_camera_folder_list_files (camera, dirname, &list), ev);
+	if (BONOBO_EX (ev))
+		return (NULL);
 
         /* Does the requested file exist? */
         if (flags & Bonobo_Storage_FAILIFEXIST) {
-		gint		i;
-		CameraList	list;
-
-                CHECK_RESULT (gp_camera_folder_list_files (new->priv->camera, 
-			    				   new->priv->dirname, 
-							   &list), ev);
-                if (BONOBO_EX (ev)) {
-			bonobo_object_unref (BONOBO_OBJECT (new));
-			return (NULL);
-		}
                 for (i = 0; i < gp_list_count (&list); i++) {
-                        if (strcmp ((gp_list_entry (&list, i))->name, 
-				    new->priv->filename) == 0) {
+                        if (!strcmp ((gp_list_entry (&list, i))->name, 
+				     filename)) {
                                 CORBA_exception_set (
 					ev, CORBA_USER_EXCEPTION, 
 					ex_Bonobo_Storage_NameExists, NULL);
-				bonobo_object_unref (BONOBO_OBJECT (new));
                                 return (NULL);
                         }
                 }
         }
 
         /* Get the file. */
+	file = gp_file_new ();
         if (flags & Bonobo_Storage_READ) {
 		if (flags & Bonobo_Storage_COMPRESSED) {
-			CHECK_RESULT (gp_camera_file_get_preview (new->priv->camera, new->priv->dirname, new->priv->filename, new->priv->file), ev);
+			CHECK_RESULT (gp_camera_file_get_preview (camera, 
+						dirname, filename, file), ev);
 		} else {
-			CHECK_RESULT (gp_camera_file_get_file (new->priv->camera, new->priv->dirname, new->priv->filename, new->priv->file), ev);
+			CHECK_RESULT (gp_camera_file_get_file (camera, 
+						dirname, filename, file), ev);
 		}
 		if (BONOBO_EX (ev)) {
-			bonobo_object_unref (BONOBO_OBJECT (new));
+			gp_file_unref (file);
 			return (NULL);
 		}
-		g_return_val_if_fail (new->priv->file, NULL);
-		if (strcmp (new->priv->file->name, new->priv->filename)) 
+		if (strcmp (file->name, filename)) 
 			g_warning ("Filenames differ: filename is '%s', 
-				   file->name is '%s'!", 
-				   new->priv->filename, new->priv->file->name);
+				   file->name is '%s'!", filename, file->name);
 	}
+
+	new = gtk_type_new (BONOBO_STREAM_CAMERA_TYPE);
+	new->priv->dirname = g_strdup (dirname); 
+	new->priv->filename = g_strdup (filename); 
+	new->priv->mode = flags; 
+	new->priv->camera = camera; 
+	gp_camera_ref (camera);
+	new->priv->file = file;
 
 	corba_new = bonobo_stream_corba_object_create (BONOBO_OBJECT (new));
 	object = bonobo_object_construct (BONOBO_OBJECT (new), corba_new);

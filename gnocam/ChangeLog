@@ -1,3 +1,10 @@
+2001-06-06	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
+	* bonobo-storage-module/bonobo-stream-camera.c: 
+	(bonobo_stream_camera_new): Always do a gp_camera_folder_list_files
+	in order to give the camera drivers a chance to populate their
+	filesystems. Thanks to Fabrice Bellet.
+
 2001-06-05	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
 	* gnome-vfs-module/camera-method.c: (do_open_directory): Let us

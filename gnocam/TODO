@@ -1,17 +1,14 @@
 
-Icon, Logo:
------------
-- remain to be created.
-
-Drag & Drop:
-------------
-- correctly implement drag (files/previews). Timeout issue?
-
-Image viewer:
--------------
-- Get the EOG people to implement printing, zooming, saving.
-
-Threads:
---------
-- Put the time consuming stuff into threads?
-
+- Design a clean async interface (gnocam/idl/GnoCam.idl) for
+   - capturing
+   - configuration (xml?)
+   - download
+   - feedback (status information!)
+- Enhance the applet to include more functionality (which?)
+- Write a plugin for the gnome-control-center
+- Update EOG to use the new GnoCam.idl and the settings defined
+  by the gnome-control-center-plugin
+- Let gtkam optionally access the camera through gnocam
+- Same with gimp (will make it possible to access the camera 
+  through different programs at the same time)
+- Make the gnome-vfs-module functional

@@ -1,7 +1,6 @@
 INCLUDES = 					\
  -DIMAGEDIR=\"$(prefix)/share/pixmaps\"		\
  -DGNOME_LOCALEDIR=\""$(datadir)/locale"\"	\
- -DGETTEXT_PACKAGE=@GETTEXT_PACKAGE@		\
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
  $(GNOCAM_CAPPLET_CFLAGS)
 
@@ -21,4 +20,8 @@ sys_DATA=camera-capplet.desktop
 deskdir=$(datadir)/gnome/apps/Settings/Peripherals
 desk_DATA=camera-capplet.desktop
 
-EXTRA_DIST = $(Desktop_in_files)
+$(Desktop_in_files): $(Desktop_in_files:.desktop.in=.desktop.in.in)
+	sed -e "s|\@PREFIX\@|$(prefix)|" $< > $@
+
+CLEANFILES = camera-capplet.desktop.in camera-capplet.desktop
+EXTRA_DIST = $(Desktop_in_files) camera-capplet.desktop.in.in

@@ -10,11 +10,6 @@ AC_STDC_HEADERS
 
 AM_MAINTAINER_MODE
 
-CFLAGS="$CFLAGS -Wall -Wchar-subscripts -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wpointer-arith"
-LDFLAGS="$LDFLAGS -g -Wall"
-AC_SUBST(CFLAGS)
-AC_SUBST(LDFLAGS)
-
 dnl ---------------------------------------------------------------------------
 dnl libtool:
 dnl ---------------------------------------------------------------------------
@@ -24,9 +19,16 @@ dnl ---------------------------------------------------------------------------
 dnl Internationalization: We need gettext and intltool
 dnl ---------------------------------------------------------------------------
 ALL_LINGUAS="no"
-AM_GNU_GETTEXT
+GETTEXT_PACKAGE="gnocam"
+AC_SUBST(GETTEXT_PACKAGE)
+AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",[What is going in here?])
 AM_GLIB_GNU_GETTEXT
-AC_PROG_INTLTOOL([0.18])
+AC_PROG_INTLTOOL
+
+dnl ---------------------------------------------------------------------------
+dnl Clean code is always good.
+dnl ---------------------------------------------------------------------------
+GNOME_COMPILE_WARNINGS
 
 dnl ---------------------------------------------------------------------------
 dnl gconf
@@ -96,6 +98,13 @@ AC_SUBST(GNOCAM_CFLAGS)
 AC_SUBST(GNOCAM_LIBS)
 
 dnl ---------------------------------------------------------------------------
+dnl For the capplet, we need some libraries.
+dnl ---------------------------------------------------------------------------
+PKG_CHECK_MODULES(GNOCAM_CAPPLET, libgnomeui-2.0 libbonobo-2.0)
+AC_SUBST(GNOCAM_CAPPLET_CFLAGS)
+AC_SUBST(GNOCAM_CAPPLET_LIBS)
+
+dnl ---------------------------------------------------------------------------
 dnl test-gnocam
 dnl ---------------------------------------------------------------------------
 PKG_CHECK_MODULES(TEST_GNOCAM, bonobo-activation-2.0 ORBit-2.0 libbonobo-2.0)
@@ -110,6 +119,7 @@ Makefile
 art/Makefile
 idl/Makefile
 applet/Makefile
+capplet/Makefile
 gnocam/Makefile
 tests/Makefile
 ])

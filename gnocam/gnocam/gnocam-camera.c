@@ -6,8 +6,10 @@
 #include <bonobo/bonobo-stream-memory.h>
 #include <bonobo/bonobo-exception.h>
 #include <libgnome/gnome-util.h>
+#include <libgnomeui/gnome-dialog.h>
 
 #include "gnocam-util.h"
+#include "gnocam-capture.h"
 #include "bonobo-storage-camera.h"
 
 #define PARENT_TYPE BONOBO_X_OBJECT_TYPE
@@ -54,6 +56,15 @@ impl_GNOME_Camera_captureImage (PortableServer_Servant servant,
 	gchar *full_path;
 
 	c = GNOCAM_CAMERA (bonobo_object_from_servant (servant));
+
+	/* Pop up a preview dialog */
+	if (gnome_dialog_run_and_close (gnocam_capture_new (c->priv->camera))) {
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION,
+				     ex_Bonobo_IOError, NULL);
+		return (CORBA_OBJECT_NIL);
+	}
+
+	/* Capture the image */
 	CHECK_RESULT (gp_camera_capture (c->priv->camera,
 				GP_OPERATION_CAPTURE_IMAGE, &path), ev);
 	if (BONOBO_EX (ev))

@@ -67,9 +67,11 @@ impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant,
 		camera->port->speed = 0;
 		CHECK_RESULT (gp_camera_init (camera), ev);
 		if (BONOBO_EX (ev)) {
+			g_message ("Initialization failed!");
 			gp_camera_unref (camera);
 			return (CORBA_OBJECT_NIL);
 		}
+		g_message ("Done.");
 	}
 	g_assert (camera);
 

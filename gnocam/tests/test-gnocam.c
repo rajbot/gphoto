@@ -40,17 +40,10 @@ int main (int argc, char *argv[])
 						 "IDL:Bonobo/Storage:1.0", &ev);
 	if (BONOBO_EX (&ev))
 		g_error (bonobo_exception_get_text (&ev));
-
-	g_message ("Getting stream...");
-	stream = Bonobo_Storage_openStream (storage, "/home/lutz/Beispiel.png",
-					    Bonobo_Storage_READ, &ev);
 	bonobo_object_release_unref (storage, NULL);
-	if (BONOBO_EX (&ev))
-		g_error (bonobo_exception_get_text (&ev));
-	bonobo_object_release_unref (stream, NULL);
 
 	g_message ("Capturing preview...");
-	stream = GNOME_Camera_capturePreview (camera, &ev);
+	stream = GNOME_Camera_captureImage (camera, &ev);
 	bonobo_object_release_unref (camera, NULL);
 	if (BONOBO_EX (&ev))
 		g_error (bonobo_exception_get_text (&ev));

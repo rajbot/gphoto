@@ -58,6 +58,7 @@ static void 	on_entry_changed 		(GtkEntry* entry, gpointer user_data);
 static void 	on_adjustment_value_changed 	(GtkAdjustment* adjustment, gpointer user_data);
 static void	on_date_edit_changed		(GnomeDateEdit* date_edit, gpointer user_data);
 static void	on_toggle_button_toggled	(GtkToggleButton* toggle_button, gpointer user_data);
+static void	on_radio_button_toggled		(GtkToggleButton* toggle_button, gpointer user_data);
 
 /********************/
 /* Helper functions */
@@ -85,18 +86,23 @@ create_page (GnoCamConfiguration* configuration, CameraWidget* widget)
 {
 	GtkWidget*	label;
 	GtkWidget*	vbox;
-	gint		id;
+	gint*		id;
 
-	if (widget) id = gp_widget_id (widget);
-	else id = -1;
+	id = g_new (gint, 1);
+	if (widget) *id = gp_widget_id (widget);
+	else *id = -1;
 
+	/* Label */
 	if (widget) label = gtk_label_new (gp_widget_label (widget));
 	else label = gtk_label_new (_("Others"));
 	gtk_widget_show (label);
+	
+	/* VBox */
 	vbox = gtk_vbox_new (FALSE, 10);
 	gtk_container_set_border_width (GTK_CONTAINER (vbox), 10);
 	gtk_widget_show (vbox);
-	g_hash_table_insert (configuration->priv->hash_table, &id, vbox);
+
+	g_hash_table_insert (configuration->priv->hash_table, id, vbox);
 	gtk_notebook_append_page (GTK_NOTEBOOK (configuration->priv->notebook), vbox, label);
 
 	return (vbox);
@@ -113,7 +119,6 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 	gfloat			max = 0.0;
 	gfloat			increment = 0.0;
 	gint			i;
-	gint			id;
 	gint			result;
 	GtkWidget*		vbox;
 	GtkWidget*		button;
@@ -123,7 +128,6 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 	GSList*			group = NULL;
 
 	type = gp_widget_type (widget);
-	id = gp_widget_id (widget);
 
 	switch (type) {
 	case GP_WIDGET_WINDOW:
@@ -187,7 +191,7 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 			gtk_object_set_data (GTK_OBJECT (button), "value", gp_widget_choice (widget, i));
 			gtk_container_add (GTK_CONTAINER (gtk_widget), button);
 			if (value_char && !strcmp (value_char, gp_widget_choice (widget, i))) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button), TRUE);
-			gtk_signal_connect (GTK_OBJECT (button), "toggled", GTK_SIGNAL_FUNC (on_toggle_button_toggled), widget);
+			gtk_signal_connect (GTK_OBJECT (button), "toggled", GTK_SIGNAL_FUNC (on_radio_button_toggled), widget);
 		}
 		break;
 	
@@ -198,6 +202,7 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 
 		gtk_widget = gtk_check_button_new_with_label (gp_widget_label (widget));
 		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (gtk_widget), (value_int != 0));
+		gtk_signal_connect (GTK_OBJECT (gtk_widget), "toggled", GTK_SIGNAL_FUNC (on_toggle_button_toggled), widget);
 		break;
 	
 	default:
@@ -211,13 +216,19 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 	gtk_container_add (GTK_CONTAINER (frame), gtk_widget);
 
 	if (gp_widget_type (widget->parent) == GP_WIDGET_SECTION) {
+		gint 	id;
+		
 		id = gp_widget_id (widget->parent);
 		vbox = g_hash_table_lookup (configuration->priv->hash_table, &id);
+//		g_return_if_fail (vbox);
 		gtk_container_add (GTK_CONTAINER (vbox), frame);
 	} else {
+		gint 	id;
+		
 		id = -1;
 		vbox = g_hash_table_lookup (configuration->priv->hash_table, &id);
 		if (!vbox) vbox = create_page (configuration, NULL);
+		g_return_if_fail (vbox);
 		gtk_container_add (GTK_CONTAINER (vbox), frame);
 	}
 }
@@ -229,16 +240,38 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 static void
 on_toggle_button_toggled (GtkToggleButton* toggle_button, gpointer user_data)
 {
+	CameraWidget*	widget;
+	gint		value = 0;
+	gint		value_new = 0;
+	gint		result;
+
+	widget = (CameraWidget*) user_data;
+	g_return_if_fail (gp_widget_type (widget) == GP_WIDGET_TOGGLE);
+
+	if ((result = gp_widget_value_get (widget, &value)) != GP_OK)
+		g_warning (_("Could not get value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+	if (toggle_button->active) value_new = 1;
+	if (value != value_new)
+		if ((result = gp_widget_value_set (widget, &value_new)) != GP_OK)
+			g_warning (_("Could not set value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+}
+
+static void
+on_radio_button_toggled (GtkToggleButton* toggle_button, gpointer user_data)
+{
 	CameraWidget* 		widget;
 	gchar*			value = NULL;
 	gchar*			value_new = NULL;
 	gint			result;
 
-	if (!toggle_button->active) return;
-	
+	g_return_if_fail (user_data);
+	g_return_if_fail (toggle_button);
+
 	widget = (CameraWidget*) user_data;
 
-	if ((result = gp_widget_value_get (widget, value)) != GP_OK)
+	if (!toggle_button->active) return;
+
+	if ((result = gp_widget_value_get (widget, &value)) != GP_OK)
 		g_warning (_("Could not get value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
 	value_new = gtk_object_get_data (GTK_OBJECT (toggle_button), "value");
 	if (!value || strcmp (value, value_new))
@@ -266,16 +299,17 @@ static void
 on_date_edit_changed (GnomeDateEdit* date_edit, gpointer user_data)
 {
 	CameraWidget*           widget;
-	gint			i_new, i;
+	gint			value = 0;
+	gint			value_new = 0;
 	gint			result;
 
 	widget = (CameraWidget*) user_data;
 
-	if ((result = gp_widget_value_get (widget, &i)) != GP_OK)
+	if ((result = gp_widget_value_get (widget, &value)) != GP_OK)
 		g_warning (_("Could not get value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
-	i_new = (gint) gnome_date_edit_get_date (date_edit);
-	if (i != i_new)
-		if ((result = gp_widget_value_set (widget, &i_new)) != GP_OK)
+	value_new = (gint) gnome_date_edit_get_date (date_edit);
+	if (value_new != value)
+		if ((result = gp_widget_value_set (widget, &value_new)) != GP_OK)
 			g_warning (_("Could not set value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
 }
 

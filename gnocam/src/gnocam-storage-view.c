@@ -41,15 +41,15 @@
 //#include "e-shell-constants.h"
 #include "utils.h"
 
-#define ETABLE_SPEC "\
-<ETableSpecification no-headers=\"true\" selection-mode=\"single\" cursor-mode=\"line\" draw-grid=\"true\" horizontal-scrolling=\"true\"> 		\
-  <ETableColumn model_col=\"0\" _title=\"Folder\" expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"render_tree\" compare=\"string\"/> 	\
-  <ETableState>																		\
-    <column source=\"0\"/>																\
-    <grouping/>																		\
-  </ETableState>																	\
-</ETableSpecification>																	\
-"
+#define ETABLE_SPEC 																		\
+"<ETableSpecification no-headers=\"true\" selection-mode=\"single\" cursor-mode=\"line\" draw-grid=\"true\" horizontal-scrolling=\"true\">" 			\
+"  <ETableColumn model_col=\"0\" _title=\"Folder\" expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"render_tree\" compare=\"string\"/>" 	\
+"  <ETableState>"																		\
+"    <column source=\"0\"/>"																	\
+"    <grouping/>"																		\
+"  </ETableState>"																		\
+"</ETableSpecification>"
+
 #define PARENT_TYPE E_TABLE_TYPE
 static ETableClass* parent_class = NULL;
 
@@ -124,7 +124,7 @@ static GtkTargetList *target_list;
 /****************/
 
 static GdkPixbuf*
-etree_icon_at (ETreeModel* etree, ETreePath* node, void* model_data)
+etree_icon_at (ETreeModel* etree, ETreePath* node, gpointer user_data)
 {
 	NodeData*	data;
 
@@ -140,7 +140,7 @@ etree_icon_at (ETreeModel* etree, ETreePath* node, void* model_data)
 }
 
 static void*
-etree_value_at (ETreeModel* etree, ETreePath* node, int col, void* model_data)
+etree_value_at (ETreeModel* etree, ETreePath* node, int col, gpointer user_data)
 {
 	NodeData*	data;
 
@@ -153,7 +153,7 @@ etree_value_at (ETreeModel* etree, ETreePath* node, int col, void* model_data)
 }
 
 static void
-etree_set_value_at (ETreeModel* etree, ETreePath* node, int col, const void* val, void* model_data)
+etree_set_value_at (ETreeModel* etree, ETreePath* node, int col, const void* val, gpointer user_data)
 {
 	g_warning ("etree_set_value_at");
 	
@@ -161,7 +161,7 @@ etree_set_value_at (ETreeModel* etree, ETreePath* node, int col, const void* val
 }
 
 static gboolean
-etree_is_editable (ETreeModel* etree, ETreePath* path, int col, void* model_data)
+etree_is_editable (ETreeModel* etree, ETreePath* path, int col, gpointer user_data)
 {
         return FALSE;
 }
@@ -265,9 +265,6 @@ insert_folders_and_files (GnoCamStorageView* storage_view, ETreePath* parent, co
 	CORBA_Environment		ev;
 	gint				i;
 
-//If you want to do this recursively in order to support folders - good luck...
-//	g_warning ("insert_folders_and_files (?, ?, %s)", path);
-
 	CORBA_exception_init (&ev);
 	if (!strcmp (path, "/")) 
 		list = Bonobo_Storage_listContents (storage_view->priv->storage, "", Bonobo_FIELD_TYPE, &ev);
@@ -295,9 +292,31 @@ insert_folders_and_files (GnoCamStorageView* storage_view, ETreePath* parent, co
 		e_tree_model_node_set_expanded (storage_view->priv->etree, parent, TRUE);
 		e_tree_model_node_set_compare_function (storage_view->priv->etree, node, treepath_compare);
 
+		//The following is in order to protect us against "Directory Browse" 
+		//browsing through the whole filesystem.
+		//I know, the following lines really suck...
+		if (!strcmp (list->_buffer [i].name, "dev")) continue;
+		if (!strcmp (list->_buffer [i].name, "bin")) continue;
+		if (!strcmp (list->_buffer [i].name, "usr")) continue;
+		if (!strcmp (list->_buffer [i].name, "var")) continue;
+		if (!strcmp (list->_buffer [i].name, "root")) continue;
+		if (!strcmp (list->_buffer [i].name, "dev-state")) continue;
+		if (!strcmp (list->_buffer [i].name, "etc")) continue;
+		if (!strcmp (list->_buffer [i].name, "boot")) continue;
+		if (!strcmp (list->_buffer [i].name, "opt")) continue;
+		if (!strcmp (list->_buffer [i].name, "mnt")) continue;
+		if (!strcmp (list->_buffer [i].name, "lib")) continue;
+		if (!strcmp (list->_buffer [i].name, "sbin")) continue;
+		if (!strcmp (list->_buffer [i].name, "tmp")) continue;
+		if (!strcmp (list->_buffer [i].name, "lost+found")) continue;
+		if (!strcmp (list->_buffer [i].name, "proc")) continue;
+		if (!strcmp (list->_buffer [i].name, "evolution")) continue;
+		if (!strcmp (list->_buffer [i].name, "src")) continue;
+		if (list->_buffer [i].name [0] == '.') continue;
+
 		/* If this is a directory, fill it */
-//		if (data->directory) 
-//			insert_folders_and_files (storage_view, node, data->path);
+		if (data->directory) 
+			insert_folders_and_files (storage_view, node, data->path);
 	}
 	
 }
@@ -312,6 +331,9 @@ gnocam_storage_view_destroy (GtkObject* object)
 	GnoCamStorageView*	storage_view;
 
 	storage_view = GNOCAM_STORAGE_VIEW (object);
+
+	bonobo_object_release_unref (storage_view->priv->storage, NULL);
+	
 	g_free (storage_view->priv);
 	//FIXME: Free NodeData in all nodes!
 
@@ -385,7 +407,7 @@ gnocam_storage_view_new (Bonobo_Storage storage)
 	NodeData*		data;
 
 	new = gtk_type_new (GNOCAM_TYPE_STORAGE_VIEW);
-	new->priv->storage = storage;
+	new->priv->storage = bonobo_object_dup_ref (storage, NULL);
 
 	/* Create the model */
 	new->priv->etree = e_tree_simple_new (NULL, NULL, NULL, NULL, NULL, NULL, etree_icon_at, etree_value_at, etree_set_value_at, etree_is_editable, new);

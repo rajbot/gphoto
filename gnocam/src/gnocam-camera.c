@@ -301,8 +301,6 @@ on_widget_changed (GnoCamFile* file, gpointer user_data)
 	g_return_if_fail (user_data);
 	camera = GNOCAM_CAMERA (user_data);
 
-	g_message ("on_widget_changed");
-
 	current_page = gtk_notebook_get_current_page (GTK_NOTEBOOK (camera->priv->notebook));
 
 	/* Remove old page */

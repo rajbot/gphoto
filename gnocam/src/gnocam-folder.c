@@ -422,6 +422,8 @@ gnocam_folder_destroy (GtkObject* object)
 	bonobo_object_release_unref (folder->priv->container, NULL);
 	bonobo_object_unref (BONOBO_OBJECT (folder->priv->component));
 
+	bonobo_object_release_unref (folder->priv->storage, NULL);
+
 	if (folder->priv->configuration) gp_widget_unref (folder->priv->configuration);
 	gp_camera_unref (folder->priv->camera);
 	g_free (folder->priv->path);
@@ -473,7 +475,7 @@ gnocam_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path, Bo
 	gp_camera_ref (new->priv->camera = camera);
 	gtk_widget_ref (new->priv->window = window);
 	new->priv->path = g_strdup (path);
-	new->priv->storage = storage;
+	new->priv->storage = bonobo_object_dup_ref (storage, NULL);
 	new->priv->list = list;
 	new->priv->container = bonobo_object_dup_ref (container, NULL);
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));

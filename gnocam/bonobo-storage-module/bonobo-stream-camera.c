@@ -203,14 +203,14 @@ bonobo_stream_camera_new (Camera* camera, const gchar* dirname, const gchar* fil
 
         /* Reject some unsupported open modes. */
 	if (mode & Bonobo_Storage_TRANSACTED) {
-//		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
-//		return (NULL);
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
+		return (NULL);
 	}
 
         /* Does the camera support upload? */
         if ((mode & (Bonobo_Storage_WRITE | Bonobo_Storage_CREATE)) && (!camera->abilities->file_put)) {
-//		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
-//		return (NULL);
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
+		return (NULL);
         }
 
 	new = gtk_type_new (BONOBO_STREAM_CAMERA_TYPE);

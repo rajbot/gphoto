@@ -63,6 +63,7 @@ struct _GnoCamStorageViewPrivate {
 typedef struct {
 	gchar*		path;
 	gboolean 	directory;
+	ETreePath*	placeholder;
 } NodeValue;
 
 enum {
@@ -147,6 +148,7 @@ etree_icon_at (ETreeModel* model, ETreePath* node, gpointer user_data)
 	NodeValue*	value;
 
 	value = (NodeValue*) e_tree_model_node_get_data (model, node);
+	if (!value) return (NULL);
 
 	//FIXME: Do we have to distribute our own pixmaps?
 
@@ -163,6 +165,7 @@ etree_value_at (ETreeModel* model, ETreePath* node, int col, gpointer user_data)
 	NodeValue*	value;
 
 	value = (NodeValue*) e_tree_model_node_get_data (model, node);
+	if (!value) return (NULL);
 
 	/* If root folder, return path. */
 	if (!strcmp (value->path, "/")) return (value->path);
@@ -183,7 +186,9 @@ treepath_compare (ETreeModel* model, ETreePath* node1, ETreePath* node2)
 	NodeValue*	value2;
 
 	value1 = e_tree_model_node_get_data (model, node1);
+	if (!value1) return (0);
 	value2 = e_tree_model_node_get_data (model, node2);
+	if (!value2) return (0);
 
 	return (strcasecmp (value1->path, value2->path));
 }
@@ -193,16 +198,23 @@ treepath_compare (ETreeModel* model, ETreePath* node1, ETreePath* node2)
 /******************/
 
 static void
-on_node_expanded (ETreeModel* model, ETreePath* parent, gboolean* allow_expanded)
+on_node_expanded (ETreeModel* model, ETreePath* parent, gboolean* allow_expanded, gpointer user_data)
 {
+	GnoCamStorageView*		storage_view;
 	Bonobo_Storage_DirectoryList*   list;
 	CORBA_Environment               ev;
 	gint                            i;
 	NodeValue*			value;
 
+	storage_view = GNOCAM_STORAGE_VIEW (user_data);
+
 	value = e_tree_model_node_get_data (model, parent);
 	g_return_if_fail (value);
 
+	/* Did we already populate this part of the tree? */
+	if (!value->placeholder) return;
+
+	/* Get the list of contents */
 	CORBA_exception_init (&ev);
 	if (!strcmp (value->path, "/"))
 		list = Bonobo_Storage_listContents (BONOBO_OBJREF (storage_view->priv->storage), "", Bonobo_FIELD_TYPE, &ev);
@@ -211,9 +223,17 @@ on_node_expanded (ETreeModel* model, ETreePath* parent, gboolean* allow_expanded
 	if (BONOBO_EX (&ev)) {
 		g_warning (_("Could not get list of contents for '%s': %s!"), value->path, bonobo_exception_get_text (&ev));
 		CORBA_exception_free (&ev);
+		*allow_expanded = FALSE;
 		return;
 	}
 	CORBA_exception_free (&ev);
+	*allow_expanded = TRUE;
+
+	/* Remove placeholder */
+	if (value->placeholder) {
+		e_tree_model_node_remove (model, value->placeholder);
+		value->placeholder = NULL;
+	}
 
 	for (i = 0; i < list->_length; i++) {
                 ETreePath*      node;
@@ -226,9 +246,16 @@ on_node_expanded (ETreeModel* model, ETreePath* parent, gboolean* allow_expanded
                 else
                         new_value->path = g_strdup_printf ("%s/%s", value->path, list->_buffer [i].name);
 		new_value->directory = (list->_buffer [i].type == Bonobo_STORAGE_TYPE_DIRECTORY);
-                node = e_tree_model_node_insert (storage_view->priv->model, parent, i, new_value);
+                node = e_tree_model_node_insert (model, parent, i, new_value);
 
-                e_tree_model_node_set_compare_function (storage_view->priv->model, node, treepath_compare);
+                e_tree_model_node_set_expanded (model, node, FALSE);
+		e_tree_model_node_set_compare_function (model, node, treepath_compare);
+
+		/* If directory, insert a placeholder */
+		if (new_value->directory)
+			new_value->placeholder = e_tree_model_node_insert (model, node, 0, NULL);
+		else 
+			new_value->placeholder = NULL;
 	}
 
 	CORBA_free (list);
@@ -237,27 +264,6 @@ on_node_expanded (ETreeModel* model, ETreePath* parent, gboolean* allow_expanded
 /*******************/
 /* E-Table methods */
 /*******************/
-
-static gint
-right_click (ETable* etable, int row, int column, GdkEvent* event)
-{
-	GnoCamStorageView*	storage_view;
-	ETreePath*		node;
-	NodeValue*		value;
-	
-	storage_view = GNOCAM_STORAGE_VIEW (etable);
-	node = e_tree_model_node_at_row (storage_view->priv->model, row);
-
-	value = (NodeValue*) e_tree_model_node_get_data (storage_view->priv->model, node);
-
-	if (value->directory) {
-		g_warning ("Popup folder menu: not implemented!");
-	} else {
-		g_warning ("Popup file menu: not implemented!");
-	}
-
-	return (0);
-}
 
 static void
 cursor_change (ETable* etable, int row)
@@ -275,126 +281,6 @@ cursor_change (ETable* etable, int row)
 		gtk_signal_emit (GTK_OBJECT (storage_view), signals [DIRECTORY_SELECTED], value->path);
 	else 
 		gtk_signal_emit (GTK_OBJECT (storage_view), signals [FILE_SELECTED], value->path);
-}
-
-static void
-table_drag_begin (ETable* etable, int row, int col, GdkDragContext* context)
-{
-	g_warning ("Implement!");
-}
-
-static void
-table_drag_data_get (ETable* etable, int drag_row, int drag_col, GdkDragContext* context, GtkSelectionData* selection_data, unsigned int info, guint32 time)
-{
-	g_warning ("Implement!");
-}
-
-static gboolean
-table_drag_motion (ETable* table, int row, int col, GdkDragContext* context, int x, int y, unsigned int time)
-{
-	g_warning ("Implement!");
-	return (TRUE);
-}
-
-static gboolean
-table_drag_drop (ETable* etable, int row, int col, GdkDragContext* context, int x, int y, unsigned int time)
-{
-	g_warning ("Implement!");
-	return (FALSE);
-}
-
-static void
-table_drag_data_received (ETable* etable, int row, int col, GdkDragContext* context, int x, int y, 
-	GtkSelectionData* selection_data, unsigned int info, unsigned int time)
-{
-	g_warning ("Implement!");
-}
-
-/********************/
-/* Helper functions */
-/********************/
-
-static void
-insert_folders_and_files (GnoCamStorageView* storage_view, ETreePath* parent, const gchar* path)
-{
-	Bonobo_Storage_DirectoryList*	list;
-	CORBA_Environment		ev;
-	gint				i;
-
-	CORBA_exception_init (&ev);
-	if (!strcmp (path, "/")) 
-		list = Bonobo_Storage_listContents (BONOBO_OBJREF (storage_view->priv->storage), "", Bonobo_FIELD_TYPE, &ev);
-	else
-		list = Bonobo_Storage_listContents (BONOBO_OBJREF (storage_view->priv->storage), path + 1, Bonobo_FIELD_TYPE, &ev);
-	if (BONOBO_EX (&ev)) {
-		CORBA_exception_free (&ev);
-		return;
-	}
-	CORBA_exception_free (&ev);
-
-	for (i = 0; i < list->_length; i++) {
-		ETreePath*	node;
-		NodeValue*	value;
-		
-		/* Insert the node */
-		value = g_new (NodeValue, 1);
-		if (!strcmp (path, "/"))
-			value->path = g_strconcat (path, list->_buffer [i].name, NULL);
-		else
-			value->path = g_strdup_printf ("%s/%s", path, list->_buffer [i].name);
-		value->directory = (list->_buffer [i].type == Bonobo_STORAGE_TYPE_DIRECTORY);
-		node = e_tree_model_node_insert (storage_view->priv->model, parent, i, value);
-		
-		e_tree_model_node_set_expanded (storage_view->priv->model, parent, TRUE);
-		e_tree_model_node_set_compare_function (storage_view->priv->model, node, treepath_compare);
-
-		//The following is in order to protect us against "Directory Browse" 
-		//browsing through the whole filesystem.
-		//I know, the following lines really suck...
-		if (!strcmp (list->_buffer [i].name, "dev")) continue;
-		if (!strcmp (list->_buffer [i].name, "bin")) continue;
-		if (!strcmp (list->_buffer [i].name, "usr")) continue;
-		if (!strcmp (list->_buffer [i].name, "var")) continue;
-		if (!strcmp (list->_buffer [i].name, "root")) continue;
-		if (!strcmp (list->_buffer [i].name, "dev-state")) continue;
-		if (!strcmp (list->_buffer [i].name, "etc")) continue;
-		if (!strcmp (list->_buffer [i].name, "boot")) continue;
-		if (!strcmp (list->_buffer [i].name, "opt")) continue;
-		if (!strcmp (list->_buffer [i].name, "mnt")) continue;
-		if (!strcmp (list->_buffer [i].name, "lib")) continue;
-		if (!strcmp (list->_buffer [i].name, "sbin")) continue;
-		if (!strcmp (list->_buffer [i].name, "tmp")) continue;
-		if (!strcmp (list->_buffer [i].name, "lost+found")) continue;
-		if (!strcmp (list->_buffer [i].name, "proc")) continue;
-		if (!strcmp (list->_buffer [i].name, "evolution")) continue;
-		if (!strcmp (list->_buffer [i].name, "src")) continue;
-		if (list->_buffer [i].name [0] == '.') continue;
-
-		/* If this is a directory, fill it */
-		if (value->directory) 
-			insert_folders_and_files (storage_view, node, value->path);
-	}
-	
-}
-
-static gint
-populate_tree (gpointer user_data)
-{
-	GnoCamStorageView*	storage_view;
-	ETreePath*              root;
-	NodeValue*		value;
-
-	storage_view = GNOCAM_STORAGE_VIEW (user_data);
-
-        /* Insert the root node */
-        value = g_new (NodeValue, 1);
-        value->path = g_strdup ("/");
-        value->directory = TRUE;
-        root = e_tree_model_node_insert (storage_view->priv->model, NULL, -1, value);
-
-	insert_folders_and_files (storage_view, root, "/");
-
-	return (FALSE);
 }
 
 /*******************/
@@ -426,13 +312,7 @@ gnocam_storage_view_class_init (GnoCamStorageViewClass* klass)
 	object_class->destroy = gnocam_storage_view_destroy;
 
 	etable_class = E_TABLE_CLASS (klass);
-//	etable_class->right_click		= right_click;
 	etable_class->cursor_change 		= cursor_change;
-//	etable_class->table_drag_begin		= table_drag_begin;
-//	etable_class->table_drag_data_get	= table_drag_data_get;
-//	etable_class->table_drag_motion		= table_drag_motion;
-//	etable_class->table_drag_drop		= table_drag_drop;
-//	etable_class->table_drag_data_received	= table_drag_data_received;
 
 	signals[DIRECTORY_SELECTED] = gtk_signal_new ("directory_selected",
 	                                GTK_RUN_FIRST,
@@ -477,13 +357,16 @@ gnocam_storage_view_new (BonoboStorage* storage)
 {
 	GnoCamStorageView*	new;
 	ETableExtras*		extras;
+	ETreePath*		root;
 	ECell*			cell;
+	NodeValue*		value;
 
 	new = gtk_type_new (GNOCAM_TYPE_STORAGE_VIEW);
 	new->priv->storage = storage;
 
 	/* Create the model */
 	new->priv->model = e_tree_simple_new (col_count, NULL, free_value, NULL, NULL, NULL, etree_icon_at, etree_value_at, NULL, etree_is_editable, new);
+	e_tree_model_root_node_set_visible (new->priv->model, TRUE);
 	gtk_signal_connect (GTK_OBJECT (new->priv->model), "node_expanded", GTK_SIGNAL_FUNC (on_node_expanded), new);
 
 	/* Create extras */
@@ -495,12 +378,19 @@ gnocam_storage_view_new (BonoboStorage* storage)
         e_table_construct (E_TABLE (new), E_TABLE_MODEL (new->priv->model), extras, ETABLE_SPEC, NULL);
         gtk_object_unref (GTK_OBJECT (extras));
 
+        /* Insert the root node */
+	value = g_new (NodeValue, 1);
+	value->path = g_strdup ("/");
+	value->directory = TRUE;
+	root = e_tree_model_node_insert (new->priv->model, NULL, -1, value);
+	e_tree_model_node_set_expanded (new->priv->model, root, FALSE);
+
+	/* Insert placeholder */
+	value->placeholder = e_tree_model_node_insert (new->priv->model, root, 0, NULL);
+
 	/* D&D */
         e_table_drag_source_set (E_TABLE (new), GDK_BUTTON1_MASK, source_drag_types, num_source_drag_types, GDK_ACTION_MOVE | GDK_ACTION_COPY); 
         e_table_drag_dest_set (E_TABLE (new), GTK_DEST_DEFAULT_ALL, source_drag_types, num_source_drag_types, GDK_ACTION_MOVE | GDK_ACTION_COPY);
-
-	/* Populate the tree */
-//	gtk_idle_add (populate_tree, new);
 
 	return (GTK_WIDGET (new));
 }

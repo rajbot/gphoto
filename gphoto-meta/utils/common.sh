@@ -46,6 +46,24 @@ cmd() {
     fi
 }
 
+if bzip2 --version < /dev/null > /dev/null 2>&1
+then
+	echo "bzip2 found."
+	compression="bz2"
+else
+	echo "bzip2 not found."
+	compression="gz"
+fi
+sed -e "s/\\\${compression}/${compression}/g" < build-tool-list > build-tool-list.boot
+buildtoollist="build-tool-list.boot"
+
+if gmake --version< /dev/null > /dev/null 2>&1
+then
+	MAKE=gmake
+else
+	MAKE=make
+fi
+
 cmd mkdir -p "${tmpdir}"
 cmd cd "${tmpdir}"
 

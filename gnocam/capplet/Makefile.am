@@ -2,6 +2,7 @@
 
 INCLUDES = \
  -DIMAGEDIR=\"$(prefix)/usr/share/pixmaps\"\
+ -DGNOME_LOCALEDIR=\""$(datadir)/locale"\"\
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
  $(GCONF_CFLAGS)\
  $(CAPPLET_CFLAGS)\

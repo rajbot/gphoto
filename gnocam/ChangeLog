@@ -1,3 +1,9 @@
+2001-07-16	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
+	Redesign: Everything through GnoCam.idl.
+
+	* (...)
+
 2001-07-13	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
 	* Makefile.am: Don't enter SUBDIRS idl and bonobo-storage-module.

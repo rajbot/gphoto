@@ -27,6 +27,18 @@ compileinstall() {
 	echo "$0: Fatal: No source distributions found. Did you run bootstrap.sh?"
 	exit 1
     fi
+
+    if [ -d "$toolroot" ]
+    then
+	echo "##### Going to use/build our own tools from/to ${toolroot}"
+	echo "    # If you don't want to use these tools, remove the"
+	echo "    # ${toolroot} directory."
+	# these are global variables
+	PATH="${toolroot}/bin:${PATH}"
+	LD_LIBRARY_PATH="${toolroot}/lib:${LD_LIBRARY_PATH}"
+	export PATH LD_LIBRARY_PATH
+    fi
+
     cmd mkdir -p "${srcdir}"
     export PKG_CONFIG_PATH="${instroot}/lib/pkgconfig:${PKG_CONFIG_PATH}"
     export LD_LIBRARY_PATH="${instroot}/lib:${LD_LIBRARY_PATH}"

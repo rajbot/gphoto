@@ -108,7 +108,7 @@ noinst_PROGRAMS = gpio_test
 
 lib_LTLIBRARIES = libgpio.la
 libgpio_la_LDFLAGS = -version-info @LIBGPIO_VERSION_INFO@ -DHAVE_TERMIOS_H 
-libgpio_la_SOURCES = gpio.c gpio.h 			gpio-serial.c gpio-serial.h 			gpio-parallel.c gpio-parallel.h 			$(SOCKET_HEADER) $(SOCKET_SOURCE)
+libgpio_la_SOURCES = gpio.c gpio.h 			gpio-serial.c gpio-serial.h 			gpio-parallel.c gpio-parallel.h 			$(SOCKET_HEADER) $(SOCKET_SOURCE) 			$(IEEE1394_HEADER) $(IEEE1394_SOURCE) 			$(USB_HEADER) $(USB_SOURCE)
 
 
 gpio_test_SOURCES = gpio-test.c
@@ -139,10 +139,50 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 libgpio_la_LIBADD = 
-@GPIO_SOCKET_FALSE@libgpio_la_OBJECTS =  gpio.lo gpio-serial.lo \
-@GPIO_SOCKET_FALSE@gpio-parallel.lo
-@GPIO_SOCKET_TRUE@libgpio_la_OBJECTS =  gpio.lo gpio-serial.lo \
-@GPIO_SOCKET_TRUE@gpio-parallel.lo gpio-socket.lo
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_TRUE@@GPIO_USB_TRUE@libgpio_la_OBJECTS =  \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_TRUE@@GPIO_USB_TRUE@gpio.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_TRUE@@GPIO_USB_TRUE@gpio-serial.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_TRUE@@GPIO_USB_TRUE@gpio-parallel.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_TRUE@@GPIO_USB_TRUE@gpio-socket.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_TRUE@@GPIO_USB_TRUE@gpio-ieee1394.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_TRUE@@GPIO_USB_TRUE@gpio-usb.lo
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_FALSE@@GPIO_USB_FALSE@libgpio_la_OBJECTS =  \
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_FALSE@@GPIO_USB_FALSE@gpio.lo \
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_FALSE@@GPIO_USB_FALSE@gpio-serial.lo \
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_FALSE@@GPIO_USB_FALSE@gpio-parallel.lo
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_FALSE@@GPIO_USB_TRUE@libgpio_la_OBJECTS =  \
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_FALSE@@GPIO_USB_TRUE@gpio.lo \
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_FALSE@@GPIO_USB_TRUE@gpio-serial.lo \
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_FALSE@@GPIO_USB_TRUE@gpio-parallel.lo \
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_FALSE@@GPIO_USB_TRUE@gpio-usb.lo
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_TRUE@@GPIO_USB_FALSE@libgpio_la_OBJECTS =  \
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_TRUE@@GPIO_USB_FALSE@gpio.lo \
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_TRUE@@GPIO_USB_FALSE@gpio-serial.lo \
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_TRUE@@GPIO_USB_FALSE@gpio-parallel.lo \
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_TRUE@@GPIO_USB_FALSE@gpio-socket.lo
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_FALSE@@GPIO_USB_FALSE@libgpio_la_OBJECTS =  \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_FALSE@@GPIO_USB_FALSE@gpio.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_FALSE@@GPIO_USB_FALSE@gpio-serial.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_FALSE@@GPIO_USB_FALSE@gpio-parallel.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_FALSE@@GPIO_USB_FALSE@gpio-ieee1394.lo
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_TRUE@@GPIO_USB_TRUE@libgpio_la_OBJECTS =  \
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_TRUE@@GPIO_USB_TRUE@gpio.lo \
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_TRUE@@GPIO_USB_TRUE@gpio-serial.lo \
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_TRUE@@GPIO_USB_TRUE@gpio-parallel.lo \
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_TRUE@@GPIO_USB_TRUE@gpio-socket.lo \
+@GPIO_IEEE1394_FALSE@@GPIO_SOCKET_TRUE@@GPIO_USB_TRUE@gpio-usb.lo
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_FALSE@@GPIO_USB_TRUE@libgpio_la_OBJECTS =  \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_FALSE@@GPIO_USB_TRUE@gpio.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_FALSE@@GPIO_USB_TRUE@gpio-serial.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_FALSE@@GPIO_USB_TRUE@gpio-parallel.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_FALSE@@GPIO_USB_TRUE@gpio-ieee1394.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_FALSE@@GPIO_USB_TRUE@gpio-usb.lo
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_TRUE@@GPIO_USB_FALSE@libgpio_la_OBJECTS =  \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_TRUE@@GPIO_USB_FALSE@gpio.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_TRUE@@GPIO_USB_FALSE@gpio-serial.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_TRUE@@GPIO_USB_FALSE@gpio-parallel.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_TRUE@@GPIO_USB_FALSE@gpio-socket.lo \
+@GPIO_IEEE1394_TRUE@@GPIO_SOCKET_TRUE@@GPIO_USB_FALSE@gpio-ieee1394.lo
 PROGRAMS =  $(noinst_PROGRAMS)
 
 gpio_test_OBJECTS =  gpio-test.o
@@ -168,8 +208,9 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = tar
 GZIP_ENV = --best
-DEP_FILES =  .deps/gpio-parallel.P .deps/gpio-serial.P \
-.deps/gpio-socket.P .deps/gpio-test.P .deps/gpio.P
+DEP_FILES =  .deps/gpio-ieee1394.P .deps/gpio-parallel.P \
+.deps/gpio-serial.P .deps/gpio-socket.P .deps/gpio-test.P \
+.deps/gpio-usb.P .deps/gpio.P
 SOURCES = $(libgpio_la_SOURCES) $(gpio_test_SOURCES)
 OBJECTS = $(libgpio_la_OBJECTS) $(gpio_test_OBJECTS)
 
@@ -562,8 +603,6 @@ uninstall-am uninstall all-redirect all-am all installdirs \
 mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
-			$(IEEE1394_HEADER) $(IEEE1394_SOURCE) \
-			$(USB_HEADER) $(USB_SOURCE)
 
 gpioConf.sh: gpioConf.sh.in Makefile
 	sed -e 's?\@GPIO_LIBDIR\@?$(GPIO_LIBDIR)?g' \

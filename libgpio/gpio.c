@@ -111,7 +111,7 @@ gpio_device *gpio_new(gpio_device_type type)
 		break;
 #endif
 #ifdef GPIO_IEEE1394
-	case GPIO_DEVICE_1394:
+	case GPIO_DEVICE_IEEE1394:
 		break;
 #endif
 	default:
@@ -151,7 +151,7 @@ gpio_device *gpio_new_by_number (int device_number) {
 			break;
 #endif
 #ifdef GPIO_IEEE1394
-		case GPIO_DEVICE_1394:
+		case GPIO_DEVICE_IEEE1394:
 			break;
 #endif
 		default:

@@ -1,3 +1,10 @@
+2001-07-30 	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
+	* gnocam/bonobo-stream-camera.c: Don't use CameraFile everywhere, just
+	keep the buffer and the size. Improves readability of the code.
+	* gnome-vfs-module/camera-method.c: Return GNOME_VFS_ERROR_EOF when
+	the stream does no longer read any bytes.
+
 2001-07-30	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
 	* configure.in: Warn people that this is a very experimental package.

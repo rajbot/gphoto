@@ -122,6 +122,8 @@ static GnomeVFSResult do_open (
 	stream = bonobo_get_object (moniker, "IDL:Bonobo/Stream:1.0", &ev); 
 	g_free (moniker); 
 	if (BONOBO_EX (&ev)) {
+		g_warning ("Got exception: %s",
+			   bonobo_exception_get_text (&ev));
 		result = GNOME_VFS_RESULT (&ev);
 		CORBA_exception_free (&ev); 
 		return (result);
@@ -182,18 +184,26 @@ static GnomeVFSResult do_read (
 	CORBA_Environment ev;
 	Bonobo_Stream_iobuf *iobuf;
 
-	CAM_VFS_DEBUG (("ENTER"));
-	
 	file_handle = (FileHandle *) handle;
 	
+	g_message ("Reading %i bytes...", (int) num_bytes);
 	CORBA_exception_init (&ev);
 	Bonobo_Stream_read (file_handle->stream, num_bytes, &iobuf, &ev);
 	if (BONOBO_EX (&ev)) {
+		g_warning ("Got exception: %s", 
+			   bonobo_exception_get_text (&ev));
 		result = GNOME_VFS_RESULT (&ev);
 		CORBA_exception_free (&ev);
 		return (result);
 	}
 	CORBA_exception_free (&ev);
+	g_message ("... done. I received %i bytes.", (int) iobuf->_length);
+
+	/* Report an error if we are at the end of the file */
+	if (!iobuf->_length) {
+		CORBA_free (iobuf);
+		return (GNOME_VFS_ERROR_EOF);
+	}
 
 	memcpy (buffer, iobuf->_buffer, iobuf->_length);
 	*bytes_read = iobuf->_length;
@@ -202,8 +212,6 @@ static GnomeVFSResult do_read (
 	
 	CORBA_free (iobuf);
 
-	CAM_VFS_DEBUG (("EXIT"));
-	
 	return (GNOME_VFS_OK);
 }
 
@@ -331,9 +339,6 @@ static GnomeVFSResult do_open_directory (
 	/* Get the storage */
 	moniker = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE);
 	CAM_VFS_DEBUG (("Getting storage for %s...", moniker));
-	//FIXME: WHY IS THIS NEEDED??? BLAME ORBIT/BONOBO/OAF/NAUTILUS/THREADS
-	//...
-	sleep (2);
 	storage = bonobo_get_object (moniker, "IDL:Bonobo/Storage:1.0", &ev);
 	CAM_VFS_DEBUG (("... done."));
 	g_free (moniker);
@@ -556,6 +561,8 @@ static GnomeVFSResult do_get_file_info (
 	CAM_VFS_DEBUG (("... done.")); 
 	g_free (moniker);
 	if (BONOBO_EX (&ev)) {
+		g_warning ("Got exception: %s",
+			   bonobo_exception_get_text (&ev));
 		g_free (basename);
 		result = GNOME_VFS_RESULT (&ev);
 		CORBA_exception_free (&ev);

@@ -992,6 +992,9 @@ void makeindex (int getthumbs) {
 	GtkStyle *style;
 	GtkWidget *vbox;
 
+	extern activate_stop_button();
+	extern deactivate_stop_button();
+
 	struct ImageInfo *node = &Thumbnails;
 
 	update_status("Getting Index...");	
@@ -1014,7 +1017,13 @@ fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
 		return;
 	}
 
+	okDownload = 1;
+	activate_stop_button();
 	for (i=1; i<=num_pictures_taken; i++) {
+		if (!okDownload) {
+			deactivate_stop_button();
+			return;
+		}
 		node->next = malloc (sizeof(struct ImageInfo));
 		node = node->next; node->next = NULL;
 
@@ -1065,6 +1074,7 @@ fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
 				 GTK_FILL,GTK_FILL,5,5);
 		update_progress((float)i/(float)num_pictures_taken);
 	}
+	deactivate_stop_button();
 	update_progress(0);
 	update_status("Done getting index.");	
 }

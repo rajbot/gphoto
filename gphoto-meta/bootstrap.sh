@@ -129,7 +129,7 @@ function checktools {
     echo "##### Checking for presence of tools..."
     while read action tool restofline
     do
-	if "$tool" --version >& /dev/null
+	if "$tool" --version &> /dev/null
 	then
 	    echo "    # $tool found."
 	else
@@ -430,7 +430,7 @@ function die {
     exit 13
 }
 
-checktools || die 
+checktools || die
 cvslogin || die
 getsources || die
 builddist || die

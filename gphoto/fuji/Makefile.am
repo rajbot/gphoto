@@ -1,6 +1,6 @@
 drivers_LTLIBRARIES = libgphoto_fuji.la
 
-CFLAGS = @GTK_CFLAGS@
+CFLAGS = @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@
 
 libgphoto_fuji_la_SOURCES = fujilib.c fuji_exif.c exif.c exifdump.c \
 	exif.h exif_tags.h gphoto_fuji.h

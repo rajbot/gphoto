@@ -1,6 +1,6 @@
 drivers_LTLIBRARIES = libgphoto_kodak_dc2x.la
 
-CFLAGS = @GTK_CFLAGS@ -DDC25=1
+CFLAGS = @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@ -DDC25=1
 
 libgphoto_kodak_dc2x_la_SOURCES = kodak_dc210.c kodak_dc2x.c change_res.c \
 	comet_to_ppm.c \

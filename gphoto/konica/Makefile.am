@@ -1,6 +1,6 @@
 drivers_LTLIBRARIES = libgphoto_konica_qm100.la
 
-CFLAGS = @GTK_CFLAGS@
+CFLAGS = @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@
 
 libgphoto_konica_qm100_la_SOURCES = konica_qm100.c getPicInfo.c \
 	transmission.c lowlevel.c getStatus.c close.c savePic.c saveThumb.c \

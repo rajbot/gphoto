@@ -120,6 +120,10 @@ char *camera_model_string()
     return "Powershot S10";
   case CANON_PS_S20:
     return "Powershot S20";
+  case CANON_PS_G1:
+    return "Powershot G1";
+  case CANON_PS_S100:
+    return "Powershot S100 / Digital IXUS"; 
   default:
     return "Unknown model !";
   }
@@ -1126,8 +1130,10 @@ static char *canon_summary(void)
     case CANON_PS_A5_ZOOM: model = "Canon Powershot A5 Zoom"; break;
     case CANON_PS_A50:     model = "Canon Powershot A50"; break;
     case CANON_PS_A70:     model = "Canon Powershot A70"; break;
+    case CANON_PS_G1:      model = "Canon Powershot G1"; break;
     case CANON_PS_S10:     model = "Canon Powershot S10"; break;
     case CANON_PS_S20:     model = "Canon Powershot S20"; break; 
+    case CANON_PS_S100:	   model = "Powershot S100 / Digital IXUS"; break;
     }
     sprintf(buffer,"%s\nDrive %s\n%11s bytes total\n%11s bytes available\n",
       model,cached_drive,a,b);

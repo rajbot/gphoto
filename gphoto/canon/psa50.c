@@ -862,6 +862,19 @@ int psa50_ready()
 	A5 = 0;
 	return 1;
       }
+      else if (!strcmp("Canon PowerShot G1",camera.ident)) {
+        update_status("Detected a Powershot G1");
+        camera.model = CANON_PS_G1;
+        A5 = 0;
+        return 1;
+      }
+      else if ((!strcmp("Canon DIGITAL IXUS",camera.ident))
+                  || (!strcmp("Canon PowerShot S100",camera.ident))) {
+        update_status("Detected a Digital IXUS / Powershot S100");
+	camera.model = CANON_PS_G1;
+        A5=0;
+        return 1;
+      }
       else
 	{
 	  printf ("Unknown camera!\n");
@@ -977,9 +990,14 @@ int psa50_ready()
 	update_status("Detected a Powershot S20");
 	camera.model = CANON_PS_S20;
 	A5 = 0;
-      } else {
+      } else if (!strcmp("Canon PowerShot S10",psa50_id)) {
 	update_status("Detected a Powershot S10");
 	camera.model = CANON_PS_S10;
+	A5 = 0;
+      }
+      else {
+        update_status("Detected a Powershot S10");
+	camera.model = CANON_PS_G1;
 	A5 = 0;
       }
       

@@ -354,12 +354,12 @@ on_tree_item_camera_button_press_event (GtkWidget *widget, GdkEventButton *event
                 g_assert ((xml_popup = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "camera_tree_popup_camera")) != NULL);
 
                 /* Store some data. */
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_video")), "camera", camera);
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_image")), "camera", camera);
-                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_preview")), "camera", camera);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_video")), "item", widget);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_image")), "item", widget);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_preview")), "item", widget);
                 gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_properties")), "camera", camera);
                 gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_upload_file")), "item", widget);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_refresh")), "item", GTK_TREE_ITEM (widget));
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_refresh")), "item", widget);
 
                 /* Connect the signals. */
                 glade_xml_signal_autoconnect (xml_popup);
@@ -629,12 +629,14 @@ on_properties_activate (GtkMenuItem* menuitem, gpointer user_data)
 void
 on_capture_preview_activate (GtkMenuItem* menuitem, gpointer user_data)
 {
+	GtkTreeItem*		item;
 	GladeXML*		xml_preview;
 	Camera*			camera;
 	frontend_data_t*	frontend_data;
 
 	g_assert (menuitem != NULL);
-	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (menuitem), "camera")) != NULL);
+	g_assert ((item = GTK_TREE_ITEM (gtk_object_get_data (GTK_OBJECT (menuitem), "item"))) != NULL);
+	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
 	g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
 
 	if (!(frontend_data->xml_preview)) {
@@ -645,8 +647,8 @@ on_capture_preview_activate (GtkMenuItem* menuitem, gpointer user_data)
 
 		/* Store some data. */
 		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview")), "camera", camera);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_capture_image")), "camera", camera);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_capture_video")), "camera", camera);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_capture_image")), "item", item);
+		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_capture_video")), "item", item);
 		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_properties")), "camera", camera);
 		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_refresh")), "camera", camera);
 		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preview, "app_preview_save")), "camera", camera);
@@ -671,11 +673,13 @@ on_capture_preview_activate (GtkMenuItem* menuitem, gpointer user_data)
 void
 on_capture_image_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
-	Camera *camera;
-	CameraCaptureInfo info;
-	CameraFile *file;
+	GtkTreeItem*		item;
+	Camera*			camera;
+	CameraCaptureInfo 	info;
+	CameraFile*		file;
 
-	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (menuitem), "camera")) != NULL);;
+	g_assert ((item = GTK_TREE_ITEM (gtk_object_get_data (GTK_OBJECT (menuitem), "item"))) != NULL);
+	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
 
 	/* Prepare the image. */
 	info.type = GP_CAPTURE_IMAGE;
@@ -687,16 +691,19 @@ on_capture_image_activate (GtkMenuItem *menuitem, gpointer user_data)
 
 	/* Clean up. */
 	gp_file_free (file);
+	camera_tree_folder_refresh (item);
 }
 
 void
 on_duration_reply (gchar *string, gpointer user_data)
 {
-	Camera *camera;
-	CameraCaptureInfo info;
-	CameraFile *file;
+	GtkTreeItem*		item;
+	Camera*			camera;
+	CameraCaptureInfo 	info;
+	CameraFile*		file;
 
-	g_assert ((camera = (Camera *) user_data) != NULL);
+        g_assert ((item = GTK_TREE_ITEM (gtk_object_get_data (GTK_OBJECT (user_data), "item"))) != NULL);
+        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);;
 
 	if (string) {
 		
@@ -710,6 +717,7 @@ on_duration_reply (gchar *string, gpointer user_data)
 		
 		/* Clean up. */
 		gp_file_free (file);
+		camera_tree_folder_refresh (item);
 	}
 }
 
@@ -717,13 +725,11 @@ void
 on_capture_video_activate (GtkMenuItem* menuitem, gpointer user_data)
 {
 	GnomeApp*	app;
-        Camera*		camera;
 
 	g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
-        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (menuitem), "camera")) != NULL);
 
 	/* Ask for duration. */
-	gnome_app_request_string (app, _("How long should the video be (in seconds)?"), on_duration_reply, camera);
+	gnome_app_request_string (app, _("How long should the video be (in seconds)?"), on_duration_reply, menuitem);
 }
 
 void

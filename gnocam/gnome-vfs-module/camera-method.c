@@ -165,9 +165,9 @@ static GnomeVFSMethod method = {
 	do_seek,
 	do_tell,
 	do_truncate_handle,
-	do_open_directory,
-	do_close_directory,
-	do_read_directory,
+	NULL, //do_open_directory,
+	NULL, //do_close_directory,
+	NULL, //do_read_directory,
 	do_get_file_info,
 	do_get_file_info_from_handle,
 	do_is_local,
@@ -188,10 +188,7 @@ static GnomeVFSMethod method = {
 GnomeVFSMethod*
 vfs_module_init (const gchar* method_name, const gchar* args)
 {
-	GError*		gerror;
-
-	gtk_init (NULL, NULL);
-	if (!gconf_init (0, NULL, &gerror)) g_warning (_("Could not initialize gconf! (%s)"), gerror->message);
+	g_print ("vfs_module_init\n");
 	gp_init (GP_DEBUG_NONE);
 	return &method;
 }
@@ -199,6 +196,7 @@ vfs_module_init (const gchar* method_name, const gchar* args)
 void
 vfs_module_shutdown (GnomeVFSMethod* method)
 {
+	g_print ("vfs_module_shutdown\n");
 	gp_exit ();
 	return;
 }
@@ -227,7 +225,8 @@ static GnomeVFSResult do_open (
 	Camera*			camera;
 	CameraFile*		file;
 	file_handle_t*		file_handle;
-	
+
+	g_print ("do_open\n");
 	/* Do we really have a file? */
 	if (!(filename = gnome_vfs_uri_get_basename (uri))) return (GNOME_VFS_ERROR_IS_DIRECTORY);
 	
@@ -284,6 +283,7 @@ static GnomeVFSResult do_create (
         guint                           perm,
         GnomeVFSContext*                context)
 {
+	g_print ("do_create\n");
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 
@@ -294,6 +294,7 @@ static GnomeVFSResult do_close (
 {
 	file_handle_t*		file_handle = NULL;
 	
+	g_print ("do_close\n");
 	g_return_val_if_fail ((file_handle = (file_handle_t*) handle), GNOME_VFS_ERROR_INTERNAL);
 
 	gp_file_unref (file_handle->file);
@@ -311,6 +312,7 @@ static GnomeVFSResult do_read (
 {
 	file_handle_t*		file_handle = NULL;
 
+	g_print ("do_read\n");
 	g_return_val_if_fail ((file_handle = (file_handle_t*) handle), GNOME_VFS_ERROR_INTERNAL);
 
 	/* 'Read' the num_bytes data. */
@@ -330,6 +332,7 @@ static GnomeVFSResult do_write (
 	GnomeVFSFileSize*               bytes_written,
 	GnomeVFSContext*                context)
 {
+	g_print ("do_write\n");
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 
@@ -340,6 +343,7 @@ static GnomeVFSResult do_seek (
         GnomeVFSFileOffset              offset,
         GnomeVFSContext*                context)
 {
+	g_print ("do_seek\n");
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 
@@ -348,6 +352,7 @@ static GnomeVFSResult do_tell (
 	GnomeVFSMethodHandle*           handle,
 	GnomeVFSFileOffset*             offset)
 {
+	g_print ("do_tell\n");
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 
@@ -357,6 +362,7 @@ static GnomeVFSResult do_truncate_handle (
         GnomeVFSFileSize                where,  
         GnomeVFSContext*                context)
 {
+	g_print ("do_truncate_handle\n");
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 
@@ -368,7 +374,8 @@ static GnomeVFSResult do_open_directory (
         const GnomeVFSDirectoryFilter*  filter,
         GnomeVFSContext*                context)
 {
-	return (GNOME_VFS_ERROR_INTERNAL);
+	g_print ("do_open_directory\n");
+	return (GNOME_VFS_OK);
 }
 
 static GnomeVFSResult do_close_directory (
@@ -376,7 +383,8 @@ static GnomeVFSResult do_close_directory (
         GnomeVFSMethodHandle*           handle,
 	GnomeVFSContext*                context)
 {
-	return (GNOME_VFS_ERROR_INTERNAL);
+	g_print ("do_close_directory\n");
+	return (GNOME_VFS_OK);
 }
 
 static GnomeVFSResult do_read_directory (
@@ -385,7 +393,8 @@ static GnomeVFSResult do_read_directory (
 	GnomeVFSFileInfo*               file_info,
 	GnomeVFSContext*                context)
 {
-	return (GNOME_VFS_ERROR_INTERNAL);
+	g_print ("do_read_directory\n");
+	return (GNOME_VFS_OK);
 }
 
 static GnomeVFSResult do_get_file_info (
@@ -395,7 +404,13 @@ static GnomeVFSResult do_get_file_info (
         GnomeVFSFileInfoOptions         options,
         GnomeVFSContext*                context)
 {
-	return (GNOME_VFS_ERROR_INTERNAL);
+	g_print ("do_get_file_info\n");
+	file_info->valid_fields = 0;
+	file_info->name = g_strdup (gnome_vfs_uri_get_basename (uri));
+	file_info->type = GNOME_VFS_FILE_TYPE_REGULAR;
+	file_info->mime_type = g_strdup ("image/jpeg");
+	file_info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+	return (GNOME_VFS_OK);
 }
 
 static GnomeVFSResult do_get_file_info_from_handle (
@@ -405,6 +420,7 @@ static GnomeVFSResult do_get_file_info_from_handle (
         GnomeVFSFileInfoOptions         options,
         GnomeVFSContext*                context)
 {
+	g_print ("do_get_file_info_from_handle\n");
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 
@@ -412,6 +428,7 @@ static gboolean do_is_local (
         GnomeVFSMethod*                 method,
 	const GnomeVFSURI*              uri)
 {
+	g_print ("do_is_local\n");
 	/* We don't have local files. */
 	return (FALSE);
 }
@@ -422,6 +439,7 @@ static GnomeVFSResult do_make_directory (
 	guint                           perm,
 	GnomeVFSContext*                context)
 {
+	g_print ("do_make_directory\n");
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 

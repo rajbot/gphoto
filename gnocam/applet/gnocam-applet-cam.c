@@ -1,16 +1,21 @@
 #include <config.h>
 #include "gnocam-applet-cam.h"
 #include "gnocam/i18n.h"
-#include "GNOME_C.h"
 
+#include <libgnocam/GNOME_C.h>
 #include <libgnocam/gnocam-chooser.h>
 #include <libgnocam/gnocam-util.h>
+#include <libgnocam/gnocam-prefs.h>
 
 #include <gtk/gtkimage.h>
 #include <gtk/gtktogglebutton.h>
 #include <gtk/gtkitemfactory.h>
 #include <gtk/gtkmenu.h>
 #include <gtk/gtkcheckmenuitem.h>
+#include <gtk/gtkdialog.h>
+#include <gtk/gtkstock.h>
+#include <gtk/gtkbutton.h>
+#include <gtk/gtkbox.h>
 
 #include <bonobo/bonobo-object.h>
 #include <bonobo/bonobo-exception.h>
@@ -166,6 +171,8 @@ gnocam_applet_cam_update (GnocamAppletCam *c)
 	gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (w), 
 				      c->priv->camera != CORBA_OBJECT_NIL);
 	g_signal_handlers_unblock_by_func (w, action_connect, c);
+	w = gtk_item_factory_get_widget (c->priv->factory, "/Settings");
+	gtk_widget_set_sensitive (w, c->priv->camera != CORBA_OBJECT_NIL);
 }
 
 void
@@ -190,7 +197,6 @@ gnocam_applet_cam_connect (GnocamAppletCam *c)
 	if (BONOBO_EX (&ev))
 		g_warning ("Could not get camera!");
 	CORBA_exception_free (&ev);
-	
 	gnocam_applet_cam_update (c);
 }
 
@@ -230,10 +236,49 @@ action_select_camera (gpointer callback_data, guint callback_action,
 	gtk_widget_show (GTK_WIDGET (chooser));
 }
 
+static void
+on_close_clicked (GtkButton *button, GtkDialog *d)
+{
+	gtk_widget_destroy (GTK_WIDGET (d));
+}
+
+static void
+action_settings (gpointer callback_data, guint callback_action, GtkWidget *w)
+{
+	GnocamPrefs *p;
+	GNOME_C_Bag bag;
+	CORBA_Environment ev;
+	GnocamAppletCam *c = GNOCAM_APPLET_CAM (callback_data);
+	GtkWidget *d, *b;
+
+	CORBA_exception_init (&ev);
+	bag = GNOME_C_Camera_get_bag (c->priv->camera, &ev);
+	if (BONOBO_EX (&ev)) {
+		g_warning ("Could not get property bag: %s",
+			   bonobo_exception_get_text (&ev));
+		CORBA_exception_free (&ev);
+		return;
+	}
+	CORBA_exception_free (&ev);
+	p = gnocam_prefs_new (bag);
+	bonobo_object_release_unref (bag, NULL);
+	gtk_widget_show (GTK_WIDGET (p));
+	d = gtk_dialog_new ();
+	gtk_container_add (GTK_CONTAINER (GTK_DIALOG (d)->vbox),
+			   GTK_WIDGET (p));
+	b = gtk_button_new_from_stock (GTK_STOCK_CLOSE);
+	gtk_widget_show (b);
+	gtk_box_pack_end (GTK_BOX (GTK_DIALOG (d)->action_area), b,
+			  FALSE, FALSE, 0);
+	g_signal_connect (b, "clicked", G_CALLBACK (on_close_clicked), d);
+	gtk_widget_show (d);
+}
+
 static GtkItemFactoryEntry popup[] =
 {
 	{"/_Connect", NULL, action_connect, 0, "<CheckItem>"},
-	{"/_Select camera", NULL, action_select_camera, 0, "<Item>"},
+	{"/_Settings", NULL, action_settings, 0, "<Item>"},
+	{"/S_elect camera", NULL, action_select_camera, 0, "<Item>"},
 };
 
 GnocamAppletCam *

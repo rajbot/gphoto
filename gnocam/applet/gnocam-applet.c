@@ -2,7 +2,8 @@
 #include "gnocam-applet.h"
 #include "gnocam-applet-cam.h"
 #include "gnocam/i18n.h"
-#include "GNOME_C.h"
+
+#include <libgnocam/GNOME_C.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -278,21 +279,6 @@ gnocam_applet_class_init (gpointer g_class, gpointer class_data)
 
 	parent_class = g_type_class_peek_parent (g_class);
 }
-
-#if 0
-static void
-verb_FileExit_cb (BonoboUIComponent *uic, gpointer user_data, const char *cname)
-{
-	gtk_widget_destroy (GTK_WIDGET (user_data));
-}
-#endif
-
-#if 0
-static BonoboUIVerb verb_list[] = {
-	BONOBO_UI_VERB ("FileExit", verb_FileExit_cb),
-	BONOBO_UI_VERB_END
-};
-#endif
 
 #if 0
 static void

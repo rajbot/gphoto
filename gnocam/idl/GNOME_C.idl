@@ -11,6 +11,54 @@ module C {
 
 	typedef unsigned long ID;
 	typedef sequence<unsigned long> IDList;
+	typedef sequence<octet> Icon;
+
+	enum ValType {
+		VAL_TYPE_BOOLEAN,
+		VAL_TYPE_EMPTY,
+		VAL_TYPE_STRING,
+		VAL_TYPE_INTEGER
+	};
+
+	union Val switch (ValType) {
+	case VAL_TYPE_BOOLEAN: boolean v_bool;
+	case VAL_TYPE_STRING:  string  v_string;
+	case VAL_TYPE_INTEGER: long    v_integer;
+	};
+
+	struct Range {
+		double min;
+		double max;
+		double incr;
+	};
+
+	/* Alternative values */
+	struct Alt {
+		sequence<Val>   vals;
+		sequence<Range> ranges;
+	};
+	typedef sequence<Alt> AltList;
+
+	/* A property */
+	interface Prop : Bonobo::Unknown {
+		readonly attribute string  name;
+		readonly attribute string  description;
+		readonly attribute AltList alts;
+		attribute Val val;
+	};
+	typedef sequence<Prop> PropList;
+
+	/* A bag containing properties */
+	interface Bag : Bonobo::Unknown {
+
+		typedef sequence<Bag> BagList;
+
+		readonly attribute string name;
+		readonly attribute string description;
+		readonly attribute Icon icon;
+		readonly attribute BagList bags;
+		readonly attribute PropList props;
+	};
 
 	interface ReadCallback : Bonobo::Unknown {
 
@@ -23,8 +71,7 @@ module C {
 
 	interface If : Bonobo::Unknown {
 
-		string get_name ();
-		void   set_name (in string name);
+		attribute string name;
 
 		void   read (in ReadCallback callback);
 		void   write ();
@@ -60,6 +107,9 @@ module C {
 
 		/* Get the root directory */
 		Dir get_dir () raises (Error);
+
+		/* Properties */
+		Bag get_bag () raises (Error);
 	};
 
 	interface Mngr : Bonobo::Unknown {

@@ -1,5 +1,5 @@
 
-Graphicsdir = $(datadir)/$(PACKAGE)/
+Graphicsdir = $(datadir)/$(PACKAGE)
 Graphics_DATA =\
  stock-zoom-1.xpm\
  stock-zoom-fit.xpm\

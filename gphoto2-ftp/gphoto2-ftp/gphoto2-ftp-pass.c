@@ -44,7 +44,7 @@ gf_pass (GFParams *params, const char *password)
 	if (!params->folder)
 		return (GP_ERROR_NO_MEMORY);
 	strcpy (params->folder, "/");
-	printf ("%3d %s\r\n", 230, "OK. Current directory is '/'.");
+	printf ("%3d %s\r\n", 230, "Connected to the camera.");
 	fflush (stdout);
 
 	return (0);

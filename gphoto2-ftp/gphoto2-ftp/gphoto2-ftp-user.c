@@ -35,6 +35,11 @@ gf_user (GFParams *params, const char *user)
 	CR (m = gp_abilities_list_lookup_model (params->al, user));
 	CR (gp_abilities_list_get_abilities    (params->al, m, &a));
 	CR (gp_camera_set_abilities            (params->camera, a));
+
+	params->folder = malloc (strlen ("/" + 1));
+	if (!params->folder)
+		return (GP_ERROR_NO_MEMORY);
+	strcpy (params->folder, "/");
 	if (strcmp (user, "Directory Browse"))
 		printf ("%3d %s\r\n", 331, "Please specify the port.");
 	else

@@ -9,4 +9,9 @@ gphotodocdir = $(datadir)/gphoto/doc
 gphotodoc_DATA = AUTHORS MANUAL
 
 EXTRA_DIST = $(gphotodoc_DATA) NEWS README THEMES TODO COPYING THANKS \
-	ChangeLog FAQ INSTALL PROGRAMMERS gphoto.spec configure
+	ChangeLog FAQ INSTALL PROGRAMMERS gphoto.spec configure \
+	gphoto.desktop
+
+sysdir = $(datadir)/gnome/apps/Graphics
+sys_DATA = gphoto.desktop
+

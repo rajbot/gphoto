@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=gPhoto
+Comment=GNU Digital Camera program
+TryExec=gphoto
+Exec=gphoto
+Icon=gnome-qeye.png
+Terminal=0
+Type=Application

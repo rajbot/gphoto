@@ -111,21 +111,6 @@ struct gpio_device {
 /* gpio Core functions
    -------------------------------------------------------------- */
 
-
-int	     gpio_init		();
-		/* Initialize the gpio library. Call first!
-			return values:
-				  successful: GPIO_OK
-				unsuccessful: GPIO_ERROR
-		*/
-
-int	     gpio_exit		();
-		/* Finalize the gpio library. Call last!
-			return values:
-				  successful: GPIO_OK
-				unsuccessful: GPIO_ERROR
-		*/
-
 gpio_device_list *gpio_get_device_list ();
 		/* Get a list of available devices
 			return values:

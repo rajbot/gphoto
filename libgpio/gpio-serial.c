@@ -70,9 +70,22 @@ int		gpio_serial_status(gpio_device *dev, int line);
 
 int 		gpio_serial_update (gpio_device *dev);
 
+/* private */
 int 		gpio_serial_set_baudrate(gpio_device *dev);
 static speed_t 	gpio_serial_baudconv(int rate);
 
+struct gpio_operations gpio_serial_operations =
+{
+	gpio_serial_list,
+	gpio_serial_init,
+	gpio_serial_exit,
+	gpio_serial_open,
+	gpio_serial_close,
+	gpio_serial_read,
+	gpio_serial_write,
+	gpio_serial_status,
+	gpio_serial_update
+};
 
 /* Serial API functions
    ------------------------------------------------------------------ */
@@ -82,7 +95,19 @@ int gpio_serial_list (gpio_device_list *list) {
 }
 
 int gpio_serial_init (gpio_device *dev) {
-
+	/* save previous setttings in to dev->settings_saved */
+#if HAVE_TERMIOS_H
+	if (tcgetattr(dev->device_fd, &term_old) < 0) {
+		perror("tcgetattr");
+		return GPIO_ERROR;
+	}
+#else
+	if (ioctl(dev->device_fd, TIOCGETP, &term_old) < 0) {
+		perror("ioctl(TIOCGETP)");
+		return GPIO_ERROR;
+	}
+#endif
+	return GPIO_OK;
 }
 
 int gpio_serial_exit (gpio_device *dev) {
@@ -222,41 +247,10 @@ int gpio_serial_update(gpio_device * dev)
 	return GPIO_OK;
 }
 
-struct gpio_operations gpio_serial_operations =
-{
-	gpio_serial_list,
-	gpio_serial_init,
-	gpio_serial_exit,
-	gpio_serial_open,
-	gpio_serial_close,
-	gpio_serial_read,
-	gpio_serial_write,
-	gpio_serial_status,
-	gpio_serial_update
-};
-
 /*
    Serial port specific helper functions
    ----------------------------------------------------------------
  */
-
-int gpio_serial_save(gpio_device * dev)
-{
-	/* save previous setttings in to dev->settings_saved */
-#if HAVE_TERMIOS_H
-	if (tcgetattr(dev->device_fd, &term_old) < 0) {
-		perror("tcgetattr");
-		return GPIO_ERROR;
-	}
-#else
-	if (ioctl(dev->device_fd, TIOCGETP, &term_old) < 0) {
-		perror("ioctl(TIOCGETP)");
-		return GPIO_ERROR;
-	}
-#endif
-	return GPIO_OK;
-}
-
 
 /* Called to set the baud rate */
 int gpio_serial_set_baudrate(gpio_device * dev)

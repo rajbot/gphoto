@@ -295,7 +295,7 @@ static GnomeVFSResult do_get_file_info (
         GnomeVFSFileInfoOptions         options,
         GnomeVFSContext*                context)
 {
-	gchar		*filename = NULL;
+	const gchar	*filename = NULL;
 	gchar		*dirname = NULL;
 	GnomeVFSResult	 result;
 	CameraList	 camera_list;
@@ -303,32 +303,36 @@ static GnomeVFSResult do_get_file_info (
 	gint		 i;
 	gboolean	 file;
 	gchar		*url;
+	const gchar	*host;
 
 	g_mutex_lock (client_mutex);
-	CAM_VFS_DEBUG (("entering"));
+	CAM_VFS_DEBUG (("ENTER"));
+	
+	host = gnome_vfs_uri_get_host_name (uri);
+	filename = gnome_vfs_uri_get_basename (uri);
+	dirname = gnome_vfs_uri_extract_dirname (uri);
+	url = gnome_vfs_unescape_string (host, NULL);
+	if (!url) {
+		CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_HOST_NOT_FOUND"));
+		g_mutex_unlock (client_mutex);
+		return (GNOME_VFS_ERROR_HOST_NOT_FOUND);
+	}
+	
+	CAM_VFS_DEBUG (("  url: %s", url));
+	CAM_VFS_DEBUG (("  host: %s", host));
+	CAM_VFS_DEBUG (("  filename: %s", filename));
+	CAM_VFS_DEBUG (("  dirname: %s", dirname));
 
 	/* Connect to the camera */
-	url = gnome_vfs_unescape_string (gnome_vfs_uri_get_host_name (uri), 
-					 NULL);
-	if (!url) {
-	    	CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_HOST_NOT_FOUND"));
-		g_mutex_unlock (client_mutex);
-	    	return (GNOME_VFS_ERROR_HOST_NOT_FOUND);
-	}
 	result = GNOME_VFS_RESULT (gp_camera_new_from_gconf (&camera, url));
 	g_free (url);
 	if (result != GNOME_VFS_OK) {
-		CAM_VFS_DEBUG (("exiting"));
+		CAM_VFS_DEBUG (("Could not connect to camera!"));
 		g_mutex_unlock (client_mutex);
                 return (result);
         }
 
 	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_NONE;
-	filename = (gchar*) gnome_vfs_uri_get_basename (uri);
-	dirname = gnome_vfs_uri_extract_dirname (uri);
-	CAM_VFS_DEBUG (("filename=%s",filename));
-	CAM_VFS_DEBUG (("dirname=%s",dirname));
-	CAM_VFS_DEBUG (("camera->ref_count=%d",camera->ref_count));
 
 	/* File or folder? */
 	file = FALSE;
@@ -386,7 +390,6 @@ static GnomeVFSResult do_get_file_info (
 	}
 
 	if (file) {
-		CAM_VFS_DEBUG (("info->name=%s",filename));
 		result = gp_camera_file_get_vfs_info (camera, dirname, 
 						      filename, info);
 		if (result != GNOME_VFS_OK) {
@@ -427,8 +430,12 @@ static gboolean do_is_local (
         GnomeVFSMethod*                 method,
 	const GnomeVFSURI*              uri)
 {
+    	const gchar *host;
+
+	host = gnome_vfs_uri_get_host_name (uri);
+
 	/* 'Directory Browse' is something different. */
-	return (!strcmp (gnome_vfs_uri_get_host_name (uri), "Directory Browse"));
+	return (!strcmp (host, "Directory Browse"));
 }
 
 static GnomeVFSResult do_check_same_fs (

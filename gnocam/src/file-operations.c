@@ -47,7 +47,8 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 	CameraFile*		file;
 	GtkFileSelection*	fileselection;
 #ifdef GNOCAM_USES_GTKHTML
-	GladeXML*		xml_gallery;
+	GtkWidget*		window;
+	GtkWidget*		widget;
 	CORBA_Object 		interface;
 	CORBA_Environment	ev;
 	BonoboObjectClient*	client;
@@ -66,8 +67,9 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 		break;
 #ifdef GNOCAM_USES_GTKHTML
 	case OPERATION_GALLERY_OPEN:
-		g_assert ((xml_gallery = gtk_object_get_data (GTK_OBJECT (button), "xml_gallery")));
-		g_assert ((client = bonobo_widget_get_server (BONOBO_WIDGET (glade_xml_get_widget (xml_gallery, "editor")))));
+		g_assert ((window = gtk_object_get_data (GTK_OBJECT (button), "window")));
+		g_assert ((widget = gtk_object_get_data (GTK_OBJECT (window), "editor")));
+		g_assert ((client = bonobo_widget_get_server (BONOBO_WIDGET (widget))));
 		g_assert ((interface =  bonobo_object_client_query_interface (client, "IDL:Bonobo/PersistFile:1.0", NULL)));
         	CORBA_exception_init (&ev);
 		Bonobo_PersistFile_load (interface, gtk_file_selection_get_filename (fileselection), &ev);
@@ -75,8 +77,9 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 	        CORBA_exception_free (&ev);
 		break;
 	case OPERATION_GALLERY_SAVE:
-		g_assert ((xml_gallery = gtk_object_get_data (GTK_OBJECT (button), "xml_gallery")));
-                g_assert ((client = bonobo_widget_get_server (BONOBO_WIDGET (glade_xml_get_widget (xml_gallery, "editor")))));
+		g_assert ((window = gtk_object_get_data (GTK_OBJECT (button), "window")));
+		g_assert ((widget = gtk_object_get_data (GTK_OBJECT (window), "editor")));
+                g_assert ((client = bonobo_widget_get_server (BONOBO_WIDGET (widget))));
                 g_assert ((interface =  bonobo_object_client_query_interface (client, "IDL:Bonobo/PersistFile:1.0", NULL)));
                 CORBA_exception_init (&ev);
                 Bonobo_PersistFile_save (interface, gtk_file_selection_get_filename (fileselection), &ev);
@@ -418,12 +421,12 @@ delete (GtkTreeItem* item)
 }
 
 void
-gallery_open (GladeXML* xml_gallery)
+gallery_open (GtkWidget* window)
 {
 	GladeXML*	xml_fileselection;
 	GtkObject*	object;
 
-	g_assert (xml_gallery);
+	g_assert (window);
 
         /* Pop up the file selection dialog. */
         g_assert ((xml_fileselection = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "fileselection")));
@@ -431,7 +434,7 @@ gallery_open (GladeXML* xml_gallery)
         /* Store some data in the ok button. */
         g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_ok_button"))));
         gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
-	gtk_object_set_data (object, "xml_gallery", xml_gallery);
+	gtk_object_set_data (object, "window", window);
         gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_GALLERY_OPEN));
 
         /* Store some data in the cancel button. */
@@ -444,12 +447,12 @@ gallery_open (GladeXML* xml_gallery)
 }
 
 void
-gallery_save_as (GladeXML* xml_gallery)
+gallery_save_as (GtkWidget* window)
 {
         GladeXML*       xml_fileselection;
         GtkObject*      object;
 
-        g_assert (xml_gallery);
+        g_assert (window);
 
         /* Pop up the file selection dialog. */
         g_assert ((xml_fileselection = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "fileselection")));
@@ -457,7 +460,7 @@ gallery_save_as (GladeXML* xml_gallery)
         /* Store some data in the ok button. */
         g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_ok_button"))));
         gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
-        gtk_object_set_data (object, "xml_gallery", xml_gallery);
+        gtk_object_set_data (object, "window", window);
         gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_GALLERY_SAVE));
 
         /* Store some data in the cancel button. */

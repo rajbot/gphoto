@@ -1,6 +1,10 @@
 
 SUBDIRS = stock
 
+if GNOCAM_USES_GTKHTML
+  SUBDIRS += ui
+endif
+
 gladedir = $(datadir)/$(PACKAGE)/
 
 INCLUDES = \
@@ -27,12 +31,12 @@ LDFLAGS = @LDFLAGS@\
 bin_PROGRAMS = gnocam
 
 gnocam_SOURCES =\
- callbacks.c\
- callbacks-gallery.c\
+ callbacks.h callbacks.c\
  callbacks-preview.c\
  cameras.h cameras.c\
  file-operations.h file-operations.c\
  frontend.h frontend.c\
+ gallery.h gallery.c\
  gnocam.h gnocam.c\
  gphoto-extensions.h gphoto-extensions.c\
  information.h information.c\

@@ -107,7 +107,7 @@ installautotools() {
 	base="$(basename "$tarball" "$ext")"
 	cmd cd "${toolsrc}/${base}"
 	cmd ./configure --prefix="${toolroot}"
-	cmd make install
+	cmd $MAKE install
     done < ${buildtoollist}
     (cd "${toolroot}/bin" && patch -p0 < "${metadir}/gettextize.patch")
 }
@@ -359,7 +359,7 @@ builddist() {
 	    echo "    # not to me. Or run this with \"echo $0 | at now\"."
 	    cmd ./autogen.sh --enable-maintainer-mode --prefix="${distroot}" ${configopts}
 	    cmd ./configure  --enable-maintainer-mode --prefix="${distroot}" ${configopts}
-	    cmd make dist
+	    cmd $MAKE dist
 
 	    # create .tar.bz2 source tarball if possible and not done yet
 	    if [ "${compression}" = "bz2" ]
@@ -385,10 +385,10 @@ builddist() {
 	    if [ "$distopts" = "install" ]
 	    then
 		# install if required
-		cmd make install
+		cmd $MAKE install
 	    else
 		# try to install even if not required
-		if ! make install
+		if ! $MAKE install
 		then
 		    # mark dist package as broken
 		    local file
@@ -533,6 +533,13 @@ else
 fi
 sed -e "s/\\\${compression}/${compression}/g" < build-tool-list > build-tool-list.boot
 buildtoollist="build-tool-list.boot"
+
+if gmake --version< /dev/null > /dev/null 2>&1
+then
+	MAKE=gmake
+else
+	MAKE=make
+fi
 
 # remove autogen-generated files - mkinstalldirs irritates configuring
 # our packages

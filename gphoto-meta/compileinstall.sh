@@ -107,7 +107,7 @@ compileinstall() {
 	    esac
 	    cmd cd "${srcdir}/${base}"
 	    cmd ./configure --prefix="${instroot}"
-	    cmd make install
+	    cmd $MAKE install
 	    echo -e "${instroot}\nRemove this file if you want gphoto-meta to rebuild this package" > installed-yet
 	done
     done < "${cvsmodulelist}"

@@ -156,7 +156,7 @@ struct Image *philips_get_picture (int picNum, int thumbnail) {
 			image->image = thumbData;
 			strcpy ( image->image_type, "pgm" );
 			}
-		else {   /* RCD-5000 uses JPEG thumbnails */
+		else {   /* RDC-5000 uses JPEG thumbnails */
 			image->image = picData;
 			strcpy ( image->image_type, "jpg" );
 			}
@@ -270,8 +270,7 @@ char *philips_summary ()
         return ( NULL );
         }
     philips_close_camera();
-
-	strcpy ( philips_summary_string, "Philips/Ricoh Camera\n\n" );
+	sprintf ( philips_summary_string, "%s\n\n", philips_model(cameraid) );
 	sprintf ( tmp, "Number of pictures: %ld\n", pcfginfo->picts );
 	strcat ( philips_summary_string, tmp );
 	sprintf ( tmp, "Camera Memory     : %d/%d bytes\n", pcfginfo->a_memory, pcfginfo->memory );

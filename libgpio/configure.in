@@ -69,7 +69,7 @@ else
   AC_MSG_WARN([
 
 *** You need Johannes Erdfelt's libusb library for USB support
-*** http://download.sourceforge.net/libusb/libusb-0.1.1.tar.gz
+*** http://download.sourceforge.net/libusb/libusb-0.1.2.tar.gz
 ])
 fi
 

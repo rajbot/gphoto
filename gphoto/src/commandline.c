@@ -91,10 +91,10 @@ void command_line(int argc, char *argv[])
 	    break;
 	case 's':
 	    if (argv[i + 1] && argv[i + 2]) {
-		fprintf(stdout,
+		fprintf(stderr,
 			"Saving image %i from camera as %s: ",
 			atoi(argv[i + 1]), argv[i + 2]);
-		fflush(stdout);
+		fflush(stderr);
 		if (
 		    ((im
 		      =
@@ -121,10 +121,10 @@ void command_line(int argc, char *argv[])
 	    break;
 	case 't':
 	    if (argv[i + 1] && argv[i + 2]) {
-		fprintf(stdout,
+		fprintf(stderr,
 			"Saving thumbnail image %i from camera as %s: ",
 			atoi(argv[i + 1]), argv[i + 2]);
-		fflush(stdout);
+		fflush(stderr);
 		if (
 		    (im =
 		     (*Camera->get_picture) (atoi(argv[i + 1]),
@@ -144,7 +144,7 @@ void command_line(int argc, char *argv[])
 			"ERROR: '#' and 'filename' not specified.\n");
 		command_usage();
 	    }
-	    fprintf(stdout, "\n");
+	    fprintf(stderr, "\n");
 	    i += 2;
 	    break;
 	case 'd':
@@ -154,7 +154,7 @@ void command_line(int argc, char *argv[])
 		    fprintf(stderr, "ERROR: Could not delete image.\n");
 		    return;
 		} else {
-		    fprintf(stdout,
+		    fprintf(stderr,
 			    "Deleted image %i from camera.\n",
 			    atoi(argv[i + 1]));
 		}
@@ -169,7 +169,7 @@ void command_line(int argc, char *argv[])
 		fprintf(stderr, "ERROR: filename not specified.\n");
 		command_usage();
 	    } else {
-		fprintf(stdout, "Taking picture...\n");
+		fprintf(stderr, "Taking picture...\n");
 
 		picNum = (*Camera->take_picture) ();
 
@@ -178,7 +178,7 @@ void command_line(int argc, char *argv[])
 			    "ERROR: could not take the picture.\n");
 		    return;
 		} else {
-		    fprintf(stdout,
+		    fprintf(stderr,
 			    "Saving the new image (# %i) as %s: ",
 			    picNum, argv[i + 1]);
 		}
@@ -197,8 +197,8 @@ void command_line(int argc, char *argv[])
 		    }
 		}
 	    }
-	    fprintf(stdout, "\n");
-	    fflush(stdout);
+	    fprintf(stderr, "\n");
+	    fflush(stderr);
 	    break;
 	case 'c':
 	    camera_summary();
@@ -208,6 +208,6 @@ void command_line(int argc, char *argv[])
 	}
 	i++;
     }
-    fflush(stdout);
+    fflush(stderr);
     _exit(0);
 }

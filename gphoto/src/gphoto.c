@@ -13,7 +13,7 @@ void update_status(char *newStatus) {
         */
     
         if (command_line_mode) {
-	    fprintf(stdout,"%s\n",newStatus);
+	    fprintf(stderr,"%s\n",newStatus);
 	    return;
         }
 
@@ -30,8 +30,8 @@ void update_progress(float percentage) {
         */
 
 	if (command_line_mode) {
-	    fprintf(stdout, "#");
-	    fflush(stdout);
+	    fprintf(stderr, "#");
+	    fflush(stderr);
 	    return;
 	}
 

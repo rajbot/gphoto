@@ -44,4 +44,5 @@ libstorage_camera_la_SOURCES =\
 libstorage_camera_la_LDFLAGS =\
  $(GPHOTO2_LIBS)\
  $(GPIO_LIBS)\
+ $(GCONF_LIBS)\
  $(common_ldflags)

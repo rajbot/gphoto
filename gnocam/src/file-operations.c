@@ -64,14 +64,11 @@ on_fileselection_cancel_button_clicked (GtkButton *button, gpointer user_data)
 {
 	GtkFileSelection*	fileselection;
 	CameraFile*		file;
-	Camera*			camera;
 
 	g_assert ((fileselection = GTK_FILE_SELECTION (glade_xml_get_widget (gtk_object_get_data (GTK_OBJECT (button), "xml_fileselection"), "fileselection"))));
 
 	switch (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (button), "operation"))) {
 	case OPERATION_FILE_UPLOAD:
-		g_assert ((camera = gtk_object_get_data (GTK_OBJECT (button), "camera")) != NULL);
-                gp_camera_unref (camera);
 		break;
 	case OPERATION_FILE_SAVE:
 		g_assert ((file = gtk_object_get_data (GTK_OBJECT (button), "file")) != NULL);
@@ -90,70 +87,126 @@ on_fileselection_cancel_button_clicked (GtkButton *button, gpointer user_data)
 void
 upload (GtkTreeItem* folder, gchar* filename)
 {
-	Camera*			camera;
-	gchar*			path;
 	GladeXML*		xml_fileselection;
 	GtkObject*		object;
-        gint			k;
-	glong			j;
-	GnomeVFSHandle*         handle;
-        GnomeVFSFileSize        bytes_read;
-        GnomeVFSResult          result;
-	GnomeVFSURI*		uri = NULL;
-        guint8                  data [1025];
-	CameraFile*		file;
-	gchar*			message;
+	GnomeVFSURI*		uri_source;
+	gchar*			tmp;
+	CORBA_Environment	ev;
+	BonoboStorage*		storage_destination;
+	Bonobo_Storage		corba_storage_destination;
+	Bonobo_Stream		corba_stream_source;
+	Bonobo_Stream		corba_stream_destination;
+	Bonobo_Stream_iobuf*	buffer;
 
 	g_return_if_fail (folder);
-	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (folder), "camera"));
-	g_return_if_fail (path = (gchar*) gnome_vfs_uri_get_path (gtk_object_get_data (GTK_OBJECT (folder), "uri")));
 
 	if (filename) {
-		uri = gnome_vfs_uri_new (filename);
-	
-		/* Read the data and upload the file. */
-		file = gp_file_new ();
-	        file->data = NULL;
-		strcpy (file->name, gnome_vfs_uri_get_basename (uri));
 
-	        if ((result = gnome_vfs_open_uri (&handle, uri, GNOME_VFS_OPEN_READ)) != GNOME_VFS_OK) {
-			message = g_strdup_printf (_("An error occurred while trying to open file '%s'.\n(%s)."), filename, gnome_vfs_result_to_string (result));
-			gnome_error_dialog_parented (message, main_window);
-			g_free (message);
-	        } else {
-	                j = 0;
-	                while (TRUE) {
-				result = gnome_vfs_read (handle, data, 1024, &bytes_read);
-	                        if ((result != GNOME_VFS_OK) && (result != GNOME_VFS_ERROR_EOF)) break;
-	                        if (bytes_read == 0) break;
-				g_assert (bytes_read <= 1024);
+		/* Init exception. */
+		CORBA_exception_init (&ev);
 
-				/* Write the data into the CameraFile. */
-				file->data = g_renew (gchar, file->data, j + bytes_read + 1);
-	                        for (k = 0; k < bytes_read; k++) {
-					file->data [k + j] = data [k];
-				}
-				file->data [bytes_read] = '\0';
-				j+= bytes_read;
-	                        file->size = j;
-	                }
-	                if ((result == GNOME_VFS_OK) || (result == GNOME_VFS_ERROR_EOF)) {
-				camera_file_upload (camera, path, file);
-				camera_tree_folder_refresh (folder);
-			} else {
-				message = g_strdup_printf (
-					_("An error occurred while trying to read file '%s'.\n(%s)."), 
-					filename, 
-					gnome_vfs_result_to_string (result));
-				gnome_error_dialog_parented (message, main_window);
-				g_free (message);
-			}
+		/* Get the source stream. */
+		uri_source = gnome_vfs_uri_new (filename);
+		tmp = gnome_vfs_uri_to_string (uri_source, GNOME_VFS_URI_HIDE_NONE);
+		corba_stream_source = bonobo_get_object (tmp, "IDL:Bonobo/Stream:1.0", &ev);
+		g_free (tmp);
+		if (BONOBO_EX (&ev)) {
+			tmp = g_strdup_printf (_("Could not get source stream!\n(%s)"), bonobo_exception_get_text (&ev));
+			gnome_error_dialog_parented (tmp, main_window);
+			g_free (tmp);
+			CORBA_exception_free (&ev);
+			gnome_vfs_uri_unref (uri_source);
+			return;
 		}
-		
+
+		/* Read source data. */
+		Bonobo_Stream_read (corba_stream_source, 4000000, &buffer, &ev);
+		if (BONOBO_EX (&ev)) {
+			tmp = g_strdup_printf (_("Could not read the source stream!\n(%s)"), bonobo_exception_get_text (&ev));
+			gnome_error_dialog_parented (tmp, main_window);
+			g_free (tmp);
+			Bonobo_Stream_unref (corba_stream_source, &ev);
+			CORBA_exception_free (&ev);
+			gnome_vfs_uri_unref (uri_source);
+			return;
+		}
+
+		/* Unref the source stream. */
+		Bonobo_Stream_unref (corba_stream_source, &ev);
+		if (BONOBO_EX (&ev)) {
+			tmp = g_strdup_printf (_("Could not unref the source stream!\n(%s)"), bonobo_exception_get_text (&ev));
+			gnome_error_dialog_parented (tmp, main_window);
+			g_free (tmp);
+			CORBA_exception_free (&ev);
+			gnome_vfs_uri_unref (uri_source);
+			return;
+		}
+
+		/* Get the destination storage. */
+		tmp = gnome_vfs_uri_to_string (gtk_object_get_data (GTK_OBJECT (folder), "uri"), GNOME_VFS_URI_HIDE_NONE);
+		storage_destination = bonobo_storage_open_full ("camera", tmp, 0664, Bonobo_Storage_WRITE | Bonobo_Storage_READ, &ev);
+		g_free (tmp);
+		if (BONOBO_EX (&ev)) {
+			tmp = g_strdup_printf (_("Could not get destination storage!\n(%s)"), bonobo_exception_get_text (&ev));
+			gnome_error_dialog_parented (tmp, main_window);
+			g_free (tmp);
+			CORBA_free (buffer);
+			CORBA_exception_free (&ev);
+			gnome_vfs_uri_unref (uri_source);
+			return;
+		}
+		corba_storage_destination = bonobo_storage_corba_object_create (BONOBO_OBJECT (storage_destination));
+
+		/* Get the destination stream. */
+		corba_stream_destination = Bonobo_Storage_openStream (corba_storage_destination, filename, Bonobo_Storage_WRITE, &ev);
+		if (BONOBO_EX (&ev)) {
+			tmp = g_strdup_printf (_("Could not get destination stream!\n(%s)"), bonobo_exception_get_text (&ev));
+			gnome_error_dialog_parented (tmp, main_window);
+			g_free (tmp);
+			bonobo_object_unref (BONOBO_OBJECT (storage_destination));
+			CORBA_free (buffer);
+			CORBA_exception_free (&ev);
+			gnome_vfs_uri_unref (uri_source);
+			return;
+		}
+
+		/* Write the data. */
+		Bonobo_Stream_write (corba_stream_destination, buffer, &ev);
+		if (BONOBO_EX (&ev)) {
+			tmp = g_strdup_printf (_("Could not write the destination stream!\n(%s)"), bonobo_exception_get_text (&ev));
+			gnome_error_dialog_parented (tmp, main_window);
+			g_free (tmp);
+			Bonobo_Stream_unref (corba_stream_destination, &ev);
+			bonobo_object_unref (BONOBO_OBJECT (storage_destination));
+			CORBA_free (buffer);
+			CORBA_exception_free (&ev);
+			gnome_vfs_uri_unref (uri_source);
+			return;
+		}
+
+		/* Commit. */
+		Bonobo_Stream_commit (corba_stream_destination, &ev);
+		if (BONOBO_EX (&ev)) {
+			tmp = g_strdup_printf (_("Could not commit the destination stream!\n(%s)"), bonobo_exception_get_text (&ev));
+			gnome_error_dialog_parented (tmp, main_window);
+			g_free (tmp);
+			Bonobo_Stream_unref (corba_stream_destination, &ev);
+			bonobo_object_unref (BONOBO_OBJECT (storage_destination));
+			CORBA_free (buffer);
+			CORBA_exception_free (&ev);
+			gnome_vfs_uri_unref (uri_source);
+			return;
+		}
+
 		/* Clean up. */
-		gp_camera_unref (camera);
-		gp_file_unref (file);
-		gnome_vfs_uri_unref (uri);
+		Bonobo_Stream_unref (corba_stream_destination, &ev);
+		bonobo_object_unref (BONOBO_OBJECT (storage_destination));
+		CORBA_free (buffer);
+		CORBA_exception_free (&ev);
+		gnome_vfs_uri_unref (uri_source);
+
+		/* Display the new file. */
+		camera_tree_folder_refresh (folder);
 		
 	} else {
 
@@ -168,15 +221,11 @@ upload (GtkTreeItem* folder, gchar* filename)
 	
 	        /* Store some data in the cancel button. */
 	        g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_fileselection, "fileselection_cancel_button"))) != NULL);
-		gtk_object_set_data (object, "camera", camera);
 	        gtk_object_set_data (object, "xml_fileselection", xml_fileselection);
 		gtk_object_set_data (object, "operation", GINT_TO_POINTER (OPERATION_FILE_UPLOAD));
 	
 	        /* Connect the signals. */
 	        glade_xml_signal_autoconnect (xml_fileselection);
-
-                /* Reference the camera. */
-                gp_camera_ref (camera);
 	}
 }
 		
@@ -362,16 +411,13 @@ delete (GtkTreeItem* item)
 	CORBA_Environment	ev;
 	gchar*			path;
 	gchar* 			tmp;
-	BonoboStorage*		storage;
-
-	g_return_if_fail (storage = gtk_object_get_data (GTK_OBJECT (item), "storage"));
 
 	/* Init exception. */
 	CORBA_exception_init (&ev);
 
 	/* Delete the file. */
 	path = gnome_vfs_uri_to_string (gtk_object_get_data (GTK_OBJECT (item), "uri"), GNOME_VFS_URI_HIDE_NONE);
-	Bonobo_Storage_erase (bonobo_storage_corba_object_create (BONOBO_OBJECT (storage)), path, &ev);
+	Bonobo_Storage_erase (gtk_object_get_data (GTK_OBJECT (item), "corba_storage"), path, &ev);
 	if (BONOBO_EX (&ev)) {
 	        tmp = g_strdup_printf (_("Could not erase '%s'!\n(%s)"), path, bonobo_exception_get_text (&ev));
 	        gnome_error_dialog_parented (tmp, main_window);

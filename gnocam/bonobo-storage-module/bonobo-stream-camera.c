@@ -65,25 +65,11 @@ static void
 camera_write (BonoboStream *stream, const Bonobo_Stream_iobuf *buffer, CORBA_Environment *ev)
 {
 	BonoboStreamCamera *s = BONOBO_STREAM_CAMERA (stream);
-	CameraFile *file;
-	gchar *folder;
 
 	printf ("camera_write\n");
 
-	g_return_if_fail (file = gp_file_new ());
-	CHECK_RESULT (gp_file_append (file, buffer->_buffer, buffer->_length), ev);
-	if (BONOBO_EX (ev)) {
-		gp_file_unref (file);
-		return;
-	}
-	g_return_if_fail (folder = gnome_vfs_uri_extract_dirname (s->uri));
-	CHECK_RESULT (gp_camera_file_put (s->camera, file, folder), ev);
-	g_free (folder);
-	if (BONOBO_EX (ev)) {
-		gp_file_unref (file);
-		return;
-	}
-	CHECK_RESULT (gp_file_unref (file), ev);
+	/* Append the data to the file. */
+	CHECK_RESULT (gp_file_append (s->file, buffer->_buffer, buffer->_length), ev);
 }
 
 static void
@@ -101,10 +87,10 @@ camera_read (BonoboStream *stream, CORBA_long count, Bonobo_Stream_iobuf **buffe
 	data = CORBA_sequence_CORBA_octet_allocbuf (count);
 	
 	/* How many bytes? */
-	if (s->position + count >= s->size) length = s->size - s->position;
+	if (s->position + count >= s->file->size) length = s->file->size - s->position;
 	else length = count;
 	
-	memcpy (data, s->data + s->position, length);
+	memcpy (data, s->file->data + s->position, length);
 	s->position += length;
 	
 	(*buffer)->_buffer = data;
@@ -123,7 +109,7 @@ camera_seek (BonoboStream *stream, CORBA_long offset, Bonobo_Stream_SeekType whe
 		s->position += (long) offset;
 		break;
 	case Bonobo_Stream_SEEK_END:
-		s->position = s->size - 1 + (long) offset;
+		s->position = s->file->size - 1 + (long) offset;
 		break;
 	case Bonobo_Stream_SEEK_SET:
 		s->position = (long) offset;
@@ -152,15 +138,27 @@ camera_copy_to (BonoboStream *stream, const CORBA_char *dest, const CORBA_long b
 static void
 camera_commit (BonoboStream *stream, CORBA_Environment *ev)
 {
+	BonoboStreamCamera *s = BONOBO_STREAM_CAMERA (stream);
+	gchar *dirname;
+	
 	printf ("camera_commit\n");
-	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
+
+	/* Send the file to the camera. */
+	dirname = gnome_vfs_uri_extract_dirname (s->uri);
+	CHECK_RESULT (gp_camera_file_put (s->camera, s->file, dirname), ev);
+	g_free (dirname);
 }
 
 static void
 camera_revert (BonoboStream *stream, CORBA_Environment *ev)
 {
+	BonoboStreamCamera *s = BONOBO_STREAM_CAMERA (stream);
+	
 	printf ("camera_revert\n");
-	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
+
+	/* Unref the file and set position to 0. */
+	if (s->file) gp_file_unref (s->file);
+	s->position = 0;
 }
 	
 static void
@@ -170,17 +168,10 @@ bonobo_stream_camera_destroy (GtkObject *object)
 
 	printf ("bonobo_stream_camera_destroy\n");
 
-	/* Free uri. */
-	if (stream->uri) gnome_vfs_uri_unref (stream->uri);
-	stream->uri = NULL;
-
-	/* Free camera. */
-	if (stream->camera) gp_camera_unref (stream->camera);
-	stream->camera = NULL;
-
-	/* Free data. */
-	if (stream->data) g_free (stream->data);
-	stream->data = NULL;
+	/* Unref uri, camera, and file. */
+	gnome_vfs_uri_unref (stream->uri);
+	gp_camera_unref (stream->camera);
+	gp_file_unref (stream->file);
 	
 	GTK_OBJECT_CLASS (bonobo_stream_camera_parent_class)->destroy (object);	
 }
@@ -201,7 +192,7 @@ bonobo_stream_camera_class_init (BonoboStreamCameraClass *klass)
 	sclass->truncate = camera_truncate;
 	sclass->copy_to  = camera_copy_to;
 	sclass->commit   = camera_commit;
-	sclass->commit   = camera_revert;
+	sclass->revert   = camera_revert;
 
 	object_class->destroy = bonobo_stream_camera_destroy;
 }
@@ -247,8 +238,6 @@ bonobo_stream_camera_open (const char *path, gint flags, gint mode, CORBA_Enviro
 {
 	BonoboStreamCamera *stream;
 	Bonobo_Stream corba_stream;
-	CameraFile* file;
-	gchar* filename;
 	gchar* dirname;
 
 	printf ("bonobo_stream_camera_open (%s, %i, %i)\n", path, flags, mode);
@@ -275,30 +264,17 @@ bonobo_stream_camera_open (const char *path, gint flags, gint mode, CORBA_Enviro
 	}
 
 	/* Get the file. */
-	g_assert (file = gp_file_new ());
-	g_assert (filename = g_strdup (gnome_vfs_uri_get_basename (stream->uri)));
-	g_assert (dirname = gnome_vfs_uri_extract_dirname (stream->uri));
-	if (gnome_vfs_uri_get_user_name (stream->uri) && (strcmp (gnome_vfs_uri_get_user_name (stream->uri), "previews") == 0)) {
-		CHECK_RESULT (gp_camera_file_get_preview (stream->camera, file, dirname, filename), ev);
-		if (BONOBO_EX (ev)) {
-			gp_file_unref (file);
-			bonobo_object_unref (BONOBO_OBJECT (stream));
-			CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
-			return NULL;
-		}
-	} else {
-		CHECK_RESULT (gp_camera_file_get (stream->camera, file, dirname, filename), ev);
-		if (BONOBO_EX (ev)) {
-			gp_file_unref (file);
-			bonobo_object_unref (BONOBO_OBJECT (stream));
-			CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
-			return NULL;
-		}
+	stream->file = gp_file_new ();
+	dirname = gnome_vfs_uri_extract_dirname (stream->uri);
+	if (gnome_vfs_uri_get_user_name (stream->uri) && (strcmp (gnome_vfs_uri_get_user_name (stream->uri), "previews") == 0)) 
+		CHECK_RESULT (gp_camera_file_get_preview (stream->camera, stream->file, dirname, (gchar*) gnome_vfs_uri_get_basename (stream->uri)), ev);
+	else
+		CHECK_RESULT (gp_camera_file_get (stream->camera, stream->file, dirname, (gchar*) gnome_vfs_uri_get_basename (stream->uri)), ev);
+	if (BONOBO_EX (ev)) {
+		g_free (dirname);
+		bonobo_object_unref (BONOBO_OBJECT (stream));
+		return NULL;
 	}
-	stream->data = file->data;
-	stream->size = file->size;
-	file->data = NULL;
-	CHECK_RESULT (gp_file_unref (file), ev);
 
 	return BONOBO_STREAM (bonobo_object_construct (BONOBO_OBJECT (stream), corba_stream));
 }

@@ -25,8 +25,7 @@ struct _BonoboStreamCamera {
 
 	Camera *camera;
 
-	gchar *data;
-	long size;
+	CameraFile *file;
 	long position;
 };
 

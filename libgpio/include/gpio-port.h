@@ -8,16 +8,21 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <stdio.h>
 
 #define IOLIBS					"."
 #define strcasecmp				_stricmp
-
+#define snprintf				_snprintf
 
 /* Work-around for readdir() */
 typedef struct {
 	HANDLE handle;
 	int got_first;
 	WIN32_FIND_DATA search;
+	char dir[1024];
+	char drive[32][2];
+	int  drive_count;
+	int  drive_index;
 } GPIOWINDIR;
 
 /* Sleep functionality */
@@ -32,7 +37,7 @@ typedef struct {
 /* Directory-oriented functions */
 #define GPIO_DIR				GPIOWINDIR *
 #define GPIO_DIRENT				WIN32_FIND_DATA *
-#define GPIO_DIR_DELIM			'\\'
+#define GPIO_DIR_DELIM			'/'
 
 
 #else

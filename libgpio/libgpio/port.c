@@ -1,41 +1,87 @@
+#include <stdio.h>
 #include <gpio.h>
 
 /* Windows Portability
    ------------------------------------------------------------------ */
 #ifdef WIN32
 
+void gpio_win_convert_path (char *path) {
+
+	int x;
+
+	if (strchr(path, '\\'))
+		/* already converted */
+		return;
+
+	if (path[0] != '.') {
+		path[0] = path[1];
+		path[1] = ':';
+		path[2] = '\\';
+	}
+
+	for (x=0; x<strlen(path); x++)
+		if (path[x] == '/')
+			path[x] = '\\';
+}
+
 GPIO_DIR GPIO_OPENDIR (char *dirname) {
 
 	GPIOWINDIR *d;
-	char dirn[1024];
+	DWORD dr;
+	int x;
 
 	d = (GPIOWINDIR*)malloc(sizeof(GPIOWINDIR));
-
-	/* Append the wildcard */
-	strcpy(dirn, dirname);
-	if (dirn[strlen(dirn)-1] != '\\')
-		strcat(dirn, "\\");
-	strcat(dirn, "*");
-
+	d->handle = INVALID_HANDLE_VALUE;
 	d->got_first = 0;
-	d->handle = FindFirstFile(dirn, &(d->search));
+	strcpy(d->dir, dirname);
+	d->drive_count = 0;
+	d->drive_index = 0;
 
-	if ((!d->handle) || (d->handle == INVALID_HANDLE_VALUE)) {
-			free(d);
-			return NULL;
+	dr = GetLogicalDrives();
+	
+	for (x=0; x<32; x++) {
+		if ((dr >> x) & 0x0001) {
+			sprintf(d->drive[d->drive_count], "%c", 'A' + x);
+			d->drive_count += 1;
+		}	
 	}
 
 	return (d);
 }
 
 GPIO_DIRENT GPIO_READDIR (GPIO_DIR d) {
-	if (d->got_first == 0) {
-		d->got_first = 1;
-		return (&(d->search));
-	}
 
-	if (!FindNextFile(d->handle, &(d->search)))
+	DWORD dr;
+	char dirn[1024];
+	char *drive;
+
+	if (strcmp(d->dir, "/")==0) {
+		if (d->drive_index == d->drive_count)
 			return (NULL);
+		strcpy(d->search.cFileName, d->drive[d->drive_index]);
+		d->drive_index += 1;
+		return (&(d->search));
+	}	
+
+
+	/* Append the wildcard */
+	
+	strcpy(dirn, d->dir);
+	gpio_win_convert_path(dirn);
+	
+	if (dirn[strlen(dirn)-1] != '\\')
+		strcat(dirn, "\\");
+	strcat(dirn, "*");
+
+
+	if (d->handle == INVALID_HANDLE_VALUE) {
+		d->handle = FindFirstFile(dirn, &(d->search));
+		if (d->handle == INVALID_HANDLE_VALUE)
+			return NULL;
+	} else {
+		if (!FindNextFile(d->handle, &(d->search)))
+			return NULL;
+	}
 
 	return (&(d->search));
 }
@@ -55,6 +101,8 @@ int GPIO_IS_FILE (char *filename) {
 
 	struct stat st;
 
+	gpio_win_convert_path(filename);
+
 	if (stat(filename, &st)!=0)
 		return 0;
 	return (st.st_mode & _S_IFREG);
@@ -63,6 +111,11 @@ int GPIO_IS_FILE (char *filename) {
 int GPIO_IS_DIR (char *dirname) {
 
 	struct stat st;
+
+	if (strlen(dirname) <= 3)
+		return 1;
+
+	gpio_win_convert_path(dirname);
 
 	if (stat(dirname, &st)!=0)
 		return 0;

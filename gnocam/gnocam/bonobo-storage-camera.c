@@ -18,7 +18,7 @@
 #include "gnocam-util.h"
 
 #define PARENT_TYPE BONOBO_STORAGE_TYPE
-static BonoboStorageClass* bonobo_storage_camera_parent_class = NULL;
+static BonoboStorageClass* parent_class = NULL;
 
 struct _BonoboStorageCameraPrivate {
 	Bonobo_Storage_OpenMode		mode;
@@ -142,21 +142,25 @@ camera_get_info (BonoboStorage *s, const CORBA_char *name,
 }
 
 static void
-camera_set_info (BonoboStorage* s, const CORBA_char* name, const Bonobo_StorageInfo* info, const Bonobo_StorageInfoFields mask, CORBA_Environment* ev)
+camera_set_info (BonoboStorage *s, const CORBA_char *name,
+		 const Bonobo_StorageInfo *info,
+		 const Bonobo_StorageInfoFields mask, CORBA_Environment *ev)
 {
-	BonoboStorageCamera*	storage;
-	CameraFileInfo		fileinfo;
+	BonoboStorageCamera *storage;
+	CameraFileInfo fileinfo;
 
 	storage = BONOBO_STORAGE_CAMERA (s);
 
 	fileinfo.preview.fields = GP_FILE_INFO_NONE;
 	fileinfo.file.fields = GP_FILE_INFO_NONE;
 	
-	CHECK_RESULT (gp_camera_file_set_info (storage->priv->camera, storage->priv->path, (gchar*) name, &fileinfo), ev);
+	CHECK_RESULT (gp_camera_file_set_info (storage->priv->camera,
+			storage->priv->path, (gchar*) name, &fileinfo), ev);
 }
 
 static void
-camera_rename (BonoboStorage* s, const CORBA_char* name_old, const CORBA_char* name_new, CORBA_Environment* ev)
+camera_rename (BonoboStorage *s, const CORBA_char *name_old,
+	       const CORBA_char *name_new, CORBA_Environment *ev)
 {
 	BonoboStorageCamera*    storage;
 	CameraFileInfo		info;
@@ -169,7 +173,8 @@ camera_rename (BonoboStorage* s, const CORBA_char* name_old, const CORBA_char* n
 	info.file.fields = GP_FILE_INFO_NAME;
 	strcpy (info.file.name, name_new);
 
-	CHECK_RESULT (gp_camera_file_set_info (storage->priv->camera, storage->priv->path, (gchar*) name_old, &info), ev);
+	CHECK_RESULT (gp_camera_file_set_info (storage->priv->camera,
+			storage->priv->path, (gchar*) name_old, &info), ev);
 }
 
 static BonoboStream *
@@ -182,7 +187,7 @@ camera_open_stream (BonoboStorage *s, const CORBA_char *filename,
 	storage = BONOBO_STORAGE_CAMERA (s);
 
 	/* Absolute path? */
-	if (*filename == '/') {
+	if (g_path_is_absolute (filename)) {
 		gchar *dirname = g_dirname (filename);
 
 		new = bonobo_stream_camera_new (storage->priv->camera,
@@ -293,12 +298,10 @@ camera_open_storage (BonoboStorage *s, const CORBA_char *name,
 
 	storage = BONOBO_STORAGE_CAMERA (s);
 
-	if (*name == '/')
+	if (g_path_is_absolute (name))
 		path_new = g_strdup (name);
-	else if (!strcmp (storage->priv->path, "/"))
-		path_new = g_strconcat ("/", name, NULL);
 	else 
-		path_new = g_strdup_printf ("%s/%s", storage->priv->path, name);
+		path_new = g_concat_dir_and_file (storage->priv->path, name);
 
 	/* Create the storage. */
 	new = bonobo_storage_camera_new (storage->priv->camera, path_new,
@@ -391,7 +394,8 @@ camera_erase (BonoboStorage* s, const CORBA_char* name, CORBA_Environment* ev)
 	
 	storage = BONOBO_STORAGE_CAMERA (s);
 
-	CHECK_RESULT (gp_camera_file_delete (storage->priv->camera, storage->priv->path, (gchar*) name), ev);
+	CHECK_RESULT (gp_camera_file_delete (storage->priv->camera,
+				storage->priv->path, (gchar*) name), ev);
 }
 
 static void
@@ -399,9 +403,29 @@ bonobo_storage_camera_destroy (GtkObject *object)
 {
 	BonoboStorageCamera *storage = BONOBO_STORAGE_CAMERA (object);
 
-	g_free (storage->priv->path);
-	gp_camera_unref (storage->priv->camera);
+	if (storage->priv->path) {
+		g_free (storage->priv->path);
+		storage->priv->path = NULL;
+	}
+
+	if (storage->priv->camera) {
+		gp_camera_unref (storage->priv->camera);
+		storage->priv->camera = NULL;
+	}
+
+	GTK_OBJECT_CLASS (parent_class)->destroy (object);
+}
+
+static void
+bonobo_storage_camera_finalize (GtkObject *object)
+{
+	BonoboStorageCamera *storage;
+
+	storage = BONOBO_STORAGE_CAMERA (object);
+
 	g_free (storage->priv);
+
+	GTK_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -411,7 +435,8 @@ bonobo_storage_camera_class_init (BonoboStorageCameraClass *klass)
 	BonoboStorageClass*	sclass;
 
 	object_class = GTK_OBJECT_CLASS (klass);
-	object_class->destroy = bonobo_storage_camera_destroy;
+	object_class->destroy  = bonobo_storage_camera_destroy;
+	object_class->finalize = bonobo_storage_camera_finalize;
 	
 	sclass = BONOBO_STORAGE_CLASS (klass);
 	sclass->get_info       = camera_get_info;
@@ -425,7 +450,7 @@ bonobo_storage_camera_class_init (BonoboStorageCameraClass *klass)
 	sclass->list_contents  = camera_list_contents;
 	sclass->erase          = camera_erase;
 
-	bonobo_storage_camera_parent_class = gtk_type_class (PARENT_TYPE);
+	parent_class = gtk_type_class (PARENT_TYPE);
 }
 
 static void 

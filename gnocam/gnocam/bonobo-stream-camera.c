@@ -11,7 +11,7 @@
 #include "gnocam-util.h"
 
 #define PARENT_TYPE BONOBO_STREAM_TYPE
-static BonoboStreamClass *bonobo_stream_camera_parent_class;
+static BonoboStreamClass *parent_class;
 
 struct _BonoboStreamCameraPrivate {
 	Camera*		camera;
@@ -142,15 +142,39 @@ bonobo_stream_camera_destroy (GtkObject* object)
 	
 	stream = BONOBO_STREAM_CAMERA (object);
 
-	g_free (stream->priv->dirname);
-	g_free (stream->priv->filename);
-	if (stream->priv->buffer)
+	if (stream->priv->dirname) {
+		g_free (stream->priv->dirname);
+		stream->priv->dirname = NULL;
+	}
+
+	if (stream->priv->filename) {
+		g_free (stream->priv->filename);
+		stream->priv->filename = NULL;
+	}
+	
+	if (stream->priv->buffer) {
 		g_free (stream->priv->buffer);
-	gp_camera_unref (stream->priv->camera);
+		stream->priv->buffer = NULL;
+	}
+
+	if (stream->priv->camera) {
+		gp_camera_unref (stream->priv->camera);
+		stream->priv->camera = NULL;
+	}
+
+	GTK_OBJECT_CLASS (parent_class)->destroy (object);	
+}
+
+static void
+bonobo_stream_camera_finalize (GtkObject *object)
+{
+	BonoboStreamCamera *stream;
+
+	stream = BONOBO_STREAM_CAMERA (object);
 
 	g_free (stream->priv);
-	
-	GTK_OBJECT_CLASS (bonobo_stream_camera_parent_class)->destroy (object);	
+
+	GTK_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -160,7 +184,8 @@ bonobo_stream_camera_class_init (BonoboStreamCameraClass* klass)
 	GtkObjectClass*		object_class;
 
 	object_class = GTK_OBJECT_CLASS (klass);
-	object_class->destroy = bonobo_stream_camera_destroy;
+	object_class->destroy  = bonobo_stream_camera_destroy;
+	object_class->finalize = bonobo_stream_camera_finalize;
 	
 	sclass = BONOBO_STREAM_CLASS (klass);
 	sclass->get_info = camera_get_info;
@@ -173,7 +198,7 @@ bonobo_stream_camera_class_init (BonoboStreamCameraClass* klass)
 	sclass->commit   = camera_commit;
 	sclass->revert   = NULL;
 
-	bonobo_stream_camera_parent_class = gtk_type_class (PARENT_TYPE);
+	parent_class = gtk_type_class (PARENT_TYPE);
 }
 
 static void

@@ -87,62 +87,62 @@ void activate_button (GtkWidget *cur_button) {
 
 void create_toolbar (GtkWidget *box, GtkWidget *mainWin) {
 
-  add_to_toolbar(mainWin, "Open Image", open_image_xpm,
+  add_to_toolbar(mainWin, N_("Open Image"), open_image_xpm,
                  GTK_SIGNAL_FUNC(open_dialog), NULL, box, 1);
-  add_to_toolbar(mainWin, "Save Opened Image(s)", save_current_image_xpm,
+  add_to_toolbar(mainWin, N_("Save Opened Image(s)"), save_current_image_xpm,
                  GTK_SIGNAL_FUNC(save_dialog), NULL, box, 1);
-  add_to_toolbar(mainWin, "Print Image", print_image_xpm,
+  add_to_toolbar(mainWin, N_("Print Image"), print_image_xpm,
                  GTK_SIGNAL_FUNC(print_pic), NULL, box, 1);
-  add_to_toolbar(mainWin, "Close Image", delete_images_xpm,
+  add_to_toolbar(mainWin, N_("Close Image"), delete_images_xpm,
                  GTK_SIGNAL_FUNC(closepic), "c", box, 1);  
   add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1);
-  add_to_toolbar(mainWin, "Previous page", left_arrow_xpm,
+  add_to_toolbar(mainWin, N_("Previous page"), left_arrow_xpm,
 		 GTK_SIGNAL_FUNC(prev_page), "i", box, 1);
-  add_to_toolbar(mainWin, "Next page", right_arrow_xpm,
+  add_to_toolbar(mainWin, N_("Next page"), right_arrow_xpm,
 		 GTK_SIGNAL_FUNC(next_page), "i", box, 1);
   add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1);
-  add_to_toolbar(mainWin, "Download Thumbnail Index", get_index_xpm,
+  add_to_toolbar(mainWin, N_("Download Thumbnail Index"), get_index_xpm,
                  GTK_SIGNAL_FUNC(getindex), NULL, box, 1);
-  add_to_toolbar(mainWin, "Download Empty Index", get_index_empty_xpm,
+  add_to_toolbar(mainWin, N_("Download Empty Index"), get_index_empty_xpm,
                  GTK_SIGNAL_FUNC(getindex_empty), NULL, box, 1);
-  add_to_toolbar(mainWin, "Download Selected Images", get_selected_images_xpm,
+  add_to_toolbar(mainWin, N_("Download Selected Images"), get_selected_images_xpm,
 		 GTK_SIGNAL_FUNC(getpics), "i", box, 1);
-  add_to_toolbar(mainWin, "Delete Selected Images", close_image_xpm, 
+  add_to_toolbar(mainWin, N_("Delete Selected Images"), close_image_xpm, 
                  GTK_SIGNAL_FUNC(del_dialog), NULL, box, 1);
   add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1);
-  stop_button = add_to_toolbar(mainWin, "Halt Download", stop_xpm,
+  stop_button = add_to_toolbar(mainWin, N_("Halt Download"), stop_xpm,
                  GTK_SIGNAL_FUNC(halt_action), NULL, box, 1);
   deactivate_button(stop_button);
   add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1);
-  add_to_toolbar(mainWin, "Rotate Clockwise", rotc_xpm,
+  add_to_toolbar(mainWin, N_("Rotate Clockwise"), rotc_xpm,
 		 GTK_SIGNAL_FUNC(manip_pic), "r", box, 1);
-  add_to_toolbar(mainWin, "Rotate Counter-Clockwise", rotcc_xpm,
+  add_to_toolbar(mainWin, N_("Rotate Counter-Clockwise"), rotcc_xpm,
 		 GTK_SIGNAL_FUNC(manip_pic), "l", box, 1);
-  add_to_toolbar(mainWin, "Flip Horizontal", fliph_xpm,
+  add_to_toolbar(mainWin, N_("Flip Horizontal"), fliph_xpm,
 		 GTK_SIGNAL_FUNC(manip_pic), "h", box, 1);
-  add_to_toolbar(mainWin, "Flip Vertical", flipv_xpm,
+  add_to_toolbar(mainWin, N_("Flip Vertical"), flipv_xpm,
 		 GTK_SIGNAL_FUNC(manip_pic), "v", box, 1);
-  add_to_toolbar(mainWin, "Resize", resize_xpm,
+  add_to_toolbar(mainWin, N_("Resize"), resize_xpm,
 		 GTK_SIGNAL_FUNC(resize_dialog),
-		 "Resize", box, 1);
-  add_to_toolbar(mainWin, "Colors", colors_xpm,
+		 N_("Resize"), box, 1);
+  add_to_toolbar(mainWin, N_("Colors"), colors_xpm,
 		 GTK_SIGNAL_FUNC(color_dialog),
-		 "Colors", box, 1);
+		 N_("Colors"), box, 1);
   add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1);
 
 /*
-  browse_button = add_to_toolbar(mainWin, "HTML Gallery", web_browse_xpm,
+  browse_button = add_to_toolbar(mainWin, N_("HTML Gallery"), web_browse_xpm,
 		 GTK_SIGNAL_FUNC(gallery_main), NULL, box, 1);
-  add_to_toolbar(mainWin, "Live Camera!", take_picture_xpm,
+  add_to_toolbar(mainWin, N_("Live Camera!"), take_picture_xpm,
                  GTK_SIGNAL_FUNC(live_main), NULL, box, 1);
   add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1);
 */
 
-  add_to_toolbar(mainWin, "Camera Configuration", configure_xpm, 
+  add_to_toolbar(mainWin, N_("Camera Configuration"), configure_xpm, 
 		 GTK_SIGNAL_FUNC(configure_call), NULL, box, 1);
   add_to_toolbar(mainWin, NULL, NULL, NULL, NULL, box, 1);
-  add_to_toolbar(mainWin, "Help", help_xpm, 
+  add_to_toolbar(mainWin, N_("Help"), help_xpm, 
                  GTK_SIGNAL_FUNC(usersmanual_dialog), NULL, box, 1);
-  add_to_toolbar(mainWin, "Exit gPhoto", exit_xpm,
+  add_to_toolbar(mainWin, N_("Exit gPhoto"), exit_xpm,
                  GTK_SIGNAL_FUNC(delete_event), NULL, box, 1);
 }

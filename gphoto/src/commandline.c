@@ -12,7 +12,7 @@ char command_prefix[256];
 
 void camera_summary()
 {
-    fprintf(stdout, "%s summary:\n%s", camera_model,
+    fprintf(stdout, N_("%s summary:\n%s"), camera_model,
 	    (*Camera->summary) ());
     fflush(stdout);
 }
@@ -20,39 +20,39 @@ void camera_summary()
 void command_usage()
 {
     fprintf(stdout,
-	    "gPhoto %s (%s) - the GNU digital camera application\n",
+	    N_("gPhoto %s (%s) - the GNU digital camera application\n"),
 	    VERSION, __DATE__);
     fprintf(stdout,
-	    "Copyright (C) 1998-2000 Scott Fritzinger <scottf@unr.edu>\n\n");
+	    N_("Copyright (C) 1998-2000 Scott Fritzinger <scottf@unr.edu>\n\n"));
     fprintf(stdout,
-	    "Usage: gphoto [-h] [-c] [-n] [-s # filename] [-t # filename]\n");
-    fprintf(stdout, "              [-d #] [-p filename] [-l filename]\n");
-    fprintf(stdout, "\t-h                    display this help screen\n");
-    fprintf(stdout, "\t-c                    display camera summary\n");
-    fprintf(stdout, "\t-n                    display the # of pictures\n");
-    fprintf(stdout, "\t-s # filename         save image # as filename\n");
+	    N_("Usage: gphoto [-h] [-c] [-n] [-s # filename] [-t # filename]\n"));
+    fprintf(stdout, N_("              [-d #] [-p filename] [-l filename]\n"));
+    fprintf(stdout, N_("\t-h                    display this help screen\n"));
+    fprintf(stdout, N_("\t-c                    display camera summary\n"));
+    fprintf(stdout, N_("\t-n                    display the # of pictures\n"));
+    fprintf(stdout, N_("\t-s # filename         save image # as filename\n"));
     fprintf(stdout,
-	    "\t-t # filename         save thumbnail # as filename\n");
+	    N_("\t-t # filename         save thumbnail # as filename\n"));
     fprintf(stdout,
-	    "\t-d #                  delete image # from camera\n");
+	    N_("\t-d #                  delete image # from camera\n"));
     fprintf(stdout,
-	    "\t-p filename           take picture and save as filename\n");
+	    N_("\t-p filename           take picture and save as filename\n"));
     fprintf(stdout,
-	    "\t-l filename           save live preview as filename\n\n");
+	    N_("\t-l filename           save live preview as filename\n\n"));
     fprintf(stdout,
-	    "gPhoto is free GNU software; you can redistribute it and/or\n");
+	    N_("gPhoto is free GNU software; you can redistribute it and/or\n"));
     fprintf(stdout,
-	    "modify it under the terms of the GNU General Public License \n");
+	    N_("modify it under the terms of the GNU General Public License \n"));
     fprintf(stdout,
-	    "as published by the Free Software Foundation; either version \n");
+	    N_("as published by the Free Software Foundation; either version \n"));
     fprintf(stdout,
-	    "2 of the License, or any later version.  Visit gphoto/COPYING\n");
+	    N_("2 of the License, or any later version.  Visit gphoto/COPYING\n"));
     fprintf(stdout,
-	    "in the source distribution to read the GNU GPL license terms.\n\n");
+	    N_("in the source distribution to read the GNU GPL license terms.\n\n"));
     fprintf(stdout,
-	    "Report bugs and camera success to gphoto-devel@gphoto.org.\n");
+	    N_("Report bugs and camera success to gphoto-devel@gphoto.org.\n"));
     fprintf(stdout,
-	    "See http://www.gphoto.org for the latest news and updates.\n");
+	    N_("See http://www.gphoto.org for the latest news and updates.\n"));
     _exit(0);
 }
 
@@ -70,21 +70,21 @@ void command_line(int argc, char *argv[])
     while (i < argc) {
 	switch (argv[i][1]) {
 	case 'n':
-	    fprintf(stdout, "%i\n", (*Camera->number_of_pictures) ());
+	    fprintf(stdout, N_("%i\n"), (*Camera->number_of_pictures) ());
 	    break;
 	case 'l':
 	    if (argv[i + 1]) {
 		if ((im = (*Camera->get_preview) ()) == 0)
-		    fprintf(stderr, "ERROR: could not get image.\n");
+		    fprintf(stderr, N_("ERROR: could not get image.\n"));
 		else if ((fp = fopen(argv[i + 1], "w"))) {
 		    fwrite(im->image,
 			   (size_t) sizeof(char),
 			   (size_t) im->image_size, fp);
 		    fclose(fp);
 		} else
-		    fprintf(stderr, "ERROR: could not save image.\n");
+		    fprintf(stderr, N_("ERROR: could not save image.\n"));
 	    } else {
-		fprintf(stderr, "ERROR: 'filename' not specified.\n");
+		fprintf(stderr, N_("ERROR: 'filename' not specified.\n"));
 		command_usage();
 	    }
 	    i += 1;
@@ -100,19 +100,19 @@ void command_line(int argc, char *argv[])
 		      =
 		      (*Camera->get_picture) (atoi(argv[i + 1]),
 					      0)) == 0))
-		      fprintf(stderr, "ERROR: could not get image.\n");
+		      fprintf(stderr, N_("ERROR: could not get image.\n"));
 		else if ((fp = fopen(argv[i + 2], "w"))) {
 		    fwrite(im->image,
 			   (size_t) sizeof(char),
 			   (size_t) im->image_size, fp);
 		    fclose(fp);
 		} else {
-		    fprintf(stderr, "ERROR: could not save image.\n");
+		    fprintf(stderr, N_("ERROR: could not save image.\n"));
 		    return;
 		}
 	    } else {
 		fprintf(stderr,
-			"ERROR: '#' and 'filename' not specified.\n");
+			N_("ERROR: '#' and 'filename' not specified.\n"));
 		command_usage();
 	    }
 	    fprintf(stderr, "\n");
@@ -129,19 +129,19 @@ void command_line(int argc, char *argv[])
 		    (im =
 		     (*Camera->get_picture) (atoi(argv[i + 1]),
 					     1)) == 0)
-		   fprintf(stderr, "ERROR: could not get image.\n");
+		   fprintf(stderr, N_("ERROR: could not get image.\n"));
 		else if ((fp = fopen(argv[i + 2], "w"))) {
 		    fwrite(im->image,
 			   (size_t) sizeof(char),
 			   (size_t) im->image_size, fp);
 		    fclose(fp);
 		} else {
-		    fprintf(stderr, "ERROR: could not save image.\n");
+		    fprintf(stderr, N_("ERROR: could not save image.\n"));
 		    return;
 		}
 	    } else {
 		fprintf(stderr,
-			"ERROR: '#' and 'filename' not specified.\n");
+			N_("ERROR: '#' and 'filename' not specified.\n"));
 		command_usage();
 	    }
 	    fprintf(stderr, "\n");
@@ -151,7 +151,7 @@ void command_line(int argc, char *argv[])
 	    if (argv[i + 1]) {
 		if (((*Camera->delete_picture) (atoi(argv[i + 1]))
 		     == 0)) {
-		    fprintf(stderr, "ERROR: Could not delete image.\n");
+		    fprintf(stderr, N_("ERROR: Could not delete image.\n"));
 		    return;
 		} else {
 		    fprintf(stderr,
@@ -159,32 +159,32 @@ void command_line(int argc, char *argv[])
 			    atoi(argv[i + 1]));
 		}
 	    } else {
-		fprintf(stderr, "ERROR: '#' not specified.\n");
+		fprintf(stderr, N_("ERROR: '#' not specified.\n"));
 		command_usage();
 	    }
 	    i += 1;
 	    break;
 	case 'p':
 	    if (!argv[i + 1]) {
-		fprintf(stderr, "ERROR: filename not specified.\n");
+		fprintf(stderr, N_("ERROR: filename not specified.\n"));
 		command_usage();
 	    } else {
-		fprintf(stderr, "Taking picture...\n");
+		fprintf(stderr, N_("Taking picture...\n"));
 
 		picNum = (*Camera->take_picture) ();
 
 		if (picNum == 0) {
 		    fprintf(stderr,
-			    "ERROR: could not take the picture.\n");
+			    N_("ERROR: could not take the picture.\n"));
 		    return;
 		} else {
 		    fprintf(stderr,
-			    "Saving the new image (# %i) as %s: ",
+			    N_("Saving the new image (# %i) as %s: "),
 			    picNum, argv[i + 1]);
 		}
 
 		if (((im = (*Camera->get_picture) (picNum, 0)) == 0)) {
-		    fprintf(stderr, "\nERROR: could not get image.\n");
+		    fprintf(stderr, N_("\nERROR: could not get image.\n"));
 		    return;
 		} else {
 		    if ((fp = fopen(argv[i + 1], "w"))) {
@@ -192,7 +192,7 @@ void command_line(int argc, char *argv[])
 			       sizeof(char), (size_t) im->image_size, fp);
 			fclose(fp);
 		    } else {
-			fprintf(stderr, "ERROR: could not save image.\n");
+			fprintf(stderr, N_("ERROR: could not save image.\n"));
 			return;
 		    }
 		}

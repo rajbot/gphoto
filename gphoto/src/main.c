@@ -59,7 +59,7 @@ void crash(int sig)
 	    "See $INSTALLPREFIX/doc/gphoto-%s/BUGS or\nhttp://gphoto.org/gphoto/bugs.html for details.\n",
 	    VERSION, __DATE__, getpid(), VERSION);
     if (!system(buddys)) {
-	fprintf(stdout, "\nLaunching Gnome Bugbuddy...\n");
+	fprintf(stdout, N_("\nLaunching Gnome Bugbuddy...\n"));
         fprintf(stdout,"%s\n",buddys);
     }
     abort();
@@ -126,13 +126,13 @@ int main (int argc, char *argv[]) {
 	    command_line_mode = 0;
 
 	fprintf(stdout,
-		"gPhoto %s (%s) - the GNU digital camera application\n",
+		N_("gPhoto %s (%s) - the GNU digital camera application\n"),
 		VERSION, __DATE__);
 	fprintf(stdout,
-		"Copyright (C) 1998-2000 Scott Fritzinger <scottf@unr.edu>\n\n");
+		N_("Copyright (C) 1998-2000 Scott Fritzinger <scottf@unr.edu>\n\n"));
 	fprintf(stdout,
-		"Usage: gphoto [-h] [-c] [-n] [-s # filename] [-t # filename]\n");
-	fprintf(stdout, "              [-d #] [-p filename] [-l filename]\n");
+		N_("Usage: gphoto [-h] [-c] [-n] [-s # filename] [-t # filename]\n"));
+	fprintf(stdout, N_("              [-d #] [-p filename] [-l filename]\n"));
 
 	gtk_init(&argc, &argv);
 #if 1 /* by fujisawa */
@@ -149,7 +149,7 @@ int main (int argc, char *argv[]) {
 	/* set up the main window -------------------------------- */
 	mainWin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 	gtk_container_border_width (GTK_CONTAINER(mainWin), 0);
-	sprintf(title, "gPhoto %s - the GNU digital camera application", VERSION);
+	sprintf(title, N_("gPhoto %s - the GNU digital camera application"), VERSION);
 	gtk_window_set_title (GTK_WINDOW(mainWin), title);
 	gtk_signal_connect (GTK_OBJECT(mainWin), "delete_event",
 			    GTK_SIGNAL_FUNC(delete_event), NULL);
@@ -187,7 +187,7 @@ int main (int argc, char *argv[]) {
 	gtk_widget_show(notebook);
 	gtk_notebook_set_scrollable(GTK_NOTEBOOK(notebook), TRUE);
 
-	label = gtk_label_new("Image Index");
+	label = gtk_label_new(N_("Image Index"));
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), index_page,
 				 label);
 

@@ -1122,8 +1122,8 @@ img_edit_new(struct ImageMembers *ii)
   imnode=ii;
 
   w = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_wmclass(GTK_WINDOW(w), "Color Adjustment", "gPhoto");
-  gtk_window_set_title(GTK_WINDOW(w), "gPhoto - Color Adjustment");
+  gtk_window_set_wmclass(GTK_WINDOW(w), N_("Color Adjustment"), "gPhoto");
+  gtk_window_set_title(GTK_WINDOW(w), N_("gPhoto - Color Adjustment"));
   gtk_container_border_width(GTK_CONTAINER(w), 2);
   gtk_window_set_policy(GTK_WINDOW(w), 0, 0, 1);
   gtk_signal_connect(GTK_OBJECT(w), "delete_event",
@@ -1138,7 +1138,7 @@ img_edit_new(struct ImageMembers *ii)
   gtk_widget_show(vm);
   gtk_container_add(GTK_CONTAINER(w), vm);
 
-  f = gtk_frame_new("Colour Settings");
+  f = gtk_frame_new(N_("Colour Settings"));
   gtk_widget_show(f);
   gtk_box_pack_start(GTK_BOX(vm), f, TRUE, TRUE, 0);
   
@@ -1244,7 +1244,7 @@ img_edit_new(struct ImageMembers *ii)
   gtk_widget_show(vvv);
   gtk_object_set_data(GTK_OBJECT(w), "gray_controls", vvv);
   gtk_box_pack_start(GTK_BOX(vv), vvv, FALSE, FALSE, 0);
-  l = gtk_label_new("Gray Controls");
+  l = gtk_label_new(N_("Gray Controls"));
   gtk_widget_show(l);
 
   gtk_box_pack_start(GTK_BOX(vvv), l, FALSE, FALSE, 0);
@@ -1284,7 +1284,7 @@ img_edit_new(struct ImageMembers *ii)
   vvv = gtk_vbox_new(FALSE, 2);
   gtk_object_set_data(GTK_OBJECT(w), "red_controls", vvv);
   gtk_box_pack_start(GTK_BOX(vv), vvv, FALSE, FALSE, 0);
-  l = gtk_label_new("Red Controls");
+  l = gtk_label_new(N_("Red Controls"));
   gtk_widget_show(l);
   gtk_box_pack_start(GTK_BOX(vvv), l, FALSE, FALSE, 0);
   pixmap = gdk_pixmap_create_from_xpm_d(w->window,&bitmap,
@@ -1324,7 +1324,7 @@ img_edit_new(struct ImageMembers *ii)
   vvv = gtk_vbox_new(FALSE, 2);
   gtk_object_set_data(GTK_OBJECT(w), "green_controls", vvv);
   gtk_box_pack_start(GTK_BOX(vv), vvv, FALSE, FALSE, 0);
-  l = gtk_label_new("Green Controls");
+  l = gtk_label_new(N_("Green Controls"));
   gtk_widget_show(l);
   gtk_box_pack_start(GTK_BOX(vvv), l, FALSE, FALSE, 0);
   pixmap = gdk_pixmap_create_from_xpm_d(w->window,&bitmap,
@@ -1364,7 +1364,7 @@ img_edit_new(struct ImageMembers *ii)
   vvv = gtk_vbox_new(FALSE, 2);
   gtk_object_set_data(GTK_OBJECT(w), "blue_controls", vvv);
   gtk_box_pack_start(GTK_BOX(vv), vvv, FALSE, FALSE, 0);
-  l = gtk_label_new("Blue Controls");
+  l = gtk_label_new(N_("Blue Controls"));
   gtk_widget_show(l);
   gtk_box_pack_start(GTK_BOX(vvv), l, FALSE, FALSE, 0);
   pixmap = gdk_pixmap_create_from_xpm_d(w->window,&bitmap,
@@ -1405,26 +1405,26 @@ img_edit_new(struct ImageMembers *ii)
   gtk_widget_show(h);
   gtk_box_pack_start(GTK_BOX(v), h, TRUE, TRUE, 0);
   
-  l = gtk_label_new("Colour Modifications:");
+  l = gtk_label_new(N_("Colour Modifications:"));
   gtk_widget_show(l);
   gtk_box_pack_start(GTK_BOX(h), l, FALSE, FALSE, 0);
   gtk_object_set_data(GTK_OBJECT(w), "size_label", l);
   t = gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL, GTK_TOOLBAR_TEXT);
   gtk_widget_show(t);
   gtk_box_pack_start(GTK_BOX(h), t, FALSE, FALSE, 0);
-  gtk_toolbar_append_item(GTK_TOOLBAR(t), "Apply",
+  gtk_toolbar_append_item(GTK_TOOLBAR(t), N_("Apply"),
 			  "Apply the current color changes to the main image",
 			  "Apply the current color changes to the main image",
 			  NULL, (GtkSignalFunc)ee_edit_cb_col_apply, w);
-  gtk_toolbar_append_item(GTK_TOOLBAR(t), "Keep",
+  gtk_toolbar_append_item(GTK_TOOLBAR(t), N_("Keep"),
 			  "Apply the current color changes to the image data, and reset",
 			  "Apply the current color changes to the image data, and reset",
 			  NULL, (GtkSignalFunc)ee_edit_cb_col_keep, w);
-  gtk_toolbar_append_item(GTK_TOOLBAR(t), "Reset",
-			  "Reset all the color changes to normal values",
-			  "Reset all the color changes to normal values",
+  gtk_toolbar_append_item(GTK_TOOLBAR(t), N_("Reset"),
+			  N_("Reset all the color changes to normal values"),
+			  N_("Reset all the color changes to normal values"),
 			  NULL, (GtkSignalFunc)ee_edit_cb_col_reset, w);
-  c = gtk_check_button_new_with_label("Always Apply");
+  c = gtk_check_button_new_with_label(N_("Always Apply"));
   gtk_widget_show(c);
   gtk_signal_connect(GTK_OBJECT(c), "clicked",
 		     GTK_SIGNAL_FUNC(ee_edit_cb_always_toggle),
@@ -1433,7 +1433,7 @@ img_edit_new(struct ImageMembers *ii)
 			    "Always apply any changes to the main image",
 			    "Always apply any changes to the main image");
 
-  c = gtk_button_new_with_label("Close");
+  c = gtk_button_new_with_label(N_("Close"));
   gtk_signal_connect_object(GTK_OBJECT(c), "clicked",
                             GTK_SIGNAL_FUNC(gtk_widget_destroy),
                             GTK_OBJECT(w));
@@ -1447,7 +1447,7 @@ img_edit_new(struct ImageMembers *ii)
   gtk_widget_show(c);
 
   /*
-  f = gtk_frame_new("Geometry Settings");
+  f = gtk_frame_new(N_("Geometry Settings"));
   gtk_widget_show(f);
   gtk_box_pack_start(GTK_BOX(vm), f, TRUE, TRUE, 0);
   
@@ -1459,12 +1459,12 @@ img_edit_new(struct ImageMembers *ii)
   gtk_widget_show(v);
   gtk_box_pack_start(GTK_BOX(h), v, TRUE, TRUE, 0);
   
-  l = gtk_label_new("Image Size:");
+  l = gtk_label_new(N_("Image Size:"));
   gtk_widget_show(l);
   gtk_box_pack_start(GTK_BOX(v), l, FALSE, FALSE, 0);
   gtk_object_set_data(GTK_OBJECT(w), "size_label", l);
   
-  l = gtk_label_new("Crop:");
+  l = gtk_label_new(N_("Crop:"));
   gtk_widget_show(l);
   gtk_box_pack_start(GTK_BOX(v), l, FALSE, FALSE, 0);
   gtk_object_set_data(GTK_OBJECT(w), "crop_label", l);

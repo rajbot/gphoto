@@ -133,7 +133,7 @@ void takepicture_call() {
 	}
 	    
 	appendpic(picNum, 0, TRUE, NULL);
-	sprintf(status, "New picture is #%03i", picNum);
+	sprintf(status, N_("New picture is #%03i"), picNum);
 	gtk_notebook_set_page (GTK_NOTEBOOK(notebook), picNum);
 	update_status(status);
 }
@@ -155,7 +155,7 @@ void format (GtkWidget *dialog, GtkObject *button) {
 	    (*Camera->delete_picture)(i);
 	    remove_thumbnail(i);
 	    i--;
-	    sprintf(error, "Deleting %i...\n", i);
+	    sprintf(error, N_("Deleting %i...\n"), i);
 	    update_status(error);
 	    update_progress((float)i/(float)no_pics);
 	}
@@ -284,7 +284,7 @@ void savepictodisk (gint picNum, gint thumbnail, char *prefix) {
 #endif
 
 	if ((im = (*Camera->get_picture)(picNum, thumbnail)) == 0) {
-		sprintf(error, "Could not save #%i", picNum);
+		sprintf(error, N_("Could not save #%i"), picNum);
 		error_dialog(error);
 		return;
 	}
@@ -366,22 +366,22 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
                 node = node->next; i++;
                 if (GTK_TOGGLE_BUTTON(node->button)->active) {
 			if ((strcmp("i", type)==0)||(strcmp("in", type)==0)) {
-				sprintf(status, "Saving Image #%03i...", i);
+				sprintf(status, N_("Saving Image #%03i..."), i);
 				update_status(status);
 				sprintf(fname, "%s-%03i",
 					saveselectedtodisk_dir, i);
 				savepictodisk(i, 0, fname); }
 			   else {
-				sprintf(status, "Saving Thumbnail #%03i...", i);
+				sprintf(status, N_("Saving Thumbnail #%03i..."), i);
 				update_status(status);
-				sprintf(fname, "%s-thumbnail-%03i",
+				sprintf(fname, N_("%s-thumbnail-%03i"),
 					saveselectedtodisk_dir, i);
 				savepictodisk(i, 1, fname);
 			}
 			pic++;
 		}
 	}
-	sprintf(fname, "Done. Images saved in %s", filesel_cwd);
+	sprintf(fname, N_("Done. Images saved in %s"), filesel_cwd);
 	update_status(fname);
 }
 
@@ -413,7 +413,7 @@ void appendpic (gint picNum, gint thumbnail, gint fromCamera, char *fileName) {
 
 	if (fromCamera) {
 		if ((im = (*Camera->get_picture)(picNum, thumbnail))==0) {
-			sprintf(error, "Could not retrieve #%i", picNum);
+			sprintf(error, N_("Could not retrieve #%i"), picNum);
 			error_dialog(error);
 			return;
 		}
@@ -421,7 +421,7 @@ void appendpic (gint picNum, gint thumbnail, gint fromCamera, char *fileName) {
 							im->image_size);
 		free_image(im);
 		if (post_process) {
-			sprintf(imagename, "%s/gphoto-image-%03i.jpg",
+			sprintf(imagename, N_("%s/gphoto-image-%03i.jpg"),
 				gphotoDir, picNum);
 			gdk_imlib_save_image(node->imlibimage,
 				imagename, NULL);
@@ -536,7 +536,7 @@ void port_dialog() {
 #endif
 
 	dialog = gtk_dialog_new();
-	gtk_window_set_title(GTK_WINDOW(dialog), "Select model/port...");
+	gtk_window_set_title(GTK_WINDOW(dialog), N_("Select model/port..."));
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
 	gtk_container_border_width(GTK_CONTAINER(dialog), 5);
 	gtk_widget_set_usize(dialog, 450, 300);
@@ -722,7 +722,7 @@ void port_dialog() {
 	
 	if (( sd = open (serial_port, O_RDWR, 0) ) < 0) {
 		
-		sprintf(status, "Error: failed to open %s",serial_port);
+		sprintf(status, N_("Error: failed to open %s"), serial_port);
 		update_status(status);
 		message_window (N_("Missing Serial Device Permissions"),
 				N_("Please check the permissions (see the manual)."), GTK_JUSTIFY_FILL);
@@ -815,7 +815,7 @@ void usersmanual_dialog() {
 	char *manual_beginning;
 
 	dialog = gtk_dialog_new();
-	gtk_window_set_title(GTK_WINDOW(dialog), "User's Manual");
+	gtk_window_set_title(GTK_WINDOW(dialog), N_("User's Manual"));
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
 	gtk_widget_set_usize(dialog, 460, 450);
 
@@ -833,7 +833,7 @@ void usersmanual_dialog() {
 		label = gtk_label_new(strdup(manual_text));
 		free(manual_text);}
 	   else {
-		sprintf(error, "Could not open:\n%s", manual_filename);
+		sprintf(error, N_("Could not open:\n%s"), manual_filename);
 		gtk_label_new(error);
 	}
 
@@ -849,7 +849,7 @@ void usersmanual_dialog() {
 
 	gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),scrwin);
 
-        button = gtk_button_new_with_label("OK");
+        button = gtk_button_new_with_label(N_("OK"));
 	gtk_widget_show(button);
         GTK_WIDGET_SET_FLAGS (button, GTK_CAN_DEFAULT);
         gtk_signal_connect_object(GTK_OBJECT(button), "clicked",
@@ -869,7 +869,7 @@ for the current FAQ list.");
   
 void show_license() {
    
-  error_dialog("\
+  error_dialog(N_("\
 This program is free software; you can redistribute it and/or modify\
 it under the terms of the GNU General Public License as published by\
 the Free Software Foundation; either version 2 of the License, or\
@@ -884,7 +884,7 @@ You should have received a copy of the GNU General Public License\
 along with this program; if not, write to the Free Software\
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.\
 \
-See http://www.gnu.org for more details on the GNU project."); 
+See http://www.gnu.org for more details on the GNU project.")); 
 }
 
 /* used until callback is implemented */
@@ -892,7 +892,7 @@ void menu_selected (gchar *toPrint) {
 
 	char Error[1024];
 	
-	sprintf(Error, "%s is not yet implemented", toPrint);
+	sprintf(Error, N_("%s is not yet implemented"), toPrint);
 	error_dialog(Error);
 }
 
@@ -944,17 +944,17 @@ void insert_thumbnail(struct ImageMembers *node) {
 	return;
   }
 
-  sprintf(status, "Getting thumbnail %i...", i);
+  sprintf(status, N_("Getting thumbnail %i..."), i);
   update_status(status);
 
   if ((im = (*Camera->get_picture)(i, 1))==0) {
-	sprintf(error, "Could not retrieve #%i", i);
+	sprintf(error, N_("Could not retrieve #%i"), i);
 	error_dialog(error);
 	return;
   }
 
   tag=g_string_new("");
-  g_string_sprintf(tag, "Picture #%i\n", i); 
+  g_string_sprintf(tag, N_("Picture #%i\n"), i); 
   for (x=0; x<im->image_info_size; x+=2) {
 	g_string_sprintfa(tag,
 		"%s:%s\n",im->image_info[x],im->image_info[x+1]);
@@ -1033,7 +1033,7 @@ void makeindex (gint getthumbs) {
 
 	struct ImageMembers *node = &Thumbnails;
 
-	update_status("Getting Index...");	
+	update_status(N_("Getting Index..."));
 
 	while (Thumbnails.next != NULL)
 		remove_thumbnail(1);
@@ -1047,9 +1047,9 @@ void makeindex (gint getthumbs) {
         gtk_container_add(GTK_CONTAINER(index_vp), index_table);
 
 	num_pictures_taken = (*Camera->number_of_pictures)();
-fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
+fprintf(stderr, N_("num_pictures_taken is %d\n"), num_pictures_taken);
 	if (num_pictures_taken == -1) {
-		error_dialog("Could not get the number of pictures");
+		error_dialog(N_("Could not get the number of pictures"));
 		return;
 	}
 
@@ -1059,7 +1059,7 @@ fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
 		if (!okAction) {
 			deactivate_button(stop_button);
 			update_progress(0);
-			update_status("Download cancelled.");
+			update_status(N_("Download cancelled."));
 			return;
 		}
 		node->next = malloc (sizeof(struct ImageMembers));
@@ -1118,7 +1118,7 @@ fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
 	}
 	deactivate_button(stop_button);
 	update_progress(0);
-	update_status("Done getting index.");	
+	update_status(N_("Done getting index."));
 }
 
 /* get index of images and place in main page table */
@@ -1154,7 +1154,7 @@ void getpics (char *pictype) {
 			x++;
 	}
 	if (x == 0) {
-		update_status("Nothing selected for download.");
+		update_status(N_("Nothing selected for download."));
 		return;
 	}
 
@@ -1168,14 +1168,14 @@ void getpics (char *pictype) {
 			y++;
 			if ((strcmp("i", pictype) == 0) ||
 			    (strcmp("ti", pictype) == 0)) {
-				sprintf(status, "Getting Image #%03i...", i);
+				sprintf(status, N_("Getting Image #%03i..."), i);
 				update_status(status);
 				appendpic(i, 0, TRUE, NULL);
 			}
 			if ((strcmp("t", pictype) == 0) ||
 			    (strcmp("ti", pictype) == 0)) {			
 				appendpic(i, 1, TRUE, NULL);
-				sprintf(status, "Getting Thumbnail #%03i...", i);
+				sprintf(status, N_("Getting Thumbnail #%03i..."), i);
 				update_status(status);
 			}
 			gtk_toggle_button_set_state(
@@ -1185,9 +1185,9 @@ void getpics (char *pictype) {
 		}
 	}
 	if (okAction)
-		update_status("Done downloading.");
+		update_status(N_("Done downloading."));
 	   else
-		update_status("Download halted.");
+		update_status(N_("Download halted."));
 	deactivate_button(stop_button);
 	update_progress(0);
 }
@@ -1263,7 +1263,7 @@ void save_dialog_update(GtkWidget *button, GtkWidget *label) {
 		"Save all opened images (enter the filename prefix below)");}
 	   else {
         	gtk_widget_show(GTK_WIDGET(child->next->data));
-		gtk_label_set_text(GTK_LABEL(label),"Save all opened images");
+		gtk_label_set_text(GTK_LABEL(label),N_("Save all opened images"));
 	}
 }
 
@@ -1275,7 +1275,7 @@ void save_dialog (GtkWidget *widget, gpointer data) {
 
 	sprintf(filename, "%s/*.*", filesel_cwd);
 
-	save_dialog_filew = gtk_file_selection_new ("Save Image(s)...");
+	save_dialog_filew = gtk_file_selection_new (N_("Save Image(s)..."));
 	gtk_window_set_position (GTK_WINDOW (save_dialog_filew),GTK_WIN_POS_CENTER);
         gtk_file_selection_set_filename(GTK_FILE_SELECTION(save_dialog_filew), 
 		filename);
@@ -1297,7 +1297,7 @@ void save_dialog (GtkWidget *widget, gpointer data) {
 	currentPic = gtk_notebook_current_page(GTK_NOTEBOOK(notebook));
 	if ((currentPic == 0) && 
 	   (!GTK_TOGGLE_BUTTON(saveall_checkbutton)->active)) {
-		update_status("Saving the index is not yet supported");
+		update_status(N_("Saving the index is not yet supported"));
 		return;
 	}
 	if (!GTK_TOGGLE_BUTTON(saveall_checkbutton)->active) {
@@ -1322,7 +1322,7 @@ void open_dialog (GtkWidget *widget, gpointer data) {
 
 	GtkWidget *filew;
 
-	filew = gtk_file_selection_new ("Open Image...");
+	filew = gtk_file_selection_new (N_("Open Image..."));
 	gtk_window_set_position (GTK_WINDOW (filew),
 		GTK_WIN_POS_CENTER);
 	gtk_file_selection_set_filename(GTK_FILE_SELECTION
@@ -1346,19 +1346,19 @@ void print_pic () {
 
 	currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
 	if (currentPic == 0) {
-		update_status("Can't print the index yet.");
+		update_status(N_("Can't print the index yet."));
 		return;
 	}
 
         dialog = gtk_dialog_new();
-        gtk_window_set_title(GTK_WINDOW(dialog), "Print Image...");
+        gtk_window_set_title(GTK_WINDOW(dialog), N_("Print Image..."));
 	gtk_window_set_position (GTK_WINDOW (dialog),GTK_WIN_POS_CENTER);
         hbox = gtk_hbox_new(FALSE, 5);
         gtk_widget_show(hbox);
         gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
 			hbox);
 
-        label = gtk_label_new("Print Command:");
+        label = gtk_label_new(N_("Print Command:"));
         gtk_widget_show(label);
         gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
         gtk_box_pack_start_defaults(GTK_BOX(hbox), label);
@@ -1380,13 +1380,13 @@ void print_pic () {
         gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
 				    label);
 
-        okbutton = gtk_button_new_with_label("Print");
+        okbutton = gtk_button_new_with_label(N_("Print"));
         gtk_widget_show(okbutton);
         GTK_WIDGET_SET_FLAGS (okbutton, GTK_CAN_DEFAULT);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
                                     okbutton);
 
-        cancelbutton = gtk_button_new_with_label("Cancel");
+        cancelbutton = gtk_button_new_with_label(N_("Cancel"));
         gtk_widget_show(cancelbutton);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
                                     cancelbutton);
@@ -1406,12 +1406,12 @@ void print_pic () {
 	sprintf(fname, "%s/gphoto-%i-%03i.jpg", gphotoDir, pid, currentPic);
 	gdk_imlib_save_image(node->imlibimage, fname,NULL);
 
-	update_status("Now spooling...");
+	update_status(N_("Now spooling..."));
 	sprintf(command, "%s %s", gtk_entry_get_text(GTK_ENTRY(entry)),
 		fname);
 
 	system(command);
-	update_status("Spooling done. Printing may take a minute.");
+	update_status(N_("Spooling done. Printing may take a minute."));
 	gtk_widget_destroy(dialog);
 }
 
@@ -1455,7 +1455,7 @@ void color_dialog() {
 
 	currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
 	if (currentPic == 0) {
-	  update_status("Can't modify the index colors.");
+	  update_status(N_("Can't modify the index colors."));
 	  return;
 	}
 
@@ -1531,7 +1531,7 @@ void resize_dialog() {
 
 	currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
 	if (currentPic == 0) {
-	  update_status("Can't scale the index.");
+	  update_status(N_("Can't scale the index."));
 	  return;
 	}
 
@@ -1541,7 +1541,7 @@ void resize_dialog() {
         }
 
 	dialog = gtk_dialog_new();
-	gtk_window_set_title(GTK_WINDOW(dialog), "Resize Image...");
+	gtk_window_set_title(GTK_WINDOW(dialog), N_("Resize Image..."));
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
 
 	hbox = gtk_hbox_new(FALSE, 5);
@@ -1549,7 +1549,7 @@ void resize_dialog() {
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
                                     hbox);
 
-	label = gtk_label_new("Width:");
+	label = gtk_label_new(N_("Width:"));
 	gtk_widget_show(label);
 	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
 	gtk_box_pack_start_defaults(GTK_BOX(hbox), label);
@@ -1572,7 +1572,7 @@ void resize_dialog() {
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
                                     hbox);
 		
-	label = gtk_label_new("Height:");
+	label = gtk_label_new(N_("Height:"));
 	gtk_widget_show(label);
 	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
 	gtk_box_pack_start_defaults(GTK_BOX(hbox), label);
@@ -1597,12 +1597,12 @@ void resize_dialog() {
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
                                     resize_dialog_constrain);
 
-	rbutton = gtk_button_new_with_label("Resize");
+	rbutton = gtk_button_new_with_label(N_("Resize"));
 	gtk_widget_show(rbutton);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
 					rbutton);
 
-	button = gtk_button_new_with_label("Cancel");
+	button = gtk_button_new_with_label(N_("Cancel"));
 	gtk_widget_show(button);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
 					button);
@@ -1644,7 +1644,7 @@ void manip_pic (gchar *Option) {
 	
 	currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
 	if (currentPic == 0) {
-	  update_status("Can't manipulate the index.");
+	  update_status(N_("Can't manipulate the index."));
 	  return;
 	}
 	while (i < currentPic) {
@@ -1697,7 +1697,7 @@ void scale (int factor) { /* Decreases image size by factor n % */
 
   currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
   if (currentPic == 0) {
-    update_status("Can't scale the index!");
+    update_status(N_("Can't scale the index!"));
     return;
   }
   
@@ -1726,16 +1726,16 @@ void scale (int factor) { /* Decreases image size by factor n % */
   gtk_widget_hide(node->image);
   gtk_pixmap_set(GTK_PIXMAP(node->image), pixmap, NULL);
   gtk_widget_show(node->image);
-  update_status("Done.");
+  update_status(N_("Done."));
 }
  
 void scale_half () { /* Scales image size by 50% */
-  update_status("Scaling image by 50%...");
+  update_status(N_("Scaling image by 50%..."));
   scale (50);
 }
 
 void scale_double () { /* Scales image size by 200% */
-  update_status("Scaling image by 200%...");
+  update_status(N_("Scaling image by 200%..."));
   scale (200);
 }
 
@@ -1781,26 +1781,26 @@ void post_process_change (GtkWidget *widget, GtkWidget *win) {
 
 
 	dialog = gtk_dialog_new();
-	gtk_window_set_title(GTK_WINDOW(dialog), "Post-Processing Options"); 
+	gtk_window_set_title(GTK_WINDOW(dialog), N_("Post-Processing Options")); 
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
-	ok = gtk_button_new_with_label("OK");
+	ok = gtk_button_new_with_label(N_("OK"));
 	gtk_widget_show(ok);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
 		ok);
 
-	cancel = gtk_button_new_with_label("Cancel");
+	cancel = gtk_button_new_with_label(N_("Cancel"));
 	gtk_widget_show(cancel);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
 		cancel);
 
-	pp = gtk_check_button_new_with_label("Enable post-processing");
+	pp = gtk_check_button_new_with_label(N_("Enable post-processing"));
 	gtk_widget_show(pp);
 	if (post_process)
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(pp), TRUE);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), pp,
 		FALSE, FALSE, 0);
 
-	label = gtk_label_new("Post-processing command-line:");
+	label = gtk_label_new(N_("Post-processing command-line:"));
 	gtk_widget_show(label);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
 		TRUE, TRUE, 0);
@@ -1866,49 +1866,49 @@ void browse_gallery() {
 }
 
 void browse_help() {
-        url_send_browser ("http://www.gphoto.org/help.php3");
+        url_send_browser (N_("http://www.gphoto.org/help.php3"));
 }
 
 void browse_gphoto() {
-        url_send_browser ("http://www.gphoto.org/");
+        url_send_browser (N_("http://www.gphoto.org/"));
 }
 
 void browse_feedback() {
-        url_send_browser ("http://www.gphoto.org/feedback.php3");
+        url_send_browser (N_("http://www.gphoto.org/feedback.php3"));
 }
 
 void browse_news() {
-        url_send_browser ("http://www.gphoto.org/news.php3");
+        url_send_browser (N_("http://www.gphoto.org/news.php3"));
 }
 
 void browse_download() {
-        url_send_browser ("http://www.gphoto.org/download.php3");
+        url_send_browser (N_("http://www.gphoto.org/download.php3"));
 }
 
 void browse_cameras() {
-        url_send_browser ("http://www.gphoto.org/cameras.php3");
+        url_send_browser (N_("http://www.gphoto.org/cameras.php3"));
 }
 
 void browse_supporting() {
-        url_send_browser ("http://www.gphoto.org/supporting.php3");
+        url_send_browser (N_("http://www.gphoto.org/supporting.php3"));
 }
 
 void browse_discussion() {
-        url_send_browser ("http://www.gphoto.org/lists.php3");
+        url_send_browser (N_("http://www.gphoto.org/lists.php3"));
 }
 
 void browse_team() {
-        url_send_browser ("http://www.gphoto.org/team.php3");
+        url_send_browser (N_("http://www.gphoto.org/team.php3"));
 }
 
 void browse_themes() {
-        url_send_browser ("http://www.gphoto.org/themes.php3");
+        url_send_browser (N_("http://www.gphoto.org/themes.php3"));
 }
 
 void browse_links() {
-        url_send_browser ("http://www.gphoto.org/links.php3");
+        url_send_browser (N_("http://www.gphoto.org/links.php3"));
 }
 
 void browse_todo() {
-        url_send_browser ("http://www.gphoto.org/todo.php3");
+        url_send_browser (N_("http://www.gphoto.org/todo.php3"));
 }

@@ -2,7 +2,7 @@
  *
  * gPhoto - free digital camera utility - http://www.gphoto.org/
  *
- * Copyright (C) 1999  Ole Kristian Aamot <ole.aamot@gphoto.org>
+ * Copyright (C) 2000 Scott Fritzinger
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.8  2000/03/24 12:28:28  ole
+ * More markups for i18n support.
+ *
  * Revision 1.7  1999/06/22 16:13:58  gdr
  * Remove DOCDIR from src/Makefile.am and put into config.h. Well
  * defines.h really but that gets included into config.h.
@@ -79,6 +82,7 @@
 #include "gtk/gtk.h"
 #include "developer.h"
 #include "config.h"
+#include "gphoto.h"
 
 #define FILE_NAME "AUTHORS"
 
@@ -129,7 +133,7 @@ developer_dialog_create ()
       
       developer_dialog = gtk_window_new (GTK_WINDOW_DIALOG);
       gtk_window_set_wmclass (GTK_WINDOW (developer_dialog), "developer", "gPhoto");
-      sprintf(title, "gPhoto release %s was brought to you by", VERSION);
+      sprintf(title, N_("gPhoto release %s was brought to you by"), VERSION);
       gtk_window_set_title (GTK_WINDOW (developer_dialog), title);
       gtk_window_set_position (GTK_WINDOW (developer_dialog), GTK_WIN_POS_CENTER);
       gtk_signal_connect (GTK_OBJECT (developer_dialog), "delete_event",
@@ -192,14 +196,14 @@ developer_dialog_create ()
       gtk_widget_show (developer_label);
 
 
-      button_team = gtk_button_new_with_label ("Web Page");
+      button_team = gtk_button_new_with_label (N_("Web Page"));
       GTK_WIDGET_UNSET_FLAGS (button_team, GTK_RECEIVES_DEFAULT);
       gtk_signal_connect (GTK_OBJECT (button_team), "clicked",
 			  GTK_SIGNAL_FUNC (browse_team), NULL);
       gtk_container_add (GTK_CONTAINER (bbox2), button_team);
       gtk_widget_show (button_team);
       
-      button_prev = gtk_button_new_with_label ("Previous");
+      button_prev = gtk_button_new_with_label (N_("Previous"));
       GTK_WIDGET_UNSET_FLAGS (button_prev, GTK_RECEIVES_DEFAULT);
       gtk_signal_connect (GTK_OBJECT (button_prev), "clicked",
 			  GTK_SIGNAL_FUNC (developer_show_next),
@@ -207,7 +211,7 @@ developer_dialog_create ()
       gtk_container_add (GTK_CONTAINER (bbox2), button_prev);
       gtk_widget_show (button_prev);
 
-      button_next = gtk_button_new_with_label ("Next");
+      button_next = gtk_button_new_with_label (N_("Next"));
       GTK_WIDGET_UNSET_FLAGS (button_next, GTK_RECEIVES_DEFAULT);
       gtk_signal_connect (GTK_OBJECT (button_next), "clicked",
 			  GTK_SIGNAL_FUNC (developer_show_next),
@@ -215,7 +219,7 @@ developer_dialog_create ()
       gtk_container_add (GTK_CONTAINER (bbox2), button_next);
       gtk_widget_show (button_next);
 
-      button_close = gtk_button_new_with_label ("Close");
+      button_close = gtk_button_new_with_label (N_("Close"));
       GTK_WIDGET_SET_FLAGS (button_close, GTK_CAN_DEFAULT);
       gtk_window_set_default (GTK_WINDOW (developer_dialog), button_close);
       gtk_signal_connect (GTK_OBJECT (button_close), "clicked",
@@ -284,9 +288,9 @@ read_developer_file (char *filename)
     {
       char msg[1024];	
       sprintf(msg,
-              "The gPhoto AUTHORS file appears to be missing!\n"
-	      "There should be a file called " FILE_NAME " in the\n"
-	      "%s directory.\nPlease check your installation.",
+              N_("The gPhoto AUTHORS file appears to be missing!\n\
+	      There should be a file called " FILE_NAME " in the\n\
+	      %s directory.\nPlease check your installation."),
 	      DOCDIR);
       store_developer(msg);
       return;

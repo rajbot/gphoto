@@ -40,6 +40,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.24  2000/03/24 12:28:28  ole
+ * More markups for i18n support.
+ *
  * Revision 1.23  2000/03/23 23:18:02  ole
  * Misc. i18n modifications
  *
@@ -206,7 +209,7 @@ void gallery_change_dir(GtkWidget *widget, GtkWidget *label) {
 
 	GtkWidget *filesel;
 
-        filesel = gtk_directory_selection_new("Select an Output Directory...");
+        filesel = gtk_directory_selection_new(N_("Select an Output Directory..."));
 	gtk_window_set_position (GTK_WINDOW (filesel), GTK_WIN_POS_CENTER);
 	gtk_widget_show(filesel);
 
@@ -304,7 +307,7 @@ Then, re-run the HTML Gallery.");
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
 		FALSE, FALSE, 0);
 
-	label = gtk_label_new("Gallery Name:");
+	label = gtk_label_new(N_("Gallery Name:"));
 	gtk_widget_show(label);
 	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 
@@ -317,7 +320,7 @@ Then, re-run the HTML Gallery.");
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hseparator,
 		FALSE, FALSE, 0);
 
-	label = gtk_label_new("Theme:");
+	label = gtk_label_new(N_("Theme:"));
 	gtk_widget_show(label);
 	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
@@ -376,7 +379,7 @@ Then, re-run the HTML Gallery.");
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
 		FALSE, FALSE, 0);	
 
-	label = gtk_label_new("Output Directory:");
+	label = gtk_label_new(N_("Output Directory:"));
 	gtk_widget_show(label);
 	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
 	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
@@ -387,7 +390,7 @@ Then, re-run the HTML Gallery.");
 	gtk_box_pack_start_defaults(GTK_BOX(hbox), dirlabel);
 	gtk_object_set_data(GTK_OBJECT(dirlabel), "dir", filesel_cwd);
 
-	dirbutton = gtk_button_new_with_label("Change...");
+	dirbutton = gtk_button_new_with_label(N_("Change..."));
 	gtk_widget_show(dirbutton);
 	gtk_signal_connect(GTK_OBJECT(dirbutton), "clicked",
 		GTK_SIGNAL_FUNC(gallery_change_dir),dirlabel);
@@ -397,15 +400,15 @@ Then, re-run the HTML Gallery.");
 	 * it should make extra buttons for shtml, table borders, and 
 	 * image borders
 	 */	
-	shtml = gtk_check_button_new_with_label("Export file as *.shtml?");
+	shtml = gtk_check_button_new_with_label(N_("Export file as *.shtml?"));
 	gtk_widget_show(shtml);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), shtml, FALSE, FALSE, 0);
 	
-	table_border = gtk_check_button_new_with_label("Set table border width to zero for thumbnails?");
+	table_border = gtk_check_button_new_with_label(N_("Set table border width to zero for thumbnails?"));
 	gtk_widget_show(table_border);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table_border, FALSE, FALSE, 0);
         
-	image_border = gtk_check_button_new_with_label("Set image border width to zero? (so you don't see the link colors...)");
+	image_border = gtk_check_button_new_with_label(N_("Set image border width to zero? (so you don't see the link colors...)"));
         gtk_widget_show(image_border);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), image_border, FALSE, FALSE, 0); 
 
@@ -415,13 +418,13 @@ Then, re-run the HTML Gallery.");
 	gtk_widget_show(netscape);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), netscape, FALSE, FALSE,0);
 
-	obutton = gtk_button_new_with_label("Create");
+	obutton = gtk_button_new_with_label(N_("Create"));
 	gtk_widget_show(obutton);
         GTK_WIDGET_SET_FLAGS (obutton, GTK_CAN_DEFAULT);
 	gtk_box_pack_start_defaults(
 		GTK_BOX(GTK_DIALOG(dialog)->action_area), obutton);
 
-	cbutton = gtk_button_new_with_label("Cancel");
+	cbutton = gtk_button_new_with_label(N_("Cancel"));
 	gtk_widget_show(cbutton);
         GTK_WIDGET_SET_FLAGS (cbutton, GTK_CAN_DEFAULT);
 	gtk_box_pack_start_defaults(
@@ -438,7 +441,7 @@ Then, re-run the HTML Gallery.");
 
 	dlist = GTK_LIST(list)->selection;
 	if (!dlist) {
-		error_dialog("You must select a theme!");
+		error_dialog(N_("You must select a theme!"));
 		if (GTK_IS_OBJECT(dialog))
 			gtk_widget_destroy(dialog);
 		return;
@@ -526,23 +529,23 @@ Then, re-run the HTML Gallery.");
 				system(cp);
 			}
 		/* Get the current thumbnail */
-			sprintf(cp, "Getting Thumbnail #%i...", j+1);
+			sprintf(cp, N_("Getting Thumbnail #%i..."), j+1);
 			update_status(cp);
 			if ((im = (*Camera->get_picture)(j+1, 1))==0) {
-				sprintf(error, "Could not retrieve #%i",
+				sprintf(error, N_("Could not retrieve #%i"),
 					j+1);
 				error_dialog(error);
-				sprintf(thumbnail, "Not Available");
+				sprintf(thumbnail, N_("Not Available"));
 				//jae
 				sprintf(thumbnail,
-		"<a href=\"picture-%03i.html\">Click Me<\\/a>",i+1);
+		N_("<a href=\"picture-%03i.html\">Click Me<\\/a>"),i+1);
   				sprintf(thumbnail_filename, "");
 				sprintf(thumbnail_number, "%03i", i+1);
 			} else {
 				sprintf(thumbnail, 
 	"<a href=\"picture-%03i.html\"><img alt=\"%03i\" src=\"thumbnail-%03i.%s\" border=\"%s\"><\\/a>",
 					i+1, i+1, i+1, im->image_type, image_border_width);
-				sprintf(thumbnail_filename, "thumbnail-%03i.%s",
+				sprintf(thumbnail_filename, N_("thumbnail-%03i.%s"),
 					i+1, im->image_type);
 				sprintf(thumbnail_number, "%03i", i+1);
 				sprintf(filename2, "%s%s", outputdir,
@@ -556,19 +559,19 @@ Then, re-run the HTML Gallery.");
 				free_image(im);
 			}
 			/* Get the current image */
-			sprintf(cp, "Getting Image #%i...", j+1);
+			sprintf(cp, N_("Getting Image #%i..."), j+1);
 			update_status(cp);
 			
 			if ((im = (*Camera->get_picture)(j+1, 0))==0) {
-				sprintf(error, "Could not retrieve #%i", j+1);
+				sprintf(error, N_("Could not retrieve #%i"), j+1);
 				error_dialog(error);
-				sprintf(picture, "Not Available");
+				sprintf(picture, N_("Not Available"));
 				sprintf(picture_filename, "");
 				sprintf(picture_number, "%03i", i+1);}
 			   else {
-				sprintf(picture, "<img alt=\"%03i\" src=\"picture-%03i.%s\">",
+				sprintf(picture, N_("<img alt=\"%03i\" src=\"picture-%03i.%s\">"),
                                 	i+1, i+1, im->image_type);
-                        	sprintf(picture_filename, "picture-%03i.%s",
+                        	sprintf(picture_filename, N_("picture-%03i.%s"),
                                 	i+1, im->image_type);
 				sprintf(picture_number, "%03i", i+1);
 				sprintf(filename2, "%s%s", outputdir,
@@ -584,12 +587,12 @@ Then, re-run the HTML Gallery.");
 			if (i+1 == num_selected)
 				strcpy(picture_next, gallery_index);
 			   else	
-				sprintf(picture_next, "picture-%03i.html",
+				sprintf(picture_next, N_("picture-%03i.html"),
 					i+2);
 			if (i == 0)
 				strcpy(picture_previous, gallery_index);
 			   else
-				sprintf(picture_previous, "picture-%03i.html",
+				sprintf(picture_previous, N_("picture-%03i.html"),
 					i);
 			sprintf(cp, "echo \"<td>\" >> %s", filename);
 			system(cp);
@@ -601,7 +604,7 @@ Then, re-run the HTML Gallery.");
 			sprintf(cp, "echo \"</td>\" >> %s", filename);
 			system(cp);
 
-			sprintf(filename, "%spicture-%03i.html",
+			sprintf(filename, N_("%spicture-%03i.html"),
 				outputdir, i+1);
 			if (!confirm_overwrite(filename)) {
 				if (GTK_IS_OBJECT(dialog))
@@ -624,10 +627,10 @@ Then, re-run the HTML Gallery.");
 	sprintf(filename2,"%s/%s/index_bottom.html",GALLERYDIR,theme);
 	gallery_parse_tags(filename, filename2);
 	if (GTK_TOGGLE_BUTTON(netscape)->active) {
-		sprintf(statmsg, "Loaded file:%s%s in %s", filesel_cwd, output_filename, BROWSER);
+		sprintf(statmsg, N_("Loaded file:%s%s in %s"), filesel_cwd, output_filename, BROWSER);
 		browse_gallery();}
 	   else {
-		sprintf(statmsg, "Gallery saved in: %s", outputdir);
+		sprintf(statmsg, N_("Gallery saved in: %s"), outputdir);
 	}		
 	if (GTK_IS_OBJECT(dialog))
 		gtk_widget_destroy(dialog);

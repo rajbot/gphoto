@@ -53,11 +53,11 @@ void error_dialog(char *Error) {
 
         dialog = gtk_dialog_new();
 	GTK_WINDOW(dialog)->type = GTK_WINDOW_DIALOG;
-        gtk_window_set_title(GTK_WINDOW(dialog), "gPhoto Message");
+        gtk_window_set_title(GTK_WINDOW(dialog), N_("gPhoto Message"));
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
         gtk_container_border_width(GTK_CONTAINER(dialog), 5);
         label = gtk_label_new(Error);
-        button = gtk_button_new_with_label("OK");
+        button = gtk_button_new_with_label(N_("OK"));
         GTK_WIDGET_SET_FLAGS (button, GTK_CAN_DEFAULT);
         gtk_signal_connect_object(GTK_OBJECT(button), "clicked",
                             GTK_SIGNAL_FUNC(gtk_widget_destroy),
@@ -98,7 +98,7 @@ void message_window(char *title, char *message, GtkJustification  jtype )
         gtk_container_border_width(GTK_CONTAINER(dialog), 5);
         label = gtk_label_new(message);
         gtk_label_set_justify ( GTK_LABEL(label), jtype );
-        button = gtk_button_new_with_label("OK");
+        button = gtk_button_new_with_label(N_("OK"));
         GTK_WIDGET_SET_FLAGS (button, GTK_CAN_DEFAULT);
         gtk_signal_connect_object(GTK_OBJECT(button), "clicked",
                             GTK_SIGNAL_FUNC(gtk_widget_destroy),
@@ -124,7 +124,7 @@ int confirm_dialog (char *message) {
 	int retval=0;
 
 	dialog = gtk_dialog_new();
-	gtk_window_set_title(GTK_WINDOW(dialog), "Confirm");
+	gtk_window_set_title(GTK_WINDOW(dialog), N_("Confirm"));
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
 	GTK_WINDOW(dialog)->type = GTK_WINDOW_DIALOG;
 
@@ -133,12 +133,12 @@ int confirm_dialog (char *message) {
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
 		label);
 
-	yes = gtk_button_new_with_label("Yes");
+	yes = gtk_button_new_with_label(N_("Yes"));
 	gtk_widget_show(yes);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
 		yes);
 
-	no = gtk_button_new_with_label("No");
+	no = gtk_button_new_with_label(N_("No"));
 	gtk_widget_show(no);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
 		no);
@@ -163,7 +163,7 @@ int confirm_overwrite (char *filename) {
 
 	if ((f = fopen(filename, "r"))) {
 		fclose(f);
-                sprintf(confirm, "File %s exists. Overwrite?", filename);
+                sprintf(confirm, N_("File %s exists. Overwrite?"), filename);
                 return (confirm_dialog(confirm));
         }
 	return 1; /* File doesn't exist. OK to overwrite */
@@ -346,7 +346,7 @@ GdkImlibImage *gdk_imlib_load_image_mem(char *image, int size) {
 		remove(c);
 		return (imlibimage);}
 	   else {
-		printf("load_image_mem: could not load image\n");
+		printf(N_("load_image_mem: could not load image\n"));
 		return (NULL);
 	}
 		
@@ -469,7 +469,7 @@ void execute_program (char *program, char *arg) {
 	pid = fork();
 
 	if (pid < 0) {
-		printf("Fork failed. Exiting. \n");
+		printf(N_("Fork failed. Exiting. \n"));
 		_exit(-1);
 	}
 
@@ -489,7 +489,7 @@ void execute_program (char *program, char *arg) {
 			}
 		}
 		g_free(rlim);
-		fprintf(stderr, "Closed %d files.\n", fd);
+		fprintf(stderr, N_("Closed %d files.\n"), fd);
 */
 		char *args[3];
 #ifdef linux

@@ -25,9 +25,9 @@ void live_snapshot(GtkWidget *dialog) {
                         GTK_CONTAINER(GTK_DIALOG(dialog)->vbox));
 	GtkWidget *gpixmap = GTK_WIDGET(child->data);
 
-	update_status("Getting live image...");
+	update_status(N_("Getting live image..."));
         if ((im = (*Camera->get_preview)()) == 0) {
-		error_dialog("Could not get preview");
+		error_dialog(N_("Could not get preview"));
 		return;
 	}
 	imlibimage = gdk_imlib_load_image_mem(im->image, im->image_size);
@@ -37,7 +37,7 @@ void live_snapshot(GtkWidget *dialog) {
         gdk_imlib_render(imlibimage, w, h);
         pixmap = gdk_imlib_move_image(imlibimage);
         gtk_pixmap_set(GTK_PIXMAP(gpixmap), pixmap, NULL);
-	update_status("Done.");
+	update_status(N_("Done."));
 }
 
 void live_video (GtkWidget *button, GtkWidget *dialog) {
@@ -65,23 +65,23 @@ void live_main () {
 	GdkImlibImage *imlibimage;
 	struct Image *im;
 
-	update_status("Getting live image...");
+	update_status(N_("Getting live image..."));
 	dialog = gtk_dialog_new();
-	gtk_window_set_title(GTK_WINDOW(dialog), "Live Camera!");
+	gtk_window_set_title(GTK_WINDOW(dialog), N_("Live Camera!"));
 	gtk_container_border_width (GTK_CONTAINER(dialog), 10);
 
 	hbox = gtk_hbox_new(FALSE,0);
 	gtk_widget_show(hbox);
 	gtk_box_pack_end_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),hbox);
 
-	ubutton = gtk_button_new_with_label("Update Picture");
+	ubutton = gtk_button_new_with_label(N_("Update Picture"));
 	gtk_widget_show(ubutton);
 	gtk_box_pack_start_defaults(GTK_BOX(hbox),ubutton);
         gtk_signal_connect_object(GTK_OBJECT(ubutton), "clicked",
                            GTK_SIGNAL_FUNC(live_snapshot),
                            GTK_OBJECT(dialog));
 
-        tbutton = gtk_button_new_with_label("Take Picture");
+        tbutton = gtk_button_new_with_label(N_("Take Picture"));
         gtk_widget_show(tbutton);
         gtk_box_pack_start_defaults(GTK_BOX(hbox),tbutton);
         gtk_signal_connect_object(GTK_OBJECT(tbutton), "clicked",
@@ -97,7 +97,7 @@ void live_main () {
         	GTK_SIGNAL_FUNC(live_video), dialog);
 
 
-	cbutton = gtk_button_new_with_label("Close");
+	cbutton = gtk_button_new_with_label(N_("Close"));
 	gtk_widget_show(cbutton);
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->action_area),
 				  cbutton);
@@ -106,7 +106,7 @@ void live_main () {
                            GTK_SIGNAL_FUNC(gtk_widget_destroy),
                            GTK_OBJECT(dialog)); 
         if ((im = (*Camera->get_preview)()) == 0) {
-	        error_dialog("Could not get preview");
+	        error_dialog(N_("Could not get preview"));
 		return;
 	}
 	imlibimage = gdk_imlib_load_image_mem(im->image, im->image_size);
@@ -121,5 +121,5 @@ void live_main () {
 	gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
                                   gpixmap);
 	gtk_widget_show(dialog);
-	update_status("Done.");
+	update_status(N_("Done."));
 }

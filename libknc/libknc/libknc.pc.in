@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
 VERSION=@VERSION@
 
-Name = libkonica
+Name: libknc
 Description: Library for accessing some cameras manufactured by Konica.
 Requires:
 Version: @VERSION@

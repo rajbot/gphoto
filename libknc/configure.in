@@ -29,23 +29,8 @@ dnl ---------------------------------------------------------------------------
 dnl Interantionalization
 dnl ---------------------------------------------------------------------------
 ALL_LINGUAS=""
-# EVIL HACKS
-BUILD_INCLUDED_LIBINTL=no
-AC_SUBST(BUILD_INCLUDED_LIBINTL)
-USE_INCLUDED_LIBINTL=no
-AC_SUBST(USE_INCLUDED_LIBINTL)
-AC_MSG_CHECKING([for po/Makevars requiring evil hack])
-GETTEXT_PACKAGE="${PACKAGE}-${LIBKNC_CURRENT}"
-AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",[The gettext domain we're using])
-AC_SUBST(GETTEXT_PACKAGE)
-if test -f po/Makevars.template
-then
-        sed -e "s/^DOMAIN.*/DOMAIN = ${GETTEXT_PACKAGE}/" < po/Makevars.template > po/Makevars
-	AC_MSG_RESULT([yes. done.])
-else
-	AC_MSG_RESULT([no])
-fi
-AM_GNU_GETTEXT([external])
+AM_GLIB_GNU_GETTEXT
+AC_PROG_INTLTOOL
 
 dnl ---------------------------------------------------------------------------
 dnl Turn on debugging and all warnings when using gcc

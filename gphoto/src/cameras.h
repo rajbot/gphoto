@@ -84,7 +84,7 @@ struct Model cameras[] = {
 	{"Olympus C-1400L", &olympus},
 	{"Olympus C-2000Z", &olympus},
 	{"Panasonic Coolshot KXl-600A", &olympus},
-	{"Panasonic Cardshot NV-DCF5E", &olympus],
+	{"Panasonic Cardshot NV-DCF5E", &olympus},
 	{"Philips ESP60", &philips},
 	{"Philips ESP80", &philips},
 	{"Polaroid PDC 640", &olympus},

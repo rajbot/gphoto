@@ -1,0 +1,6 @@
+This directory contains csv2trainschedpdb a tool to convert a CSV file to
+the PDB format used on the Palm Pilot.
+See csvformat.txt for the format of the CSV file.
+
+Philippe Marzouk
+philm@users.sourceforge.net

@@ -35,7 +35,7 @@ do
 	chmod a+r "$new"
     fi
 done
-chmod 0644 *.tar.* bz2/*.tar.*
+chmod 0644 bz2/*.tar.*
 
 chmod 0705 .
 
@@ -44,6 +44,7 @@ cd .. || exit 2
 rm -f SUPPORTED-CAMERAS latest-bz2 latest-gz
 ln -s "$(basename "$base")"/bz2 latest-bz2
 ln -s "$(basename "$base")"/gz latest-gz
+ln -s "$(basename "$base")"/SUPPORTED-CAMERAS SUPPORTED-CAMERAS
 
 chmod 0604 .htaccess
 chmod 0705 .

@@ -1,3 +1,5 @@
+SUBDIRS = dc21x
+
 drivers_LTLIBRARIES = libgphoto_kodak_dc2x.la
 
 CFLAGS = @CFLAGS@ @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@ -DDC25=1

@@ -86,6 +86,7 @@ gallery/Makefile \
 gallery/RedNGray/Makefile \
 gphoto.spec \
 kodak/Makefile \
+kodak/dc21x/Makefile \
 kodak_generic/Makefile \
 konica/Makefile \
 konica_qmxxx/Makefile \

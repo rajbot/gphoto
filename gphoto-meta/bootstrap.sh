@@ -527,6 +527,10 @@ fi
 sed -e "s/\\\${compression}/${compression}/g" < build-tool-list > build-tool-list.boot
 buildtoollist="build-tool-list.boot"
 
+# remove autogen-generated files - mkinstalldirs irritates configuring
+# our packages
+rm -f mkinstalldirs missing ltmain.sh install-sh depcomp configure
+
 checktools || die
 cvslogin || die
 getsources || die

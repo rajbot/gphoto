@@ -3,6 +3,8 @@
 
 #include <kmainwindow.h>
 
+#define MESSAGE_TIME 5000
+
 /* Forward declarations */
 class KIconView;
 class KMenuBar;
@@ -25,7 +27,7 @@ private:
     KMenuBar *menu;
     KPopupMenu *fileMenu, *editMenu, *commandMenu, *cameraMenu, *help;
     KIconView *iconView;
-    KAction *saveAction, *deleteAction, *quitAction, *selectWorkDirAction,
+    KAction *saveAction, *deleteAction, *quitAction, /* *selectWorkDirAction,*/
             *downloadThumbsAction, *selectAllAction, *invertSelectionAction,
             *clearSelectionAction, *selectCameraAction, *initCameraAction, 
             *configureCameraAction,*cameraInformationAction, 

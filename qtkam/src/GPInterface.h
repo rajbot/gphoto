@@ -41,6 +41,7 @@ class GPInterface
     static void downloadThumbs(QIconView* iconView);
     static void downloadPicture(QString name, QString folder);
     static void deletePicture(QString name, QString folder);
+    static bool isInitialized() { return cameraInitialized; }
 
 private:
     static QPixmap downloadThumb(const char* name, const char* folder);

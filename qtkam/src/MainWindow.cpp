@@ -7,11 +7,13 @@
 #include <kimageio.h>
 #include <kiconloader.h>
 #include <kfiledialog.h>
+//#include <kprogress.h>
 #include <ktoolbarbutton.h>
 #include <klocale.h>
 #include <kaction.h>
 #include <kstdaction.h>
 #include <qpixmap.h>
+#include <qprogressdialog.h>
 #include <qiconview.h>
 #include <qwidget.h>
 #include <qfiledialog.h>
@@ -21,6 +23,7 @@
 #include "MainWindow.moc"
 
 #include "GPInterface.h"
+#include "GPMessenger.h"
 #include "SelectCameraDialog.h"
 
 MainWindow::MainWindow() : KMainWindow() 
@@ -40,8 +43,8 @@ MainWindow::MainWindow() : KMainWindow()
     /* Check if a camera is configured */
     if (GPInterface::getCamera().isNull())
         selectCamera();
-    else 
-        statusBar()->message(i18n("Camera not ready"));
+     
+    statusBar()->message(i18n("Ready"));
 }
 
 
@@ -62,8 +65,8 @@ void MainWindow::initWidgets()
     /* Construct Actions */
     saveAction = KStdAction::save(this, SLOT(saveSelected()),this); 
     quitAction = KStdAction::quit(this, SLOT(close()),this);
-    selectWorkDirAction = new KAction(i18n("Set &Working Directory"),
-                    CTRL + Key_W, this, SLOT(selectWorkDir()), this);
+    /*selectWorkDirAction = new KAction(i18n("Set &Working Directory"),
+                    CTRL + Key_W, this, SLOT(selectWorkDir()), this);*/
     deleteAction = new KAction(i18n("Delete"), "edittrash",
                     Key_Delete, this, SLOT(deleteSelected()), this);
     downloadThumbsAction = new KAction(i18n("Download Thumbs"), "queue",
@@ -76,8 +79,8 @@ void MainWindow::initWidgets()
                     SHIFT + Key_N, this, SLOT(selectNone()), this);
     selectCameraAction = new KAction(i18n("Select &Camera"),  
                     CTRL + Key_C, this, SLOT(selectCamera()), this);
-    initCameraAction = new KAction(i18n("Initialize Camera"),
-                    "connect_creating", CTRL + Key_I, this, 
+    initCameraAction = new KAction(i18n("Reset Camera"),
+                    "connect_creating", CTRL + Key_R, this, 
                     SLOT(initCamera()), this);
     configureCameraAction = new KAction(i18n("&Configure"), 
                     0, this, SLOT(configureCamera()), this);
@@ -91,7 +94,6 @@ void MainWindow::initWidgets()
     /* Initialize actions */
     saveAction->setEnabled(false);
     deleteAction->setEnabled(false);
-    downloadThumbsAction->setEnabled(false);
 
     /* Create & initialize icon view */
     iconView = new KIconView(this);
@@ -107,8 +109,8 @@ void MainWindow::initWidgets()
     fileMenu = new KPopupMenu();
     saveAction->plug(fileMenu);
     deleteAction->plug(fileMenu);
-    fileMenu->insertSeparator();
-    selectWorkDirAction->plug(fileMenu);
+    //fileMenu->insertSeparator();
+    //selectWorkDirAction->plug(fileMenu);
     fileMenu->insertSeparator();
     quitAction->plug(fileMenu);
 
@@ -143,7 +145,7 @@ void MainWindow::initWidgets()
     menuBar()->insertItem(i18n("&Help"), help);
    
     /* Create toolbar */
-    initCameraAction->plug(toolBar());
+    /*initCameraAction->plug(toolBar());*/
     downloadThumbsAction->plug(toolBar());
     saveAction->plug(toolBar());
     deleteAction->plug(toolBar());
@@ -155,16 +157,18 @@ void MainWindow::initCamera()
     /* Clear thumbnail overview */
     iconView->clear();
 
+    statusBar()->message(i18n("Initializing camera ..."));
     try {
         /* Initialize Camera */
         GPInterface::initCamera();
-        statusBar()->message(i18n("Camera ready"));
+        //statusBar()->message(i18n("Camera ready"));
 
         /* Enable downloading of thumbs */
         downloadThumbsAction->setEnabled(true);
 
         /* Change window title */
         setCaption(GPInterface::getCamera());
+        statusBar()->message(i18n("Done"),MESSAGE_TIME);
     }
     catch (QString msg) {
         /* Disable downloading of thumbs */
@@ -173,17 +177,34 @@ void MainWindow::initCamera()
         /* Change window title */
         setPlainCaption("QtKam");
         KMessageBox::error(this, msg);
-        statusBar()->message(i18n("Camera not ready"));
+        statusBar()->message(i18n("Error"), MESSAGE_TIME);
     } 
 }
 
 void MainWindow::saveSelected() 
 {
+    /* Select target */
+    selectWorkDir();
+
+    /* Create new progress dialog */
+    /* FIXME: Doesn't seem to work. Put GPInterface in a separate thread ? */
+    QProgressDialog* progress = new QProgressDialog(this);
+    
+    connect(GPMessenger::instance(),SIGNAL(progressChanged(int)),
+            progress,SLOT(setProgress(int)));
+    
     for (QIconViewItem *i = iconView->firstItem(); i; i = i->nextItem()) {
-        if (i->isSelected())
+        if (i->isSelected()) {
+            statusBar()->message("Downloading " + i->text());
+            progress->setLabelText(i->text());
             GPInterface::downloadPicture(i->text(),"/");
+            statusBar()->clear();
+        }
     } 
+    
+    statusBar()->message(i18n("Done"),MESSAGE_TIME);
 }
+
 
 void MainWindow::selectWorkDir()
 {
@@ -197,14 +218,22 @@ void MainWindow::selectWorkDir()
 
 void MainWindow::downloadThumbs()
 {
+    /* Check if camera has to be initialized */
+    if (!GPInterface::isInitialized())
+        initCamera();
+    
+    /* Clear iconview */
     iconView->clear();
+
+    /* Try downloading thumbs */
+    statusBar()->message("Downloading thumbs ...");
     try {
-        QProgressBar* bar=new QProgressBar(statusBar());
-        statusBar()->addWidget(bar);
         GPInterface::downloadThumbs(iconView);
+        statusBar()->message("Done",MESSAGE_TIME);
     }
     catch (QString str) {
         KMessageBox::error(this, str);
+        statusBar()->message("Error",MESSAGE_TIME);
     }
 }
 
@@ -261,8 +290,10 @@ void MainWindow::selectionChanged()
 void MainWindow::deleteSelected()
 {
     if (KMessageBox::questionYesNo(this, 
-        "Are you sure you want to delete the selected pictures ?", 
-        "Delete") == KMessageBox::Yes) {
+        i18n("Are you sure you want to delete the selected pictures ?"), 
+        i18n("Delete")) == KMessageBox::Yes) {
+
+        statusBar()->message(i18n("Deleting pictures ..."));
         try {
         for (QIconViewItem *i = iconView->firstItem();i; i=i->nextItem()) {
             if (i->isSelected()) {
@@ -271,7 +302,11 @@ void MainWindow::deleteSelected()
                 iconView->arrangeItemsInGrid();
             }
         }
-        } catch (QString err) { KMessageBox::error(this, err); }
+        statusBar()->message(i18n("Done"));
+        } catch (QString err) { 
+            KMessageBox::error(this, err); 
+            statusBar()->message(i18n("Error"), MESSAGE_TIME);
+        }
     }
 }
 

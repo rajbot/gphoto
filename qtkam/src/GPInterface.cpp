@@ -9,6 +9,8 @@
 #include <stdlib.h>
 
 #include "GPInterface.h"
+#include "GPMessenger.h"
+
 
 /** 
  * Starts & initializes gphoto, and registers the interface
@@ -342,6 +344,7 @@ int GPInterface::frontend_status(Camera * /*camera*/, char * /*message*/)
 
 int GPInterface::frontend_progress(Camera*, CameraFile*, float percentage)
 {
+    GPMessenger::instance()->emit progressChanged((int) percentage);
     return 0;
 }
 
@@ -364,5 +367,6 @@ int GPInterface::frontend_prompt (Camera * /*camera*/, CameraWidget * /*window*/
   return 0;
 }
 
+/* Static instances */
 bool GPInterface::cameraInitialized = false;
 Camera* GPInterface::theCamera = 0;

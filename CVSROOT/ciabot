@@ -35,6 +35,7 @@ echo -n "Notifying #${projectname}..."
 maxlines=6
 message=`cat`
 uname=`id -un`
+branch=`echo "$message" | grep "^[ 	]*Tag:" | awk -F: ' { print $2 } ' | sed 's/ //g'`
 lineno=`echo "$message" | grep -n "Log Message:" | awk -F: ' { print $1 } '`
 message=`echo "$message" | sed "1,${lineno}d"`
 newline=`echo`
@@ -52,38 +53,38 @@ fi
 
 module=`echo $1 | cut -d/ -f1`
 
+if test -n "$branch"; then
+	branch=" ({green}$branch{normal})"
+fi
+
 if $includefilename; then
 	directory=`echo $1 | cut -d" " -f1`
 	filename=`echo $1 | cut -d" " -f2 | cut -d"," -f1`
 	module="$directory/$filename"
 fi
 
-tmpfile="/tmp/$RANDOM-$projectname"
+tmpfile="/tmp/$uname-$projectname"
 cat <<EOF >$tmpfile
 From: $returnaddress
 To: $commitaddress
 Content-Type: text/plain;
 Subject: Announce $projectname
 
-commit by $uname to $module: $message
+commit by {yellow}$uname{normal} to {green}$module{normal}$branch: $message
 EOF
 
-if [ -e /tmp/lastlog-$projectname ]; then
-    if ! diff /tmp/lastlog-$projectname $tmpfile &>/dev/null; then
+if [ -e /tmp/lastlog-$uname-$projectname ]; then
+    if ! diff /tmp/lastlog-$uname-$projectname $tmpfile &>/dev/null; then
         # there are differences, so this is a different commit
         cat $tmpfile | /usr/sbin/sendmail -t
-        mv $tmpfile /tmp/lastlog-$projectname
-        # To ensure that the next person to commit will be able to overwrite
-        chmod a+w /tmp/lastlog-$projectname
+        mv $tmpfile /tmp/lastlog-$uname-$projectname
     else
         # it's just cvs spamming us from another directory
         rm $tmpfile
     fi
 else
     cat $tmpfile | /usr/sbin/sendmail -t
-    mv $tmpfile /tmp/lastlog-$projectname
-    # To ensure that the next person to commit will be able to overwrite
-    chmod a+w /tmp/lastlog-$projectname
+    mv $tmpfile /tmp/lastlog-$uname-$projectname
 fi
 
 echo "done."

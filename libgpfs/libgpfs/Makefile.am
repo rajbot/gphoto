@@ -22,6 +22,7 @@ libgpfsinclude_HEADERS =	\
 	gpfs-err.h		\
 	gpfs-err-type.h		\
 	gpfs-file.h		\
+	gpfs-i18n.h		\
 	gpfs.h			\
 	gpfs-if.h		\
 	gpfs-info.h

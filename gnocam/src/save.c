@@ -6,6 +6,8 @@
 #include "save.h"
 #include "gnocam.h"
 
+/* Prototypes */
+
 void on_reply (gint reply, gpointer data);
 
 void
@@ -60,7 +62,8 @@ save (GladeXML *xml, gboolean file, gboolean temp)
                         /* Retrieve some data we need. */
                         row = GPOINTER_TO_INT (g_list_nth_data (selection, i));
                         camera = gtk_clist_get_row_data (clist, row);
-                        g_assert (camera != NULL);                        gtk_clist_get_text (clist, row, 1, &path);
+                        g_assert (camera != NULL);
+                        gtk_clist_get_text (clist, row, 1, &path);
                         g_assert (path != NULL);
                         gtk_clist_get_text (clist, row, 2, &file_name);
                         g_assert (file_name != NULL);
@@ -97,7 +100,7 @@ save (GladeXML *xml, gboolean file, gboolean temp)
 			/* Clean up. */
 			gp_frontend_progress (camera, NULL, 0.0);
                 }
-                g_free (camera_file);
+                gp_file_free (camera_file);
         } else {
                 gnome_app_error (app, _("No files selected!"));
         }

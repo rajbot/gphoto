@@ -6,6 +6,8 @@
  * software, without which I would not have attempted this library.
  * That code was modified and added to, forming this library
  */
+
+#include "config.h"
 #include "crctab.c"
 
 #if HAVE_TERMIOS_H

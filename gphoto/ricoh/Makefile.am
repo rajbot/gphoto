@@ -1,6 +1,6 @@
 drivers_LTLIBRARIES = libgphoto_ricoh300z.la
 
-CFLAGS = @GTK_CFLAGS@ -DHAVE_TERMIOS_H=1
+CFLAGS = @GTK_CFLAGS@
 
 libgphoto_ricoh300z_la_SOURCES = ricoh_300z.c ricoh_300_io.c crctab.c
 

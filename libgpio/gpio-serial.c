@@ -99,9 +99,20 @@ int gpio_serial_list (gpio_device_info *list, int *count) {
 	
 	char buf[1024];
 	int x, fd, use_int=0, use_char=0;
+#ifdef OS2
+        int rc,fh,option;
+#endif
 
 	for (x=GPIO_SERIAL_RANGE_LOW; x<=GPIO_SERIAL_RANGE_HIGH; x++) {
 		sprintf(buf, GPIO_SERIAL_PREFIX, x);
+#ifdef OS2
+              rc = DosOpen(buf,&fh,&option,0,0,1,OPEN_FLAGS_FAIL_ON_ERROR|OPEN_SHARE_DENYREADWRITE,0);
+              DosClose(fh);
+              if(rc==0)
+              {
+#endif
+
+
 		fd = open (buf, O_RDONLY | O_NDELAY);
 		if (fd != -1) {
 			close(fd);
@@ -112,6 +123,11 @@ int gpio_serial_list (gpio_device_info *list, int *count) {
 			list[*count].argument_needed = 0;
 			*count += 1;
 		}
+#ifdef OS2
+              }
+#endif
+
+
 	}
 
 	return (GPIO_OK);
@@ -187,10 +203,12 @@ int gpio_serial_write(gpio_device * dev, char *bytes, int size)
 	}
 
 	/* wait till all bytes are really sent */
+#ifndef OS2
 #if HAVE_TERMIOS_H
 	tcdrain(dev->device_fd);
 #else
 	ioctl(dev->device_fd, TCDRAIN, 0);
+#endif
 #endif
 	return GPIO_OK;
 }

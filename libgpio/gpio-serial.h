@@ -44,6 +44,12 @@
 #define GPIO_SERIAL_RANGE_HIGH	32
 #endif
 
+#ifdef OS2
+#define GPIO_SERIAL_PREFIX "COM%i"
+#define GPIO_SERIAL_RANGE_LOW   1
+#define GPIO_SERIAL_RANGE_HIGH  4
+#endif
+
 /* Others? */
 
 /* Default */
@@ -75,5 +81,4 @@ extern struct gpio_operations gpio_serial_operations;
 
 
 #endif /* _GPIO_SERIAL_H_ */
-
 

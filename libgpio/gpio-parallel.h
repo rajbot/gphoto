@@ -41,6 +41,13 @@
 #define	GPIO_PARALLEL_RANGE_HIGH	16
 #endif
 
+/* OS/2 */
+#ifdef OS2
+#define GPIO_PARALLEL_PREFIX "LPT%i"
+#define GPIO_PARALLEL_RANGE_LOW         1
+#define GPIO_PARALLEL_RANGE_HIGH        4
+#endif
+
 /* Others? */
 
 /* Default */
@@ -59,7 +66,6 @@ typedef struct {
 extern struct gpio_operations gpio_parallel_operations;
 
 #endif /* _GPIO_PARALLEL_H_ */
-
 
 
 

@@ -77,6 +77,12 @@ int gpio_parallel_list(gpio_device_info *list, int *count) {
 
         for (x=GPIO_PARALLEL_RANGE_LOW; x<=GPIO_PARALLEL_RANGE_HIGH; x++) {
                 sprintf(buf, GPIO_PARALLEL_PREFIX, x);
+                #ifdef OS2
+                rc = DosOpen(buf,&fh,&option,0,0,1,OPEN_FLAGS_FAIL_ON_ERROR|OPEN_SHARE_DENYREADWRITE,0);
+                if(rc==0)
+                {
+                #endif
+
                 fd = open (buf, O_RDONLY | O_NDELAY);
                 if (fd != -1) {
                         close(fd);
@@ -87,6 +93,9 @@ int gpio_parallel_list(gpio_device_info *list, int *count) {
 			list[*count].argument_needed = 0;
                         *count += 1;
                 }
+                #ifdef OS2
+                }
+                #endif
         }
 
         return (GPIO_OK);

@@ -1,6 +1,11 @@
 #ifndef _GPIO_H_
 #define _GPIO_H_
 
+#ifdef OS2
+#include <gpioos2.h>
+#include <os2.h>
+#endif
+
 #include "gpio-serial.h"
 
 #include "gpio-parallel.h"

@@ -8,7 +8,7 @@
 # Please note that the actual code is *not* freely available.
 
 PACKAGE = gphoto
-VERSION = 0.5.1
+VERSION = 0.4.4
 
 SHELL = /bin/sh
 
@@ -16,7 +16,7 @@ SHELL = /bin/sh
 srcdir = .
 top_srcdir = ..
 
-prefix = /opt/gphoto
+prefix = /usr/local
 exec_prefix = ${prefix}
 datadir = $(prefix)/share
 localedir = $(datadir)/locale

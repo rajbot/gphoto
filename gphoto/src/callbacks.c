@@ -35,6 +35,12 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#ifdef linux
+/* devfs support */
+#include <sys/stat.h>
+#include <sys/types.h>
+#endif
+
 #include "icons/post_processing_on.xpm"
 #include "icons/post_processing_off.xpm"
 
@@ -541,7 +547,8 @@ void port_dialog(void)
 	GSList *listgroup, *portgroup;
 	GList *cam_list;
 
-	char serial_port_prefix[20], tempstring[20], status[128];
+	char serial_port_prefix[20], tempstring[64], status[128];
+	char temp[64];
 	char *camera_selected;
 	int i, count;
 	int sd = -1;
@@ -552,13 +559,19 @@ void port_dialog(void)
 #endif
 
 #ifdef linux
-	sprintf(serial_port_prefix, "/dev/ttyS");
+	struct stat st;
+	strcpy(serial_port_prefix, "/dev/ttyS");
+	/* check for devfs */
+	if (stat("/dev/tts", &st) == 0) {
+		if (S_ISDIR(st.st_mode))
+			strcpy(serial_port_prefix, "/dev/tts/");
+	}
 #elif defined(__FreeBSD__) || defined(__NetBSD__)
-	sprintf(serial_port_prefix, "/dev/tty0");
+	strcpy(serial_port_prefix, "/dev/tty0");
 #elif defined(sun)
-        sprintf(serial_port_prefix, "/dev/ttya");
+        strcpy(serial_port_prefix, "/dev/ttya");
 #else
-	sprintf(serial_port_prefix, "/dev/tty0");
+	strcpy(serial_port_prefix, "/dev/tty0");
 #endif
 
 	/*
@@ -741,41 +754,40 @@ void port_dialog(void)
 	gtk_widget_show(topportbox);
 	gtk_box_pack_end(GTK_BOX(vbox), topportbox, FALSE, TRUE, 0);
 
-	label = gtk_label_new("Select a Port");
-	gtk_widget_show(label);
+	label = gtk_label_new("Select a Port");	gtk_widget_show(label);
 	gtk_box_pack_end(GTK_BOX(vbox), label, FALSE, TRUE, 0);
 
+	/* Enumerate the serial port devices */
 
 	portgroup = NULL;
-#ifdef __NetBSD__
-	port0 = gtk_radio_button_new_with_label(NULL, "/dev/tty00 (COM1)");
-#else   
-	port0 = gtk_radio_button_new_with_label(NULL, "/dev/ttyS0 (COM1)");
-#endif
+	sprintf(temp, "%s0 (COM1)", serial_port_prefix);
+	port0 = gtk_radio_button_new_with_label(NULL, temp);
 	gtk_widget_show(port0);
-	portgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(port0));
-#ifdef __NetBSD__
-	port1 = gtk_radio_button_new_with_label(portgroup, "/dev/tty01 (COM2)");
-#else   
-	port1 = gtk_radio_button_new_with_label(portgroup, "/dev/ttyS1 (COM2)");
-#endif
-	gtk_widget_show(port1);
-	portgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(port1));
-#ifdef __NetBSD__
-	port2 = gtk_radio_button_new_with_label(portgroup, "/dev/tty02 (COM3)");
-#else   
-	port2 = gtk_radio_button_new_with_label(portgroup, "/dev/ttyS2 (COM3)");
-#endif
-	gtk_widget_show(port2);
-	portgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(port2));
-#ifdef __NetBSD__
-	port3 = gtk_radio_button_new_with_label(portgroup, "/dev/tty03 (COM4)");
-#else   
-	port3 = gtk_radio_button_new_with_label(portgroup, "/dev/ttyS3 (COM4)");
-#endif
-	gtk_widget_show(port3);
-	portgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(port3));
+	if (strcmp(serial_port, temp)==0)
+		gtk_button_clicked(GTK_BUTTON(port0));
 
+	portgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(port0));
+	sprintf(temp, "%s1 (COM2)", serial_port_prefix);
+	port1 = gtk_radio_button_new_with_label(portgroup, temp);
+	gtk_widget_show(port1);
+	if (strcmp(serial_port, temp)==0)
+		gtk_button_clicked(GTK_BUTTON(port1));
+
+	portgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(port1));
+	sprintf(temp, "%s2 (COM3)", serial_port_prefix);
+	port2 = gtk_radio_button_new_with_label(portgroup, temp);
+	gtk_widget_show(port2);
+	if (strcmp(serial_port, temp)==0)
+		gtk_button_clicked(GTK_BUTTON(port2));
+
+	portgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(port2));
+	sprintf(temp, "%s3 (COM4)", serial_port_prefix);
+	port3 = gtk_radio_button_new_with_label(portgroup, temp);
+	gtk_widget_show(port3);
+	if (strcmp(serial_port, temp)==0)
+		gtk_button_clicked(GTK_BUTTON(port3));
+
+	portgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(port3));
 	other = gtk_radio_button_new_with_label(portgroup, "Other:");
 	gtk_widget_show(other);
 	portgroup = gtk_radio_button_group(GTK_RADIO_BUTTON(other));
@@ -787,25 +799,16 @@ void port_dialog(void)
 	case GPHOTO_CAMERA_NONE:
 		break;
 	case GPHOTO_CAMERA_SERIAL:
-		if (!strncmp(serial_port_prefix, serial_port, 9)) {
-			switch (serial_port[9]) {
-			case '0':
-				gtk_button_clicked(GTK_BUTTON(port0));
-				break;
-			case '1':
-				gtk_button_clicked(GTK_BUTTON(port1));
-				break;
-			case '2':
-				gtk_button_clicked(GTK_BUTTON(port2));
-				break;
-			case '3':
-				gtk_button_clicked(GTK_BUTTON(port3));
-				break;
-			default:
-				break;
+		if (strlen(serial_port_prefix) == strlen(serial_port)-1) {
+			if (strncmp(serial_port, serial_port_prefix, 
+			    strlen(serial_port)-1) != 0) {
+				gtk_entry_set_text(GTK_ENTRY(ent_other), serial_port);
+				gtk_button_clicked(GTK_BUTTON(other));
 			}
-		} else
-		gtk_entry_set_text(GTK_ENTRY(ent_other), serial_port);
+		} else {
+			gtk_entry_set_text(GTK_ENTRY(ent_other), serial_port);
+			gtk_button_clicked(GTK_BUTTON(other));
+		}
 		gtk_notebook_set_page(GTK_NOTEBOOK(notebook), 1);
 		break;
 #ifdef GPIO_USB
@@ -871,6 +874,7 @@ void port_dialog(void)
 
 	if (camera_type == GPHOTO_CAMERA_SERIAL) {
 #endif
+	   if (strcmp(camera_selected, "Browse Directory")!=0) {
 		sd = open(serial_port, O_RDWR, 0);
 		if (sd < 0) {
 			sprintf(status, "Error: failed to open %s",serial_port);
@@ -884,6 +888,7 @@ void port_dialog(void)
 			save_config();
 		}
 		close(sd);
+	  }
 #ifdef GPIO_USB
 	} else {
 		save_config();

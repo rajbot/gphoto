@@ -1,0 +1,55 @@
+The gPhoto roadmap
+
+Odd number version are development versions only. They are not 
+stable releases. All stable release will use even number versions.
+
+gPhoto 0.4
+   - Camera support for:
+        <camera list here>
+   - Ability to save unaltered image from camera.
+   - Summary function in all camera libraries
+   - Description function in all camera libraries
+   - Autoconf/configure 
+   - Camera libraries built as shared libraries
+   - GTK 1.2 
+   - Toolbar icons
+   - HTML gallery updates/changes
+   - Empty thumbnails
+   - Batch saves
+   - RPM spec files
+   - Updated Manual
+   - Better error checking
+
+gPhoto 0.6
+   - Camera support for:
+        <camera list here>
+   - Asynchronous I/O
+   - Common serial I/O library
+   - Progress Bar / status display
+   - Image post processing
+   - Make gdk_imlib_load_image_mem really do in memory conversions
+   - XML gallery
+   - Message handling
+   - Developer's Manual
+   - Updated User's Manual
+
+gPhoto 0.8
+   - Camera support for:
+        <camera list here>
+   - Dynamic loading of libraries
+   - CORBA
+   - Photo Album 
+
+gPhoto 1.0 !!!
+   - Camera support for:
+        <camera list here>
+   - Updated Developer's Manual
+   - Updated User's Manual
+
+
+Non-version related 
+   - Gnome version
+   - Tcl Interpreter
+   - Camera interface specs
+   - Vendor contact / support
+

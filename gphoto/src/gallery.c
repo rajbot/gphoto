@@ -40,8 +40,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
- * Revision 1.1  1999/05/27 18:32:07  scottf
- * Initial revision
+ * Revision 1.2  1999/06/08 19:08:10  scottf
+ * Fixed several gallery.c bugs, and improved it a bit.
+ * Added free_image and save_image to util.c
+ *
+ * Revision 1.1.1.1  1999/05/27 18:32:07  scottf
+ * gPhoto- digital camera utility
  *
  * Revision 1.11  1999/05/08 13:31:10  ole
  * Changed paths from /usr/share/... to /usr/local/share/...
@@ -56,14 +60,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>  
 
 extern struct ImageInfo Thumbnails;
 extern struct ImageInfo Images;
 
 #include <sys/dir.h>
-
-GtkWidget *filesel;
 
 /* initialize some tags */
 char gallery_name[256];
@@ -80,11 +83,14 @@ char picture_previous[128];
 
 void gallery_change_dir(GtkWidget *widget, GtkWidget *label) {
 
-        filesel = gtk_file_selection_new("Select an Output Directory...");
+	GtkWidget *filesel;
 
+        filesel = gtk_file_selection_new("Select an Output Directory...");
         gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_entry);
         gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_text);
         gtk_widget_hide(GTK_FILE_SELECTION(filesel)->file_list);
+	gtk_widget_show(filesel);
+	
 	gtk_file_selection_set_filename(GTK_FILE_SELECTION(filesel),
 		gtk_object_get_data(GTK_OBJECT(label), "dir"));
 
@@ -94,10 +100,12 @@ void gallery_change_dir(GtkWidget *widget, GtkWidget *label) {
 		return;
 	}
 
-	gtk_label_set(GTK_LABEL(label),
-		gtk_file_selection_get_filename(GTK_FILE_SELECTION(filesel)));
-	gtk_object_set_data(GTK_OBJECT(label), "dir",
-		gtk_file_selection_get_filename(GTK_FILE_SELECTION(filesel)));
+	gtk_label_set(GTK_LABEL(label), strdup(
+	gtk_file_selection_get_filename(GTK_FILE_SELECTION(filesel))));
+	gtk_object_set_data(GTK_OBJECT(label), "dir", strdup(
+	gtk_file_selection_get_filename(GTK_FILE_SELECTION(filesel))));
+
+	gtk_widget_destroy(filesel);
 }
 
 void gallery_parse_tags(char *dest, char *source) {
@@ -132,22 +140,26 @@ void gallery_main() {
 	int i=0, j=0, num_selected = 0;
 	char outputdir[1024], theme[32];
 	char filename[1024], filename2[1024], cp[1024];
+	struct Image *im;
+
 	GList *dlist;
 
 	GtkWidget *dialog, *list, *list_item, *scrwin, *obutton, *cbutton;
 	GtkWidget *galentry;
 	GtkWidget *label, *dirlabel, *dirbutton, *hbox, *hseparator;
-	GdkImlibImage *imlibimage;
 
 	struct ImageInfo *node = &Thumbnails;
 	struct ImageInfo *node_image;
 
 	if (Thumbnails.next == NULL) {
-		error_dialog("Please retrieve the index first,
+		error_dialog(
+"Please retrieve the index first,
 and select the images to include\nin the gallery by clicking on them.
 Then, re-run the HTML Gallery.");
 		return;
 	}
+
+	/* Create the file selection to change directory */
 
 	i = 0;
 	while (node->next != NULL) {
@@ -201,7 +213,7 @@ Then, re-run the HTML Gallery.");
 		error_dialog(
 "HTML gallery themes do not exist at
 /usr/local/share/gphoto/gallery
-Please install move gallery themes there.");
+Please install/move gallery themes there.");
 		return;
 	}
 
@@ -261,8 +273,8 @@ Please install move gallery themes there.");
 
 	dirbutton = gtk_button_new_with_label("Change...");
 	gtk_widget_show(dirbutton);
-	gtk_signal_connect_object(GTK_OBJECT(dirbutton), "clicked",
-		GTK_SIGNAL_FUNC(gallery_change_dir),GTK_OBJECT(dirlabel));
+	gtk_signal_connect(GTK_OBJECT(dirbutton), "clicked",
+		GTK_SIGNAL_FUNC(gallery_change_dir),dirlabel);
 	gtk_box_pack_end(GTK_BOX(hbox), dirbutton, FALSE, FALSE, 0);
 
 	obutton = gtk_button_new_with_label("Create");
@@ -277,7 +289,8 @@ Please install move gallery themes there.");
 		GTK_BOX(GTK_DIALOG(dialog)->action_area), cbutton);
 	gtk_widget_show(dialog);
 	gtk_widget_grab_default(obutton);
-
+	
+	/* wait until the dialog is closed */
         if (wait_for_hide(dialog, obutton, cbutton) == 0)
                 return;
 
@@ -338,16 +351,29 @@ Please install move gallery themes there.");
 					filename);
 				system(cp);
 			}
+		/* Get the current thumbnail */
+			sprintf(cp, "Getting Thumbnail #%i...", j+1);
+			update_status(cp);
+			im = (*Camera->get_picture)(i+1, 1);
 			sprintf(thumbnail, 
-	"<a href=\"picture-%03i.html\"><img src=\"thumbnail-%03i.jpg\"><\\/a>",
-				i+1, i+1);
-			sprintf(thumbnail_filename, "thumbnail-%03i.jpg",
-				i+1);
+	"<a href=\"picture-%03i.html\"><img src=\"thumbnail-%03i.%s\"><\\/a>",
+				i+1, i+1, im->image_type);
+			sprintf(thumbnail_filename, "thumbnail-%03i.%s",
+				i+1, im->image_type);
 			sprintf(thumbnail_number, "%03i", i+1);
-			sprintf(picture, "<img src=\"picture-%03i.jpg\">",
-				i+1);
-			sprintf(picture_filename, "picture-%03i.jpg",
-				i+1);
+			sprintf(filename2, "%s%s", outputdir,
+				thumbnail_filename);
+			save_image(filename2, im);
+			free_image(im);
+
+		/* Get the current image */
+			sprintf(cp, "Getting Image #%i...", j+1);
+			update_status(cp);
+			im = (*Camera->get_picture)(i+1, 0);
+			sprintf(picture, "<img src=\"picture-%03i.%s\">",
+				i+1, im->image_type);
+			sprintf(picture_filename, "picture-%03i.%s",
+				i+1, im->image_type);
 			sprintf(picture_number, "%03i", i+1);
 			if (i+1 == num_selected)
 				strcpy(picture_next, gallery_index);
@@ -361,48 +387,18 @@ Please install move gallery themes there.");
 					i);
 			sprintf(cp, "echo \"<td>\" >> %s", filename);
 			system(cp);
-			
+			sprintf(filename2, "%s%s", outputdir,
+				picture_filename);
+			save_image(filename2, im);
+			free_image(im);
+
 			sprintf(filename2,
 				"/usr/local/share/gphoto/gallery/%s/thumbnail.html",
 				theme);
 			gallery_parse_tags(filename, filename2);
 			sprintf(cp, "echo \"</td>\" >> %s", filename);
 			system(cp);
-			sprintf(filename2, "%s%s", outputdir,
-				thumbnail_filename);
-			sprintf(cp, "Getting Image #%i...", j+1);
-			update_status(cp);
-			for(node_image = &Images, loaded = 0;
-			  node_image->next != NULL;) {
-			    node_image = node_image->next;
-			    sscanf(node_image->info,"%i",&picnum);
-			    if(picnum == j + 1) {
-			    	loaded = 1;
-				imlibimage = node_image->imlibimage;
-			    	break;
-			    }
-			}
-			if(loaded == 0) {
-                            appendpic(j + 1, TRUE, NULL);
-			    for(node_image = &Images;
-			      node_image->next !=NULL;) {
-				node_image = node_image->next;
-				sscanf(node_image->info,"%i",&picnum);
-				if(picnum == j + 1) {
-				    imlibimage = node_image->imlibimage;
-				    break;
-				}
-			    }
-			}
-			gtk_toggle_button_set_state(
-                          GTK_TOGGLE_BUTTON(node->button), FALSE);
-			gdk_imlib_save_image(node->imlibimage, filename2,
-				NULL);
-			sprintf(filename2, "%s%s", outputdir,
-				picture_filename);
-			update_status(filename2);
-			gdk_imlib_save_image(imlibimage, filename2, NULL);
-			gdk_imlib_kill_image(imlibimage);
+
 			sprintf(filename, "%spicture-%03i.html",
 				outputdir, i+1);
 			sprintf(cp, "echo \" \" > %s", filename);
@@ -423,7 +419,6 @@ Please install move gallery themes there.");
 		"/usr/local/share/gphoto/gallery/%s/index_bottom.html",
 		theme);			
 	gallery_parse_tags(filename, filename2);
-	gtk_widget_destroy(filesel);
 	gtk_widget_destroy(dialog);
 	update_status("Done saving Gallery.");
 }

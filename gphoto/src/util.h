@@ -37,4 +37,8 @@ int wait_for_hide (GtkWidget *dialog, GtkWidget *ok_button,
 
 GdkImlibImage *gdk_imlib_load_image_mem(char *image, int size);
 
+void free_image(struct Image *im);
+
+void save_image(char *filename, struct Image *im);
+
 #endif /* _UTIL_H */

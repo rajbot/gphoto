@@ -1,201 +1,369 @@
-# $Id$
-#
-# $Log$
-# Revision 1.4  1999/05/31 18:51:52  ole
-# 1999-05-31  Ole Aamot  <oleaa@ifi.uio.no>
-#
-# 	* casio/Makefile: clean now removes config.log and config.stats
-# 	* removed the gphoto-bug script.  Use the "debbugs" module
-#
-# Revision 1.3  1999/05/31 18:32:26  ole
-# 1999-05-31  Ole Aamot  <oleaa@ifi.uio.no>
-#
-# 	* modified the "gnome-bugs" script, and added gphoto-bug
-# 	* added more supported models to camera.h
-# 	* removed some cruft from the FAQ
-#
-# Revision 1.2  1999/05/28 20:24:07  ole
-# Gallery themes now installs correctly.
-# Changed the URL for Help - FAQs entry.
-#
-# Revision 1.1.1.1  1999/05/27 18:32:06  scottf
-# gPhoto- digital camera utility
-#
-# Revision 1.38  1999/05/10 18:03:04  mmartin
-# Added the color adjustment dialog ripped (with permission) from Electric Eyes,
-# activated from the toolbar with a new button.
-#
-# Revision 1.37  1999/05/09 21:20:11  ole
-# Moved the "gphoto" wrapper to "gphoto.sh".  Modified Makefile to compile
-# and install "gphoto".
-#
-# Revision 1.36  1999/05/09 15:23:38  ole
-# AUTHORS for developers, CREDITS for beta-testers. :-)
-#
-# Revision 1.35  1999/05/09 05:47:27  gdr
-# Changed hard coded path (/usr/doc) to Makefile variable (DOCDIR)
-#
-# Revision 1.34  1999/05/09 00:08:49  mmartin
-# Added an "rpath" to the linking step with the hope of removing the wrapper
-#
-# Revision 1.33  1999/05/08 22:42:52  gdr
-# Fixed typo
-#
-# Revision 1.32  1999/05/08 18:08:24  gdr
-# Modified to hopefully make more portable
-#
-# Revision 1.31  1999/05/08 04:10:14  scottf
-# added -I/usr/lib/glib/include to paths in some Makefiles
-# and fixed a path in developer_dialog.c (/usr/doc/gphoto-0.3).
-# finally, added "image_type" to the Image struct
-#
-# Revision 1.30  1999/05/06 15:08:28  ole
-# Small adjustments.
-#
-# Revision 1.29  1999/05/06 15:00:43  ole
-# Added /usr/doc/gphoto-0.3 in (un)install:
-#
-# This Makefile is totally rehashed from the old one. Please keep it tidy
-# It will be replaced with a ./configure but that's a good reason to keep
-# it clean. Its difficult to produce a clean script if the template it is
-# working toward is not minimal. 
+# Generated automatically from Makefile.in by configure.
+# Makefile.in generated automatically by automake 1.4a from Makefile.am
 
-# I've removed the 'gtk-configs' etc since they produce the same outputs.
-# configure will need INCDIRS and things so its best to head in that
-# direction now. - Phill
+# Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-PREFIX		=	/usr/local
-BINDIR		=	$(PREFIX)/bin
-DOCDIR		=	$(PREFIX)/doc
-MANDIR		=	$(PREFIX)/man
-GPHOTODIR	=	$(PREFIX)/share/gphoto
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
 
-CARGS = -g -D_GNU_SOURCE -Wall -m486 -DDOCDIR="\"$(DOCDIR)\""
 
-GTK_CFLAGS = $(shell gtk-config --cflags)
-GTK_LIBS = $(shell gtk-config --libs)
+SHELL = /bin/sh
 
-INCDIR = $(GTK_CFLAGS) -I./icons/
+srcdir = .
+top_srcdir = ..
+prefix = /usr/local
+exec_prefix = ${prefix}
 
-CAMLINKDIR = -L../konica \
-	-L../philips \
-	-L../fuji \
-	-L../directory \
-	-L../photopc \
-	-L../ricoh \
-	-L../kodak \
-	-L../sony \
-	-L../casio
-LDARGS = -lgdk_imlib $(GTK_LIBS) -ljpeg -lgif
-CAMLDARGS = -Wl,-rpath,$(GPHOTODIR)/drivers\
-	-lgphoto_konica_qm100 \
-	-lgphoto_casio_qv \
-	-lgphoto_philips \
-	-lgphoto_fuji \
-	-lgphoto_dir \
-	-lgphoto_photopc \
-	-lgphoto_kodak_dc2x \
-	-lgphoto_ricoh300z \
-	-lgphoto_sony_dscf1 \
+bindir = ${exec_prefix}/bin
+sbindir = ${exec_prefix}/sbin
+libexecdir = ${exec_prefix}/libexec
+datadir = ${prefix}/share
+sysconfdir = ${prefix}/etc
+sharedstatedir = ${prefix}/com
+localstatedir = ${prefix}/var
+libdir = ${exec_prefix}/lib
+infodir = ${prefix}/info
+mandir = ${prefix}/man
+includedir = ${prefix}/include
+oldincludedir = /usr/include
 
-OBJS =  main.o \
-	commandline.o \
-	live.o \
-	gallery.o \
-	menu.o \
-	toolbar.o \
-	developer_dialog.o \
-	util.o \
-	callbacks.o \
-	img_edit.o
+DESTDIR =
 
-SH_LIBS = ../konica/libgphoto_konica_qm100.so \
-	../philips/libgphoto_philips.so \
-	../casio/libgphoto_casio_qv.so \
-	../fuji/libgphoto_fuji.so \
-	../photopc/libgphoto_photopc.so \
-	../kodak/libgphoto_kodak_dc2x.so \
-	../ricoh/libgphoto_ricoh300z.so \
-	../sony/libgphoto_sony_dscf1.so \
-	../directory/libgphoto_dir.so
+pkgdatadir = $(datadir)/gphoto
+pkglibdir = $(libdir)/gphoto
+pkgincludedir = $(includedir)/gphoto
 
-.c.o:
-	gcc ${CFLAGS} ${CARGS} -c $< ${INCDIR}
+top_builddir = ..
 
-gphoto:	${OBJS} ${LIBS} ${SH_LIBS}
-	gcc ${CFLAGS} ${CARGS} -o gphoto ${OBJS} ${LIBS} ${LINKDIR} ${CAMLDARGS} ${CAMLINKDIR} ${LDARGS}
+ACLOCAL = aclocal
+AUTOCONF = autoconf
+AUTOMAKE = automake
+AUTOHEADER = autoheader
 
-install:
-	cp gphoto $(BINDIR)
-	cp ../man/gphoto.1 $(MANDIR)/man1
-	mkdir -p $(GPHOTODIR)
-	mkdir -p $(GPHOTODIR)/drivers
-	mkdir -p $(DOCDIR)/gphoto-0.3
-	cp ../AUTHORS $(DOCDIR)/gphoto-0.3/
-	cp ../CREDITS $(DOCDIR)/gphoto-0.3/
-	cp ../README $(DOCDIR)/gphoto-0.3/
-	cp ../MANUAL $(DOCDIR)/gphoto-0.3/
-	cp ../FAQ $(DOCDIR)/gphoto-0.3/
-	cp ../NEWS $(DOCDIR)/gphoto-0.3/
-	cp -R ../gallery $(GPHOTODIR)
-	cp ../directory/libgphoto_dir.so $(GPHOTODIR)/drivers
-	cp ../konica/libgphoto_konica_qm100.so $(GPHOTODIR)/drivers
-	cp ../casio/libgphoto_casio_qv.so $(GPHOTODIR)/drivers
-	cp ../philips/libgphoto_philips.so $(GPHOTODIR)/drivers
-	cp ../fuji/libgphoto_fuji.so $(GPHOTODIR)/drivers
-	cp ../photopc/libgphoto_photopc.so $(GPHOTODIR)/drivers
-	cp ../kodak/libgphoto_kodak_dc2x.so $(GPHOTODIR)/drivers
-	cp ../ricoh/libgphoto_ricoh300z.so $(GPHOTODIR)/drivers
-	cp ../sony/libgphoto_sony_dscf1.so $(GPHOTODIR)/drivers
+INSTALL = /usr/bin/install -c
+INSTALL_PROGRAM = ${INSTALL}
+INSTALL_DATA = ${INSTALL} -m 644
+INSTALL_SCRIPT = ${INSTALL_PROGRAM}
+INSTALL_STRIP_FLAG =
+transform = s,x,x,
 
-uninstall:
-	rm -rf ~/.gphoto/
-	rm -f $(BINDIR)/gphoto
-	rm -f $(BINDIR)/gphoto.bin
-	rm -f $(MANDIR)/man1/gphoto.1
-	rm -rf $(GPHOTODIR)
-	rm -rf $(DOCDIR)/gphoto-0.3/
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+host_alias = i686-pc-linux-gnu
+host_triplet = i686-pc-linux-gnu
+AS = 
+CC = gcc
+CPP = gcc -E
+DLLTOOL = 
+GDK_IMLIB_CFLAGS = -I/usr/X11R6/include -I/usr/lib/glib/include -I/usr/X11R6/include
+GDK_IMLIB_LIBS = -L/usr/lib -lgdk_imlib -L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic -lgmodule -lglib -ldl -lXext -lX11 -lm
+GLIB_CFLAGS = -I/usr/lib/glib/include
+GLIB_CONFIG = /usr/bin/glib-config
+GLIB_LIBS = -L/usr/lib -lglib
+GTK_CFLAGS = -I/usr/X11R6/include -I/usr/lib/glib/include
+GTK_CONFIG = /usr/bin/gtk-config
+GTK_LIBS = -L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic -lgmodule -lglib -ldl -lXext -lX11 -lm
+IMLIB_CFLAGS = @IMLIB_CFLAGS@
+IMLIB_CONFIG = /usr/bin/imlib-config
+IMLIB_LIBS = @IMLIB_LIBS@
+LD = /usr/bin/ld
+LIBTOOL = $(SHELL) $(top_builddir)/libtool
+LN_S = ln -s
+MAINT = #
+MAKEINFO = /home/scottf/gphoto/missing makeinfo
+NM = /usr/bin/nm -B
+PACKAGE = gphoto
+RANLIB = ranlib
+USE_SYMBOL_UNDERSCORE = no
+VERSION = 0.3.1
+docdir = ${prefix}/doc/gphoto
+driversdir = ${pkgdatadir}/drivers
+gallerydir = ${pkgdatadir}/gallery
 
-../ricoh/libgphoto_ricoh300z.so:
-	make -C ../ricoh CFLAGS="$(CARGS) $(INCDIR)" libgphoto_ricoh300z.so
+bin_PROGRAMS = gphoto
 
-../kodak/libgphoto_kodak_dc2x.so:
-	make -C ../kodak CFLAGS="$(CARGS) $(INCDIR)" libgphoto_kodak_dc2x.so
+CFLAGS = -g -Iicons -I/usr/X11R6/include -I/usr/lib/glib/include -I/usr/X11R6/include -I/usr/lib/glib/include -I/usr/X11R6/include -DDOCDIR="\"$(docdir)\""
 
-../photopc/libgphoto_photopc.so:
-	make -C ../photopc CFLAGS="$(CARGS) $(INCDIR)" libgphoto_photopc.so
+gphoto_LDADD = ../konica/libgphoto_konica_qm100.la 	../casio/libgphoto_casio_qv.la 	../philips/libgphoto_philips.la 	../fuji/libgphoto_fuji.la 	../photopc/libgphoto_photopc.la 	../kodak/libgphoto_kodak_dc2x.la 	../ricoh/libgphoto_ricoh300z.la 	../sony/libgphoto_sony_dscf1.la 	../directory/libgphoto_dir.la 	-L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic -lgmodule -lglib -ldl -lXext -lX11 -lm -L/usr/lib -lgdk_imlib -L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic -lgmodule -lglib -ldl -lXext -lX11 -lm
 
-../fuji/libgphoto_fuji.so:
-	make -C ../fuji CFLAGS="$(CARGS) $(INCDIR)" libgphoto_fuji.so
 
-../konica/libgphoto_konica_qm100.so:
-	make -C ../konica CFLAGS="$(CARGS) $(INCDIR)" libgphoto_konica_qm100.so
+gphoto_SOURCES = main.c commandline.c live.c gallery.c menu.c toolbar.c 	callbacks.c util.c developer_dialog.c img_edit.c 	main.h commandline.h live.h gallery.h menu.h toolbar.h callbacks.h 	util.h cameras.h gphoto.h developer.h developer_dialog.h
 
-../casio/libgphoto_casio_qv.so:
-	make -C ../casio CFLAGS="$(CARGS) $(INCDIR)" libgphoto_casio_qv.so
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = ../config.h
+CONFIG_CLEAN_FILES = 
+PROGRAMS =  $(bin_PROGRAMS)
 
-../philips/libgphoto_philips.so:
-	make -C ../philips CFLAGS="$(CARGS) $(INCDIR)" libgphoto_philips.so
 
-../sony/libgphoto_sony_dscf1.so:
-	make -C ../sony CFLAGS="$(CARGS) $(INCDIR)" libgphoto_sony_dscf1.so
+DEFS = -DHAVE_CONFIG_H -I. -I$(srcdir) -I..
+CPPFLAGS = 
+LDFLAGS = 
+LIBS = -ljpeg -ldl 
+gphoto_OBJECTS =  main.o commandline.o live.o gallery.o menu.o toolbar.o \
+callbacks.o util.o developer_dialog.o img_edit.o
+gphoto_DEPENDENCIES =  ../konica/libgphoto_konica_qm100.la \
+../casio/libgphoto_casio_qv.la ../philips/libgphoto_philips.la \
+../fuji/libgphoto_fuji.la ../photopc/libgphoto_photopc.la \
+../kodak/libgphoto_kodak_dc2x.la ../ricoh/libgphoto_ricoh300z.la \
+../sony/libgphoto_sony_dscf1.la ../directory/libgphoto_dir.la
+gphoto_LDFLAGS = 
+COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
+DIST_COMMON =  README Makefile.am Makefile.in
 
-../directory/libgphoto_dir.so:
-	make -C ../directory CFLAGS="$(CARGS) $(INCDIR)" libgphoto_dir.so
 
-dist-clean:	
-	make -C ../photopc clean
-	make -C ../ricoh clean
-	make -C ../kodak clean
-	make -C ../fuji clean
-	make -C ../philips clean
-	make -C ../konica clean
-	make -C ../casio clean
-	make -C ../sony clean
-	make -C ../directory clean 
-	rm -f *.o gphoto core
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-distclean: dist-clean
+TAR = gtar
+GZIP_ENV = --best
+DEP_FILES =  .deps/callbacks.P .deps/commandline.P \
+.deps/developer_dialog.P .deps/gallery.P .deps/img_edit.P .deps/live.P \
+.deps/main.P .deps/menu.P .deps/toolbar.P .deps/util.P
+SOURCES = $(gphoto_SOURCES)
+OBJECTS = $(gphoto_OBJECTS)
 
-clean:
-	rm -f *.o gphoto core
+all: all-redirect
+.SUFFIXES:
+.SUFFIXES: .S .c .lo .o .s
+$(srcdir)/Makefile.in: # Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu src/Makefile
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+
+mostlyclean-binPROGRAMS:
+
+clean-binPROGRAMS:
+	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+
+distclean-binPROGRAMS:
+
+maintainer-clean-binPROGRAMS:
+
+install-binPROGRAMS: $(bin_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(bindir)
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    echo " $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
+	    $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	  else :; fi; \
+	done
+
+uninstall-binPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	done
+
+.s.o:
+	$(COMPILE) -c $<
+
+.S.o:
+	$(COMPILE) -c $<
+
+mostlyclean-compile:
+	-rm -f *.o core *.core
+
+clean-compile:
+
+distclean-compile:
+	-rm -f *.tab.c
+
+maintainer-clean-compile:
+
+.s.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+.S.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+mostlyclean-libtool:
+	-rm -f *.lo
+
+clean-libtool:
+	-rm -rf .libs _libs
+
+distclean-libtool:
+
+maintainer-clean-libtool:
+
+gphoto: $(gphoto_OBJECTS) $(gphoto_DEPENDENCIES)
+	@rm -f gphoto
+	$(LINK) $(gphoto_LDFLAGS) $(gphoto_OBJECTS) $(gphoto_LDADD) $(LIBS)
+
+tags: TAGS
+
+ID: $(HEADERS) $(SOURCES) $(LISP)
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	here=`pwd` && cd $(srcdir) \
+	  && mkid -f$$here/ID $$unique $(LISP)
+
+TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
+
+mostlyclean-tags:
+
+clean-tags:
+
+distclean-tags:
+	-rm -f TAGS ID
+
+maintainer-clean-tags:
+
+distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
+
+subdir = src
+
+distdir: $(DISTFILES)
+	here=`cd $(top_builddir) && pwd`; \
+	top_distdir=`cd $(top_distdir) && pwd`; \
+	distdir=`cd $(distdir) && pwd`; \
+	cd $(top_srcdir) \
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnu src/Makefile
+	@for file in $(DISTFILES); do \
+	  d=$(srcdir); \
+	  if test -d $$d/$$file; then \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	    || cp -p $$d/$$file $(distdir)/$$file || :; \
+	  fi; \
+	done
+
+DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
+
+-include $(DEP_FILES)
+
+mostlyclean-depend:
+
+clean-depend:
+
+distclean-depend:
+	-rm -rf .deps
+
+maintainer-clean-depend:
+
+%.o: %.c
+	@echo '$(COMPILE) -c $<'; \
+	$(COMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.lo: %.c
+	@echo '$(LTCOMPILE) -c $<'; \
+	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
+info-am:
+info: info-am
+dvi-am:
+dvi: dvi-am
+check-am: all-am
+check: check-am
+installcheck-am:
+installcheck: installcheck-am
+install-exec-am: install-binPROGRAMS
+install-exec: install-exec-am
+
+install-data-am:
+install-data: install-data-am
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+install: install-am
+uninstall-am: uninstall-binPROGRAMS
+uninstall: uninstall-am
+all-am: Makefile $(PROGRAMS)
+all-redirect: all-am
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
+installdirs:
+	$(mkinstalldirs)  $(DESTDIR)$(bindir)
+
+
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES)
+	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+mostlyclean-am:  mostlyclean-binPROGRAMS mostlyclean-compile \
+		mostlyclean-libtool mostlyclean-tags mostlyclean-depend \
+		mostlyclean-generic
+
+mostlyclean: mostlyclean-am
+
+clean-am:  clean-binPROGRAMS clean-compile clean-libtool clean-tags \
+		clean-depend clean-generic mostlyclean-am
+
+clean: clean-am
+
+distclean-am:  distclean-binPROGRAMS distclean-compile distclean-libtool \
+		distclean-tags distclean-depend distclean-generic \
+		clean-am
+	-rm -f libtool
+
+distclean: distclean-am
+
+maintainer-clean-am:  maintainer-clean-binPROGRAMS \
+		maintainer-clean-compile maintainer-clean-libtool \
+		maintainer-clean-tags maintainer-clean-depend \
+		maintainer-clean-generic distclean-am
+	@echo "This command is intended for maintainers to use;"
+	@echo "it deletes files that may require special tools to rebuild."
+
+maintainer-clean: maintainer-clean-am
+
+.PHONY: mostlyclean-binPROGRAMS distclean-binPROGRAMS clean-binPROGRAMS \
+maintainer-clean-binPROGRAMS uninstall-binPROGRAMS install-binPROGRAMS \
+mostlyclean-compile distclean-compile clean-compile \
+maintainer-clean-compile mostlyclean-libtool distclean-libtool \
+clean-libtool maintainer-clean-libtool tags mostlyclean-tags \
+distclean-tags clean-tags maintainer-clean-tags distdir \
+mostlyclean-depend distclean-depend clean-depend \
+maintainer-clean-depend info-am info dvi-am dvi check check-am \
+installcheck-am installcheck install-exec-am install-exec \
+install-data-am install-data install-am install uninstall-am uninstall \
+all-redirect all-am all installdirs mostlyclean-generic \
+distclean-generic clean-generic maintainer-clean-generic clean \
+mostlyclean distclean maintainer-clean
+
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

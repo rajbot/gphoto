@@ -1,3 +1,4 @@
+#include "gphoto.h"
 #include "util.h"
 #include <stdio.h>    
 #include <setjmp.h> 
@@ -146,10 +147,28 @@ int wait_for_hide (GtkWidget *dialog, GtkWidget *ok_button,
         return 1;
 }
 
+void free_image (struct Image *im) {
+
+	/* Note to self: forget to free the image_info here */
+	free (im->image);
+	free (im);
+}
+
+void save_image (char *filename, struct Image *im) {
+
+	FILE *fp;
+
+	fp = fopen (filename, "w");
+	fwrite (im->image, (size_t)sizeof(char), (size_t)im->image_size, fp);
+	fclose (fp);
+}
+
+
 GdkImlibImage *gdk_imlib_load_image_mem(char *image, int size) {
 
 	/* Scott was here. just a quick hash until the mem-to-mem
-	   copy works on all image types. Bad thing(tm): disk hit
+	   copy works on all image types. Bad thing(tm): disk hit.
+	   This is being worked on.
 	*/
 
 	FILE *fp;

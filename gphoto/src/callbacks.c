@@ -849,8 +849,7 @@ void insert_thumbnail(struct ImageInfo *node){
   if (thumbname!=NULL) gtk_label_set_text  (GTK_LABEL(node->label)
 					    ,thumbname);
   */
-  free (im->image);
-  free (im);
+  free_image (im);
 
   w = node->imlibimage->rgb_width; 
   h = node->imlibimage->rgb_height;

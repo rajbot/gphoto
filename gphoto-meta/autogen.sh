@@ -79,7 +79,7 @@ test -f bootstrap.sh || {
         exit 1
 }
 
-if ! ls dist/*.tar* >& /dev/null
+if ! ls dist-files/*.tar* >& /dev/null
 then
     echo "You must run bootstrap.sh before autogen.sh"
     exit 1

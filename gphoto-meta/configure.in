@@ -10,5 +10,5 @@ echo "srcdir=$srcdir"
 AC_OUTPUT([
 Makefile
 utils/Makefile
-dist/Makefile
+dist-files/Makefile
 ])

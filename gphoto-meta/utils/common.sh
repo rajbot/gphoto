@@ -10,7 +10,7 @@ cvsmodulelist="${metadir}/cvs-module-list"
 
 cvsorig="${metadir}/cvs-orig"
 cvssrc="${metadir}/cvs-src"
-distdir="${metadir}/dist"
+distdir="${metadir}/dist-files"
 distroot="${metadir}/dist-root"
 srcdir="${metadir}/src"
 instroot="${metadir}/inst-root"

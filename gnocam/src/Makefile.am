@@ -6,10 +6,7 @@ gladedir = $(datadir)/$(PACKAGE)/
 INCLUDES = \
  -DGNOME_LOCALEDIR=\""$(datadir)/locale"\"\
  -DGNOCAM_GLADEDIR=\""$(gladedir)"\"\
- -DGNOCAM_DATADIR=\""$(datadir)"\"\
- $(GNOME_INCLUDEDIR)\
- -I$(top_srcdir)/src\
- -I$(includedir)/src
+ -DGNOCAM_DATADIR=\""$(datadir)"\"
 
 CFLAGS = @CFLAGS@\
  `gnome-config --cflags libglade gdk_pixbuf gnomeui vfs xml bonobox gal`\

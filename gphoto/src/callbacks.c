@@ -25,6 +25,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <fcntl.h>
 #include <time.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -424,9 +425,11 @@ void port_dialog() {
 	GSList *group;
 	GList *list;
 
-	char serial_port_prefix[20], tempstring[20];
+	char serial_port_prefix[20], tempstring[20], status[128];
+
 	char *camera_selected;
 	int i=0;
+	int sd = -1;
 
 #ifdef linux
         sprintf(serial_port_prefix, "/dev/ttyS");
@@ -497,20 +500,20 @@ void port_dialog() {
 	group = NULL;
 	label = gtk_label_new("Port:");
 	gtk_widget_show(label);
-	port0 = gtk_radio_button_new_with_label(NULL, "Serial Port 1");
+	port0 = gtk_radio_button_new_with_label(NULL, "/dev/ttyS0 (COM1)");
         gtk_widget_show(port0);
 	gtk_button_clicked(GTK_BUTTON(port0));
         group = gtk_radio_button_group(GTK_RADIO_BUTTON(port0));
-        port1 = gtk_radio_button_new_with_label(group, "Serial Port 2");
+        port1 = gtk_radio_button_new_with_label(group, "/dev/ttyS1 (COM2)");
         gtk_widget_show(port1);
         group = gtk_radio_button_group(GTK_RADIO_BUTTON(port1));
-        port2 = gtk_radio_button_new_with_label(group, "Serial Port 3");
+        port2 = gtk_radio_button_new_with_label(group, "/dev/ttyS2 (COM3)");
         gtk_widget_show(port2);
         group = gtk_radio_button_group(GTK_RADIO_BUTTON(port2));
-        port3 = gtk_radio_button_new_with_label(group, "Serial Port 4");
+        port3 = gtk_radio_button_new_with_label(group, "/dev/ttyS3 (COM4)");
         gtk_widget_show(port3);
         group = gtk_radio_button_group(GTK_RADIO_BUTTON(port3));
-        other = gtk_radio_button_new_with_label(group, "Other");
+        other = gtk_radio_button_new_with_label(group, "other");
         gtk_widget_show(other);
 
 	ent_other = gtk_entry_new();
@@ -564,6 +567,8 @@ void port_dialog() {
 	strcpy(camera_model, camera_selected);
 	set_camera(camera_model);
 
+	set_camera(camera_model);
+
 	if (GTK_WIDGET_STATE(port0) == GTK_STATE_ACTIVE) {
 		sprintf(tempstring, "%s0", serial_port_prefix);
 		strcpy(serial_port, tempstring);
@@ -586,7 +591,21 @@ void port_dialog() {
 		strcpy(serial_port, tempstring);
 	}
 	
-	save_config();
+	if (( sd = open (serial_port, O_RDWR, 0) ) < 0) {
+		
+		sprintf(status, "Error: failed to open %s",serial_port);
+		update_status(status);
+		message_window ("Missing Serial Device Permissions",
+				"Please check the permissions "
+				"(see the manual).", GTK_JUSTIFY_FILL);
+	} 
+	else {
+		sprintf (status, "Opened %s.", serial_port);
+		update_status (status);
+		save_config ();
+	}
+	close(sd);
+	gtk_widget_destroy(dialog);
 }
 
 int  load_config() {

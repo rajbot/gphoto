@@ -39,12 +39,9 @@ int dir_get_dir() {
 	GtkWidget *filesel;
 	GdkImlibImage *imlibimage;
 
-	filesel = gtk_file_selection_new("Select a directory to open...");
-	gtk_window_set_position(GTK_WINDOW(filesel), GTK_WIN_POS_CENTER);	
-	gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_entry);
-	gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_text);
-	gtk_widget_hide(GTK_FILE_SELECTION(filesel)->file_list);
-
+	filesel = gtk_directory_selection_new("Select a directory to open...");
+	gtk_window_set_position (GTK_WINDOW (filesel),
+		GTK_WIN_POS_CENTER);
 	if (wait_for_hide(filesel,
 	   GTK_FILE_SELECTION(filesel)->ok_button,
 	   GTK_FILE_SELECTION(filesel)->cancel_button) == 0)

@@ -16,7 +16,6 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 	gchar*		name;
 
 	g_return_val_if_fail (camera, 		GP_ERROR_BAD_PARAMETERS);
-	g_return_val_if_fail (!(*camera), 	GP_ERROR_BAD_PARAMETERS);
 	g_return_val_if_fail (!((name_or_url [0] == '/') && (name_or_url [1] != '/')), GP_ERROR_BAD_PARAMETERS);
 
 	/* Make sure GConf is initialized. */

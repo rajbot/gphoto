@@ -3,9 +3,9 @@
 #include "gnocam-control.h"
 
 #include <stdio.h>
-#include <gtk/gtksignal.h>
-#include <gtk/gtkmarshal.h>
-#include <gtk/gtktypeutils.h>
+//#include <gtk/gtksignal.h>
+//#include <gtk/gtkmarshal.h>
+//#include <gtk/gtktypeutils.h>
 #include <bonobo/bonobo-moniker-extender.h>
 
 #include <gphoto-extensions.h>
@@ -38,7 +38,7 @@ gnocam_control_new (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options
 	GtkWidget*		widget;
 	CORBA_Environment	ev;
 	Bonobo_UIContainer	container;
-	Camera*			camera;
+	Camera*			camera = NULL;
 
 	/* Create the camera. */
 	name = bonobo_moniker_get_name (moniker);
@@ -72,7 +72,7 @@ gnocam_control_new (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options
 
 	/* Initialize our variables. */
 	for (i = 2; name[i] != 0; i++) if (name[i] == '/') break;
-	control->path = g_strdup (name + i + 2);
+	control->path = g_strdup (name + i);
 	control->config_camera = NULL;
 	control->config_folder = NULL;
 	control->config_file = NULL;

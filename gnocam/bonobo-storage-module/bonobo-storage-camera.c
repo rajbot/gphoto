@@ -205,7 +205,7 @@ bonobo_storage_camera_open (const char *path, gint flags, gint mode, CORBA_Envir
 {
         BonoboStorageCamera*	storage;
 	CameraList 		list;
-	Camera*			camera;
+	Camera*			camera = NULL;
 
         /* Reject some unsupported open modes. */
 	if (mode & (Bonobo_Storage_COMPRESSED | Bonobo_Storage_TRANSACTED)) {

@@ -128,7 +128,7 @@ file_handle_free (GnomeVFSMethodHandle* handle)
 GnomeVFSMethodHandle*
 directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options, GnomeVFSContext* context, GnomeVFSResult* result)
 {
-	Camera* 		camera;
+	Camera* 		camera = NULL;
 	directory_handle_t*	directory_handle;
 	CameraList		camera_list;
 	GSList*			folders = NULL;

@@ -1,11 +1,8 @@
 #include <config.h>
-#include <gnome.h>
 #include <gphoto2.h>
-#include <gconf/gconf-client.h>
-#include <libgnomevfs/gnome-vfs.h>
 #include <parser.h>
-#include <tree.h>
 #include <bonobo.h>
+
 #include "gnocam-control.h"
 #include "utils.h"
 
@@ -183,7 +180,7 @@ menu_create (GnoCamControl* control)
 		BonoboUIComponent* 	component = bonobo_control_get_ui_component (BONOBO_CONTROL (control));
 		gchar*			file = g_basename (control->path);
 		gchar*  		folder = g_dirname (control->path);
-		
+
 		/* Set the component's container. */
 		bonobo_ui_component_set_container (component, container);
 
@@ -194,7 +191,7 @@ menu_create (GnoCamControl* control)
 				g_warning (_("Could not get widget for camera configuration! (%s)"), 
 					gp_camera_result_as_string (control->camera, result));
 		}
-		if (control->config_camera) menu_setup (control, control->config_camera, "CameraConfiguration", NULL, NULL);
+		if (control->config_camera) menu_setup (control, control->config_camera, "Camera Configuration", NULL, NULL);
 
 		/* File Configuration? */
 		if (!control->config_file) {
@@ -203,7 +200,7 @@ menu_create (GnoCamControl* control)
 				g_warning (_("Could not get widget for configuration of file '%s' in folder '%s'! (%s)"), 
 					file, folder, gp_camera_result_as_string (control->camera, result));
 		}
-		if (control->config_file) menu_setup (control, control->config_file, "FileConfiguration", folder, file);
+		if (control->config_file) menu_setup (control, control->config_file, "File Configuration", folder, file);
 
 		/* Folder Configuration? */
 		if (!control->config_folder) {
@@ -212,7 +209,7 @@ menu_create (GnoCamControl* control)
 				g_warning (_("Could not get widget for configuration of folder '%s'! (%s)"), 
 					folder, gp_camera_result_as_string (control->camera, result));
 		}
-		if (control->config_folder) menu_setup (control, control->config_folder, "FolderConfiguration", folder, NULL);
+		if (control->config_folder) menu_setup (control, control->config_folder, "Folder Configuration", folder, NULL);
 		
 		/* Release the container. */
 		bonobo_object_release_unref (container, NULL);

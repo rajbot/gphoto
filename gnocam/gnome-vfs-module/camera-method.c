@@ -393,7 +393,7 @@ static GnomeVFSResult do_get_file_info (
 	gchar*		dirname = NULL;
 	GnomeVFSResult	result;
 	CameraList	camera_list;
-	Camera*		camera;
+	Camera*		camera = NULL;
 	gint		i;
 
 	g_print ("CAMERA: do_get_file_info\n");

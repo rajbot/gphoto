@@ -244,7 +244,9 @@ bonobo_stream_camera_open (const char *path, gint flags, gint mode, CORBA_Enviro
 {
 	BonoboStreamCamera*	stream;
 	Bonobo_Stream 		corba_stream;
-	Camera*			camera;
+	Camera*			camera = NULL;
+
+	g_warning ("bonobo_stream_camera_open (%s, ?, ?, ?)", path);
 
 	/* Create camera. */
 	CHECK_RESULT (gp_camera_new_from_gconf (&camera, path), ev);

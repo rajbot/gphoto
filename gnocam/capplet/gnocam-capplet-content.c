@@ -2,6 +2,8 @@
 #include <config.h>
 #endif
 
+#include <gphoto2.h>
+
 #include "gnocam-capplet-content.h"
 
 #include <gal/util/e-util.h>
@@ -12,8 +14,6 @@
 #include <gal/e-table/e-cell-popup.h>
 #include <gal/e-table/e-cell-combo.h>
 #include <gconf/gconf-client.h>
-
-#include "gnocam-camera-druid.h"
 
 #define PARENT_TYPE GTK_TYPE_VBOX
 static GtkVBoxClass* parent_class = NULL;
@@ -35,8 +35,8 @@ struct _GnoCamCappletContentPrivate {
 #define E_TABLE_SPEC                                                                                                                                            \
 "<ETableSpecification click-to-add=\"true\" draw-grid=\"true\" _click-to-add-message=\"* Click here to add a camera *\">"					\
 "  <ETableColumn model_col=\"0\" _title=\"Name\"  expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"string\" compare=\"string\"/>"		\
-"  <ETableColumn model_col=\"1\" _title=\"Model\" expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"string\" compare=\"string\"/>"		\
-"  <ETableColumn model_col=\"2\" _title=\"Port\"  expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"string\" compare=\"string\"/>"		\
+"  <ETableColumn model_col=\"1\" _title=\"Model\" expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"model\" compare=\"string\"/>"		\
+"  <ETableColumn model_col=\"2\" _title=\"Port\"  expansion=\"1.0\" minimum_width=\"20\" resizable=\"true\" cell=\"port\" compare=\"string\"/>"			\
 "  <ETableState>"                                                                                                                                               \
 "    <column source=\"0\"/>"                                                                                                                                    \
 "    <column source=\"1\"/>"                                                                                                                                    \
@@ -91,18 +91,6 @@ table_selected_row_foreach_delete (int row, gpointer user_data)
 /*************/
 /* Callbacks */
 /*************/
-
-static void
-on_new_clicked (GtkButton* button, gpointer user_data)
-{
-	GtkWidget*		druid;
-	GnoCamCappletContent*	content;
-
-	content = GNOCAM_CAPPLET_CONTENT (user_data);
-
-	druid = gnocam_camera_druid_new (content->priv->client, GTK_WINDOW (gtk_widget_get_ancestor (GTK_WIDGET (button), GTK_TYPE_WINDOW)));
-	gtk_widget_show (druid);
-}
 
 static void
 on_delete_clicked (GtkButton* button, gpointer user_data)
@@ -300,8 +288,13 @@ gnocam_capplet_content_new (CappletWidget* capplet)
 	GtkWidget*		button;
 	GtkWidget*		widget;
 	ETableExtras*		extras;
-//	ECell*			cell;
-//	ECell*			child;
+	ECell*			cell;
+	ECell*			popup_cell;
+	gint			number;
+	gint			i;
+	gchar			buffer [1024];
+	GList*			list;
+	CameraPortInfo		info;
 
 	new = gtk_type_new (GNOCAM_TYPE_CAPPLET_CONTENT);
 	
@@ -339,15 +332,30 @@ gnocam_capplet_content_new (CappletWidget* capplet)
         extras = e_table_extras_new ();
 
 	/* Create the cell for port */
-//	cell = e_cell_combo_new ();
-//	e_cell_combo_set_popdown_strings (E_CELL_COMBO (cell), g_list_append (NULL, "Hello World!"));
-//	e_table_extras_add_cell (extras, "port", cell);
+	cell = e_cell_text_new (NULL, GTK_JUSTIFY_LEFT);
+	popup_cell = e_cell_combo_new ();
+	list = NULL;
+	if ((number = gp_port_count_get ()) >= 0) 
+		for (i = 0; i < number; i++) 
+			if (gp_port_info_get (i, &info) == GP_OK) 
+				list = g_list_append (list, g_strdup (info.name));
+	e_cell_combo_set_popdown_strings (E_CELL_COMBO (popup_cell), list);
+	e_cell_popup_set_child (E_CELL_POPUP (popup_cell), cell);
+	gtk_object_unref (GTK_OBJECT (cell));
+	e_table_extras_add_cell (extras, "port", popup_cell);
 
 	/* Create the cell for model */
-//	child = e_cell_text_new (NULL, GTK_JUSTIFY_LEFT);
-//	cell = e_cell_popup_new ();
-//	e_cell_popup_set_child (E_CELL_POPUP (cell), child);
-//	e_table_extras_add_cell (extras, "model", cell);
+	cell = e_cell_text_new (NULL, GTK_JUSTIFY_LEFT);
+	popup_cell = e_cell_combo_new ();
+	list = NULL;
+        if ((number = gp_camera_count ()) >= 0) 
+		for (i = 0; i < number; i++) 
+			if (gp_camera_name (i, buffer) == GP_OK) 
+				list = g_list_append (list, g_strdup (buffer));
+	e_cell_combo_set_popdown_strings (E_CELL_COMBO (popup_cell), list);
+	e_cell_popup_set_child (E_CELL_POPUP (popup_cell), cell);
+	gtk_object_unref (GTK_OBJECT (cell));
+	e_table_extras_add_cell (extras, "model", popup_cell);
 
 	/* Create the table */
 	new->priv->table = e_table_scrolled_new (new->priv->model, extras, E_TABLE_SPEC, NULL);
@@ -360,10 +368,6 @@ gnocam_capplet_content_new (CappletWidget* capplet)
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (vbuttonbox), GTK_BUTTONBOX_START);
 	gtk_widget_show (vbuttonbox);
 	gtk_box_pack_end (GTK_BOX (hbox), vbuttonbox, FALSE, FALSE, 10);
-	button = gtk_button_new_with_label (_("New"));
-	gtk_signal_connect (GTK_OBJECT (button), "clicked", GTK_SIGNAL_FUNC (on_new_clicked), new);
-	gtk_widget_show (button);
-	gtk_box_pack_start (GTK_BOX (vbuttonbox), button, FALSE, FALSE, 10);
 	button = gtk_button_new_with_label (_("Delete"));
 	gtk_signal_connect (GTK_OBJECT (button), "clicked", GTK_SIGNAL_FUNC (on_delete_clicked), new);
 	gtk_widget_show (button);

@@ -15,7 +15,6 @@ INCLUDES = \
 bin_PROGRAMS = camera-capplet
 
 camera_capplet_SOURCES =\
- gnocam-camera-druid.c gnocam-camera-druid.h\
  gnocam-capplet-content.c gnocam-capplet-content.h\
  main.c
 

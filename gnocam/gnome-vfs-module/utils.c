@@ -90,8 +90,10 @@ file_handle_new (GnomeVFSURI* uri, GnomeVFSResult* result)
 
         /* Get the file. */
 	dirname = gnome_vfs_uri_extract_dirname (uri);
+	g_print ("  getting file '%s' from directory '%s'...\n", filename, dirname);
 	file = gp_file_new ();
 	if (gp_camera_file_get_preview (camera, file, dirname, (gchar*) filename) != GP_OK) {
+		g_print ("    ERROR\n");
 		*result = GNOME_VFS_ERROR_GENERIC;
 		return (NULL);
 	}

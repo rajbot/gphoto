@@ -177,11 +177,18 @@ static GnomeVFSMethod method = {
 /* Functions */
 /*************/
 
+int gp_frontend_message (Camera* camera, char *message)
+{
+	g_print ("MESSAGE: %s\n", message);
+	return (GP_OK);
+}
+
 GnomeVFSMethod*
 vfs_module_init (const gchar* method_name, const gchar* args)
 {
 	if (!gconf_is_initialized ()) gconf_init (0, NULL, NULL);
-	gp_init (GP_DEBUG_NONE);
+	gp_init (GP_DEBUG_HIGH);
+	gp_frontend_register (NULL, NULL, gp_frontend_message, NULL, NULL);
 	return &method;
 }
 
@@ -245,12 +252,19 @@ static GnomeVFSResult do_read (
 	g_print ("do_read\n");
 	g_return_val_if_fail ((file_handle = (file_handle_t*) handle), GNOME_VFS_ERROR_INTERNAL);
 
-	/* 'Read' the num_bytes data. */
-	for (*bytes_read = 0; *bytes_read < num_bytes; (*bytes_read)++) {
-		if (file_handle->position + *bytes_read >= file_handle->file->size) return GNOME_VFS_ERROR_EOF;
-		((gchar*) buffer) [*bytes_read] = file_handle->file->data [file_handle->position + *bytes_read];
-		file_handle->position++;
+	if (gnome_vfs_context_check_cancellation (context)) return GNOME_VFS_ERROR_CANCELLED;
+
+	/* Check if num_bytes or less are left. */
+	if (file_handle->position + num_bytes >= file_handle->file->size) {
+		*bytes_read = file_handle->file->size - file_handle->position;
+		memcpy (buffer, file_handle->file->data + file_handle->position, *bytes_read);
+		if (*bytes_read == 0) return (GNOME_VFS_ERROR_EOF);
+	} else {
+		*bytes_read = num_bytes;
+		memcpy (buffer, file_handle->file->data + file_handle->position, *bytes_read);
 	}
+	
+	file_handle->position += *bytes_read;
 	return (GNOME_VFS_OK);
 }
 

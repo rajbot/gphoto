@@ -1,0 +1,17 @@
+
+GNOCAM
+------
+
+GnoCam was born because I felt a need for a small but powerful frontend to 
+gphoto2 for the GNOME desktop.
+
+GnoCam actually is a quick hack, assembled by code from gtCam and several
+GNOME applications like gedit, gftp, etc. See TODO for a list of things that
+remain to do.
+
+If you feel that GnoCam is worth being developed further, send an e-mail to me.
+
+
+Lutz Müller <urc8@rz.uni-karlsruhe.de>
+ 
+

@@ -1,0 +1,5 @@
+src/callbacks.c
+src/camera_properties.c
+src/gnocam.c
+src/preferences.c
+src/save.c

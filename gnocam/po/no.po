@@ -1,0 +1,136 @@
+# Norwegian (bokmål) message catalog for GnoCam, a GNOME front end for gphoto2
+# Copyright (C) 2000 Free Software Foundation, Inc.
+# Ole Aamot <ole@gnu.org>, 2000.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: GnoCam 0.3\n"
+"POT-Creation-Date: 2000-09-08 21:34+0000\n"
+"PO-Revision-Date: 2000-09-08 23:29+0200\n"
+"Last-Translator: Ole Aamot <ole@gnu.org>\n"
+"Language-Team: Norwegian (bokmål) <no@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-1\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/callbacks.c:95
+#, c-format
+msgid "Do you really want to delete the %i selected files?"
+msgstr "Er du sikker på at du vil slette de valgte %i filene?"
+
+#: src/callbacks.c:97
+msgid "Do you really want to delete the selected file?"
+msgstr "Er du sikker på at du vil slette den valgte filen?"
+
+#: src/callbacks.c:122
+msgid "Could not delete file!"
+msgstr "Kunne ikke slette fil!"
+
+#: src/callbacks.c:128 src/save.c:71
+msgid "No files selected!"
+msgstr "Ingen valgte filer!"
+
+#: src/callbacks.c:204 src/preferences.c:168
+msgid "Please select a camera first!"
+msgstr "Velg et kamera først!"
+
+#: src/callbacks.c:228 src/gnocam.c:55 src/preferences.c:484
+msgid "Could not find "
+msgstr "Klarte ikke å finne "
+
+#: src/callbacks.c:341
+msgid "Could not load image!"
+msgstr "Klarte ikke å hente fotografi!"
+
+#: src/callbacks.c:347
+msgid "Could not get preview from the camera!"
+msgstr "Klarte ikke å laste ned miniatyr fra kameraet!"
+
+#: src/callbacks.c:357
+msgid "Could not get the file list from the camera!"
+msgstr "Klarte ikke å laste ned fillisten fra kameraet!"
+
+#: src/camera_properties.c:83
+msgid "Could not set camera properties!"
+msgstr "Klarte ikke å lagre kamerainnstillinger!"
+
+#: src/camera_properties.c:421
+msgid "Could not fine "
+msgstr "Klarte ikke å finne "
+
+#: src/camera_properties.c:425
+msgid "Could not get camera properties!"
+msgstr "Klarte ikke å laste ned kamerainnstillinger!"
+
+#: src/preferences.c:127
+msgid "Please select only one camera."
+msgstr "Velg kun ett kamera."
+
+#: src/preferences.c:130
+msgid "Please select one camera first."
+msgstr "Velg ett kamera først."
+
+#: src/preferences.c:318
+msgid "Could not get camera abilities!"
+msgstr "Klarte ikke å hente kamerafunksjoner!"
+
+#: src/preferences.c:360
+msgid "You have to indicate a name!"
+msgstr "Du må angi et navn!"
+
+#: src/preferences.c:364
+msgid "Name of camera cannot be empty string!"
+msgstr "Kameranavnet kan ikke være en tom streng!"
+
+#: src/preferences.c:370
+msgid "You have to indicate a port!"
+msgstr "Du må angi en port!"
+
+#: src/preferences.c:375 src/preferences.c:577
+msgid "Could not get number of ports!"
+msgstr "Klarte ikke å finne antall porter!"
+
+#: src/preferences.c:380
+msgid "Could not get port information!"
+msgstr "Klarte ikke å finne portinformasjon!"
+
+#: src/preferences.c:389
+msgid "Could not find port!"
+msgstr "Klarte ikke å finne port!"
+
+#: src/preferences.c:399
+msgid "You have to indicate a model!"
+msgstr "Du må angi en modell!"
+
+#: src/preferences.c:403
+msgid "Could not set camera model!"
+msgstr "Klarte ikke å sette kameramodell!"
+
+#: src/preferences.c:449 src/preferences.c:623
+msgid "Could not get folder list!"
+msgstr "Klarte ikke å laste ned liste over mapper!"
+
+#: src/preferences.c:545
+msgid "Could not get model name!"
+msgstr "Klarte ikke å hente modellnavn!"
+
+#: src/preferences.c:556
+msgid "Could not get number of supported models!"
+msgstr "Klarte ikke å hente antall støttede modeller!"
+
+#: src/preferences.c:565
+msgid "Could not get port info!"
+msgstr "Klarte ikke å hente portinformasjon!"
+
+#: src/preferences.c:695
+msgid "The configuration file is corrupt!"
+msgstr "Konfigurasjonsfilen er ødelagt!"
+
+#: src/preferences.c:714
+msgid "It seems that you are running\n"
+msgstr "Det ser ut som om du kjører\n"
+
+#: src/save.c:53
+msgid "Could not get file from camera!"
+msgstr "Klarte ikke å laste ned fil fra kameraet!"

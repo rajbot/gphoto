@@ -1,0 +1,120 @@
+AC_INIT(src/gnocam.c)
+
+AM_INIT_AUTOMAKE(GnoCam, 0.4)
+AM_CONFIG_HEADER(config.h)
+
+AM_MAINTAINER_MODE
+AM_ACLOCAL_INCLUDE(macros)
+
+GNOME_INIT
+
+AC_ISC_POSIX
+AC_PROG_CC
+AM_PROG_CC_STDC
+AC_HEADER_STDC
+
+GNOME_COMPILE_WARNINGS
+
+dnl Add the languages which your application supports here.
+ALL_LINGUAS="no"
+AM_GNU_GETTEXT
+
+dnl Set PACKAGE_LOCALE_DIR in config.h.
+if test "x${prefix}" = "xNONE"; then
+    AC_DEFINE_UNQUOTED(PACKAGE_LOCALE_DIR, "${ac_default_prefix}/${DATADIRNAME}/locale")
+else
+    AC_DEFINE_UNQUOTED(PACKAGE_LOCALE_DIR, "${prefix}/${DATADIRNAME}/locale")
+fi
+
+dnl **********
+dnl gnome-libs
+dnl **********
+AC_MSG_CHECKING(for gnome-libs >= 1.0.55)
+if gnome-config --version > /dev/null 2>&1; then
+    vers=`gnome-config --version | awk 'BEGIN { FS = "."; } { printf "%d", ($1 * 1000 + $2) * 1000 + $3;}'`
+    if test "$vers" -ge 55; then
+	AC_MSG_RESULT(found)
+    else
+	AC_MSG_ERROR([
+*** You need at least gnome-libs 1.0.55 for this version of ${PACKAGE}.])
+    fi
+else
+    AC_MSG_ERROR([
+*** Did not find gnome-libs installed.])
+fi
+
+dnl ********
+dnl libglade
+dnl ********
+AC_MSG_CHECKING(for Glade libraries >= 0.11)
+if gnome-config --libs libglade > /dev/null 2>&1; then
+    vers=`gnome-config --modversion libglade | awk 'BEGIN { FS = "."; } { print $1 * 1000 + $2;}'`
+    if test "$vers" -ge 11; then
+	AC_MSG_RESULT(found)
+    else
+	AC_MSG_ERROR([
+*** You need a least libglade 0.11 for this version of ${PACKAGE}.])
+    fi
+else
+    AC_MSG_ERROR([
+*** You need libglade for this version of ${PACKAGE}.])
+fi
+
+dnl *******
+dnl libgpio
+dnl *******
+AC_MSG_CHECKING(for libgpio >= 0.0.2)
+if gnome-config --libs gpio > /dev/null 2>&1; then
+    vers=`gnome-config --modversion gpio | awk 'BEGIN { FS = "."; } { printf "%d", ($1 * 1000 + $2) * 1000 + $3;}'`
+    if test "$vers" -ge 2; then
+        AC_MSG_RESULT(found)
+    else
+        AC_MSG_ERROR([
+*** You need at least libgpio 0.0.2 for this version of ${PACKAGE}.
+*** Get it from http://sourceforge.net/projects/gphoto/])
+    fi
+else
+    AC_MSG_ERROR([
+*** You need libgpio for this version of ${PACKAGE}.
+*** Get it from http://sourceforge.net/projects/gphoto/])
+fi
+
+dnl **********
+dnl libgphoto2
+dnl **********
+AC_MSG_CHECKING(for libgphoto2 >= 2.0)
+if gnome-config --libs libgphoto2 > /dev/null 2>&1; then
+    AC_MSG_RESULT(found)
+else
+    AC_MSG_ERROR([
+*** You need libgphoto2 for this version of ${PACKAGE}.
+*** Get it from http://sourceforge.net/projects/gphoto/])
+fi
+
+AC_SUBST(CFLAGS)
+AC_SUBST(CPPFLAGS)
+AC_SUBST(LDFLAGS)
+
+dnl *********
+dnl Makefiles
+dnl *********
+AC_OUTPUT([
+gnocam.spec
+Makefile
+intl/Makefile
+macros/Makefile
+po/Makefile.in
+src/Makefile
+])
+
+dnl *********************
+dnl Give some feedback...
+dnl *********************
+
+echo "
+
+Configuration
+
+	Source code location: ${srcdir}
+	Compiler:             ${CC}
+"

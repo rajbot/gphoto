@@ -1,0 +1,9 @@
+2000/09/09	Ole Aamot <oka@ping.uio.no>
+	* Makefile.am: Added autogen.sh in EXTRA_DIST
+	* configure.in: Check for libgpio and libgphoto2.
+
+2000/09/08	Lutz Müller <urc8@rz.uni-karlsruhe.de>
+	* Added gnocam.h.
+	* Set prefix to HOME on first startup. (Scott)
+	* Clear progress bar after transaction. (Scott)
+	* Released GnoCam-0.2.

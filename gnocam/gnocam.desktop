@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=GnoCam
+Comment=Front-end to gphoto2
+Exec=gnocam
+Icon=gnome-default.png
+Terminal=0
+Type=Application

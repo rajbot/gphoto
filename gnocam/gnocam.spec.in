@@ -1,0 +1,44 @@
+%define		name	GnoCam
+%define 	ver	@VERSION@
+%define 	rel	1
+%define 	prefix	/usr
+
+Summary:	%{name} is a small put powerful frontend to gphoto2 for GNOME.
+Name: 		%{name}
+Version:	%{ver}
+Release:	%{rel}
+Copyright:	GPL
+Group:		Applications/Multimedia
+Source:		
+URL:		http://www.uni-karlsruhe.de/~urc8/GnoCam/
+BuildRoot:	/var/tmp/gnocam-%{PACKAGE_VERSION}-root
+Docdir:		%{prefix}/help
+
+Requires:	gtk+ >= 1.2.7
+Requires:	gnome-libs >= 1.0.55
+Requires: 	gdk-pixbuf >= 0.9.0
+
+%description
+%{name} is a small but powerful front-end to gphoto2 for the GNOME desktop.
+
+%prep
+%setup
+
+%build
+%ifarch alpha
+    CFLAGS="$RPM_OPT_FLAGS" LDFLAGS="-s" ./configure --host=alpha-redhat-linux\
+        --prefix=%{prefix}
+%else
+    CFLAGS="$RPM_OPT_FLAGS" LDFLAGS="-s" ./configure --prefix=%{prefix}
+%endif
+make
+
+%install
+[ -d $RPM_BUILD_ROOT ] && rm -rf $RPM_BUILD_ROOT;
+make -e prefix=$RPM_BUILD_ROOT%{prefix} install
+
+%clean
+[ -d $RPM_BUILD_ROOT ] && rm -rf $RPM_BUILD_ROOT;
+
+%files
+%defattr(-, root, root)

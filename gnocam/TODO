@@ -1,0 +1,31 @@
+
+Icon, Logo:
+-----------
+- remain to be created.
+
+Drag & Drop:
+------------
+- implement uploading
+- correctly implement drag (files/previews). Timeout issue?
+- use gnome-vfs
+
+Save:
+-----
+- Save as not implemented. 
+- The whole save things should be recoded. gnome-vfs?
+
+PopUp Menus:
+------------
+- right-click on camera: take picture/delete, reread directory...
+
+GConf:
+------
+- preferences.c should use GConf, nothing else.
+
+eog:
+----
+- plugin for gphoto2 (ok, this has actually nothing to do with GnoCam :-)
+
+gnome-vfs:
+----------
+- camera-method anyone?

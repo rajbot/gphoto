@@ -23,6 +23,8 @@ dll: ..\giparall.dll
    @$(CC) -o $@ $** $(CCFLAGS)
 
 lib: ..\..\lib\giparall.a
+
+..\..\lib\giparall.a:
    @implib giparall.lib ..\giparall.dll
    @emximp -o ..\..\lib\giparall.a giparall.lib
 

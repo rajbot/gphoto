@@ -23,6 +23,8 @@ dll: ..\giserial.dll
    @$(CC) -o $@ $** $(CCFLAGS)
 
 lib: ..\..\lib\giserial.a
+
+..\..\lib\giserial.a:
    @implib giserial.lib ..\giserial.dll
    @emximp -o ..\..\lib\giserial.a giserial.lib
 

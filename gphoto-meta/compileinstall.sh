@@ -77,7 +77,9 @@ compileinstall() {
 	#    continue
 	#fi
 	# unpack gz if available, else bz2 (this is faster :-)
-	for tarball in "${distdir}/${module}-"[0-9]*.tar.{gz,bz2}
+	for ext in gz bz2
+	do
+	for tarball in "${distdir}/${module}-"[0-9]*.tar.$ext
 	do
 	    if [ ! -f "${tarball}" ]
 	    then
@@ -109,6 +111,7 @@ compileinstall() {
 	    cmd ./configure --prefix="${instroot}"
 	    cmd "$MAKE" install
 	    echo -e "${instroot}\nRemove this file if you want gphoto-meta to rebuild this package" > installed-yet
+	done
 	done
     done < "${cvsmodulelist}"
 

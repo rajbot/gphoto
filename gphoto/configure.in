@@ -51,7 +51,14 @@ AM_PATH_GTK(1.2.6)
 dnl Check for gdk_imlib
 AM_PATH_GDK_IMLIB(1.9.0)
 CFLAGS="$CFLAGS -I`pwd`/libgpio"
-LDFLAGS="$LDFLAGS -L`pwd`/libgpio -lgpio0"
+dnl LDFLAGS="$LDFLAGS -L`pwd`/libgpio -lgpio0"  We do not have libgpio installed yet.
+
+dnl Solaris needs posix4 library
+changequote(, )dnl
+if test -n "`echo $host_os | grep [sS]olaris`"; then
+  LIBS="$LIBS -lposix4"
+fi
+changequote([, ])dnl
 
 AC_SUBST(CFLAGS)
 AC_SUBST(LIBS)

@@ -93,9 +93,11 @@ int interrupted = 0;
 int pending_input = 0;
 struct pict_info *pinfo = NULL;
 
+#define FUJI_MAXBUF_DEFAULT 900000
+
 unsigned char answer[5000];
 static char *fuji_buffer;
-long fuji_maxbuf=300000;
+long fuji_maxbuf=FUJI_MAXBUF_DEFAULT;
 int answer_len = 0;
 
 static int get_raw_byte (void)
@@ -784,9 +786,8 @@ int fuji_init(){
 
 	if (fuji_debug) printf("Initializing %s\n",serial_port);
 
+	fuji_maxbuf=FUJI_MAXBUF_DEFAULT; /* This should be camera dependent */
 	/*	read_fuji_config(); */
-	fuji_maxbuf=200000; /* This should be camera dependent */
-
 
 	if (init_serial(serial_port)==-1) return(-1);
 

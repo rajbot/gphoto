@@ -1,5 +1,6 @@
 #include "gphoto.h"
 #include "main.h"
+#include <stdio.h>
 
 extern GtkWidget *status_bar;
 extern GtkWidget *progress;
@@ -23,8 +24,11 @@ void update_progress(float percentage) {
                 of the main window
         */
 
-	if (command_line_mode)
+	if (command_line_mode) {
+		printf("#");
+		fflush(stdout);
 		return;
+	}
 	
         gtk_progress_bar_update(GTK_PROGRESS_BAR(progress), percentage);
         while (gtk_events_pending())

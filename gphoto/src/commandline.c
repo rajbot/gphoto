@@ -51,43 +51,56 @@ void command_line (int argc, char *argv[]) {
 	i = 1;
 	while (i < argc) {
 		switch(argv[i][1]) {
-			case 'n':
-				printf("%i\n",
-				(*Camera->number_of_pictures)());
-				break;
-			case 'l':
-				im = (*Camera->get_preview)();
-				fp = fopen(argv[i+1], "w");
-				fwrite(im->image, (size_t)sizeof(char),
-				       (size_t)im->image_size, fp);
-				fclose(fp);
-				i+=1;
-				break;
-			case 's':
-				im = (*Camera->get_picture)
-					     (atoi(argv[i+1]), 0);
-				fp = fopen(argv[i+2], "w");
-				fwrite(im->image, (size_t)sizeof(char),
-				       (size_t)im->image_size, fp);
-				fclose(fp);
-				i+=2;
-				break;
-			case 't':
-				im = (*Camera->get_picture)
-					     (atoi(argv[i+1]), 1);
-				fp = fopen(argv[i+2], "w");
-				fwrite(im->image, (size_t)sizeof(char),
-				       (size_t)im->image_size, fp);
-				fclose(fp);				
-				i+=2;
-				break;
-			case 'd':
-				if ((*Camera->delete_picture)
-					(atoi(argv[i+1])) == 0)
-					printf("Could not delete image.\n");
-				break;
-			default:
-				break;
+		case 'n':
+			printf("%i\n", (*Camera->number_of_pictures)());
+			break;
+		case 'l':
+			if ((im = (*Camera->get_preview)()) == 0)
+				printf("Error: could not get image.\n");
+			   else
+				if (fp = fopen(argv[i+1], "w")) {
+					fwrite(im->image, (size_t)sizeof(char),
+					       (size_t)im->image_size, fp);
+					fclose(fp);}
+				   else
+					printf("Error: could not save image.\n");
+			i+=1;
+			break;
+		case 's':
+			printf("Saving Image: ");
+			fflush(stdout);
+			if ((im = (*Camera->get_picture)(atoi(argv[i+1]), 0)) 
+			   == 0)
+				printf("Error: could not get image.\n");
+			   else
+				if (fp = fopen(argv[i+2], "w")) {
+					fwrite(im->image, (size_t)sizeof(char),
+					       (size_t)im->image_size,fp);
+					fclose(fp);}
+				   else
+					printf("Error: could not save image.\n");
+			i+=2;
+			printf("\n");
+			break;
+		case 't':
+			if ((im=(*Camera->get_picture)(atoi(argv[i+1]),1))
+			   == 0)
+				printf("Error: could not get image.\n");
+			   else
+				if (fp = fopen(argv[i+2], "w")) {
+					fwrite(im->image, (size_t)sizeof(char),
+					       (size_t)im->image_size, fp);
+					fclose(fp);}
+				   else
+					printf("Error: could not save image.\n");
+			i+=2;
+			break;
+		case 'd':
+			if ((*Camera->delete_picture)(atoi(argv[i+1])) == 0)
+				printf("Could not delete image.\n");
+			break;
+		default:
+			break;
 		}
 		i++;
 	}

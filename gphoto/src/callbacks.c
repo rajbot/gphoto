@@ -282,6 +282,7 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 		filesel_prefix = gtk_entry_get_text(GTK_ENTRY(entry));
 		sprintf(saveselectedtodisk_dir, "%s%s", filesel_dir,
 			filesel_prefix);
+		gtk_widget_destroy(filesel);
 	}
 
 	while (node->next != NULL) {
@@ -596,27 +597,25 @@ int  load_config() {
 	FILE *conf;
 
         sprintf(fname, "%s/gphotorc", gphotoDir);
-        conf = fopen(fname, "r");
-        if (!conf) {
-		/* reset to defaults, and save */
-		sprintf(serial_port, "/dev/ttyS0");
-		sprintf(camera_model, "Browse Directory");
-		sprintf(post_process_script, "");
-		save_config();
-                return (0);
+        if (conf = fopen(fname, "r")) {
+		fgets(fname, 100, conf);
+		strncpy(serial_port, fname, strlen(fname)-1);
+		fgets(fname, 100, conf);
+		strncpy(camera_model, fname, strlen(fname)-1);
+		fgets(fname, 100, conf);
+		strncpy(post_process_script, fname, strlen(fname)-1);
+		fclose(conf);
+		if (strcmp(camera_model, post_process_script) == 0)
+			sprintf(post_process_script, "");
+		return (1);
 	}
-	fgets(fname, 100, conf);
-	strncpy(serial_port, fname, strlen(fname)-1);
-	fgets(fname, 100, conf);
-	strncpy(camera_model, fname, strlen(fname)-1);
-	fgets(fname, 100, conf);
-	strncpy(post_process_script, fname, strlen(fname)-1);
-	fclose(conf);
 
-	if (strcmp(camera_model, post_process_script) == 0)
-		sprintf(post_process_script, "");
-
-	return (1);
+	/* reset to defaults, and save */
+	sprintf(serial_port, "/dev/ttyS0");
+	sprintf(camera_model, "Browse Directory");
+	sprintf(post_process_script, "");
+	save_config();
+	return (0);
 }
 
 void save_config() {
@@ -625,12 +624,14 @@ void save_config() {
 	FILE *conf;
 
 	sprintf(gphotorc, "%s/gphotorc", gphotoDir);
-	conf = fopen(gphotorc, "w");
-	fprintf(conf, "%s\n", serial_port);
-	fprintf(conf, "%s\n", camera_model);
-	fprintf(conf, "%s\n", post_process_script);
-
-	fclose(conf);
+	if (conf = fopen(gphotorc, "w")) {
+		fprintf(conf, "%s\n", serial_port);
+		fprintf(conf, "%s\n", camera_model);
+		fprintf(conf, "%s\n", post_process_script);
+		fclose(conf);
+		return;
+	}
+	error_dialog("Could not open $HOME/.gphoto/gphotorc for writing.");
 }
 
 void version_dialog() {
@@ -1019,11 +1020,13 @@ fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
 
 	okDownload = 1;
 	activate_stop_button();
-	for (i=1; i<=num_pictures_taken; i++) {
-		if (!okDownload) {
+	for (i=1; i<=num_pictures_taken, okDownload; i++) {
+/*		if (!okDownload) {
 			deactivate_stop_button();
+			updat
 			return;
 		}
+*/
 		node->next = malloc (sizeof(struct ImageInfo));
 		node = node->next; node->next = NULL;
 
@@ -1245,7 +1248,7 @@ void filedialog (gchar *a) {
 			if (currentPic != 0)
 	        		gtk_widget_show(filew);
 			   else
-				error_dialog("Saving the index is not yet supported.");
+				update_status("Saving the index is not yet supported.");
 			break;
 
 		case 'o':
@@ -1280,7 +1283,7 @@ void print_pic () {
 
 	currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
 	if (currentPic == 0) {
-		error_dialog("Can't print the index yet.");
+		update_status("Can't print the index yet.");
 		return;
 	}
 
@@ -1346,7 +1349,7 @@ void print_pic () {
 
 	system(command);
 	update_status("Spooling done. Printing may take a minute.");
-
+	gtk_widget_destroy(dialog);
 }
 
 void select_all() {
@@ -1775,4 +1778,5 @@ Example: /usr/local/bin/datestamp %s");
                 	&style->bg[GTK_STATE_NORMAL],
 			(gchar **)post_processing_off_xpm);
         gtk_pixmap_set(GTK_PIXMAP(post_process_pixmap), pixmap, bitmap);
+	gtk_widget_destroy(dialog);
 }

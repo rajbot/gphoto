@@ -44,7 +44,6 @@ void error_dialog(char *Error) {
         gtk_window_set_title(GTK_WINDOW(dialog), "gPhoto Message");
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
         gtk_container_border_width(GTK_CONTAINER(dialog), 5);
-/*	gtk_widget_set_usize(dialog, 200, 100);*/
         label = gtk_label_new(Error);
         button = gtk_button_new_with_label("OK");
         GTK_WIDGET_SET_FLAGS (button, GTK_CAN_DEFAULT);
@@ -140,6 +139,13 @@ int wait_for_hide (GtkWidget *dialog, GtkWidget *ok_button,
 void free_image (struct Image *im) {
 
 	/* Note to self: forget to free the image_info here */
+	int x;
+
+	if (im->image_info_size > 0) {
+		for (x=0; x<im->image_info_size; x++)
+			free(im->image_info[x]);
+		free (im->image_info);
+	}
 	free (im->image);
 	free (im);
 }
@@ -176,13 +182,17 @@ GdkImlibImage *gdk_imlib_load_image_mem(char *image, int size) {
 	sprintf(c, "/tmp/gphoto_image_%i.jpg", utilcounter);
 	utilcounter++;
 
-	fp = fopen(c, "w");
-	fwrite (image, (size_t)sizeof(char), (size_t)size, fp);
-	fclose(fp);
-	imlibimage = gdk_imlib_load_image(c);
-	remove(c);
-
-	return (imlibimage);
+	if (fp = fopen(c, "w")) {
+		fwrite (image, (size_t)sizeof(char), (size_t)size, fp);
+		fclose(fp);
+		imlibimage = gdk_imlib_load_image(c);
+		remove(c);
+		return (imlibimage);}
+	   else {
+		printf("load_image_mem: could not load image\n");
+		return (NULL);
+	}
+		
 
 /*
 	struct jpeg_decompress_struct cinfo;

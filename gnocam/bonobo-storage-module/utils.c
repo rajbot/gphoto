@@ -22,7 +22,6 @@ util_camera_new (GnomeVFSURI* uri, CORBA_Environment* ev)
         xmlDocPtr 	doc;
         xmlNodePtr 	node;
         Camera*		camera;
-        CameraPortInfo 	info;
         GSList* 	list;
 
         /* Does GConf know about the camera (host)? */
@@ -54,28 +53,28 @@ util_camera_new (GnomeVFSURI* uri, CORBA_Environment* ev)
                 return NULL;
         }
 
+	/* Create the camera. */
+	if (gp_camera_new_by_name (&camera, model) != GP_OK) {
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
+		return NULL;
+	}
+
         /* Make ready for connection. Beware of 'Directory Browse'.*/
-        if (!strcmp ("Directory Browse", model)) strcpy (info.path, "");
+        if (!strcmp ("Directory Browse", model)) strcpy (camera->port->path, "");
         else {
                 for (i = 0; i < gp_port_count (); i++) {
-                        if (gp_port_info (i, &info) != GP_OK) continue;
-                        if (!strcmp (info.name, port)) break;
+                        if (gp_port_info (i, camera->port) != GP_OK) continue;
+                        if (!strcmp (camera->port->name, port)) break;
                 }
                 if ((i == gp_port_count ()) || (i < 0)) {
                         CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
                         return NULL;
                 }
-                info.speed = atoi (speed);
-        }
-
-        /* Create the camera. */
-        if (gp_camera_new_by_name (&camera, model) != GP_OK) {
-                CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
-                return NULL;
+                camera->port->speed = atoi (speed);
         }
 
         /* Connect to the camera. */
-        if (gp_camera_init (camera, &info) != GP_OK) {
+        if (gp_camera_init (camera) != GP_OK) {
                 CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
                 return NULL;
         }

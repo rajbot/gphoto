@@ -56,7 +56,6 @@ camera_new_by_uri (GnomeVFSURI* uri, GSList* list, GnomeVFSContext* context, Gno
         xmlDocPtr               doc;
         xmlNodePtr              node;
         Camera*                 camera;
-	CameraPortInfo		info;
 	gchar*			host;
 
         /* Does gconf know about the camera (host)? */
@@ -76,21 +75,22 @@ camera_new_by_uri (GnomeVFSURI* uri, GSList* list, GnomeVFSContext* context, Gno
 	g_free (host);
 	if (i == g_slist_length (list)) return (NULL);
 
+	if ((*result = GNOME_VFS_RESULT (gp_camera_new_by_name (&camera, model))) != GNOME_VFS_OK) return (NULL);
+
         /* Make ready for connection. Beware of 'Directory Browse'.*/
-	if (!strcmp ("Directory Browse", model)) strcpy (info.path, "");
+	if (!strcmp ("Directory Browse", model)) strcpy (camera->port->path, "");
 	else {
 		for (i = 0; i < gp_port_count (); i++) {
-			if (gp_port_info (i, &info) != GP_OK) continue;
-			if (!strcmp (info.name, port)) break;
+			if (gp_port_info (i, camera->port) != GP_OK) continue;
+			if (!strcmp (camera->port->name, port)) break;
 		}
 		if ((i == gp_port_count ()) || (i < 0)) return (NULL);
-		info.speed = atoi (speed);
+		camera->port->speed = atoi (speed);
 	}
 
-	/* Create and connect to the camera. */
-	if ((*result = GNOME_VFS_RESULT (gp_camera_new_by_name (&camera, model))) != GNOME_VFS_OK) return (NULL);
+	/* Connect to the camera. */
 	if (gnome_vfs_context_check_cancellation (context)) {*result = GNOME_VFS_ERROR_CANCELLED; return (NULL);}
-	if ((*result = GNOME_VFS_RESULT (gp_camera_init (camera, &info))) != GNOME_VFS_OK) return (NULL);
+	if ((*result = GNOME_VFS_RESULT (gp_camera_init (camera))) != GNOME_VFS_OK) return (NULL);
 
 	*result = GNOME_VFS_OK;
 	return (camera);

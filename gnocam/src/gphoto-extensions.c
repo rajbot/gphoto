@@ -14,7 +14,6 @@ gp_camera_new_by_description (gint id, gchar* name, gchar* model, gchar* port, g
 {
 	gint 			number_of_ports, i;
 	gint			result = GP_OK;
-	CameraPortInfo 		port_info;
 	frontend_data_t*	frontend_data;
 
 	g_return_val_if_fail (name, 	GP_ERROR_BAD_PARAMETERS);
@@ -23,27 +22,27 @@ gp_camera_new_by_description (gint id, gchar* name, gchar* model, gchar* port, g
 	g_return_val_if_fail (camera, 	GP_ERROR_BAD_PARAMETERS);
 	g_return_val_if_fail (!*camera, GP_ERROR_BAD_PARAMETERS);
 
+	/* Check the model. */
+	if ((result = gp_camera_new_by_name (camera, model)) != GP_OK) return (result);
+
 	/* "Directory Browse needs special care. */
 	if (strcmp ("Directory Browse", model) != 0) {
 	
 		/* Check port. */
 		if ((number_of_ports = gp_port_count ()) < 0) return (result);
 		for (i = 0; i < number_of_ports; i++) {
-			if ((result = gp_port_info (i, &port_info)) != GP_OK) return (result);
-			if (strcmp (port_info.name, port) == 0) break;
+			if ((result = gp_port_info (i, (*camera)->port)) != GP_OK) return (result);
+			if (strcmp ((*camera)->port->name, port) == 0) break;
 		}
 		if (i == number_of_ports) return (GP_ERROR);
 	
 		/* Nothing to check for what concerns speed. */
-		port_info.speed = speed;
+		(*camera)->port->speed = speed;
 		
-	} else strcpy (port_info.path, "");
+	} else strcpy ((*camera)->port->path, "");
 
-	/* Check model. */
-	if ((result = gp_camera_new_by_name (camera, model)) != GP_OK) return (result);
-	
 	/* Initialize the camera. */
-	if ((result = gp_camera_init (*camera, &port_info)) != GP_OK) return (result);
+	if ((result = gp_camera_init (*camera)) != GP_OK) return (result);
 
 	/* Store our data. */
 	frontend_data = g_new (frontend_data_t, 1);

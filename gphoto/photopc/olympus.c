@@ -79,7 +79,6 @@ struct Image *oly_get_picture (int picNum, int thumbnail) {
 	int pid;
 	struct Image *im = NULL;
 
-
 	if (picNum != 0) {
 		if (oly_open_camera() == 0)
 			return(im);
@@ -116,6 +115,7 @@ struct Image *oly_get_picture (int picNum, int thumbnail) {
 	strcpy(im->image_type, "jpg");
 
 	oly_close_camera();
+	update_progress(0);
 	return (im);
 }
 

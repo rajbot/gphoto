@@ -846,8 +846,8 @@ void insert_thumbnail(struct ImageInfo *node) {
 	error_dialog(error);
 	return;
   }
+
   sprintf(info, "Picture #%i\n", i); 
-  /* it looks like the tooltips set wrapping by the first line */
   for (x=0; x<im->image_info_size; x+=2) {
 	sprintf(tag, "%s:%s\n",im->image_info[x],im->image_info[x+1]);
 	strcat(info, tag);
@@ -857,11 +857,7 @@ void insert_thumbnail(struct ImageInfo *node) {
   gtk_tooltips_set_tip(tooltip,node->button,info, NULL);
 
   node->imlibimage = gdk_imlib_load_image_mem(im->image, im->image_size);
-  /*
-  thumbname=find_tag(im,"ImageDescription");
-  if (thumbname!=NULL) gtk_label_set_text  (GTK_LABEL(node->label)
-					    ,thumbname);
-  */
+
   free_image (im);
 
   w = node->imlibimage->rgb_width; 

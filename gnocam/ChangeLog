@@ -1,3 +1,7 @@
+2001-07-17	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
+	* gnocam/*: Prettier camera selection dialog.
+
 2001-07-16	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
 	Redesign: Everything through GnoCam.idl.

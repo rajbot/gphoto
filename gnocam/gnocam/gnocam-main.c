@@ -25,7 +25,8 @@ initialize_camera (GSList *list, Camera *camera, const gchar *name,
 		   CORBA_Environment *ev)
 {
 	gint i;
-	
+
+	g_message ("Looking for %s...", name);
 	for (i = 0; i < g_slist_length (list); i += 3)
 		if (!strcmp (g_slist_nth_data (list, i), name))
 			break;
@@ -35,6 +36,7 @@ initialize_camera (GSList *list, Camera *camera, const gchar *name,
 		return;
 	}
 
+	g_message ("Trying to initialize %s...", name);
 	strcpy (camera->model, g_slist_nth_data (list, i + 1));
 	strcpy (camera->port->name, g_slist_nth_data (list, i + 2));
 	CHECK_RESULT (gp_camera_init (camera), ev);
@@ -86,7 +88,8 @@ impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant,
 		GnomeDialog *selector;
 		const gchar *name;
 
-		selector = gnocam_camera_selector_new (list);
+		selector = gnocam_camera_selector_new (
+						gnocam_main->priv->client);
 		switch (gnome_dialog_run (selector)) {
 		case 1:
 			/* Cancel */

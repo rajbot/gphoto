@@ -215,7 +215,10 @@ char *konica_qm100_summary()
 
 char *konica_qm100_description()
 {
-  return("Konica Q-M100 Digital Camera gPhoto Plugin (C) 1999 Phill Hugo / Jesper Skov Works for Q-M100 / HP C20 / HP C30");
+  return("Konica Q-M100 Digital Camera\n" 
+         "plugin for gPhoto\n" 
+         "(C) 1999 Phill Hugo/Jesper Skov\n"
+         "Works for Q-M100/HP C20/HP C30");
 }
 
 /* Declare the camera function pointers */

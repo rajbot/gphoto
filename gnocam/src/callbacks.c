@@ -1,9 +1,5 @@
 #include <config.h>
 #include <gnome.h>
-#ifdef GNOCAM_USES_GTKHTML
-#  include <pspell/pspell.h>
-#  include <gtkhtml/gtkhtml.h>
-#endif
 #include <glade/glade.h>
 #include <gphoto2.h>
 #include <gconf/gconf-client.h>
@@ -13,6 +9,8 @@
 #include "information.h"
 #include "cameras.h"
 #include "preview.h"
+#include "gallery.h"
+#include "callbacks.h"
 
 /**********************/
 /* External Variables */
@@ -52,8 +50,6 @@ void on_save_files_activate 		(GtkMenuItem* menuitem, gpointer user_data);
 void on_save_files_as_activate 		(GtkMenuItem* menuitem, gpointer user_data);
 void on_delete_activate 		(GtkMenuItem* menuitem, gpointer user_data);
 void on_exit_activate 			(GtkMenuItem* menuitem, gpointer user_data);
-void on_preferences_activate 		(GtkMenuItem* menuitem, gpointer user_data);
-void on_about_activate			(GtkMenuItem* menuitem, gpointer user_data);
 void on_manual_activate			(GtkMenuItem* menuitem, gpointer user_data);
 
 void on_camera_tree_popup_file_delete_activate 		(GtkMenuItem* menuitem, gpointer user_data);
@@ -181,26 +177,7 @@ on_button_delete_clicked (GtkButton *button, gpointer user_data)
 void
 on_new_gallery_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
-#ifdef GNOCAM_USES_GTKHTML
-	GladeXML*	xml_gallery;
-	GtkTargetEntry	target_table[] = {{"text/uri-list", 0, 0}};
-
-	g_assert ((xml_gallery = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "app_gallery")) != NULL);
-
-	/* Store some data. */
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_gallery, "app_gallery_close")), "xml_gallery", xml_gallery);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_gallery, "app_gallery_open")), "xml_gallery", xml_gallery);
-        gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_gallery, "app_gallery_save_as")), "xml_gallery", xml_gallery);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_gallery, "app_gallery_button_save_as")), "xml_gallery", xml_gallery);
-
-	/* Connect the signals. */
-	glade_xml_signal_autoconnect (xml_gallery);
-
-	/* Drag and Drop. */
-	gtk_drag_dest_set (glade_xml_get_widget (xml_gallery, "editor"), GTK_DEST_DEFAULT_ALL, target_table, 1, GDK_ACTION_COPY);
-#else
-	dialog_information (_("You need to compile " PACKAGE " with gtkhtml enabled in order to use this feature."));
-#endif
+	gallery_new ();
 }
 
 void

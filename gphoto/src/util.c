@@ -109,6 +109,8 @@ void ok_click (GtkWidget *dialog) {
 int wait_for_hide (GtkWidget *dialog, GtkWidget *ok_button,
                    GtkWidget *cancel_button) {
                    
+	int cont=1;
+	
         gtk_object_set_data(GTK_OBJECT(dialog), "button", "CANCEL");
         gtk_signal_connect_object(
                         GTK_OBJECT(ok_button), "clicked",
@@ -119,8 +121,15 @@ int wait_for_hide (GtkWidget *dialog, GtkWidget *ok_button,
                         GTK_SIGNAL_FUNC(gtk_widget_hide),
                         GTK_OBJECT(dialog));
         gtk_widget_show(dialog);
-        while (GTK_WIDGET_VISIBLE(dialog))
-                gtk_main_iteration();
+        while (cont) {
+		/* because the window manager could destroy the window */
+		if(!GTK_IS_OBJECT(dialog))
+			return 0;
+		if (GTK_WIDGET_VISIBLE(dialog))
+			gtk_main_iteration();
+		else
+			cont = 0;
+	}
         if (strcmp("CANCEL",
            (char*)gtk_object_get_data(GTK_OBJECT(dialog), "button"))==0)
                 return 0;

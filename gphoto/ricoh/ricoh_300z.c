@@ -47,11 +47,15 @@ static void flash_mode();
 static void DrawText_im();
 /* forward references for jpeg decompress  */
 GdkImlibImage *gdk_imlib_load_image_mem();
-static void jpeg_decomp_FatalErrorHandler();
+static void jpeg_FatalErrorHandler();
 static void decom_init();
 static boolean decom_fill();
 static void decom_skip_input_data();
 static void decom_term();
+char *gdk_imlib_save_image_mem();
+static void comp_init();
+static boolean comp_empty();
+static void comp_term();
 
 /* include the xpm image with the "no preview support message */
 #include "ricoh_nopreview.xpm"
@@ -128,15 +132,9 @@ struct Image *ricoh_300z_get_picture (int picNum, int thumbnail) {
 	   If thumbnail == FALSE, it reads the whole image.
 	*/
 
-        long Size;
-        char *picData;
 	char textbuf[12];
 	unsigned char date[6];
-
-	FILE *jpgfile;
-	int jpgfile_size;
 	struct Image *im;
-	char filename[1024];
 
 	GdkImlibImage *imlibimage;
 
@@ -148,7 +146,8 @@ struct Image *ricoh_300z_get_picture (int picNum, int thumbnail) {
 	}
 	else picNum = 1;
 
-	ricoh_300_getsize(picNum, &Size);
+        im = (struct Image*)malloc(sizeof(struct Image));
+	ricoh_300_getsize(picNum, &im->image_size);
 
 
 	if(thumbnail) {
@@ -174,20 +173,21 @@ struct Image *ricoh_300z_get_picture (int picNum, int thumbnail) {
 	    sprintf(textbuf, "%02x:%02x:%02x", date[3], date[4], date[5]);
 	    DrawText_im(&pseudo_thumb, 10, 35, textbuf);
 	    if(ricoh_camera_model != RICOH_300) {
-	    	sprintf(textbuf, "%dk Bytes", (int)(Size/1024));
+	    	sprintf(textbuf, "%dk Bytes", (int)(im->image_size/1024));
 	    	DrawText_im(&pseudo_thumb, 0, 45, textbuf);
 	    }
 	    imlibimage =
 	      gdk_imlib_create_image_from_data(pseudo_thumb.data, NULL, 84, 63);
 	    free(pseudo_thumb.data);
+	    im->image = gdk_imlib_save_image_mem(imlibimage, &im->image_size); 
 	}
 	else {
-            picData = malloc(Size);
-
-	    ricoh_300_getpict(picNum, picData);
-	    imlibimage = gdk_imlib_load_image_mem(picData, Size);
-	    free(picData);
+            im->image = (char *)malloc(im->image_size);
+	    ricoh_300_getpict(picNum, im->image);
+	    imlibimage = gdk_imlib_load_image_mem(im->image, im->image_size);
 	}
+	strcpy(im->image_type, "jpg");
+        im->image_info_size = 0;
 
 	if(!thumbnail) {
 	    /* replace the pseudo thumbnail by a real one */
@@ -197,7 +197,7 @@ struct Image *ricoh_300z_get_picture (int picNum, int thumbnail) {
 
 	    for(i = 0, node = &Thumbnails; i < picNum && node; i++)
 		node = node->next;
-	    if(node) {
+	    if(node && node->imlibimage) {
 	    	gdk_imlib_kill_image(node->imlibimage);
 	    	node->imlibimage =
 	    	  gdk_imlib_clone_scaled_image(imlibimage, 84, 63);
@@ -207,22 +207,7 @@ struct Image *ricoh_300z_get_picture (int picNum, int thumbnail) {
 	    }
 	}
 	ricoh_300z_close_camera();
-
-          sprintf(filename, "%s/gphoto-ricoh-%i.jpg", gphotoDir, picNum);
-          gdk_imlib_save_image (imlibimage, filename, NULL);
-	  gdk_imlib_kill_image (imlibimage);
-          jpgfile = fopen(filename, "r");
-          fseek(jpgfile, 0, SEEK_END);
-          jpgfile_size = ftell(jpgfile);      
-          rewind(jpgfile);
-          im = (struct Image*)malloc(sizeof(struct Image));
-          im->image = (char *)malloc(sizeof(char)*jpgfile_size);
-	  fread(im->image,(size_t)sizeof(char),(size_t)jpgfile_size,jpgfile); 
-	  fclose(jpgfile);
-          strcpy(im->image_type, "jpg");
-          im->image_size = (int)jpgfile_size;
-          im->image_info_size = 0;
-          remove(filename);
+	gdk_imlib_destroy_image(imlibimage);
 	return (im);
 }
 /*****************************************************************************
@@ -744,34 +729,23 @@ int ricoh_300z_configure () {
 
 	save_button = gtk_button_new_with_label("Save");
 	gtk_widget_show(save_button);
-	gtk_signal_connect_object(GTK_OBJECT(save_button), "clicked", 
-			          GTK_SIGNAL_FUNC(gtk_widget_destroy),
-				  GTK_OBJECT(dialog));
 	GTK_WIDGET_SET_FLAGS (save_button, GTK_CAN_DEFAULT);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
 			   save_button, FALSE, FALSE, 0);
 	cancel_button = gtk_button_new_with_label("Cancel");
 	gtk_widget_show(cancel_button);
-	gtk_signal_connect_object(GTK_OBJECT(cancel_button), "clicked", 
-				  GTK_SIGNAL_FUNC(gtk_widget_hide), 
-				  GTK_OBJECT(dialog));
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
 			   cancel_button, FALSE, FALSE, 0);
 	gtk_widget_grab_default (save_button);
 
-	gtk_object_set_data(GTK_OBJECT(dialog), "button", "CANCEL");
 	gtk_widget_show(dialog);
 	update_status("Done.");
 	update_progress(0);
 
 /* ----------------------------------------------------------- */
-	while (GTK_WIDGET_VISIBLE(dialog))
-                gtk_main_iteration();
+	if (wait_for_hide(dialog, save_button, cancel_button) == 0)
+		return (1);
 /* ----------------------------------------------------------- */
-
-	if (strcmp("CANCEL",
-           (char*)gtk_object_get_data(GTK_OBJECT(dialog), "button"))==0)
-                return 1;
 
 	update_status("Saving Configuration...");
 
@@ -949,7 +923,7 @@ are place holders until the actual images
 are downloaded.");
 }
 
-struct decom_JPEG_error_mgr
+struct JPEG_error_mgr
 {
    struct jpeg_error_mgr pub;
    sigjmp_buf          setjmp_buffer;
@@ -959,14 +933,14 @@ GdkImlibImage *
 gdk_imlib_load_image_mem(char *image, int size)
 {
    struct jpeg_decompress_struct cinfo;
-   struct decom_JPEG_error_mgr jerr;
+   struct JPEG_error_mgr jerr;
    unsigned char      *data, *line[16], *ptr;
    int                 x, y, i;
     int w, h;
     GdkImlibImage *imlibimage;
 
    cinfo.err = jpeg_std_error(&(jerr.pub));
-   jerr.pub.error_exit = jpeg_decomp_FatalErrorHandler;
+   jerr.pub.error_exit = jpeg_FatalErrorHandler;
 
    /* error handler to longjmp to, we want to preserve signals */
    if (sigsetjmp(jerr.setjmp_buffer, 1))
@@ -1079,18 +1053,84 @@ decom_term (j_decompress_ptr cinfo)
 {
   /* no work necessary here */
 }
+char*
+gdk_imlib_save_image_mem(GdkImlibImage *imlibimage, int *jpg_size)
+{
+    struct	jpeg_compress_struct cinfo;
+    struct	JPEG_error_mgr jerr;
+    JSAMPROW	row_pointer[1];
+    int		row_stride;
+    char	*jpg_image;		/* jpeg image */
+    int		size;			/* size of jpeg image */
+
+    /* preallocate max possible size for jpeg image, then reallocate later */
+    size = imlibimage->rgb_width * imlibimage->rgb_height * 3 + 500;
+    jpg_image = malloc(size);
+    cinfo.err = jpeg_std_error(&(jerr.pub));
+    jerr.pub.error_exit = jpeg_FatalErrorHandler;
+
+    /* error handler to longjmp to, we want to preserve signals */
+    if (sigsetjmp(jerr.setjmp_buffer, 1))
+    {
+	/* Whoops there was a jpeg error */
+	jpeg_destroy_compress(&cinfo);
+	return NULL;
+    }
+
+    jpeg_create_compress(&cinfo);
+    cinfo.dest = malloc(sizeof(struct jpeg_destination_mgr));
+    cinfo.dest->next_output_byte = jpg_image;
+    cinfo.dest->free_in_buffer = size;
+    cinfo.dest->init_destination = comp_init;
+    cinfo.dest->empty_output_buffer = comp_empty;
+    cinfo.dest->term_destination = comp_term;
+    cinfo.image_width = imlibimage->rgb_width;
+    cinfo.image_height = imlibimage->rgb_height;
+    cinfo.input_components = 3;
+    cinfo.in_color_space = JCS_RGB;
+    jpeg_set_defaults(&cinfo);
+    jpeg_set_quality(&cinfo, (100 * 208) >> 8, TRUE);
+    jpeg_start_compress(&cinfo, TRUE);
+    row_stride = cinfo.image_width * 3;
+    while (cinfo.next_scanline < cinfo.image_height)
+    {
+	row_pointer[0] =
+	  imlibimage->rgb_data + (cinfo.next_scanline * row_stride);
+	jpeg_write_scanlines(&cinfo, row_pointer, 1);
+    }
+    jpeg_finish_compress(&cinfo);
+    *jpg_size =  size - cinfo.dest->free_in_buffer;
+    realloc(jpg_image, *jpg_size);
+    free(cinfo.dest);
+    jpeg_destroy_compress(&cinfo);
+    return jpg_image;
+}
+METHODDEF(void)
+comp_init(j_compress_ptr cinfo)
+{
+}
+METHODDEF(boolean)
+comp_empty(j_compress_ptr cinfo)
+{
+    fprintf(stderr,"jpeg compresion buffer was to small\n");
+    return TRUE;
+}
+METHODDEF(void)
+comp_term(j_compress_ptr cinfo)
+{
+}
 
 static void 
-jpeg_decomp_FatalErrorHandler(j_common_ptr cinfo)
+jpeg_FatalErrorHandler(j_common_ptr cinfo)
 {
    /* 
     * FIXME:
     * We should somehow signal what error occurred to the caller so the
     * caller can handle the error message 
     */
-   struct decom_JPEG_error_mgr               *errmgr;
+   struct JPEG_error_mgr               *errmgr;
 
-   errmgr = (struct decom_JPEG_error_mgr *) cinfo->err;
+   errmgr = (struct JPEG_error_mgr *) cinfo->err;
    cinfo->err->output_message(cinfo);
    siglongjmp(errmgr->setjmp_buffer, 1);
    return;

@@ -215,6 +215,11 @@ you would probably like to install for example eog
 for viewing images.
 ***
 
+I AM CURRENTLY MOVING GNOCAM TO USE MORE BONOBO STUFF, THEREFORE I 
+RECOMMENT YOU TO STAY AWAY FROM THIS PACKAGE UNLESS YOU KNOW WHAT YOU
+ARE DOING. Contact me (urc8@rz.uni-karlsruhe.de) if you'd like to have
+more info.
+
 Configuration
 
 	Source code location: ${srcdir}

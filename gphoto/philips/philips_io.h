@@ -75,6 +75,13 @@ typedef struct	PHILIPS_CFG {
 #define P_ERR2 "\x18\x00"       /* Error ????? */
 
 
+/* Miscellenous defines */
+
+#define PHILIPS_RESENDS	2		/* number of retransmissions */
+
+
+/* function prototypes (eventually) */
+
 int philips_get_mode ();
 int philips_gettotalbytes();
 int philips_getavailbytes();

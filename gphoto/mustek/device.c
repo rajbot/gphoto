@@ -59,7 +59,7 @@ int mdc800_device_setupDevice (fd, baud)
 	newtio.c_cflag = (newtio.c_cflag & ~CSIZE) | CS8;
 
 	//  Set into raw, no echo mode 
-	#if defined(__NetBSD__)
+	#if defined(__NetBSD__) || defined(__FreeBSD__)
 	newtio.c_iflag &= ~(IGNBRK | IGNCR | INLCR | ICRNL |
 		IXANY | IXON | IXOFF | INPCK | ISTRIP);
 	#else

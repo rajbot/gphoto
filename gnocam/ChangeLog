@@ -1,3 +1,8 @@
+2001-08-21  Lutz Müller <urc8@rz.uni-karlsruhe.de>
+
+	* applet/gnocam-applet.desktop.in: New
+	* applet/Makefile.am: Add this file here
+
 2001-08-20  Lutz Müller <urc8@rz.uni-karlsruhe.de>
 
 	* gnocam/gnocam-main.c: Kill compile warnings

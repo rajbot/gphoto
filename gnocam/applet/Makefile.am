@@ -26,7 +26,12 @@ CLEANFILES += $(CORBA_GENERATED)
 
 gnocam_applet_LDADD = $(APPLET_LIBS)
 
+sysdir = $(datadir)/applets/Multimedia
+sys_predata = gnocam-applet.desktop.in
+sys_DATA = $(sys_predata:.desktop.in=.desktop)
+@XML_I18N_MERGE_DESKTOP_RULE@
+
 gnorbadir = $(sysconfdir)/CORBA/servers
 gnorba_DATA = gnocam-applet.gnorba
 
-EXTRA_DIST = $(gnorba_DATA)
+EXTRA_DIST = $(gnorba_DATA) $(sys_DATA)

@@ -1,0 +1,7 @@
+[Desktop Entry]
+_Name=GnoCam Applet
+_Comment=Quick access to your camera
+Exec=gnocam-applet --activate-goad-server=gnocam-applet
+Icon=gnocam.png
+Terminal=0
+Type=Application

@@ -55,6 +55,19 @@ else
 *** version from http://www.gnome.org.])
 fi
 
+dnl *****
+dnl GConf
+dnl *****
+AC_MSG_CHECKING(for gconf)
+if gconf-config --version > /dev/null 2>&1; then
+    AC_MSG_RESULT(found)
+else
+    AC_MSG_ERROR([
+*** You need gconf for this version of ${PACKAGE}. Get the latest
+*** version from http://www.gnome.org.])
+fi
+
+
 dnl ********
 dnl libglade
 dnl ********

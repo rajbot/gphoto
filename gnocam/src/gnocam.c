@@ -2,6 +2,7 @@
 #include <gnome.h>
 #include <libgnomevfs/gnome-vfs.h>
 #include <glade/glade.h>
+#include <gconf/gconf.h>
 #include <gphoto2.h>
 #include "preferences.h"
 #include "gnocam.h"
@@ -48,6 +49,7 @@ int main (int argc, char *argv[])
 	static GtkTargetEntry target_table[] = { 
 		{"text/uri-list", 0, 0}
 	};
+	GError *gerror = NULL;
 
 	/* Init GNOME. */
 	gnome_init (PACKAGE, VERSION, argc, argv);
@@ -65,6 +67,12 @@ int main (int argc, char *argv[])
 	/* Init gnome-vfs. */
 	if (!gnome_vfs_init ()) {
 		gnome_error_dialog (_("Could not initialize gnome-vfs!"));
+		return (1);
+	}
+
+	/* Init gconf. */
+	if (!gconf_init (argc, argv, &gerror)) {
+		gnome_error_dialog (g_strdup_printf (_("Could not initialize gconf!\n\n%s"), gerror->message));
 		return (1);
 	}
 

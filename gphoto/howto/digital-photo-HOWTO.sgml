@@ -1,0 +1,511 @@
+<!DOCTYPE BOOK PUBLIC "-//Davenport//DTD DocBook V3.0//EN"> 
+<book>
+<bookinfo>
+<bookbiblio>
+
+<title>Digital Photo HOWTO</title>
+<subtitle>A brief overview of existing Digital Cameras,
+CCDs, chipsets and various digital imaging device systems that
+work with GNU/Linux systems.</subtitle>
+
+<authorgroup>
+<corpauthor>The gPhoto Project (<htmlurl url="http://www.gphoto.org" name="www.gphoto.org">)</corpauthor>
+<othercredit><authorblurb>
+<para>Ole Aamot (<htmlurl url="mailto:ole@gnu.org" name="ole@gnu.org">), Oslo/Norway</para>
+</authorblurb></othercredit>
+</authorgroup>
+
+<pubdate>v.0.1, 18 June 1999</pubdate>
+
+<abstract>
+<para>This is the <idx>Digital Photo HOWTO</idx>. It is intended as a
+quick reference covering everything you need to know to install and 
+use digital imaging hardware under GNU/Linux. Frequently asked questions 
+related to digital still cameras and other photo devices are answered, 
+and references are given to other sources of information related to
+digital photo applications and technology.</para>
+</abstract>
+</bookbiblio>
+</bookinfo>
+
+<chapter>
+  <title>Introduction</title>
+
+  <para>This is the <idx>Digital Photo HOWTO</idx>. It is intended as a
+  quick reference covering everything you need to know to install and 
+  use digital imaging hardware under GNU/Linux. Frequently asked questions 
+  related to digital still cameras and other photo devices are answered, 
+  and references are given to other sources of information related to
+  digital photo applications and technology.</para>
+
+    <sect1>
+    <title>Acknowledgements</title>
+
+    <para>Much of this information was provided from <htmlurl
+    url="http://www.gphoto.org" name="gPhoto"> (GNU Photo) developers and
+    users, the <htmlurl url="news:rec.photo.digital"
+    name="rec.photo.digital"> group on GNUsenet, and input from digital 
+    photo fans worldwide.</para>
+
+    <para>Thanks to the <htmlurl
+    url="ftp://metalab.unc.edu/pub/Linux/utils/text/sgml-tools-0.99.0.tar.gz"
+    name="SGML Tools"> package, this HOWTO is available in several
+    formats, all generated from a common source file.</para>
+
+    <para>New versions of this document will be periodically posted to the
+    <htmlurl url="news:rec.digital.photo" name="rec.digital.photo"> 
+    GNUsenet newsgroup. They will also be uploaded to various anonymous
+    ftp sites that archive such information including
+    <url url="ftp://metalab.unc.edu/pub/Linux/docs/HOWTO/">.</para>
+
+    </sect1>
+
+    <sect1>
+    <title>Feedback</title>
+
+    <para>I rely on you, the reader, to make this HOWTO useful. If you
+    have any suggestions, corrections, or comments, please send them to me,
+    <htmlurl url="mailto:ole@gnu.org" name="ole@gnu.org">, and
+    I will try to incorporate them in the next revision.</para>
+
+    <para>I am also willing to answer general questions on digital photo under 
+    GNU/Linux, as best I can. Before doing so, please read all of the 
+    information in this HOWTO, and then send me detailed information about
+    the problem. Please do not ask me about using digital cameras or
+    devices under operating systems other than free distributions of
+    GNU/Linux systems.</para>
+
+    <para>If you publish this document on a CD-ROM or in hardcopy form, a
+    complimentary copy would be appreciated; mail me for my postal
+    address. Also consider making a donation to the Free Software
+    Foundation to support free documentation for free software.</para>
+
+    </sect1>
+
+    <sect1>
+    <title>Distribution Policy</title>
+
+    <para>Copyright (c) 1999 by Ole Kristian Aamot. This document may be
+    distributed under the terms set forth in the OPL license at <url
+    url="http://www.opencontent.org/opl.html">.</para>
+    </sect1>
+
+  <chapter>
+  <title>Digital Photo Technologies</title>
+
+  <para>
+  With traditional photography you have to wait for Polaroids, then you 
+  have to wait for the film to be developed, then you have to wait for 
+  the color separations, not to mention all of the messengers between
+  all those stops. That's a lot of time and money being spent.</para>
+
+  <para>Digital image devices are the newest got-to-have-it peripheral 
+  for your computer. They supply instant gratification in the form of
+  a digital image you can immediately pop into a document, print, or
+  send off as e-mail to your friend. For fun, ease of use, and
+  immediate impact, digital photo devices can't be beat. But they are not
+  all created equal.</para>
+
+    <sect1>
+    <title>Paper Scanners</title>
+    <para>Text about slide scanners goes here...</para>
+    </sect1>
+
+    <sect1>
+    <title>Film Scanners</title>
+    <para>Text about paper scanners goes here...</para>
+    </sect1>
+
+    <sect1>
+    <title>Digital Cameras</title>
+
+    <para>Digital cameras have the balance of quality, features, and 
+    price that appeals to users looking for a fast and convenient
+    way to get images into their PC. You can spend a lot more -- or
+    a lot less -- for one than the $400 to $1000 these cost, but you 
+    won't like the quality at the low end or the prices at the high end. 
+    With digital cameras, the best place to be is in the middle.</para>
+
+    <para>No other image-capture option for your computer matches the fun, 
+    immediacy, and convenience of a digital camera. Unlike with a 
+    scanner, you don't need an already-existing image: A digital 
+    camera lets you capture what you see. And unlike film-to-disk 
+    services, a digital camera is immediate: You don't have to wait 
+    hours or days before you can use an image on your computer.</para>
+  
+    <para>Operating a digital camera is also inexpensive, because the only 
+    recurring cost is batteries. The camera's storage is reusable once you
+    download a batch of images. And since you don't have to pay for film 
+    processing, you can go wild.</para>
+  
+    <para>Don't expect digital photo technology to replace film cameras yet.
+    They're still years away from challenging regular cameras in image 
+    quality and even in features for the price. Pictures from film
+    cameras have resolutions of many thousands of dots per inch; most
+    digital cameras have resolutions under 100 dpi. If your
+    application requires the highest  possible image quality, your
+    best bet is to use a film camera and then scan the processed
+    photo.  You'll be better off using digital cameras for screen-oriented 
+    applications such as e-mail attachments and for nonprofessional 
+    printing applications.</para>
+
+    <para>There are dramatic differences among digital cameras.
+    Here's what to look for:</para>
+
+      <sect2>
+      <title>Features</title>
+
+      <para>Although the image quality produced by digital still cameras
+      still lags behind 35mm film, the latest crop of PC-ready cameras
+      moves a lot closer to the mark--thanks to megapixel resolutions
+      and a raft of nifty new features that make digital picture-taking
+      easier than ever.</para>
+
+      <para>Because every photographer is different, only you can decide
+      which digital camera is the perfect one for you. Each cameras offer 
+      distinct features and capabilities, and you will need to assess each 
+      one in terms of your specific skills and intended use. But you really 
+      can't lose. Most cameras provide good image quality in a wide variety 
+      of conditions.</para>
+
+      <para>Filmless photography also offers many other advantages. Most
+      digital cameras store pictures on tiny removable memory cards,
+      eliminating the expense associated with buying and processing
+      film. You can balance file size against image quality by setting
+      the resolution and compression level of each picture, and many
+      digital cameras provide both a conventional glass viewfinder
+      and an LCD that lets you compose photographs, review stored
+      pictures, and use onscreen menus to adjust settings. Photos
+      appear on the screen only a few seconds after you shoot them,
+      and if you're unhappy with what you see, they can be easily
+      deleted. Stored photographs are normally downloaded through a
+      serial port. Most vendors sell adapters that let you insert
+      memory cards into a floppy drive or PC Card slot.</para>
+      
+      <para>If you want to play the photos back right away as a slide show
+      on your TV, then a camera with a video-out port is essential.  
+      Also, if you need to take extreme close-ups, get a camera with
+      a macro lens; automatic flash and exposure control are
+      standard on digital cameras, but special items such as zoom
+      lenses are not. You should also make sure you're comfortable
+      with the camera's weight and the placement of its buttons.</para>
+      
+      <para>Inexpensive Megapixel Digital Cameras range (in June '99,
+      when this was written) in price from $350 to $599, and you 
+      can get at least 4MB of storage, a LCD screen, built-in flash, 
+      and 1,152x864 resolution from Eastman Kodak Co. and Konica, who 
+      provide protocol specifications to free software developers.</para>
+
+      <para>Many of the features--such as autofocusing lenses, 
+      ----self-timers, and special red-eye-reducing flash modes--will 
+      seem familiar to anyone who owns a late-model film camera. Some 
+      new digital models even emulate the functions of zoom lenses, 
+      motorized power winders, and panoramic cameras.</para>
+
+      <para>Comparing digital cameras is no more complicated than 
+      comparing film cameras once you understand what the possible
+      features are. Here's a glossary of features that you may find:
+
+        <sect3>
+	<title>35mm Lens Equivalent</title>
+	<para>Digital Cameras utilize different lens lengths than the
+	traditional 35mm cameras. In order to make any useful comparison,
+	manufacturers offer an equivalent lens length to 35mm cameras.
+	There are three basic types of lenses that come on Digital Cameras:
+	Wide Angle, Normal and Telephoto. Wide Angle lenses have lengths
+	which generally range from 25-40mm. Normal lenses have lengths
+	ranging from 45-55mm. Normal lenses are closest to those in our own
+	eyes. Telephoto lenses begin roughly at 100mm and continue much
+	higher. In rare cases, equivalent lens lengths were unattainable,
+	and actual lens lengths are given instead.</para>
+	</sect3>
+
+	<sect3>
+	<title>Aperture</title>
+	<para>The Aperture is the lens opening that allows light to hit the
+	image sensor inside the Digital Camera. Apertures are measured as
+	f-stops (F). The f-stop is inversely related to the size of the
+	lens opening; the larger the f-stop the smaller the opening.
+	Digital Cameras in this search have either Fixed Apertures, which
+	do not allow you to make adjustments or Aperture Ranges which do
+	allow you to make adjustments. Many Digital Cameras do have
+	different Fixed Apertures to choose form.</para>
+	</sect3>
+
+	<sect3>
+	<title>Audio Recording</title>
+	<para>This feature allows you to record sound bites with the image, to
+	annotate each shot.</para>
+	<para><em>Benefit: You can capture your thoughts at the exact moment
+	you take a photograph.</em></para>
+	</sect3>
+
+	<sect3>
+	<title>Battery Type</title>
+	<para>This specifies the type of batteries that come with the Digital
+	Camera. Cameras that are Tethered are powered directly from the
+	computer.</para>
+	</sect3>
+
+	<sect3>
+	<title>Color Depth</title>
+	<para>Digital Cameras create colors using red, green and blue. A
+	camera with 24-bit color will have 8 bits per channel. This will
+	produce 256 different shades per channel. The end result is a
+	camera capable of reproducing millions of different colors.
+	Greyscale refers to black and white images.</para>
+	</sect3>
+
+	<sect3>
+	<title>Continuous Shooting</title>
+	<para>This feature allows the camera to take multiple shots in a row.
+	Most cameras take at least one frame per second.</para>
+	<para><em>Benefit: Continuous Shooting helps to capture high speed
+	sequences, such as a golf swing, and can also act as motion
+	video.</em></para>
+	</sect3>
+
+	<sect3>
+	<title>Dimensions (HxWxD)</title>
+	<para>The dimensions of the Digital Camera, measured in inches (Height
+	x Width x Depth).</para>
+	</sect3>
+
+	<sect3>
+	<title>Flash</title>
+	<para>A device that produces a burst of light for your picture. There
+	are several different options that may come with the flash. Some
+	cameras have automatic flash, which means that the camera decides
+	when more light is needed for the picture and then fires the flash
+	automatically. Other options include manual over ride, always on,
+	always off and red eye reduction. Red Eye Reduction is helpful when
+	taking pictures of people. With red eye reduction, all your friends
+	and relatives won't appear to be vampires in every shot.</para>
+	</sect3>
+
+	<sect3>
+	<title>Focus</title>
+	<para>This feature allows you to adjust the lens of the camera to
+	produce the sharpest image possible. Digital Cameras have two
+	different kinds of focusing, Fixed Focus and Auto Focus. Fixed
+	Focus comes set by the manufacturer and you cannot make any
+	adjustments. In some cameras there are multiple Fixed Focus
+	settings that you may select. Cameras with Auto Focus will actually
+	make all the adjustments necessary to produce the sharpest image
+	for you. All you have to do is point and let the camera do the
+	work.</para>
+	</sect3>
+
+	<sect3>
+	<title>Image Capacity</title>
+	<para>The number of images that the Digital Camera can store at its
+	minimum resolution or highest compression mode. This number usually
+	relates to lower quality images. <i>Note: This number reflects
+	image capacity with standard memory only. Most manufacturers offer
+	additional memory which can greatly increase storage
+	capacity.</i></para>
+	<para><em>Benefit: The more images a camera can hold without additional
+	memory the better.</em></para>
+	</sect3>
+
+	<sect3>
+	<title>Image Capacity at Max Res.</title>
+	<para>This notes the number of images the Digital Camera can store at
+	its highest resolution or lowest compression mode. Note: This
+	number usually relates to high quality images.</para>
+	</sect3>
+
+	<sect3>
+	<title>Interface</title>
+	<para>This is the method in which your Digital Camera and Computer
+	communicate. A Serial or Parallel interface connects with a port in
+	the back of your desktop. PCMCIA interfaces plug directly into
+	laptops. Other methods of communication between computer and
+	Digital Camera include Infrared (wireless), SCSI, and even 3.5-inch
+	Floppy Disks.</para>
+	</sect3>
+
+	<sect3>
+	<title>ISO Equivalent</title>
+	<para>Traditional 35mm cameras use the International Standards
+	Organization (ISO) to determine film speed.</para>
+	<para><em>Benefit: The higher the ISO number, the less light needed for
+	the picture. Digital Cameras do not use traditional film, so the
+	industry uses an equivalency rating. This rating specifies the
+	Digital Camera's sensitivity to lighting. For example, ISO 100
+	could be used for sunny outside shots, while ISO 800 could take
+	candlelight stills with no flash.</em></para>
+	</sect3>
+	
+	<sect3>
+	<title>LCD Size (in)</title>
+	<para>The size of the LCD viewfinder screen measured
+	diagonally in inches.</para>
+	</sect3>
+	
+	<sect3>
+	<title>Macro</title>
+	<para>A lens that can take close-up shots, approximately one foot or
+	closer.</para>
+	<para><em>Benefit: Camera has the ability to take extremely close-up
+	shots.</em></para>
+	</sect3>
+
+	<sect3>
+	<title>Max. Resolution</title>
+	<para>Each digital image is comprised of thousands of tiny dots called
+	pixels. Resolution equals the number of horizontal pixels
+	multiplied by the number of vertical pixels. The more pixels per
+	image, the better the clarity of the picture.</para>
+	<para><em>Benefit: The higher the Max Resolution, the better the
+	picture. High resolution doesn't come cheap and requires much more
+	memory per picture.</em></para>
+
+	<sect3>
+	<title>On Camera Editing</title>
+	<para>This feature allows you to manipulate the amount of photos on
+	the cameras has stored in its memory.</para>
+	<para><em>Benefit: This will allow you to delete unwanted pictures from
+	the camera, freeing up storage space. If you don't like a shot,
+	this feature lets you to immediately delete it rather than waiting
+	to download the images to the computer. Cameras with LCD screens
+	may offer other options. Some cameras can show one to 12 pictures
+	simultaneously on the screen and allow you to edit each shot
+	individually or all at once.</em></para>
+
+	<sect3>
+	<title>Other Resolution Modes</title>
+	<para>Optional settings to vary the quality of image stored in the
+	camera's memory.</para>
+	<para><em>Benefit: Sometimes expressed in the manufacturer's verbal
+	interpretation (Good, Better, Best), rather than in pixels.
+	Resolution equals the number of horizontal pixels multiplied by the
+	number of vertical pixels. The more pixels per image the better the
+	clarity of the picture. High-resolution images take up more of the
+	camera's memory. Cameras that allow you to switch resolutions give
+	you the option of saving valuable storage space at the expense of
+	image quality.</em></para>
+	<para><em>Compression reduces the size of the data, allowing for
+	additional pictures to be stored in the camera's memory. Compressed
+	data has to be expanded before use, which causes the images to lose
+	some of their clarity, in essence reducing the resolution. Some
+	photo software, like gPhoto, have the ability to increase the 
+	resolution after the image has been downloaded into the
+	computer.</em></para>
+	</sect3>
+
+	<sect3>
+	<title>Red Eye Reduction</title>
+	<para><!-- No glossary entry for this item. --></para>
+	<para><em>Benefit: Red eye reduction is helpful when taking pictures of
+	people. With red eye reduction, all your friends and relatives
+	won't appear to be vampires in every shot.</em></para>
+	</sect3>
+
+	<sect3>
+	<title>Self Timer</title>
+	<para>Automatic timer you set to take a picture in a set amount of
+	time.</para>
+	<para><em>Benefit: Tired of having everyone in your pictures but you?
+	Simply set the timer (most average around 10 seconds), and get in
+	the shot!</em></para>
+	</sect3>
+
+	<sect3>
+	<title>Shutter Speed</title>
+	<para>The camera's shutter is a device which opens and closes,
+	allowing light to hit its image sensor. Shutter Speed refers to the
+	amount of time the shutter stays open and is measured in fractions
+	of a second.</para>
+	</sect3>
+
+	<sect3>
+	<title>Storage Type</title>
+	<para>There are two types of storage for Digital Cameras, internal and
+	removable. Internal storage comes inside the camera, and usually
+	cannot be altered. In a few cases, manufacturers will put
+	additional memory inside the camera, at additional costs. Once the
+	internal memory is full, download the images to the computer and
+	start again. Some cameras have On Camera Editing features which
+	allow you to preview and delete at the camera. This can free up
+	internal storage space without having to download.</para>
+	<para><em>Removable Storage</em> is Digital Camera memory that can be
+	replaced. As soon as one card is full, pull it out, insert another
+	and keep shooting. There are several types of removable storage
+	medium with varying capacity. CompactFlash, SmartMedia (SSFDC), and
+	Miniature Cards are the three most common types of removable
+	storage. Each come in a variety of densities, anywhere from 2MB to
+	64MB and beyond. Another type of removable storage is Type II or
+	III PCMCIA cards which can insert directly into laptop computers.
+	Some manufacturers use their own proprietary removable storage
+	medium, while others can use every day 3.5-inch floppy disks. There
+	is no set standard in the industry at this time.</para>
+	<para>Digital Cameras that are <em>Tethered</em> to the
+	computer have no storage capacity of their own. Images are 
+	downloaded directly to the computer's hard drive or floppy
+	disk.  Capacity is therefore dependent on the computer's disk 
+	space.  Those cameras are usually referred to as "webcams".</para>
+	</sect3>	
+	
+	<sect3>
+	<title>Video Out</title>
+	<para>The Video Out feature allows you to plug the Digital Camera
+	directly into a TV or VCR.</para>
+	<para><em>Benefit: Preview or edit your images on a full size
+	television screen. Plug into the VCR and transfer your images to a
+	VHS tape.</em></para>
+	</sect3>	
+
+	<sect3>
+	<title>Viewfinder</title>
+	<para>The device used to preview your image before taking the picture.
+	Digital Cameras have two kinds of viewfinders, optical and LCD.
+	Optical viewfinders require you to put the camera up to your eye to
+	see what you are shooting at. LCDs (Liquid Crystal Display) are
+	flat screens that display images on a 1-3 inch screen. LCDs can
+	also display camera functions and battery life. Batteries tend to
+	last significantly less when using the LCD screen. Some cameras
+	have both optical viewfinders and LCDs.</para>
+	<para><em>Benefit: Allows you to preview what your picture will look
+	like before you waste a picture.</em></para>
+	</sect3>	
+
+	<sect3>
+	<title>Zoom</title>
+	<para>Lenses that can change Focal Lengths are Zoom Lenses. A camera's
+	Focal Length is the distance at which the lens brings light into
+	focus.</para>
+	<para><em>Benefit: A large Focal Length will make distant
+	subjects appear closer.</em></para>
+	</sect3>
+      </sect1>
+
+    <sect1>
+    <title>Pitfalls</title>
+    <para>Many digital devices come with proprietary software or no 
+    software at all for GNU/Linux systems for transferring data to 
+    your computer.</para>
+
+    <para>You should consider to write your manufacturer and ask
+    them to open the protocol specs, to enable camera drivers for
+    free photo software such gPhoto (GNU Photo) to be written.</para>
+
+      <sect2>
+      <title>Kodak PhotoCD</title>
+      <em><idx>PhotoCD</idx></em> is a semi-open standard developed by 
+      Kodak for storing photographic images as digital data on a
+      CD-ROM.  AFAIK, you can only view the images on a computer with 
+      proprietary software from Eastman Kodak.
+      </sect2>
+
+      <sect2>
+      <title>Canon PowerShot</title>
+      Unfortunately, <em><idx>Canon Inc.</idx></em> refuse to
+      disclosure the protocol details for their camera models, 
+      necessary to write free software drivers for gPhoto yet.
+      </sect2>
+
+    </sect1>
+  </chapter>
+</book>
+

@@ -119,12 +119,17 @@ digital photo applications and technology.</para>
 
     <sect1>
     <title>Paper Scanners</title>
-    <para>Text about slide scanners goes here...</para>
+    <para>Paper scanners allow you to create a digital image from documents,
+  hard-copy photos, and other media. There exists 3D scanners as well,
+  which have a depth-of-field perception to create an image on your
+  computer with apparent depth.</para>
     </sect1>
 
     <sect1>
     <title>Film Scanners</title>
-    <para>Text about paper scanners goes here...</para>
+    <para>Film scanners can read in your 35mm slides and negatives.
+  This is especially helpful if you no longer have the prints available
+  for your paper scanner.</para>
     </sect1>
 
     <sect1>
@@ -515,8 +520,83 @@ digital photo applications and technology.</para>
       disclosure the protocol details for their camera models, 
       necessary to write free software drivers for gPhoto yet.
       </sect2>
-
     </sect1>
-  </chapter>
+</chapter>
+<chapter>
+  <sect1>
+<title>Digital Cameras supported under Linux</title>
+<para>Even though most manufacturers do not disclose any technical specifications
+for their cameras, there are several existing application that provide support
+for digital cameras in the Linux environment. All application are covered under
+GPL unless noted otherwise.</para>
+  </sect1>
+	<sect2>
+	<title>DC20PACK<title>
+	<para>Support for the Kodak DC20/25
+	http://home.t-online.de/home/Oliver.Hartmann/dc20secr.htm
+	<htmlurl url="http://home.t-online.de/home/Oliver.Hartmann/dc20secr.htm" name="DC20 Secrets Site">
+	</para>
+
+	<title>FujiPlay<title>
+	<para>Support for Fuji DS-7 and MX-700
+	http://topo.math.u-psud.fr/~bousch/fujiplay.html
+	<htmlurl url="http://topo.math.u-psud.fr/~bousch/fujiplay.html" name="Fujiplay Site">
+	</para>
+
+	<title>gPhoto<title>
+	<para>Support for over 40 camera models and counting. 
+	This project has incorporated several of the other projects 
+	listed here (kdcpi, fujiplay, photopc) as well as new libraries 
+	for Konica, Ricoh, Philips, Sony, Toshiba, and Kodak cameras.
+	http://www.gphoto.org
+	<htmlurl url="http://www.gphoto.org" name="gPhoto Site">
+	</para>
+
+	<title>JCam<title>
+	<para>Java application with support for several different cameras.
+	This is a commercial application, and as a result, has an approximate $35
+	registration fee. The program stops working after the demo period has passed.
+	http://www.jcam.com
+	<htmlurl url="http://www.jcam.com" name="JCam Site">
+	</para>
+
+	<title>kdcpi<title>
+	<para>Support for Kodak DC200/210
+	http://www.berkhirt.com/HomerProductions/products/kdcpi/
+	<htmlurl url="http://www.berkhirt.com/HomerProductions/products/kdcpi/" name="kdcpi Site">
+	</para>
+
+	<title>MotifCamedia</title>
+	<para>Support for Olympus Camedia cameras
+	http://home.t-online.de/home/jodda/camedia.htm
+	<htmlurl url="http://home.t-online.de/home/jodda/camedia.htm" name="MotifCamedia Site">
+	</para>
+
+	<title>OpenDiS<title>
+	<para>Open Digital Support for Kodak DC220/260
+	http://digitalux.netpedia.net
+	<htmlurl url="http://digitalux.netpedia.net" name="OpenDiS Site">
+	</para>
+
+	<title>PhotoPC<title>
+	<para>Support for several Agfa, Epson, Olympus, Sanyo and Nikon cameras
+	http://www.average.org/digicam
+	<htmlurl url="http://www.average.org/digicam" name="PhotoPC Site">
+	</para>
+
+	<title>Qvplay</title>
+	<para>Support for Logitech (formerly Connectix) Quickcams
+	http://www.bit.net.au/~bhepple/qvplay/qvplay.html
+	<htmlurl url="http://www.bit.net.au/~bhepple/qvplay/qvplay.html" name="Qvplay Site">
+	</para>
+
+	<title>SANE</title>
+	<para>Support for Kodak DC20/25/200/210 via the SANE interface
+	http://www.mostang.com/sane
+	<htmlurl url="http://www.mostang.com/sane" name="SANE Site">
+	</para>	
+
+</sect2>	
+</chapter>
 </book>
 

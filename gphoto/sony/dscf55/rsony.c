@@ -668,11 +668,11 @@ struct Image *sony_dscf55_get_picture(int imageid, int thumbnail)
 			printf("X13Camera Failed\n");
 
 		SelectImage[4] = imageid;
-		Converse(&dp, SelectImage, 7, CHG_CTRL, 1);
+		Converse(&dp, SelectImage, 7, CHG_CTRL, 0);
 
 		sprintf(filename, "/tmp/gphoto_image_%u.jpg", imageid-1);
-		printf("%s\n", filename);
-//		sprintf(filename, "/tmp/%s", dp.buffer+5);
+/*		printf("%s\n", filename); */
+/*		sprintf(filename, "/tmp/%s", dp.buffer+5); */
 		temp = fopen(filename, "wb");
 
 		Converse(&dp, SendThumbnail, 4, CHG_CTRL, 0);

@@ -22,12 +22,12 @@ IEEE1394_HEADER =
 IEEE1394_SOURCE =
 endif
 
-if GPIO_SOCKET
-SOCKET_HEADER = gpio-socket.h
-SOCKET_SOURCE = gpio-socket.c
+if GPIO_NETWORK
+NETWORK_HEADER = gpio-network.h
+NETWORK_SOURCE = gpio-network.c
 else
-SOCKET_HEADER =
-SOCKET_SOURCE =
+NETWORK_HEADER =
+NETWORK_SOURCE =
 endif
 
 
@@ -36,7 +36,7 @@ libgpio_la_LDFLAGS = -version-info @LIBGPIO_VERSION_INFO@ -DHAVE_TERMIOS_H
 libgpio_la_SOURCES = 	gpio.c gpio.h \
 			gpio-serial.c gpio-serial.h \
 			gpio-parallel.c gpio-parallel.h \
-			$(SOCKET_HEADER) $(SOCKET_SOURCE) \
+			$(NETWORK_HEADER) $(NETWORK_SOURCE) \
 			$(IEEE1394_HEADER) $(IEEE1394_SOURCE) \
 			$(USB_HEADER) $(USB_SOURCE)
 
@@ -44,7 +44,7 @@ gpio_test_SOURCES = gpio-test.c
 gpio_test_LDADD = libgpio.la
 
 gpioincdir = $(includedir)/gpio
-gpioinc_HEADERS = gpio.h gpio-serial.h gpio-parallel.h $(SOCKET_HEADER) $(IEEE1394_HEADER) $(USB_HEADER) 
+gpioinc_HEADERS = gpio.h gpio-serial.h gpio-parallel.h $(NETWORK_HEADER) $(IEEE1394_HEADER) $(USB_HEADER) 
 
 # DEPS = $(top_builddir)/libgpio.la
 # LDADDS = $(top_builddir)/libgpio.la

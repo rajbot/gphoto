@@ -33,6 +33,7 @@ typedef struct {
 	GSList*			files;
 	GnomeVFSFileInfoOptions	options;
         gint			position;
+	gboolean		preview;
 } directory_handle_t;
 
 /**************/

@@ -1,5 +1,10 @@
 2001-04-21	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
+	* gnome-vfs-module/*: More debugging stuff. Files are now local because
+	we don't know if the camera is based on the "Directory Browse". 
+
+2001-04-21	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
 	* gnome-vfs-module/*: Tried to get it working with the konica driver.
 	Didn't succeed...
 

@@ -127,21 +127,27 @@ directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options,
 	GSList			*folders = NULL;
 	GSList			*files = NULL;
 	gint			 i;
-	const gchar		*path;
 	const gchar		*host;
 	gchar			*url;
 	gchar			*name;
+	gchar			*dirname;
+	gboolean		 preview;
 
-	path = gnome_vfs_uri_get_path (uri);
-	host = gnome_vfs_uri_get_host_name (uri);
+	CAM_VFS_DEBUG (("  ENTER"));
 	
-	CAM_VFS_DEBUG (("uri=%s",uri->text));
-	CAM_VFS_DEBUG (("basename(uri)=%s",gnome_vfs_uri_get_basename(uri)));
-	CAM_VFS_DEBUG (("dirname(uri)=%s",gnome_vfs_uri_extract_dirname(uri)));
-	CAM_VFS_DEBUG (("path(uri)=%s", path));
+	host = gnome_vfs_uri_get_host_name (uri);
+	CAM_VFS_DEBUG (("    host: %s", host));
 
+	dirname = gnome_vfs_uri_extract_dirname (uri);
+	CAM_VFS_DEBUG (("    dirname: %s", dirname));
+
+        preview = (gnome_vfs_uri_get_user_name (uri) &&
+                   !strcmp (gnome_vfs_uri_get_user_name (uri), "previews"));
+        CAM_VFS_DEBUG (("  preview: %i", preview));
+	
 	url = gnome_vfs_unescape_string (host, NULL);
 	if (!url) {
+	    	g_free (dirname);
 		*result = GNOME_VFS_ERROR_HOST_NOT_FOUND;
 		CAM_VFS_DEBUG (("returns GNOME_VFS_ERROR_HOST_NOT_FOUND"));
         	return (NULL);
@@ -151,6 +157,7 @@ directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options,
 	*result = GNOME_VFS_RESULT (gp_camera_new_from_gconf (&camera, url));
         if (*result != GNOME_VFS_OK) {
                 g_free (url);
+		g_free (dirname);
 		CAM_VFS_DEBUG (("gp_camera_new_from_gconf() failed"));
                 return (NULL);
         }
@@ -159,6 +166,7 @@ directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options,
 	/* Cancelled? */
         if (gnome_vfs_context_check_cancellation (context)) {
 		gp_camera_unref (camera); 
+		g_free (dirname);
 		*result = GNOME_VFS_ERROR_CANCELLED; 
 		CAM_VFS_DEBUG (("returns GNOME_VFS_ERROR_CANCELED"));
 		return (NULL);
@@ -167,7 +175,7 @@ directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options,
 	/* Get folder list. If an error occurs, skip this. It can well be */
 	/* that the camera does not support folders.			  */
 	*result = GNOME_VFS_RESULT (gp_camera_folder_list_folders (
-		    				camera, path, &camera_list));
+		    				camera, dirname, &camera_list));
 	if (*result == GNOME_VFS_OK) {
 	    	for (i = 0; i < gp_list_count (&camera_list); i++) {
 		    	name = g_strdup (gp_list_entry (&camera_list, i)->name);
@@ -178,20 +186,23 @@ directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options,
 	/* Cancelled? */
 	if (gnome_vfs_context_check_cancellation (context)) {
 		gp_camera_unref (camera); 
+		g_free (dirname);
 		*result = GNOME_VFS_ERROR_CANCELLED; 
 		CAM_VFS_DEBUG (("returns GNOME_VFS_ERROR_CANCELED"));
 		return (NULL);
 	}
 
 	/* Get file list. */
-	*result = GNOME_VFS_RESULT (gp_camera_folder_list_files (camera, path,
+	*result = GNOME_VFS_RESULT (gp_camera_folder_list_files (camera, 
+		    						 dirname,
 		    						 &camera_list));
 	if (*result != GNOME_VFS_OK) {
 		for (i = 0; i < g_slist_length (folders); i++) 
 			g_free (g_slist_nth_data (folders, i));
 		g_slist_free (folders);
 		gp_camera_unref (camera);
-		CAM_VFS_DEBUG (("gp_camera_folder_list_list_files() failed"));
+		g_free (dirname);
+		CAM_VFS_DEBUG (("gp_camera_folder_list_files() failed"));
 		return (NULL);
 	}
 	for (i = 0; i < gp_list_count (&camera_list); i++) {
@@ -206,10 +217,11 @@ directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options,
 	directory_handle->options = options;
 	directory_handle->position = 0;
 	directory_handle->camera = camera;
-	directory_handle->folder = g_strdup (path);
+	directory_handle->folder = dirname;
+	directory_handle->preview = preview;
 
 	*result = GNOME_VFS_OK;
-	CAM_VFS_DEBUG (("exiting"));
+	CAM_VFS_DEBUG (("  EXIT"));
 	return ((GnomeVFSMethodHandle*) directory_handle);
 }
 

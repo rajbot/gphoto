@@ -49,7 +49,8 @@ GnomeVFSResult 	gp_result_as_gnome_vfs_result 	(gint result);
 GnomeVFSResult	gp_camera_file_get_vfs_info (Camera 		*camera, 
 					     const gchar 	*folder,
 					     const gchar 	*file,
-					     GnomeVFSFileInfo 	*info);
+					     GnomeVFSFileInfo 	*info,
+					     gboolean		 preview);
 
 gint 		gp_camera_new_from_gconf (Camera	**camera, 
 					  const gchar	 *name_or_url);

@@ -236,8 +236,8 @@ static GnomeVFSResult do_read_directory (
 	handle = (directory_handle_t*) h;
 	
 	g_mutex_lock (client_mutex);
-	CAM_VFS_DEBUG (("entering"));
-	
+	CAM_VFS_DEBUG (("ENTER"));
+
 	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_NONE;
 	if (handle->position < g_slist_length (handle->folders)) {
 
@@ -261,7 +261,7 @@ static GnomeVFSResult do_read_directory (
 			handle->position - g_slist_length (handle->folders));
 		result = gp_camera_file_get_vfs_info (handle->camera, 
 						      handle->folder, file, 
-						      info);
+						      info, handle->preview);
 		if (result != GNOME_VFS_OK) {
 		    	
 		    	/* We always have to return GNOME_VFS_OK... */
@@ -302,6 +302,7 @@ static GnomeVFSResult do_get_file_info (
 	Camera		*camera = NULL;
 	gint		 i;
 	gboolean	 file;
+	gboolean	 preview;
 	gchar		*url;
 	const gchar	*host;
 
@@ -309,19 +310,25 @@ static GnomeVFSResult do_get_file_info (
 	CAM_VFS_DEBUG (("ENTER"));
 	
 	host = gnome_vfs_uri_get_host_name (uri);
+	CAM_VFS_DEBUG (("  host: %s", host));
+
 	filename = gnome_vfs_uri_get_basename (uri);
+	CAM_VFS_DEBUG (("  filename: %s", filename));
+
 	dirname = gnome_vfs_uri_extract_dirname (uri);
+	CAM_VFS_DEBUG (("  dirname: %s", dirname));
+
+	preview = (gnome_vfs_uri_get_user_name (uri) && 
+		   !strcmp (gnome_vfs_uri_get_user_name (uri), "previews"));
+	CAM_VFS_DEBUG (("  preview: %i", preview));
+	
 	url = gnome_vfs_unescape_string (host, NULL);
 	if (!url) {
 		CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_HOST_NOT_FOUND"));
 		g_mutex_unlock (client_mutex);
 		return (GNOME_VFS_ERROR_HOST_NOT_FOUND);
 	}
-	
 	CAM_VFS_DEBUG (("  url: %s", url));
-	CAM_VFS_DEBUG (("  host: %s", host));
-	CAM_VFS_DEBUG (("  filename: %s", filename));
-	CAM_VFS_DEBUG (("  dirname: %s", dirname));
 
 	/* Connect to the camera */
 	result = GNOME_VFS_RESULT (gp_camera_new_from_gconf (&camera, url));
@@ -339,6 +346,7 @@ static GnomeVFSResult do_get_file_info (
 	if (filename) {
 
 	    	/* Get the list of files */
+	    	CAM_VFS_DEBUG (("  Getting list of files..."));
 		result = GNOME_VFS_RESULT (gp_camera_folder_list_files (
 			    			camera, dirname, &camera_list));
 		if (result != GNOME_VFS_OK) {
@@ -364,6 +372,7 @@ static GnomeVFSResult do_get_file_info (
 	if (!file && strcmp (dirname, "/")) {
 
 	    	/* Get the list of folders */
+	    	CAM_VFS_DEBUG (("Getting list of folders..."));
 	    	result = GNOME_VFS_RESULT (gp_camera_folder_list_folders (
 						camera, dirname, &camera_list));
 		if (result != GNOME_VFS_OK) {
@@ -390,8 +399,9 @@ static GnomeVFSResult do_get_file_info (
 	}
 
 	if (file) {
+	    	CAM_VFS_DEBUG (("  Getting file information..."));
 		result = gp_camera_file_get_vfs_info (camera, dirname, 
-						      filename, info);
+						      filename, info, preview);
 		if (result != GNOME_VFS_OK) {
 		    	gp_camera_unref (camera);
 			g_mutex_unlock (client_mutex);
@@ -430,12 +440,7 @@ static gboolean do_is_local (
         GnomeVFSMethod*                 method,
 	const GnomeVFSURI*              uri)
 {
-    	const gchar *host;
-
-	host = gnome_vfs_uri_get_host_name (uri);
-
-	/* 'Directory Browse' is something different. */
-	return (!strcmp (host, "Directory Browse"));
+	return (TRUE);
 }
 
 static GnomeVFSResult do_check_same_fs (

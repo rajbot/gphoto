@@ -85,96 +85,26 @@ gnocam_applet_update (GnocamApplet *a)
 #endif
 }
 
-#if 0
-static void
-listener_cb (BonoboListener *listener, const char *event_name,
-	     const CORBA_any *any, CORBA_Environment *ev, gpointer user_data)
-{
-#if 0
-	GnocamApplet *a = GNOCAM_APPLET (user_data);
-
-	g_message ("Got event '%s'.", event_name);
-
-	if (CORBA_TypeCode_equal (any->_type, TC_GNOME_Gnocam_ErrorCode, ev)) {
-		g_warning ("Error!");
-	} else if (CORBA_TypeCode_equal (any->_type, TC_GNOME_Camera, ev)) {
-		g_message ("Got camera.");
-		if (a->priv->camera != CORBA_OBJECT_NIL)
-			bonobo_object_release_unref (a->priv->camera, NULL);
-		a->priv->camera = bonobo_object_dup_ref (
-				*((GNOME_Camera *) any->_value), NULL);
-	} else {
-		g_warning ("Unknown type.");
-	}
-
-	gnocam_applet_update (a);
-
-	bonobo_object_unref (listener);
-#endif
-}
-#endif
-
-#if 0
-static void
-gnocam_applet_connect (GnocamApplet *a)
-{
-	CORBA_Environment ev;
-	Bonobo_Unknown o;
-	BonoboListener *l;
-
-	g_return_if_fail (GNOCAM_IS_APPLET (a));
-
-	g_message ("Connecting...");
-
-	CORBA_exception_init (&ev);
-
-	o = bonobo_get_object ("OAFIID:GNOME_Gnocam", "Bonobo/Unknown", &ev);
-	if (BONOBO_EX (&ev)) {
-		gnocam_applet_report_error (a, &ev);
-		CORBA_exception_free (&ev);
-		return;
-	}
-
-	/* Terminate any existing connection. */
-	gnocam_applet_disconnect (a);
-
-	l = bonobo_listener_new (listener_cb, a);
-	if ((a->priv->prefs.model && strlen (a->priv->prefs.model)) &&
-	    (a->priv->prefs.port  && strlen (a->priv->prefs.port)))
-		GNOME_Gnocam_getCameraByModelAndPort (o, BONOBO_OBJREF (l),
-			a->priv->prefs.model, a->priv->prefs.port, &ev);
-	else if (a->priv->prefs.model && strlen (a->priv->prefs.model))
-		GNOME_Gnocam_getCameraByModel (o, BONOBO_OBJREF (l),
-			a->priv->prefs.model, &ev);
-	else
-		GNOME_Gnocam_getCamera (o, BONOBO_OBJREF (l), &ev);
-	bonobo_object_release_unref (o, NULL);
-	if (BONOBO_EX (&ev)) {
-		gnocam_applet_report_error (a, &ev);
-		CORBA_exception_free (&ev);
-		return;
-	}
-
-	CORBA_exception_free (&ev);
-}
-#endif
-
 static void
 on_changed (GnocamAppletCam *c, GnocamApplet *a)
 {
 	gchar *key = panel_applet_get_preferences_key (a->priv->applet);
 	guint i = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (c), "number"));
 	gchar *s;
+	const gchar *t;
 	
 	/* New camera? */
 	if (!i) i = g_list_length (a->priv->cameras) + 1;
 	s = g_strdup_printf ("%s/%i", key, i);
-	panel_applet_gconf_set_string (a->priv->applet, "manufacturer",
-		gnocam_applet_cam_get_manufacturer (c), NULL);
-	panel_applet_gconf_set_string (a->priv->applet, "model", 
-		gnocam_applet_cam_get_model (c), NULL);
-	panel_applet_gconf_set_string (a->priv->applet, "port", 
-		gnocam_applet_cam_get_port (c), NULL);
+	
+	t = gnocam_applet_cam_get_manufacturer (c);
+	if (t) panel_applet_gconf_set_string (a->priv->applet,
+					      "manufacturer", t, NULL);
+	t = gnocam_applet_cam_get_model (c);
+	if (t) panel_applet_gconf_set_string (a->priv->applet,
+					      "model", t, NULL);
+	t = gnocam_applet_cam_get_port (c);
+	if (t) panel_applet_gconf_set_string (a->priv->applet, "port", t, NULL);
 	panel_applet_gconf_set_bool (a->priv->applet, "connect_auto", 
 		gnocam_applet_cam_get_connect_auto (c), NULL);
 
@@ -351,40 +281,6 @@ gnocam_applet_class_init (gpointer g_class, gpointer class_data)
 
 #if 0
 static void
-on_prefs_camera_changed (GnocamPrefs *prefs, gboolean automatic,
-			 GnocamApplet *a)
-{
-	panel_applet_gconf_set_bool (a->priv->applet, "camera_automatic",
-				     automatic, NULL);
-	gnocam_applet_load_preferences (a);
-}
-
-static void
-on_prefs_connect_changed (GnocamPrefs *prefs, gboolean automatic,
-			  GnocamApplet *a)
-{
-	panel_applet_gconf_set_bool (a->priv->applet, "connect_automatic",
-				     automatic, NULL);
-	gnocam_applet_load_preferences (a);
-}
-
-static void
-on_prefs_model_changed (GnocamPrefs *prefs, const gchar *model, GnocamApplet *a)
-{
-	panel_applet_gconf_set_string (a->priv->applet, "model", model, NULL);
-	gnocam_applet_load_preferences (a);
-}
-
-static void
-on_prefs_port_changed (GnocamPrefs *prefs, const gchar *port, GnocamApplet *a)
-{
-	panel_applet_gconf_set_string (a->priv->applet, "port", port, NULL);
-	gnocam_applet_load_preferences (a);
-}
-#endif
-
-#if 0
-static void
 verb_FileExit_cb (BonoboUIComponent *uic, gpointer user_data, const char *cname)
 {
 	gtk_widget_destroy (GTK_WIDGET (user_data));
@@ -558,66 +454,6 @@ gnocam_applet_capture_cb (BonoboUIComponent *uic, GnocamApplet *a,
 #endif
 
 static void
-gnocam_applet_properties_cb (BonoboUIComponent *uic, GnocamApplet *a,
-			     const char *verbname)
-{
-#if 0
-	static GnocamPrefs *prefs = NULL;
-	CORBA_Environment ev;
-
-	g_return_if_fail (GNOCAM_IS_APPLET (a));
-
-	if (prefs) {
-		gtk_window_present (GTK_WINDOW (prefs));
-		return;
-	}
-
-	/* Create the dialog. */
-	CORBA_exception_init (&ev);
-	prefs = gnocam_prefs_new (a->priv->prefs.camera_automatic,
-				  a->priv->prefs.connect_automatic,
-				  a->priv->prefs.model, a->priv->prefs.port,
-				  &ev);
-	if (BONOBO_EX (&ev) || !prefs) {
-		gnocam_applet_report_error (a, &ev);
-		CORBA_exception_free (&ev);
-		return;
-	}
-	CORBA_exception_free (&ev);
-
-	/* Set up the dialog. */
-	gtk_window_set_wmclass (GTK_WINDOW (prefs), "gnocam-applet",
-				"Camera Applet");
-	gnome_window_icon_set_from_file (GTK_WINDOW (prefs),
-					 IMAGEDIR "gnocam-camera1.png");
-	g_signal_connect (prefs, "destroy", G_CALLBACK (gtk_widget_destroyed),
-			  &prefs);
-	g_signal_connect (prefs, "camera_changed",
-			  G_CALLBACK (on_prefs_camera_changed), a);
-	g_signal_connect (prefs, "connect_changed",
-			  G_CALLBACK (on_prefs_connect_changed), a);
-	g_signal_connect (prefs, "model_changed",
-			  G_CALLBACK (on_prefs_model_changed), a);
-	g_signal_connect (prefs, "port_changed",
-			  G_CALLBACK (on_prefs_port_changed), a);
-
-	/* Show the dialog. */
-	gtk_widget_show (GTK_WIDGET (prefs));
-#endif
-}
-
-#if 0
-static void
-gnocam_applet_disconnect_cb (BonoboUIComponent *uic, GnocamApplet *a,
-			     const char *verbname)
-{
-	g_return_if_fail (GNOCAM_IS_APPLET (a));
-
-	gnocam_applet_disconnect (a);
-}
-#endif
-
-static void
 gnocam_applet_add_cb (BonoboUIComponent *uic, GnocamApplet *a,
 		      const char *verbname)
 {
@@ -679,7 +515,6 @@ gnocam_applet_about_cb (BonoboUIComponent *uic, GnocamApplet *a,
 
 static const BonoboUIVerb gnocam_applet_menu_verbs[] = {
 	BONOBO_UI_UNSAFE_VERB ("Add", gnocam_applet_add_cb),
-	BONOBO_UI_UNSAFE_VERB ("Props", gnocam_applet_properties_cb),
 	BONOBO_UI_UNSAFE_VERB ("About", gnocam_applet_about_cb),
 	BONOBO_UI_VERB_END
 };

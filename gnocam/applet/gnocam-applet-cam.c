@@ -255,10 +255,7 @@ on_changed (GnocamChooser *chooser, GnocamAppletCam *c)
 	c->priv->manuf = gnocam_chooser_get_manufacturer (chooser);
 	c->priv->model = gnocam_chooser_get_model (chooser);
 	c->priv->port  = gnocam_chooser_get_port (chooser);
-
-	g_message ("Manufacturer: %s", c->priv->manuf);
-	g_message ("Model: %s", c->priv->model);
-	g_message ("Port: %s", c->priv->port);
+	c->priv->connect_auto = gnocam_chooser_get_connect_auto (chooser);
 
 	if (b) gnocam_applet_cam_connect (c);
 
@@ -272,15 +269,12 @@ action_select_camera (gpointer callback_data, guint callback_action,
 	GnocamAppletCam *c = GNOCAM_APPLET_CAM (callback_data);
 	GnocamChooser *chooser = gnocam_chooser_new ();
 
-	g_signal_connect (chooser, "changed", G_CALLBACK (on_changed), c);
-	gtk_widget_show (GTK_WIDGET (chooser));
-
-	g_signal_handlers_block_by_func (chooser, on_changed, c);
 	gnocam_chooser_set_manufacturer (chooser, c->priv->manuf);
 	gnocam_chooser_set_model (chooser, c->priv->model);
 	gnocam_chooser_set_port (chooser, c->priv->port);
 	gnocam_chooser_set_connect_auto (chooser, c->priv->connect_auto);
-	g_signal_handlers_unblock_by_func (chooser, on_changed, c);
+	g_signal_connect (chooser, "changed", G_CALLBACK (on_changed), c);
+	gtk_widget_show (GTK_WIDGET (chooser));
 }
 
 static GtkItemFactoryEntry popup[] =
@@ -314,6 +308,8 @@ void
 gnocam_applet_cam_set_manufacturer (GnocamAppletCam *c, const gchar *m)
 {
 	g_return_if_fail (GNOCAM_IS_APPLET_CAM (c));
+	if (c->priv->camera != CORBA_OBJECT_NIL)
+		gnocam_applet_cam_disconnect (c);
 	g_free (c->priv->manuf);
 	c->priv->manuf = g_strdup (m);
 }
@@ -322,7 +318,8 @@ void
 gnocam_applet_cam_set_model (GnocamAppletCam *c, const gchar *m)
 {
 	g_return_if_fail (GNOCAM_IS_APPLET_CAM (c));
-	g_free (c->priv->model);
+	if (c->priv->camera != CORBA_OBJECT_NIL)
+		gnocam_applet_cam_disconnect (c);
 	c->priv->model = g_strdup (m);
 }
 
@@ -330,6 +327,8 @@ void
 gnocam_applet_cam_set_port (GnocamAppletCam *c, const gchar *m)
 {
 	g_return_if_fail (GNOCAM_IS_APPLET_CAM (c));
+	if (c->priv->camera != CORBA_OBJECT_NIL)
+		gnocam_applet_cam_disconnect (c);
 	g_free (c->priv->port);
 	c->priv->port = g_strdup (m);
 }

@@ -179,19 +179,6 @@ gnocam_chooser_setup (GnocamChooser *c)
 }
 
 static void
-on_cancel_clicked (GtkButton *button, GnocamChooser *c)
-{
-	g_warning ("Restore settings!");
-	gtk_object_destroy (GTK_OBJECT (c));
-}
-
-static void
-on_apply_clicked (GtkButton *button, GnocamChooser *c)
-{
-	g_warning ("Emit signals!");
-}
-
-static void
 on_close_clicked (GtkButton *button, GnocamChooser *c)
 {
 	gtk_object_destroy (GTK_OBJECT (c));
@@ -256,10 +243,9 @@ on_model_selection_changed (GtkTreeSelection *s, GnocamChooser *c)
 	GNOME_C_Mngr_PortList pl;
 	gchar *manuf, *model, *port;
 
+	model = gnocam_chooser_get_model (c); if (!model) return;
 	manuf = gnocam_chooser_get_manufacturer (c);
 	g_return_if_fail (manuf != NULL);
-	model = gnocam_chooser_get_model (c);
-	g_return_if_fail (model != NULL);
 	port  = gnocam_chooser_get_port (c);
 
 	/* Set up the list for the ports */
@@ -438,16 +424,6 @@ gnocam_chooser_new (void)
 	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (c)->vbox), ui, TRUE, TRUE, 0);
 
 	/* Add the buttons */
-	b = gtk_button_new_from_stock (GTK_STOCK_CANCEL);
-	gtk_widget_show (b);
-	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (c)->action_area), b,
-			    TRUE, TRUE, 0);
-	g_signal_connect (b, "clicked", G_CALLBACK (on_cancel_clicked), c);
-	b = gtk_button_new_from_stock (GTK_STOCK_APPLY);
-	gtk_widget_show (b);
-	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (c)->action_area), b, 
-			    TRUE, TRUE, 0);
-	g_signal_connect (b, "clicked", G_CALLBACK (on_apply_clicked), c);
 	b = gtk_button_new_from_stock (GTK_STOCK_CLOSE);
 	gtk_widget_show (b);
 	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (c)->action_area), b,
@@ -514,7 +490,8 @@ void
 gnocam_chooser_set_connect_auto (GnocamChooser *c, gboolean connect_auto)
 {
 	g_return_if_fail (GNOCAM_IS_CHOOSER (c));
-	g_warning ("Fixme!");
+	gtk_toggle_button_set_active (c->priv->toggle_connect_auto,
+				      connect_auto);
 }
 
 gboolean

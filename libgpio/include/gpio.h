@@ -42,9 +42,16 @@
 #define GPIO_MAX_BUF_LEN 4096 		/* max length of receive buffer */
 
 
+/* Return values (errors are negative) */
 #define GPIO_OK		0
 #define	GPIO_ERROR	-1		/* IO return codes */
 #define GPIO_TIMEOUT    -2
+
+/* Debugging definitions for gpio_init */
+#define GPIO_DEBUG_NONE		0
+#define GPIO_DEBUG_LOW		1
+#define GPIO_DEBUG_MEDIUM 	2
+#define GPIO_DEBUG_HIGH 	3
 
 /* Specify the types of devices */
 typedef enum {
@@ -157,7 +164,7 @@ struct gpio_device {
 	void gpio_debug_printf (char *format, ...);
 		/* issues debugging messages */
 
-	int gpio_init		();
+	int gpio_init (int debug_level);
 		/* Initializes the library.
 			return values:
 				  successful: GPIO_OK

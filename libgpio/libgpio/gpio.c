@@ -3,11 +3,7 @@
 
    Modifications:
    Copyright (C) 1999 Scott Fritzinger <scottf@unr.edu>
-
-   Based on work by:
-   Copyright (C) 1999 Beat Christen <spiff@longstreet.ch>
-   for the toshiba gPhoto library.
-
+
    The GPIO Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Library General Public License as
    published by the Free Software Foundation; either version 2 of the
@@ -37,15 +33,15 @@ int              device_count;
 /* Toggle to turn on/off debugging */
 int              device_debug=0;
 
-void gpio_debug_printf (char *format, ...) {
-
-        va_list         pvar;
+void gpio_debug_printf (char *format, ...)
+{
+        va_list arg;
 
         if (device_debug) {
                 fprintf(stderr, "gpio: ");
-                va_start(pvar, format);
-                vfprintf(stderr, format, pvar);
-                va_end(pvar);
+                va_start(arg, format);
+                vfprintf(stderr, format, arg);
+                va_end(arg);
                 fprintf(stderr, "\n");
         }
 }
@@ -55,11 +51,12 @@ void gpio_debug_printf (char *format, ...) {
    ----------------------------------------------------------------
  */
 
-int gpio_init()
+int gpio_init(int debug)
 {
         gpio_debug_printf("Initializing...");
         /* Enumerate all the available devices */
         device_count = 0;
+	device_debug = debug;
         return (gpio_library_list(device_list, &device_count));
 }
 
@@ -161,10 +158,13 @@ int gpio_open(gpio_device *dev)
                 retval = dev->ops->update(dev);
                 if (retval != GPIO_OK) {
                         dev->device_fd = 0;
+			gpio_debug_printf("gpio_open: update error");
                         return GPIO_ERROR;
                 }
+		gpio_debug_printf("gpio_open: OK");
                 return GPIO_OK;
         }
+	gpio_debug_printf("gpio_open: open error");
         return GPIO_ERROR;
 }
 
@@ -173,14 +173,18 @@ int gpio_close(gpio_device *dev)
 {
         int retval = 0;
 
-        if (!dev)
+        if (!dev) {
+		gpio_debug_printf("gpio_close: bad device");
                 return GPIO_ERROR;
-        if (dev->type == GPIO_DEVICE_SERIAL && dev->device_fd == 0)
+	}
+        if (dev->type == GPIO_DEVICE_SERIAL && dev->device_fd == 0) {
+		gpio_debug_printf("gpio_close: OK");
                 return GPIO_OK;
+	}
 
         retval = dev->ops->close(dev);
         dev->device_fd = 0;
-
+	gpio_debug_printf("gpio_close: close %s", retval == GPIO_OK? "ok":"error");
         return retval;
 }
 
@@ -189,8 +193,9 @@ int gpio_free(gpio_device *dev)
 {
         int retval = dev->ops->exit(dev);
 
-        gpio_library_close(dev);
+	gpio_debug_printf("gpio_free: exit %s", retval < 0? "error":"ok");
 
+        gpio_library_close(dev);
         free(dev);
 
         return GPIO_OK;
@@ -199,7 +204,26 @@ int gpio_free(gpio_device *dev)
 int gpio_write(gpio_device *dev, char *bytes, int size)
         /* Called to write "bytes" to the IO device */
 {
-        return dev->ops->write(dev, bytes, size);
+	int x, retval;
+	char t[8];
+	char *buf;
+
+	if (device_debug == GPIO_DEBUG_HIGH) {
+		buf = (char*)malloc(sizeof(size));
+		buf[0] = 0;
+		gpio_debug_printf("gpio_write: size=%i", size);
+		for (x=0; x<size; x++) {
+			sprintf(t, "%02x ", (unsigned char)bytes[x]);
+			strcat(buf, t); 
+		}
+		gpio_debug_printf("gpio_write: DATA : %s", buf);
+		free(buf);
+	}
+        retval =  dev->ops->write(dev, bytes, size);
+
+	gpio_debug_printf("gpio_write: write %s", retval < 0? "error":"ok");
+
+	return (retval);
 }
 
 int gpio_read(gpio_device *dev, char *bytes, int size)
@@ -207,33 +231,63 @@ int gpio_read(gpio_device *dev, char *bytes, int size)
            "bytes" should be large enough to hold all the data.
          */
 {
-        return dev->ops->read(dev, bytes, size);
+	int x, retval;	
+	char t[8];
+	char *buf;
+
+	retval = dev->ops->read(dev, bytes, size);
+
+	if ((retval > 0)&&(device_debug == GPIO_DEBUG_HIGH)) {
+		buf = (char*)malloc(sizeof(size));
+		buf[0] = 0;
+		gpio_debug_printf("gpio_read: bytes read=%i", retval);		
+		for (x=0; x<retval; x++) {
+			sprintf(t, "%02x ", (unsigned char)bytes[x]);
+			strcat(buf, t); 
+		}
+		gpio_debug_printf("gpio_read: DATA : %s", buf);
+		free(buf);
+	}
+
+	return (retval);
 }
 
 int gpio_set_timeout(gpio_device *dev, int millisec_timeout)
 {
         dev->timeout = millisec_timeout;
+
+	gpio_debug_printf("gpio_set_timeout: value=%ims", millisec_timeout);
+
         return GPIO_OK;
 }
 
 int gpio_get_timeout(gpio_device *dev, int *millisec_timeout)
 {
         *millisec_timeout = dev->timeout;
+
+	gpio_debug_printf("gpio_get_timeout: value=%ims", *millisec_timeout);
+
         return GPIO_OK;
 }
 
 int gpio_set_settings(gpio_device *dev, gpio_device_settings settings)
 {
+	int retval;
+
         /* need to memcpy() settings to dev->settings */
         memcpy(&dev->settings_pending, &settings, sizeof(dev->settings_pending));
 
-        return dev->ops->update(dev);
+        retval =  dev->ops->update(dev);
+	gpio_debug_printf("gpio_set_settings: update %s", retval < 0? "error":"ok");
+	return (retval);
 }
 
 
 int gpio_get_settings(gpio_device *dev, gpio_device_settings * settings)
 {
         memcpy(settings, &dev->settings, sizeof(gpio_device_settings));
+	gpio_debug_printf("gpio_get_settings: ok");
+
         return GPIO_OK;
 }
 
@@ -242,18 +296,28 @@ int gpio_get_settings(gpio_device *dev, gpio_device_settings * settings)
 
 int gpio_get_pin(gpio_device *dev, int pin)
 {
-        if (!dev->ops->get_pin)
-                return (GPIO_ERROR);
+	int retval;
 
-        return (dev->ops->get_pin(dev, pin));
+        if (!dev->ops->get_pin) {
+		gpio_debug_printf("gpio_get_pin: get_pin NULL");
+                return (GPIO_ERROR);
+	}
+
+        retval = dev->ops->get_pin(dev, pin);
+	gpio_debug_printf("gpio_get_pin: get_pin %s", retval < 0? "error":"ok");
+	return (retval);
 }
 
 int gpio_set_pin(gpio_device *dev, int pin, int level)
 {
+	int retval;
+
         if (!dev->ops->get_pin)
                 return (GPIO_ERROR);
 
-        return (dev->ops->set_pin(dev, pin, level));
+        retval = dev->ops->set_pin(dev, pin, level);
+	gpio_debug_printf("gpio_set_pin: set_pin %s", retval < 0? "error":"ok");
+	return (retval);
 }
 
 
@@ -264,32 +328,57 @@ int gpio_set_pin(gpio_device *dev, int pin, int level)
 
 int gpio_usb_find_device (gpio_device * dev, int idvendor, int idproduct)
 {
-        if (!dev->ops->find_device)
-                return (GPIO_ERROR);
+	int retval;
 
-        return (dev->ops->find_device(dev, idvendor, idproduct));
+        if (!dev->ops->find_device) {
+		gpio_debug_printf("gpio_usb_find_device: find_device NULL");
+                return (GPIO_ERROR);
+	}
+
+        retval = dev->ops->find_device(dev, idvendor, idproduct);
+	gpio_debug_printf("gpio_usb_find_device: find_device (0x%04x 0x%04x) %s", 
+		idvendor, idproduct, retval < 0? "error":"ok");
+	return (retval);
 }
 int gpio_usb_clear_halt (gpio_device * dev)
 {
-        if (!dev->ops->clear_halt)
-                return (GPIO_ERROR);
+	int retval;
 
-        return (dev->ops->clear_halt(dev));
+        if (!dev->ops->clear_halt) {
+		gpio_debug_printf("gpio_usb_clear_halt: clear_halt NULL");
+                return (GPIO_ERROR);
+	}
+
+        retval = dev->ops->clear_halt(dev);
+	gpio_debug_printf("gpio_usb_clear_halt: clear_halt %s", retval < 0? "error":"ok");
+	return (retval);
 }
 
 int gpio_usb_msg_write (gpio_device * dev, int value, char *bytes, int size)
 {
-        if (!dev->ops->msg_write)
-                return (GPIO_ERROR);
+	int retval;
 
-        return (dev->ops->msg_write(dev, value, bytes, size));
+        if (!dev->ops->msg_write) {
+		gpio_debug_printf("gpio_usb_msg_write: msg_write NULL");
+                return (GPIO_ERROR);
+ 	}
+
+        retval = dev->ops->msg_write(dev, value, bytes, size);
+	gpio_debug_printf("gpio_usb_msg_write: msg_write %s", retval < 0? "error":"ok");
+	return (retval);
 }
 
 int gpio_usb_msg_read (gpio_device * dev, int value, char *bytes, int size)
 {
-        if (!dev->ops->msg_read)
-                return (GPIO_ERROR);
+	int retval; 
 
-        return (dev->ops->msg_read(dev, value, bytes, size));
+        if (!dev->ops->msg_read) {
+		gpio_debug_printf("gpio_usb_msg_read: msg_read NULL");
+                return (GPIO_ERROR);
+	}
+
+        retval = dev->ops->msg_read(dev, value, bytes, size);
+	gpio_debug_printf("gpio_usb_msg_read: msg_read %s", retval < 0? "error":"ok");
+	return (retval);
 }
 #endif

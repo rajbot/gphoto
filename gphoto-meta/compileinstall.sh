@@ -17,11 +17,32 @@ then
     fi
 fi
 
+# FIXME hack. we have to determine default PKG_CONFIG_PATH somehow.
+if [ "x$PKG_CONFIG_PATH" = "x" ]
+then
+    PKG_CONFIG_PATH=/usr/lib/pkgconfig
+fi
+export PKG_CONFIG_PATH
+
 ########################################################################
 # compile & install stuff
 
 compileinstall() {
-    if ! ls "${distdir}"/*.tar.{gz,bz2} >& /dev/null
+    local ext bool
+    bool=true
+    for ext in .tar.gz .tar.bz2
+    do
+	if ! ls "${distdir}"/*${ext} >& /dev/null
+	then
+	    echo "$0: No *${ext} source distributions found."
+	else
+	    echo "$0: *${ext} source distributions found."
+	    bool=false
+	    break
+	fi
+    done
+
+    if [ "$bool" = "true" ]
     then
 	echo "$0: Fatal: No source distributions found. Did you run bootstrap.sh?"
 	exit 1

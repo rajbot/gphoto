@@ -31,7 +31,7 @@
 
 #include "gpio.h"
 
-#undef GPIO_DEBUG
+#undef GPIO_USB_DEBUG
 
 int gpio_usb_list(gpio_device_info *list, int *count) {
 
@@ -60,7 +60,7 @@ int gpio_usb_open(gpio_device * dev)
 {
 	int ret;
 
-#ifdef GPIO_DEBUG
+#ifdef GPIO_USB_DEBUG
 	printf ("gpio_usb_open() called\n");
 #endif
 	dev->device_handle = usb_open(dev->settings.usb.udev);
@@ -94,7 +94,7 @@ int gpio_usb_close(gpio_device * dev)
 
 	int ret;
 
-#ifdef GPIO_DEBUG
+#ifdef GPIO_USB_DEBUG
 	printf ("gpio_usb_close() called\n");
 #endif
 	ret = usb_release_interface(dev->device_handle, dev->settings.usb.interface);
@@ -130,10 +130,10 @@ int gpio_usb_clear_halt (gpio_device * dev)
 int gpio_usb_write(gpio_device * dev, char *bytes, int size)
 {
 	int i;
-#ifdef GPIO_DEBUG
+#ifdef GPIO_USB_DEBUG
 	printf ("gpio_usb_write(): ");
 	for (i=0;i<size;i++)
-	  printf ("%02x ",bytes[i]);
+	  printf ("%02x ",(unsigned char)bytes[i]);
 	printf("\n");
 #endif
 	return usb_bulk_write(dev->device_handle, dev->settings.usb.outep,
@@ -145,7 +145,7 @@ int gpio_usb_read(gpio_device * dev, char *bytes, int size)
 	int i;
 	n=usb_bulk_read(dev->device_handle, dev->settings.usb.inep,
 			     bytes, size, dev->timeout);
-#ifdef GPIO_DEBUG
+#ifdef GPIO_USB_DEBUG
 	printf ("gpio_usb_read(timeout=%d): ",dev->timeout);
 	for (i=0;i<n;i++)
 	  printf ("%02x ",(unsigned char)(bytes[i]));
@@ -185,14 +185,6 @@ int gpio_usb_set_pin(gpio_device * dev, int pin, int level)
 int gpio_usb_update(gpio_device * dev)
 {
 	memcpy(&dev->settings, &dev->settings_pending, sizeof(dev->settings));
-	/*
-	if (dev->device_handle) {
-		if (gpio_usb_close(dev) == GPIO_ERROR)
-			return GPIO_ERROR;
-		if (gpio_usb_open(dev) == GPIO_ERROR)
-			return GPIO_ERROR;
-	}
-	*/
 	return GPIO_OK;
 }
 

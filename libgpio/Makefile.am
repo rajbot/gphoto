@@ -36,7 +36,7 @@ libgpio_la_LDFLAGS = -version-info @LIBGPIO_VERSION_INFO@ -DHAVE_TERMIOS_H
 libgpio_la_SOURCES = 	gpio.c gpio.h \
 			gpio-serial.c gpio-serial.h \
 			gpio-parallel.c gpio-parallel.h \
-			$(SOCKET_HEADER) $(SOCKET_SOURCE)
+			$(SOCKET_HEADER) $(SOCKET_SOURCE) \
 			$(IEEE1394_HEADER) $(IEEE1394_SOURCE) \
 			$(USB_HEADER) $(USB_SOURCE)
 

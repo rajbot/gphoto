@@ -1,3 +1,9 @@
+2000-07-09  Fabrice Bellet  <Fabrice.Bellet@creatis.insa-lyon.fr>
+
+	* Makefile.am : fixed typo.
+	* gpio-usb.c : cosmetic namespace changes.
+	* gpio.c : fixed compilation warnings.
+
 2000-01-07  Ole Aamot  <oka@ifi.uio.no>
 
 	* Added USB patch from Johannes Erdfelt <jerdfelt@valinux.com> 

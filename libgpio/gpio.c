@@ -25,7 +25,8 @@
    Boston, MA 02111-1307, USA.
  */
 
-#include "stdlib.h"
+#include <stdlib.h>
+#include <string.h>
 #include "gpio.h"
 
 gpio_device_info device_list[256];

@@ -40,7 +40,7 @@ set | grep '^parm_'
 
 
 ########################################################################
-# installautotools - check for necessary tools to be installed
+# installautotools - download, build and locally install build tools
 
 function installautotools() {
     local tool URL restofline

@@ -186,7 +186,7 @@ camera_list_contents (BonoboStorage *storage, const CORBA_char *path, Bonobo_Sto
 		list->_buffer [i + gp_list_count (&folder_list)].name = CORBA_string_dup (gp_list_entry (&file_list, i)->name);
 		list->_buffer [i + gp_list_count (&folder_list)].type = Bonobo_STORAGE_TYPE_REGULAR;
 		list->_buffer [i + gp_list_count (&folder_list)].size = 0;
-		list->_buffer [i + gp_list_count (&folder_list)].content_type = NULL;
+		list->_buffer [i + gp_list_count (&folder_list)].content_type = CORBA_string_dup ("image/jpeg");
 	}
 
 	return list;

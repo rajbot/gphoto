@@ -37,22 +37,11 @@ extern EPaned*			main_paned;
 /* Prototypes */
 /**************/
 
-void on_refresh_activate 		(BonoboUIComponent* component, gpointer folder, const gchar* name);
 void on_capture_preview_activate 	(BonoboUIComponent* component, gpointer folder, const gchar* name);
 void on_capture_image_activate		(BonoboUIComponent* component, gpointer folder, const gchar* name);
 void on_capture_video_activate		(BonoboUIComponent* component, gpointer folder, const gchar* name);
 void on_upload_activate			(BonoboUIComponent* component, gpointer folder, const gchar* name);
 void on_manual_activate 		(BonoboUIComponent* component, gpointer folder, const gchar* name);
-void on_save_file_activate		(BonoboUIComponent* component, gpointer folder, const gchar* name);
-void on_save_file_as_activate		(BonoboUIComponent* component, gpointer folder, const gchar* name);
-void on_save_preview_activate		(BonoboUIComponent* component, gpointer folder, const gchar* name);
-void on_save_preview_as_activate	(BonoboUIComponent* component, gpointer folder, const gchar* name);
-void on_delete_activate			(BonoboUIComponent* component, gpointer folder, const gchar* name);
-
-void on_tree_item_expand        (GtkTreeItem* tree_item, gpointer user_data);
-void on_tree_item_collapse      (GtkTreeItem* tree_item, gpointer user_data);
-
-void on_tree_item_select	(GtkTreeItem* item, gpointer user_data);
 
 void on_drag_data_received                      (GtkWidget* widget, GdkDragContext* context, gint x, gint y, GtkSelectionData* selection_data, guint info, guint time);
 void on_camera_tree_file_drag_data_get          (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data);
@@ -61,13 +50,6 @@ void on_camera_tree_folder_drag_data_get        (GtkWidget* widget, GdkDragConte
 /*************/
 /* Callbacks */
 /*************/
-
-void
-on_refresh_activate (BonoboUIComponent* component, gpointer folder, const gchar *name)
-{
-        /* Clean the folder... */
-        camera_tree_folder_clean (GTK_TREE_ITEM (folder));
-}
 
 void
 on_capture_preview_activate (BonoboUIComponent* component, gpointer folder, const gchar* name)
@@ -94,36 +76,6 @@ on_upload_activate (BonoboUIComponent* component, gpointer folder, const gchar* 
 }
 
 void
-on_save_preview_activate (BonoboUIComponent* component, gpointer file, const gchar* name)
-{
-	save (GTK_TREE_ITEM (file), TRUE);
-}
-
-void
-on_save_preview_as_activate (BonoboUIComponent* component, gpointer file, const gchar* name)
-{
-	download (GTK_TREE_ITEM (file), NULL, TRUE);
-}
-
-void
-on_delete_activate (BonoboUIComponent* component, gpointer file, const gchar* name)
-{
-	delete (GTK_TREE_ITEM (file));
-}
-
-void
-on_save_file_activate (BonoboUIComponent* component, gpointer file, const gchar* name)
-{
-	save (GTK_TREE_ITEM (file), FALSE);
-}
-
-void
-on_save_file_as_activate (BonoboUIComponent* component, gpointer file, const gchar* name)
-{
-	download (GTK_TREE_ITEM (file), NULL, FALSE);
-}
-
-void
 on_manual_activate (BonoboUIComponent* component, gpointer folder, const gchar* name)
 {
 	Camera*		camera = gtk_object_get_data (GTK_OBJECT (folder), "camera");
@@ -138,40 +90,6 @@ on_manual_activate (BonoboUIComponent* component, gpointer folder, const gchar* 
 		gchar* tmp = g_strdup_printf (_("Could not get camera manual!\n(%s)"), gp_camera_result_as_string (camera, result));
 		gnome_error_dialog_parented (tmp, main_window);
 		g_free (tmp);
-	}
-}
-
-void
-on_tree_item_expand (GtkTreeItem* tree_item, gpointer user_data)
-{
-        if (!gtk_object_get_data (GTK_OBJECT (tree_item), "populated")) camera_tree_folder_populate (tree_item);
-}
-
-void
-on_tree_item_collapse (GtkTreeItem* tree_item, gpointer user_data)
-{
-        /* We currently don't do anything here. */
-}
-
-void
-on_tree_item_select (GtkTreeItem* item, gpointer user_data)
-{
-	GtkWidget*		widget;
-	gchar*			url;
-
-	g_return_if_fail (item);
-	g_return_if_fail (main_paned);
-	g_return_if_fail (url = gtk_object_get_data (GTK_OBJECT (item), "url"));
-
-	/* If there is an old viewer, destroy it. */
-	if (main_paned->child2) gtk_container_remove (GTK_CONTAINER (main_paned), main_paned->child2);
-
-	/* Display! */
-	if (!(widget = bonobo_widget_new_control (url, corba_container))) {
-		g_warning (_("Could not get widget to show the item '%s'!"), url);
-	} else {
-		gtk_widget_show (widget);
-		e_paned_pack2 (main_paned, widget, TRUE, TRUE);
 	}
 }
 
@@ -204,287 +122,11 @@ on_drag_data_received (GtkWidget *widget, GdkDragContext *context, gint x, gint 
 /* Functions */
 /*************/
 
-void
-camera_tree_folder_clean (GtkTreeItem* folder)
-{
-	Bonobo_Storage			storage;
-	GtkWidget*			tree;
-	gchar*				url;
-	Bonobo_Storage_DirectoryList*	list;
-
-	g_return_if_fail (folder);
-	g_return_if_fail (url = gtk_object_get_data (GTK_OBJECT (folder), "url"));
-	g_return_if_fail (storage = gtk_object_get_data (GTK_OBJECT (folder), "storage"));
-
-	/* Delete all items of subtree. Then, delete the subtree.*/
-	if (folder->subtree) {
-		gint i;
-		for (i = g_list_length (GTK_TREE (folder->subtree)->children) - 1; i >= 0; i--) {
-			gtk_container_remove (GTK_CONTAINER (folder->subtree), GTK_WIDGET (g_list_nth_data (GTK_TREE (folder->subtree)->children, i)));
-		}
-		gtk_tree_item_remove_subtree (folder);
-	}
-
-	/* Do we have contents? */
-	if ((list = gtk_object_get_data (GTK_OBJECT (folder), "list"))) {
-		if (list->_length > 0) {
-			gtk_widget_show (tree = gtk_tree_new ());
-			gtk_tree_item_set_subtree (folder, tree);
-		}
-	}
-
-	gtk_object_set_data (GTK_OBJECT (folder), "populated", NULL);
-}
-
-void 
-camera_tree_folder_populate (GtkTreeItem* folder)
-{
-	gchar*				url = gtk_object_get_data (GTK_OBJECT (folder), "url");
-	Bonobo_Storage_DirectoryList*	list;
-	int 				i;
-	gchar*				tmp;
-
-	g_return_if_fail (folder->subtree);
-	g_return_if_fail (url);
-	g_return_if_fail (list = gtk_object_get_data (GTK_OBJECT (folder), "list"));
-
-	/* Does the folder contain anything? */
-	for (i = 0; i < list->_length; i++) {
-		switch (list->_buffer [i].type) {
-		case Bonobo_STORAGE_TYPE_DIRECTORY:
-			if (url[strlen(url) - 1] == '/') tmp = g_strconcat (url, list->_buffer [i].name, NULL);
-			else tmp = g_strconcat (url, "/", list->_buffer [i].name, NULL);
-			g_warning ("Adding folder '%s' (in '%s', name '%s')...", tmp, url, list->_buffer [i].name);
-			camera_tree_folder_add (GTK_TREE (folder->subtree), NULL, tmp);
-			g_free (tmp);
-			break;
-		case Bonobo_STORAGE_TYPE_REGULAR:
-			if (url[strlen(url) - 1] == '/') tmp = g_strconcat (url, list->_buffer [i].name, NULL);
-			else tmp = g_strconcat (url, "/", list->_buffer [i].name, NULL);
-			g_warning ("Adding file '%s' (in '%s', name '%s')...", tmp, url, list->_buffer [i].name);
-			camera_tree_file_add (GTK_TREE (folder->subtree), tmp);
-			g_free (tmp);
-			break;
-		default:
-			g_assert_not_reached ();
-		}
-	}
-
-	gtk_object_set_data (GTK_OBJECT (folder), "populated", GINT_TO_POINTER (1));
-}
-
-void
-camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* url)
-{
-	Bonobo_Storage			storage = CORBA_OBJECT_NIL;
-	Bonobo_Storage_DirectoryList*	list;
-	GtkWidget*			item;
-	gboolean			root = (camera != NULL);
-	GtkTargetEntry 			target_table[] = {{"text/uri-list", 0, 0}};
-	CORBA_Environment		ev;
-
-	g_return_if_fail (tree);
-	g_return_if_fail (url);
-
-	if (!camera) g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (tree->tree_owner), "camera"));
-
-	/* Create the item. */
-	if (root) {
-		gint 			i;
-		gchar*			name;
-		gchar*			tmp = url + 9;
-
-		/* Create the storage. */
-		CORBA_exception_init (&ev);
-		storage = bonobo_get_object (url, "IDL:Bonobo/Storage:1.0", &ev);
-		if (BONOBO_EX (&ev)) g_warning (_("Could not get storage for '%s'! (%s)"), url, bonobo_exception_get_text (&ev));
-		CORBA_exception_free (&ev);
-
-		/* Extract the camera's name. */
-		for (i = 0; *tmp != 0; i++) {
-			if (*tmp == '/') break;
-			tmp++;
-		}
-		name = g_strndup (url + 9, i);
-		gtk_widget_show (item = gtk_tree_item_new_with_label (name));
-		g_free (name);
-		
-	} else {
-		if ((storage = gtk_object_get_data (GTK_OBJECT (tree->tree_owner), "storage"))) {
-
-			/* Open the storage. */
-			CORBA_exception_init (&ev);
-			storage = Bonobo_Storage_openStorage (storage, g_basename (url), Bonobo_Storage_READ, &ev);
-			if (BONOBO_EX (&ev)) g_warning (_("Could not open storage for '%s'! (%s)"), url, bonobo_exception_get_text (&ev));
-			CORBA_exception_free (&ev);
-			
-		} else g_warning (_("There is no storage associated to the higher level tree item!"));
-						
-		gtk_widget_show (item = gtk_tree_item_new_with_label (g_basename (url)));
-	}
-        gtk_tree_append (tree, item);
-
-	if (storage) {
-		gtk_object_set_data_full (GTK_OBJECT (item), "storage", storage, (GtkDestroyNotify) bonobo_object_unref);
-
-		/* Get the folder's contents. */
-		CORBA_exception_init (&ev);
-		list = Bonobo_Storage_listContents (storage, "", Bonobo_FIELD_TYPE, &ev);
-		if (BONOBO_EX (&ev)) g_warning (_("Could not get list of contents for '%s'!\n(%s)"), url, bonobo_exception_get_text (&ev));
-		CORBA_exception_free (&ev);
-		
-		gtk_object_set_data (GTK_OBJECT (item), "list", list);
-	}
-
-	/* The camera is ours. */
-	gp_camera_ref (camera);
-	gtk_object_set_data_full (GTK_OBJECT (item), "camera", camera, (GtkDestroyNotify) gp_camera_unref);
-
-	gtk_object_set_data_full (GTK_OBJECT (item), "url", g_strdup (url), (GtkDestroyNotify) g_free);
-
-        /* For drag and drop. */
-        //FIXME: Right now, only drops onto the camera (= root folder) work. Why?!?
-        gtk_drag_dest_set (item, GTK_DEST_DEFAULT_ALL, target_table, 1, GDK_ACTION_COPY);
-	gtk_drag_source_set (item, GDK_BUTTON1_MASK | GDK_BUTTON3_MASK, target_table, 1, GDK_ACTION_COPY);
-
-        /* Connect the signals. */
-        gtk_signal_connect (GTK_OBJECT (item), "drag_data_received", GTK_SIGNAL_FUNC (on_drag_data_received), NULL);
-	gtk_signal_connect (GTK_OBJECT (item), "expand", GTK_SIGNAL_FUNC (on_tree_item_expand), NULL);
-        gtk_signal_connect (GTK_OBJECT (item), "collapse", GTK_SIGNAL_FUNC (on_tree_item_collapse), NULL);
-        gtk_signal_connect (GTK_OBJECT (item), "select", GTK_SIGNAL_FUNC (on_tree_item_select), NULL);
-	gtk_signal_connect (GTK_OBJECT (item), "drag_data_get", GTK_SIGNAL_FUNC (on_camera_tree_folder_drag_data_get), NULL);
-
-	/* Clean the item (in order to check if the folder is empty or not). */
-	camera_tree_folder_clean (GTK_TREE_ITEM (item));
-
-	/* Prevent this folder from being removed. */
-	gtk_object_set_data (GTK_OBJECT (item), "checked", GINT_TO_POINTER (1));
-}
-
-void
-camera_tree_file_add (GtkTree* tree, gchar* url)
-{
-	GtkWidget*		item;
-	GtkTargetEntry  	target_table[] = {{"text/uri-list", 0, 0}};
-
-	g_return_if_fail (tree);
-	g_return_if_fail (url);
-
-	/* Add the file to the tree. */
-        gtk_widget_show (item = gtk_tree_item_new_with_label (g_basename (url)));
-        gtk_tree_append (tree, item);
-
-	gtk_object_set_data_full (GTK_OBJECT (item), "url", g_strdup (url), (GtkDestroyNotify) g_free);
-
-	/* Drag and Drop */
-	gtk_drag_source_set (item, GDK_BUTTON1_MASK | GDK_BUTTON3_MASK, target_table, 1, GDK_ACTION_COPY);
-
-        /* Connect the signals. */
-        gtk_signal_connect (GTK_OBJECT (item), "select", GTK_SIGNAL_FUNC (on_tree_item_select), NULL);
-	gtk_signal_connect (GTK_OBJECT (item), "drag_data_get", GTK_SIGNAL_FUNC (on_camera_tree_file_drag_data_get), NULL);
-}
-
-void
-main_tree_update (void)
-{
-	GConfClient*	client;
-        gint            i;
-
-	g_return_if_fail (main_tree);
-	g_return_if_fail (client = gconf_client_get_default ());
-
-        /* Mark each camera in the tree as unchecked. */
-        for (i = 0; i < g_list_length (main_tree->children); i++) gtk_object_set_data (GTK_OBJECT (g_list_nth_data (main_tree->children, i)), "checked", NULL);
-
-	/* Investigate if all cameras are in the tree. */
-	for (i = 0; ; i++) {
-		gchar* path;
-
-		/* Check each entry in gconf's database. */
-		path = g_strdup_printf ("/apps/" PACKAGE "/camera/%i", i);
-		if (gconf_client_dir_exists (client, path, NULL)) {
-			Camera*	camera = NULL;
-			gint	j;
-			gchar* 	model;
-			gchar* 	name;
-			gchar* 	port;
-			gchar* 	tmp;
-
-			tmp = g_strconcat (path, "/model", NULL);
-			model = g_strdup (gconf_client_get_string (client, tmp, NULL));
-			g_free (tmp);
-
-			tmp = g_strconcat (path, "/port", NULL);
-			port = g_strdup (gconf_client_get_string (client, tmp, NULL));
-			g_free (tmp);
-
-			tmp = g_strconcat (path, "/name", NULL);
-			name = g_strdup (gconf_client_get_string (client, tmp, NULL));
-			g_free (tmp);
-
-	                /* Do we have this camera in the tree? */
-	                for (j = 0; j < g_list_length (main_tree->children); j++) {
-				GtkTreeItem* 	item = GTK_TREE_ITEM (g_list_nth_data (main_tree->children, j));
-				gchar*		label;
-				
-	                	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
-				gtk_label_get (GTK_LABEL (GTK_BIN (item)->child), &label);
-				if (!strcmp (label, name)) {
-	
-	                                /* We found the camera. Changed? */
-					if ((strcmp (camera->model, model)) || (strcmp (camera->port->name, port))) {
-
-						/* We simply remove the camera and add a new one to the tree. */
-						gtk_container_remove (GTK_CONTAINER (main_tree), GTK_WIDGET (item));
-						j = g_list_length (main_tree->children) - 1;
-					}
-				}
-	                }
-	                if (j == g_list_length (main_tree->children)) {
-				gint result;
-	
-	                        /* We don't have the camera in the tree (yet). */
-				camera = NULL;
-	                        if ((result = gp_camera_new_from_gconf (&camera, name)) != GP_OK) {
-					gchar* tmp = g_strdup_printf (_("Could not connect to the camera!\n(%s)"), gp_camera_result_as_string (camera, result));
-					gnome_error_dialog_parented (tmp, main_window);
-					g_free (tmp);
-				} else {
-					gchar* url = g_strdup_printf ("camera://%s/", name);
-					
-					camera_tree_folder_add (main_tree, camera, url);
-					g_free (url);
-					gp_camera_unref (camera);
-				}
-	                }
-
-			g_free (model);
-			g_free (name);
-			g_free (port);
-	        } else {
-			g_free (path);
-			break;
-		}
-		g_free (path);
-	}
-	
-        /* Delete all unchecked cameras. */
-        for (i = g_list_length (main_tree->children) - 1; i >= 0; i--) {
-		GtkWidget* item = g_list_nth_data (main_tree->children, i);
-        	if (!gtk_object_get_data (GTK_OBJECT (item), "checked")) gtk_container_remove (GTK_CONTAINER (main_tree), item);
-        }
-
-	gtk_object_unref (GTK_OBJECT (client));
-}
-
 #if 0
 void
 camera_tree_item_popup_create (GtkTreeItem* item)
 {
 	Camera*			camera = gtk_object_get_data (GTK_OBJECT (item), "camera");
-	CameraWidget*		window_camera = NULL;
-	CameraWidget*		window_file = NULL;
-	CameraWidget*		window_folder = NULL;
         CORBA_Environment       ev;
         xmlDocPtr               doc;
         xmlNsPtr                ns;
@@ -529,17 +171,6 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 	/* Folder or file? */
 	if (gtk_object_get_data (GTK_OBJECT (item), "file")) {
 
-	        /* File configuration? */
-	        if ((result = gp_camera_file_config_get (camera, &window_file, folder, file)) == GP_OK) {
-	                xmlAddChild (node, node_child = xmlNewNode (ns, "submenu"));
-	                xmlSetProp (node_child, "name", "File Configuration");
-	                xmlSetProp (node_child, "_label", "File Configuration");
-			xmlSetProp (node_child, "_tip", "File configuration");
-			popup_prepare (component, window_file, node_child, command, ns);
-	                xmlAddChild (node, xmlNewNode (ns, "separator"));
-			gtk_object_set_data_full (GTK_OBJECT (item), "window_file", window_file, (GtkDestroyNotify) gp_widget_unref);
-	        }
-	
 	        /* Save preview? */
 	        if (camera->abilities->file_preview) {
 	                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
@@ -586,22 +217,6 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 		/* Root? */
 		if (strcmp (gnome_vfs_uri_get_path (uri), "/") == 0) {
 
-	                /* Camera configuration? */
-			if (camera->abilities->config) {
-		                if ((result = gp_camera_config_get (camera, &window_camera)) == GP_OK) {
-		                        xmlAddChild (node, node_child = xmlNewNode (ns, "submenu"));
-		                        xmlSetProp (node_child, "name", "Camera Configuration");
-		                        xmlSetProp (node_child, "_label", "Camera Configuration");
-					xmlSetProp (node_child, "_tip", "Camera configuration");
-		                        popup_prepare (component, window_camera, node_child, command, ns);
-					gtk_object_set_data_full (GTK_OBJECT (item), "window_camera", window_camera, (GtkDestroyNotify) gp_widget_unref);
-		                } else {
-					tmp = g_strdup_printf (_("Could not get camera configuration!\n(%s)"), gp_camera_result_as_string (camera, result));
-					bonobo_ui_component_set_status (main_component, tmp, NULL);
-					g_free (tmp);
-				}
-			}
-	
 	                /* Manual. */
 	                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
 	                xmlSetProp (node_child, "name", "Manual");
@@ -641,17 +256,6 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 	                }
 		}
 
-	        /* Folder configuration? */
-	        if ((result = gp_camera_folder_config_get (camera, &window_folder, "/")) == GP_OK) {
-	                xmlAddChild (node, node_child = xmlNewNode (ns, "submenu"));
-	                xmlSetProp (node_child, "name", "Folder Configuration");
-	                xmlSetProp (node_child, "_label", "Folder Configuration");
-			xmlSetProp (node_child, "_tip", "Folder configuration");
-	                popup_prepare (component, window_folder, node_child, command, ns);
-        	        xmlAddChild (node, xmlNewNode (ns, "separator"));
-			gtk_object_set_data_full (GTK_OBJECT (item), "window_folder", window_folder, (GtkDestroyNotify) gp_widget_unref);
-	        }
-	
 	        /* Upload? */
 	        if (camera->abilities->file_put) {
 	                xmlAddChild (node, node_child = xmlNewNode (ns, "menuitem"));
@@ -684,21 +288,6 @@ camera_tree_item_popup_create (GtkTreeItem* item)
                 tmp = g_strdup_printf ("/popups/%i", counter);
                 bonobo_window_add_popup (BONOBO_WINDOW (main_window), GTK_MENU (menu), tmp);
                 g_free (tmp);
-                if (window_camera) {
-			tmp = g_strdup_printf ("/popups/%i/Camera Configuration", counter);
-			popup_fill (component, tmp, window_camera, window_camera, TRUE);
-			g_free (tmp);
-		}
-                if (window_folder) {
-			tmp = g_strdup_printf ("/popups/%i/Folder Configuration", counter);
-			popup_fill (component, tmp, window_folder, window_folder, FALSE);
-			g_free (tmp);
-		}
-		if (window_file) {
-			tmp = g_strdup_printf ("/popups/%i/File Configuration", counter);
-			popup_fill (component, tmp, window_file, window_file, FALSE);
-			g_free (tmp);
-		}
                 counter++;
         }
 

@@ -21,6 +21,7 @@ gnocam_SOURCES =\
  file-operations.h file-operations.c\
  frontend.h frontend.c\
  gnocam.h gnocam.c\
+ gnocam-shortcut-bar.h gnocam-shortcut-bar.c\
  preferences.h preferences.c
 
 gnocam_LDFLAGS =\

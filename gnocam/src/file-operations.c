@@ -190,12 +190,6 @@ upload (GtkTreeItem* folder, GnomeVFSURI* uri)
 		/* Free exception. */
 		CORBA_exception_free (&ev);
 		CORBA_exception_free (&dummy);
-
-		/* Add the new file to the tree. */
-		camera_tree_file_add (
-			GTK_TREE (folder->subtree), 
-			gnome_vfs_uri_append_file_name (gtk_object_get_data (GTK_OBJECT (folder), "uri"), gnome_vfs_uri_get_basename (uri)));
-		
 	} else {
 
 	        /* Ask the user for a filename. Pop up the file selection dialog. */

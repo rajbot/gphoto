@@ -7,6 +7,7 @@
 #include <liboaf/liboaf.h>
 #include <bonobo.h>
 #include <gphoto2.h>
+
 #include <gal/e-paned/e-hpaned.h>
 
 #include "gnocam.h"
@@ -14,6 +15,7 @@
 #include "frontend.h"
 #include "preferences.h"
 #include "file-operations.h"
+#include "gnocam-shortcut-bar.h"
 #include "Gphoto.h"
 
 /********************/
@@ -31,60 +33,38 @@ EPaned*			main_paned	= NULL;
 /* Prototypes. */
 /***************/
 
-void on_camera_setup_changed (GConfClient* client, guint notify_id, GConfEntry* entry, gpointer user_data);
-
-void on_save_previews_activate 		(GtkWidget* widget, gpointer user_data);
-void on_save_previews_as_activate 	(GtkWidget* widget, gpointer user_data);
-void on_save_files_activate		(GtkWidget* widget, gpointer user_data);
-void on_save_files_as_activate		(GtkWidget* widget, gpointer user_data);
-void on_gnocam_delete_activate		(GtkWidget* widget, gpointer user_data);
+void on_shortcut_bar_item_selected (EShortcutBar* shortcut_bar, GdkEvent* event, gint group_num, gint item_num);
 
 /**************/
 /* Callbacks. */
 /**************/
 
 void
-on_camera_setup_changed (GConfClient* client, guint notify_id, GConfEntry* entry, gpointer user_data)
+on_shortcut_bar_item_selected (EShortcutBar* shortcut_bar, GdkEvent* event, gint group_num, gint item_num)
 {
-        main_tree_update ();
-}
+	gchar* 		url;
+	gchar* 		name;
+	GtkWidget*	widget;
+
+	/* If there is an old viewer, destroy it. */
+	if (main_paned->child2) gtk_container_remove (GTK_CONTAINER (main_paned), main_paned->child2);
+
+	/* Get information about the item. */
+	e_shortcut_model_get_item_info (shortcut_bar->model, group_num, item_num, &url, &name);
+
+	/* Get widget */
+        if (!(widget = bonobo_widget_new_control (url, corba_container))) {
+                g_warning (_("Could not get widget for '%s'!"), url);
+        } else {
+                gtk_widget_show (widget);
+                e_paned_pack2 (main_paned, widget, TRUE, TRUE);
+        }
+}															
 
 void
 on_about_activate (BonoboUIComponent* component, gpointer user_data, const gchar* path)
 {
 	g_return_if_fail (glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "about"));
-}
-
-void 
-on_save_previews_activate (GtkWidget* widget, gpointer user_data)
-{
-        save_all_selected (main_tree, TRUE, FALSE);
-}
-
-void
-on_save_previews_as_activate (GtkWidget* widget, gpointer user_data)
-{
-	save_all_selected (main_tree, TRUE, TRUE);
-}
-
-void
-on_save_files_activate (GtkWidget* widget, gpointer user_data)
-{
-	save_all_selected (main_tree, FALSE, FALSE);
-}
-
-void 
-on_save_files_as_activate (GtkWidget* widget, gpointer user_data)
-{
-	save_all_selected (main_tree, FALSE, TRUE);
-}
-
-void 
-on_gnocam_delete_activate (GtkWidget* widget, gpointer user_data)
-{
-	gint 			i;
-	
-	for (i = 0; i < g_list_length (GTK_TREE_SELECTION (main_tree)); i++) delete (GTK_TREE_ITEM (g_list_nth_data (GTK_TREE_SELECTION (main_tree), i)));
 }
 
 /*************/
@@ -95,18 +75,12 @@ int main (int argc, char *argv[])
 {
 	GConfClient*		client;
 	GError*			gerror = NULL;
-	GtkWidget*		widget;
-	GtkWidget*		scrolledwindow;
+	GtkWidget*		shortcut_bar;
 	BonoboUIContainer*      container;
 	BonoboUIVerb		verb [] = {
 		BONOBO_UI_UNSAFE_VERB ("Exit", gtk_main_quit),
 		BONOBO_UI_UNSAFE_VERB ("Preferences", preferences),
 		BONOBO_UI_UNSAFE_VERB ("About", on_about_activate),
-		BONOBO_UI_UNSAFE_VERB ("SavePreviews", on_save_previews_activate),
-		BONOBO_UI_UNSAFE_VERB ("SavePreviewsAs", on_save_previews_as_activate),
-		BONOBO_UI_UNSAFE_VERB ("SaveFiles", on_save_files_activate),
-		BONOBO_UI_UNSAFE_VERB ("SaveFilesAs", on_save_files_as_activate),
-		BONOBO_UI_UNSAFE_VERB ("Delete", on_gnocam_delete_activate),
 		BONOBO_UI_VERB_END};
 	gint			result;
 	Bonobo_Unknown		bag, property;
@@ -162,21 +136,18 @@ int main (int argc, char *argv[])
 	}
 	gp_frontend_register (gp_frontend_status, gp_frontend_progress, gp_frontend_message, gp_frontend_confirm, NULL);
 
-	/* Create the window. */
+	/* Create the window and hpaned. */
 	main_window = GTK_WINDOW (bonobo_window_new (PACKAGE, PACKAGE));
 	gtk_signal_connect (GTK_OBJECT (main_window), "delete_event", GTK_SIGNAL_FUNC (gtk_main_quit), NULL);
-
-	/* Create the tree. */
 	gtk_widget_show (GTK_WIDGET (main_paned = E_PANED (e_hpaned_new ())));
-	gtk_widget_show (scrolledwindow = gtk_scrolled_window_new (NULL, NULL));
-	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-	e_paned_pack1 (main_paned, scrolledwindow, TRUE, TRUE);
-	gtk_widget_show (widget = gtk_viewport_new (NULL, NULL));
-	gtk_container_add (GTK_CONTAINER (scrolledwindow), widget);
-	gtk_widget_show (GTK_WIDGET (main_tree = GTK_TREE (gtk_tree_new ())));
-	gtk_tree_set_selection_mode (GTK_TREE (main_tree), GTK_SELECTION_MULTIPLE);
-	gtk_container_add (GTK_CONTAINER (widget), GTK_WIDGET (main_tree));
 	bonobo_window_set_contents (BONOBO_WINDOW (main_window), GTK_WIDGET (main_paned));
+
+	/* Create the shortcut bar. */
+	shortcut_bar = gnocam_shortcut_bar_new ();
+	gnocam_shortcut_bar_refresh (GNOCAM_SHORTCUT_BAR (shortcut_bar));
+	gtk_widget_show (shortcut_bar);
+	e_paned_add1 (E_PANED (main_paned), shortcut_bar);
+	gtk_signal_connect (GTK_OBJECT (shortcut_bar), "item_selected", (GtkSignalFunc) on_shortcut_bar_item_selected, NULL);
 
 	/* Create the component. */
 	corba_container = bonobo_object_corba_objref (BONOBO_OBJECT (container = bonobo_ui_container_new ()));
@@ -196,9 +167,6 @@ int main (int argc, char *argv[])
 		/* Popup a welcome message. */
 		g_assert ((glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "welcome_messagebox")));
 	} 
-
-        /* Populate the camera tree. */
-	main_tree_update ();
 
 	/* Show what we have done so far. */
 	gtk_widget_show (GTK_WIDGET (main_window));

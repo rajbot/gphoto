@@ -25,6 +25,8 @@ bin_PROGRAMS = \
 bonobo_moniker_camera_SOURCES =\
  bonobo-moniker-camera.h bonobo-moniker-camera.c\
  gnocam-control.h gnocam-control.c\
+ gnocam-control-file.h gnocam-control-file.c\
+ gnocam-control-folder.h gnocam-control-folder.c\
  utils.h utils.c
 
 bonobo_moniker_camera_LDADD=\

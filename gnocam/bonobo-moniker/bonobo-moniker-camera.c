@@ -51,7 +51,7 @@ camera_resolve (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options, co
 
 	/* Control? */
 	if (!strcmp (requested_interface, "IDL:Bonobo/Control:1.0")) {
-		GnoCamControl* control;
+		GnoCamControl*	control;
 		
 		control = gnocam_control_new (moniker, options, ev);
 		if (BONOBO_EX (ev)) {
@@ -60,7 +60,6 @@ camera_resolve (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options, co
 		}
 		g_return_val_if_fail (control, CORBA_OBJECT_NIL);
 		
-		g_warning ("END: camera_resolve");
 		return (CORBA_Object_duplicate (BONOBO_OBJREF (control), ev));
 	}
 

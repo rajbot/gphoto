@@ -409,6 +409,7 @@ function builddist {
 		for dir in html xhtml html-nochunks xhtml-nochunks man pdf txt
 		do
 		    if ls "${docdir}/${dir}/"* > /dev/null 2>&1
+		    then
 			local base
 			base="${distdir}/${module}-${dir}.tar"
 			tar cvfhz "${base}.gz" "${dir}/"

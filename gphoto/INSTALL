@@ -45,7 +45,9 @@ ftp://ftp.jimpick.com/pub/gnome/snap/gphoto/ if you prefer this.
 Now you will want to go through and build and install gPhoto:
 
        cd gphoto
-       make && make install
+       ./autogen.sh
+       make
+       make install
 
 After you have checked the code out, you can use
 

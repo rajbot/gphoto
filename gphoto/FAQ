@@ -57,6 +57,7 @@ f. What is the current version of gPhoto?
 g. How do I build and install gPhoto from CVS source?
 
            cd gphoto/
+           ./autogen.sh
            make
            make install
 

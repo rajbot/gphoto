@@ -44,4 +44,5 @@ rm -f SUPPORTED-CAMERAS latest-bz2 latest-gz
 ln -s "$(basename "$base")"/bz2 latest-bz2
 ln -s "$(basename "$base")"/gz latest-gz
 
+chmod 0604 .htaccess
 chmod 0705 .

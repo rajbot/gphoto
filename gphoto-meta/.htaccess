@@ -1,0 +1,18 @@
+AddDescription "GTK widgets for EXIF tags" libexif-gtk-*.tar.*
+AddDescription "EXIF parser" libexif-*.tar.*
+AddDescription "Manual (one HTML file)" gphoto2-manual-html-nochunks*.tar.*
+AddDescription "Manual (one XHTML file)" gphoto2-manual-xhtml-nochunks*.tar.*
+AddDescription "Manual (HTML files)" gphoto2-manual-html*.tar.*
+AddDescription "Manual (XHTML files)" gphoto2-manual-xhtml*.tar.*
+AddDescription "Manual (man pages)" gphoto2-manual-man*.tar.*
+AddDescription "Manual (TXT file)" gphoto2-manual-txt.tar.*
+AddDescription "Manual (XML sources)" gphoto2-manual-*.tar.*
+AddDescription "gphoto2 command line interface" gphoto2-*.tar.*
+AddDescription "libgphoto2 drivers and library" libgphoto2-*.tar.*
+AddDescription "GTK EXIF viewer" gexif-*.tar.*
+AddDescription "command line exif viewer" exif-*.tar.*
+AddDescription "USB interface library" libusb-*.tar.*
+AddDescription "GTK libgphoto2 frontend" gtkam-*.tar.*
+AddDescription "Latest CVS snapshot tarballs in gzip format" latest-gz
+AddDescription "Latest CVS snapshot tarballs in bzip2 format" latest-bz2
+AddDescription "List of supported cameras" SUPPORTED-CAMERAS

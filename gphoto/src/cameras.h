@@ -38,6 +38,8 @@ struct Model cameras[] = {
 	{"Canon PowerShot A50", &canon, 0, 0},
 	{"Canon PowerShot S10", &canon, 0x4a9, 0x3041},
 	{"Canon PowerShot S20", &canon, 0x4a9, 0x3043},
+    {"Canon PowerShot S100", &canon, 0x4a9, 0x3045},
+	{"Canon Digital Ixus", &canon, 0x4a9, 0x3047},
 	{"Casio QV-10", &casio_qv, 0, 0},
 	{"Casio QV-10A", &casio_qv, 0, 0},
 	{"Casio QV-11", &casio_qv, 0, 0},

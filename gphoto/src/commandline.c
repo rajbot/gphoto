@@ -1,3 +1,4 @@
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -9,53 +10,34 @@
 
 char command_prefix[256];
 
-void print_camera_models () {
+void camera_summary () {
 
 	int i=1;
 	int colwidth;
 
-	printf("Supported camera models in gPhoto v.%s: \n", VERSION);
-
-	while (strlen(cameras[i].name) > 0) {
-
-		if (cameras[i].name[0] == cameras[i+1].name[0]
-		    && cameras[i].name[3] == cameras[i+1].name[3]) {
-			printf("%s, ", cameras[i].name);
-		}
-		else printf("%s\n", cameras[i].name);
-		i++;
-	}
+	printf("%s Summary:\n%s",camera_model,(*Camera->summary)());
 	fflush(stdout);
 }
 	
-
-void command_license () {
+void command_usage () {
  	printf("gPhoto v.%s - the GNU digital camera application\n", VERSION);
  	printf("Copyright (C) 1998-99 Scott Fritzinger <scottf@unr.edu>\n\n");
+	printf("Usage: gphoto [-h] [-c] [-n] [-s # filename] [-t # filename]\n");
+	printf("              [-d #] [-l filename]\n");
+	printf("\t-h 			display this help screen\n");
+	printf("\t-c                      display camera summary\n");
+	printf("\t-n			display the # of pictures\n");
+	printf("\t-s # filename		save image # as filename\n");
+	printf("\t-t # filename		save thumbnail # as filename\n");
+	printf("\t-d #			delete image # from camera\n");
+	printf("\t-l filename		save live preview as filename\n\n");
         printf("gPhoto is free GNU software; you can redistribute it and/or\n");
         printf("modify it under the terms of the GNU General Public License \n");
         printf("as published by the Free Software Foundation; either version \n");
         printf("2 of the License, or any later version.  Visit gphoto/COPYING\n");
 	printf("in the source distribution to read the GNU GPL license terms.\n\n");
-	print_camera_models ();
-        printf("\nReport bugs and camera reports to gphoto-devel@gphoto.org.\n");
+        printf("Report bugs and camera reports to gphoto-devel@gphoto.org.\n");
 	printf("See http://www.gphoto.org for the latest news and updates.\n");
-	_exit(0);
-}
-
-void command_usage () {
-
- 	printf("gPhoto v.%s - the GNU digital camera application\n", VERSION);
-	printf("Covered by the GNU GPL.  Type \"gphoto -v\" for details.\n");
-	printf("Usage: gphoto [-h] [-n] [-s # filename] [-t # filename]\n");
-	printf("              [-d #] [-l filename]\n");
-	printf("\t-n			display the # of pictures\n");
-	printf("\t-s # filename		save image # as filename\n");
-	printf("\t-t # filename		save thumbnail # as filename\n");
-	printf("\t-d #			delete image # from camera\n");
-	printf("\t-l filename		save live preview as filename\n");
-	printf("\t-h 			display this help screen\n");
-	printf("\t-v                      display information about the %s version\n", VERSION);
 	_exit(0);
 }
 
@@ -65,8 +47,9 @@ void command_line (int argc, char *argv[]) {
 	struct Image *im;
 	FILE *fp;
 
-	if (strcmp(argv[1], "-h") == 0)
+	if (strcmp(argv[1], "-h") == 0) {
 		command_usage();
+	}
 
 	i = 1;
 	while (i < argc) {
@@ -119,8 +102,8 @@ void command_line (int argc, char *argv[]) {
 			if ((*Camera->delete_picture)(atoi(argv[i+1])) == 0)
 				printf("Could not delete image.\n");
 			break;
-		case 'v':
-			command_license ();
+		case 'c':
+			camera_summary ();
 			break;
 		default:
 			break;

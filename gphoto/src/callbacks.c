@@ -108,8 +108,8 @@ void takepicture_call() {
 		return;
 	}
 
+	appendpic(picNum, 0, TRUE, NULL);
 	sprintf(status, "New picture is #%i", picNum);
-
 	error_dialog(status);
 	update_status("Done.");
 }

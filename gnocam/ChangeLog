@@ -3,6 +3,7 @@
 	* configure.in: Version 0.10 - there are people out there that want
 	tar-balls... Remove "no" from ALL_LINGUAS - make distcheck won't work
 	otherwise?
+	* bonobo-moniker/Makefile.am: Fix to make distcheck work.
 
 2001-06-07	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 

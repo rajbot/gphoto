@@ -12,11 +12,9 @@ INCLUDES =\
  $(GPHOTO_CFLAGS)\
  $(BONOBO_CFLAGS)
 
-OAF_FILES =\
- Bonobo_Moniker_camera.oaf.in
-
 oafdir = $(datadir)/oaf
-oaf_DATA = $(OAF_FILES:.oaf.in=.oaf)
+oaf_in_files = Bonobo_Moniker_camera.oaf.in
+oaf_DATA = $(oaf_in_files:.oaf.in=.oaf)
 
 @XML_I18N_MERGE_OAF_RULE@
 
@@ -31,5 +29,5 @@ bonobo_moniker_camera_LDADD=\
  $(GPHOTO_LIBS)\
  $(BONOBO_LIBS)
 
-EXTRA_DIST = Bonobo_Moniker_camera.oaf.in
+EXTRA_DIST = $(oaf_in_files) $(oaf_DATA)
 

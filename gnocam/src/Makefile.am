@@ -30,6 +30,7 @@ gnocam_SOURCES =\
  gphoto-extensions.h gphoto-extensions.c\
  information.h information.c\
  preferences.h preferences.c\
+ preview.h preview.c\
  properties.h properties.c\
  save.h save.c
 

@@ -340,7 +340,10 @@ gp_camera_new_by_description (GladeXML *xml, gchar* description)
 	frontend_data = g_new (frontend_data_t, 1);
 	frontend_data->id = id;
 	frontend_data->name = name;
+	frontend_data->ref_count = 1;
+	frontend_data->xml = xml;
 	frontend_data->xml_properties = NULL;
+	frontend_data->xml_preview = NULL;
 	camera->frontend_data = frontend_data;
 
 	/* Clean up. */

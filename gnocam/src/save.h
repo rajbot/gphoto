@@ -12,3 +12,5 @@ void delete (GtkTreeItem* item);
 
 void upload (Camera* camera, gchar* path_orig, gchar* filename);
 
+void camera_file_save (CameraFile* file, gchar* filename);
+

@@ -145,8 +145,8 @@
 	      <name>exit</name>
 	      <signal>
 		<name>activate</name>
-		<handler>on_exit_activate</handler>
-		<last_modification_time>Mon, 25 Sep 2000 10:32:45 GMT</last_modification_time>
+		<handler>gtk_main_quit</handler>
+		<last_modification_time>Wed, 04 Oct 2000 12:01:22 GMT</last_modification_time>
 	      </signal>
 	      <stock_item>GNOMEUIINFO_MENU_EXIT_ITEM</stock_item>
 	    </widget>
@@ -407,11 +407,29 @@
 
   <widget>
     <class>GtkMenuItem</class>
+    <name>camera_tree_popup_camera_capture_preview</name>
+    <signal>
+      <name>activate</name>
+      <handler>on_capture_preview_activate</handler>
+      <last_modification_time>Wed, 04 Oct 2000 12:26:55 GMT</last_modification_time>
+    </signal>
+    <label>Capture Preview</label>
+    <right_justify>False</right_justify>
+  </widget>
+
+  <widget>
+    <class>GtkMenuItem</class>
+    <name>separator8</name>
+    <right_justify>False</right_justify>
+  </widget>
+
+  <widget>
+    <class>GtkMenuItem</class>
     <name>camera_tree_popup_camera_capture_image</name>
     <signal>
       <name>activate</name>
-      <handler>on_camera_tree_popup_camera_capture_image_activate</handler>
-      <last_modification_time>Sun, 01 Oct 2000 18:51:16 GMT</last_modification_time>
+      <handler>on_capture_image_activate</handler>
+      <last_modification_time>Wed, 04 Oct 2000 13:32:00 GMT</last_modification_time>
     </signal>
     <label>Capture Image</label>
     <right_justify>False</right_justify>
@@ -422,8 +440,8 @@
     <name>camera_tree_popup_camera_capture_video</name>
     <signal>
       <name>activate</name>
-      <handler>on_camera_tree_popup_camera_capture_video_activate</handler>
-      <last_modification_time>Sun, 01 Oct 2000 18:51:39 GMT</last_modification_time>
+      <handler>on_capture_video_activate</handler>
+      <last_modification_time>Wed, 04 Oct 2000 13:32:07 GMT</last_modification_time>
     </signal>
     <label>Capture Video</label>
     <right_justify>False</right_justify>
@@ -458,8 +476,8 @@
     <name>camera_tree_popup_camera_properties</name>
     <signal>
       <name>activate</name>
-      <handler>on_camera_tree_popup_camera_properties_activate</handler>
-      <last_modification_time>Sun, 01 Oct 2000 18:51:58 GMT</last_modification_time>
+      <handler>on_properties_activate</handler>
+      <last_modification_time>Wed, 04 Oct 2000 12:21:38 GMT</last_modification_time>
     </signal>
     <stock_item>GNOMEUIINFO_MENU_PROPERTIES_ITEM</stock_item>
   </widget>
@@ -1417,6 +1435,331 @@
     </signal>
     <label>Upload file</label>
     <right_justify>False</right_justify>
+  </widget>
+</widget>
+
+<widget>
+  <class>GnomeApp</class>
+  <name>app_preview</name>
+  <title>GnoCam</title>
+  <type>GTK_WINDOW_TOPLEVEL</type>
+  <position>GTK_WIN_POS_NONE</position>
+  <modal>False</modal>
+  <allow_shrink>False</allow_shrink>
+  <allow_grow>True</allow_grow>
+  <auto_shrink>False</auto_shrink>
+  <enable_layout_config>True</enable_layout_config>
+
+  <widget>
+    <class>GnomeDock</class>
+    <child_name>GnomeApp:dock</child_name>
+    <name>dock1</name>
+    <allow_floating>True</allow_floating>
+    <child>
+      <padding>0</padding>
+      <expand>True</expand>
+      <fill>True</fill>
+    </child>
+
+    <widget>
+      <class>GnomeDockItem</class>
+      <name>dockitem1</name>
+      <border_width>2</border_width>
+      <placement>GNOME_DOCK_TOP</placement>
+      <band>0</band>
+      <position>0</position>
+      <offset>0</offset>
+      <locked>False</locked>
+      <exclusive>True</exclusive>
+      <never_floating>False</never_floating>
+      <never_vertical>True</never_vertical>
+      <never_horizontal>False</never_horizontal>
+      <shadow_type>GTK_SHADOW_OUT</shadow_type>
+
+      <widget>
+	<class>GtkMenuBar</class>
+	<name>menubar1</name>
+	<shadow_type>GTK_SHADOW_NONE</shadow_type>
+
+	<widget>
+	  <class>GtkMenuItem</class>
+	  <name>file2</name>
+	  <stock_item>GNOMEUIINFO_MENU_FILE_TREE</stock_item>
+
+	  <widget>
+	    <class>GtkMenu</class>
+	    <name>file2_menu</name>
+
+	    <widget>
+	      <class>GtkMenuItem</class>
+	      <name>app_preview_refresh</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_app_preview_refresh_activate</handler>
+		<last_modification_time>Wed, 04 Oct 2000 14:27:32 GMT</last_modification_time>
+	      </signal>
+	      <label>Refresh</label>
+	      <right_justify>False</right_justify>
+	    </widget>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>app_preview_save</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_app_preview_save_activate</handler>
+		<last_modification_time>Wed, 04 Oct 2000 13:24:26 GMT</last_modification_time>
+	      </signal>
+	      <stock_item>GNOMEUIINFO_MENU_SAVE_ITEM</stock_item>
+	    </widget>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>app_preview_save_as</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_app_preview_save_as_activate</handler>
+		<last_modification_time>Wed, 04 Oct 2000 13:25:22 GMT</last_modification_time>
+	      </signal>
+	      <stock_item>GNOMEUIINFO_MENU_SAVE_AS_ITEM</stock_item>
+	    </widget>
+
+	    <widget>
+	      <class>GtkMenuItem</class>
+	      <name>separator7</name>
+	      <right_justify>False</right_justify>
+	    </widget>
+
+	    <widget>
+	      <class>GtkMenuItem</class>
+	      <name>app_preview_capture_image</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_capture_image_activate</handler>
+		<last_modification_time>Wed, 04 Oct 2000 10:25:26 GMT</last_modification_time>
+	      </signal>
+	      <label>Capture Image</label>
+	      <right_justify>False</right_justify>
+	    </widget>
+
+	    <widget>
+	      <class>GtkMenuItem</class>
+	      <name>app_preview_capture_video</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_capture_video_activate</handler>
+		<last_modification_time>Wed, 04 Oct 2000 10:25:21 GMT</last_modification_time>
+	      </signal>
+	      <label>Capture Video</label>
+	      <right_justify>False</right_justify>
+	    </widget>
+
+	    <widget>
+	      <class>GtkMenuItem</class>
+	      <name>separator6</name>
+	      <right_justify>False</right_justify>
+	    </widget>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>app_preview_close</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_app_preview_close_activate</handler>
+		<last_modification_time>Wed, 04 Oct 2000 13:24:13 GMT</last_modification_time>
+	      </signal>
+	      <stock_item>GNOMEUIINFO_MENU_CLOSE_ITEM</stock_item>
+	    </widget>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>exit1</name>
+	      <signal>
+		<name>activate</name>
+		<handler>gtk_main_quit</handler>
+		<last_modification_time>Wed, 04 Oct 2000 12:01:43 GMT</last_modification_time>
+	      </signal>
+	      <stock_item>GNOMEUIINFO_MENU_EXIT_ITEM</stock_item>
+	    </widget>
+	  </widget>
+	</widget>
+
+	<widget>
+	  <class>GtkMenuItem</class>
+	  <name>edit1</name>
+	  <stock_item>GNOMEUIINFO_MENU_EDIT_TREE</stock_item>
+
+	  <widget>
+	    <class>GtkMenu</class>
+	    <name>edit1_menu</name>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>app_preview_properties</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_properties_activate</handler>
+		<last_modification_time>Wed, 04 Oct 2000 12:02:43 GMT</last_modification_time>
+	      </signal>
+	      <stock_item>GNOMEUIINFO_MENU_PROPERTIES_ITEM</stock_item>
+	    </widget>
+	  </widget>
+	</widget>
+
+	<widget>
+	  <class>GtkMenuItem</class>
+	  <name>settings2</name>
+	  <stock_item>GNOMEUIINFO_MENU_SETTINGS_TREE</stock_item>
+
+	  <widget>
+	    <class>GtkMenu</class>
+	    <name>settings2_menu</name>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>app_preview_preferences</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_preferences_activate</handler>
+		<last_modification_time>Wed, 04 Oct 2000 10:22:15 GMT</last_modification_time>
+	      </signal>
+	      <stock_item>GNOMEUIINFO_MENU_PREFERENCES_ITEM</stock_item>
+	    </widget>
+	  </widget>
+	</widget>
+
+	<widget>
+	  <class>GtkMenuItem</class>
+	  <name>help2</name>
+	  <stock_item>GNOMEUIINFO_MENU_HELP_TREE</stock_item>
+
+	  <widget>
+	    <class>GtkMenu</class>
+	    <name>help2_menu</name>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>app_preview_about</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_about_activate</handler>
+		<last_modification_time>Wed, 04 Oct 2000 10:22:09 GMT</last_modification_time>
+	      </signal>
+	      <stock_item>GNOMEUIINFO_MENU_ABOUT_ITEM</stock_item>
+	    </widget>
+	  </widget>
+	</widget>
+      </widget>
+    </widget>
+
+    <widget>
+      <class>GnomeDockItem</class>
+      <name>dockitem2</name>
+      <border_width>1</border_width>
+      <placement>GNOME_DOCK_TOP</placement>
+      <band>1</band>
+      <position>0</position>
+      <offset>0</offset>
+      <locked>False</locked>
+      <exclusive>True</exclusive>
+      <never_floating>False</never_floating>
+      <never_vertical>False</never_vertical>
+      <never_horizontal>False</never_horizontal>
+      <shadow_type>GTK_SHADOW_OUT</shadow_type>
+
+      <widget>
+	<class>GtkToolbar</class>
+	<name>toolbar1</name>
+	<border_width>1</border_width>
+	<orientation>GTK_ORIENTATION_HORIZONTAL</orientation>
+	<type>GTK_TOOLBAR_BOTH</type>
+	<space_size>16</space_size>
+	<space_style>GTK_TOOLBAR_SPACE_LINE</space_style>
+	<relief>GTK_RELIEF_NONE</relief>
+	<tooltips>True</tooltips>
+
+	<widget>
+	  <class>GtkButton</class>
+	  <child_name>Toolbar:button</child_name>
+	  <name>app_preview_button_refresh</name>
+	  <tooltip>New File</tooltip>
+	  <signal>
+	    <name>clicked</name>
+	    <handler>on_app_preview_button_refresh_clicked</handler>
+	    <last_modification_time>Wed, 04 Oct 2000 13:50:17 GMT</last_modification_time>
+	  </signal>
+	  <label>Refresh</label>
+	  <stock_pixmap>GNOME_STOCK_PIXMAP_REFRESH</stock_pixmap>
+	</widget>
+
+	<widget>
+	  <class>GtkButton</class>
+	  <child_name>Toolbar:button</child_name>
+	  <name>app_preview_button_save</name>
+	  <tooltip>Save File</tooltip>
+	  <signal>
+	    <name>clicked</name>
+	    <handler>on_app_preview_button_save_clicked</handler>
+	    <last_modification_time>Wed, 04 Oct 2000 13:50:29 GMT</last_modification_time>
+	  </signal>
+	  <label>Save</label>
+	  <stock_pixmap>GNOME_STOCK_PIXMAP_SAVE</stock_pixmap>
+	</widget>
+
+	<widget>
+	  <class>GtkButton</class>
+	  <child_name>Toolbar:button</child_name>
+	  <name>app_preview_button_save_as</name>
+	  <tooltip>Save File</tooltip>
+	  <signal>
+	    <name>clicked</name>
+	    <handler>on_app_preview_button_save_as_clicked</handler>
+	    <last_modification_time>Wed, 04 Oct 2000 13:50:51 GMT</last_modification_time>
+	  </signal>
+	  <label>Save As...</label>
+	  <stock_pixmap>GNOME_STOCK_PIXMAP_SAVE_AS</stock_pixmap>
+	</widget>
+      </widget>
+    </widget>
+
+    <widget>
+      <class>GtkScrolledWindow</class>
+      <child_name>GnomeDock:contents</child_name>
+      <name>scrolledwindow1</name>
+      <hscrollbar_policy>GTK_POLICY_AUTOMATIC</hscrollbar_policy>
+      <vscrollbar_policy>GTK_POLICY_AUTOMATIC</vscrollbar_policy>
+      <hupdate_policy>GTK_UPDATE_CONTINUOUS</hupdate_policy>
+      <vupdate_policy>GTK_UPDATE_CONTINUOUS</vupdate_policy>
+
+      <widget>
+	<class>GtkViewport</class>
+	<name>viewport1</name>
+	<shadow_type>GTK_SHADOW_IN</shadow_type>
+
+	<widget>
+	  <class>GtkPixmap</class>
+	  <name>app_preview_pixmap</name>
+	  <xalign>0.5</xalign>
+	  <yalign>0.5</yalign>
+	  <xpad>0</xpad>
+	  <ypad>0</ypad>
+	  <build_insensitive>True</build_insensitive>
+	</widget>
+      </widget>
+    </widget>
+  </widget>
+
+  <widget>
+    <class>GnomeAppBar</class>
+    <child_name>GnomeApp:appbar</child_name>
+    <name>appbar1</name>
+    <has_progress>True</has_progress>
+    <has_status>True</has_status>
+    <child>
+      <padding>0</padding>
+      <expand>True</expand>
+      <fill>True</fill>
+    </child>
   </widget>
 </widget>
 

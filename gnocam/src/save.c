@@ -179,18 +179,35 @@ upload_common (Camera* camera, gchar* path, gchar* filename)
 }
 
 void
-save_common (Camera* camera, gchar* path, gchar* filename, gboolean file, gchar* filename_user)
+camera_file_save (CameraFile* file, gchar* filename)
 {
-        CameraFile*     	camera_file;
-        gint            	return_status;
         GnomeVFSResult          result;
         GnomeVFSHandle*         handle;
         GnomeVFSURI*            uri;
         GnomeVFSFileSize        file_size;
 
-	/* Be sure path and filename are ours. */
-	path = g_strdup (path);
-	filename = g_strdup (filename);
+        g_assert (file != NULL);
+        g_assert (filename != NULL);
+
+        /* Let gnome-vfs save the file. */
+        uri = gnome_vfs_uri_new (filename);
+        if ((result = gnome_vfs_create_uri (&handle, uri, GNOME_VFS_OPEN_WRITE, FALSE, 0644)) != GNOME_VFS_OK) {
+                dialog_information (_("An error occurred while trying to open file '%s' for write access (%s)."), filename, gnome_vfs_result_to_string (result));
+        } else {
+                if ((result = gnome_vfs_write (handle, file->data, file->size, &file_size)) != GNOME_VFS_OK) {
+                        dialog_information (_("An error occurred while trying to write into file '%s' (%s)."), filename, gnome_vfs_result_to_string (result));
+                }
+                if ((result = gnome_vfs_close (handle)) != GNOME_VFS_OK) {
+                        dialog_information (_("An error occurred while trying to close the file '%s' (%s)."), filename, gnome_vfs_result_to_string (result));
+                }
+        }
+}
+
+void
+save_common (Camera* camera, gchar* path, gchar* filename, gboolean file, gchar* filename_user)
+{
+        CameraFile*     	camera_file;
+        gint            	return_status;
 
         /* Get the file/preview from gphoto backend. */
         camera_file = gp_file_new ();
@@ -201,29 +218,11 @@ save_common (Camera* camera, gchar* path, gchar* filename, gboolean file, gchar*
         }
         if (return_status == GP_ERROR) {
                 dialog_information (_("Could not get file '%s/%s' from camera!"), path, filename);
-        } else {
-
-                /* Let gnome-vfs save the file. */
-                uri = gnome_vfs_uri_new (filename_user);
-                if ((result = gnome_vfs_create_uri (&handle, uri, GNOME_VFS_OPEN_WRITE, FALSE, 0644)) != GNOME_VFS_OK) {
-                        dialog_information (gnome_vfs_result_to_string (result));
-                } else {
-                        if ((result = gnome_vfs_write (handle, camera_file->data, camera_file->size, &file_size)) != GNOME_VFS_OK) {
-                                dialog_information (gnome_vfs_result_to_string (result));
-                        }
-                        if ((result = gnome_vfs_close (handle)) != GNOME_VFS_OK) {
-                                dialog_information (gnome_vfs_result_to_string (result));
-                        }
-                }
-                g_free (uri);
-        }
+        } else camera_file_save (camera_file, filename_user);
 
 	/* Clean up. */
         gp_frontend_progress (camera, NULL, 0.0);
         gp_file_free (camera_file);
-	g_free (path);
-	g_free (filename_user);
-	g_free (filename);
 }
 
 void 
@@ -246,6 +245,9 @@ save (GladeXML* xml, Camera* camera, gchar* path, gchar* filename, gboolean file
 		filename_user = g_strdup_printf ("%s/%s", gconf_value_get_string (value), filename);
 	}
 	save_common (camera, path, filename, file, filename_user);
+
+	/* Clean up. */
+	g_free (filename_user);
 }
 
 void 

@@ -5,7 +5,6 @@
 #include <gconf/gconf-client.h>
 #include <gphoto2.h>
 #include <callbacks.h>
-#include "preferences.h"
 #include "gphoto-extensions.h"
 #include "gnocam.h"
 #include "cameras.h"
@@ -159,7 +158,7 @@ int main (int argc, char *argv[])
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "save_files_as")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "delete")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "exit")), "xml", xml);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "preferences")), "xml", xml);
+	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "preferences")), "client", client);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "about")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "tree_cameras")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "button_save_files")), "xml", xml);
@@ -177,7 +176,6 @@ int main (int argc, char *argv[])
 
 	/* Notification in case the camera setup changes. */
 	notify_id_cameras = gconf_client_notify_add (client, "/apps/" PACKAGE "/cameras", on_camera_setup_changed, xml, NULL, NULL);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "app")), "notify_id_cameras", GUINT_TO_POINTER (notify_id_cameras));
 
 	/* Drag'n drop stuff. */
 //FIXME
@@ -190,6 +188,7 @@ int main (int argc, char *argv[])
 
 	/* Clean up. */
 	gp_exit ();
+	gconf_client_notify_remove (client, notify_id_cameras);
 	gtk_object_unref (GTK_OBJECT (client));
 	return (0);
 }

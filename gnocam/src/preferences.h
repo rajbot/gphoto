@@ -2,6 +2,6 @@
 
 /* Prototypes */
 
-void preferences (GladeXML *xml);
+void preferences (GConfClient* client);
 
 

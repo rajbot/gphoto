@@ -31,15 +31,16 @@ camera_tree_folder_clean (GtkTreeItem* folder)
 void
 camera_tree_item_remove (GtkTreeItem* item)
 {
-	GladeXML*	xml;
-	gchar*		path;
-	gchar*		filename;
-	GtkNotebook*	notebook;
-	GtkWidget*	page;
-	GtkWidget*	owner;
-	GtkTree*	tree;
-	Camera*		camera;
-	gboolean	root;
+	GladeXML*		xml;
+	gchar*			path;
+	gchar*			filename;
+	GtkNotebook*		notebook;
+	GtkWidget*		page;
+	GtkWidget*		owner;
+	GtkTree*		tree;
+	Camera*			camera;
+	gboolean		root;
+	frontend_data_t*	frontend_data = NULL;
 
 	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (item), "xml")) != NULL);
 	g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
@@ -47,6 +48,7 @@ camera_tree_item_remove (GtkTreeItem* item)
 	g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
 	g_assert ((tree = GTK_TREE (GTK_WIDGET (item)->parent)) != NULL);
 	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
+	g_assert ((frontend_data = (frontend_data_t*) frontend_data) != NULL);
 
 	/* Root folder needs special care. */
 	root = ((!(filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) && (strcmp ("/", path) == 0));
@@ -62,7 +64,10 @@ camera_tree_item_remove (GtkTreeItem* item)
         if ((page = gtk_object_get_data (GTK_OBJECT (item), "page"))) gtk_notebook_remove_page (notebook, gtk_notebook_page_num (notebook, page));
 
 	/* If it's the root folder, free the camera. */
-	if (root) gp_camera_free (camera);
+	if (root) {
+		frontend_data->ref_count--;
+		if (frontend_data->ref_count == 0) gp_camera_free (camera);
+	}
 
 	/* If this is the last item, we have to make sure we don't loose the 	*/
 	/* tree. Therefore, keep a reference to the tree owner. 		*/

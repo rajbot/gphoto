@@ -6,6 +6,12 @@
 #include "preferences.h"
 #include "callbacks.h"
 
+/********************/
+/* Static Variables */
+/********************/
+
+static GladeXML*	xml_preferences = NULL;
+
 /******************************************************************************/
 /* Prototypes                                                                 */
 /******************************************************************************/
@@ -27,14 +33,14 @@ gboolean on_combo_entry_model_focus_out_event 	(GtkWidget *widget, GdkEventFocus
 
 void on_radiobutton_debug_level_toggled (GtkToggleButton* toggle_button);
 
-void dialog_preferences_debug_level_update 	(GladeXML* xml_preferences, gint debug_level);
-void dialog_preferences_prefix_update 		(GladeXML* xml_preferences, gchar *prefix);
-void dialog_preferences_cameras_update 		(GladeXML* xml_preferences, GSList* camera_list);
-void dialog_preferences_populate 		(GladeXML* xml_preferences);
-void dialog_preferences_cameras_changed 	(GladeXML* xml_preferences);
-void dialog_preferences_revert 			(GladeXML* xml_preferences);
-void dialog_preferences_apply 			(GladeXML* xml_preferences);
-void dialog_preferences_update_sensitivity 	(GladeXML* xml_preferences);
+void dialog_preferences_debug_level_update 	(gint debug_level);
+void dialog_preferences_prefix_update 		(gchar *prefix);
+void dialog_preferences_cameras_update 		(GSList* camera_list);
+void dialog_preferences_populate 		(void);
+void dialog_preferences_cameras_changed 	(void);
+void dialog_preferences_revert 			(void);
+void dialog_preferences_apply 			(void);
+void dialog_preferences_update_sensitivity 	(void);
 
 /******************************************************************************/
 /* Callbacks                                                                  */
@@ -43,7 +49,6 @@ void dialog_preferences_update_sensitivity 	(GladeXML* xml_preferences);
 void
 on_button_camera_add_clicked (GtkButton *button, gpointer user_data)
 {
-	GladeXML*	xml_preferences;
 	GtkWindow*	window;
 	GtkCList*	clist;
 	gchar*		model;
@@ -55,7 +60,6 @@ on_button_camera_add_clicked (GtkButton *button, gpointer user_data)
 	gint		unused_id;
 	guint		j;
 
-	g_assert ((xml_preferences = gtk_object_get_data (GTK_OBJECT (button), "xml_preferences")) != NULL);
 	g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml_preferences, "clist_cameras"))) != NULL);
 	g_assert ((window = GTK_WINDOW (glade_xml_get_widget (xml_preferences, "dialog_preferences"))) != NULL);
 	g_assert ((change_set = gtk_object_get_data (GTK_OBJECT (window), "change_set")) != NULL);
@@ -89,15 +93,14 @@ on_button_camera_add_clicked (GtkButton *button, gpointer user_data)
 		gtk_clist_append (clist, text);
 		gtk_clist_set_row_data (clist, clist->rows - 1, GINT_TO_POINTER (unused_id));
 
-		dialog_preferences_cameras_changed (xml_preferences);
-		dialog_preferences_update_sensitivity (xml_preferences);
+		dialog_preferences_cameras_changed ();
+		dialog_preferences_update_sensitivity ();
 	}
 }
 
 void
 on_button_camera_update_clicked (GtkButton *button, gpointer user_data)
 {
-        GladeXML*	xml_preferences;
         gchar*		name;
 	gchar*		model;
 	gchar*		speed;
@@ -110,7 +113,6 @@ on_button_camera_update_clicked (GtkButton *button, gpointer user_data)
 	GList*		selection;
 
 	g_assert (button != NULL);
-        g_assert ((xml_preferences = gtk_object_get_data (GTK_OBJECT (button), "xml_preferences")) != NULL);
 	g_assert ((window = GTK_WINDOW (glade_xml_get_widget (xml_preferences, "dialog_preferences"))) != NULL);
 	g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml_preferences, "clist_cameras"))) != NULL);
 	g_assert ((change_set = gtk_object_get_data (GTK_OBJECT (window), "change_set")) != NULL);
@@ -141,8 +143,8 @@ on_button_camera_update_clicked (GtkButton *button, gpointer user_data)
 			/* Remove the old entry in the list. */
 			gtk_clist_remove (clist, row + 1);
 
-			dialog_preferences_cameras_changed (xml_preferences);
-			dialog_preferences_update_sensitivity (xml_preferences);
+			dialog_preferences_cameras_changed ();
+			dialog_preferences_update_sensitivity ();
 		} else {
 			gnome_error_dialog_parented (_("Please select only one camera."), window);
 		}
@@ -155,14 +157,12 @@ void
 on_button_camera_delete_clicked (GtkButton *button, gpointer user_data)
 {
 	GList*		selection;
-	GladeXML*	xml_preferences;
 	GtkWindow*	window;
 	GtkCList*	clist;
 	gint		row;
 	GConfChangeSet*	change_set;
 
 	g_assert (button != NULL);
-	g_assert ((xml_preferences = gtk_object_get_data (GTK_OBJECT (button), "xml_preferences")) != NULL);
 	g_assert ((window = GTK_WINDOW (glade_xml_get_widget (xml_preferences, "dialog_preferences"))) != NULL);
 	g_assert ((change_set = gtk_object_get_data (GTK_OBJECT (window), "change_set")) != NULL);
 	g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml_preferences, "clist_cameras"))) != NULL);
@@ -176,8 +176,8 @@ on_button_camera_delete_clicked (GtkButton *button, gpointer user_data)
 			selection = g_list_first (clist->selection);
 		}
 
-		dialog_preferences_cameras_changed (xml_preferences);
-		dialog_preferences_update_sensitivity (xml_preferences);
+		dialog_preferences_cameras_changed ();
+		dialog_preferences_update_sensitivity ();
 	} else {
 		gnome_error_dialog_parented (_("Please select a camera first!"), window);
 	}
@@ -186,19 +186,18 @@ on_button_camera_delete_clicked (GtkButton *button, gpointer user_data)
 void
 on_dialog_preferences_button_ok_clicked (GtkButton *button, gpointer user_data)
 {
-	GladeXML*	xml_preferences;
-	GtkWidget*	dialog;
-	GConfChangeSet*	change_set;
-	GConfChangeSet*	revert_change_set;
+	GtkWidget*		dialog;
+	GConfChangeSet*		change_set;
+	GConfChangeSet*		revert_change_set;
 
 	g_assert (button != NULL);
-	g_assert ((xml_preferences = gtk_object_get_data (GTK_OBJECT (button), "xml_preferences")) != NULL);
         g_assert ((dialog = glade_xml_get_widget (xml_preferences, "dialog_preferences")) != NULL);
 	g_assert ((change_set = gtk_object_get_data (GTK_OBJECT (dialog), "change_set")) != NULL);
 
-	dialog_preferences_apply (xml_preferences);
+	dialog_preferences_apply ();
 
 	/* Clean up and exit. */
+	xml_preferences = NULL;
 	gconf_change_set_unref (change_set);
 	if ((revert_change_set = gtk_object_get_data (GTK_OBJECT (dialog), "revert_change_set"))) gconf_change_set_unref (revert_change_set);
 	gtk_widget_destroy (dialog);
@@ -207,40 +206,30 @@ on_dialog_preferences_button_ok_clicked (GtkButton *button, gpointer user_data)
 void
 on_dialog_preferences_button_revert_clicked (GtkButton *button, gpointer user_data)
 {
-	GladeXML*	xml_preferences;
-
-	g_assert (button != NULL);
-	g_assert ((xml_preferences = gtk_object_get_data (GTK_OBJECT (button), "xml_preferences")) != NULL);
-
-	dialog_preferences_revert (xml_preferences);
+	dialog_preferences_revert ();
 }
 
 void
 on_dialog_preferences_button_apply_clicked (GtkButton *button, gpointer user_data)
 {
-	GladeXML*	xml_preferences;
-
-	g_assert ((xml_preferences = gtk_object_get_data (GTK_OBJECT (button), "xml_preferences")) != NULL);
-
-	dialog_preferences_apply (xml_preferences);
+	dialog_preferences_apply ();
 }
 
 void
 on_dialog_preferences_button_cancel_clicked (GtkButton *button, gpointer user_data)
 {
-	GladeXML*	xml_preferences;
 	GtkWidget*	dialog;
 	GConfChangeSet* change_set;
 	GConfChangeSet* revert_change_set;
 
 	g_assert (button != NULL);
-	g_assert ((xml_preferences = gtk_object_get_data (GTK_OBJECT (button), "xml_preferences")) != NULL);
 	g_assert ((dialog = glade_xml_get_widget (xml_preferences, "dialog_preferences")) != NULL);
 	g_assert ((change_set = gtk_object_get_data (GTK_OBJECT (dialog), "change_set")) != NULL);
 
-	dialog_preferences_revert (xml_preferences);
+	dialog_preferences_revert ();
 
 	/* Clean up and exit. */
+	xml_preferences = NULL;
 	gconf_change_set_unref (change_set);
 	if ((revert_change_set = gtk_object_get_data (GTK_OBJECT (dialog), "revert_change_set"))) gconf_change_set_unref (revert_change_set);
 	gtk_widget_destroy (dialog);
@@ -249,13 +238,11 @@ on_dialog_preferences_button_cancel_clicked (GtkButton *button, gpointer user_da
 void
 on_entry_prefix_changed (GtkEditable* editable, gpointer user_data)
 {
-	GladeXML*	xml_preferences;
 	gchar*		prefix;
 	GConfChangeSet*	change_set;
 	GtkEntry*	entry;
 
 	g_assert (editable != NULL);
-	g_assert ((xml_preferences = gtk_object_get_data (GTK_OBJECT (editable), "xml_preferences")) != NULL);
 	g_assert ((entry = GTK_ENTRY (glade_xml_get_widget (xml_preferences, "entry_prefix"))) != NULL);
 	g_assert ((change_set = gtk_object_get_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences")), "change_set")) != NULL);
 
@@ -267,7 +254,7 @@ on_entry_prefix_changed (GtkEditable* editable, gpointer user_data)
 		if (*prefix != '0') gconf_change_set_set_string (change_set, "/apps/" PACKAGE "/prefix", prefix);
 		else gconf_change_set_unset (change_set, "/apps/" PACKAGE "/prefix");
                         
-		dialog_preferences_update_sensitivity (xml_preferences);
+		dialog_preferences_update_sensitivity ();
 	}
 }
 
@@ -275,11 +262,9 @@ void
 on_clist_cameras_row_selection_changed (GtkWidget *clist, gint row, gint column, GdkEventButton *event, gpointer user_data)
 {
 	GList *selection;
-	GladeXML *xml_preferences;
 	gchar *name, *model, *speed, *port;
 
 	g_assert (clist != NULL);
-	g_assert ((xml_preferences = gtk_object_get_data (GTK_OBJECT (clist), "xml_preferences")) != NULL); 
 
 	/* Check how many cameras have been selected. */
 	selection = g_list_first (GTK_CLIST (clist)->selection);
@@ -308,12 +293,10 @@ on_clist_cameras_row_selection_changed (GtkWidget *clist, gint row, gint column,
 void
 on_radiobutton_debug_level_toggled (GtkToggleButton* toggle_button)
 {
-	GladeXML*	xml_preferences;
 	GConfChangeSet*	change_set;
 	gint		debug_level = GP_DEBUG_NONE;
 
 	g_assert (toggle_button != NULL);
-	g_assert ((xml_preferences = gtk_object_get_data (GTK_OBJECT (toggle_button), "xml_preferences")) != NULL);
         g_assert ((change_set = gtk_object_get_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences")), "change_set")) != NULL);
 	
 	/* Which debug level has been selected? */
@@ -329,7 +312,7 @@ on_radiobutton_debug_level_toggled (GtkToggleButton* toggle_button)
 		/* Tell gconf about it. */
 		if (toggle_button->active) {
 			gconf_change_set_set_int (change_set, "/apps/" PACKAGE "/debug_level", debug_level);
-			dialog_preferences_update_sensitivity (xml_preferences);
+			dialog_preferences_update_sensitivity ();
 		}
 	}
 }
@@ -337,7 +320,6 @@ on_radiobutton_debug_level_toggled (GtkToggleButton* toggle_button)
 gboolean
 on_combo_entry_model_focus_out_event (GtkWidget *widget, GdkEventFocus *event, gpointer user_data)
 {
-	GladeXML*	xml_preferences;
 	GtkWindow*	window;
 	GList*		list;
 	GtkCombo*	combo;
@@ -345,7 +327,6 @@ on_combo_entry_model_focus_out_event (GtkWidget *widget, GdkEventFocus *event, g
 	gchar*		model;
 	CameraAbilities abilities;
 
-	g_assert ((xml_preferences = gtk_object_get_data (GTK_OBJECT (widget), "xml_preferences")) != NULL);
 	g_assert ((window = GTK_WINDOW (glade_xml_get_widget (xml_preferences, "dialog_preferences"))) != NULL);
 	g_assert ((combo = GTK_COMBO (glade_xml_get_widget (xml_preferences, "combo_speed"))) != NULL);
 
@@ -381,7 +362,7 @@ on_combo_entry_model_focus_out_event (GtkWidget *widget, GdkEventFocus *event, g
 /******************************************************************************/
 
 void
-dialog_preferences_prefix_update (GladeXML *xml_preferences, gchar *prefix)
+dialog_preferences_prefix_update (gchar *prefix)
 {
 	GtkEntry*	entry_prefix;
 
@@ -392,7 +373,7 @@ dialog_preferences_prefix_update (GladeXML *xml_preferences, gchar *prefix)
 }
 
 void
-dialog_preferences_debug_level_update (GladeXML *xml_preferences, gint debug_level)
+dialog_preferences_debug_level_update (gint debug_level)
 {
         GtkToggleButton*        toggle_none;
         GtkToggleButton*        toggle_low;
@@ -424,7 +405,7 @@ dialog_preferences_debug_level_update (GladeXML *xml_preferences, gint debug_lev
 }
 
 void
-dialog_preferences_cameras_update (GladeXML* xml_preferences, GSList* list_cameras)
+dialog_preferences_cameras_update (GSList* list_cameras)
 {
 	GtkCList*	clist;
 	GConfValue*	value;
@@ -468,7 +449,7 @@ dialog_preferences_cameras_update (GladeXML* xml_preferences, GSList* list_camer
 }
 
 void
-dialog_preferences_cameras_changed (GladeXML* xml_preferences)
+dialog_preferences_cameras_changed ()
 {
 	GConfChangeSet*	change_set;
 	GtkObject*	object;
@@ -503,7 +484,7 @@ dialog_preferences_cameras_changed (GladeXML* xml_preferences)
 }
 
 void
-dialog_preferences_populate (GladeXML *xml_preferences)
+dialog_preferences_populate ()
 {
 	GConfValue*	value;
 	GConfClient*	client;
@@ -516,7 +497,7 @@ dialog_preferences_populate (GladeXML *xml_preferences)
         value = gconf_client_get (client, "/apps/" PACKAGE "/prefix", NULL);
         if (value) {
                 g_assert (value->type == GCONF_VALUE_STRING);
-                dialog_preferences_prefix_update (xml_preferences, (gchar*) gconf_value_get_string (value));
+                dialog_preferences_prefix_update ((gchar*) gconf_value_get_string (value));
                 gconf_value_free (value);
         }
 
@@ -524,7 +505,7 @@ dialog_preferences_populate (GladeXML *xml_preferences)
         value = gconf_client_get (client, "/apps/" PACKAGE "/debug_level", NULL);
         if (value) {
                 g_assert (value->type == GCONF_VALUE_INT);
-                dialog_preferences_debug_level_update (xml_preferences, gconf_value_get_int (value));
+                dialog_preferences_debug_level_update (gconf_value_get_int (value));
                 gconf_value_free (value);
         }
 
@@ -534,13 +515,13 @@ dialog_preferences_populate (GladeXML *xml_preferences)
                 g_assert (value->type == GCONF_VALUE_LIST);
                 list_cameras = gconf_value_get_list (value);
 		g_assert (gconf_value_get_list_type (value) == GCONF_VALUE_STRING);
-		dialog_preferences_cameras_update (xml_preferences, list_cameras);
+		dialog_preferences_cameras_update (list_cameras);
                 gconf_value_free (value);
         }
 }
 
 void
-dialog_preferences_apply (GladeXML *xml_preferences)
+dialog_preferences_apply ()
 {
         GConfChangeSet* change_set;
 	GConfChangeSet* revert_change_set;
@@ -567,11 +548,11 @@ dialog_preferences_apply (GladeXML *xml_preferences)
 
 	gconf_client_commit_change_set (client, change_set, TRUE, NULL);
 
-	dialog_preferences_update_sensitivity (xml_preferences);
+	dialog_preferences_update_sensitivity ();
 }
 
 void
-dialog_preferences_revert (GladeXML *xml_preferences)
+dialog_preferences_revert ()
 {
         GConfChangeSet* change_set;
         GConfChangeSet* revert_change_set;
@@ -597,9 +578,9 @@ dialog_preferences_revert (GladeXML *xml_preferences)
 			if (value) {
 				g_assert (value->type == GCONF_VALUE_STRING);
 				prefix = (gchar*) gconf_value_get_string (value);
-				dialog_preferences_prefix_update (xml_preferences, prefix);
+				dialog_preferences_prefix_update (prefix);
 			} else {
-				dialog_preferences_prefix_update (xml_preferences, "");
+				dialog_preferences_prefix_update ("");
 			}
 		} 
 
@@ -607,9 +588,9 @@ dialog_preferences_revert (GladeXML *xml_preferences)
 		if (gconf_change_set_check_value (revert_change_set, "/apps/" PACKAGE "/debug_level", &value)) {
 			if (value) {
 				g_assert (value->type == GCONF_VALUE_INT);
-				dialog_preferences_debug_level_update (xml_preferences, gconf_value_get_int (value));
+				dialog_preferences_debug_level_update (gconf_value_get_int (value));
 			} else {
-				dialog_preferences_debug_level_update (xml_preferences, GP_DEBUG_NONE);
+				dialog_preferences_debug_level_update (GP_DEBUG_NONE);
 			}
 		}
 
@@ -622,17 +603,17 @@ dialog_preferences_revert (GladeXML *xml_preferences)
 			} else {
 				list_cameras = NULL;
 			}
-			dialog_preferences_cameras_update (xml_preferences, list_cameras);
+			dialog_preferences_cameras_update (list_cameras);
 		}
 
 		gconf_client_commit_change_set (client, revert_change_set, FALSE, NULL);
 
-		dialog_preferences_update_sensitivity (xml_preferences);
+		dialog_preferences_update_sensitivity ();
 	}
 }
 
 void 
-dialog_preferences_update_sensitivity (GladeXML *xml_preferences)
+dialog_preferences_update_sensitivity ()
 {
 	GtkWidget* 	apply;
 	GtkWidget* 	revert;
@@ -660,15 +641,12 @@ dialog_preferences_update_sensitivity (GladeXML *xml_preferences)
 
 /**
  * preferences:
- * @xml: A reference to xml of the main window.
  *
  * Pops up the preferences dialog.
  **/
 void
-preferences (GladeXML *xml)
+preferences (GConfClient* client)
 {
-	GnomeApp*	app;
-	GladeXML*	xml_preferences;
 	GList*		list;
 	gchar 		buffer[1024];
 	gint 		number_of_models;
@@ -678,86 +656,73 @@ preferences (GladeXML *xml)
 	GtkWindow*	window;
 	gchar*		name;
 	CameraPortInfo 	info;
-	GConfClient*	client = NULL;
 	GConfChangeSet*	change_set = NULL;
 
-	g_assert (xml != NULL);
-	g_assert ((app = GNOME_APP (glade_xml_get_widget (xml, "app"))) != NULL);
-	g_assert ((client = gtk_object_get_data (GTK_OBJECT (app), "client")) != NULL);
-	g_assert ((xml_preferences = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "dialog_preferences")) != NULL);
-	g_assert ((window = GTK_WINDOW (glade_xml_get_widget (xml_preferences, "dialog_preferences"))) != NULL);
+	g_assert (client != NULL);
 
-	change_set = gconf_change_set_new ();
+	/* Check if preferences dialog is already open. */
+	if (!xml_preferences) {
+		g_assert ((xml_preferences = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "dialog_preferences")) != NULL);
+		g_assert ((window = GTK_WINDOW (glade_xml_get_widget (xml_preferences, "dialog_preferences"))) != NULL);
 
-	/* Connect the signals. */
-	glade_xml_signal_autoconnect (xml_preferences);
+		change_set = gconf_change_set_new ();
 
-	/* Store some data we need afterwards. */
-	gtk_object_set_data (GTK_OBJECT (window), "xml_preferences", xml_preferences);
-	gtk_object_set_data (GTK_OBJECT (window), "client", client);
-	gtk_object_set_data (GTK_OBJECT (window), "change_set", change_set);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "entry_prefix")), "xml_preferences", xml_preferences);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "clist_cameras")), "xml_preferences", xml_preferences);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "combo_entry_model")), "xml_preferences", xml_preferences);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "button_camera_add")), "xml_preferences", xml_preferences);
-        gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "button_camera_update")), "xml_preferences", xml_preferences);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "button_camera_delete")), "xml_preferences", xml_preferences);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences_button_apply")), "xml_preferences", xml_preferences);
-        gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences_button_revert")), "xml_preferences", xml_preferences);
-        gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences_button_cancel")), "xml_preferences", xml_preferences);
-        gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences_button_ok")), "xml_preferences", xml_preferences);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "radiobutton_debug_level_none")), "xml_preferences", xml_preferences);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "radiobutton_debug_level_low")), "xml_preferences", xml_preferences);
-        gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "radiobutton_debug_level_medium")), "xml_preferences", xml_preferences);
-        gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "radiobutton_debug_level_high")), "xml_preferences", xml_preferences);
-
-	/* Get the current values from gconf. */
-	dialog_preferences_populate (xml_preferences);
-	gtk_object_set_data (GTK_OBJECT (window), "done", GINT_TO_POINTER (1));
-
-        /* Build model list. */
-	g_assert ((combo = GTK_COMBO (glade_xml_get_widget (xml_preferences, "combo_model"))) != NULL);
-        list = NULL;
-	if ((number_of_models = gp_camera_count ()) != GP_ERROR) {
-                for (i = 0; i < number_of_models; i++) {
-                        if (gp_camera_name (i, buffer) == GP_ERROR) {
-                                gnome_error_dialog_parented (_("Could not get model name!"), window);
-                                strcpy (buffer, "?");
-                        }
-			name = g_strdup_printf ("%s", buffer);
-                        list = g_list_append (list, name);
-                }
-                if (list != NULL) {
-			gtk_combo_set_popdown_strings (combo, list);
-			gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_model")), "");
+		/* Connect the signals. */
+		glade_xml_signal_autoconnect (xml_preferences);
+	
+		/* Store some data we need afterwards. */
+		gtk_object_set_data (GTK_OBJECT (window), "xml_preferences", xml_preferences);
+		gtk_object_set_data (GTK_OBJECT (window), "client", client);
+		gtk_object_set_data (GTK_OBJECT (window), "change_set", change_set);
+	
+		/* Get the current values from gconf. */
+		dialog_preferences_populate ();
+		gtk_object_set_data (GTK_OBJECT (window), "done", GINT_TO_POINTER (1));
+	
+	        /* Build model list. */
+		g_assert ((combo = GTK_COMBO (glade_xml_get_widget (xml_preferences, "combo_model"))) != NULL);
+	        list = NULL;
+		if ((number_of_models = gp_camera_count ()) != GP_ERROR) {
+	                for (i = 0; i < number_of_models; i++) {
+	                        if (gp_camera_name (i, buffer) == GP_ERROR) {
+	                                gnome_error_dialog_parented (_("Could not get model name!"), window);
+	                                strcpy (buffer, "?");
+	                        }
+				name = g_strdup_printf ("%s", buffer);
+	                        list = g_list_append (list, name);
+	                }
+	                if (list != NULL) {
+				gtk_combo_set_popdown_strings (combo, list);
+				gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_model")), "");
+			}
+		} else {
+			gnome_error_dialog_parented (_("Could not get number of supported models!"), window);
 		}
-	} else {
-		gnome_error_dialog_parented (_("Could not get number of supported models!"), window);
+	
+	        /* Build port list. */
+		g_assert ((combo = GTK_COMBO (glade_xml_get_widget (xml_preferences, "combo_port"))) != NULL);
+		list = NULL;
+	        if ((number_of_ports = gp_port_count ()) != GP_ERROR) {
+	                for (i = 0; i < number_of_ports; i++) {
+	                        if (gp_port_info (i, &info) == GP_ERROR) {
+	                                gnome_error_dialog_parented (_("Could not get port info!"), window);
+	                                list = g_list_append (list, g_strdup ("?"));
+	                        } else {
+	                                list = g_list_append (list, g_strdup (info.name));
+	                        }
+	                }
+	                if (list != NULL) {
+				gtk_combo_set_popdown_strings (combo, list);
+				gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_port")), "");
+			}
+	                gtk_object_set_data (GTK_OBJECT (combo), "list", list);
+	        } else {
+	                gnome_error_dialog_parented (_("Could not get number of ports!"), window);
+	                gtk_object_set_data (GTK_OBJECT (combo), "list", NULL);
+	        }
+	
+		dialog_preferences_update_sensitivity ();
 	}
-
-        /* Build port list. */
-	g_assert ((combo = GTK_COMBO (glade_xml_get_widget (xml_preferences, "combo_port"))) != NULL);
-	list = NULL;
-        if ((number_of_ports = gp_port_count ()) != GP_ERROR) {
-                for (i = 0; i < number_of_ports; i++) {
-                        if (gp_port_info (i, &info) == GP_ERROR) {
-                                gnome_error_dialog_parented (_("Could not get port info!"), window);
-                                list = g_list_append (list, g_strdup ("?"));
-                        } else {
-                                list = g_list_append (list, g_strdup (info.name));
-                        }
-                }
-                if (list != NULL) {
-			gtk_combo_set_popdown_strings (combo, list);
-			gtk_entry_set_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_port")), "");
-		}
-                gtk_object_set_data (GTK_OBJECT (combo), "list", list);
-        } else {
-                gnome_error_dialog_parented (_("Could not get number of ports!"), window);
-                gtk_object_set_data (GTK_OBJECT (combo), "list", NULL);
-        }
-
-	dialog_preferences_update_sensitivity (xml_preferences);
 }
 
 

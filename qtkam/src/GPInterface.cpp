@@ -38,7 +38,6 @@ void GPInterface::initialize()
  */
 void GPInterface::shutdown() 
 {
-    deleteTempFolder();
     gp_exit();
 }
 
@@ -97,23 +96,13 @@ void GPInterface::setSpeed(const QString& speed)
         gp_setting_set("qtkam","speed", "");
 }
 
-void GPInterface::setFolder(const QString& folder)
+void GPInterface::setWorkDir(const QString& folder)
 {
     if (!folder.isNull())
-        gp_setting_set("qtkam","folder", (char*) folder.latin1());
+        gp_setting_set("qtkam","workdir", (char*) folder.latin1());
     else
-        gp_setting_set("qtkam","folder", "");
+        gp_setting_set("qtkam","workdir", "");
 }
-
-void GPInterface::setTempFolder(const QString& folder)
-{
-    if (!folder.isNull())
-        gp_setting_set("qtkam","temp_folder", (char*) folder.latin1());
-    else
-        gp_setting_set("qtkam","temp_folder", "");
-}
-
-
 
 
 void GPInterface::setGeometry(const QRect& geometry)
@@ -152,24 +141,14 @@ QString GPInterface::getSpeed()
         return QString();
 }
 
-QString GPInterface::getFolder()
+QString GPInterface::getWorkDir()
 {
     char buf[1024];
-    if (gp_setting_get("qtkam", "folder", buf) == GP_OK)
+    if (gp_setting_get("qtkam", "workdir", buf) == GP_OK)
         return QString(buf);
     else
-        return QString("/");
+        return ".";
 }
-
-QString GPInterface::getTempFolder()
-{
-    char buf[1024];
-    if (gp_setting_get("qtkam", "temp_folder", buf) == GP_OK)
-        return QString(buf);
-    else
-        return QString("/tmp/qtkam");
-}
-
 
 QRect GPInterface::getGeometry() 
 {
@@ -268,6 +247,26 @@ QStringList GPInterface::getSupportedSpeeds(const QString& camera)
 }
 
 
+void GPInterface::downloadPicture(QString file, QString folder)
+{
+    CameraFile *f;
+
+    /* Initialize file */
+    gp_file_new(&f);
+
+    /* Try downloading thumb */
+    if (gp_camera_file_get(theCamera, "/", file.latin1(),
+                           GP_FILE_TYPE_NORMAL, f) != GP_OK)
+        throw QString("Couldn't get thumb ") + file +
+              QString(" in folder ") + QString(folder);
+
+    /* Save file */
+    gp_file_save(f, (char*) (getWorkDir() + file).latin1());
+
+    /* Release file */
+    gp_file_free(f);
+}
+
 void GPInterface::downloadThumbs(QIconView* iconView)
 {
     int count;
@@ -277,20 +276,20 @@ void GPInterface::downloadThumbs(QIconView* iconView)
     if (!cameraInitialized)
         throw QString("Camera not initialized");
 
-    /* Clear temp floder */
-    initTempFolder();
-
     /* Get list of files */
-    if (gp_camera_folder_list_files(theCamera, getTempFolder().latin1(), &list) != GP_OK)
+    if (gp_camera_folder_list_files(theCamera, "/", &list) != GP_OK)
         throw QString("Could not retrieve picture list");
 
     /* Iterate over whole list */
     count = gp_list_count(&list);
     for (int i=0; i < count; i++)  {
         gp_list_get_name (&list, i, &name);
+        
         /* Download thumb & insert in icon view */
-        new QIconViewItem(iconView,0,name,
-                downloadThumb(name,getFolder().latin1()));
+        QIconViewItem* icon = new QIconViewItem(iconView,0,name,
+                                  downloadThumb(name,"/"));
+        icon->setDragEnabled(false);
+        icon->setRenameEnabled(false);
     }
 }
 
@@ -322,29 +321,6 @@ QPixmap GPInterface::downloadThumb(const char* name, const char* folder)
     return p;
 }
 
-
-void GPInterface::initTempFolder() 
-{
-    QDir d(getTempFolder());
-    
-    /* Check if dir exists */
-    if (!d.exists()) {
-        /* FIXME: do error recovery */
-        d.mkdir(getTempFolder());
-    }
-}
-
-
-void GPInterface::deleteTempFolder()
-{
-    QDir d(getTempFolder());
-    /* FIXME: do error recovery */
-    if (d.exists()) {
-        for (unsigned int i=0 ; i < d.count(); i++)
-            d.remove(d[i]);
-        d.rmdir(getTempFolder());
-    }
-}
 
 /*
  * Interface to gPhoto2.

@@ -8,12 +8,10 @@
 #define GPINTERFACE_H
 
 #include <gphoto2.h>
-#include <qobject.h>
 #include <qstringlist.h>
 #include <qiconview.h>
 #include <qpixmap.h>
 #include <qrect.h>
-
 
 /** 
  * The GPInterface class definition.
@@ -29,25 +27,22 @@ class GPInterface
     static void setCamera(const QString& camera);
     static void setPort(const QString& port);
     static void setSpeed(const QString& speed);
-    static void setFolder(const QString& folder);
-    static void setTempFolder(const QString& folder);
+    static void setWorkDir(const QString& folder);
     static void setGeometry(const QRect& geometry);
 
     static QString getCamera();
     static QString getPort();
     static QString getSpeed();
-    static QString getFolder();
-    static QString getTempFolder();
+    static QString getWorkDir();
     static QRect getGeometry();
     static QStringList getSupportedCameras(); 
     static QStringList getSupportedPorts(const QString& camera);
     static QStringList getSupportedSpeeds(const QString& camera);
     static void downloadThumbs(QIconView* iconView);
+    static void downloadPicture(QString name, QString folder);
 
 private:
     static QPixmap downloadThumb(const char* name, const char* folder);
-    static void initTempFolder();
-    static void deleteTempFolder();
     
     static int frontend_status(Camera*, char*);
     static int frontend_progress(Camera*, CameraFile*, float);
@@ -58,5 +53,5 @@ private:
     static bool cameraInitialized;
     static Camera* theCamera;
 };
-    
+
 #endif

@@ -55,14 +55,11 @@ gpfs_bag_set_func_prop_count (GPFsBag *b, GPFsBagFuncCount f, void *f_data)
 GPFsBag *
 gpfs_bag_new (void)
 {
-	GPFsBag *b;
+	GPFsObj *o;
 
-	b = malloc (sizeof (GPFsBag));
-	if (!b) return NULL;
-	memset (b, 0, sizeof (GPFsBag));
-	gpfs_obj_init (GPFS_OBJ (b));
-
-	return b;
+	o = gpfs_obj_new (sizeof (GPFsBag));
+	if (!o) return NULL;
+	return (GPFsBag *) o;
 }
 
 unsigned int

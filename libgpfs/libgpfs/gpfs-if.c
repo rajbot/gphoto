@@ -40,15 +40,11 @@ struct _GPFsIf {
 GPFsIf *
 gpfs_if_new (void)
 {
-	GPFsIf *i;
+	GPFsObj *o;
 
-	i = malloc (sizeof (GPFsIf));
-	if (!i)
-		return NULL;
-	memset (i, 0, sizeof (GPFsIf));
-	gpfs_obj_init (GPFS_OBJ (i));
-
-	return i;
+	o = gpfs_obj_new (sizeof (GPFsIf));
+	if (!o) return NULL;
+	return (GPFsIf *) o;
 };
 
 void

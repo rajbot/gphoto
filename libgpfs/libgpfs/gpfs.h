@@ -11,9 +11,7 @@ typedef GPFsFile *     (* GPFsFuncGetFile)    (GPFs *, GPFsErr *, const char *,
 typedef char *         (* GPFsFuncGetFolder)  (GPFs *, GPFsErr *, const char *,
 					       unsigned int, void *);
 
-GPFs *gpfs_new   (void);
-void  gpfs_ref   (GPFs *);
-void  gpfs_unref (GPFs *);
+GPFs *gpfs_new (void);
 
 /* Listing files */
 unsigned int  gpfs_file_count (GPFs *, GPFsErr *, const char *);

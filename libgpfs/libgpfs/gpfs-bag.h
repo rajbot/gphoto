@@ -1,10 +1,10 @@
 #ifndef __GPFS_BAG_H__
 #define __GPFS_BAG_H__
 
+typedef struct _GPFsBag GPFsBag;
+
 #include <libgpfs/gpfs-prop.h>
 #include <libgpfs/gpfs-err.h>
-
-typedef struct _GPFsBag GPFsBag;
 
 GPFsBag    *gpfs_bag_new      (void);
 

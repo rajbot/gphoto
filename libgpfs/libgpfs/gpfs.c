@@ -1,6 +1,7 @@
 #include "config.h"
 #include "gpfs.h"
 #include "gpfs-i18n.h"
+#include "gpfs-obj.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -31,42 +32,23 @@
 
 struct _GPFs
 {
-	unsigned int ref_count;
+	GPFsObj parent;
 
-	GPFsFuncCount   f_file_count  ; void *f_data_file_count  ;
-	GPFsFuncGetFile      f_file_get     ; void *f_data_file_get     ;
-	GPFsFuncCount f_folder_count; void *f_data_folder_count;
-	GPFsFuncGetFolder    f_folder_get   ; void *f_data_folder_get   ;
+	GPFsFuncCount     f_file_count  ; void *f_data_file_count  ;
+	GPFsFuncGetFile   f_file_get    ; void *f_data_file_get    ;
+	GPFsFuncCount     f_folder_count; void *f_data_folder_count;
+	GPFsFuncGetFolder f_folder_get  ; void *f_data_folder_get  ;
 };
 
 GPFs *
 gpfs_new (void)
 {
-	GPFs *fs;
+	GPFsObj *o;
 
-	fs = malloc (sizeof (GPFs));
-	if (!fs)
-		return NULL;
-	memset (fs, 0, sizeof (GPFs));
-	fs->ref_count = 1;
+	o = gpfs_obj_new (sizeof (GPFs));
+	if (!o) return NULL;
 
-	return (fs);
-}
-
-void
-gpfs_ref (GPFs *fs)
-{
-	if (fs)
-		fs->ref_count++;
-}
-
-void
-gpfs_unref (GPFs *fs)
-{
-	if (!fs)
-		return;
-	if (!--fs->ref_count)
-		free (fs);
+	return (GPFs *) o;
 }
 
 void

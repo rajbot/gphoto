@@ -24,7 +24,6 @@
 
 struct _GPFsPropPriv 
 {
-	unsigned int ref_count;
 	unsigned char *id, *name, *description;
 
 	GPFsPropFuncSetVal f_set_val; void *f_data_set_val;
@@ -32,60 +31,47 @@ struct _GPFsPropPriv
 	GPFsVal val;
 };
 
+static void
+gpfs_prop_free (GPFsObj *o)
+{
+	unsigned int n;
+	GPFsProp *prop = (GPFsProp *) o;
+
+	free (prop->priv->id);
+	free (prop->priv->name);
+	free (prop->priv->description);
+	gpfs_val_clear (&prop->priv->val);
+	free (prop->priv);
+	switch (prop->t) {
+	case GPFS_ALT_TYPE_VALS:
+		for (n = 0; n < prop->alt.vals.vals_count; n++)
+			gpfs_val_clear (&prop->alt.vals.vals[n]);
+		free (prop->alt.vals.vals);
+		break;
+	default:
+		break;
+	}
+}
+
 GPFsProp *
 gpfs_prop_new (const char *id, const char *name, const char *description,
 	       GPFsVal *v)
 {
-	GPFsProp *i;
+	GPFsObj *o;
 
-	i = malloc (sizeof (GPFsProp));
-	if (!i) return NULL;
-	memset (i, 0, sizeof (GPFsProp));
-	i->priv = malloc (sizeof (GPFsPropPriv));
-	if (!i->priv) {
-		free (i);
-		return NULL;
-	}
-	memset (i->priv, 0, sizeof (GPFsPropPriv));
-	i->priv->ref_count = 1;
+	o = gpfs_obj_new (sizeof (GPFsProp));
+	if (!o) return NULL;
+	o->f_free = gpfs_prop_free;
+	((GPFsProp *) o)->priv = malloc (sizeof (GPFsPropPriv));
+	if (!((GPFsProp *) o)->priv) {free (o); return NULL;}
+	memset (((GPFsProp *) o)->priv, 0, sizeof (GPFsPropPriv));
 
-	i->priv->id          = strdup (id);
-	i->priv->name        = strdup (name);
-	i->priv->description = strdup (description);
-	gpfs_val_copy (&i->priv->val, v);
+	((GPFsProp *) o)->priv->id          = strdup (id);
+	((GPFsProp *) o)->priv->name        = strdup (name);
+	((GPFsProp *) o)->priv->description = strdup (description);
+	gpfs_val_copy (&((GPFsProp *) o)->priv->val, v);
 
-	return i;
-}
-
-void
-gpfs_prop_ref (GPFsProp *i)
-{
-	if (i) i->priv->ref_count++;
-}
-
-void
-gpfs_prop_unref (GPFsProp *i)
-{
-	unsigned int n;
-
-	if (!i) return;
-	if (!--i->priv->ref_count) {
-		free (i->priv->id);
-		free (i->priv->name);
-		free (i->priv->description);
-		gpfs_val_clear (&i->priv->val);
-		free (i->priv);
-		switch (i->t) {
-		case GPFS_ALT_TYPE_VALS:
-			for (n = 0; n < i->alt.vals.vals_count; n++)
-				gpfs_val_clear (&i->alt.vals.vals[n]);
-			free (i->alt.vals.vals);
-			break;
-		default:
-			break;
-		}
-		free (i);
-	}
+	return (GPFsProp *) o;
 }
 
 const char *

@@ -1,8 +1,11 @@
 #ifndef __GPFS_PROP_H__
 #define __GPFS_PROP_H__
 
+typedef struct _GPFsProp     GPFsProp;
+
 #include <libgpfs/gpfs-val.h>
 #include <libgpfs/gpfs-err.h>
+#include <libgpfs/gpfs-obj.h>
 
 typedef enum {
 	GPFS_ALT_TYPE_NONE,
@@ -10,10 +13,10 @@ typedef enum {
 	GPFS_ALT_TYPE_RANGE
 } GPFsAltType;
 
-typedef struct _GPFsProp     GPFsProp;
 typedef struct _GPFsPropPriv GPFsPropPriv;
 
 struct _GPFsProp {
+	GPFsObj parent;
 	GPFsPropPriv *priv;
 
 	/* Alternatives */
@@ -35,8 +38,6 @@ struct _GPFsProp {
 
 GPFsProp *gpfs_prop_new   (const char *id, const char *name,
 			   const char *description, GPFsVal *);
-void      gpfs_prop_ref   (GPFsProp *);
-void      gpfs_prop_unref (GPFsProp *);
 
 const char *gpfs_prop_get_id          (GPFsProp *);
 const char *gpfs_prop_get_name        (GPFsProp *);

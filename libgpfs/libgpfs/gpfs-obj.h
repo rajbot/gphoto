@@ -1,23 +1,22 @@
 #ifndef __GPFS_OBJ_H__
 #define __GPFS_OBJ_H__
 
-#include <libgpfs/gpfs-err.h>
-#include <libgpfs/gpfs-bag.h>
-
-#define GPFS_OBJ(o) ((GPFsObj *)(o))
-
-typedef struct _GPFsObj        GPFsObj;
 typedef struct _GPFsObjPrivate GPFsObjPrivate;
-
+typedef struct _GPFsObj        GPFsObj;
 struct _GPFsObj {
 	void (* f_free) (GPFsObj *);
 
 	GPFsObjPrivate *priv;
 };
 
-void gpfs_obj_init  (GPFsObj *);
-void gpfs_obj_ref   (GPFsObj *);
-void gpfs_obj_unref (GPFsObj *);
+#include <libgpfs/gpfs-err.h>
+#include <libgpfs/gpfs-bag.h>
+
+#define GPFS_OBJ(o) ((GPFsObj *)(o))
+
+GPFsObj *gpfs_obj_new   (unsigned int size);
+void     gpfs_obj_ref   (GPFsObj *);
+void     gpfs_obj_unref (GPFsObj *);
 
 const char  *gpfs_obj_get_name   (GPFsObj *, GPFsErr *);
 void         gpfs_obj_set_name   (GPFsObj *, GPFsErr *, const char *);

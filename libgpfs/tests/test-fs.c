@@ -116,10 +116,11 @@ func_file_get (GPFs *fs, GPFsErr *e, const char *folder, unsigned int n, void *d
 	GPFsFile *f;
 	GPFsIf *i;
 
-	printf ("<<< Backend is setting up a file >>>\n");
+	printf ("<<< Backend is creating a file >>>\n");
 	f = gpfs_file_new ();
 
 	/* Interface 'default' */
+	printf ("<<< Backend is adding an interface >>>\n");
 	i = gpfs_if_new ();
 	gpfs_obj_set_name (GPFS_OBJ (i), NULL, "default");
 	gpfs_if_set_func_read (i, func_read1, NULL);
@@ -129,6 +130,7 @@ func_file_get (GPFs *fs, GPFsErr *e, const char *folder, unsigned int n, void *d
 	gpfs_obj_unref (GPFS_OBJ (i));
 
 	/* Interface 'preview' */
+	printf ("<<< Backend is adding an interface >>>\n");
 	i = gpfs_if_new ();
 	gpfs_obj_set_name (GPFS_OBJ (i), NULL, "preview");
 	gpfs_if_set_func_read (i, func_read2, NULL);
@@ -178,20 +180,26 @@ main (int argc, char **argv)
 	gpfs_set_func_file_get    (fs, func_file_get, NULL);
 
 	/* Test the filesystem */
+	printf ("Counting files...\n");
 	n = gpfs_file_count (fs, NULL, "/");
 	printf ("Found %i file(s).\n", n);
 
+	printf ("Getting first file...\n");
 	f = gpfs_file_get (fs, NULL, "/", 0);
-	gpfs_unref (fs);
+	printf ("... done.\n");
 
+	gpfs_obj_unref (GPFS_OBJ (fs));
+
+	printf ("Counting interfaces...\n");
 	n = gpfs_file_if_count (f);
-	printf ("Found %i interface(s).\n", n);
+	printf ("... done. Found %i interface(s).\n", n);
+
 	for (j = 0; j < n; j++) {
 		i = gpfs_file_if_get (f, j);
 
 		/* Add the interface to our cache. */
 		gpfs_cache_if_add (c, i);
-		gpfs_cache_if_set_limit_read (c, i, j * 20);
+		gpfs_cache_if_set_limit (c, i, j * 20);
 
 #if 0
 		printf (" %i: Interface '%s' with %i properties\n",
@@ -211,14 +219,21 @@ main (int argc, char **argv)
 
 	printf ("There are now %i interfaces in our cache.\n", 
 		gpfs_cache_if_count (c));
+
 	printf ("Testing interfaces again...\n");
 	for (j = 0; j < n; j++) {
 		i = gpfs_file_if_get (f, j);
 		gpfs_if_read (i, NULL, func_read_cb, NULL);
 	}
+	printf ("... done.\n");
 
+	printf ("Releasing file...\n");
 	gpfs_obj_unref (GPFS_OBJ (f));
+	printf ("... done.\n");
+
+	printf ("Releasing cache...\n");
 	gpfs_obj_unref (GPFS_OBJ (c));
+	printf ("... done.\n");
 
 	return 0;
 }

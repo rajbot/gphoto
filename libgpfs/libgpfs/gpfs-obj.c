@@ -36,17 +36,21 @@ struct _GPFsObjPrivate {
 	unsigned int bag_count;
 };
 
-void
-gpfs_obj_init (GPFsObj *v)
+GPFsObj *
+gpfs_obj_new (unsigned int size)
 {
-	GPFsObj *o = v;
+	GPFsObj *o;
 
-	memset (o, 0, sizeof (GPFsObj));
+	if (size < sizeof (GPFsObj)) return NULL;
+	o = malloc (size);
+	if (!o) return NULL;
+	memset (o, 0, size);
 	o->priv = malloc (sizeof (GPFsObjPrivate));
-	if (!o->priv)
-		return;
+	if (!o->priv) {free (o); return NULL;}
 	memset (o->priv, 0, sizeof (GPFsObjPrivate));
 	o->priv->ref_count = 1;
+
+	return o;
 }
 
 void
@@ -56,11 +60,9 @@ gpfs_obj_ref (GPFsObj *v)
 }
 
 void
-gpfs_obj_unref (GPFsObj *v)
+gpfs_obj_unref (GPFsObj *o)
 {
-	GPFsObj *o = v;
-
-	if (!v) return;
+	if (!o) return;
 	if (!--o->priv->ref_count) {
 		if (o->f_free) o->f_free (o);
 		free (o->priv->name);

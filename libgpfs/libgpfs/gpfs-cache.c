@@ -64,15 +64,12 @@ gpfs_cache_free (GPFsObj *o)
 GPFsCache *
 gpfs_cache_new (void)
 {
-	GPFsCache *c;
+	GPFsObj *o;
 
-	c = malloc (sizeof (GPFsCache));
-	if (!c) return NULL;
-	memset (c, 0, sizeof (GPFsCache));
-	gpfs_obj_init (GPFS_OBJ (c));
-	((GPFsObj *) c)->f_free = gpfs_cache_free;
-
-	return c;
+	o = gpfs_obj_new (sizeof (GPFsCache));
+	if (!o) return NULL;
+	o->f_free = gpfs_cache_free;
+	return (GPFsCache *) o;
 }
 
 typedef struct {
@@ -199,12 +196,9 @@ gpfs_cache_if_set_limit (GPFsCache *c, GPFsIf *i, unsigned int l)
 {
 	unsigned int n;
 
-	if (!c || !i)
-		return;
-
+	if (!c || !i) return;
 	for (n = 0; (n < c->i_count) && (c->i[n].i != i); n++);
-	if (n == c->i_count)
-		return;
+	if (n == c->i_count) return;
 	c->i[n].limit = l;
 	if (c->i[n].size > l) {
 		free (c->i[n].data);

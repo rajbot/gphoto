@@ -28,16 +28,12 @@ gpfs_file_free (GPFsObj *o)
 GPFsFile *
 gpfs_file_new (void)
 {
-	GPFsFile *f;
+	GPFsObj *o;
 
-	f = malloc (sizeof (GPFsFile));
-	if (!f)
-		return NULL;
-	memset (f, 0, sizeof (GPFsFile));
-	gpfs_obj_init (GPFS_OBJ (f));
-	((GPFsObj *) f)->f_free = gpfs_file_free;
-
-	return f;
+	o = gpfs_obj_new (sizeof (GPFsFile));
+	if (!o) return NULL;
+	o->f_free = gpfs_file_free;
+	return (GPFsFile *) o;
 }
 
 void

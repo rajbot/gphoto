@@ -1,3 +1,11 @@
+2001-05-24	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
+	* gnome-vfs-module/camera-method.c: Work on the bonoboized version.
+	Remove comments before "#define USE_BONOBO" if you'd like to check
+	it out.
+	* configure.in: Don't use AM_PATH_GCONF - there seem to be systems 
+	with GConf out there that don't have this macro.
+
 2001-05-07	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
 	* bonobo-storage-module/bonobo-storage-camera.c: 

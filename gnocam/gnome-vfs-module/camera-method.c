@@ -15,6 +15,9 @@
 #include <gphoto-extensions.h>
 #include "utils.h"
 
+//#define USE_BONOBO
+//#undef G_THREADS_ENABLED
+
 #ifdef G_THREADS_ENABLED
 #define MUTEX_NEW()     g_mutex_new ()
 #define MUTEX_FREE(a)   g_mutex_free (a)
@@ -198,6 +201,13 @@ static GnomeVFSResult do_tell (
 	return GNOME_VFS_OK;
 }
 
+#ifdef USE_BONOBO
+typedef struct {
+	Bonobo_Storage_DirectoryList *list;
+	guint pos;
+} DirectoryHandle;
+#endif
+
 static GnomeVFSResult do_open_directory (
         GnomeVFSMethod*                 method,
         GnomeVFSMethodHandle**          handle,
@@ -206,16 +216,65 @@ static GnomeVFSResult do_open_directory (
         const GnomeVFSDirectoryFilter*  filter,
         GnomeVFSContext*                context)
 {
-	GnomeVFSResult		result;
+#ifdef USE_BONOBO
+	Bonobo_Storage storage;
+	Bonobo_Storage_DirectoryList *list;
+	DirectoryHandle *directory_handle;
+	CORBA_Environment ev;
+	gchar *moniker;
+#else
+	GnomeVFSResult result;
+#endif
 
+	CAM_VFS_DEBUG (("ENTER"));
 	MUTEX_LOCK (client_mutex);
-	CAM_VFS_DEBUG (("entering uri->text=%s",uri->text));
-	
-	*handle = directory_handle_new (uri, options, context, &result);
 
-	CAM_VFS_DEBUG (("exiting"));
+#ifdef USE_BONOBO
+	CORBA_exception_init (&ev);
+	
+	/* Get the storage */
+	CAM_VFS_DEBUG (("Getting storage..."));
+	moniker = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE);
+	storage = bonobo_get_object (moniker, "IDL:Bonobo/Storage:1.0", &ev);
+	g_free (moniker);
+	if (BONOBO_EX (&ev)) {
+		CORBA_exception_free (&ev);
+		MUTEX_UNLOCK (client_mutex);
+		return (GNOME_VFS_ERROR_GENERIC);
+	}
+
+	/* Get the directory list */
+	CAM_VFS_DEBUG (("Getting contents..."));
+	list = Bonobo_Storage_listContents (storage, "", 
+					    Bonobo_FIELD_CONTENT_TYPE | 
+					    Bonobo_FIELD_SIZE | 
+					    Bonobo_FIELD_TYPE, &ev);
+	bonobo_object_release_unref (storage, NULL);
+	if (BONOBO_EX (&ev)) {
+		CORBA_exception_free (&ev);
+		MUTEX_UNLOCK (client_mutex);
+		return (GNOME_VFS_ERROR_GENERIC);
+	}
+	
+	CORBA_exception_free (&ev);
+
+	/* Construct the handle */
+	CAM_VFS_DEBUG (("Constructing handle..."));
+	directory_handle = g_new0 (DirectoryHandle, 1);
+	directory_handle->list = list;
+	directory_handle->pos = 0;
+	*handle = (GnomeVFSMethodHandle *) directory_handle;
+#else
+	*handle = directory_handle_new (uri, options, context, &result);
+	if (result != GNOME_VFS_OK) {
+		MUTEX_UNLOCK (client_mutex);
+		return (result);
+	}
+#endif
+
 	MUTEX_UNLOCK (client_mutex);
-	return (result);
+	CAM_VFS_DEBUG (("EXIT"));
+	return (GNOME_VFS_OK);
 }
 
 static GnomeVFSResult do_close_directory (
@@ -223,57 +282,116 @@ static GnomeVFSResult do_close_directory (
         GnomeVFSMethodHandle*           handle,
 	GnomeVFSContext*                context)
 {
-	GnomeVFSResult		result;
-
+#ifdef USE_BONOBO
+	DirectoryHandle *directory_handle;
+#else
+	GnomeVFSResult result;
+#endif
 
 	MUTEX_LOCK (client_mutex);
-	g_return_val_if_fail (handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
-	CAM_VFS_DEBUG (("entering"));
+	g_mutex_lock (client_mutex);
+	CAM_VFS_DEBUG (("ENTER"));
 	
+#ifdef USE_BONOBO
+	/* Free the handle */
+	directory_handle = (DirectoryHandle *) handle;
+	CORBA_free (directory_handle->list);
+#else
 	result = directory_handle_free (handle);
-	CAM_VFS_DEBUG (("exiting"));
+	if (result != GNOME_VFS_OK) {
+		MUTEX_UNLOCK (client_mutex);
+		return (result);
+	}
+#endif
+
 	MUTEX_UNLOCK (client_mutex);
-	return (result);
+	CAM_VFS_DEBUG (("EXIT"));
+	return (GNOME_VFS_OK);
 }
 
 static GnomeVFSResult do_read_directory (
 	GnomeVFSMethod*                 method,
-	GnomeVFSMethodHandle*           h,
+	GnomeVFSMethodHandle*           handle,
 	GnomeVFSFileInfo*		info,
 	GnomeVFSContext*                context)
 {
-	directory_handle_t*	handle;
+#ifdef USE_BONOBO
+	DirectoryHandle *dh;
+#else
+	directory_handle_t*	h;
+#endif
 
-	g_return_val_if_fail (h, GNOME_VFS_ERROR_BAD_PARAMETERS);
-	handle = (directory_handle_t*) h;
-	
-	MUTEX_LOCK (client_mutex);
 	CAM_VFS_DEBUG (("ENTER"));
+	MUTEX_LOCK (client_mutex);
 
-	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_NONE;
-	if (handle->position < g_slist_length (handle->folders)) {
+#ifdef USE_BONOBO
+	dh = (DirectoryHandle *) handle;
+	if (dh->list->_length <= dh->pos) {
+		MUTEX_UNLOCK (client_mutex);
+		CAM_VFS_DEBUG (("EXIT (GNOME_VFS_ERROR_EOF)"));
+		return (GNOME_VFS_ERROR_EOF);
+	}
+#else
+	h = (directory_handle_t*) handle;
+	if (h->position < g_slist_length (h->folders) + 
+						g_slist_length (h->files)) {
+		h->position = -1; 
+		MUTEX_UNLOCK (client_mutex);
+		CAM_VFS_DEBUG (("EXIT (GNOME_VFS_ERROR_EOF)"));
+		return (GNOME_VFS_ERROR_EOF); 
+	} 
+							      
+#endif
+	
+	GNOME_VFS_FILE_INFO_SET_LOCAL (info, FALSE);
+
+#ifdef USE_BONOBO
+
+	/* Tell gnome-vfs which fields will be valid */
+	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_NONE |
+			     GNOME_VFS_FILE_INFO_FIELDS_TYPE |
+			     GNOME_VFS_FILE_INFO_FIELDS_SIZE |
+			     GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+
+	/* Fill the fields */
+	info->name      = g_strdup (dh->list->_buffer [dh->pos].name);
+	info->mime_type = g_strdup (dh->list->_buffer [dh->pos].content_type);
+	info->size      = dh->list->_buffer [dh->pos].size;
+
+	CAM_VFS_DEBUG (("name: %s", info->name));
+	CAM_VFS_DEBUG (("mime_type: %s", info->mime_type));
+	CAM_VFS_DEBUG (("size: %i", (int) info->size));
+
+	/* Directory or folder? */
+	if (dh->list->_buffer [dh->pos].type == Bonobo_STORAGE_TYPE_REGULAR)
+		info->type = GNOME_VFS_FILE_TYPE_REGULAR;
+	else 
+		info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
+
+	dh->pos++;
+
+#else
+	if (h->position < g_slist_length (h->folders)) {
 
 		/* Folder */
-		info->name = g_strdup (g_slist_nth_data (handle->folders, 
-			    				 handle->position));
+		info->name = g_strdup (g_slist_nth_data (h->folders, 
+			    				 h->position));
 		info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
 		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
-		if (handle->options & GNOME_VFS_FILE_INFO_GET_MIME_TYPE) {
-			info->mime_type = g_strdup ("x-directory/normal");
-			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
-		}
+		info->mime_type = g_strdup ("x-directory/normal");
+		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
 		CAM_VFS_DEBUG (("%s is a folder",info->name));
-	} else if (handle->position < g_slist_length (handle->folders) + 
-				      g_slist_length (handle->files)) {
+	} else if (h->position < g_slist_length (h->folders) + 
+				      g_slist_length (h->files)) {
 		GnomeVFSResult	 result;
 		const gchar 	*file;
 
 		/* File */
-		file = g_slist_nth_data (handle->files,
-			handle->position - g_slist_length (handle->folders));
-		result = gp_camera_file_get_vfs_info (handle->camera, 
-						      handle->folder, file, 
-						      info, handle->preview);
+		file = g_slist_nth_data (h->files,
+			h->position - g_slist_length (h->folders));
+		result = gp_camera_file_get_vfs_info (h->camera, 
+						      h->folder, file, 
+						      info, h->preview);
 		if (result != GNOME_VFS_OK) {
 		    	
 		    	/* We always have to return GNOME_VFS_OK... */
@@ -284,19 +402,14 @@ static GnomeVFSResult do_read_directory (
 			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
 		}
 		CAM_VFS_DEBUG (("%s is a file",info->name));
-
-	} else {
-		handle->position = -1;
-		MUTEX_UNLOCK (client_mutex);
-		CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_EOF"));
-		return (GNOME_VFS_ERROR_EOF);
 	}
-	GNOME_VFS_FILE_INFO_SET_LOCAL (info, FALSE);
 	
-	handle->position++;
-	CAM_VFS_DEBUG ((" -> (%i) %s", handle->position - 1, info->name));
-	CAM_VFS_DEBUG (("returning GNOME_VFS_OK"));
+	h->position++;
+	CAM_VFS_DEBUG ((" -> (%i) %s", h->position - 1, info->name));
+#endif
+
 	MUTEX_UNLOCK (client_mutex);
+	CAM_VFS_DEBUG (("EXIT"));
 	return (GNOME_VFS_OK);
 }
 
@@ -329,7 +442,7 @@ static GnomeVFSResult do_get_file_info (
 	escaped_host = gnome_vfs_uri_get_host_name (uri);
 	if (!escaped_host) {
 	    	CAM_VFS_DEBUG (("returning GNOME_VFS_ERROR_HOST_NOT_FOUND"));
-		g_mutex_unlock (client_mutex);
+		MUTEX_UNLOCK (client_mutex);
 		return (GNOME_VFS_ERROR_HOST_NOT_FOUND);
 	}
 	host = gnome_vfs_unescape_string (escaped_host, NULL);
@@ -436,8 +549,8 @@ static GnomeVFSResult do_get_file_info (
 	info->flags = GNOME_VFS_FILE_FLAGS_NONE;
 	GNOME_VFS_FILE_INFO_SET_LOCAL (info, FALSE);
 
-	CAM_VFS_DEBUG (("returning GNOME_VFS_OK"));
 	MUTEX_UNLOCK (client_mutex);
+	CAM_VFS_DEBUG (("EXIT"));
 	return (GNOME_VFS_OK);
 }
 
@@ -499,9 +612,29 @@ static GnomeVFSMethod method = {
 GnomeVFSMethod*
 vfs_module_init (const gchar* method_name, const gchar* args)
 {
-	printf ("vfs_module_init\n");
+#ifdef USE_BONOBO
+	CORBA_ORB orb;
+#endif
+	
+	CAM_VFS_DEBUG (("ENTER"));
+
+#ifdef USE_BONOBO
+	/* Initialize ORBit */
+	if (oaf_is_initialized ())
+		orb = oaf_orb_get ();
+	else
+		orb = oaf_init (0, NULL);
+	if (!orb)
+		g_error ("Cannot init oaf");
+
+	/* Initialize bonobo */
+	if (!bonobo_init (orb, NULL, NULL))
+		g_error ("Cannot init bonobo");
+#else
 
         gtk_init (0, NULL);
+#endif
+
         gp_init (GP_DEBUG_NONE);
         gp_frontend_register (NULL, NULL, NULL, NULL, NULL);
 	client_mutex = MUTEX_NEW();

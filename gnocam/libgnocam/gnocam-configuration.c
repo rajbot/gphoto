@@ -78,7 +78,7 @@ set_config (GnoCamConfiguration* configuration)
 
         if (result != GP_OK) {
 		gp_widget_get_label (configuration->priv->widget, &label);
-                g_warning (_("Could not set configuration of '%s'!\n(%s)"), label, gp_camera_get_result_as_string (configuration->priv->camera, result));
+                g_warning (_("Could not set configuration of '%s'!\n(%s)"), label, gp_result_as_string (result));
 	}
 }
 
@@ -406,7 +406,7 @@ on_button_clicked (GtkButton* button, gpointer user_data)
 	gp_widget_get_value (widget, &callback);
 
 	if ((result = callback (configuration->priv->camera, widget)) != GP_OK)
-		g_warning (_("Could not execute command '%s': %s!"), label, gp_camera_get_result_as_string (configuration->priv->camera, result));
+		g_warning (_("Could not execute command '%s': %s!"), label, gp_result_as_string (result));
 }
 
 static void

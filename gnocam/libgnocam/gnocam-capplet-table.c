@@ -111,7 +111,7 @@ configure_camera (GnoCamCappletTable *table, guint number)
 	result = gp_camera_set_abilities (camera, abilities);
 	if (result < 0) {
 		g_warning ("Could not set model: %s",
-			   gp_camera_get_result_as_string (camera, result));
+			   gp_result_as_string (result));
 		gp_camera_unref (camera);
 		return;
 	}
@@ -121,8 +121,7 @@ configure_camera (GnoCamCappletTable *table, guint number)
 		result = gp_camera_set_port_name (camera, port);
 		if (result < 0) {
 			g_warning ("Could not set port: %s",
-				   gp_camera_get_result_as_string (camera,
-					   			   result));
+				   gp_result_as_string (result));
 			gp_camera_unref (camera);
 			return;
 		}
@@ -132,7 +131,7 @@ configure_camera (GnoCamCappletTable *table, guint number)
 	result = gp_camera_init (camera);
 	if (result < 0) {
 		g_warning ("Could not initialize camera: %s",
-			   gp_camera_get_result_as_string (camera, result));
+			   gp_result_as_string (result));
 		gp_camera_unref (camera);
 	}
 
@@ -140,7 +139,7 @@ configure_camera (GnoCamCappletTable *table, guint number)
 	result = gp_camera_get_config (camera, &config);
 	if (result < 0) {
 		g_warning ("Could not get configuration: %s",
-			   gp_camera_get_result_as_string (camera, result));
+			   gp_result_as_string (result));
 		gp_camera_unref (camera);
 	}
 
@@ -151,7 +150,7 @@ configure_camera (GnoCamCappletTable *table, guint number)
 	result = gp_camera_unref (camera);
 	if (result < 0)
 		g_warning ("Could not unref camera: %s",
-			   gp_camera_get_result_as_string (camera, result));
+			   gp_result_as_string (result));
 	result = gp_widget_unref (config);
 	if (result < 0)
 		g_warning ("Could not unref widget: %s",
@@ -185,7 +184,7 @@ get_info (GnoCamCappletTable *table, guint number)
 	result = gp_camera_set_abilities (camera, abilities);
 	if (result < 0) {
 		g_warning ("Could not set model: %s",
-			   gp_camera_get_result_as_string (camera, result));
+			   gp_result_as_string (result));
 		gp_camera_unref (camera);
 		return;
 	}
@@ -195,8 +194,7 @@ get_info (GnoCamCappletTable *table, guint number)
 		result = gp_camera_set_port_name (camera, port);
 		if (result < 0) {
 			g_warning ("Could not set port: %s",
-				   gp_camera_get_result_as_string (camera,
-					   			   result));
+				   gp_result_as_string (result));
 			gp_camera_unref (camera);
 			return;
 		}
@@ -206,7 +204,7 @@ get_info (GnoCamCappletTable *table, guint number)
 	result = gp_camera_init (camera);
 	if (result < 0) {
 		g_warning ("Could not initialize camera: %s",
-			   gp_camera_get_result_as_string (camera, result));
+			   gp_result_as_string (result));
 		gp_camera_unref (camera);
 	}
 
@@ -214,7 +212,7 @@ get_info (GnoCamCappletTable *table, guint number)
 	result = gp_camera_get_summary (camera, &text);
 	if (result < 0) {
 		g_warning ("Could not get summary: %s",
-			   gp_camera_get_result_as_string (camera, result));
+			   gp_result_as_string (result));
 	}
 
 	gnome_dialog_run_and_close (GNOME_DIALOG (gnome_ok_dialog (text.text)));
@@ -223,7 +221,7 @@ get_info (GnoCamCappletTable *table, guint number)
 	result = gp_camera_unref (camera);
 	if (result < 0)
 		g_warning ("Could not unref camera: %s",
-			   gp_camera_get_result_as_string (camera, result));
+			   gp_result_as_string (result));
 }
 
 static void

@@ -95,9 +95,9 @@ builddist() {
 	    fi
 	    cmd ./configure --enable-maintainer-mode --prefix="${distroot}" ${configopts}
 	    cmd make dist
-	    cmd make install
 	    cmd mv ${module}*.tar.gz "${distdir}/"
 	    mv ${module}*.tar.bz2 "${distdir}/"
+	    cmd make install
 	fi
 	subdirs="${subdirs} ${module}"
     done < "${cvsmodulelist}"

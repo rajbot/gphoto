@@ -7,6 +7,7 @@
 #include <bonobo/bonobo-exception.h>
 #include <libgnomeui/gnome-dialog.h>
 #include <libgnomeui/gnome-stock.h>
+#include <libgnomeui/gnome-dialog-util.h>
 
 #include "gnocam-util.h"
 #include "gnocam-camera.h"
@@ -261,14 +262,14 @@ gnocam_main_finalize (GtkObject *object)
 }
 
 static int
-gp_frontend_message (Camera *camera, char *message)
+frontend_message (Camera *camera, char *message)
 {
 	gnome_ok_dialog (message);
 	return (GP_OK);
 }
 
 static int
-gp_frontend_confirm (Camera *camera, char *message)
+frontend_confirm (Camera *camera, char *message)
 {
 	GtkWidget *widget;
 	int result;
@@ -282,7 +283,7 @@ gp_frontend_confirm (Camera *camera, char *message)
 		return (GP_PROMPT_OK);
 	case 1:
 		return (GP_PROMPT_CANCEL);
-	case default:
+	default:
 		return (GP_ERROR);
 	}
 }
@@ -306,8 +307,8 @@ gnocam_main_class_init (GnoCamMainClass *klass)
 	if (!gp_is_initialized ()) {
 		g_message ("Initializing GPhoto...");
 		g_assert (gp_init (GP_DEBUG_NONE) == GP_OK);
-		gp_frontend_register (NULL, NULL, gp_frontend_message,
-				      gp_frontend_confirm, NULL);
+		gp_frontend_register (NULL, NULL, frontend_message,
+				      frontend_confirm, NULL);
 	}
 
 	parent_class = gtk_type_class (PARENT_TYPE);

@@ -1,5 +1,9 @@
 2001-08-20  Lutz Müller <urc8@rz.uni-karlsruhe.de>
 
+	* gnocam/gnocam-main.c: Kill compile warnings
+
+2001-08-20  Lutz Müller <urc8@rz.uni-karlsruhe.de>
+
 	* applet/gnocam-applet.c: Use a toolbar
 	* art/gnocam-folder.png: New
 	* art/Makefile.am: Install gnocam-folder.png

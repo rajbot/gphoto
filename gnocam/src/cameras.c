@@ -18,6 +18,7 @@
 /**********************/
 
 extern GladeXML*	xml;
+extern GConfClient*	client;
 
 /**
  * camera_tree_folder clean:
@@ -245,4 +246,84 @@ camera_tree_update (GtkTree* tree, GConfValue* value)
                 }
         }
 }
+
+void
+camera_tree_item_update_pixmap (GtkTreeItem* item)
+{
+	GdkInterpType		interpolation = 0;
+	gint			magnification;
+	GConfValue*		value;
+        GtkPixmap*              pm;
+        GdkPixbuf*              pixbuf;
+        GdkPixbufLoader*        loader;
+        GdkPixmap*              pixmap;
+        GdkBitmap*              bitmap;
+	gchar*			path;
+	gchar*			filename;
+	CameraFile*		file;
+
+	g_assert ((pm = gtk_object_get_data (GTK_OBJECT (item), "pixmap")) != NULL);
+        g_assert ((loader = gdk_pixbuf_loader_new ()) != NULL);
+        g_assert ((path = gtk_object_get_data (GTK_OBJECT (item), "path")) != NULL);
+        g_assert ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename")) != NULL);
+        g_assert ((file = gtk_object_get_data (GTK_OBJECT (item), "preview")) != NULL);
+        if (gdk_pixbuf_loader_write (loader, file->data, file->size)) {
+                gdk_pixbuf_loader_close (loader);
+                g_assert ((pixbuf = gdk_pixbuf_loader_get_pixbuf (loader)) != NULL);
+
+                /* Magnification? */
+                value = gconf_client_get_without_default (client, "/apps/" PACKAGE "/magnification", NULL);
+                if (value) {
+                        g_assert (value->type = GCONF_VALUE_INT);
+                        magnification = gconf_value_get_int (value);
+                } else magnification = 1;
+
+                /* Interpolation? */
+                value = gconf_client_get_without_default (client, "/apps/" PACKAGE "/interpolation", NULL);
+                if (value) {
+                        g_assert (value->type = GCONF_VALUE_INT);
+                        switch (gconf_value_get_int (value)) {
+                        case 0:
+                                interpolation = GDK_INTERP_NEAREST;
+                                break;
+                        case 1:
+                                interpolation = GDK_INTERP_TILES;
+                                break;
+                        case 2:
+                                interpolation = GDK_INTERP_BILINEAR;
+                                break;
+                        case 3:
+                                interpolation = GDK_INTERP_HYPER;
+                                break;
+                        default:
+                                g_assert_not_reached ();
+                        }
+                } else interpolation = GDK_INTERP_BILINEAR;
+                gdk_pixbuf_render_pixmap_and_mask (gdk_pixbuf_scale_simple (
+                        pixbuf,
+                        magnification * gdk_pixbuf_get_width (pixbuf),
+                        magnification * gdk_pixbuf_get_height (pixbuf),
+                        interpolation), &pixmap, &bitmap, 127);
+                gdk_pixbuf_unref (pixbuf);
+                gtk_pixmap_set (pm, pixmap, bitmap);
+        } else {
+                if (strcmp ("/", path) == 0) dialog_information (_("Could not load image '/%s'!"), filename);
+                else dialog_information (_("Could not load image '%s/%s'!"), path, filename);
+        }
+}
+
+void
+camera_tree_update_pixmaps (GtkTree* tree)
+{
+        GtkTreeItem*    item;
+        gint            i;
+
+	g_assert (tree != NULL);
+
+        for (i = 0; i < g_list_length (tree->children); i++) {
+                item = GTK_TREE_ITEM (g_list_nth_data (tree->children, i));
+                if (item->subtree) camera_tree_update_pixmaps (GTK_TREE (item->subtree));
+                else if (gtk_object_get_data (GTK_OBJECT (item), "pixmap")) camera_tree_item_update_pixmap (item);
+        }
+} 
 

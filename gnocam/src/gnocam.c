@@ -4,12 +4,11 @@
 #include <glade/glade.h>
 #include <gconf/gconf-client.h>
 #include <gphoto2.h>
-#include <callbacks.h>
 #include "gphoto-extensions.h"
-#include "gnocam.h"
 #include "cameras.h"
-#include "properties.h"
 #include "information.h"
+#include "frontend.h"
+#include "notification.h"
 
 /********************/
 /* Global Variables */
@@ -22,68 +21,12 @@ GladeXML*	xml;
 /* Functions */
 /*************/
 
-int gp_frontend_status (Camera *camera, char *status) 
-{
-	gnome_appbar_set_status (GNOME_APPBAR (glade_xml_get_widget (xml, "appbar")), status);
-	return (GP_OK);
-}
-
-int gp_frontend_progress (Camera *camera, CameraFile *file, float percentage)
-{
-	gnome_appbar_set_progress (GNOME_APPBAR (glade_xml_get_widget (xml, "appbar")), percentage / 100);
-	return (GP_OK);
-}
-
-int gp_frontend_message (Camera *camera, char *message)
-{
-	dialog_information (message);
-	return (GP_OK);
-}
-
-int gp_frontend_confirm (Camera *camera, char *message)
-{
-	//FIXME
-	return (GP_CONFIRM_NO);
-}
-
-int gp_frontend_prompt (Camera *camera, CameraWidget *window)
-{
-	frontend_data_t*	frontend_data;
-	
-	g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
-
-	/* Is the propertybox opened? */	
-	if (frontend_data->xml_properties) {
-		values_set (frontend_data->xml_properties, window);
-		return (GP_PROMPT_OK);
-	} else {
-		camera_properties (xml, camera, window);
-		return (GP_PROMPT_CANCEL);
-	}
-}
-
-static void
-on_camera_setup_changed (GConfClient* client, guint notify_id, GConfEntry* entry, gpointer user_data)
-{
-	GtkTree*	tree;
-
-	g_assert ((tree = GTK_TREE (glade_xml_get_widget (xml, "tree_cameras"))) != NULL);
-
-	if (entry->value == NULL) {
-		
-		/* No cameras configured. */
-		camera_tree_update (tree, NULL);
-	} else {
-		camera_tree_update (tree, entry->value);
-	}
-}
-
 int main (int argc, char *argv[]) 
 {
 //	static GtkTargetEntry target_table[] = {{"text/uri-list", 0, 0}};
 	GError*		gerror = NULL;
 	GConfValue*	value = NULL;
-	guint 		notify_id_cameras;
+	guint 		notify_id_cameras, notify_id_magnification, notify_id_interpolation;
 	gchar*		prefix = NULL;
 	gchar*		home = NULL;
 	gchar*		message = NULL;
@@ -150,23 +93,6 @@ int main (int argc, char *argv[])
 	/* connect the signals */
 	glade_xml_signal_autoconnect (xml);
 
-	/* Store some data. */
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "app")), "client", client);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "save_previews")), "xml", xml);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "save_previews_as")), "xml", xml);
-        gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "save_files")), "xml", xml);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "save_files_as")), "xml", xml);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "delete")), "xml", xml);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "exit")), "xml", xml);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "preferences")), "client", client);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "about")), "xml", xml);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "tree_cameras")), "xml", xml);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "button_save_files")), "xml", xml);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "button_save_files_as")), "xml", xml);
-        gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "button_save_previews")), "xml", xml);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "button_save_previews_as")), "xml", xml);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "button_delete")), "xml", xml);
-
         /* Populate the camera tree. */
         value = gconf_client_get (client, "/apps/" PACKAGE "/cameras", NULL);
         if (value) {
@@ -176,6 +102,8 @@ int main (int argc, char *argv[])
 
 	/* Notifications. */
 	notify_id_cameras = gconf_client_notify_add (client, "/apps/" PACKAGE "/cameras", on_camera_setup_changed, NULL, NULL, NULL);
+	notify_id_magnification = gconf_client_notify_add (client, "/apps/" PACKAGE "/magnification", on_preview_setup_changed, NULL, NULL, NULL);
+	notify_id_interpolation = gconf_client_notify_add (client, "/apps/" PACKAGE "/interpolation", on_preview_setup_changed, NULL, NULL, NULL);
 
 	/* Drag'n drop stuff. */
 //FIXME
@@ -193,6 +121,8 @@ int main (int argc, char *argv[])
 	/* Clean up. */
 	gp_exit ();
 	gconf_client_notify_remove (client, notify_id_cameras);
+	gconf_client_notify_remove (client, notify_id_magnification);
+	gconf_client_notify_remove (client, notify_id_interpolation);
 	gtk_object_unref (GTK_OBJECT (client));
 	return (0);
 }

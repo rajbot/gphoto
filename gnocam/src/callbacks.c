@@ -13,6 +13,7 @@
 #include "cameras.h"
 #include "preview.h"
 #include "gphoto-extensions.h"
+#include "frontend.h"
 
 /**********************/
 /* External Variables */
@@ -418,15 +419,11 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 	GtkWidget*		hbox;
 	CameraFile*		file;
 	Camera*			camera;
-        GdkPixbuf*		pixbuf;
-        GdkPixbufLoader*	loader;
+	GdkPixbuf*		pixbuf;
         GdkPixmap*		pixmap;
         GdkBitmap*		bitmap;
 	CameraText*		buffer;
 	gint			folder_count, file_count;
-	gint			magnification;
-	GdkInterpType		interpolation;
-	GConfValue*		value;
 
 	g_assert ((notebook = GTK_NOTEBOOK (glade_xml_get_widget (xml, "notebook_files"))) != NULL);
 	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
@@ -475,63 +472,25 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 		}
 
 		if (file) {
+			
+			/* Create a fake pixmap. */
+			pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 1, 1);
+			gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 127);
+			gdk_pixbuf_unref (pixbuf);
+	                widget = gtk_pixmap_new (pixmap, bitmap);
+	                gtk_container_add (GTK_CONTAINER (viewport), widget);
+			gtk_object_set_data (GTK_OBJECT (item), "pixmap", widget);
 
-	                /* Process the image. */
-	                g_assert ((loader = gdk_pixbuf_loader_new ()) != NULL);
-	                if (gdk_pixbuf_loader_write (loader, file->data, file->size)) {
-	                        gdk_pixbuf_loader_close (loader);
-	                        pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
+			/* Render the preview. */
+			camera_tree_item_update_pixmap (item);
+	
+			/* Clist for exif tags. */
+//			widget = gtk_clist_new (1);
+//			gtk_container_add (GTK_CONTAINER (page), widget);
+//			list_text[0] = g_strdup ("This list will display exif tags.");
+//			gtk_clist_append (GTK_CLIST (widget), list_text);
+//			g_free (list_text[0]);
 
-				/* Magnification? */
-				value = gconf_client_get_without_default (client, "/apps/" PACKAGE "/magnification", NULL);
-				if (value) {
-					g_assert (value->type = GCONF_VALUE_INT);
-					magnification = gconf_value_get_int (value);
-				} else magnification = 1;
-				
-				/* Interpolation? */
-				value = gconf_client_get_without_default (client, "/apps/" PACKAGE "/interpolation", NULL);
-				if (value) {
-					g_assert (value->type = GCONF_VALUE_INT);
-					switch (gconf_value_get_int (value)) {
-					case 0:
-						interpolation = GDK_INTERP_NEAREST;
-						break;
-					case 1: 
-						interpolation = GDK_INTERP_TILES;
-						break;
-					case 2: 
-						interpolation = GDK_INTERP_BILINEAR;
-						break;
-					case 3:
-						interpolation = GDK_INTERP_HYPER;
-						break;
-					default: 
-						g_assert_not_reached ();
-					}
-				} else interpolation = GDK_INTERP_BILINEAR;
-	                        gdk_pixbuf_render_pixmap_and_mask (gdk_pixbuf_scale_simple (
-					pixbuf, 
-					magnification * gdk_pixbuf_get_width (pixbuf), 
-					magnification * gdk_pixbuf_get_height (pixbuf), 
-					interpolation), &pixmap, &bitmap, 127);
-	                        gdk_pixbuf_unref (pixbuf);
-	                        widget = gtk_pixmap_new (pixmap, bitmap);
-	                        gtk_container_add (GTK_CONTAINER (viewport), widget);
-				gtk_object_set_data (GTK_OBJECT (item), "pixmap", pixmap);
-	
-				/* Clist for exif tags. */
-//				widget = gtk_clist_new (1);
-//				gtk_container_add (GTK_CONTAINER (page), widget);
-//				list_text[0] = g_strdup ("This list will display exif tags.");
-//				gtk_clist_append (GTK_CLIST (widget), list_text);
-//				g_free (list_text[0]);
-	
-	                } else {
-	                        if (strcmp ("/", path) == 0) dialog_information (_("Could not load image '/%s'!"), filename);
-				else dialog_information (_("Could not load image '%s/%s'!"), path, filename);
-				gtk_container_add (GTK_CONTAINER (viewport), gtk_label_new ("?"));
-	                }
 		}
 		label = gtk_label_new (filename);
 

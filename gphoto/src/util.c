@@ -146,6 +146,29 @@ int wait_for_hide (GtkWidget *dialog, GtkWidget *ok_button,
         return 1;
 }
 
+void free_imagemembers (struct ImageMembers *im) {
+
+	if (im->imlibimage)
+		gdk_imlib_kill_image(im->imlibimage);
+
+	if (im->image)
+		gtk_widget_destroy(im->image);
+
+	if (im->label)
+		gtk_widget_destroy(im->label);
+
+	if (im->button)
+		gtk_widget_destroy(im->button);
+
+	if (im->page)
+		gtk_widget_destroy(im->page);
+
+	if (im->info)
+		free(im->info);
+
+	free(im);
+}
+
 void free_image (struct Image *im) {
 
 	/* Note to self: forget to free the image_info here */
@@ -156,8 +179,10 @@ void free_image (struct Image *im) {
 			free(im->image_info[x]);
 		free (im->image_info);
 	}
-	free (im->image);
-	free (im);
+	if (im->image)
+		free (im->image);
+	if (im)
+		free (im);
 }
 
 void save_image (char *filename, struct Image *im) {

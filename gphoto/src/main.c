@@ -45,8 +45,8 @@ extern  char	  serial_port[20];	/* Serial port			*/
 	GtkAccelGroup*  mainag;
 
 	struct _Camera  *Camera;
-	struct ImageInfo Images;
-	struct ImageInfo Thumbnails;
+	struct ImageMembers Images;
+	struct ImageMembers Thumbnails;
 
 	char *filesel_cwd;
 
@@ -67,12 +67,19 @@ int main (int argc, char *argv[]) {
 	GtkWidget *gpixmap;
 	GdkPixmap *pixmap;
 	GdkBitmap *bitmap;
+/*	GdkImlibInitParams params;*/
 	FILE *conf;
 	char fname[1024];
 	char title[256];
-
+/*
+	params.flags = 0;
+	params.flags = PARAMS_IMAGECACHESIZE | PARAMS_SHAREDPIXMAPS;
+	params.sharedpixmaps = '0';
+	params.imagecachesize = 0;
+*/
 	gtk_init(&argc, &argv);
 	gdk_imlib_init();
+/*	gdk_imlib_init_params(&params);*/
 	gtk_widget_push_visual(gdk_imlib_get_visual());
 	gtk_widget_push_colormap(gdk_imlib_get_colormap());
 

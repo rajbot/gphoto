@@ -46,7 +46,7 @@ ee_edit_update_graphs(GtkWidget *w);
 static gint adj_ignore_count = 0;
 
 GdkImlibImage *thisim;
-struct ImageInfo *imnode;
+struct ImageMembers *imnode;
 
 static void
 ee_adjustment_value_changed(GtkAdjustment *a)
@@ -1108,7 +1108,7 @@ ee_edit_set_size_label(GtkWidget *widget, gchar *txt)
 }
 
 GtkWidget *
-img_edit_new(struct ImageInfo *ii)
+img_edit_new(struct ImageMembers *ii)
 {
   GtkWidget *w, *v, *h, *vv, *hh, *f, *a, *b, *aa, *r, *vvv, *p, *t, *l, *c;
   GtkWidget *vm;

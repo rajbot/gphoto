@@ -45,14 +45,14 @@ struct Model {
 	struct _Camera *library;
 };
 
-struct ImageInfo {
+struct ImageMembers {
         GdkImlibImage *imlibimage;
         GtkWidget *image;
         GtkWidget *button;
         GtkWidget *page;
         GtkWidget *label;
         char      *info;
-        struct    ImageInfo *next;
+        struct    ImageMembers *next;
 };
 
 int	  command_line_mode;	/* TRUE if in command line mode */ 

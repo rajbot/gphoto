@@ -34,8 +34,8 @@
 
 static int okDownload;
 
-extern struct ImageInfo Thumbnails;
-extern struct ImageInfo Images;
+extern struct ImageMembers Thumbnails;
+extern struct ImageMembers Images;
 extern struct _Camera *Camera;
 extern struct Model cameras[];
 extern GtkWidget *library_name;
@@ -125,7 +125,7 @@ void del_pics (GtkWidget *dialog, GtkObject *button) {
         int i=1;
 	char error[32];
 
-        struct ImageInfo *node = &Thumbnails;
+        struct ImageMembers *node = &Thumbnails;
 
         gtk_widget_hide(dialog);
         update_status("Deleting selected pictures...");
@@ -161,7 +161,7 @@ void del_dialog () {
 	int nothing_selected = 1;
 	GtkWidget *dialog, *button, *label;
 
-	struct ImageInfo *node = &Thumbnails;
+	struct ImageMembers *node = &Thumbnails;
 	while (node->next != NULL) {
 		node = node->next;
 		if (GTK_TOGGLE_BUTTON(node->button)->active)
@@ -241,7 +241,7 @@ void saveselectedtodisk (GtkWidget *widget, char *type) {
 	char fname[1024], status[32];
 	char *filesel_dir, *filesel_prefix;
 
-	struct ImageInfo *node = &Thumbnails;
+	struct ImageMembers *node = &Thumbnails;
 
 	GtkWidget *filesel, *label;
 	GtkWidget *entry;
@@ -318,13 +318,21 @@ void appendpic (int picNum, int thumbnail, int fromCamera, char *fileName) {
 	GdkPixmap *pixmap;
 	struct Image *im;
 
-	struct ImageInfo *node = &Images;
+	struct ImageMembers *node = &Images;
 
 	while (node->next != NULL)
 		node = node->next;
 
-	node->next = malloc(sizeof(struct ImageInfo));
-	node = node->next; node->next = NULL;
+	node->next = malloc(sizeof(struct ImageMembers));
+
+	node = node->next;
+	node->imlibimage = NULL;
+	node->image = NULL;
+	node->button = NULL;
+	node->page = NULL;
+	node->label = NULL;
+	node->info = NULL;
+	node->next = NULL;
 
 	if (fromCamera) {
 		if ((im = (*Camera->get_picture)(picNum, thumbnail))==0) {
@@ -778,8 +786,8 @@ void menu_selected (gchar *toPrint) {
 void remove_thumbnail (int i) {
 
 	int x=0;
-	struct ImageInfo *node = &Thumbnails;
-	struct ImageInfo *prev = node;
+	struct ImageMembers *node = &Thumbnails;
+	struct ImageMembers *prev = node;
 
 	while (x < i) {
 		prev = node;
@@ -789,21 +797,11 @@ void remove_thumbnail (int i) {
 
 	prev->next = node->next;
 
-	if (node->imlibimage!=NULL)
-		gdk_imlib_kill_image(node->imlibimage);
-
-	if (node->image!=NULL)
-	  if (GTK_PIXMAP(node->image)->pixmap) {
-	    gdk_pixmap_unref(GTK_PIXMAP(node->image)->pixmap);
-	    gdk_imlib_free_pixmap(GTK_PIXMAP(node->image)->pixmap);	
-	  }
-
-	gtk_widget_destroy(node->button);
-	free (node);
+	free_imagemembers (node);
 }
 
 /* Place a thumbnail into the index at location corresponding to node */
-void insert_thumbnail(struct ImageInfo *node) {
+void insert_thumbnail(struct ImageMembers *node) {
   char status[256], error[32];
   GdkPixmap *pixmap;
   GdkImlibImage *scaledImage;
@@ -812,7 +810,7 @@ void insert_thumbnail(struct ImageInfo *node) {
   /*  char *thumbname;*/
   int i=0, x;
   int w, h;
-  struct ImageInfo *other=&Thumbnails;
+  struct ImageMembers *other=&Thumbnails;
   struct Image *im;
   double aspectRatio;
   char info[1024];
@@ -896,7 +894,7 @@ gint thumb_click( GtkWidget *widget,GdkEventButton *event,gpointer   callback_da
 
 	/* Double click will (re)-load the thumbnail*/
 	if (event->type==GDK_2BUTTON_PRESS){
-	  insert_thumbnail((struct ImageInfo *)callback_data);
+	  insert_thumbnail((struct ImageMembers *)callback_data);
 	  return(TRUE);
 	};
 
@@ -920,7 +918,7 @@ void makeindex (int getthumbs) {
 	extern activate_button(GtkWidget *cur_button);
 	extern deactivate_button(GtkWidget *cur_button);
 
-	struct ImageInfo *node = &Thumbnails;
+	struct ImageMembers *node = &Thumbnails;
 
 	update_status("Getting Index...");	
 
@@ -951,9 +949,15 @@ fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
 			update_status("Download cancelled.");
 			return;
 		}
-		node->next = malloc (sizeof(struct ImageInfo));
-		node = node->next; node->next = NULL;
-
+		node->next = malloc (sizeof(struct ImageMembers));
+		node = node->next;
+		node->imlibimage = NULL;
+		node->image = NULL;
+		node->button = NULL;
+		node->page = NULL;
+		node->label = NULL;
+		node->info = NULL;
+		node->next = NULL;
 		
 		node->button = gtk_toggle_button_new();
 		gtk_widget_show(node->button);
@@ -1029,7 +1033,7 @@ void getpics (char *pictype) {
 	extern activate_button(GtkWidget *cur_button);
         extern deactivate_button(GtkWidget *cur_button);
 
-	struct ImageInfo *node = &Thumbnails;
+	struct ImageMembers *node = &Thumbnails;
 	
 	while (node->next != NULL) {	
 		node=node->next;
@@ -1079,8 +1083,8 @@ void remove_image(int i) {
 
 	int x=0;
 
-	struct ImageInfo *node = &Images;
-	struct ImageInfo *prev = node;
+	struct ImageMembers *node = &Images;
+	struct ImageMembers *prev = node;
 
 
 	while (x < i) {
@@ -1090,13 +1094,7 @@ void remove_image(int i) {
 	}
 
 	prev->next = node->next;
-	gdk_imlib_kill_image(node->imlibimage);
-	gdk_pixmap_unref(GTK_PIXMAP(node->image)->pixmap);
-	gdk_imlib_free_pixmap(GTK_PIXMAP(node->image)->pixmap);
-	gtk_widget_destroy(node->image);
-	gtk_widget_destroy(node->page);
-/*	gtk_notebook_remove_page(GTK_NOTEBOOK(notebook), i);*/
-	free(node);
+	free_imagemembers(node);
 }
 
 void closepic () {
@@ -1114,7 +1112,7 @@ void save_opened_image (int i, char *filename) {
 
 	int x=0;
 
-	struct ImageInfo *node = &Images;
+	struct ImageMembers *node = &Images;
 	while (x < i) {
 		node = node->next;
 		x++;
@@ -1210,7 +1208,7 @@ void print_pic () {
 
 	int currentPic, pid, x=0;
 	char command[1024], fname[1024];
-	struct ImageInfo *node = &Images;
+	struct ImageMembers *node = &Images;
 
 	GtkWidget *dialog, *label, *entry, *hbox, *okbutton, *cancelbutton;
 
@@ -1287,7 +1285,7 @@ void print_pic () {
 
 void select_all() {
 
-	struct ImageInfo *node = &Thumbnails;
+	struct ImageMembers *node = &Thumbnails;
 
 	while (node->next != NULL) {
 		node = node->next;
@@ -1298,7 +1296,7 @@ void select_all() {
 
 void select_inverse() {
 
-	struct ImageInfo *node = &Thumbnails;
+	struct ImageMembers *node = &Thumbnails;
 
 	while (node->next != NULL) {
 		node = node->next;
@@ -1308,7 +1306,7 @@ void select_inverse() {
 
 void select_none() {
 
-	struct ImageInfo *node = &Thumbnails;
+	struct ImageMembers *node = &Thumbnails;
 
 	while (node->next != NULL) {
 		node = node->next;
@@ -1319,7 +1317,7 @@ void select_none() {
 
 void color_dialog() {
 	int i=0,currentPic;
-	struct ImageInfo *node = &Images;
+	struct ImageMembers *node = &Images;
 
 	currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
 	if (currentPic == 0) {
@@ -1396,7 +1394,7 @@ void resize_dialog() {
 	GdkImlibImage *scaledImage;
 	GdkPixmap *pixmap;
 
-	struct ImageInfo *node = &Images;
+	struct ImageMembers *node = &Images;
 
 	currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
 	if (currentPic == 0) {
@@ -1507,7 +1505,7 @@ void resize_dialog() {
 void manip_pic (gchar *Option) {
 
 	int i=0, currentPic, w, h;
-	struct ImageInfo *node = &Images;
+	struct ImageMembers *node = &Images;
 
 	GdkPixmap *pixmap;
 	
@@ -1560,7 +1558,7 @@ void scale (int factor) { /* Decreases image size by factor n % */
   GdkImlibImage *scaledImage;
   GdkPixmap *pixmap;
   
-  struct ImageInfo *node = &Images;
+  struct ImageMembers *node = &Images;
 
   w = h = 0;
 

@@ -23,7 +23,7 @@ void about_dialog();
 void show_license();
 void menu_selected (gchar *toPrint);
 void remove_thumbnail (int i);
-void insert_thumbnail(struct ImageInfo *node);
+void insert_thumbnail(struct ImageMembers *node);
 void makeindex (int getthumbs);
 void getindex ();
 void getindex_empty ();

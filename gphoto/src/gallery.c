@@ -40,6 +40,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.13  1999/07/01 16:22:22  scottf
+ * renamed "struct ImageInfo" to "struct ImageMembers" to avoid confusion
+ * added "free_imagemembers(struct ImageMembers *im)" to util.c to centralize
+ * 	removing the image related widgets and images.
+ * initialized all the ImageMembers members to NULL
+ * fixed the core dump after retrieving 2 or 3 concurrent indexes.
+ *
  * Revision 1.12  1999/06/30 00:13:16  scottf
  * updated the "get blank index" icon to be a little more consistent
  * added gtk_directory_selection_new() and related functions
@@ -126,8 +133,8 @@
 extern GtkWidget *index_window;
 /* extern GtkWidget *browse_button; */
 
-extern struct ImageInfo Thumbnails;
-extern struct ImageInfo Images;
+extern struct ImageMembers Thumbnails;
+extern struct ImageMembers Images;
 extern struct _Camera *Camera;
 extern char   *filesel_cwd;
 
@@ -207,8 +214,8 @@ void gallery_main() {
 	GtkWidget *galentry;
 	GtkWidget *label, *dirlabel, *dirbutton, *hbox, *hseparator;
 
-	struct ImageInfo *node = &Thumbnails;
-	struct ImageInfo *node_image;
+	struct ImageMembers *node = &Thumbnails;
+	struct ImageMembers *node_image;
 
 	if (Thumbnails.next == NULL) {
 		error_dialog(

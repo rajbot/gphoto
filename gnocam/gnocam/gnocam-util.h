@@ -2,7 +2,7 @@
 	gint	r;							      \
 									      \
 	r = result;							      \
-        if (r <= 0) {      						      \
+        if (!BONOBO_EX (ev) && (r <= 0)) {				      \
                 switch (r) {						      \
                 case GP_OK:                                                   \
                         break;                                                \

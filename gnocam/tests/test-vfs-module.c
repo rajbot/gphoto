@@ -1,4 +1,4 @@
-
+#include <gtk/gtkmain.h>
 #include <libgnomevfs/gnome-vfs.h>
 
 #define CHECK(r) {GnomeVFSResult result = r; if (result != GNOME_VFS_OK) g_error(gnome_vfs_result_to_string (result));}
@@ -59,6 +59,8 @@ int main (int argc, char **argv)
 	gchar *text_uri;
 
 	g_assert (argc == 2);
+
+	gtk_init (&argc, &argv);
 
 	/* Initialize gnome-vfs */
 	g_message ("Initializing gnome-vfs...");

@@ -71,7 +71,7 @@ impl_GNOME_Camera_capturePreview (PortableServer_Servant servant,
 	g_message ("impl_GNOME_Camera_capturePreview");
 
 	c = GNOCAM_CAMERA (bonobo_object_from_servant (servant));
-	file = gp_file_new ();
+	CHECK_RESULT (gp_file_new (&file), ev);
 	CHECK_RESULT (gp_camera_capture_preview (c->priv->camera, file), ev);
 	if (BONOBO_EX (ev)) {
 		gp_file_unref (file);

@@ -182,9 +182,14 @@ static GnomeVFSResult do_open (
 	if (result != GNOME_VFS_OK)
 		return (result);
 
+	result = GNOME_VFS_RESULT (gp_file_new (&file));
+	if (result != GNOME_VFS_OK) {
+		unref_camera (camera);
+		return (result);
+	}
+
 	dirname = gnome_vfs_uri_extract_dirname (uri);
 	filename = gnome_vfs_uri_get_basename (uri);
-	file = gp_file_new ();
 	g_mutex_lock (cameras_mutex);
 	if (gnome_vfs_uri_get_user_name (uri) != NULL)
 		result = GNOME_VFS_RESULT (gp_camera_file_get_preview (camera,
@@ -242,7 +247,7 @@ static GnomeVFSResult do_create (
 	g_mutex_lock (cameras_mutex);
 	file_handle->camera = camera;
 	g_mutex_unlock (cameras_mutex);
-	file_handle->file = gp_file_new ();
+	gp_file_new (&(file_handle->file));
 	file_handle->create = TRUE;
 	file_handle->dirname = gnome_vfs_uri_extract_dirname (uri);
 	file_handle->preview = (gnome_vfs_uri_get_user_name (uri) != NULL);

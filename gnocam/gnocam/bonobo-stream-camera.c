@@ -170,7 +170,7 @@ camera_commit (BonoboStream* s, CORBA_Environment* ev)
 	
 	stream = BONOBO_STREAM_CAMERA (s);
 	
-	file = gp_file_new ();
+	CHECK_RESULT (gp_file_new (&file), ev);
 	CHECK_RESULT (gp_file_append (file, stream->priv->buffer,
 				      stream->priv->size), ev);
 	CHECK_RESULT (gp_camera_folder_put_file (stream->priv->camera,
@@ -324,7 +324,7 @@ bonobo_stream_camera_new (Camera            *camera,
         }
 
         /* Get the file. */
-	file = gp_file_new ();
+	CHECK_RESULT (gp_file_new (&file), ev);
         if (flags & Bonobo_Storage_READ) {
 		if (flags & Bonobo_Storage_COMPRESSED) {
 			CHECK_RESULT (gp_camera_file_get_preview (camera, 
@@ -333,14 +333,10 @@ bonobo_stream_camera_new (Camera            *camera,
 			CHECK_RESULT (gp_camera_file_get_file (camera, 
 						dirname, filename, file), ev);
 		}
-		if (BONOBO_EX (ev)) {
-			gp_file_unref (file);
-			return (NULL);
-		}
-		if (strcmp (file->name, filename)) 
-			g_warning ("Filenames differ: filename is '%s', 
-				   file->name is '%s'!", filename, file->name);
 	}
+	CHECK_RESULT (gp_file_unref (file), ev);
+	if (BONOBO_EX (ev))
+		return (NULL);
 
 	new = gtk_type_new (BONOBO_STREAM_CAMERA_TYPE);
 	new->priv->dirname = g_strdup (dirname); 

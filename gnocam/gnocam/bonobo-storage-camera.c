@@ -126,8 +126,6 @@ camera_get_info (BonoboStorage *s, const CORBA_char *name,
 
 	/* Get the list of files in order to check if this is a file */
 	CHECK_RESULT (gp_list_new (&list), ev);
-	if (BONOBO_EX (ev))
-		return (NULL);
 	CHECK_RESULT (gp_camera_folder_list_files (storage->priv->camera, 
 					storage->priv->path, list), ev);
 	if (BONOBO_EX (ev)) {
@@ -285,10 +283,6 @@ camera_list_contents (BonoboStorage *s, const CORBA_char *name,
 
 	/* Get folder list. */
 	CHECK_RESULT (gp_list_new (&folder_list), ev);
-	if (BONOBO_EX (ev)) {
-		g_free (full_path);
-		return (NULL);
-	}
 	CHECK_RESULT (gp_camera_folder_list_folders (storage->priv->camera, 
 						full_path, folder_list), ev);
 	if (BONOBO_EX (ev)) {

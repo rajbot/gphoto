@@ -41,7 +41,7 @@ do_capture (gpointer data){
 	capture = GNOCAM_CAPTURE (data);
 
         /* Prepare the image. */
-        file = gp_file_new ();
+	gp_file_new (&file);
 
         /* Capture. */
 	result = gp_camera_capture_preview (capture->priv->camera, file);

@@ -57,6 +57,7 @@ camera_resolve (BonoboMoniker 		    *moniker,
 		return (CORBA_OBJECT_NIL);
 
 	/* Get the storage */
+	g_message ("Getting storage...");
 	storage = Bonobo_Unknown_queryInterface (camera,
 						 "IDL:Bonobo/Storage:1.0", ev);
 	bonobo_object_release_unref (camera, NULL);
@@ -68,14 +69,16 @@ camera_resolve (BonoboMoniker 		    *moniker,
 		Bonobo_Storage sub_storage;
 
 		g_message ("Trying to open storage for '%s'...", name);
-
 		sub_storage = Bonobo_Storage_openStorage (storage, name,
 							  Bonobo_Storage_READ |
 							  Bonobo_Storage_WRITE,
 							  ev);
 		bonobo_object_release_unref (storage, NULL);
-		if (BONOBO_EX (ev))
+		if (BONOBO_EX (ev)) {
+			g_message ("Failure: %s", 
+				   bonobo_exception_get_text (ev));
 			return (CORBA_OBJECT_NIL);
+		}
 
 		return (sub_storage);
 	}

@@ -293,7 +293,9 @@ camera_open_storage (BonoboStorage *s, const CORBA_char *name,
 
 	storage = BONOBO_STORAGE_CAMERA (s);
 
-	if (!strcmp (storage->priv->path, "/"))
+	if (*name == '/')
+		path_new = g_strdup (name);
+	else if (!strcmp (storage->priv->path, "/"))
 		path_new = g_strconcat ("/", name, NULL);
 	else 
 		path_new = g_strdup_printf ("%s/%s", storage->priv->path, name);

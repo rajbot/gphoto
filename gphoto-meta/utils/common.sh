@@ -34,3 +34,5 @@ cmd() {
 	fail
     fi
 }
+
+cmd cd "${metadir}"

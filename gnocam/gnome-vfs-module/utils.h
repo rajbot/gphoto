@@ -24,12 +24,11 @@ typedef struct {
 
 GnomeVFSResult GNOME_VFS_RESULT (int result);
 
-Camera*	camera_new_by_uri (GnomeVFSURI* uri, GConfClient* client, GMutex* client_mutex, GnomeVFSContext* context, GnomeVFSResult* result);
+Camera*	camera_new_by_uri (GnomeVFSURI* uri, GSList* list, GnomeVFSContext* context, GnomeVFSResult* result);
 
 GnomeVFSMethodHandle*	directory_handle_new (
-				GnomeVFSURI* 		uri, 
-				GConfClient* 		client, 
-				GMutex* 		client_mutex, 
+				GnomeVFSURI* 		uri,
+				GSList*			list,
 				GnomeVFSFileInfoOptions options, 
 				GnomeVFSContext*	context,
 				GnomeVFSResult* 	result);
@@ -38,8 +37,7 @@ GnomeVFSResult		directory_handle_free (GnomeVFSMethodHandle* handle);
 GnomeVFSMethodHandle*	file_handle_new	(
 				GnomeVFSURI* 		uri, 
 				GnomeVFSOpenMode 	mode, 
-				GConfClient* 		client, 
-				GMutex* 		client_mutex, 
+				GSList*			list,
 				GnomeVFSContext*	context,
 				GnomeVFSResult* 	result);
 GnomeVFSResult		file_handle_free (GnomeVFSMethodHandle* handle);

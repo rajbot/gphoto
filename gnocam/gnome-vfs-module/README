@@ -9,4 +9,11 @@ specified in the preferences dialog of GnoCam.
 Currently, you are able to get previews with 
 something like "camera://previews@my_camera/".
 
+By the way: The module hangs when accessing gconf
+all the time. Therefore the initialization mess.
+But like that, I only access gconf one time and
+never again. Which means you have to restart
+nautilus (= unload the module, load it again) in
+order to be able to access new settings.
+
 

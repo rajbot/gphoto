@@ -42,8 +42,11 @@ lib: ..\lib\libgpio.a
 obj\gpio.o: libgpio\gpio.c
   @$(CC) -o $@ $** $(CCFLAGS)
 
+obj\port.o: libgpio\port.c
+  @$(CC) -o $@ $** $(CCFLAGS)
+
 obj\library.o: libgpio\library.c
   @$(CC) -o $@ $** $(CCFLAGS)
 
-..\lib\libgpio.a: obj\gpio.o obj\library.o
+..\lib\libgpio.a: obj\gpio.o obj\library.o obj\port.o
   @$(MKLIB) $@ $**

@@ -20,7 +20,7 @@ gpio_test_SOURCES = gpio-test.c
 gpio_test_LDADD = libgpio.la
 
 gpioincdir = $(includedir)/gpio
-gpioinc_HEADERS = gpio.h
+gpioinc_HEADERS = gpio.h gpio-serial.h
 
 # DEPS = $(top_builddir)/libgpio.la
 # LDADDS = $(top_builddir)/libgpio.la

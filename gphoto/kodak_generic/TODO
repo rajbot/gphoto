@@ -1,17 +1,44 @@
 Things to do for the DC240 Driver:
 ----------------------------------
-   - Need to add recovery from a packet timeout during data transfers.
-     The problem is that the error function doesn't know what type of
-     error occured.  This information needs to be passed into the error
-     handler function so that it can decide to retry the packet in the
-     event of a timeout.
+   Error Handling:
 
-   - There is a nasty problem with reading the directory when the directory
-     has more entries than will fit into a single packet.  When this
-     happens, the driver causes a SEGV when reading the second packet.
-     The strange thing is that the correct amount of space was allocated
-     by malloc at the start of the operation, but by the time that the
-     next packet arrives, everything goes haywire.
+      - Need to add recovery from a packet timeout during packet
+        transfers.  The error function now knows what type of error
+        occured (unknown, read, write, or timeout), but it doesn't
+        do anything with the error.  The real question is "What should
+        be done on timeout errors?"
+
+      - Verify that packet checksum errors are correctly handled.
+        Basically, someone needs to beat the hell out of the driver
+        until you get a checksum error and make sure that checksum
+        errors cause a packet retransmission.
+
+      - Make the driver work correctly when gphoto is started with
+        the camera turned off.  Currently for things to work right,
+        the camera needs to be on when gphoto runs.
+
+        There is some logic in kodak_dc240_helpers.c that attemts to
+        reinitialize the camera (by asserting break and then trying
+        to change the baud rate from 9600 to 115200) after an error,
+        but I've never seen this work right.
+
+        After the break, the command to change the baud rate is sent,
+        but the camera goes bonkers after this.  By playing around with
+        the IGNBRK flag, I made the determination that the camera seems
+        to be asserting the break signal (or the PC thinks it is anyway).
+        This could mean that we have a baud rate mismatch or we've done
+        something to hose up the camera.
+
+   Commands:
+
+      - ...get_preview() needs to be implemented.
+
+      - ...delete_picture() needs to be implemented.
+
+      - ...get_status() could be changed to return more information.
+
+      - ...configure() needs to be implemented.
 
 Things to do for the generic Kodak support:
 -------------------------------------------
+   Nothing (yet).

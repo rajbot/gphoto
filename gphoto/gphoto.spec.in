@@ -8,14 +8,14 @@ Version: %ver
 Release: %rel
 Copyright: GPL
 Group: X11/Utilities
-Source: ftp://ftp.gphoto.org/projects/gphoto/pub/tar/gphoto/0.3/gphoto-%{ver}.tar.gz
+Source: ftp://ftp.gphoto.org/projects/gphoto/pub/tar/gphoto/stable/gphoto-%{ver}.tar.gz
 BuildRoot: /var/tmp/gphoto-root
 URL: http://www.gphoto.org/
 Docdir: %{prefix}/doc
 Requires: gtk+ >= 1.2.0
 
 %description
-gPhoto is a part of the GNU project and is an universal, free
+gPhoto is part of the GNU project - and is an universal, free
 GTK+ application and library framework that lets you download
 images from several different digital camera models, and from
 the local harddrive, and generate HTML albums.

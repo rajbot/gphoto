@@ -40,6 +40,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.21  1999/11/24 11:51:48  ole
+ * typo
+ *
  * Revision 1.20  1999/11/23 11:17:29  ole
  * Path fix by Jae <jgangemi@ccf.rutgers.edu>
  *
@@ -471,7 +474,8 @@ Then, re-run the HTML Gallery.");
 	date[24] = '\0';
  	sprintf(outputdir,"%s",
 		(char*)gtk_object_get_data(GTK_OBJECT(dirlabel),"dir"));
-
+	
+	//jae
 	sprintf(filename, "%s/%s/",GALLERYDIR,theme);
 	dir = opendir(filename);
 	file = readdir(dir);

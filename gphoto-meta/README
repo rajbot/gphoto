@@ -1,4 +1,6 @@
-About the mechanism:
+========================================================================
+What can you do with gphoto-meta?
+========================================================================
 
 
 1. run bootstrap.sh - if you downloaded gphoto-meta via CVS
@@ -27,3 +29,15 @@ parameter to compileinstall.sh).
 Creates a gphoto-meta-VERSION.tar.gz package containing all the
 packages found in dist. This package can then be distributed and
 used to build everything using compileinstall.sh.
+
+
+========================================================================
+How does it work?
+========================================================================
+
+The file "cvs-module-list" contains a list of CVS modules to download
+and compile. Every line describes a CVS module with its location,
+name, the revision to download and some options describing how to
+process it.
+
+[ ... to be continued ... ]

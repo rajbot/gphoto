@@ -396,7 +396,7 @@ static GnomeVFSResult do_read_directory (
 		info->type = GNOME_VFS_FILE_TYPE_REGULAR;
 		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
 		if (directory_handle->options & GNOME_VFS_FILE_INFO_GET_MIME_TYPE) {
-			info->mime_type = g_strdup ("image/png");
+			info->mime_type = g_strdup ("image/jpeg");
 			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
 		}
 	} else {

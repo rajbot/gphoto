@@ -1,0 +1,40 @@
+About the mechanism:
+
+
+1. run bootstrap.sh
+===================
+
+Downloads sources for all subprojects from CVS, configures them
+locally, locally creates distribution tarballs in dist/.
+
+Unfortunately, (due to usage of pkgconfig), we have to install
+libgphoto2 before gtkam or gphoto2 will even configure.
+
+
+2. run compileinstall.sh
+===============================
+
+Compiles the source packages from dist/ and installs them
+to ${instroot} aka inst-root/.
+
+
+
+========================================================================
+The following had been planned, but is not quite feasible for a number
+of reasons.
+========================================================================
+
+
+2. run autogen.sh
+=================
+Initializes automake based build system for all subprojects.
+
+
+3. make gphoto-world
+====================
+(configure, make and install) for each project in turn.
+
+
+4. make dist
+============
+create one huge tarball containing all subprojects

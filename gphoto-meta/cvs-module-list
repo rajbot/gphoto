@@ -1,0 +1,6 @@
+:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/libusb	libusb		HEAD	""
+:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/libexif	libexif		HEAD	""
+:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto	libgphoto2	HEAD	""
+:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto	gphoto2-manual	HEAD	""
+:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto	gphoto2		HEAD	""
+:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto	gtkam		HEAD	""

@@ -1,68 +1,85 @@
 # $Id$
 
-Scott Fritzinger (scottf@scs.unr.edu)
+Scott Fritzinger <scottf@scs.unr.edu>
 GUI, HTML gallery, Live Cam! plugins
 Fujitsu chipset library
 
-Eugene Crosser (crosser@average.org)
+Eugene Crosser <crosser@average.org>
 Fujitsu chipset protocol
 
-Matt Martin (matt.martin@ieee.org)
+Matt Martin <matt.martin@ieee.org>
 Fuji DS-7 library
 Bug fixing and GUI features
 
-Gary Ross (gdr@hooked.net)
+Werner Almesberger <almesber@lrc.di.epfl.ch>
+Canon A50 library
+
+Wolfgang Reissnegger
+Canon A50 library
+
+Ray Newman
+Canon PS350 protocol sniffing
+
+Anne Bezemer <costar@panic.et.tudelft.nl>
+Canon PS350 protocol sniffing
+
+Gus Hartmann <hartmann@cs.wisc.edu>
+Minolta Dimage V library
+
+Gary Ross <gdr@hooked.net>
 Casio QV library
 
-M. Adam Kendall (joker@penguinpub.com)
-Implemented the Sony DSC compatible library.
+Ed Legowski <edlegowski@pobox.com>
+Konica Q-M100, HP-C20/30 library
 
-Del Simmons (del@gphoto.org)
+M. Adam Kendall <joker@penguinpub.com>
+Sony DSC compatible library.
+
+Del Simmons <del@gphoto.org>
 Kodak DC20/25 library
-CVS maintaining
 
-Bob Paauwe (bpaauwe@bobsplace.com)
+Bob Paauwe <bpaauwe@bobsplace.com>
 Philips ESP 80 library
 Bug fixing
 
-Cliff Wright (cliff@snipe444.org)
+Cliff Wright <cliff@snipe444.org>
 Ricoh RDC 300/300Z library
 Bug fixing
 
-Phill Hugo (phill@gphoto.org)
+Phill Hugo <phill@gphoto.org>
 Konica Q-M100, HP-C20/30 library
 Rewrote dynamic loaded libraries
 
-Beat Christen (spiff@longstreet.ch)
+Beat Christen <spiff@longstreet.ch>
 Toshiba PDR M1 library
 
-Warren Baird (wjbaird@bigfoot.com)
+Warren Baird <wjbaird@bigfoot.com>
 Bug fixing
 
-Brent D. Metz (bmetz@vt.edu)
+Brent D. Metz <bmetz@vt.edu>
 Kodak 200/210 library
 
-Brian Hirt (bhirt@loopy.berkhirt.com)
+Brian Hirt <bhirt@loopy.berkhirt.com>
 Kodak 210 library
 
-Mandrake (mandrake@lobotomy.com)
+Mandrake <mandrake@lobotomy.com>
 Kodak DC210 library hacking
 
-Randy D. Scott (scottr@wwa.com)
+Randy D. Scott <scottr@wwa.com>
 Kodak DC240 library
 
-Paul S. Jenner (psj@mustec.eu.org)
+Paul S. Jenner <psj@mustec.eu.org>
 GNU AutoConf scripts
 
-Tuomas Kuosmanen (tigert@gimp.org)
+Tuomas Kuosmanen <tigert@gimp.org>
 Misc. toolbar icons
 
-Ole Aamot (oleaa@ifi.uio.no)
+Ole Aamot <ole@gnu.org>
 Mailinglists, web, FAQ, bug fixing
 
 If you feel left out, then please
 add yourself to the file "AUTHORS",
-or mail gphoto-devel@gphoto.org!
+or mail <gphoto-devel@gphoto.org>!
 
 The gPhoto project is the easiest
 way for Digital Camera Companies

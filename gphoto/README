@@ -1,6 +1,6 @@
 $Id$
 
-This is a developer release of gPhoto (GNU Photo).
+This is the developer release of gPhoto, the GNU digital camera utility.
 
 DESCRIPTION
 	gPhoto is an universal, free GTK+ application that will allow
@@ -15,18 +15,17 @@ DESCRIPTION
 	gallery "themes" (HTML with special tags), and publish images 
 	to the web.  A directory browse mode has also been implemented.
 
-	gPhoto supports a wide array of digital camera models.  Visit
-	http://www.gphoto.org/cameras.php3 for an updated list.
+	gPhoto supports a wide array of digital camera models.  
+	Visit http://www.gphoto.org/cameras.php3 for an updated list.
 
 IMPORTANT NOTICES
 	- Remove your old one from your $HOME/.gphoto/ directory
 	  and then run gphoto and select your camera model.
 	
 	- For info about HTML gallery theme support, read THEMES (included).
-	  For the latest theme specs., visit http://www.gphoto.org/pub/THEMES
 
 	- For developer specs, please download the latest common interface 
-	  specs from http://www.gphoto.org/pub/PROGRAMMERS
+	  specs from http://www.gphoto.org/documentation/programmers.html
 
 REQUIREMENTS:
         * GNU utils (sed)
@@ -38,22 +37,28 @@ REQUIREMENTS:
 	  
 WHATS IN THE PACKAGE:
 	* GTK+ graphical application, by Scott Fritzinger <scottf@scs.unr.edu>
+	* Canon A50 library by Werner Almesberger <almesber@lrc.di.epfl.ch>
 	* Casio QV library implemented by Gary Ross <gdr@hooked.net>
 	* Directory Browse library, by Scott Fritzinger <scottf@scs.unr.edu>
-        * Fuji DS-7 library implemented by Matt Martin <matt.martin@ieee.org>
+        * Fuji DS/DX library implemented by Matt Martin <matt.martin@ieee.org>
         * Kodak DC-2x library implemented by Del Simmons <del@cimedia.com>
 	* Kodak DC-2x0 library implemented by Brian Hirt <bhirt@mobygames.com>
+	* Kodak DC-240 library by Randy Scott <scottr@wwa.com>
+	* Kodak DC-240/280 USB support by David Brownell <david-b@pacbell.net>
 	* Konica Q M-100 library implemented by Phill Hugo <phill@gphoto.org>
+        * Konica library improvements by Ed Legowski <edlegowski@pobox.com>
+        * Minolta Dimage V library by Gus Hartmann <hartmann@cs.wisc.edu> 
 	* Philips ESP library written by Bob Paauwe <bpaauwe@bobsplace.com>
 	* PhotoPC library written by Eugene Crosser <crosser@average.org> 
-	  and implemented for gPhoto by Scott Fritzinger <scottf@scs.unr.edu>
+	* PhotoPC library for gPhoto by Scott Fritzinger <scottf@scs.unr.edu>
         * Ricoh 300 library implemented by Clifford Wright <cliff@snipe444.org>
 	* Sony DSC library written by M. Adam Kendall <joker@penguinpub.com>
+	* Command line interface, by Scott Fritzinger <scottf@scs.unr.edu>
+        * Autoconf/automake/libtool scripts by Paul Jenner <psj@mustec.eu.org>
 
 FEATURES/CHANGES:
-	Here are the major changes to 0.2:
-
 	* Directory browse mode.
+
 		In the "select model/port", select "Browse directory"
 		then, whenever you click on "get index", a file selector
 		pops up to ask you which directory to open. all images
@@ -62,7 +67,13 @@ FEATURES/CHANGES:
 		already archived on your hard drive and you want to find
 		one... also, this can be used in the HTML gallery!
 
-	* HTML gallery
+	* Live Camera! real-time camera preview
+
+		This feature lets you see what your camera sees, 
+		and trigger a snapshot if you like what you see.
+
+	* HTML gallery generator
+
 		The addition of this is a BIGGIE!  This is really the first
 		step in making gPhoto "more" than just a digicam utility.
 		there is a "Default" theme included... to install it, 
@@ -76,8 +87,7 @@ FEATURES/CHANGES:
 			* Go to "plugins->HTML Gallery"
 			* Type in a name for the Gallery
 			* Click on "Default" for the theme
-			* "Change" the output directory to where you want
-				it.
+			* "Change" the output directory to where you want it.
 			* Click on "create"
 
 		It will go through the motions, and tell you when it's
@@ -90,25 +100,32 @@ FEATURES/CHANGES:
 		the tags (until i nail down a faster way internally)
 		so you need that on your machine.
 
-	* Makefile in root source tree
-		People don't need to change to the src directory anymore.
-		Just change to the root source tree (gphoto-0.2-1) and
-		type "make" then "make install".. There is also
-		"make clean", and "make uninstall"
+	* Configure scripts for building libraries and GTK+ application
+
+		To build/install everything, change to the gphoto source
+		tree and type:
+	
+		./configure
+		make
+		make install
+
+		There is also "make clean", "make distclean", and 
+		"make uninstall".
 
 	* Command-line mode
+
 		After building the gPhoto binary, type "gphoto -h" for
 		command-line options. Here's the low-down:
 
-	GNU Photo v.0.4
-	Usage: gphoto [-h] [-n] [-s # filename] [-t # filename]
+	Usage: gphoto [-h] [-c] [-n] [-s # filename] [-t # filename]
 	              [-d #] [-l filename]
-	        -n                      display the # of pictures
-	        -s # filename           save image # as filename
-	        -t # filename           save thumbnail # as filename
-	        -d #                    delete image # from camera
-	        -l filename             save live preview as filename
-	        -h                      display this help screen 
+		-h 			display this help screen
+		-c                      display camera summary
+		-n			display the # of pictures
+		-s # filename		save image # as filename
+		-t # filename		save thumbnail # as filename
+		-d #			delete image # from camera
+		-l filename		save live preview as filename
 
 	Only catch is you MUST run gphoto in graphical
 	mode to initially set the camera library before
@@ -147,103 +164,35 @@ BUGS/PROBLEMS:
 	
 REPORT BUGS TO:
 	gphoto-devel@gphoto.org
+	gphoto-kodak@gphoto.org
 
 UPDATES:
-	http://www.gphoto.org/pub/
+	http://www.gphoto.org/download.php3
 
 FAQS:
 	http://www.gphoto.org/help.php3
 
+VENDOR SUPPORT:
+	http://www.gphoto.org/supporting.php3
+
+SUPPORT LETTER TEMPLATE:
+	http://cvs.gnome.org/lxr/source/gphoto/LETTER
+
 DEVELOPMENT DOCUMENTATION:
-	http://www.gphoto.org/pub/PROGRAMMERS
+	http://cvs.gnome.org/lxr/source/gphoto/PROGRAMMERS
 
 GALLERY THEMES DOCUMENTATION:
-	http://www.gphoto.org/pub/THEMES
-
-AUTHORS:
-	Scott Fritzinger (scottf@scs.unr.edu)
-	GUI, HTML gallery, Live Cam! plugins
-	Fujitsu chipset library
-
-	Eugene Crosser (crosser@average.org)
-	Fujitsu chipset protocol
-
-	Matt Martin (matt.martin@ieee.org)
-	Fuji DS-7 library
-	Bug fixing and GUI features
-
-	Gary Ross (gdr@hooked.net)
-	Casio QV library
-
-	M. Adam Kendall (joker@penguinpub.com)
-	Implemented the Sony DSC compatible library.
-
-	Del Simmons (del@gphoto.org)
-	Kodak DC20/25 library
-	CVS maintaining
-
-	Bob Paauwe (bpaauwe@bobsplace.com)
-	Philips ESP 80 library
-	Bug fixing
-
-	Cliff Wright (cliff@snipe444.org)
-	Ricoh RDC 300/300Z library
-	Bug fixing
-
-	Phill Hugo (phill@gphoto.org)
-	Konica Q-M100, HP-C20/30 library
-	Rewrote dynamic loaded libraries
-
-	Beat Christen (spiff@longstreet.ch)
-	Toshiba PDR M1 library
-
-	Warren Baird (wjbaird@bigfoot.com)
-	Bug fixing
-
-	Brian Hirt (bhirt@loopy.berkhirt.com)
-	Kodak 210 library
-
-	Mandrake (mandrake@lobotomy.com)
-	Kodak DC210 library hacking
-
-	Randy D. Scott (scottr@wwa.com)
-	Kodak DC240 library
-
-	Paul S. Jenner (psj@mustec.eu.org)
-	GNU AutoConf scripts
-
-	Tuomas Kuosmanen (tigert@gimp.org)
-	Misc. toolbar icons
-
-	Ole Aamot (oleaa@ifi.uio.no)
-	Mailinglists, web, FAQ, bug fixing
-
-	If you feel left out, then please
-	add yourself to the file "AUTHORS",
-	or mail gphoto-devel@gphoto.org!
-
-	The gPhoto project is the easiest
-	way for Digital Camera Companies
-	to support potential customers.
-
-	Emailing the gPhoto developers' list
-	<gphoto-devel@gphoto.org> is a good
-	place to start in procuring talents.
-
-	Often it takes nothing more than open
-	access to the technical details and a
-	camera or two for testing/development.
+	http://cvs.gnome.org/lxr/source/gphoto/THEMES
 
 COPYING:
-	For each camera library, please see it's source code.  The authors
+	gPhoto v.0.3.6-pre - the GNU digital camera application
+	Copyright (C) 1998-99 Scott Fritzinger <scottf@unr.edu>
+
+	For each camera library, see the authors' source code.  The authors
 	have been contacted, and the author's permission was kindly granted 
         to publish derived libraries based on the efforts with gPhoto under
-	terms of the GNU GPL (see COPYING to read the full license terms..)
-        _______________________________________________________________
-      
-	gPhoto (GNU Photo) - GTK+ application for digital still cameras.
-	Copyright (C) 1998-99 Scott Fritzinger <scottf@scs.unr.edu>
-	
+	terms of the GNU GPL (see COPYING, to read the full license terms):
+
 	gPhoto is free software; you can redistribute it and/or 
 	modify it under the terms of the GNU General Public License as 
 	published by the Free Software Foundation; either version 2 of 

@@ -204,6 +204,8 @@ static GnomeVFSResult do_open (
 	GnomeVFSContext* 		context)
 {
 	GnomeVFSResult	result;
+
+	g_print ("CAMERA: do_open\n");
 	
 	if ((mode == GNOME_VFS_OPEN_READ) || (mode == GNOME_VFS_OPEN_WRITE)) *handle = file_handle_new (uri, mode, client, client_mutex, context, &result);
 	else result = GNOME_VFS_ERROR_INVALID_OPEN_MODE;
@@ -257,6 +259,8 @@ static GnomeVFSResult do_read (
 
 	g_return_val_if_fail (file_handle = (file_handle_t*) handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
 	g_return_val_if_fail (file_handle->mode == GNOME_VFS_OPEN_READ, GNOME_VFS_ERROR_BAD_PARAMETERS);
+
+	g_print ("CAMERA: do_read\n");
 
 	/* Do we have num_bytes left? */
 	if (file_handle->position + num_bytes >= file_handle->file->size) {
@@ -337,6 +341,8 @@ static GnomeVFSResult do_close_directory (
 	GnomeVFSContext*                context)
 {
 	g_return_val_if_fail (handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
+
+	g_print ("CAMERA: do_close_directory\n");
 	
 	return (directory_handle_free (handle));
 }

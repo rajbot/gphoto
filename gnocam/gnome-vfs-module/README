@@ -2,9 +2,11 @@
 This module isn't fully implemented (yet).
 
 You should be able to access a file with something 
-like "camera://My Camera/directory/filename.jpg", 
+like "camera://my_camera/directory/filename.jpg", 
 where 'My Camera' is the name of the camera you
 specified in the preferences dialog of GnoCam.
 
-Let's wait and see what is yet to come...
+Currently, you are able to get previews with 
+something like "camera://previews@my_camera/".
+
 

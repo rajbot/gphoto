@@ -130,14 +130,21 @@ file_handle_new (GnomeVFSURI* uri, GnomeVFSOpenMode mode, GConfClient* client, G
 	        /* Get the file. */
 		dirname = gnome_vfs_uri_extract_dirname (uri);
 		file = gp_file_new ();
-		if ((*result = GNOME_VFS_RESULT (gp_camera_file_get (camera, file, dirname, (gchar*) filename))) != GNOME_VFS_OK) {
-			gp_camera_unref (camera);
+
+		/* Preview? */
+		if (strcmp (gnome_vfs_uri_get_user_name (uri), "previews") == 0) {
+			*result = GNOME_VFS_RESULT (gp_camera_file_get_preview (camera, file, dirname, (gchar*) filename));
+		} else {
+			*result = GNOME_VFS_RESULT (gp_camera_file_get (camera, file, dirname, (gchar*) filename));
+		}
+		gp_camera_unref (camera);
+
+		/* Everything's ok? */
+		if (*result != GNOME_VFS_OK) {
+			gp_file_unref (file);
 			return (NULL);
 		}
-		gp_file_ref (file);
-		gp_camera_unref (camera);
-		camera = NULL;
-
+		
 	} else if (mode == GNOME_VFS_OPEN_WRITE) {
 
 		/* Create an empty file. */

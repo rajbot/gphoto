@@ -638,36 +638,6 @@ digital photo applications and technology.</para>
       </sect2>
     </sect1>
 
-    <sect1>
-    <title>Pitfalls</title>
-    <para>Many digital devices come with proprietary software or no 
-    software at all for GNU/Linux systems for transferring data to 
-    your computer.</para>
-
-    <para>You should consider to write your manufacturer and ask
-    them to open the protocol specs, to enable camera drivers for
-    free photo software such as gPhoto and SANE to be written.</para>
-
-      <sect2>
-      <title>Kodak PhotoCD</title>
-      <para>
-      <emphasis>PhotoCD</emphasis> is a semi-open standard developed by 
-      Kodak for storing photographic images as digital data on a
-      CD-ROM.  AFAIK, you can only view the images on a computer with 
-      proprietary software from Eastman Kodak.
-      </para>
-      </sect2>
-
-      <sect2>
-      <title>Canon PowerShot</title>
-      <para>
-      Unfortunately, <emphasis>Canon Inc.</emphasis> refuse to
-      disclosure the protocol details for their camera models, 
-      necessary to write free software drivers for gPhoto yet.
-      </para>
-      </sect2>
-    </sect1>
-
   </chapter>
 
   <chapter>
@@ -825,6 +795,36 @@ digital photo applications and technology.</para>
       url="http://home.t-online.de/home/jodda/camedia.htm">http://home.t-online.de/home/jodda/camedia.htm</ulink>
       </para>
       <para>Free software alternative: gPhoto <ulink url="http://www.gphoto.org">http://www.gphoto.org</ulink></para>
+      </sect2>
+    </sect1>
+
+    <sect1>
+    <title>Pitfalls</title>
+    <para>Many digital devices come with proprietary software or no 
+    software at all for GNU/Linux systems for transferring data to 
+    your computer.</para>
+
+    <para>You should consider to write your manufacturer and ask
+    them to open the protocol specs, to enable hardware drivers for
+    free photo software such as gPhoto and SANE to be written.</para>
+
+      <sect2>
+      <title>Kodak PhotoCD</title>
+      <para>
+      <emphasis>PhotoCD</emphasis> is a semi-open standard developed by 
+      Kodak for storing photographic images as digital data on a
+      CD-ROM.  AFAIK, you can only view the images on a computer with 
+      proprietary software from Eastman Kodak.
+      </para>
+      </sect2>
+
+      <sect2>
+      <title>Canon PowerShot</title>
+      <para>
+      Unfortunately, <emphasis>Canon Inc.</emphasis> refuse to
+      disclosure the protocol details for their camera models, 
+      necessary to write free software drivers.
+      </para>
       </sect2>
     </sect1>
 

@@ -8,7 +8,6 @@
 #include <gphoto2.h>
 #include "gnocam.h"
 #include "cameras.h"
-#include "information.h"
 #include "frontend.h"
 #include "notification.h"
 #include "gallery.h"
@@ -33,6 +32,7 @@ GtkTree*		main_tree 	= NULL;
 GnoCamViewMode		view_mode 	= GNOCAM_VIEW_MODE_PREVIEW;
 GList*			preview_list 	= NULL;
 GladeXML*		xml_main 	= NULL;
+GtkWindow*		main_window	= NULL;
 
 /***************/
 /* Prototypes. */
@@ -91,10 +91,10 @@ on_manual_activate (GtkWidget* widget, gpointer user_data)
                 g_free (url);
                 g_free (manualfile);
         } else {
-                dialog_information (
+                gnome_error_dialog_parented (
                         "Could not find the manual for " PACKAGE ". "
                         "Check if it has been installed correctly in "
-                        "$PREFIX/share/gnome/help/gnocam.");
+                        "$PREFIX/share/gnome/help/gnocam.", main_window);
         }
 }
 
@@ -138,7 +138,6 @@ int main (int argc, char *argv[])
 	GConfValue*		value = NULL;
 	guint 			notify_id_cameras;
 	gchar*			prefix = NULL;
-	GtkWidget*		window;
 	GtkWidget*		widget;
 	GtkWidget*      	viewer;
 	GtkWidget*		menu;
@@ -186,12 +185,12 @@ int main (int argc, char *argv[])
 	gp_frontend_register (gp_frontend_status, gp_frontend_progress, gp_frontend_message, gp_frontend_confirm, gp_frontend_prompt);
 
 	/* Create the window. We cannot do it with libglade as bonobo-support in libglade misses some features like toolbars and menus. */
-	gtk_widget_show (window = bonobo_window_new (PACKAGE, PACKAGE));
+	gtk_widget_show (GTK_WIDGET (main_window = GTK_WINDOW (bonobo_window_new (PACKAGE, PACKAGE))));
 	g_assert ((xml_main = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "main_vbox")));
 	gtk_widget_show (widget = glade_xml_get_widget (xml_main, "main_vbox"));
-	bonobo_window_set_contents (BONOBO_WINDOW (window), widget);
+	bonobo_window_set_contents (BONOBO_WINDOW (main_window), widget);
         container = bonobo_ui_container_new ();
-        bonobo_ui_container_set_win (container, BONOBO_WINDOW (window));
+        bonobo_ui_container_set_win (container, BONOBO_WINDOW (main_window));
         component = bonobo_ui_component_new (PACKAGE);
         bonobo_ui_component_set_container (component, bonobo_object_corba_objref (BONOBO_OBJECT (container)));
         bonobo_ui_component_add_verb_list (component, verb);
@@ -218,7 +217,7 @@ int main (int argc, char *argv[])
 		gtk_widget_show (viewer);
 		gtk_paned_pack2 (GTK_PANED (glade_xml_get_widget (xml_main, "main_hpaned")), viewer, TRUE, TRUE);
 		viewer_client = bonobo_widget_get_server (BONOBO_WIDGET (viewer));
-	} else dialog_information (_("Could not start the eog image viewer!"));
+	} else gnome_error_dialog_parented (_("Could not start the eog image viewer!"), main_window);
 
 	/* Set the global variables. */
 	main_tree = GTK_TREE (glade_xml_get_widget (xml_main, "main_tree"));
@@ -260,7 +259,7 @@ int main (int argc, char *argv[])
         for (i = g_list_length (main_tree->children) - 1; i >= 0; i--) camera_tree_item_remove (g_list_nth_data (main_tree->children, i));
 	bonobo_object_unref (BONOBO_OBJECT (component));
 	bonobo_object_unref (BONOBO_OBJECT (container));
-	gtk_widget_destroy (window);
+	gtk_widget_destroy (GTK_WIDGET (main_window));
 
 	/* Clean up (gphoto). */
 	gp_exit ();

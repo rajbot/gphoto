@@ -6,7 +6,6 @@
 #include <parser.h>
 #include "preferences.h"
 #include "gnocam.h"
-#include "information.h"
 
 /********************/
 /* Static Variables */
@@ -344,7 +343,7 @@ on_combo_entry_model_focus_out_event (GtkWidget *widget, GdkEventFocus *event, g
 	if (strcmp ("", model) != 0) {
 		
 		/* User has selected a model. */
-		if (gp_camera_abilities_by_name (model, &abilities) != GP_ERROR) {
+		if (gp_camera_abilities_by_name (model, &abilities) == GP_OK) {
 			i = 0;
 			list = NULL;
 			while (abilities.speed[i] != 0) {
@@ -652,9 +651,9 @@ preferences ()
 	        /* Build model list. */
 		g_assert ((combo = GTK_COMBO (glade_xml_get_widget (xml_preferences, "combo_model"))) != NULL);
 	        list = NULL;
-		if ((number_of_models = gp_camera_count ()) != GP_ERROR) {
+		if ((number_of_models = gp_camera_count ()) >= 0) {
 	                for (i = 0; i < number_of_models; i++) {
-	                        if (gp_camera_name (i, buffer) == GP_ERROR) {
+	                        if (gp_camera_name (i, buffer) != GP_OK) {
 	                                gnome_error_dialog_parented (_("Could not get model name!"), window);
 	                                strcpy (buffer, "?");
 	                        }
@@ -672,9 +671,9 @@ preferences ()
 	        /* Build port list. */
 		g_assert ((combo = GTK_COMBO (glade_xml_get_widget (xml_preferences, "combo_port"))) != NULL);
 		list = NULL;
-	        if ((number_of_ports = gp_port_count ()) != GP_ERROR) {
+	        if ((number_of_ports = gp_port_count ()) >= 0) {
 	                for (i = 0; i < number_of_ports; i++) {
-	                        if (gp_port_info (i, &info) == GP_ERROR) {
+	                        if (gp_port_info (i, &info) != GP_OK) {
 	                                gnome_error_dialog_parented (_("Could not get port info!"), window);
 	                                list = g_list_append (list, g_strdup ("?"));
 	                        } else {

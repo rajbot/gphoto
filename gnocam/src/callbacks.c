@@ -6,7 +6,6 @@
 #include <libgnomevfs/gnome-vfs.h>
 #include "file-operations.h"
 #include "gnocam.h"
-#include "information.h"
 #include "cameras.h"
 #include "preview.h"
 #include "utils.h"
@@ -17,6 +16,7 @@
 
 extern GConfClient*	gconf_client;
 extern GtkTree*		main_tree;
+extern GtkWindow*	main_window;
 extern GnoCamViewMode	view_mode;
 
 /**************/
@@ -116,11 +116,17 @@ on_camera_tree_popup_camera_manual_activate (GtkMenuItem* menuitem, gpointer use
 {
 	Camera*		camera;
 	CameraText 	manual;
+	gchar*		message;
+	gint		result;
 	
 	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (menuitem), "camera")) != NULL);
 
-	if (gp_camera_manual (camera, &manual) == GP_OK) dialog_information (manual.text);
-	else dialog_information (_("Could not get camera manual!"));
+	if ((result = gp_camera_manual (camera, &manual)) == GP_OK) gnome_ok_dialog_parented (manual.text, main_window);
+	else {
+		message = g_strdup_printf ("Could not get camera manual!\n(%s)", gp_camera_result_as_string (camera, result));
+		gnome_error_dialog_parented (message, main_window);
+		g_free (message);
+	}
 }
 
 void

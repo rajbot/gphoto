@@ -17,7 +17,6 @@
 #include "gphoto-extensions.h"
 #include "gnocam.h"
 #include "cameras.h"
-#include "information.h"
 #include "file-operations.h"
 #include "frontend.h"
 #include "utils.h"
@@ -32,6 +31,7 @@ extern BonoboObjectClient*	viewer_client;
 extern GtkTree*			main_tree;
 extern GnoCamViewMode		view_mode;
 extern GList*			preview_list;
+extern GtkWindow*		main_window;
 
 /**************/
 /* Prototypes */
@@ -200,6 +200,8 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 {
         gchar*                  filename;
         gchar*                  path;
+	gchar*			message = NULL;
+	gint			result;
         CameraFile*             file = NULL;
         Camera*                 camera;
 	CORBA_Environment	ev;
@@ -219,9 +221,18 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 		        /* Do we already have the preview? */
 		        if (!(file = gtk_object_get_data (GTK_OBJECT (item), "preview"))) {
 		                file = gp_file_new ();
-		                if (gp_camera_file_get_preview (camera, file, path, filename) != GP_OK) {
-		                        if (strcmp ("/", path) == 0) dialog_information (_("Could not get preview of file '/%s' from camera!"), filename);
-		                        else dialog_information (_("Could not get preview of file '%s/%s' from camera!"), path, filename);
+		                if ((result = gp_camera_file_get_preview (camera, file, path, filename)) != GP_OK) {
+		                        if (strcmp ("/", path) == 0) message = g_strdup_printf (
+						_("Could not get preview of file '/%s' from camera!\n(%s)"), 
+						filename, 
+						gp_camera_result_as_string (camera, result));
+		                        else message = g_strdup_printf (
+						_("Could not get preview of file '%s/%s' from camera!\n(%s)"), 
+						path, 
+						filename, 
+						gp_camera_result_as_string (camera, result));
+					gnome_error_dialog_parented (message, main_window);
+					g_free (message);
 		                        gp_file_unref (file);
 		                        file = NULL;
 		                } else gtk_object_set_data (GTK_OBJECT (item), "preview", file);
@@ -233,9 +244,18 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 			/* Do we already have the file? */
 			if (!(file = gtk_object_get_data (GTK_OBJECT (item), "file"))) {
 				file = gp_file_new ();
-				if (gp_camera_file_get (camera, file, path, filename) != GP_OK) {
-					if (strcmp ("/", path) == 0) dialog_information (_("Could not get file '/%s' from camera!"), filename);
-					else dialog_information (_("Could not get file '%s/%s' from camera!"), path, filename);
+				if ((result = gp_camera_file_get (camera, file, path, filename)) != GP_OK) {
+					if (strcmp ("/", path) == 0) message = g_strdup_printf (
+						_("Could not get file '/%s' from camera!\n(%s)"), 	
+						filename, 
+						gp_camera_result_as_string (camera, result));
+					else message = g_strdup_printf (
+						_("Could not get file '%s/%s' from camera!\n(%s)"), 
+						path, 
+						filename, 
+						gp_camera_result_as_string (camera, result));
+					gnome_error_dialog_parented (message, main_window);
+					g_free (message);
 					gp_file_unref (file);
 					file = NULL;
 				} else gtk_object_set_data (GTK_OBJECT (item), "file", file);
@@ -246,12 +266,18 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 		if (file && viewer_client) {
 			CORBA_exception_init (&ev);
 			interface = bonobo_object_client_query_interface (viewer_client, "IDL:Bonobo/PersistStream:1.0", &ev);
-			if (ev._major != CORBA_NO_EXCEPTION) 
-				dialog_information (_("Could not connect to the eog image viewer! (%s)"), bonobo_exception_get_text (&ev));
-			else {
+			if (ev._major != CORBA_NO_EXCEPTION) {
+				message = g_strdup_printf (_("Could not connect to the eog image viewer! (%s)"), bonobo_exception_get_text (&ev));
+				gnome_error_dialog_parented (message, main_window);
+				g_free (message);
+			} else {
 				g_assert ((stream = bonobo_stream_mem_create (file->data, file->size, FALSE, TRUE)));
 				Bonobo_PersistStream_load (interface, (Bonobo_Stream) bonobo_object_corba_objref (BONOBO_OBJECT (stream)), file->type, &ev);
-				if (ev._major != CORBA_NO_EXCEPTION) dialog_information (_("Could not display the file! (%s)"), bonobo_exception_get_text (&ev));
+				if (ev._major != CORBA_NO_EXCEPTION) {
+					message = g_strdup_printf (_("Could not display the file! (%s)"), bonobo_exception_get_text (&ev));
+					gnome_error_dialog_parented (message, main_window);
+					g_free (message);
+				}
 				bonobo_object_unref (BONOBO_OBJECT (stream));
 				Bonobo_Unknown_unref (interface, &ev);
 				CORBA_Object_release (interface, &ev);
@@ -287,7 +313,7 @@ on_camera_tree_file_drag_data_get (GtkWidget* widget, GdkDragContext* context, G
 void
 on_camera_tree_folder_drag_data_get (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data)
 {
-	dialog_information (_("Not yet implemented!"));
+	gnome_ok_dialog (_("Not yet implemented."));
 }
 
 void
@@ -333,8 +359,10 @@ camera_tree_folder_populate (GtkTreeItem* folder)
         Camera*                 camera;
         gchar*                  path;
         gchar*                  new_path;
+	gchar*			message;
         gint                    folder_list_count, file_list_count;
         gint                    i;
+	gint			result;
 
         g_assert ((camera = gtk_object_get_data (GTK_OBJECT (folder), "camera")) != NULL);
         g_assert ((path = gtk_object_get_data (GTK_OBJECT (folder), "path")) != NULL);
@@ -342,12 +370,16 @@ camera_tree_folder_populate (GtkTreeItem* folder)
         g_assert (GTK_OBJECT (folder->subtree)->ref_count > 0);
 
         /* Get file and folder list. */
-        if (gp_camera_folder_list (camera, &folder_list, path) != GP_OK) {
-                dialog_information ("Could not get folder list for folder '%s'!", path);
+        if ((result = gp_camera_folder_list (camera, &folder_list, path)) != GP_OK) {
+                message = g_strdup_printf ("Could not get folder list for folder '%s'!\n(%s)", path, gp_camera_result_as_string (camera, result));
+		gnome_error_dialog_parented (message, main_window);
+		g_free (message);
                 return;
         }
-        if (gp_camera_file_list (camera, &file_list, path) != GP_OK) {
-                dialog_information ("Could not get file list for folder '%s'!", path);
+        if ((result = gp_camera_file_list (camera, &file_list, path)) != GP_OK) {
+                message = g_strdup_printf ("Could not get file list for folder '%s'!\n(%s)", path, gp_camera_result_as_string (camera, result));
+		gnome_error_dialog_parented (message, main_window);
+		g_free (message);
                 return;
         }
 
@@ -456,6 +488,8 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* path)
 	CameraList	file_list;
 	gint		folder_list_count;
 	gint		file_list_count;
+	gint		result;
+	gchar*		message;
 	GtkTargetEntry 	target_table[] = {{"text/uri-list", 0, 0}};
 
 	g_assert (camera != NULL);
@@ -494,15 +528,19 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* path)
         gtk_object_set_data (GTK_OBJECT (item), "checked", GINT_TO_POINTER (1));
 
         /* Do we have folders? */
-        if (gp_camera_folder_list (camera, &folder_list, path) != GP_OK) {
-                dialog_information ("Could not get folder list for folder '%s'!", path);
+        if ((result = gp_camera_folder_list (camera, &folder_list, path)) != GP_OK) {
+                message = g_strdup_printf ("Could not get folder list for folder '%s'!\n(%s)", path, gp_camera_result_as_string (camera, result));
+		gnome_error_dialog_parented (message, main_window);
+		g_free (message);
                 folder_list_count = 0;
         } else folder_list_count = gp_list_count (&folder_list);
         gtk_object_set_data (GTK_OBJECT (item), "folder_list_count", GINT_TO_POINTER (folder_list_count));
 
         /* Do we have files? */
-        if (gp_camera_file_list (camera, &file_list, path) != GP_OK) {
-                dialog_information ("Could not get file list for folder '%s'!", path);
+        if ((result = gp_camera_file_list (camera, &file_list, path)) != GP_OK) {
+                message = g_strdup_printf ("Could not get file list for folder '%s'!\n(%s)", path, gp_camera_result_as_string (camera, result));
+		gnome_error_dialog_parented (message, main_window);
+		g_free (message);
                 file_list_count = 0;
         } else file_list_count = gp_list_count (&file_list);
         gtk_object_set_data (GTK_OBJECT (item), "file_list_count", GINT_TO_POINTER (file_list_count));

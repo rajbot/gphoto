@@ -7,7 +7,6 @@
 #include <bonobo.h>
 #include <bonobo/bonobo-stream-memory.h>
 #include <libgnomevfs/gnome-vfs.h>
-#include "information.h"
 #include "gnocam.h"
 #include "preview.h"
 #include "file-operations.h"
@@ -26,6 +25,7 @@
 
 extern GConfClient* 	gconf_client;
 extern GList*		preview_list;
+extern GtkWindow*	main_window;
 
 /**************/
 /* Prototypes */
@@ -64,7 +64,14 @@ on_preview_capture_video_activate (GtkWidget* widget, gpointer user_data)
 void
 on_preview_properties_activate (GtkWidget* widget, gpointer user_data)
 {
-	if (gp_camera_config (gtk_object_get_data (GTK_OBJECT (user_data), "camera")) != GP_OK) dialog_information (_("Could not get camera properties!"));
+	gint	result;
+	gchar*	message = NULL;
+	
+	if ((result = gp_camera_config (gtk_object_get_data (GTK_OBJECT (user_data), "camera"))) != GP_OK) {
+		message = g_strdup_printf (_("Could not get camera properties!\n(%s)"), message);
+		gnome_error_dialog_parented (message, main_window);
+		g_free (message);
+	}
 }
 
 void
@@ -98,6 +105,8 @@ on_preview_refresh_activate (GtkWidget* widget, gpointer user_data)
 void
 preview_refresh (GtkWidget* preview)
 {
+	gint			result;
+	gchar*			message;
 	Camera*			camera;
         CameraFile*             file;
         CameraFile*             old_file;
@@ -116,18 +125,24 @@ preview_refresh (GtkWidget* preview)
         info.duration = 0;
 
         /* Capture. */
-        if (gp_camera_capture (camera, file, &info) == GP_OK) {
+        if ((result = gp_camera_capture (camera, file, &info)) == GP_OK) {
 		if ((old_file = gtk_object_get_data (GTK_OBJECT (preview), "file"))) gp_file_free (old_file);
 		gtk_object_set_data (GTK_OBJECT (preview), "file", file);
 		if ((client = gtk_object_get_data (GTK_OBJECT (preview), "client"))) {
 			CORBA_exception_init (&ev);
 			interface = bonobo_object_client_query_interface (client, "IDL:Bonobo/PersistStream:1.0", &ev);
-			if (ev._major != CORBA_NO_EXCEPTION) 
-				dialog_information (_("Could not connect to the eog image viewer! (%s)"), bonobo_exception_get_text (&ev));
-			else {
+			if (ev._major != CORBA_NO_EXCEPTION) {
+				message = g_strdup_printf (_("Could not connect to the eog image viewer! (%s)"), bonobo_exception_get_text (&ev));
+				gnome_error_dialog_parented (message, main_window);
+				g_free (message);
+			} else {
 				g_assert ((stream = bonobo_stream_mem_create (file->data, file->size, FALSE, TRUE)));
 				Bonobo_PersistStream_load (interface, (Bonobo_Stream) bonobo_object_corba_objref (BONOBO_OBJECT (stream)), file->type, &ev);
-				if (ev._major != CORBA_NO_EXCEPTION) dialog_information (_("Could not display the file! (%s)"), bonobo_exception_get_text (&ev));
+				if (ev._major != CORBA_NO_EXCEPTION) {
+					message = g_strdup_printf (_("Could not display the file! (%s)"), bonobo_exception_get_text (&ev));
+					gnome_error_dialog_parented (message, main_window);
+					g_free (message);
+				}
 				bonobo_object_unref (BONOBO_OBJECT (stream));
 				Bonobo_Unknown_unref (interface, &ev);
 				CORBA_Object_release (interface, &ev);
@@ -135,7 +150,9 @@ preview_refresh (GtkWidget* preview)
 			CORBA_exception_free (&ev);
 		}
         } else {
-                dialog_information (_("Could not get preview from camera!"));
+                message = g_strdup_printf (_("Could not get preview from camera!\n(%s)"), gp_camera_result_as_string (camera, result));
+		gnome_error_dialog_parented (message, main_window);
+		g_free (message);
                 gp_file_unref (file);
         }
 }
@@ -211,7 +228,7 @@ preview_new (Camera* camera)
 	if ((widget = bonobo_widget_new_control (EOG_IMAGE_VIEWER_ID, bonobo_object_corba_objref (BONOBO_OBJECT (container))))) {
 		bonobo_window_set_contents (BONOBO_WINDOW (window), widget);
 		gtk_object_set_data (GTK_OBJECT (window), "client", bonobo_widget_get_server (BONOBO_WIDGET (widget)));
-	} else dialog_information (_("Could not start the eog image viewer!"));
+	} else gnome_error_dialog_parented (_("Could not start the eog image viewer!"), main_window);
 	gtk_widget_show_all (window);
 
         /* Store some data. */

@@ -22,6 +22,8 @@ typedef struct {
 /* Prototypes */
 /**************/
 
+GnomeVFSResult GNOME_VFS_RESULT (int result);
+
 Camera*	camera_new_by_uri (GnomeVFSURI* uri, GConfClient* client, GMutex* client_mutex, GnomeVFSContext* context, GnomeVFSResult* result);
 
 GnomeVFSMethodHandle*	directory_handle_new (

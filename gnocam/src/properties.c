@@ -303,7 +303,6 @@ page_new (GnomePropertyBox *propertybox, CameraWidget *camera_widget)
 void
 camera_properties (Camera* camera, CameraWidget* window)
 {
-	GladeXML*		xml_properties;
 	GnomePropertyBox*	propertybox;
 	GtkWidget*		vbox_for_orphans = NULL;
 	CameraWidget*		camera_widget;
@@ -311,16 +310,16 @@ camera_properties (Camera* camera, CameraWidget* window)
 	gboolean 		orphans = FALSE;
 	frontend_data_t*	frontend_data;
 
-	g_assert (camera != NULL);
-	g_assert (window != NULL);
-	g_assert (gp_widget_type (window) == GP_WIDGET_WINDOW);
-	g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
+	g_return_if_fail (camera);
+	g_return_if_fail (window);
+	g_return_if_fail (gp_widget_type (window) == GP_WIDGET_WINDOW);
+	g_return_if_fail (frontend_data = (frontend_data_t*) camera->frontend_data);
+	g_return_if_fail (frontend_data->xml_properties = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "properties"));
+	
 	gp_widget_ref (window);
 
 	/* Create the propertybox */
-	g_assert ((xml_properties = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "properties")) != NULL);
-	frontend_data->xml_properties = xml_properties;
-	propertybox = GNOME_PROPERTY_BOX (glade_xml_get_widget (xml_properties, "properties"));
+	propertybox = GNOME_PROPERTY_BOX (glade_xml_get_widget (frontend_data->xml_properties, "properties"));
 	gtk_window_set_title (GTK_WINDOW (propertybox), frontend_data->name);
 
 	/* Store some data for later use. */
@@ -346,7 +345,7 @@ camera_properties (Camera* camera, CameraWidget* window)
 	}
 
 	/* Connect the signals. */
-	glade_xml_signal_autoconnect (xml_properties);
+	glade_xml_signal_autoconnect (frontend_data->xml_properties);
 
 	/* Show the propertybox. Clean up. */
 	g_free (gtk_object_get_data (GTK_OBJECT (propertybox), "done"));

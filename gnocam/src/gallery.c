@@ -13,8 +13,13 @@
 #include <libgnomevfs/gnome-vfs.h>
 #include "gnocam.h"
 #include "file-operations.h"
-#include "information.h"
 #include "gallery.h"
+
+/**********************/
+/* External Variables */
+/**********************/
+
+extern GtkWindow*	main_window;
 
 /***************/
 /* Definitions */
@@ -54,6 +59,7 @@ void on_editor_drag_data_received (GtkWidget* widget, GdkDragContext* context, g
 	GList*			filenames;
 	gint			i;
 	gchar*			buffer;
+	gchar*			message;
 	gint			buffer_size;
 
 	/* Preliminary stuff. */
@@ -65,7 +71,9 @@ void on_editor_drag_data_received (GtkWidget* widget, GdkDragContext* context, g
 	stream = bonobo_stream_mem_create (NULL, 0, FALSE, TRUE);
 	Bonobo_PersistStream_save (interface, (Bonobo_Stream) bonobo_object_corba_objref (BONOBO_OBJECT (stream)), "text/html", &ev);
 	if (ev._major != CORBA_NO_EXCEPTION) {
-		dialog_information (_("Could not get the editor's contents! (%s)"), bonobo_exception_get_text (&ev));
+		message = g_strdup_printf (_("Could not get the editor's contents! (%s)"), bonobo_exception_get_text (&ev));
+		gnome_error_dialog_parented (message, main_window);
+		g_free (message);
 	} else {
 		stream_mem = BONOBO_STREAM_MEM (stream);
 		buffer = g_malloc (stream_mem->pos + 1);
@@ -92,7 +100,9 @@ void on_editor_drag_data_received (GtkWidget* widget, GdkDragContext* context, g
 		g_free (buffer);
 		Bonobo_PersistStream_load (interface, (Bonobo_Stream) bonobo_object_corba_objref (BONOBO_OBJECT (stream)), "text/html", &ev);
 		if (ev._major != CORBA_NO_EXCEPTION) {
-			dialog_information (_("Could not set the editor's contents! (%s)"), bonobo_exception_get_text (&ev));
+			message = g_strdup_printf (_("Could not set the editor's contents! (%s)"), bonobo_exception_get_text (&ev));
+			gnome_error_dialog_parented (message, main_window);
+			g_free (message);
 		}
 		bonobo_object_unref (BONOBO_OBJECT (stream));
 	}
@@ -136,13 +146,13 @@ on_window_gallery_button_save_as_clicked (GtkWidget* widget, gpointer user_data)
 void
 on_window_gallery_clear_activate (GtkWidget* widget, gpointer user_data)
 {
-	dialog_information (_("Not yet implemented!"));
+	gnome_ok_dialog_parented (_("Not yet implemented!"), main_window);
 }
 
 void
 on_window_gallery_button_clear_clicked (GtkWidget* widget, gpointer user_data)
 {
-	dialog_information (_("Not yet implemented!"));
+	gnome_ok_dialog_parented (_("Not yet implemented!"), main_window);
 }
 
 /*************/

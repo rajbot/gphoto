@@ -6,7 +6,12 @@
 #include "gnocam.h"
 #include "utils.h"
 #include "cameras.h"
-#include "information.h"
+
+/**********************/
+/* External variables */
+/**********************/
+
+extern GtkWindow*	main_window;
 
 /**************/
 /* Prototypes */
@@ -113,9 +118,11 @@ void
 properties (Camera* camera)
 {
         frontend_data_t*        frontend_data;
+	gchar*			message;
+	gint			result;
 
-        g_assert ((camera));
-        g_assert ((frontend_data = (frontend_data_t*) camera->frontend_data) != NULL);
+        g_return_if_fail (camera);
+        g_return_if_fail (frontend_data = (frontend_data_t*) camera->frontend_data);
 
         if (!(frontend_data->xml_properties)) {
 
@@ -123,9 +130,18 @@ properties (Camera* camera)
                 gp_camera_ref (camera);
 
                 /* Get the camera properties from the backend. */
-                if (gp_camera_config (camera) != GP_OK) {
-                        dialog_information (_("Could not get camera properties of camera %s!"), frontend_data->name);
+                if ((result = gp_camera_config (camera)) != GP_OK) {
+			message = g_strdup_printf (
+				_("Could not get camera properties of camera '%s'!\n(%s)"), 
+				frontend_data->name, 
+				gp_camera_result_as_string (camera, result));
+			gnome_error_dialog_parented (message, main_window);
+			g_free (message);
                 }
-        }
+        } else {
+		message = g_strdup_printf (_("The camera properties dialog for camera '%s' is already open."), frontend_data->name);
+		gnome_ok_dialog_parented (message, main_window);
+		g_free (message);
+	}
 }
 

@@ -5,7 +5,6 @@
 #include <glade/glade.h>
 #include <gphoto2.h>
 #include <bonobo.h>
-#include "information.h"
 #include "cameras.h"
 #include "file-operations.h"
 #include "frontend.h"
@@ -24,6 +23,7 @@
 /**********************/
 
 extern GConfClient*	gconf_client;
+extern GtkWindow*	main_window;
 
 /**************/
 /* Prototypes */
@@ -68,7 +68,7 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
 		g_assert ((interface =  bonobo_object_client_query_interface (client, "IDL:Bonobo/PersistFile:1.0", NULL)));
         	CORBA_exception_init (&ev);
 		Bonobo_PersistFile_load (interface, gtk_file_selection_get_filename (fileselection), &ev);
-		if (ev._major != CORBA_NO_EXCEPTION) dialog_information (_("Could not save gallery."));
+		if (ev._major != CORBA_NO_EXCEPTION) gnome_error_dialog_parented (_("Could not save gallery."), main_window);
 	        CORBA_exception_free (&ev);
 		break;
 	case OPERATION_GALLERY_SAVE_AS:
@@ -78,7 +78,7 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
                 g_assert ((interface =  bonobo_object_client_query_interface (client, "IDL:Bonobo/PersistFile:1.0", NULL)));
                 CORBA_exception_init (&ev);
                 Bonobo_PersistFile_save (interface, gtk_file_selection_get_filename (fileselection), &ev);
-                if (ev._major != CORBA_NO_EXCEPTION) dialog_information (_("Could not load gallery."));
+                if (ev._major != CORBA_NO_EXCEPTION) gnome_error_dialog_parented (_("Could not load gallery."), main_window);
 		CORBA_exception_free (&ev);
                 break;
 	default:
@@ -132,6 +132,7 @@ upload (GtkTreeItem* folder, gchar* filename)
 	GnomeVFSURI*		uri = NULL;
         guint8                  data [1025];
 	CameraFile*		file;
+	gchar*			message;
 
 	g_return_if_fail (folder);
 	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (folder), "camera"));
@@ -146,7 +147,9 @@ upload (GtkTreeItem* folder, gchar* filename)
 		strcpy (file->name, gnome_vfs_uri_get_basename (uri));
 
 	        if ((result = gnome_vfs_open_uri (&handle, uri, GNOME_VFS_OPEN_READ)) != GNOME_VFS_OK) {
-	                dialog_information (_("An error occurred while trying to open file '%s' (%s)."), filename, gnome_vfs_result_to_string (result));
+			message = g_strdup_printf (_("An error occurred while trying to open file '%s'.\n(%s)."), filename, gnome_vfs_result_to_string (result));
+			gnome_error_dialog_parented (message, main_window);
+			g_free (message);
 	        } else {
 	                j = 0;
 	                while (TRUE) {
@@ -168,7 +171,12 @@ upload (GtkTreeItem* folder, gchar* filename)
 				camera_file_upload (camera, path, file);
 				camera_tree_folder_refresh (folder);
 			} else {
-				dialog_information (_("An error occurred while trying to read file '%s' (%s)."), filename, gnome_vfs_result_to_string (result));
+				message = g_strdup_printf (
+					_("An error occurred while trying to read file '%s'.\n(%s)."), 
+					filename, 
+					gnome_vfs_result_to_string (result));
+				gnome_error_dialog_parented (message, main_window);
+				g_free (message);
 			}
 		}
 		
@@ -205,11 +213,18 @@ upload (GtkTreeItem* folder, gchar* filename)
 void
 camera_file_upload (Camera* camera, gchar* path, CameraFile* file)
 {
+	gint	result;
+	gchar*	message = NULL;
+	
 	g_return_if_fail (camera);
 	g_return_if_fail (path);
 	g_return_if_fail (file);
 	
-        if (gp_camera_file_put (camera, file, path) != GP_OK) dialog_information (_("Could not upload file '%s' into folder '%s'!"), file->name, path);
+        if ((result = gp_camera_file_put (camera, file, path)) != GP_OK) {
+		message = g_strdup_printf (_("Could not upload file '%s' into folder '%s'!\n(%s)"), file->name, path, gp_camera_result_as_string (camera, result));
+		gnome_error_dialog_parented (message, main_window);
+		g_free (message);
+	}
 }
 
 void
@@ -218,28 +233,35 @@ camera_file_save (CameraFile* file, GnomeVFSURI* uri)
         GnomeVFSResult          result;
         GnomeVFSHandle*         handle;
         GnomeVFSFileSize        file_size;
+	gchar*			message;
 
         g_return_if_fail (file);
         g_return_if_fail (uri);
 
 	/* Save the file. */
         if ((result = gnome_vfs_create_uri (&handle, uri, GNOME_VFS_OPEN_WRITE, FALSE, 0644)) != GNOME_VFS_OK) {
-                dialog_information (
+                message = g_strdup_printf (
 			_("An error occurred while trying to open file '%s' for write access (%s)."), 
 			gnome_vfs_uri_get_basename (uri), 
 			gnome_vfs_result_to_string (result));
+		gnome_error_dialog_parented (message, main_window);
+		g_free (message);
         } else {
                 if ((result = gnome_vfs_write (handle, file->data, file->size, &file_size)) != GNOME_VFS_OK) {
-                        dialog_information (
+                        message = g_strdup_printf (
 				_("An error occurred while trying to write into file '%s' (%s)."), 
 				gnome_vfs_uri_get_basename (uri),
 				gnome_vfs_result_to_string (result));
+			gnome_error_dialog_parented (message, main_window);
+			g_free (message);
                 }
                 if ((result = gnome_vfs_close (handle)) != GNOME_VFS_OK) {
-                        dialog_information (
+                        message = g_strdup_printf (
 				_("An error occurred while trying to close the file '%s' (%s)."), 
 				gnome_vfs_uri_get_basename (uri), 
 				gnome_vfs_result_to_string (result));
+			gnome_error_dialog_parented (message, main_window);
+			g_free (message);
                 }
         }
 }
@@ -318,10 +340,11 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 	gchar*		path;
 	gchar*		filename;
 	gchar*		filename_user;
+	gchar*		message;
 	CameraFile*	file;
 	Camera*		camera;
 	GConfValue*	value;
-	gint		return_status;
+	gint		result;
 	GnomeVFSURI*	uri = NULL;
 
 	g_return_if_fail (item);
@@ -345,11 +368,21 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 
 		/* Get the file/preview from gphoto backend. */
 		file = gp_file_new ();
-		if (preview) return_status = gp_camera_file_get_preview (camera, file, path, filename);
-		else return_status = gp_camera_file_get (camera, file, path, filename);
-		if (return_status != GP_OK) {
-			if (preview) dialog_information (_("Could not get preview of file '%s/%s' from camera!"), path, filename);
-			else dialog_information (_("Could not get file '%s/%s' from camera!"), path, filename);
+		if (preview) result = gp_camera_file_get_preview (camera, file, path, filename);
+		else result = gp_camera_file_get (camera, file, path, filename);
+		if (result != GP_OK) {
+			if (preview) message = g_strdup_printf (
+				_("Could not get preview of file '%s/%s' from camera!\n(%s)"), 
+				path, 
+				filename, 
+				gp_camera_result_as_string (camera, result));
+			else message = g_strdup_printf (
+				_("Could not get file '%s/%s' from camera!\n(%s)"), 
+				path, 
+				filename, 
+				gp_camera_result_as_string (camera, result));
+			gnome_error_dialog_parented (message, main_window);
+			g_free (message);
 			gp_file_free (file);
 			file = NULL;
 		} else {
@@ -402,16 +435,20 @@ delete (GtkTreeItem* item)
 {
 	gchar*	path;
 	gchar*	filename;
+	gchar*	message;
 	Camera*	camera;
+	gint	result;
 
 	g_return_if_fail (path = gtk_object_get_data (GTK_OBJECT (item), "path"));
 	g_return_if_fail (filename = gtk_object_get_data (GTK_OBJECT (item), "filename"));
 	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
 
-	if (gp_camera_file_delete (camera, path, filename) == GP_OK) camera_tree_item_remove (item);
+	if ((result = gp_camera_file_delete (camera, path, filename)) == GP_OK) camera_tree_item_remove (item);
 	else {
-		if (strcmp ("/", path) == 0) dialog_information (_("Could not delete '/%s'!"), filename);
-		else dialog_information (_("Could not delete '%s/%s'!"), path, filename);
+		if (strcmp ("/", path) == 0) message = g_strdup_printf (_("Could not delete '/%s'!\n(%s)"), filename, gp_camera_result_as_string (camera, result));
+		else message = g_strdup_printf (_("Could not delete '%s/%s'!\n(%s)"), path, filename, gp_camera_result_as_string (camera, result));
+		gnome_error_dialog_parented (message, main_window);
+		g_free (message);
 	}
 }
 

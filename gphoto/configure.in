@@ -72,6 +72,6 @@ AC_SUBST(gallerydir)
 AC_OUTPUT(casio/Makefile fuji/Makefile kodak/Makefile konica/Makefile \
 	philips/Makefile photopc/Makefile ricoh/Makefile \
 	kodak_generic/Makefile sony/Makefile directory/Makefile \
-	src/Makefile src/icons/Makefile gallery/Makefile minolta/Makefile\
+	src/Makefile src/icons/Makefile gallery/Makefile minolta/Makefile \
 	gallery/Default/Makefile gallery/RedNGray/Makefile \
 	gallery/CSStheme/Makefile man/Makefile Makefile gphoto.spec)

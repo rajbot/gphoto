@@ -2,19 +2,35 @@ CCFLAGS=-O2 -c -I.. -I..\include -Zmtd -Zcrtdll -Zbin-files -D__ST_MT_ERRNO_ -I.
 CC=gcc
 MKLIB=ar r
 
-all: ..\lib\libgpio.a
+
+all: start \
+  lib \
+  end
+
+start:
+  @echo ****
+  @echo   Entering:      $(MAKEDIR)
+  @echo   using CCFLAGS: $(CCFLAGS)
+  @echo ****
+
+end:
+  @echo ****
+  @echo   Done: $(MAKEDIR)
+  @echo ****
+
+lib: ..\lib\libgpio.a
 
 ..\obj\gpio.o: gpio.c
-  $(CC) -o $@ $** $(CCFLAGS)
+  @$(CC) -o $@ $** $(CCFLAGS)
 
 ..\obj\gpio-serial.o: gpio-serial.c
-  $(CC) -o $@ $** $(CCFLAGS)
+  @$(CC) -o $@ $** $(CCFLAGS)
 
 ..\obj\gpio-parallel.o: gpio-parallel.c
-  $(CC) -o $@ $** $(CCFLAGS)
+  @$(CC) -o $@ $** $(CCFLAGS)
 
 ..\obj\gpio-network.o: gpio-network.c
-  $(CC) -o $@ $** $(CCFLAGS)
+  @$(CC) -o $@ $** $(CCFLAGS)
 
 ..\lib\libgpio.a: ..\obj\gpio.o ..\obj\gpio-serial.o ..\obj\gpio-parallel.o ..\obj\gpio-network.o
-  $(MKLIB) $@ $**
+  @$(MKLIB) $@ $**

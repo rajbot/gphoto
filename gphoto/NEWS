@@ -1,5 +1,4 @@
-A new development version of gPhoto, the GNU Digital Camera Program,
-has been released: gphoto-0.3.99
+gPhoto 0.3.99 NEWS -- user-visible changes.  03 Oct 1999
 
 Please report bugs to the Bug Tracking System (http://bugs.gnome.org)
 Mail source diff patches and comments to: <gphoto-devel@gphoto.org>
@@ -7,11 +6,9 @@ Mail source diff patches and comments to: <gphoto-devel@gphoto.org>
 
 AVAILABILITY
 
-* ftp://ftp.gphoto.org/projects/gphoto/pub/tar/0.3/gphoto-0.3.99.tar.gz
+* ftp://ftp.gphoto.org/projects/gphoto/pub/tar/stable/gphoto-0.3.99.tar.gz
 
-i386/src RPMs (built on RedHat 6.0) of 0.3.99 (including Canon PowerShot A50,
-Kodak DC-240/280 USB and Mustek MDC-800 digital camera support) are also
-available:
+i386/src RPMs (built on RedHat 6.0) of 0.3.99 are also available:
 
 * ftp://ftp.gphoto.org/projects/gphoto/pub/rpm/i386/gphoto-0.3.99-1.i386.rpm
 * ftp://ftp.gphoto.org/projects/gphoto/pub/rpm/SRPMS/gphoto-0.3.99-1.src.rpm
@@ -30,6 +27,22 @@ REQUIREMENTS
 
 
 NEWS
+
+* Sony DSC 55E still library
+
+Mark Davies <mdavies@dial.pipex.com> has written a 
+Sony DSC 55E still library.
+
+* Konica QM 100/200 library and FreeBSD/Linux patches
+
+Toshiki Fujisawa <gphoto@fujisaw.gr.jp> from Development Dept. Camera
+& Digital Imaging Division at Konica Corporation has released free 
+sample source code for Q-M100/Q-M200 under the GPL.
+
+See http://www.konica.co.jp/qscan/open-source-en.html for details.
+
+Mr. Fujisawa also submitted a patch that makes the latest gPhoto 
+release compile on FreeBSD.
 
 * Kodak DC240 serial/USB driver
 

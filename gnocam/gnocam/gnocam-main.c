@@ -85,6 +85,8 @@ impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant,
 
 	gnocam_main = GNOCAM_MAIN (bonobo_object_from_servant (servant));
 	CHECK_RESULT (gp_camera_new (&camera), ev);
+	if (BONOBO_EX (ev))
+		return (CORBA_OBJECT_NIL);
 
 	list = gconf_client_get_list (gnocam_main->priv->client,
 			              "/apps/" PACKAGE "/cameras",

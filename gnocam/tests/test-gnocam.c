@@ -29,7 +29,6 @@ listener_cb (BonoboListener *listener, gchar *event_name, CORBA_any *any,
 		g_message ("Getting storage...");
 		storage = Bonobo_Unknown_queryInterface (camera,
 						"IDL:Bonobo/Storage:1.0", ev);
-		bonobo_object_release_unref (camera, NULL);
 		CHECK (ev);
 
 		g_message ("Getting stream for '%s' (preview only)...",
@@ -58,8 +57,11 @@ listener_cb (BonoboListener *listener, gchar *event_name, CORBA_any *any,
 		CORBA_free (info);
 
 	} else if (!strcmp (event_name, "GNOME/Camera:CaptureImage:Cancel")) {
-		bonobo_object_release_unref (camera, NULL);
+		g_message ("Capturing cancelled!");
 	}
+
+	bonobo_event_source_client_remove_listener (camera, id, NULL);
+	bonobo_object_release_unref (camera, NULL);
 
 	gtk_main_quit ();
 }

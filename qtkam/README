@@ -22,8 +22,8 @@ Requirements
 
 * KDE libraries: can be found at http://www.kde.org
 
-* Qt: a graphical toolkit. The KDE libraries are based on this toolkit, so
-      when you have those, you should have the Qt libraries too. 
+* Qt: the graphical toolkit on which the KDE libraries are built.
+      When you have KDE, you should have the Qt libraries too. 
       More info on Qt can be found at http://www.trolltech.com/
                
 * To be able to view thumbnails, you need either
@@ -34,17 +34,15 @@ Requirements
 * And of course: a C++ compiler.
 
 
-Install
--------
+Installation
+------------
+See INSTALL file included in this directory.
 
 
-Useage
+Usage
 ------
 
 
 Troubleshooting
 ---------------
-
-
-
 

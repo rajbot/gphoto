@@ -97,6 +97,8 @@ static unsigned int signals [LAST_SIGNAL] = { 0 };
 "<placeholder name=\"Camera\">"											\
 "  <submenu name=\"Camera\" _label=\"Camera\">"									\
 "    <menuitem name=\"Manual\" _label=\"Manual\" verb=\"\" pixtype=\"stock\" pixname=\"Book Open\"/>"		\
+"    <menuitem name=\"About\" _label=\"About\" verb=\"\" pixtype=\"stock\" pixname=\"Book Open\"/>"		\
+"    <menuitem name=\"Summary\" _label=\"Summary\" verb=\"\" pixtype=\"stock\" pixname=\"Book Open\"/>"		\
 "    <placeholder name=\"CaptureOperations\" delimit=\"top\"/>"							\
 "    <placeholder name=\"Configuration\" delimit=\"top\"/>"							\
 "  </submenu>"													\
@@ -139,7 +141,9 @@ static unsigned int signals [LAST_SIGNAL] = { 0 };
 /* Prototypes */
 /**************/
 
+static void	on_about_clicked		(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 static void 	on_manual_clicked 		(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
+static void	on_summary_clicked		(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 static void 	on_capture_clicked 		(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 static void	on_capture_preview_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
 static void	on_configuration_clicked	(BonoboUIComponent* component, gpointer user_data, const gchar* cname);
@@ -153,22 +157,18 @@ static int 	on_storage_view_vbox_button_release_event 	(GtkWidget* widget, GdkEv
 
 static void 	on_popup_storage_view_title_bar_button_clicked 	(ETitleBar* title_bar, void* data);
 
-static void 	show_current_menu 	(GnoCamCamera* camera);
-
 /**********************/
 /* Internal functions */
 /**********************/
 
-static gint
-create_menu (gpointer user_data)
+static void
+create_menu (GnoCamCamera* camera)
 {
-	GnoCamCamera*	camera;
-
-	camera = GNOCAM_CAMERA (user_data);
-
 	/* Create the main menu */
         bonobo_ui_component_set_translate (camera->priv->component, "/menu", GNOCAM_CAMERA_UI, NULL);
         bonobo_ui_component_add_verb (camera->priv->component, "Manual", on_manual_clicked, camera);
+	bonobo_ui_component_add_verb (camera->priv->component, "About", on_about_clicked, camera);
+	bonobo_ui_component_add_verb (camera->priv->component, "Summary", on_summary_clicked, camera);
 
 	/* Preview? */
 	if (camera->priv->camera->abilities->file_operations & GP_FILE_OPERATION_PREVIEW) {
@@ -210,8 +210,6 @@ create_menu (gpointer user_data)
 		bonobo_ui_component_set_translate (camera->priv->component, "/menu/Camera/Camera", GNOCAM_CAMERA_UI_CONFIGURATION, NULL);
 		bonobo_ui_component_add_verb (camera->priv->component, "Configuration", on_configuration_clicked, camera);
 	}
-
-	return (FALSE);
 }
 
 static int
@@ -354,6 +352,40 @@ on_size_request (GtkWidget* widget, GtkRequisition* requisition, gpointer user_d
 }
 
 static void
+on_about_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
+{
+	GnoCamCamera*	camera;
+	gint		result;
+	CameraText	about;
+
+	camera = GNOCAM_CAMERA (user_data);
+
+	result = gp_camera_get_about (camera->priv->camera, &about);
+	if (result != GP_OK) {
+		g_warning (_("Could not get information about the camera driver: %s!"), gp_camera_get_result_as_string (camera->priv->camera, result));
+		return;
+	}
+	g_message (about.text);
+}
+
+static void
+on_summary_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
+{
+	GnoCamCamera*   camera;
+	gint            result;
+	CameraText	summary;
+
+	camera = GNOCAM_CAMERA (user_data);
+
+	result = gp_camera_get_summary (camera->priv->camera, &summary);
+	if (result != GP_OK) {
+		g_warning (_("Could not get camera summary: %s!"), gp_camera_get_result_as_string (camera->priv->camera, result));
+		return;
+	}
+	g_message (summary.text);
+}
+
+static void
 on_manual_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
 {
 	GnoCamCamera* 	camera;
@@ -364,8 +396,11 @@ on_manual_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 
         result = gp_camera_get_manual (camera->priv->camera, &manual);
 	
-	if (result != GP_OK) g_warning (_("Could not get camera manual!\n(%s)"), gp_camera_get_result_as_string (camera->priv->camera, result));
-        else g_message (manual.text);
+	if (result != GP_OK) {
+		g_warning (_("Could not get camera manual: %s!"), gp_camera_get_result_as_string (camera->priv->camera, result));
+		return;
+	}
+        g_message (manual.text);
 }
 
 static void
@@ -623,7 +658,7 @@ gnocam_camera_show_menu (GnoCamCamera* camera)
 	if (bonobo_ui_component_get_container (camera->priv->component) == BONOBO_OBJREF (camera->priv->container)) return;
 
 	bonobo_ui_component_set_container (camera->priv->component, BONOBO_OBJREF (camera->priv->container));
-	gtk_idle_add (create_menu, camera);
+	create_menu (camera);
 	show_current_menu (camera);
 }
 

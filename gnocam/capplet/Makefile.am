@@ -20,6 +20,7 @@ camera_capplet_SOURCES =\
  main.c
 
 camera_capplet_LDADD =\
+ $(PRINT_LIBS)\
  $(CAPPLET_LIBS)\
  $(GAL_LIBS)\
  $(GCONF_LIBS)\

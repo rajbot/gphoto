@@ -58,7 +58,7 @@ struct _GnoCamCapturePrivate {
 
 #define GNOCAM_CAPTURE_UI_CAPTURE_PREVIEW                      			\
 "<placeholder name=\"CaptureOperations\">"                 			\
-"  <menuitem name=\"CapturePreview\" _label=\"CapturePreview\" verb=\"\"/>"     \
+"  <menuitem name=\"CapturePreview\" _label=\"Capture Preview\" verb=\"\"/>"    \
 "</placeholder>"
 
 /**************/
@@ -138,6 +138,7 @@ do_capture (GnoCamCapture* capture)
 	oaf_requirements = g_strdup_printf (
 		"bonobo:supported_mime_types.has ('%s') AND "
 		"repo_ids.has ('IDL:Bonobo/Control:1.0') AND "
+		"repo_ids.has ('IDL:Bonobo/PersistFile:1.0') AND " //This is to avoid Nautilus_Image_View...
 		"repo_ids.has ('IDL:Bonobo/PersistStream:1.0')", file->type);
 
 	/* Activate the object */

@@ -5,6 +5,7 @@ INCLUDES = \
  -DGNOCAM_DATADIR=\""$(datadir)"\"\
  -DIMAGEDIR=\""$(datadir)/pixmaps"\"\
  -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
+ -DGNOME\
  $(GCONF_CFLAGS)\
  $(EXTRA_WARNING_CFLAGS)\
  $(GAL_CFLAGS)\

@@ -25,14 +25,52 @@ scale_pixbuf (GdkPixbuf* pixbuf)
 GdkPixbuf*
 util_pixbuf_folder (void)
 {
+	static GdkPixbuf*       pixbuf = NULL;
+
+	if (pixbuf) return (pixbuf);
+	
 	if (!g_file_exists (IMAGEDIR "/gnome-folder.png")) return (NULL);
-	return (scale_pixbuf (gdk_pixbuf_new_from_file (IMAGEDIR "/gnome-folder.png")));
+
+	pixbuf = scale_pixbuf (gdk_pixbuf_new_from_file (IMAGEDIR "/gnome-folder.png"));
+	return (pixbuf);
 }
 
 GdkPixbuf*
 util_pixbuf_file (void)
 {
+	static GdkPixbuf*	pixbuf = NULL;
+
+	if (pixbuf) return (pixbuf);
+
 	if (!g_file_exists (IMAGEDIR "/gnome-file-h.png")) return (NULL);
-	return (scale_pixbuf (gdk_pixbuf_new_from_file (IMAGEDIR "/gnome-file-h.png")));
+
+	pixbuf = scale_pixbuf (gdk_pixbuf_new_from_file (IMAGEDIR "/gnome-file-h.png"));
+	return (pixbuf);
+}
+
+GdkPixbuf*
+util_pixbuf_lock (void)
+{
+	static GdkPixbuf*	pixbuf = NULL;
+
+	if (pixbuf) return (pixbuf);
+
+	if (!g_file_exists (IMAGEDIR "/gnome-lockscreen.png")) return (NULL);
+
+	pixbuf = scale_pixbuf (gdk_pixbuf_new_from_file (IMAGEDIR "/gnome-lockscreen.png"));
+	return (pixbuf);
+}
+
+GdkPixbuf*
+util_pixbuf_unlock (void)
+{
+	static GdkPixbuf*	pixbuf = NULL;
+
+	if (pixbuf) return (pixbuf);
+
+	if (!g_file_exists (IMAGEDIR "/gnocam-unlock.png")) return (NULL);
+
+	pixbuf = scale_pixbuf (gdk_pixbuf_new_from_file (IMAGEDIR "/gnocam-unlock.png"));
+	return (pixbuf);
 }
 

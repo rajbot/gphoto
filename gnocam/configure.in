@@ -144,6 +144,29 @@ else
 fi
 
 dnl ******************************
+dnl gnome-print
+dnl ******************************
+AC_MSG_CHECKING(for GnomePrint libraries >= 0.16)
+if gnome-config --libs print > /dev/null 2>&1; then 
+    vers=`gnome-config --modversion print | sed -e "s/gnome-print-//" | awk 'BEGIN { FS = "."; } { print $1 * 1000 + $2;}'`
+    if test "$vers" -ge 16; then
+        AC_MSG_RESULT(found)
+	PRINT_LIBS="`gnome-config --libs print`"
+	AC_SUBST(PRINT_LIBS)
+    else
+    	AC_MSG_ERROR([
+*** You need at least gnome-print 0.16 for this version of ${PACKAGE}.
+*** Get the latest version from http://www.gnome.org.
+*** Mirrors can be found at http://www.gnome.org/mirrors.])
+    fi
+else
+    AC_MSG_ERROR([
+*** You need at least gnome-print 0.16 for this version of ${PACKAGE}.
+*** Get the latest version from http://www.gnome.org.
+*** Mirrors can be found at http://www.gnome.org/mirrors.])
+fi
+
+dnl ******************************
 dnl Capplet
 dnl ******************************
 AC_MSG_CHECKING(for capplet libraries)

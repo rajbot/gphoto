@@ -185,13 +185,14 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		if ((result = gp_widget_value_get (widget, &value_char)) != GP_OK)
 			g_warning (_("Could not get value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
 
-		gtk_widget = gtk_vbox_new (FALSE, 5);
+		if (gp_widget_choice_count (widget) < 4) gtk_widget = gtk_hbox_new (FALSE, 5);
+		else gtk_widget = gtk_vbox_new (FALSE, 5);
 		for (i = 0; i < gp_widget_choice_count (widget); i++) {
 			button = gtk_radio_button_new_with_label (group, gp_widget_choice (widget, i));
 			gtk_widget_show (button);
 			group = gtk_radio_button_group (GTK_RADIO_BUTTON (button));
 			gtk_object_set_data (GTK_OBJECT (button), "value", gp_widget_choice (widget, i));
-			gtk_container_add (GTK_CONTAINER (gtk_widget), button);
+			gtk_box_pack_start (GTK_BOX (gtk_widget), button, FALSE, FALSE, 0);
 			if (value_char && !strcmp (value_char, gp_widget_choice (widget, i))) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button), TRUE);
 			gtk_signal_connect (GTK_OBJECT (button), "toggled", GTK_SIGNAL_FUNC (on_radio_button_toggled), widget);
 		}
@@ -222,17 +223,15 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		
 		id = gp_widget_id (widget->parent);
 		vbox = g_hash_table_lookup (configuration->priv->hash_table, &id);
-		g_return_if_fail (vbox);
-		gtk_container_add (GTK_CONTAINER (vbox), frame);
 	} else {
 		gint 	id;
 		
 		id = -1;
 		vbox = g_hash_table_lookup (configuration->priv->hash_table, &id);
 		if (!vbox) vbox = create_page (configuration, NULL);
-		g_return_if_fail (vbox);
-		gtk_container_add (GTK_CONTAINER (vbox), frame);
 	}
+	g_return_if_fail (vbox);
+	gtk_box_pack_start (GTK_BOX (vbox), frame, FALSE, FALSE, 0);
 }
 
 /*************/

@@ -1,7 +1,6 @@
-#include <config.h>
-#include "gpfs-val-type.h"
-
+#include "config.h"
 #include "gpfs-i18n.h"
+#include "gpfs-val-type.h"
 
 static struct {
 	GPFsValType t;

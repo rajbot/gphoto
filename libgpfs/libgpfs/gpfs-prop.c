@@ -1,11 +1,10 @@
-#include <config.h>
+#include "config.h"
+#include "gpfs-i18n.h"
 #include "gpfs-prop.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "gpfs-i18n.h"
 
 #define CNN(i,e) {                                                      \
         if (!i) {                                                       \

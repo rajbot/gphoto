@@ -109,6 +109,7 @@ installautotools() {
 	cmd ./configure --prefix="${toolroot}"
 	cmd make install
     done < ${buildtoollist}
+    (cd "${toolroot}/bin" && patch -p0 < "${metadir}/gettextize.patch")
 }
 
 

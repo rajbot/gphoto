@@ -24,7 +24,6 @@ struct _GnoCamCameraPrivate
 {
 	Camera *camera;
 	
-	BonoboStorage *storage;
 	BonoboEventSource *event_source;
 };
 
@@ -279,9 +278,8 @@ gnocam_camera_new (Camera *camera, CORBA_Environment *ev)
 	gp_camera_ref (camera);
 
 	g_message ("Adding interfaces...");
-	gc->priv->storage = storage;
 	bonobo_object_add_interface (BONOBO_OBJECT (gc),
-				     BONOBO_OBJECT (gc->priv->storage));
+				     BONOBO_OBJECT (storage));
 
 	gc->priv->event_source = bonobo_event_source_new ();
 	bonobo_object_add_interface (BONOBO_OBJECT (gc),

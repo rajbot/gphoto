@@ -10,8 +10,9 @@
 #ifdef linux
 #include <sched.h>
 #endif
-
+#define DECLARE_GLOBAL_VARS_IN_GPHOTO_H
 #include "gphoto.h"
+#undef DECLARE_GLOBAL_VARS_IN_GPHOTO_H
 #include "callbacks.h"
 #include "util.h"
 #include "cameras.h"
@@ -25,11 +26,12 @@
 
 extern  struct Model cameras[];
 extern  GtkAccelGroup*  mainag;
-extern  int 	  command_line_mode;
-extern  char      *gphotoDir;		/* gPhoto directory		*/
-extern  char	  serial_port[20];	/* Serial port			*/
 
-        char	  camera_model[100];	/* Currently selected cam model */
+//extern  int 	  command_line_mode;
+//extern  char      *gphotoDir;		/* gPhoto directory		*/
+//extern  char	  serial_port[20];	/* Serial port			*/
+//        char	  camera_model[100];	/* Currently selected cam model */
+
 	GtkWidget *status_bar;		/* Main window status bar	*/
 	GtkWidget *library_name;	/* Main window library bar	*/
 	GtkWidget *notebook;            /* Main window Notebook		*/

@@ -55,11 +55,17 @@ struct ImageMembers {
         struct    ImageMembers *next;
 };
 
+#ifdef DECLARE_GLOBAL_VARS_IN_GPHOTO_H
 int	  command_line_mode;	/* TRUE if in command line mode */ 
 char     *gphotoDir;		/* gPhoto directory		*/
 char	  serial_port[20];	/* Serial port			*/
 char	  camera_model[100];	/* Currently selected cam model */
-
+#else
+extern int       command_line_mode;    /* TRUE if in command line mode */ 
+extern char      *gphotoDir;           /* gPhoto directory             */
+extern char      serial_port[20];      /* Serial port                  */
+extern char      camera_mode
+#endif
 void update_progress (float percentage);
 void update_status   (char *newStatus);
 

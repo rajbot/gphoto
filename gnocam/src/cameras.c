@@ -269,7 +269,7 @@ on_camera_tree_file_drag_data_get (GtkWidget* widget, GdkDragContext* context, G
 	CameraFile*	file;
 
 	if (!(file = gtk_object_get_data (GTK_OBJECT (widget), "file"))) g_assert ((file = gtk_object_get_data (GTK_OBJECT (widget), "preview")) != NULL);
-	filename = g_strdup_printf ("file:/tmp/%s", file->name);
+	filename = g_strdup_printf ("file:%s/%s", g_get_tmp_dir (), file->name);
 	camera_file_save (file, filename);
 	gtk_selection_data_set (selection_data, selection_data->target, 8, filename, strlen (filename));
 	g_free (filename);

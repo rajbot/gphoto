@@ -323,7 +323,7 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
         g_assert ((value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL)));
         g_assert (value->type == GCONF_VALUE_STRING);
 
-	if (temporary) filename_user = g_strdup_printf ("file:/tmp/%s", filename);
+	if (temporary) filename_user = g_strdup_printf ("file:%s/%s", g_get_tmp_dir (), filename);
 	else filename_user = g_strdup_printf ("%s/%s", gconf_value_get_string (value), filename);
 
 	/* Check if we already have the file. */

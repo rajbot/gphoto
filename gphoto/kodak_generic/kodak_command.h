@@ -25,6 +25,7 @@
 
 #define CMD_SET_HPBS         0x2A
 #define CMD_BAUD_RATE        0x41
+#define CMD_SEND_LAST_PIC    0x4C
 #define CMD_TAKE_PICTURE     0x7C
 #define CMD_STATUS           0x7F
 #define CMD_READ_PIC_INFO    0x91
@@ -33,6 +34,7 @@
 #define CMD_CLOSE_CARD       0x97
 #define CMD_READ_DIRECTORY   0x99
 #define CMD_READ_FILE        0x9A
+#define CMD_DELETE_FILE      0x9D
 
 #define COMMAND_RESPONSE_COMPLETE   0x00
 #define COMMAND_RESPONSE_ACK        0xD1

@@ -550,7 +550,8 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
                 gtk_container_add (GTK_CONTAINER (window), viewport);
 
 	        if (gp_camera_file_get_preview (camera, file, path, filename) != GP_OK) {
-			dialog_information (_("Could not get preview of file '%s/%s' from the camera!"), path, filename);
+			if (strcmp ("/", path) == 0) dialog_information (_("Could not get preview of file '/%s' from the camera!"), filename);
+			else dialog_information (_("Could not get preview of file '%s/%s' from the camera!"), path, filename);
 			gtk_container_add (GTK_CONTAINER (viewport), gtk_label_new ("?"));
 		} else {
 
@@ -572,7 +573,8 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 				g_free (list_text[0]);
 
                         } else {
-                                dialog_information (_("Could not load image '%s/%s'!"), path, filename);
+                                if (strcmp ("/", path) == 0) dialog_information (_("Could not load image '/%s'!"), filename);
+				else dialog_information (_("Could not load image '%s/%s'!"), path, filename);
 				gtk_container_add (GTK_CONTAINER (viewport), gtk_label_new ("?"));
                         }
                 }

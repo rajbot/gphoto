@@ -105,6 +105,7 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* path)
 	g_assert (path != NULL);
 	g_assert ((xml = gtk_object_get_data (GTK_OBJECT (tree), "xml")) != NULL);
 
+	/* Root folder needs special care. */
 	root = (strcmp ("/", path) == 0);
 
 	/* Create the new item. */

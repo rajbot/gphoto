@@ -91,7 +91,7 @@ bin_PROGRAMS = qmxxx
 drivers_LTLIBRARIES = libgphoto_konica_qmxxx.la
 
 CFLAGS = @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@
-EXTRA_DIST = konicarc.sample ChangeLog TODO gettraces 
+EXTRA_DIST = ChangeLog TODO gettraces 
 
 libgphoto_konica_qmxxx_la_SOURCES = os.c log.c qm.c dcx.c
 
@@ -121,7 +121,7 @@ COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CF
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
-DIST_COMMON =  Makefile.am Makefile.in
+DIST_COMMON =  README Makefile.am Makefile.in
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)

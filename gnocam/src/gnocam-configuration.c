@@ -65,7 +65,8 @@ static void	on_radio_button_toggled		(GtkToggleButton* toggle_button, gpointer u
 static void
 set_config (GnoCamConfiguration* configuration)
 {
-        gint    result;
+        gint    	result;
+	const gchar*	label;
 
         if (configuration->priv->filename) 
 		result = gp_camera_file_set_config (configuration->priv->camera,
@@ -74,9 +75,10 @@ set_config (GnoCamConfiguration* configuration)
 		result = gp_camera_folder_set_config (configuration->priv->camera, configuration->priv->dirname, configuration->priv->widget);
         else result = gp_camera_set_config (configuration->priv->camera, configuration->priv->widget);
 
-        if (result != GP_OK)
-                g_warning (_("Could not set configuration of '%s'!\n(%s)"), 
-			gp_widget_label (configuration->priv->widget), gp_camera_get_result_as_string (configuration->priv->camera, result));
+        if (result != GP_OK) {
+		gp_widget_get_label (configuration->priv->widget, &label);
+                g_warning (_("Could not set configuration of '%s'!\n(%s)"), label, gp_camera_get_result_as_string (configuration->priv->camera, result));
+	}
 }
 
 static GtkWidget*
@@ -85,14 +87,17 @@ create_page (GnoCamConfiguration* configuration, CameraWidget* widget)
 	GtkWidget*	label;
 	GtkWidget*	vbox;
 	gint*		id;
+	const gchar*	l;
 
 	id = g_new (gint, 1);
-	if (widget) *id = gp_widget_id (widget);
+	if (widget) gp_widget_get_id (widget, id);
 	else *id = -1;
 
 	/* Label */
-	if (widget) label = gtk_label_new (gp_widget_label (widget));
-	else label = gtk_label_new (_("Others"));
+	if (widget) {
+		gp_widget_get_label (widget, &l);
+		label = gtk_label_new (l);
+	} else label = gtk_label_new (_("Others"));
 	gtk_widget_show (label);
 	
 	/* VBox */
@@ -110,6 +115,7 @@ static void
 create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 {
 	CameraWidgetType	type;
+	const gchar*		label;
 	gchar*			value_char = NULL;
 	gint			value_int = 0;
 	gfloat			value_float = 0.0;
@@ -125,7 +131,8 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 	GtkObject*		adjustment;
 	GSList*			group = NULL;
 
-	type = gp_widget_type (widget);
+	gp_widget_get_label (widget, &label);
+	gp_widget_get_type (widget, &type);
 
 	switch (type) {
 	case GP_WIDGET_WINDOW:
@@ -135,7 +142,12 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		if (type == GP_WIDGET_SECTION) create_page (configuration, widget);
 
 		/* Create sub-widgets */
-		for (i = 0; i < gp_widget_child_count (widget); i++) create_widgets (configuration, gp_widget_child (widget, i));
+		for (i = 0; i < gp_widget_count_children (widget); i++) {
+			CameraWidget* child;
+			
+			gp_widget_get_child (widget, i, &child);
+			create_widgets (configuration, child);
+		}
 
 		return;
 		
@@ -143,7 +155,7 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 	
 		gtk_widget = gtk_vbox_new (FALSE, 10);
 		gtk_container_set_border_width (GTK_CONTAINER (gtk_widget), 10);
-		button = gtk_button_new_with_label (gp_widget_label (widget));
+		button = gtk_button_new_with_label (label);
 		gtk_widget_show (button);
 		gtk_signal_connect (GTK_OBJECT (button), "clicked", GTK_SIGNAL_FUNC (on_button_clicked), widget);
 		gtk_container_add (GTK_CONTAINER (gtk_widget), button);
@@ -151,8 +163,8 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		
 	case GP_WIDGET_DATE:
 	
-		if ((result = gp_widget_value_get (widget, &value_int)) != GP_OK)
-			g_warning (_("Could not get value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+		if ((result = gp_widget_get_value (widget, &value_int)) != GP_OK)
+			g_warning (_("Could not get value of widget '%s': %s!"), label, gp_result_as_string (result));
 		gtk_widget = gnome_date_edit_new ((time_t) value_int, TRUE, TRUE);
 		gtk_signal_connect (GTK_OBJECT (gtk_widget), "date_changed", GTK_SIGNAL_FUNC (on_date_edit_changed), widget);
 		gtk_signal_connect (GTK_OBJECT (gtk_widget), "time_changed", GTK_SIGNAL_FUNC (on_date_edit_changed), widget);
@@ -160,8 +172,8 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 		
 	case GP_WIDGET_TEXT:
 
-		if ((result = gp_widget_value_get (widget, &value_char)) != GP_OK)
-			g_warning (_("Could not get value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+		if ((result = gp_widget_get_value (widget, &value_char)) != GP_OK)
+			g_warning (_("Could not get value of widget '%s': %s!"), label, gp_result_as_string (result));
 		gtk_widget = gtk_entry_new ();
 		if (value_char) gtk_entry_set_text (GTK_ENTRY (gtk_widget), value_char);
 		gtk_signal_connect (GTK_OBJECT (gtk_widget), "changed", GTK_SIGNAL_FUNC (on_entry_changed), widget);
@@ -169,10 +181,10 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 	
 	case GP_WIDGET_RANGE:
 
-		if ((result = gp_widget_value_get (widget, &value_float)) != GP_OK)
-			g_warning (_("Could not get value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
-		if ((result = gp_widget_range_get (widget, &min, &max, &increment)) != GP_OK)
-			g_warning (_("Could not get values of range widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+		if ((result = gp_widget_get_value (widget, &value_float)) != GP_OK)
+			g_warning (_("Could not get value of widget '%s': %s!"), label, gp_result_as_string (result));
+		if ((result = gp_widget_get_range (widget, &min, &max, &increment)) != GP_OK)
+			g_warning (_("Could not get values of range widget '%s': %s!"), label, gp_result_as_string (result));
 		adjustment = gtk_adjustment_new (value_float, min, max, increment, 0, 0);
 		gtk_signal_connect (adjustment, "value_changed", GTK_SIGNAL_FUNC (on_adjustment_value_changed), widget);
 		gtk_widget = gtk_hscale_new (GTK_ADJUSTMENT (adjustment));
@@ -183,46 +195,51 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 	case GP_WIDGET_MENU:
 	case GP_WIDGET_RADIO:
 
-		if ((result = gp_widget_value_get (widget, &value_char)) != GP_OK)
-			g_warning (_("Could not get value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+		if ((result = gp_widget_get_value (widget, &value_char)) != GP_OK)
+			g_warning (_("Could not get value of widget '%s': %s!"), label, gp_result_as_string (result));
 
-		if (gp_widget_choice_count (widget) < 6) gtk_widget = gtk_hbox_new (FALSE, 5);
+		if (gp_widget_count_choices (widget) < 6) gtk_widget = gtk_hbox_new (FALSE, 5);
 		else gtk_widget = gtk_vbox_new (FALSE, 5);
-		for (i = 0; i < gp_widget_choice_count (widget); i++) {
-			button = gtk_radio_button_new_with_label (group, gp_widget_choice (widget, i));
+		for (i = 0; i < gp_widget_count_choices (widget); i++) {
+			const gchar* choice;
+
+			gp_widget_get_choice (widget, i, &choice);
+			button = gtk_radio_button_new_with_label (group, choice);
 			gtk_widget_show (button);
 			group = gtk_radio_button_group (GTK_RADIO_BUTTON (button));
-			gtk_object_set_data (GTK_OBJECT (button), "value", gp_widget_choice (widget, i));
+			gtk_object_set_data (GTK_OBJECT (button), "value", (char*) choice);
 			gtk_box_pack_start (GTK_BOX (gtk_widget), button, FALSE, FALSE, 0);
-			if (value_char && !strcmp (value_char, gp_widget_choice (widget, i))) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button), TRUE);
+			if (value_char && !strcmp (value_char, choice)) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button), TRUE);
 			gtk_signal_connect (GTK_OBJECT (button), "toggled", GTK_SIGNAL_FUNC (on_radio_button_toggled), widget);
 		}
 		break;
 	
 	case GP_WIDGET_TOGGLE:
 
-		if ((result = gp_widget_value_get (widget, &value_int)) != GP_OK)
-			g_warning (_("Could not get value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+		if ((result = gp_widget_get_value (widget, &value_int)) != GP_OK)
+			g_warning (_("Could not get value of widget '%s': %s!"), label, gp_result_as_string (result));
 
-		gtk_widget = gtk_check_button_new_with_label (gp_widget_label (widget));
+		gtk_widget = gtk_check_button_new_with_label (label);
 		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (gtk_widget), (value_int != 0));
 		gtk_signal_connect (GTK_OBJECT (gtk_widget), "toggled", GTK_SIGNAL_FUNC (on_toggle_button_toggled), widget);
 		break;
 	
 	default:
-		g_warning (_("Widget '%s' is of unknown type!"), gp_widget_label (widget));
+		g_warning (_("Widget '%s' is of unknown type!"), label);
 		return;
 	}
 	
 	gtk_widget_show (gtk_widget);
-	frame = gtk_frame_new (gp_widget_label (widget));
+	frame = gtk_frame_new (label);
 	gtk_widget_show (frame);
 	gtk_container_add (GTK_CONTAINER (frame), gtk_widget);
 
-	if (gp_widget_type (widget->parent) == GP_WIDGET_SECTION) {
+	gp_widget_get_type (widget->parent, &type);
+
+	if (type == GP_WIDGET_SECTION) {
 		gint 	id;
 		
-		id = gp_widget_id (widget->parent);
+		gp_widget_get_id (widget->parent, &id);
 		vbox = g_hash_table_lookup (configuration->priv->hash_table, &id);
 	} else {
 		gint 	id;
@@ -242,43 +259,50 @@ create_widgets (GnoCamConfiguration* configuration, CameraWidget* widget)
 static void
 on_toggle_button_toggled (GtkToggleButton* toggle_button, gpointer user_data)
 {
-	CameraWidget*	widget;
-	gint		value = 0;
-	gint		value_new = 0;
-	gint		result;
+	CameraWidget*		widget;
+	CameraWidgetType	type;
+	gint			value = 0;
+	gint			value_new = 0;
+	gint			result;
+	const gchar*		label;
 
 	widget = (CameraWidget*) user_data;
-	g_return_if_fail (gp_widget_type (widget) == GP_WIDGET_TOGGLE);
+	gp_widget_get_type (widget, &type);
+	gp_widget_get_label (widget, &label);
 
-	if ((result = gp_widget_value_get (widget, &value)) != GP_OK)
-		g_warning (_("Could not get value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+	g_return_if_fail (type == GP_WIDGET_TOGGLE);
+
+	if ((result = gp_widget_get_value (widget, &value)) != GP_OK)
+		g_warning (_("Could not get value of widget '%s': %s!"), label, gp_result_as_string (result));
 	if (toggle_button->active) value_new = 1;
 	if (value != value_new)
-		if ((result = gp_widget_value_set (widget, &value_new)) != GP_OK)
-			g_warning (_("Could not set value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+		if ((result = gp_widget_set_value (widget, &value_new)) != GP_OK)
+			g_warning (_("Could not set value of widget '%s': %s!"), label, gp_result_as_string (result));
 }
 
 static void
 on_radio_button_toggled (GtkToggleButton* toggle_button, gpointer user_data)
 {
-	CameraWidget* 		widget;
-	gchar*			value = NULL;
-	gchar*			value_new = NULL;
-	gint			result;
+	CameraWidget* 	widget;
+	gchar*		value = NULL;
+	gchar*		value_new = NULL;
+	gint		result;
+	const gchar*	label;
 
 	g_return_if_fail (user_data);
 	g_return_if_fail (toggle_button);
 
 	widget = (CameraWidget*) user_data;
+	gp_widget_get_label (widget, &label);
 
 	if (!toggle_button->active) return;
 
-	if ((result = gp_widget_value_get (widget, &value)) != GP_OK)
-		g_warning (_("Could not get value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+	if ((result = gp_widget_get_value (widget, &value)) != GP_OK)
+		g_warning (_("Could not get value of widget '%s': %s!"), label, gp_result_as_string (result));
 	value_new = gtk_object_get_data (GTK_OBJECT (toggle_button), "value");
 	if (!value || strcmp (value, value_new))
-		if ((result = gp_widget_value_set (widget, value_new)) != GP_OK)
-			g_warning (_("Could not set value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+		if ((result = gp_widget_set_value (widget, value_new)) != GP_OK)
+			g_warning (_("Could not set value of widget '%s': %s!"), label, gp_result_as_string (result));
 }
 
 static void
@@ -288,13 +312,15 @@ on_button_clicked (GtkButton* button, gpointer user_data)
 	CameraWidget*		widget;
 	CameraWidgetCallback	callback;
 	gint			result;
+	const gchar*		label;
 
 	configuration = GNOCAM_CONFIGURATION (gtk_widget_get_ancestor (GTK_WIDGET (button), GNOCAM_TYPE_CONFIGURATION));
 	widget = (CameraWidget*) user_data;
-	callback = gp_widget_callback (widget);
+	gp_widget_get_label (widget, &label);
+	gp_widget_get_value (widget, &callback);
 
 	if ((result = callback (configuration->priv->camera, widget)) != GP_OK)
-		g_warning (_("Could not execute command '%s': %s!"), gp_widget_label (widget), gp_camera_get_result_as_string (configuration->priv->camera, result));
+		g_warning (_("Could not execute command '%s': %s!"), label, gp_camera_get_result_as_string (configuration->priv->camera, result));
 }
 
 static void
@@ -304,15 +330,17 @@ on_date_edit_changed (GnomeDateEdit* date_edit, gpointer user_data)
 	gint			value = 0;
 	gint			value_new = 0;
 	gint			result;
+	const gchar*		label;
 
 	widget = (CameraWidget*) user_data;
+	gp_widget_get_label (widget, &label);
 
-	if ((result = gp_widget_value_get (widget, &value)) != GP_OK)
-		g_warning (_("Could not get value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+	if ((result = gp_widget_get_value (widget, &value)) != GP_OK)
+		g_warning (_("Could not get value of widget '%s': %s!"), label, gp_result_as_string (result));
 	value_new = (gint) gnome_date_edit_get_date (date_edit);
 	if (value_new != value)
-		if ((result = gp_widget_value_set (widget, &value_new)) != GP_OK)
-			g_warning (_("Could not set value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+		if ((result = gp_widget_set_value (widget, &value_new)) != GP_OK)
+			g_warning (_("Could not set value of widget '%s': %s!"), label, gp_result_as_string (result));
 }
 
 static void
@@ -322,32 +350,37 @@ on_entry_changed (GtkEntry* entry, gpointer user_data)
 	gchar*			value_new = NULL;
 	gchar*			value = NULL;
 	gint			result;
+	const gchar*		label;
 
 	widget = (CameraWidget*) user_data;
+	gp_widget_get_label (widget, &label);
 
-	if ((result = gp_widget_value_get (widget, value)) != GP_OK)
-		g_warning (_("Could not get value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+	if ((result = gp_widget_get_value (widget, value)) != GP_OK)
+		g_warning (_("Could not get value of widget '%s': %s!"), label, gp_result_as_string (result));
 	value_new = gtk_entry_get_text (entry);
 	if (!value || strcmp (value, value_new))
-		if ((result = gp_widget_value_set (widget, value_new)) != GP_OK)
-			g_warning (_("Could not set value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+		if ((result = gp_widget_set_value (widget, value_new)) != GP_OK)
+			g_warning (_("Could not set value of widget '%s': %s!"), label, gp_result_as_string (result));
 }
 
 static void
 on_adjustment_value_changed (GtkAdjustment* adjustment, gpointer user_data)
 {
-	CameraWidget*           widget;
-	gint			result;
-	gfloat			value = 0;
-	gfloat			value_new = 0.0;
+	CameraWidget*   widget;
+	gint		result;
+	gfloat		value = 0;
+	gfloat		value_new = 0.0;
+	const gchar*	label;
 
 	widget = (CameraWidget*) user_data;
-	if ((result = gp_widget_value_get (widget, &value)) != GP_OK)
-		g_warning (_("Could not get value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+	gp_widget_get_label (widget, &label);
+
+	if ((result = gp_widget_set_value (widget, &value)) != GP_OK)
+		g_warning (_("Could not get value of widget '%s': %s!"), label, gp_result_as_string (result));
 	value_new = adjustment->value;
 	if (value_new != value) 
-		if ((result = gp_widget_value_set (widget, &value_new)) != GP_OK)
-			g_warning (_("Could not set value of widget '%s': %s!"), gp_widget_label (widget), gp_result_as_string (result));
+		if ((result = gp_widget_set_value (widget, &value_new)) != GP_OK)
+			g_warning (_("Could not set value of widget '%s': %s!"), label, gp_result_as_string (result));
 }
 
 static void
@@ -410,7 +443,9 @@ gnocam_configuration_new (Camera* camera, const gchar* dirname, const gchar* fil
 	GnoCamConfiguration*	new;
 	gint			result;
 	CameraWidget*		widget = NULL;
+	CameraWidgetType	type;
 	const gchar*            buttons [] = {GNOME_STOCK_BUTTON_OK, GNOME_STOCK_BUTTON_APPLY, GNOME_STOCK_BUTTON_CANCEL, NULL};
+	const gchar*		label;
 
 	g_return_val_if_fail (camera, NULL);
 
@@ -423,7 +458,10 @@ gnocam_configuration_new (Camera* camera, const gchar* dirname, const gchar* fil
 		return (NULL);
 	}
 
-	if (gp_widget_type (widget) != GP_WIDGET_WINDOW) {
+	gp_widget_get_type (widget, &type);
+	gp_widget_get_label (widget, &label);
+
+	if (type != GP_WIDGET_WINDOW) {
 		g_warning (_("Got configuration widget which is not of type GP_WIDGET_WINDOW!"));
 		gp_widget_unref (widget);
 		return (NULL);
@@ -431,7 +469,7 @@ gnocam_configuration_new (Camera* camera, const gchar* dirname, const gchar* fil
 
 	/* Set up the dialog */
 	new = gtk_type_new (GNOCAM_TYPE_CONFIGURATION);
-	gnome_dialog_constructv (GNOME_DIALOG (new), gp_widget_label (widget), buttons);
+	gnome_dialog_constructv (GNOME_DIALOG (new), label, buttons);
 	gnome_dialog_set_parent (GNOME_DIALOG (new), window);
 	gnome_dialog_set_close (GNOME_DIALOG (new), FALSE);
 

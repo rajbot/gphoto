@@ -3,6 +3,8 @@
 
 #include "GNOME_C.h"
 
+#include <string.h>
+
 #include <gtk/gtkbox.h>
 #include <gtk/gtkbutton.h>
 #include <gtk/gtkcontainer.h>
@@ -11,6 +13,7 @@
 #include <gtk/gtkcellrenderertext.h>
 #include <gtk/gtktreeviewcolumn.h>
 #include <gtk/gtktreeview.h>
+#include <gtk/gtktreeselection.h>
 
 #include <glade/glade.h>
 
@@ -18,6 +21,7 @@
 
 #include <bonobo/bonobo-exception.h>
 #include <bonobo/bonobo-moniker-util.h>
+#include <bonobo/bonobo-object.h>
 
 #define _(s) s
 
@@ -25,7 +29,8 @@ struct _GnocamChooserPriv
 {
 	GList *l;
 
-	GtkListStore *manufacturers, *models, *ports;
+	GtkListStore *manufs, *models, *ports;
+	GtkTreeSelection *s_manufs, *s_models, *s_ports;
 };
 
 #define PARENT_TYPE GTK_TYPE_DIALOG
@@ -35,6 +40,13 @@ enum {
 	NAME_COL = 0,
 	NUM_COLS
 };
+
+enum {
+	CHANGED,
+	LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = {0};
 
 static void
 gnocam_chooser_finalize (GObject *object)
@@ -59,6 +71,11 @@ gnocam_chooser_class_init (gpointer g_class, gpointer class_data)
 	gobject_class->finalize = gnocam_chooser_finalize;
 
 	parent_class = g_type_class_peek_parent (g_class);
+
+	signals[CHANGED] = g_signal_new ("changed",
+		G_TYPE_FROM_CLASS (g_class), G_SIGNAL_RUN_FIRST,
+		G_STRUCT_OFFSET (GnocamChooserClass, changed), NULL, NULL,
+		g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
 
 static void
@@ -68,7 +85,7 @@ gnocam_chooser_init (GTypeInstance *instance, gpointer g_class)
 
 	c->priv = g_new0 (GnocamChooserPriv, 1);
 
-	c->priv->manufacturers = gtk_list_store_new (NUM_COLS, G_TYPE_STRING);
+	c->priv->manufs = gtk_list_store_new (NUM_COLS, G_TYPE_STRING);
 	c->priv->models = gtk_list_store_new (NUM_COLS, G_TYPE_STRING);
 	c->priv->ports = gtk_list_store_new (NUM_COLS, G_TYPE_STRING);
 }
@@ -101,7 +118,7 @@ gnocam_chooser_setup (GnocamChooser *c)
 	CORBA_Environment ev;
 	GNOME_C_Mngr m;
 	guint i, j, k;
-	GNOME_C_Mngr_DeviceList *dl, *d;
+	GNOME_C_Mngr_ManufacturerList *ml;
 	GtkTreeIter iter;
 	GList *list = NULL;
 
@@ -112,7 +129,7 @@ gnocam_chooser_setup (GnocamChooser *c)
 	c->priv->l = NULL;
 
 	/* Clear the lists */
-	gtk_list_store_clear (c->priv->manufacturers);
+	gtk_list_store_clear (c->priv->manufs);
 	gtk_list_store_clear (c->priv->models);
 	gtk_list_store_clear (c->priv->ports);
 
@@ -132,30 +149,28 @@ gnocam_chooser_setup (GnocamChooser *c)
 				       &ev);
 		if (BONOBO_EX (&ev))
 			continue;
-		dl = GNOME_C_Mngr_get_devices (m, &ev);
+		ml = GNOME_C_Mngr_get_devices (m, &ev);
 		bonobo_object_release_unref (m, NULL);
 		if (BONOBO_EX (&ev))
 			continue;
-		c->priv->l = g_list_append (c->priv->l, dl);
+		c->priv->l = g_list_append (c->priv->l, ml);
 	}
 	CORBA_free (l);
 	CORBA_exception_free (&ev);
 
 	for (i = 0; i < g_list_length (c->priv->l); i++) {
-		d = g_list_nth_data (c->priv->l, i);
-		for (j = 0; j < d->_length; j++) {
-			for (k = 0; k < g_list_length (list); k++)
-				if (!strcmp (g_list_nth_data (list, k),
-					     d->_buffer[j].manufacturer))
-					break;
-			if (k == g_list_length (list))
-				list = g_list_append (list,
-						d->_buffer[j].manufacturer);
-		}
+	    ml = g_list_nth_data (c->priv->l, i);
+	    for (j = 0; j < ml->_length; j++) {
+		for (k = 0; k < g_list_length (list); k++)
+		    if (!strcmp (g_list_nth_data (list, k),
+				 ml->_buffer[j].manufacturer)) break;
+		if (k == g_list_length (list))
+		    list = g_list_append (list, ml->_buffer[j].manufacturer);
+	    }
 	}
 	for (i = 0; i < g_list_length (list); i++) {
-		gtk_list_store_append (c->priv->manufacturers, &iter);
-		gtk_list_store_set (c->priv->manufacturers, &iter, NAME_COL,
+		gtk_list_store_append (c->priv->manufs, &iter);
+		gtk_list_store_set (c->priv->manufs, &iter, NAME_COL,
 				    g_list_nth_data (list, i), -1);
 	}
 	g_list_free (list);
@@ -180,6 +195,214 @@ on_close_clicked (GtkButton *button, GnocamChooser *c)
 	gtk_object_destroy (GTK_OBJECT (c));
 }
 
+static void
+on_manuf_selection_changed (GtkTreeSelection *s, GnocamChooser *c)
+{
+	gchar *manuf;
+	guint i, j, k, n;
+	GList *list = NULL;
+	GNOME_C_Mngr_ManufacturerList *ml;
+	GNOME_C_Mngr_ModelList l;
+	GtkTreeIter iter;
+
+	manuf = gnocam_chooser_get_manufacturer (c);
+	g_return_if_fail (manuf != NULL);
+
+	/* Set up the list for the models */
+	gtk_list_store_clear (c->priv->models);
+	for (i = 0; i < g_list_length (c->priv->l); i++) {
+	    ml = g_list_nth_data (c->priv->l, i);
+	    for (j = 0; j < ml->_length; j++) {
+		if (strcmp (ml->_buffer[j].manufacturer, manuf)) continue;
+		l = ml->_buffer[j].models;
+		for (k = 0; k < l._length; k++) {
+		    for (n = 0; n < g_list_length (list); n++)
+			if (!strcmp (g_list_nth_data (list, n),
+				     l._buffer[k].model)) break;
+		    if (n == g_list_length (list))
+			list = g_list_append (list, l._buffer[k].model);
+		}
+	    }
+	}
+	g_free (manuf);
+	for (i = 0; i < g_list_length (list); i++) {
+		gtk_list_store_append (c->priv->models, &iter);
+		gtk_list_store_set (c->priv->models, &iter, NAME_COL,
+				g_list_nth_data (list, i), -1);
+	}
+	g_list_free (list);
+
+	/* Select the first model */
+	gnocam_chooser_set_model (c, NULL);
+
+	g_signal_emit (c, signals[CHANGED], 0);
+}
+
+static void
+on_port_selection_changed (GtkTreeSelection *s, GnocamChooser *c)
+{
+	g_signal_emit (c, signals[CHANGED], 0);
+}
+
+static void
+on_model_selection_changed (GtkTreeSelection *s, GnocamChooser *c)
+{
+	GtkTreeIter iter;
+	guint i, j, k, l, n;
+	GList *list = NULL;
+	GNOME_C_Mngr_ManufacturerList *ml;
+	GNOME_C_Mngr_PortList pl;
+	gchar *manuf, *model, *port;
+
+	manuf = gnocam_chooser_get_manufacturer (c);
+	g_return_if_fail (manuf != NULL);
+	model = gnocam_chooser_get_model (c);
+	g_return_if_fail (model != NULL);
+	port  = gnocam_chooser_get_port (c);
+
+	/* Set up the list for the ports */
+	gtk_list_store_clear (c->priv->ports);
+	for (i = 0; i < g_list_length (c->priv->l); i++) {
+	    ml = g_list_nth_data (c->priv->l, i);
+	    for (j = 0; j < ml->_length; j++) {
+		if (strcmp (ml->_buffer[j].manufacturer, manuf)) continue;
+		for (k = 0; k < ml->_buffer[j].models._length; k++) {
+		    if (strcmp (ml->_buffer[j].models._buffer[k].model,
+				model)) continue;
+		    pl = ml->_buffer[j].models._buffer[k].ports;
+		    for (l = 0; l < pl._length; l++) {
+		        for (n = 0; n < g_list_length (list); n++)
+			    if (!strcmp (g_list_nth_data (list, n),
+					 pl._buffer[l])) break;
+			if (n == g_list_length (list))
+			    list = g_list_append (list, pl._buffer[l]);
+		    }
+		}
+	    }
+	}
+	g_free (model);
+	g_free (manuf);
+	for (i = 0; i < g_list_length (list); i++) {
+		gtk_list_store_append (c->priv->ports, &iter);
+		gtk_list_store_set (c->priv->ports, &iter, NAME_COL,
+				g_list_nth_data (list, i), -1);
+	}
+	g_list_free (list);
+
+	gnocam_chooser_set_port (c, port);
+	g_free (port);
+
+	g_signal_emit (c, signals[CHANGED], 0);
+}
+
+static void
+gnocam_chooser_set_common (GnocamChooser *c, GtkTreeModel *m,
+			   GtkTreeSelection *s, const gchar *n)
+{
+	GtkTreeIter iter;
+	GValue v = {0,};
+
+	g_return_if_fail (GNOCAM_IS_CHOOSER (c));
+	g_return_if_fail (GTK_IS_TREE_MODEL (m));
+	g_return_if_fail (GTK_IS_TREE_SELECTION (s));
+
+	if (!n) {
+		if (gtk_tree_model_get_iter_first (m, &iter))
+			gtk_tree_selection_select_iter (s, &iter);
+		return;
+	}
+
+	if (gtk_tree_model_get_iter_first (m, &iter)) {
+	    gtk_tree_model_get_value (m, &iter, NAME_COL, &v);
+	    if (!strcmp (g_value_get_string (&v), n)) {
+		g_value_unset (&v);
+		gtk_tree_selection_select_iter (s, &iter);
+	        return;
+	    }
+	    g_value_unset (&v);
+	    while (gtk_tree_model_iter_next (m, &iter)) {
+		gtk_tree_model_get_value (m, &iter, NAME_COL, &v);
+		if (!strcmp (g_value_get_string (&v), n)) {
+		    g_value_unset (&v);
+		    gtk_tree_selection_select_iter (s, &iter);
+		    return;
+		}
+		g_value_unset (&v);
+	    }
+	}
+}
+
+void
+gnocam_chooser_set_port (GnocamChooser *c, const gchar *port)
+{
+	g_return_if_fail (GNOCAM_IS_CHOOSER (c));
+
+	gnocam_chooser_set_common (c, GTK_TREE_MODEL (c->priv->ports),
+				   c->priv->s_ports, port);
+}
+
+void
+gnocam_chooser_set_model (GnocamChooser *c, const gchar *model)
+{
+	g_return_if_fail (GNOCAM_IS_CHOOSER (c));
+
+	gnocam_chooser_set_common (c, GTK_TREE_MODEL (c->priv->models),
+				   c->priv->s_models, model);
+}
+
+void
+gnocam_chooser_set_manufacturer (GnocamChooser *c, const gchar *manufacturer)
+{
+	g_return_if_fail (GNOCAM_IS_CHOOSER (c));
+
+	gnocam_chooser_set_common (c, GTK_TREE_MODEL (c->priv->manufs),
+				   c->priv->s_manufs, manufacturer);
+}
+
+static gchar *
+gnocam_chooser_get_common (GnocamChooser *c, GtkTreeSelection *s)
+{
+	GtkTreeIter iter;
+	GtkTreeModel *m;
+	GValue v = {0,};
+	gchar *n;
+
+	g_return_val_if_fail (GNOCAM_IS_CHOOSER (c), NULL);
+	g_return_val_if_fail (GTK_IS_TREE_SELECTION (s), NULL);
+
+	if (!gtk_tree_selection_get_selected (s, &m, &iter)) return NULL;
+	gtk_tree_model_get_value (m, &iter, NAME_COL, &v);
+	g_return_val_if_fail (G_VALUE_HOLDS_STRING (&v), NULL);
+	n = g_strdup (g_value_get_string (&v));
+	g_value_unset (&v);
+
+	return n;
+}
+
+gchar *
+gnocam_chooser_get_manufacturer (GnocamChooser *c)
+{
+	g_return_val_if_fail (GNOCAM_IS_CHOOSER (c), NULL);
+
+	return gnocam_chooser_get_common (c, c->priv->s_manufs);
+}
+
+gchar *
+gnocam_chooser_get_model (GnocamChooser *c)
+{
+	g_return_val_if_fail (GNOCAM_IS_CHOOSER (c), NULL);
+
+	return gnocam_chooser_get_common (c, c->priv->s_models);
+}
+
+gchar *
+gnocam_chooser_get_port (GnocamChooser *c)
+{
+	g_return_val_if_fail (GNOCAM_IS_CHOOSER (c), NULL);
+
+	return gnocam_chooser_get_common (c, c->priv->s_ports);
+}
+
 GnocamChooser *
 gnocam_chooser_new (void)
 {
@@ -188,6 +411,7 @@ gnocam_chooser_new (void)
 	GtkWidget *ui, *b, *w;
 	GtkCellRenderer *r;
 	GtkTreeViewColumn *col;
+	GtkTreeIter iter;
 
 	/* Read the interface description */
 	xml = glade_xml_new (GNOCAM_GLADE_DIR "/gnocam.glade",
@@ -225,11 +449,14 @@ gnocam_chooser_new (void)
 	/* Manufacturer */
 	w = glade_xml_get_widget (xml, "treeview_manufacturer");
 	gtk_tree_view_set_model (GTK_TREE_VIEW (w),
-				 GTK_TREE_MODEL (c->priv->manufacturers));
+				 GTK_TREE_MODEL (c->priv->manufs));
 	r = gtk_cell_renderer_text_new ();
 	col = gtk_tree_view_column_new_with_attributes (_("Manufacturer"), r,
 		"text", NAME_COL, NULL);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (w), col);
+	c->priv->s_manufs = gtk_tree_view_get_selection (GTK_TREE_VIEW (w));
+	g_signal_connect (c->priv->s_manufs, "changed",
+			  G_CALLBACK (on_manuf_selection_changed), c);
 
 	/* Model */
 	w = glade_xml_get_widget (xml, "treeview_model");
@@ -239,6 +466,9 @@ gnocam_chooser_new (void)
 	col = gtk_tree_view_column_new_with_attributes (_("Model"), r,
 		"text", NAME_COL, NULL);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (w), col);
+	c->priv->s_models = gtk_tree_view_get_selection (GTK_TREE_VIEW (w));
+	g_signal_connect (c->priv->s_models, "changed",
+			  G_CALLBACK (on_model_selection_changed), c);
 
 	/* Port */
 	w = glade_xml_get_widget (xml, "treeview_port");
@@ -248,10 +478,19 @@ gnocam_chooser_new (void)
 	col = gtk_tree_view_column_new_with_attributes (_("Port"), r,
 		"text", NAME_COL, NULL);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (w), col);
+	c->priv->s_ports = gtk_tree_view_get_selection (GTK_TREE_VIEW (w));
+	g_signal_connect (c->priv->s_ports, "changed",
+			  G_CALLBACK (on_port_selection_changed), c);
 
 	/* Find available cameras on the system. */
 	gnocam_chooser_setup (c);
 
+	/* Select the first manufacturer */
+	if (gtk_tree_model_get_iter_first (
+			GTK_TREE_MODEL (c->priv->manufs), &iter))
+		gtk_tree_selection_select_iter (c->priv->s_manufs, &iter);
+
+	/* We don't need the GLADE xml any more. */
 	g_object_unref (xml);
 
 	return c;

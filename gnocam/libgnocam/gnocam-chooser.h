@@ -21,9 +21,20 @@ struct _GnocamChooser
 struct _GnocamChooserClass
 {
 	GtkDialogClass parent_class;
+
+	void (* changed) (GnocamChooser *);
 };
 
 GtkType        gnocam_chooser_get_type (void);
 GnocamChooser *gnocam_chooser_new      (void);
+
+void   gnocam_chooser_set_model (GnocamChooser *, const gchar *);
+gchar *gnocam_chooser_get_model (GnocamChooser *);
+
+void   gnocam_chooser_set_manufacturer (GnocamChooser *, const gchar *);
+gchar *gnocam_chooser_get_manufacturer (GnocamChooser *);
+
+void   gnocam_chooser_set_port (GnocamChooser *, const gchar *);
+gchar *gnocam_chooser_get_port (GnocamChooser *);
 
 #endif /* __GNOCAM_CHOOSER_H__ */

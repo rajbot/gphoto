@@ -1,7 +1,7 @@
 AC_INIT(gnocam/main.c)
 AC_PREREQ(2.50)
 
-AM_INIT_AUTOMAKE(GnoCam, 0.14)
+AM_INIT_AUTOMAKE(Gnocam, 0.14)
 AM_CONFIG_HEADER(config.h)
 
 AC_ISC_POSIX
@@ -27,7 +27,10 @@ AC_PROG_INTLTOOL
 dnl ---------------------------------------------------------------------------
 dnl Clean code is always good.
 dnl ---------------------------------------------------------------------------
-GNOME_COMPILE_WARNINGS
+if test "$ac_cv_prog_gcc" = "yes"; then
+	CFLAGS="$CFLAGS -g -Wall -Wmissing-declarations -Wmissing-prototypes"
+	LDFLAGS="$LDFLAGS -g -Wall"
+fi
 
 dnl ---------------------------------------------------------------------------
 dnl gconf

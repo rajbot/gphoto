@@ -9,7 +9,7 @@ static gboolean
 factory_callback (PanelApplet *applet, const gchar *iid,
 		  gpointer user_data)
 {
-	GnoCamApplet *a;
+	GnocamApplet *a;
 
 	a = gnocam_applet_new (applet);
 
@@ -22,6 +22,6 @@ main (int argc, char *argv[])
 	gnome_program_init ("gnocam-applet", VERSION, LIBGNOMEUI_MODULE,
 			    argc, argv, NULL);
 
-	return panel_applet_factory_main ("OAFIID:GNOME_GnoCamApplet_Factory",
+	return panel_applet_factory_main ("OAFIID:GNOME_GnocamApplet_Factory",
 				PANEL_TYPE_APPLET, factory_callback, NULL);
 }

@@ -63,22 +63,26 @@ module C {
 	interface Mngr : Bonobo::Unknown {
 
 		/* Querying the supported devices */
-		struct Device {
-			string manufacturer;
+		typedef sequence<string> PortList;
+		struct Model {
 			string model;
-			IDList ports;
+			PortList ports;
 		};
-		typedef sequence<Device> DeviceList;
-		DeviceList get_devices ();
-		string get_port_name (in ID id) raises (BadID);
+		typedef sequence<Model> ModelList;
+		struct Manufacturer {
+			string manufacturer;
+			ModelList models;
+		};
+		typedef sequence<Manufacturer> ManufacturerList;
+		ManufacturerList get_devices ();
 
 		/* Querying cameras we are already connected to. */
 		IDList get_cameras ();
 		Camera get_camera (in ID id_device) raises (BadID);
 
 		/* Connecting to cameras */
-		Camera connect_to_device_at_port (
-				in ID id_device, in ID id_port) raises (BadID);
+		Camera connect (in string manufacturer, in string model,
+				in string port) raises (Error);
 	};
 };
 };

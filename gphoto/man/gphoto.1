@@ -1,9 +1,9 @@
 .\" Man Page for gPhoto by scott... :)
 .\" groff -man -Tascii foo.1
 .\"
-.TH GPHOTO 1 "DECEMBER 1998" Linux "User Manuals"
+.TH GPHOTO 1 "OCTOBER 1999" GNU "User Manuals"
 .SH NAME
-gPhoto (GNU Photo) \- Digital Camera utility
+gPhoto \- GNU Project Digital Camera Program
 .SH SYNOPSIS
 .B gphoto [-h] [-n] [-s # 
 .I filename 
@@ -11,7 +11,7 @@ gPhoto (GNU Photo) \- Digital Camera utility
 .B [-t # 
 .I filename 
 .B ]
-
+.br
 .B gphoto [-d #] [-l 
 .I filename
 .B ]
@@ -24,12 +24,6 @@ different digital still camera models.
 gPhoto has a basic command line interface, which is handy,
 if you want to set up a web camera, and use gphoto in a 
 script, e.g. with Perl/PHP.
-
-Currently, gPhoto has integrated Eugene Crosser's PhotoPC
-library, and is working on more support. Cameras reported to
-work are Epson, Olympus, Agfa, Sanyo, and Nikon (CoolPix) digital
-models. For a complete list, visit the camera support page at
-http://gphoto.fix.no/cameras.shtml
 
 .SH USAGE
 .IP gphoto <option> <# of picture> <filename>
@@ -57,25 +51,65 @@ display help screen
 .RS
 gPhoto configuration file
 .SH BUGS
-At times, gPhoto may crash when closing opened images.
-This is a known bug and is being worked on. Additionally,
-images may not save correctly. Again, this is being worked
-on. Be sure to type the image extension of the desired format
-in the filename.
+http://bugs.gnome.org/db/pa/lgphoto.html
+.SH UPDATES
+http://www.gphoto.org/download.php3
 .SH AUTHORS
-.BR Scott	Fritzinger	<scottf@unr.edu>
-
-Camera libraries, patches, fixes, plugins, extensions, 
-scripts and more from lots and lots of people including 
-but not limited to:
-
-.BR Matt		Martin		<matt.martin@ieee.org>
-.BR Bob		Paauwe		<bpaauwe@bobsplace.com>
-.BR Del		Simmons		<del@cimedia.com>
-.BR Clifford	Wright		<cliff@snipe444.org>
-.BR Ole		Aamot		<oleaa@ifi.uio.no>
-.BR Phill	Hugo			<phill@gphoto.org>
+.B 
+Scott Fritzinger <scottf@unr.edu>
+.br
+Eugene Crosser <crosser@average.org
+.br
+Matt Martin <matt.martin@ieee.org>
+.br
+Werner Almesberger <almesber@lrc.di.epfl.ch>
+.br
+Ole W. Saastad <o.w.saastad@kjemi.uio.no>
+.br
+Anne Bezemer <costar@panic.et.tudelft.nl>
+.br
+Gus Hartmann <hartmann@cs.wisc.edu>
+.br
+Gary Ross <gdr@hooked.net>
+.br
+Phill Hugo <phill@gphoto.org>
+.br
+Ed Legowski <edlegowski@pobox.com>
+.br
+Toshiki Fujisawa <gphoto@fujisaw.gr.jp>
+.br
+M. Adam Kendall <joker@penguinpub.com>
+.br
+Mark Davies <mdavies@dial.pipex.com>
+.br
+Michael McCormack <mccormac@aals27.alcatel.com.au>
+.br
+Pedro Caria <pmiguel@maquina.com>
+.br
+Del Simmons <del@gphoto.org>
+.br
+Bob Paauwe <bpaauwe@bobsplace.com>
+.br
+Cliff Wright <cliff@snipe444.org>
+.br
+Beat Christen <spiff@longstreet.ch>
+.br
+Warren Baird <wjbaird@bigfoot.com>
+.br
+Brent D. Metz <bmetz@vt.edu>
+.br
+Brian Hirt <bhirt@loopy.berkhirt.com>
+.br
+Randy D. Scott <scottr@wwa.com>
+.br
+David Brownell <david-b@pacbell.net>
+.br
+Paul S. Jenner <psj@mustec.eu.org>
+.br
+Tuomas Kuosmanen <tigert@gimp.org>
+.br
+Ole Kristian Aamot <ole@gnu.org>
 .SH "SEE ALSO"
-.BR gdk, 
-.BR gtk+, 
+.BR gdk,
+.BR gtk+,
 .BR imlib

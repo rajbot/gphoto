@@ -8,3 +8,4 @@ Makefile
 Makefile.in
 *.c
 *.h
+po2tbl.sed

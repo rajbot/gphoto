@@ -1,34 +1,17 @@
 
-NULL =
-
 modulesdir = $(libdir)/vfs/modules
 
-modules_LTLIBRARIES =\
- libvfs-camera.la\
- $(NULL)
+modules_LTLIBRARIES = libvfs-camera.la
 
-libvfs_camera_la_SOURCES =\
- camera-method.c\
- utils.h utils.c\
- $(NULL)
+libvfs_camera_la_SOURCES = camera-method.c
 
 INCLUDES =\
- -I$(top_srcdir)\
- -I$(top_srcdir)/libgnocam\
- $(GPHOTO_CFLAGS)\
- $(EXTRA_WARNING_CFLAGS)\
- $(VFS_CFLAGS)\
- $(GNOME_INCLUDEDIR)\
- $(NULL)
+ $(VFS_CFLAGS)
 
 libvfs_camera_la_LIBADD =\
- ../libgnocam/libgnocam.la\
- $(VFS_LIBS)\
- $(NULL)
+ $(VFS_LIBS)
 
-libvfs_camera_la_LDFLAGS =\
- -export_dynamic\
- -avoid-version
+libvfs_camera_la_LDFLAGS = -export_dynamic -avoid-version
 
 modulesconfdir = $(sysconfdir)/vfs/modules
 modulesconf_DATA = camera-methods.conf

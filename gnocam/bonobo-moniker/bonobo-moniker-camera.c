@@ -1,13 +1,4 @@
-/*
- * bonobo-moniker-camera.c: CAMERA based Moniker
- *
- * Author:
- *   Joe Shaw (joe@helixcode.com)
- *
- * Copyright (c) 2000 Helix Code, Inc.
- */
 #include <config.h>
-#include <gphoto2.h>
 #include <bonobo/bonobo-moniker-extender.h>
 
 #include "bonobo-moniker-camera.h"
@@ -18,6 +9,7 @@ camera_resolve (BonoboMoniker 		    *moniker,
 		const CORBA_char 	    *requested_interface, 
 		CORBA_Environment 	    *ev)
 {
+	CORBA_Environment tmp_ev;
 	const gchar *name;
 
 	name = bonobo_moniker_get_name (moniker);
@@ -26,17 +18,29 @@ camera_resolve (BonoboMoniker 		    *moniker,
 	if (!strcmp (requested_interface, "IDL:Bonobo/Stream:1.0")) {
 		BonoboStream* stream;
 		
-//FIXME: We should have Bonobo_Storage_READ | Bonobo_Storage_WRITE, but then
-//we always get errors with cameras that don't support upload :-(
+		CORBA_exception_init (&tmp_ev);
+		
 		stream = bonobo_stream_open_full ("camera", name, 
-						  Bonobo_Storage_READ, 
-						  0644, ev);
-		if (BONOBO_EX (ev)) {
-			g_warning ("Could not get stream: %s", 
-				   bonobo_exception_get_text (ev));
-			return CORBA_OBJECT_NIL;
+						  Bonobo_Storage_READ |
+						  Bonobo_Storage_WRITE, 
+						  0644, &tmp_ev);
+		if (BONOBO_EX (&tmp_ev)) {
+			g_warning ("Could not get stream: %s",
+				   bonobo_exception_get_text (&tmp_ev));
+
+			CORBA_exception_free (&tmp_ev);
+
+			stream = bonobo_stream_open_full ("camera", name,
+							  Bonobo_Storage_READ,
+							  0644, ev);
+			if (BONOBO_EX (ev)) {
+				g_warning ("Could not get stream: %s", 
+					   bonobo_exception_get_text (ev));
+				return CORBA_OBJECT_NIL;
+			}
 		}
-		g_return_val_if_fail (stream, CORBA_OBJECT_NIL);
+
+		CORBA_exception_free (&tmp_ev);
 
 		return CORBA_Object_duplicate (BONOBO_OBJREF (stream), ev);
 	}
@@ -55,9 +59,7 @@ camera_resolve (BonoboMoniker 		    *moniker,
 				   bonobo_exception_get_text (ev));
 			return CORBA_OBJECT_NIL;
 		}
-		g_return_val_if_fail (storage, CORBA_OBJECT_NIL);
 
-		g_message ("Returning storage...");
 		return CORBA_Object_duplicate (BONOBO_OBJREF (storage), ev);
 	}
 

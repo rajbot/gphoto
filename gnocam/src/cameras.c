@@ -486,8 +486,8 @@ main_tree_update (GConfValue* value)
         for (i = 0; i < g_slist_length (list_cameras); i++) {
                 value = g_slist_nth_data (list_cameras, i);
                 g_assert (value->type == GCONF_VALUE_STRING);
-		g_assert ((xml = g_strdup (gconf_value_get_string (value))) != NULL);
-		if (!(doc = xmlParseMemory (g_strdup (xml), strlen (xml)))) continue;
+		xml = g_strdup (gconf_value_get_string (value));
+		if (!(doc = xmlParseMemory (xml, strlen (xml)))) continue;
 		g_assert ((node = xmlDocGetRootElement (doc)) != NULL);
 
 		/* This sanity check only seems to work with libxml2. */
@@ -503,7 +503,7 @@ main_tree_update (GConfValue* value)
                 /* Do we have this camera in the tree? */
                 for (j = 0; j < g_list_length (main_tree->children); j++) {
 			item = GTK_TREE_ITEM (g_list_nth_data (main_tree->children, j));
-                        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (item), "camera")) != NULL);
+                	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
                         if (atoi (id) == ((frontend_data_t*) camera->frontend_data)->id) {
 
                                 /* We found the camera. Changed? */
@@ -537,6 +537,9 @@ main_tree_update (GConfValue* value)
 				gp_camera_unref (camera);
 			}
                 }
+
+		/* Clean up. */
+		xmlFreeDoc (doc);
         }
 
         /* Delete all unchecked cameras. */
@@ -606,6 +609,7 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 			xmlSetProp (node_child, "_tip", "File configuration");
 			popup_prepare (component, window_file, node_child, command, ns);
 	                xmlAddChild (node, xmlNewNode (ns, "separator"));
+			gtk_object_set_data_full (GTK_OBJECT (item), "window_file", window_file, (GtkDestroyNotify) gp_widget_unref);
 	        }
 	
 	        /* Save preview? */
@@ -662,6 +666,7 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 		                        xmlSetProp (node_child, "_label", "Camera Configuration");
 					xmlSetProp (node_child, "_tip", "Camera configuration");
 		                        popup_prepare (component, window_camera, node_child, command, ns);
+					gtk_object_set_data_full (GTK_OBJECT (item), "window_camera", window_camera, (GtkDestroyNotify) gp_widget_unref);
 		                } else {
 					tmp = g_strdup_printf (_("Could not get camera configuration!\n(%s)"), gp_camera_result_as_string (camera, result));
 					bonobo_ui_component_set_status (main_component, tmp, NULL);
@@ -716,6 +721,7 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 			xmlSetProp (node_child, "_tip", "Folder configuration");
 	                popup_prepare (component, window_folder, node_child, command, ns);
         	        xmlAddChild (node, xmlNewNode (ns, "separator"));
+			gtk_object_set_data_full (GTK_OBJECT (item), "window_folder", window_folder, (GtkDestroyNotify) gp_widget_unref);
 	        }
 	
 	        /* Upload? */
@@ -780,9 +786,6 @@ camera_tree_item_popup_create (GtkTreeItem* item)
 
         /* Store some data. */
         gtk_object_set_data (GTK_OBJECT (item), "menu", menu);
-	if (window_folder) gtk_object_set_data_full (GTK_OBJECT (item), "window_folder", window_folder, (GtkDestroyNotify) gp_widget_unref);
-	if (window_camera) gtk_object_set_data_full (GTK_OBJECT (item), "window_camera", window_camera, (GtkDestroyNotify) gp_widget_unref);
-	if (window_file) gtk_object_set_data_full (GTK_OBJECT (item), "window_file", window_file, (GtkDestroyNotify) gp_widget_unref);
 
 	/* To make sure the _user_ toggled... */
 	gtk_object_set_data (GTK_OBJECT (component), "done", GINT_TO_POINTER (1));

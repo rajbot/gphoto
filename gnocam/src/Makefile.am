@@ -40,11 +40,18 @@ gnocam_SOURCES =\
 
 glade_DATA = gnocam.glade
 
+if GNOCAM_USES_GTKHTML
 gnocam_LDADD = \
  $(GNOME_LIBDIR)\
  $(GNOMEUI_LIBS)\
  $(INTLLIBS)\
  /usr/lib/libglade-bonobo.so
+else
+gnocam_LDADD =\
+ $(GNOME_LIBDIR)\
+ $(GNOMEUI_LIBS)\
+ $(INTLLIBS)
+endif
 
 EXTRA_DIST = $(glade_DATA)
 

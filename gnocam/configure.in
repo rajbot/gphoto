@@ -77,6 +77,7 @@ if test x"$use_gtkhtml" = xyes; then
         CFLAGS="$CFLAGS $GTKHTML_CFLAGS"
         LIBS="$LIBS $GTKHTML_LIBS"
         AC_DEFINE(GNOCAM_USES_GTKHTML,1)
+        AM_CONDITIONAL(GNOCAM_USES_GTKHTML,true)
     else
         AC_MSG_ERROR([
 *** You need to have gtkhtml installed to use it. Get the latest
@@ -84,6 +85,7 @@ if test x"$use_gtkhtml" = xyes; then
     fi
 else
     AC_MSG_RESULT([no])
+    AM_CONDITIONAL(GNOCAM_USES_GTKHTML,false)
 fi
 
 dnl *********

@@ -988,8 +988,9 @@ Matthew G. Martin
 Based on fujiplay by
 Thierry Bousch<bousch@topo.math.u-psud.fr>
 
-Known to work with Fuji DS-7 camera, but 
-may support other Fuji cameras.");
+Known to work with Fuji DS-7, Apple QuickTake 200,
+Samsung Kenox SSC-350N cameras, but 
+may support other Fuji cams as well.");
 }
 
 struct _Camera fuji = {fuji_initialize,

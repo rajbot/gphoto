@@ -362,19 +362,21 @@ static GnomeVFSResult do_seek (
         GnomeVFSContext*                context)
 {
 	FileHandle *file_handle = (FileHandle *) handle;
+	const char *data;
+	long int size;
 
 	G_LOCK (cameras);
 
+	gp_file_get_data_and_size (file_handle->file, &data, &size);
 	switch (position) {
 	case GNOME_VFS_SEEK_START:
-		file_handle->pos = MIN (file_handle->file->size, offset);
+		file_handle->pos = MIN (size, offset);
 		break;
 	case GNOME_VFS_SEEK_CURRENT:
-		file_handle->pos = MIN (file_handle->pos + offset,
-					file_handle->file->size);
+		file_handle->pos = MIN (file_handle->pos + offset, size);
 		break;
 	case GNOME_VFS_SEEK_END:
-		file_handle->pos = MAX (file_handle->file->size - 1 - offset,0);
+		file_handle->pos = MAX (size - 1 - offset,0);
 		break;
 	}
 
@@ -781,12 +783,14 @@ static GnomeVFSResult do_get_file_info_from_handle (
 	CameraFileInfo camera_info;
 	GnomeVFSResult result;
 	FileHandle *fh = (FileHandle *) handle;
+	const char *name;
 
 	G_LOCK (cameras);
 
+	gp_file_get_name (fh->file, &name);
 	result = GNOME_VFS_RESULT (gp_camera_file_get_info (fh->camera,
 							    fh->dirname,
-							    fh->file->name,
+							    name,
 							    &camera_info));
 	if (result != GNOME_VFS_OK) {
 		G_UNLOCK (cameras);

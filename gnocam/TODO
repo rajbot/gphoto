@@ -7,16 +7,8 @@ Drag & Drop:
 ------------
 - correctly implement drag (files/previews). Timeout issue?
 
-Gallery:
---------
-- Implement that correctly so that it gets useful.
-
-Main Window:
-------------
-- At least on my system, the manual doesn't work.
-
-EOG:
-----
+Image viewer:
+-------------
 - Get the EOG people to implement printing, zooming, saving.
 
 Threads:

@@ -1,4 +1,4 @@
-%define		name	GnoCam
+%define		name	@PACKAGE@
 %define 	ver	@VERSION@
 %define 	rel	1
 %define 	prefix	/usr
@@ -12,17 +12,19 @@ Group:		Applications/Multimedia
 Source:		
 URL:		http://www.uni-karlsruhe.de/~urc8/GnoCam/
 BuildRoot:	/var/tmp/gnocam-%{PACKAGE_VERSION}-root
-Docdir:		%{prefix}/help
+Docdir:	
 
 Requires:	gtk+ >= 1.2.7
 Requires:	gnome-libs >= 1.0.55
 Requires: 	gdk-pixbuf >= 0.9.0
 Requires:	gnome-vfs
-Requires:	libxml2 >= 2.0.0
+Requires:	libxml2
 Requires:	libglade >= 0.14
 Requires:	GConf >= 0.10
-Requires	libgpio >= 0.0.2
+Requires:	libgpio >= 0.0.2
 Requires:	libgphoto2
+Requires:	bonobo
+Requires:	gal
 
 %description
 %{name} is a small but powerful front-end to gphoto2 for the GNOME desktop.

@@ -13,7 +13,6 @@ GnoCam requires at least the following libraries. Please get the latest
 version from http://www.gnome.org. 
  * gnome-libs
  * bonobo
- * gtkhtml
  * libglade
  * gnome-vfs
  * gconf

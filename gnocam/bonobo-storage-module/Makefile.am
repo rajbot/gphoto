@@ -6,6 +6,8 @@ INCLUDES = \
  -I$(top_srcdir)\
  -I$(top_builddir)\
  -I$(includedir)\
+ -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
+ -DGNOMELOCALEDIR=\""$(datadir)/locale"\"\
  $(EXTRA_GNOME_CFLAGS)\
  $(GCONF_CFLAGS)\
  $(EXTRA_WARNING_CFLAGS)\

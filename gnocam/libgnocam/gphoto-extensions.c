@@ -40,7 +40,6 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 	for (i = 0; ; i++) {
 		gchar* tmp;
 		gchar* path = g_strdup_printf ("/apps/" PACKAGE "/camera/%i", i);
-		gchar* port;
 
 		/* Does such an entry exist? */
 		if (!gconf_client_dir_exists (client, path, NULL)) {
@@ -89,34 +88,22 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 		}
 
 		/* Get port. */
-		tmp = g_strconcat (path, "/port", NULL);
-		port = gconf_client_get_string (client, tmp, NULL);
-		g_free (tmp);
+		{
+			gchar* port;
+			
+			tmp = g_strconcat (path, "/port", NULL);
+			port = gconf_client_get_string (client, tmp, NULL);
+			g_free (tmp);
+
+			strcpy ((*camera)->port->name, port);
+			g_free (port);
+		}
 		
 		/* Free path - we've got from gconf everything we need. */
 		g_free (path);
 
 		/* Prepare initialization. */
 		(*camera)->port->speed = 0;
-
-		/* Search for port. Beware of "Directory Browse"... */
-		if (strcmp ((*camera)->model, "Directory Browse")) {
-			for (i = 0; i < gp_port_count_get (); i++) {
-				if ((result = gp_port_info_get (i, (*camera)->port)) != GP_OK) {
-					g_warning (_("Could not get port info for port %i! (%s)\n"), i, gp_result_as_string (result));
-					continue;
-				}
-				if (!strcmp ((*camera)->port->name, port)) break;
-			}
-			if ((i == gp_port_count_get ()) || (i < 0)) {
-				g_warning (_("Port '%s' not found!"), port);
-				gp_camera_unref (*camera);
-				*camera = NULL;
-				g_free (port);
-				return (GP_ERROR);
-			}
-		}
-		g_free (port);
 
 		/* Connect to the camera */
 		if ((result = gp_camera_init (*camera)) != GP_OK) {

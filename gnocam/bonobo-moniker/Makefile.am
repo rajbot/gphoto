@@ -1,10 +1,11 @@
 INCLUDES =\
  -I$(top_srcdir)/libgnocam\
- -DGNOMELOCALEDIR=\""$(datadir)/locale"\"\
  -I.\
  -I$(srcdir) -I$(top_srcdir)\
  -I$(top_builddir)\
  -I$(includedir)\
+ -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
+ -DGNOMELOCALEDIR=\""$(datadir)/locale"\"\
  $(EXTRA_GNOME_CFLAGS)\
  $(EXTRA_WARNING_CFLAGS)\
  $(GCONF_CFLAGS)\

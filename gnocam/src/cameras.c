@@ -214,6 +214,7 @@ camera_tree_folder_clean (GtkTreeItem* folder)
 
 	g_return_if_fail (folder);
 	g_return_if_fail (url = gtk_object_get_data (GTK_OBJECT (folder), "url"));
+	g_return_if_fail (storage = gtk_object_get_data (GTK_OBJECT (folder), "storage"));
 
 	/* Delete all items of subtree. Then, delete the subtree.*/
 	if (folder->subtree) {
@@ -224,37 +225,8 @@ camera_tree_folder_clean (GtkTreeItem* folder)
 		gtk_tree_item_remove_subtree (folder);
 	}
 
-	/* Do we already have the list? */
-	if (!(list = gtk_object_get_data (GTK_OBJECT (folder), "list"))) {
-		CORBA_Environment ev;
-
-		/* Init exception. */
-		CORBA_exception_init (&ev);
-	
-		/* Do we already have the storage? */
-		if (!(storage = gtk_object_get_data (GTK_OBJECT (folder), "storage"))) {
-#if 0
-			storage = bonobo_get_object (url, "IDL:Bonobo/Storage:1.0", &ev);
-			if (BONOBO_EX (&ev)) g_warning (_("Could not get storage for '%s'! (%s)"), url, bonobo_exception_get_text (&ev));
-#else
-			//FIXME: Above doesn't work. Why???
-			storage = BONOBO_OBJREF (bonobo_storage_open_full ("camera", url + 7, 0644, Bonobo_Storage_READ, &ev));
-			if (BONOBO_EX (&ev)) g_warning (_("Could not get storage for '%s'! (%s)"), url, bonobo_exception_get_text (&ev));
-#endif
-		}
-		if (storage) {
-			gtk_object_set_data_full (GTK_OBJECT (folder), "storage", storage, (GtkDestroyNotify) bonobo_object_unref);
-			list = Bonobo_Storage_listContents (storage, "", Bonobo_FIELD_TYPE, &ev);
-			if (BONOBO_EX (&ev)) g_warning (_("Could not get list of contents for '%s'!\n(%s)"), url, bonobo_exception_get_text (&ev));
-			else gtk_object_set_data (GTK_OBJECT (folder), "list", list);
-		}
-
-		/* Free exception. */
-		CORBA_exception_free (&ev);
-	}
-
 	/* Do we have contents? */
-	if (list) {
+	if ((list = gtk_object_get_data (GTK_OBJECT (folder), "list"))) {
 		if (list->_length > 0) {
 			gtk_widget_show (tree = gtk_tree_new ());
 			gtk_tree_item_set_subtree (folder, tree);
@@ -282,12 +254,14 @@ camera_tree_folder_populate (GtkTreeItem* folder)
 		case Bonobo_STORAGE_TYPE_DIRECTORY:
 			if (url[strlen(url) - 1] == '/') tmp = g_strconcat (url, list->_buffer [i].name, NULL);
 			else tmp = g_strconcat (url, "/", list->_buffer [i].name, NULL);
+			g_warning ("Adding folder '%s' (in '%s', name '%s')...", tmp, url, list->_buffer [i].name);
 			camera_tree_folder_add (GTK_TREE (folder->subtree), NULL, tmp);
 			g_free (tmp);
 			break;
 		case Bonobo_STORAGE_TYPE_REGULAR:
 			if (url[strlen(url) - 1] == '/') tmp = g_strconcat (url, list->_buffer [i].name, NULL);
 			else tmp = g_strconcat (url, "/", list->_buffer [i].name, NULL);
+			g_warning ("Adding file '%s' (in '%s', name '%s')...", tmp, url, list->_buffer [i].name);
 			camera_tree_file_add (GTK_TREE (folder->subtree), tmp);
 			g_free (tmp);
 			break;
@@ -302,9 +276,12 @@ camera_tree_folder_populate (GtkTreeItem* folder)
 void
 camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* url)
 {
-	GtkWidget*		item;
-	gboolean		root = (camera != NULL);
-	GtkTargetEntry 		target_table[] = {{"text/uri-list", 0, 0}};
+	Bonobo_Storage			storage = CORBA_OBJECT_NIL;
+	Bonobo_Storage_DirectoryList*	list;
+	GtkWidget*			item;
+	gboolean			root = (camera != NULL);
+	GtkTargetEntry 			target_table[] = {{"text/uri-list", 0, 0}};
+	CORBA_Environment		ev;
 
 	g_return_if_fail (tree);
 	g_return_if_fail (url);
@@ -313,28 +290,56 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* url)
 
 	/* Create the item. */
 	if (root) {
+		gint 			i;
+		gchar*			name;
+		gchar*			tmp = url + 9;
+
+		/* Create the storage. */
+		CORBA_exception_init (&ev);
+		storage = bonobo_get_object (url, "IDL:Bonobo/Storage:1.0", &ev);
+		if (BONOBO_EX (&ev)) g_warning (_("Could not get storage for '%s'! (%s)"), url, bonobo_exception_get_text (&ev));
+		CORBA_exception_free (&ev);
 
 		/* Extract the camera's name. */
-		gchar* 	tmp = url + 9;
-		gint	i;
-		gchar*	name;
-
 		for (i = 0; *tmp != 0; i++) {
 			if (*tmp == '/') break;
 			tmp++;
 		}
-
 		name = g_strndup (url + 9, i);
 		gtk_widget_show (item = gtk_tree_item_new_with_label (name));
 		g_free (name);
 		
-	} else gtk_widget_show (item = gtk_tree_item_new_with_label (url));
+	} else {
+		if ((storage = gtk_object_get_data (GTK_OBJECT (tree->tree_owner), "storage"))) {
+
+			/* Open the storage. */
+			CORBA_exception_init (&ev);
+			storage = Bonobo_Storage_openStorage (storage, g_basename (url), Bonobo_Storage_READ, &ev);
+			if (BONOBO_EX (&ev)) g_warning (_("Could not open storage for '%s'! (%s)"), url, bonobo_exception_get_text (&ev));
+			CORBA_exception_free (&ev);
+			
+		} else g_warning (_("There is no storage associated to the higher level tree item!"));
+						
+		gtk_widget_show (item = gtk_tree_item_new_with_label (g_basename (url)));
+	}
         gtk_tree_append (tree, item);
+
+	if (storage) {
+		gtk_object_set_data_full (GTK_OBJECT (item), "storage", storage, (GtkDestroyNotify) bonobo_object_unref);
+
+		/* Get the folder's contents. */
+		CORBA_exception_init (&ev);
+		list = Bonobo_Storage_listContents (storage, "", Bonobo_FIELD_TYPE, &ev);
+		if (BONOBO_EX (&ev)) g_warning (_("Could not get list of contents for '%s'!\n(%s)"), url, bonobo_exception_get_text (&ev));
+		CORBA_exception_free (&ev);
+		
+		gtk_object_set_data (GTK_OBJECT (item), "list", list);
+	}
 
 	/* The camera is ours. */
 	gp_camera_ref (camera);
 	gtk_object_set_data_full (GTK_OBJECT (item), "camera", camera, (GtkDestroyNotify) gp_camera_unref);
-	
+
 	gtk_object_set_data_full (GTK_OBJECT (item), "url", g_strdup (url), (GtkDestroyNotify) g_free);
 
         /* For drag and drop. */

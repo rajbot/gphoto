@@ -2210,7 +2210,14 @@ Hyper
       <vupdate_policy>GTK_UPDATE_CONTINUOUS</vupdate_policy>
 
       <widget>
-	<class>Placeholder</class>
+	<class>GtkViewport</class>
+	<name>viewport2</name>
+	<shadow_type>GTK_SHADOW_IN</shadow_type>
+
+	<widget>
+	  <class>OAFIID:control:html-editor:63c5499b-8b0c-475a-9948-81ec96a9662c</class>
+	  <name>oafiid:control:html-editor:63c5499b-8b0c-475a-9948-81ec96a9662c1</name>
+	</widget>
       </widget>
     </widget>
   </widget>

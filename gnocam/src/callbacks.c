@@ -141,16 +141,8 @@ on_new_gallery_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
 #ifdef GNOCAM_USES_GTKHTML
 	GladeXML*	xml_gallery;
-	GtkWidget*	widget;
-	GdkColor	bgColor = {0, 0xdfff, 0xdfff, 0xffff};
 
 	g_assert ((xml_gallery = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "app_gallery")) != NULL);
-	widget = gtk_html_new ();
-	gtk_widget_show (widget);
-	gtk_html_load_empty (GTK_HTML (widget));
-	gtk_html_set_default_background_color (GTK_HTML (widget), &bgColor);
-	gtk_html_set_editable (GTK_HTML (widget), TRUE);
-	gtk_container_add (GTK_CONTAINER (glade_xml_get_widget (xml_gallery, "app_gallery_scrolledwindow")), widget);
 
 	/* Store some data. */
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_gallery, "app_gallery_close")), "xml_gallery", xml_gallery);

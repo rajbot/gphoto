@@ -3,6 +3,7 @@
 #include <libgnomevfs/gnome-vfs.h>
 #include <glade/glade.h>
 #include <gconf/gconf-client.h>
+#include <bonobo.h>
 #include <gphoto2.h>
 #include "gnocam.h"
 #include "gphoto-extensions.h"
@@ -36,7 +37,13 @@ int main (int argc, char *argv[])
 
 	/* Init GNOME, glade, gnome-vfs, gconf. */
 	gnome_init (PACKAGE, VERSION, argc, argv);
+#ifdef GNOCAM_USES_GTKHTML
+	oaf_init (argc, argv);
+	bonobo_init (CORBA_OBJECT_NIL, CORBA_OBJECT_NIL, CORBA_OBJECT_NIL);
+	glade_bonobo_init ();
+#else
 	glade_gnome_init ();
+#endif
 	if (!gnome_vfs_init ()) {
 		gnome_error_dialog (_("Could not initialize gnome-vfs!"));
 		return (1);

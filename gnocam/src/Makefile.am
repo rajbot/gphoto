@@ -12,13 +12,13 @@ INCLUDES = \
 CFLAGS = @CFLAGS@\
  `gphoto2-config --cflags`\
  `gpio-config --cflags`\
- `gnome-config --cflags libglade gdk_pixbuf gnomeui vfs`\
+ `gnome-config --cflags libglade gdk_pixbuf gnomeui vfs bonobo`\
  `gconf-config --cflags gconf gconf-gtk`
 
 LDFLAGS = @LDFLAGS@\
  `gphoto2-config --libs`\
  `gpio-config --libs`\
- `gnome-config --libs libglade gdk_pixbuf gnomeui vfs`\
+ `gnome-config --libs libglade gdk_pixbuf gnomeui vfs bonobo`\
  `gconf-config --libs gconf gconf-gtk`
 
 bin_PROGRAMS = gnocam
@@ -43,7 +43,8 @@ glade_DATA = gnocam.glade
 gnocam_LDADD = \
  $(GNOME_LIBDIR)\
  $(GNOMEUI_LIBS)\
- $(INTLLIBS)
+ $(INTLLIBS)\
+ /usr/lib/libglade-bonobo.so
 
 EXTRA_DIST = $(glade_DATA)
 

@@ -1,4 +1,4 @@
-Makefile.am
+Makefile
 Makefile.in
 *.o
 bonobo-moniker-camera

@@ -1,8 +1,9 @@
 #ifdef WIN32
-#define GP_DLOPEN(_handle, _filename)
-#define GP_DLSYM(_pointer, _handle, _funcname)
-#define GP_DLCLOSE(_handle)
-#define GP_DLERROR()
+#include <windows.h>
+#define GP_DLOPEN(_handle, _filename)			(_handle = LoadLibrary(_filename))
+#define GP_DLSYM(_pointer, _handle, _funcname)	(_pointer = GetProcAddress(_handle, _funcname))
+#define GP_DLCLOSE(_handle)						(_handle = FreeLibrary(_handle))
+#define GP_DLERROR()							"Windows Error"
 #else
 #include <dirent.h>
 #include <dlfcn.h>

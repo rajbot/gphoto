@@ -2,7 +2,7 @@ bin_PROGRAMS = qm100
 drivers_LTLIBRARIES = libgphoto_konica_qm100.la
 
 CFLAGS   = @GTK_CFLAGS@ @GDK_IMLIB_CFLAGS@
-EXTRA_DIST = konicarc.sample
+EXTRA_DIST = konicarc.sample ChangeLog
 
 libgphoto_konica_qm100_la_SOURCES = konica_qm100.c getPicInfo.c \
 	transmission.c lowlevel.c getStatus.c close.c savePic.c saveThumb.c \
@@ -22,5 +22,3 @@ qm100_SOURCES= qm100.c qm100.h getPicInfo.c \
 	dump.c dump.h 
 
 libgphoto_konica_qm100_la_LDFLAGS = -version-info 0:0:0
-
-

@@ -9,6 +9,6 @@ int   qm100_getPacket(int serialdev, qm100_packet_block *packet);
 void  qm100_endTransmit(int serialdev, char *title);
 void  qm100_continueTransmission(int serialdev, char *title);
 int   qm100_getRealPicNum(int serialdev, int picNum);
-void  qm100_sendNullCmd(int serialdev);
+void  qm100_getCommandTermination(int serialdev);
 void  qm100_setTransmitSpeed(void);
 #endif

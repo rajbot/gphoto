@@ -2,8 +2,8 @@
 
 void qm100_takePic(int serialdev)
 {
-  unsigned char cmd_setpic[QM100_SETPIC_LEN]=QM100_SETPIC;
-  unsigned char cmd_takepic[QM100_TAKEPIC_LEN]=QM100_TAKEPIC;
+  unsigned char cmd_setpic[]=QM100_SETPIC;
+  unsigned char cmd_takepic[]=QM100_TAKEPIC;
   qm100_packet_block packet;
 /*---------------------------------------------------------------------*
  *                                                                     *
@@ -49,10 +49,5 @@ void qm100_takePic(int serialdev)
   /* Take Picture */
 
   qm100_transmit(serialdev, cmd_takepic, sizeof(cmd_takepic), &packet, "Take Picture");
-  qm100_sendNullCmd(serialdev);
+  qm100_getCommandTermination(serialdev);
 }
-
-
-
-
-

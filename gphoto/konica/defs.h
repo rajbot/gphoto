@@ -1,21 +1,57 @@
 #ifndef _QM100_DEFS_H
 #define _QM100_DEFS_H
-#define QM100_BLD      "101"
+#define QM100_MOD      "1999/08/04"
 #define QM100_VER      "0.3.5"   
-#define QM100_INIT     {0x00, 0x90, 0x00, 0x00}
+
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * Standard ascii control codes                                        *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+#define SIO_NUL        0x00   /* null */
+#define SIO_STX        0x02   /* start transmission */
+#define SIO_ETX        0x03   /* end transaction */
+#define SIO_EOT        0x04   /* end transmission  */
+#define SIO_ENQ        0x05   /* reuest to send */
+#define SIO_ACK        0x06   /* acknowledge (positive) */
+#define SIO_NAK        0x15   /* acknowledge (negative) */
+#define SIO_ETB        0x17   /* end of block (more to follow) */
+#define SIO_CAN        0x18   /* cancel */
+#define SIO_ESC        0x1b   /* escape */
+
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * Skeleton packets for camera commands                                *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+#define QM100_INIT       {0x00, 0x90, 0x00, 0x00};
+#define QM100_SUSPEND    {0x00, 0x90, 0x00, 0x00}
+#define QM100_GETID      {0x10, 0x90, 0x00, 0x00}
+#define QM100_GETSTATUS  {0x20, 0x90, 0x00, 0x00, 0x00, 0x00}
+#define QM100_GETTIME    {0x30, 0x90, 0x00, 0x00}
+#define QM100_GETTIMERS  {0x40, 0x90, 0x00, 0x00, 0x00, 0x00}
+#define QM100_SETSPEED   {0x80, 0x90, 0x00, 0x00, 0x00, 0x00, 0x11, 0x00}
+#define QM100_SETTIME    {0xb0, 0x90, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+//                                                  yy    mm    dd    hh    mm    ss 
+
+#define QM100_SETAUTOOFF {0xc0, 0x90, 0x00, 0x00, 0x04, 0xd0, 0x00, 0x00}
+//                                                            secs
+#define QM100_SETTIMER   {0xc0, 0x90, 0x00, 0x00, 0x04, 0xc0, 0x00, 0x00}
+//                                                            secs
+#define QM100_SETBEEP    {0xc0, 0x90, 0x00, 0x00, 0x06, 0xd0, 0x00, 0x00}
+//                                                            Bool  
+#define QM100_RESETFACT  {0xc1, 0x90, 0x00, 0x00, 0x00, 0x00}
+
+
+#define QM100_SETPIC     {0xC0, 0x90, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+#define QM100_FORMAT     {0x10, 0x80, 0x00, 0x00, 0x02, 0x00}
+#define QM100_GETPIC     {0x30, 0x88, 0x00, 0x00, 0x02, 0x00, 0x00, 0x80}
+#define QM100_GETTHUMB   {0x00, 0x88, 0x00, 0x00, 0x02, 0x00, 0x00, 0x80} 
+#define QM100_PICINFO    {0x20, 0x88, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00}
+#define QM100_PROTECT    {0x30, 0x80, 0x00, 0x00, 0x02, 0x00, 0x00, 0x80, 0x00, 0x00} 
+//                                                      MSB#  LSB#         1/0
 #define QM100_ERASE    {0x00, 0x80, 0x00, 0x00, 0x02, 0x00, 0x00, 0x80}
-#define QM100_FORMAT   {0x10, 0x80, 0x00, 0x00, 0x02, 0x00}
-#define QM100_GETPIC   {0x30, 0x88, 0x00, 0x00, 0x02, 0x00, 0x00, 0x80}
-#define QM100_GETTHUMB {0x00, 0x88, 0x00, 0x00, 0x02, 0x00, 0x00, 0x80} 
-#define QM100_PICINFO  {0x20, 0x88, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00}
-#define QM100_PROTECT  {0x30, 0x80, 0x00, 0x00, 0x02, 0x00, 0x00, 0x80, 0x00, 0x00} 
-//                                                    MSB#  LSB#         1/0
-#define QM100_SETPIC   {0xC0, 0x90, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-#define QM100_SPEED    {0x80, 0x90, 0x00, 0x00, 0x00, 0x00, 0x11, 0x00}
-#define QM100_STATUS   {0x20, 0x90, 0x00, 0x00, 0x00, 0x00}
-#define QM100_SUSPEND  {0x00, 0x90, 0x00, 0x00}
 #define QM100_TAKEPIC  {0x00, 0x91, 0x00, 0x00, 0x02, 0x00}
-#define QM100_TIME     {0xb0, 0x90, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 
 #define QM100_INIT_LEN     4
 #define QM100_STATUS_LEN   6
@@ -60,7 +96,7 @@
 #define PICNUM        packet.packet+0xf9
 
 #define DEFAULT_PORT	  "/dev/ttyS0"
-#define DEFAULT_SPEED  "38400"
+#define DEFAULT_SPEED  "9600"
 #define DEFAULT_PACING "10"
 #define PACKET_SIZE    4096       /* maximum response packet length */
 #define STATUS_SIZE    34         /* expected size of status response* */
@@ -89,5 +125,20 @@ typedef struct
   unsigned short counter;
   unsigned char whitebal;
 } qm100_info_block;
+/*---------------------------------------------------------------------*
+ *                                                                     *
+ * Format of the response packet for getTime.                          *
+ *                                                                     *
+ *---------------------------------------------------------------------*/
+typedef struct
+{
+   char   cmd[4];
+   char   year;
+   char   month;
+   char   day;
+   char   hour;
+   char   minute;
+   char   second;
+}  PKT_TIME;
 
 #endif  /* _QM100_DEFS_H */

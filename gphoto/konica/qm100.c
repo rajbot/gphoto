@@ -17,12 +17,13 @@ int main(int argc, char *argv[])
    int   serialdev;
    int   infoPic=0;
    char  cameraName[128];
+   int   qm100_date=0;
 
    strcpy(cameraName,qm100_getKeyword("CAMERA", DEFAULT_PORT));
    qm100_setTrace();
    while (1)
       {
-      c = getopt(argc, argv, "e:fg:hstai:p:b:");
+      c = getopt(argc, argv, "e:fg:hstai:p:b:dD");
       if (c == -1)
          break;
       switch (c)
@@ -62,6 +63,16 @@ int main(int argc, char *argv[])
             qm100_format=1;
             qm100_permission=1;
             break;
+
+         case 'd':
+            qm100_date=1;
+            qm100_permission=1;
+            break;
+	  
+         case 'D':
+            qm100_date=2;
+            qm100_permission=1;
+            break;
 	  
          case 'g':
             sscanf(optarg,"%d",&qm100_getPic);
@@ -75,7 +86,7 @@ int main(int argc, char *argv[])
 
          default:
             printf("Konica QM-100 Digtal Camera Utility "
-                   "Version %s Build %s\n", QM100_VER,  QM100_BLD);
+                   "Version %s Mod %s\n", QM100_VER,  QM100_MOD);
             printf("Usage:\tqm100 MODE [OPTION]... [FILENAME]\n");
             printf("\tMODES\n");
             printf("\t  -s\t\tdisplay the camera status\n");
@@ -85,6 +96,8 @@ int main(int argc, char *argv[])
             printf("\t  -e##\t\terase picture ##\n");
             printf("\t  -i##\t\tdump information block for picture ##\n");
             printf("\t  -f\t\tformat the compact flash card\n");
+            printf("\t  -d\t\tget date and time from camera\n");
+            printf("\t  -D\t\tSet camera date and time from system clock\n");
             printf("\n\tOPTIONS\n");
             printf("\t  -p\t\tSet the camera device/port (default %s)\n", cameraName);
             printf("\t  -b\t\tSet the speed/baud rate\n"
@@ -111,6 +124,10 @@ int main(int argc, char *argv[])
       qm100_getStatus(serialdev, qm100_showStatus);
       if (qm100_format)
          qm100_formatCF(serialdev);
+      else if (qm100_date == 1)
+         printf("Camera reports date as: %s\n", qm100_getDate(serialdev));
+      else if (qm100_date == 2)
+         printf("Camera date set to: %s\n", qm100_setDate(serialdev));
       else if (qm100_getPic > 0)
          {
          qm100_getPic = qm100_getRealPicNum(serialdev, qm100_getPic);

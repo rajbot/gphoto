@@ -35,7 +35,7 @@ void konica_show_camera_error(void)
 int konica_qm100_number_of_pictures ()
 {
   qm100_packet_block packet;
-  char cmd_status[QM100_STATUS_LEN]=QM100_STATUS;
+  char cmd[]=QM100_GETSTATUS;
   int serialdev;
   
   if (setjmp(qm100_jmpbuf))
@@ -44,7 +44,7 @@ int konica_qm100_number_of_pictures ()
      return 0;
      }
   serialdev = qm100_open(serial_port);
-  qm100_transmit(serialdev, cmd_status, sizeof(cmd_status), &packet, "Get Status");
+  qm100_transmit(serialdev, cmd, sizeof(cmd), &packet, "Get Status");
   qm100_close(serialdev);
   return PICTURE_COUNT;
 }
@@ -53,7 +53,7 @@ int konica_qm100_take_picture()
 {
   int serialdev;
   qm100_packet_block packet;
-  char cmd_status[QM100_STATUS_LEN]=QM100_STATUS;
+  char cmd[]=QM100_GETSTATUS;
   
   if (setjmp(qm100_jmpbuf))
      {
@@ -62,7 +62,7 @@ int konica_qm100_take_picture()
      }
   serialdev = qm100_open(serial_port);
   qm100_takePic(serialdev);
-  qm100_transmit(serialdev, cmd_status, sizeof(cmd_status), &packet, "Get Status");
+  qm100_transmit(serialdev, cmd, sizeof(cmd), &packet, "Get Status");
   qm100_close(serialdev);
   return PICTURE_COUNT;
 }
@@ -193,7 +193,7 @@ char *konica_qm100_summary()
 {
   char summary_string[500];
   char *summary;
-  char cmd_status[QM100_STATUS_LEN]=QM100_STATUS;
+  char cmd[]=QM100_GETSTATUS;
   int serialdev;
   qm100_packet_block packet;
   
@@ -201,7 +201,7 @@ char *konica_qm100_summary()
   if (setjmp(qm100_jmpbuf))
      return qm100_errmsg;
   serialdev = qm100_open(serial_port);
-  qm100_transmit(serialdev, cmd_status, sizeof(cmd_status), &packet, "Get Status");
+  qm100_transmit(serialdev, cmd, sizeof(cmd), &packet, "Get Status");
   qm100_close(serialdev);
   update_progress(1);
 

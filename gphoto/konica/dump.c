@@ -74,8 +74,3 @@ void dump(FILE *fd, const char *title,
    fprintf(fd, "  * %s *\n", text);
    fflush(fd);
 }
-
-
-
-
-

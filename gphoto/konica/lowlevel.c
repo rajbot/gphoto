@@ -57,7 +57,3 @@ void qm100_iostat(unsigned char *str, unsigned char *buf, int len)
     }
   fprintf(qm100_trace,"\n");
 }
-
-
-
-

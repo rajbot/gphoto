@@ -9,6 +9,11 @@ char *qm100_getKeyword(char *key, char *dflt)
    
    sprintf(fname, "%s/.gphoto/konicarc", getenv("HOME"));
    fp = fopen(fname, "r");
+   if (!fp)
+      {
+      sprintf(fname, "%s/konicarc", getenv("HOME"));
+      fp = fopen(fname, "r");
+      }
    if (fp)
       {
       while ((sp = fgets(buf, sizeof(buf)-1, fp)) != NULL)
@@ -25,6 +30,8 @@ char *qm100_getKeyword(char *key, char *dflt)
          }
       fclose(fp);
       }
+   else
+      printf("Unable to open %s\n", fname);
    if (!sp)
       {
       sprintf(buf, "QM100_%s", key);
@@ -38,13 +45,27 @@ char *qm100_getKeyword(char *key, char *dflt)
 void qm100_setTrace(void)
 {
    char *fname;
+   char tname[128];
    
    fname = qm100_getKeyword("TRACE", "off");
    if (!qm100_trace && fname &&
        strcasecmp(fname, "off") != 0  &&
        strcasecmp(fname, "none") != 0)
-      qm100_trace = fopen(fname, "w");
-
+      {
+      if (strcasecmp(fname, "on") == 0)
+         fname = "konica.trace";
+      if (*fname != '/' && *fname != '.')
+         sprintf(tname, "%s/.gphoto/%s", getenv("HOME"),  fname);
+      else
+         strcpy(tname, fname);
+      qm100_trace = fopen(tname, "w");
+      if (!qm100_trace)
+         {
+         sprintf(tname, "%s/%s", fname);
+         qm100_trace = fopen(tname, "w");
+         }
+      }
+   
    fname = qm100_getKeyword("TRACE_BYTES", "off");
    if (qm100_trace && fname && strcasecmp(fname, "off") != 0)
       qm100_showBytes = 1;
@@ -54,7 +75,7 @@ int qm100_open(const char *devname)
 {
   int serialdev;
   qm100_packet_block packet;
-  char cmd_init[QM100_INIT_LEN]=QM100_INIT;
+  char cmd[]=QM100_INIT;
 
   serialdev = open(devname, O_RDWR|O_NOCTTY);
   if (serialdev < 0) 
@@ -78,9 +99,7 @@ int qm100_open(const char *devname)
 
   if (tcsetattr(serialdev, TCSANOW, &newt) < 0)
      qm100_error(serialdev, "Unable to set serial device attributes", errno);
-  qm100_transmit(serialdev, cmd_init, sizeof(cmd_init), &packet, "Open");
+  qm100_transmit(serialdev, cmd, sizeof(cmd), &packet, "Open");
   qm100_setSpeed(serialdev, qm100_transmitSpeed);
   return serialdev;
 }
-
-

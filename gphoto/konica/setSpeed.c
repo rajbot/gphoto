@@ -4,7 +4,7 @@ void qm100_setSpeed(int serialdev, int speed)
 {
   qm100_packet_block packet;
   int reg;
-  unsigned char cmd_speed[QM100_SPEED_LEN]=QM100_SPEED;
+  unsigned char cmd[]=QM100_SETSPEED;
 
   newt.c_cflag |= CS8;
   newt.c_iflag &= ~(IGNBRK|BRKINT|IGNPAR|PARMRK|INPCK|ISTRIP|INLCR);
@@ -33,10 +33,10 @@ void qm100_setSpeed(int serialdev, int speed)
       reg = 0x200;
       break;
     }
-  cmd_speed[4]=(reg & 0xff);
-  cmd_speed[5]=((reg>>8) & 0xff);
+  cmd[4]=(reg & 0xff);
+  cmd[5]=((reg>>8) & 0xff);
 
-  qm100_transmit(serialdev, cmd_speed, sizeof(cmd_speed), &packet, "Set Speed");
+  qm100_transmit(serialdev, cmd, sizeof(cmd), &packet, "Set Speed");
   if (packet.packet_len != 8)
      qm100_error(serialdev, "SetSpeed incorrect response length", 0);
   else
@@ -47,5 +47,3 @@ void qm100_setSpeed(int serialdev, int speed)
         qm100_error(serialdev, "Unable to set serial device attributes", errno);
      }
 }
-
-

@@ -3,9 +3,8 @@
 void qm100_savePic(int serialdev, char *filename, int pic, void (*progress)(void))
 {
   int jpgfile;
-
   char success=1;
-  char cmd[QM100_GETPIC_LEN]=QM100_GETPIC;
+  char cmd[]=QM100_GETPIC;
   qm100_packet_block packet;  
 
   cmd[5] = (pic >> 8) & 0xff;
@@ -29,5 +28,5 @@ void qm100_savePic(int serialdev, char *filename, int pic, void (*progress)(void
       close(jpgfile);
     }
   qm100_endTransmit(serialdev, "GetPicture");
-  qm100_sendNullCmd(serialdev);
+  qm100_getCommandTermination(serialdev);
 }

@@ -218,4 +218,3 @@ void on_spd_pressed(GtkButton *button, gpointer user_data)
 {}
 void cancel_btn_clicked(GtkButton *button, gpointer user_data)
 {}
-

@@ -5,13 +5,13 @@ Camera      /dev/ttyS0
 #  Speed  - sets the speed for serial communication.  Higher
 #           speeds may cause frequent errors on slower machines.
 #           Possible values:
-#              9600
+#              9600    (default)
 #              19200
-#              38400  (default)
+#              38400  
 #              57600
 #              115200
 #   
-Speed       38400
+Speed       9600
 #   
 #  Pacing - sets the delay, in milleseconds, between bytes sent
 #           to the camera.  The default of 10 should work on
@@ -19,7 +19,10 @@ Speed       38400
 Pacing      10
 #
 #  Trace  - sets the name of the output trace file.  If 'off',
-#           then no tracing is performed.
+#           then no tracing is performed.  Anything else is
+#           is treated as the name of the file to which trace
+#           data should be written.  If the name does not begin
+#           with / it is placed in ~/.gphoto.
 #
 Trace       off
 #

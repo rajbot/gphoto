@@ -13,7 +13,9 @@ module GNOME {
 		exception IOError {};
 
 		Bonobo::Stream capturePreview ();
-		Bonobo::Stream captureImage ()
+		
+		/* The path to the new image will be returned. */
+		string captureImage ()
 			raises (Cancelled, NotSupported, IOError);
 	};
 

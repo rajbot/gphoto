@@ -12,7 +12,7 @@ int main (int argc, char *argv[])
 	GNOME_Camera camera;
 	CORBA_Environment ev;
 	Bonobo_Storage storage;
-	Bonobo_Stream stream;
+	CORBA_char* path;
 
 	gtk_type_init ();
 
@@ -43,15 +43,16 @@ int main (int argc, char *argv[])
 	bonobo_object_release_unref (storage, NULL);
 
 	g_message ("Capturing preview...");
-	stream = GNOME_Camera_captureImage (camera, &ev);
+	path = GNOME_Camera_captureImage (camera, &ev);
 	g_message ("Releasing camera...");
 	bonobo_object_release_unref (camera, NULL);
 	g_message ("Checking for exception...");
 	if (BONOBO_EX (&ev))
 		g_error (bonobo_exception_get_text (&ev));
 
-	bonobo_object_release_unref (stream, NULL);
-
+	g_message ("The image should be in %s...", path);
+	CORBA_free (path);
+	
 	CORBA_exception_free (&ev);
 
 	return (0);

@@ -63,15 +63,13 @@ impl_GNOME_Camera_capturePreview (PortableServer_Servant servant,
 	return (CORBA_Object_duplicate (BONOBO_OBJREF (stream), ev));
 }
 
-static Bonobo_Stream
+static CORBA_char *
 impl_GNOME_Camera_captureImage (PortableServer_Servant servant,
 				CORBA_Environment *ev)
 {
-	Bonobo_Stream stream;
 	GnoCamCamera *c;
 	GnomeDialog *capture;
 	CameraFilePath path;
-	gchar *full_path;
 
 	c = GNOCAM_CAMERA (bonobo_object_from_servant (servant));
 
@@ -96,17 +94,7 @@ impl_GNOME_Camera_captureImage (PortableServer_Servant servant,
 	if (BONOBO_EX (ev))
 		return (CORBA_OBJECT_NIL);
 
-	full_path = g_concat_dir_and_file (path.folder, path.name);
-	g_message ("Image is in %s", full_path);
-	stream = Bonobo_Storage_openStream (BONOBO_OBJREF (c->priv->storage),
-					    full_path, Bonobo_Storage_READ, ev);
-	g_free (full_path);
-	if (BONOBO_EX (ev)) {
-		g_message ("Got exception: %s", bonobo_exception_get_text (ev));
-		return (CORBA_OBJECT_NIL);
-	}
-
-	return (stream);
+	return (g_concat_dir_and_file (path.folder, path.name));
 }
 
 static void

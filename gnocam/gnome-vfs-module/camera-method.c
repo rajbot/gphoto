@@ -187,7 +187,7 @@ GnomeVFSMethod*
 vfs_module_init (const gchar* method_name, const gchar* args)
 {
 	if (!gconf_is_initialized ()) gconf_init (0, NULL, NULL);
-	gp_init (GP_DEBUG_HIGH);
+	gp_init (GP_DEBUG_NONE);
 	gp_frontend_register (NULL, NULL, gp_frontend_message, NULL, NULL);
 	return &method;
 }
@@ -320,7 +320,7 @@ static GnomeVFSResult do_open_directory (
 {
 	GnomeVFSResult		result;
 	
-	g_print ("do_open_directory (%s)\n", gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE));
+	g_print ("CAMERA: do_open_directory (%s)\n", gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE));
 	
 	*handle = directory_handle_new (uri, options, &result);
 	return (result);
@@ -331,7 +331,7 @@ static GnomeVFSResult do_close_directory (
         GnomeVFSMethodHandle*           handle,
 	GnomeVFSContext*                context)
 {
-	g_print ("do_close_directory\n");
+	g_print ("CAMERA: do_close_directory\n");
 
 	return (directory_handle_free (handle));
 }
@@ -385,15 +385,32 @@ static GnomeVFSResult do_get_file_info (
         GnomeVFSFileInfoOptions         options,
         GnomeVFSContext*                context)
 {
-	GnomeVFSURI*	parent;
+	gchar*		filename = NULL;
+	gchar*		dirname = NULL;
+	GnomeVFSResult	result;
+	CameraList	list;
+	Camera*		camera;
+	gint		i;
 	
 	g_print ("CAMERA: do_get_file_info (%s)\n", gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE));
 
+	/* Connect to the camera. */
+	if (!(camera = camera_new_by_uri (uri, &result))) return (result);
+
 	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_NONE;
-	if (gnome_vfs_uri_get_basename (uri)) {
-		
-		/* File */
-		info->name = g_strdup (gnome_vfs_uri_get_basename (uri));
+	filename = (gchar*) gnome_vfs_uri_get_basename (uri);
+	dirname = gnome_vfs_uri_extract_dirname (uri);
+	if (filename) {
+
+		/* Check if existent. */
+		if (gp_camera_file_list (camera, &list, dirname) != GP_OK) {
+			gp_camera_unref (camera);
+			return (GNOME_VFS_ERROR_GENERIC);
+		}
+		gp_camera_unref (camera);
+		for (i = 0; i < gp_list_count (&list); i++) if (!strcmp (filename, gp_list_entry (&list, i)->name)) break;
+		if (i == gp_list_count (&list)) return (GNOME_VFS_ERROR_NOT_FOUND);
+		info->name = g_strdup (filename);
 		info->type = GNOME_VFS_FILE_TYPE_REGULAR;
 		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
 		if (options & GNOME_VFS_FILE_INFO_GET_MIME_TYPE) {
@@ -401,13 +418,19 @@ static GnomeVFSResult do_get_file_info (
 			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
 		}
 	} else {
-		
-		/* Directory */
-		if (!(parent = gnome_vfs_uri_get_parent (uri))) info->name = g_strdup ("/");
-		else {
-			info->name = g_strdup (gnome_vfs_uri_extract_dirname (uri));
-			gnome_vfs_uri_unref (parent);
+
+		/* Check if existent (only non-root). */
+		if (strcmp (dirname, "/")) {
+			if (gp_camera_folder_list (camera, &list, dirname) != GP_OK) {
+				gp_camera_unref (camera);
+				return (GNOME_VFS_ERROR_GENERIC);
+			}
+			gp_camera_unref (camera);
+			for (i = 0; i < gp_list_count (&list); i++) if (!strcmp (dirname, gp_list_entry (&list, i)->name)) break;
+			if (i == gp_list_count (&list)) return (GNOME_VFS_ERROR_NOT_FOUND);
 		}
+
+		info->name = g_strdup (dirname);
 		info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
 		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
 		if (options & GNOME_VFS_FILE_INFO_GET_MIME_TYPE) {
@@ -415,6 +438,7 @@ static GnomeVFSResult do_get_file_info (
 			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
 		}
 	}
+	info->flags = GNOME_VFS_FILE_FLAGS_NONE;
 	GNOME_VFS_FILE_INFO_SET_LOCAL (info, FALSE);	
 
 	return (GNOME_VFS_OK);
@@ -427,7 +451,7 @@ static GnomeVFSResult do_get_file_info_from_handle (
         GnomeVFSFileInfoOptions         options,
         GnomeVFSContext*                context)
 {
-	g_print ("do_get_file_info_from_handle\n");
+	g_print ("CAMERA: do_get_file_info_from_handle\n");
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 
@@ -435,7 +459,7 @@ static gboolean do_is_local (
         GnomeVFSMethod*                 method,
 	const GnomeVFSURI*              uri)
 {
-	g_print ("do_is_local\n");
+	g_print ("CAMERA: do_is_local (%s)\n", gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE));
 	return (FALSE);
 }
 

@@ -77,7 +77,9 @@ file_handle_new (GnomeVFSURI* uri, GnomeVFSResult* result)
         gchar*                  dirname;
         Camera*                 camera;
         CameraFile*             file;
+	CameraList		list;
         file_handle_t*          file_handle;
+	gint			i;
 
         /* Do we really have a file? */
         if (!(filename = gnome_vfs_uri_get_basename (uri))) {
@@ -88,11 +90,22 @@ file_handle_new (GnomeVFSURI* uri, GnomeVFSResult* result)
 	/* Connect to the camera. */
 	if (!(camera = camera_new_by_uri (uri, result))) return (NULL);
 
+	/* Check if we've got the file. */
+	if (gp_camera_file_list (camera, &list, gnome_vfs_uri_extract_dirname (uri)) != GP_OK) {
+		*result = GNOME_VFS_ERROR_GENERIC;
+		return (NULL);
+	}
+	for (i = 0; i < gp_list_count (&list); i++) if (!strcmp (filename, gp_list_entry (&list, i)->name)) break;
+	if (i == gp_list_count (&list)) {
+		*result = GNOME_VFS_ERROR_NOT_FOUND;
+		return (NULL);
+	}
+
         /* Get the file. */
 	dirname = gnome_vfs_uri_extract_dirname (uri);
 	g_print ("  getting file '%s' from directory '%s'...\n", filename, dirname);
 	file = gp_file_new ();
-	if (gp_camera_file_get_preview (camera, file, dirname, (gchar*) filename) != GP_OK) {
+	if (gp_camera_file_get (camera, file, dirname, (gchar*) filename) != GP_OK) {
 		g_print ("    ERROR\n");
 		*result = GNOME_VFS_ERROR_GENERIC;
 		return (NULL);
@@ -131,6 +144,12 @@ directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options, GnomeVF
 	GSList*			files = NULL;
 	gint			i;
 
+	/* Do we really have a directory? */
+	if (gnome_vfs_uri_get_basename (uri)) {
+		*result = GNOME_VFS_ERROR_NOT_A_DIRECTORY;
+		return (NULL);
+	}
+
 	/* Connect to the camera. */
 	if (!(camera = camera_new_by_uri (uri, result))) return (NULL);
 
@@ -164,7 +183,7 @@ directory_handle_new (GnomeVFSURI* uri, GnomeVFSFileInfoOptions options, GnomeVF
 	directory_handle->position = 0;
 
 	*result = GNOME_VFS_OK;
-//	gp_camera_unref (camera);
+	gp_camera_unref (camera);
 	return ((GnomeVFSMethodHandle*) directory_handle);
 }
 

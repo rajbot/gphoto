@@ -12,12 +12,12 @@ INCLUDES = \
 CFLAGS = @CFLAGS@\
  `gphoto2-config --cflags`\
  `gpio-config --cflags`\
- `gnome-config --cflags libglade gdk_pixbuf gnomeui`
+ `gnome-config --cflags libglade gdk_pixbuf gnomeui vfs`
 
 LDFLAGS = @LDFLAGS@\
  `gphoto2-config --libs`\
  `gpio-config --libs`\
- `gnome-config --libs libglade gdk_pixbuf gnomeui`
+ `gnome-config --libs libglade gdk_pixbuf gnomeui vfs`
 
 bin_PROGRAMS = gnocam
 

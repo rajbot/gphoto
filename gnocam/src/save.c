@@ -1,5 +1,6 @@
 #include <config.h>
 #include <gnome.h>
+#include <libgnomevfs/gnome-vfs.h>
 #include <glade/glade.h>
 #include <gphoto2.h>
 #include "save.h"
@@ -31,14 +32,18 @@ on_reply (gint reply, gpointer data)
 void 
 save (GladeXML *xml, gboolean file, gboolean temp)
 {
-        GList *selection;
-        Camera *camera;
-        CameraFile *camera_file = NULL;
-        GtkCList *clist;
-        GnomeApp *app;
-        gchar *path, *file_name, *full_file_name;
-        guint i, row;
-        gint return_status = GP_OK;
+        GList 		*selection;
+        Camera 		*camera;
+        CameraFile 	*camera_file = NULL;
+        GtkCList 	*clist;
+        GnomeApp 	*app;
+        gchar 		*path, *file_name, *full_file_name;
+        guint 		 i, row;
+        gint 		 return_status = GP_OK;
+	GnomeVFSResult 	 result;
+	GnomeVFSHandle 	*handle;
+	GnomeVFSURI 	*uri;
+	GnomeVFSFileSize file_size;
 
         g_assert (xml != NULL);
         clist = GTK_CLIST (glade_xml_get_widget (xml, "clist_files"));
@@ -75,7 +80,18 @@ save (GladeXML *xml, gboolean file, gboolean temp)
 					//FIXME: Quick hack. Should be done better...
 					full_file_name = g_strdup_printf ("%s%s", (gchar *) gtk_object_get_data (GTK_OBJECT (app), "prefix"), file_name);
 				}
-				gp_file_save (camera_file, full_file_name);
+				uri = gnome_vfs_uri_new (full_file_name);
+				g_free (full_file_name);
+				if ((result = gnome_vfs_create_uri (&handle, uri, GNOME_VFS_OPEN_WRITE, FALSE, 0644)) != GNOME_VFS_OK) {
+					gnome_app_error (app, gnome_vfs_result_to_string (result));
+				} else {
+					if ((result = gnome_vfs_write (handle, camera_file->data, camera_file->size, &file_size)) != GNOME_VFS_OK) {
+						gnome_app_error (app, gnome_vfs_result_to_string (result));
+					}
+					if ((result = gnome_vfs_close (handle)) != GNOME_VFS_OK) {
+						gnome_app_error (app, gnome_vfs_result_to_string (result));
+					}
+				}
 			}
 
 			/* Clean up. */

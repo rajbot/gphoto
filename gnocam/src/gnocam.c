@@ -1,5 +1,6 @@
 #include <config.h>
 #include <gnome.h>
+#include <libgnomevfs/gnome-vfs.h>
 #include <glade/glade.h>
 #include <gphoto2.h>
 #include "preferences.h"
@@ -48,14 +49,24 @@ int main (int argc, char *argv[])
 		{"text/uri-list", 0, 0}
 	};
 
-	/* Init several libraries. */
+	/* Init GNOME. */
 	gnome_init (PACKAGE, VERSION, argc, argv);
+
+	/* Init glade. */
 	glade_gnome_init ();
+
+	/* Init gphoto2 backend. */
         gnome_config_push_prefix ("/" PACKAGE "/Other/");
         debug_level = gnome_config_get_int ("debug level");
 	gnome_config_pop_prefix ();
         gp_init (debug_level);
 	gp_frontend_register (gp_frontend_status, gp_frontend_progress, gp_frontend_message, gp_frontend_confirm, gp_frontend_prompt);
+
+	/* Init gnome-vfs. */
+	if (!gnome_vfs_init ()) {
+		gnome_error_dialog (_("Could not initialize gnome-vfs!"));
+		return (1);
+	}
 
 	/* Load the interface. */
 	xml = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "app");

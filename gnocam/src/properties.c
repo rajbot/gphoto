@@ -54,8 +54,7 @@ on_radiobutton_toggled (GtkToggleButton *togglebutton, gpointer user_data)
 	done = gtk_object_get_data (GTK_OBJECT (propertybox), "done");
 
 	/* Make sure the user toggled the button. */
-	if (strcmp (done, "yes") == 0) 
-		gnome_property_box_changed (GNOME_PROPERTY_BOX (gtk_object_get_data (GTK_OBJECT (togglebutton), "propertybox")));
+	if (strcmp (done, "yes") == 0) gnome_property_box_changed (GNOME_PROPERTY_BOX (gtk_object_get_data (GTK_OBJECT (togglebutton), "propertybox")));
 }
 
 void on_properties_apply (GnomePropertyBox *propertybox, gint arg, gpointer user_data)
@@ -96,7 +95,6 @@ values_set (GladeXML* xml_properties, CameraWidget *camera_widget)
 	GtkObject*	object;
 	GtkWidget*	preference_widget;
 	GtkWidget*	choice_widget;
-	guint 		k;
 	gint 		i, i_new;
 	gfloat		f, f_new;
 	gchar*		c;
@@ -112,8 +110,7 @@ values_set (GladeXML* xml_properties, CameraWidget *camera_widget)
 		gp_widget_value_get (camera_widget, c);
                 if ((preference_widget = gtk_object_get_data (object, gp_widget_label (camera_widget))) == NULL) break;
 		c_new = gtk_entry_get_text (GTK_ENTRY (preference_widget));
-		if (strcmp (c, c_new) != 0) 
-	                gp_widget_value_set (camera_widget, c_new);
+		if (strcmp (c, c_new) != 0) gp_widget_value_set (camera_widget, c_new);
                 break;
         case GP_WIDGET_RANGE:
 		gp_widget_value_get (camera_widget, &f);
@@ -131,13 +128,11 @@ values_set (GladeXML* xml_properties, CameraWidget *camera_widget)
         case GP_WIDGET_RADIO:
 		gp_widget_value_get (camera_widget, c);
 		if ((preference_widget = gtk_object_get_data (object, gp_widget_label (camera_widget))) == NULL) break;
-                for (k = 0; k < gp_widget_choice_count (camera_widget); k++) {
-                        if ((choice_widget = gtk_object_get_data (GTK_OBJECT (preference_widget), gp_widget_choice (camera_widget, k))) == NULL) break;
+                for (i = 0; i < gp_widget_choice_count (camera_widget); i++) {
+                        if ((choice_widget = gtk_object_get_data (GTK_OBJECT (preference_widget), gp_widget_choice (camera_widget, i))) == NULL) break;
                         if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (choice_widget))) {
-				c_new = gp_widget_choice (camera_widget, k);
-				if (strcmp (c_new, c) != 0) {
-	                                gp_widget_value_set (camera_widget, c_new);
-				}
+				c_new = gp_widget_choice (camera_widget, i);
+				if (strcmp (c_new, c) != 0) gp_widget_value_set (camera_widget, c_new);
 			}
                 }
                 break;
@@ -172,14 +167,10 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 {
 	GtkWidget*		frame;
 	GtkWidget*		widget;
-	GtkWidget*		button;
 	GtkWidget*		hbox;
-	GtkWidget*		combo;
-	GtkWidget*		hscale;
 	GtkAdjustment*		adjustment;
-	GSList*			list;
-	GList*			combo_items;
-	guint 			j, k;
+	GSList*			slist;
+	GList*			list;
 	gfloat 			min, max, increment;
 	GnomePropertyBox*	propertybox;
 	gchar*			c;
@@ -192,7 +183,6 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 
 	/* Create the frame. */
 	frame = gtk_frame_new (gp_widget_label (camera_widget));
-	gtk_widget_show (frame);
 	gtk_box_pack_start (GTK_BOX (vbox), frame, FALSE, FALSE, 0);
 
 	/* Create the widget. */
@@ -201,98 +191,61 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 	case GP_WIDGET_TEXT:
 		gp_widget_value_get (camera_widget, c);
 		widget = gtk_entry_new ();
-		gtk_widget_show (widget);
 		gtk_entry_set_text (GTK_ENTRY (widget), c);
 		gtk_container_add (GTK_CONTAINER (frame), widget);
-
-		/* Connect the signals. */
 		gtk_signal_connect_object (GTK_OBJECT (widget), "changed", GTK_SIGNAL_FUNC (on_entry_changed), (gpointer) widget);
-
-		/* Store some data. */
 		gtk_object_set_data (GTK_OBJECT (widget), "propertybox", propertybox);
 		gtk_object_set_data (GTK_OBJECT (propertybox), gp_widget_label (camera_widget), widget);
-
 		break;
 	case GP_WIDGET_RANGE:
 		gp_widget_value_get (camera_widget, &f);
 		gp_widget_range_get (camera_widget, &min, &max, &increment);
 		adjustment = GTK_ADJUSTMENT (gtk_adjustment_new (f, min, max, increment, 0, 0));
-		hscale = gtk_hscale_new (adjustment);
-		gtk_widget_show (hscale);
-		gtk_range_set_update_policy (GTK_RANGE (hscale), GTK_UPDATE_DISCONTINUOUS);
-		gtk_container_add (GTK_CONTAINER (frame), hscale);
-
-		/* Connect the signals. */
+		widget = gtk_hscale_new (adjustment);
+		gtk_range_set_update_policy (GTK_RANGE (widget), GTK_UPDATE_DISCONTINUOUS);
+		gtk_container_add (GTK_CONTAINER (frame), widget);
 		gtk_signal_connect_object (GTK_OBJECT (adjustment), "value_changed", GTK_SIGNAL_FUNC (on_adjustment_value_changed), (gpointer) adjustment);
-
-		/* Store some data. */
 		gtk_object_set_data (GTK_OBJECT (adjustment), "propertybox", propertybox);
-		gtk_object_set_data (GTK_OBJECT (propertybox), gp_widget_label (camera_widget), hscale);
-
+		gtk_object_set_data (GTK_OBJECT (propertybox), gp_widget_label (camera_widget), widget);
 		break;
 	case GP_WIDGET_TOGGLE:
 		gp_widget_value_get (camera_widget, &i);
-		button = gtk_check_button_new_with_label (gp_widget_label (camera_widget));
-		gtk_widget_show (button);
-		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button), (i == 1));
-		gtk_container_add (GTK_CONTAINER (frame), button);
-
-		/* Connect the signals. */
-		gtk_signal_connect_object (GTK_OBJECT (button), "toggled", GTK_SIGNAL_FUNC (on_radiobutton_toggled), (gpointer) button);
-
-		/* Store some data. */
-		gtk_object_set_data (GTK_OBJECT (button), "propertybox", propertybox);
-		gtk_object_set_data (GTK_OBJECT (propertybox), gp_widget_label (camera_widget), button);
-	
+		widget = gtk_check_button_new_with_label (gp_widget_label (camera_widget));
+		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (widget), (i != 0));
+		gtk_container_add (GTK_CONTAINER (frame), widget);
+		gtk_signal_connect_object (GTK_OBJECT (widget), "toggled", GTK_SIGNAL_FUNC (on_radiobutton_toggled), (gpointer) widget);
+		gtk_object_set_data (GTK_OBJECT (widget), "propertybox", propertybox);
+		gtk_object_set_data (GTK_OBJECT (propertybox), gp_widget_label (camera_widget), widget);
 		break;
 	case GP_WIDGET_RADIO:
 		gp_widget_value_get (camera_widget, c);
                 hbox = gtk_hbox_new (FALSE, 10);
-		gtk_widget_show (hbox);
        	        gtk_container_add (GTK_CONTAINER (frame), hbox);
 		gtk_object_set_data (GTK_OBJECT (propertybox), gp_widget_label (camera_widget), hbox);
-		list = NULL;
-		for (k = 0; k < gp_widget_choice_count (camera_widget); k++) {
-			button = gtk_radio_button_new_with_label (list, gp_widget_choice (camera_widget, k));
-			gtk_widget_show (button);
-			list = gtk_radio_button_group (GTK_RADIO_BUTTON (button));
-			if (strcmp (c, gp_widget_choice (camera_widget, k)) == 0)
-       				gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button), TRUE);
-                        gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
-
-			/* Connect the signals. */
-			gtk_signal_connect_object (GTK_OBJECT (button), "toggled", GTK_SIGNAL_FUNC (on_radiobutton_toggled), (gpointer) button);
-	
-			/* Store some data. */
-			gtk_object_set_data (GTK_OBJECT (button), "propertybox", propertybox);
-			gtk_object_set_data (GTK_OBJECT (hbox), gp_widget_choice (camera_widget, k), button);
+		slist = NULL;
+		for (i = 0; i < gp_widget_choice_count (camera_widget); i++) {
+			widget = gtk_radio_button_new_with_label (slist, gp_widget_choice (camera_widget, i));
+			slist = gtk_radio_button_group (GTK_RADIO_BUTTON (widget));
+			if (strcmp (c, gp_widget_choice (camera_widget, i)) == 0) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (widget), TRUE);
+                        gtk_box_pack_start (GTK_BOX (hbox), widget, TRUE, TRUE, 0);
+			gtk_signal_connect_object (GTK_OBJECT (widget), "toggled", GTK_SIGNAL_FUNC (on_radiobutton_toggled), (gpointer) widget);
+			gtk_object_set_data (GTK_OBJECT (widget), "propertybox", propertybox);
+			gtk_object_set_data (GTK_OBJECT (hbox), gp_widget_choice (camera_widget, i), widget);
 		}
 		break;
 	case GP_WIDGET_MENU:
 		gp_widget_value_get (camera_widget, c);
-		combo = gtk_combo_new ();
-		gtk_widget_show (combo);
-		gtk_container_add (GTK_CONTAINER (frame), combo);
-		combo_items = NULL;
-		for (j = 0; j < gp_widget_choice_count (camera_widget); j++) {
-			combo_items = g_list_append (combo_items, g_strdup (gp_widget_choice (camera_widget, j)));
-		}
-		gtk_combo_set_popdown_strings (GTK_COMBO (combo), combo_items);
-		g_list_free (combo_items);
-		gtk_entry_set_text (GTK_ENTRY (GTK_COMBO (combo)->entry), c);
-		gtk_container_add (GTK_CONTAINER (frame), combo);
-
-		/* Connect the signals. */
-		gtk_signal_connect_object (
-			GTK_OBJECT (GTK_COMBO (combo)->entry), 
-			"changed", 
-			GTK_SIGNAL_FUNC (on_entry_changed), 
-			(gpointer) (GTK_COMBO (combo)->entry));
-
-		/* Store some data. */
-		gtk_object_set_data (GTK_OBJECT (GTK_COMBO (combo)->entry), "propertybox", propertybox);
-		gtk_object_set_data (GTK_OBJECT (propertybox), gp_widget_label (camera_widget), combo);
-		
+		widget = gtk_combo_new ();
+		gtk_container_add (GTK_CONTAINER (frame), widget);
+		list = NULL;
+		for (i = 0; i < gp_widget_choice_count (camera_widget); i++) list = g_list_append (list, g_strdup (gp_widget_choice (camera_widget, i)));
+		gtk_combo_set_popdown_strings (GTK_COMBO (widget), list);
+		g_list_free (list);
+		gtk_entry_set_text (GTK_ENTRY (GTK_COMBO (widget)->entry), c);
+		gtk_container_add (GTK_CONTAINER (frame), widget);
+		gtk_signal_connect_object (GTK_OBJECT (GTK_COMBO (widget)->entry), "changed", GTK_SIGNAL_FUNC (on_entry_changed), (gpointer) widget);
+		gtk_object_set_data (GTK_OBJECT (GTK_COMBO (widget)->entry), "propertybox", propertybox);
+		gtk_object_set_data (GTK_OBJECT (propertybox), gp_widget_label (camera_widget), widget);
 		break;
 	case GP_WIDGET_BUTTON:
 		g_warning ("GP_WIDGET_BUTTON not implemented!");
@@ -300,34 +253,24 @@ page_entry_new (GtkWidget *vbox, CameraWidget *camera_widget)
 	case GP_WIDGET_DATE:
 		gp_widget_value_get (camera_widget, &i);
 		hbox = gtk_hbox_new (FALSE, 10);
-		gtk_widget_show (hbox);
 		gtk_container_add (GTK_CONTAINER (frame), hbox);
-
-		/* Create the clock. */
-//FIXME: Can I set the date and time of a gtk-clock?
-//		widget = gtk_clock_new (GTK_CLOCK_INCREASING);
-//		gtk_widget_show (widget);
-//		gtk_clock_set_format (GTK_CLOCK (widget), _("%Y/%m/%d %H:%M:%S"));
-//		gtk_clock_start (GTK_CLOCK (widget));
-//		gtk_container_add (GTK_CONTAINER (hbox), widget);
-
-		/* Create the widget to edit the date. */
-		widget = gnome_date_edit_new ((time_t) i, TRUE, TRUE);
-//		gnome_date_edit_set_time (GNOME_DATE_EDIT (widget), (time_t) i);
-		gtk_widget_show (widget);
+		widget = gtk_clock_new (GTK_CLOCK_INCREASING);
+		gtk_clock_set_format (GTK_CLOCK (widget), _("%Y/%m/%d %H:%M:%S"));
+		gtk_clock_set_seconds (GTK_CLOCK (widget), (time_t) i);
+		gtk_clock_start (GTK_CLOCK (widget));
 		gtk_container_add (GTK_CONTAINER (hbox), widget);
-
-		/* Connect the signals. */
+		widget = gnome_date_edit_new ((time_t) i, TRUE, TRUE);
+		gnome_date_edit_set_time (GNOME_DATE_EDIT (widget), (time_t) i);
+		gtk_container_add (GTK_CONTAINER (hbox), widget);
 		gtk_signal_connect_object (GTK_OBJECT (widget), "date_changed", GTK_SIGNAL_FUNC (on_date_changed), (gpointer) widget);
-		gtk_signal_connect_object (GTK_OBJECT (widget), "time_changed", GTK_SIGNAL_FUNC (on_date_changed), (gpointer) widget);
-		
-		/* Store some data. */
+		gtk_signal_connect_object (GTK_OBJECT (widget), "time_changed", GTK_SIGNAL_FUNC (on_date_changed), (gpointer)widget);
 		gtk_object_set_data (GTK_OBJECT (widget), "propertybox", propertybox);
 		gtk_object_set_data (GTK_OBJECT (propertybox), gp_widget_label (camera_widget), widget);
 		break;
 	default:
 		g_assert_not_reached ();
 	}
+	gtk_widget_show_all (frame);
 	g_free (c);
 }
 
@@ -350,14 +293,9 @@ page_new (GnomePropertyBox *propertybox, CameraWidget *camera_widget)
 
 	/* Store some data for later use. */
 	gtk_object_set_data (GTK_OBJECT (vbox), "propertybox", propertybox);
-	
-	if (camera_widget != NULL) {
 
-		/* Populate the page. */
-		for (i = 0; i < gp_widget_child_count (camera_widget); i++) {
-			page_entry_new (vbox, gp_widget_child (camera_widget, i));
-		}
-	} 
+	/* Populate the page. */	
+	if (camera_widget != NULL) for (i = 0; i < gp_widget_child_count (camera_widget); i++) page_entry_new (vbox, gp_widget_child (camera_widget, i));
 	return (vbox);
 }
 

@@ -423,7 +423,7 @@ char* dimage_v_write_picture_to_file(int picture_number)
 		return NULL;
 	}
 
-	if ((tmpnam(tmpfile))==NULL)
+	if ((mkstemp(tmpfile))==-1)
 	{
 		perror("dimage_v_write_picture_to_file::unable to generate temporary filename");
 		return NULL;

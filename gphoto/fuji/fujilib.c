@@ -1,20 +1,21 @@
 /*
  * $Id$
  
- Fuji Camera library for the gphoto project, (C) 2000 Matthew G. Martin
+ Fuji Camera library for the gphoto project, 
+ (C) 2000 Matthew G. Martin <matt.martin@ieee.org>
   This routine works for Fuji DS-7 and DX-5,7,10 and MX-500,600,700,2700, 
   Apple QuickTake 200,Samsung Kenox SSC-350N cameras and possibly others.
 
- Preview and take_picture fixes contributed by Michael Smith.
+   Preview and take_picture fixes and preview conversion integrated 
+   by Michael Smith <michael@csuite.ns.ca>.
 
-  Reworked from the "fujiplay" package:
+   This driver was reworked from the "fujiplay" package:
       * A program to control Fujifilm digital cameras, like
       * the DS-7 and MX-700, and their clones.
-      *
       * Written by Thierry Bousch <bousch@topo.math.u-psud.fr>
       * and released in the public domain.
 
-    Portions of this code were adapted taken from
+    Portions of this code were adapted from
     GDS7 v0.1 interactive digital image transfer software for DS-7 camera
     Copyright (C) 1998 Matthew G. Martin
 
@@ -54,8 +55,6 @@
 #include "../src/gphoto.h"
 #include "../src/util.h"
 #include "../src/callbacks.h"
-
-/*#include "blank.xpm"*/
 
 extern unsigned char *fuji_exif_convert(exifparser *exifdat);
 extern GtkWidget *open_fuji_config_dialog();
@@ -1023,6 +1022,83 @@ int fuji_initialize () {
 	reset_serial();
 	return 1;
 }
+ 
+
+/* Convert Fuji previews to 24-bit PPM format.
+ * Based on yycc2ppm.c, part of the fujiplay package by Thierry Bousch
+ * <bousch@club-internet.fr>.
+ *
+ * > One question - what format is the output from "fujiplay preview"?
+ *
+ * I don't think it's a "standard" format, rather a custom one. See the
+ * yycc2ppm(1) utility for more information: there is a four-byte header
+ * containing the image dimensions, followed by chunks of 4 bytes. Each
+ * chunk encodes two adjacent pixels, in the format Y1 Y2 Cb Cr, where Y1
+ * and Y2 are the luminance values of the two pixels, and Cb and Cr are the
+ * averaged blue and red chrominance values for the pair.
+ *
+ * Usage: Pass the data, the length, and a pointer to an integer to receive
+ *	  the size of the PPM buffer.
+ * Returns the new PPM buffer.
+ */
+static char *
+yycc2ppm(unsigned char *c, int len, int *ppmsize)
+{
+	int width, height, Y1, Y2, Cb, Cr, Roff, Goff, Boff;
+	const char *headformat = "P6\n%d %d\n255\n";
+	char header[24];
+	unsigned char *ppm;
+	register int i, j;
+
+	if (len < 8) {
+		fprintf(stderr, "yycc2ppm: preview is %d bytes, need >= 8.\n",
+			len);
+		return NULL;
+	}
+	width  = 256 * c[1] + c[0];	/* little-endian */
+	height = 256 * c[3] + c[2];
+
+	if (fuji_debug)
+		fprintf(stderr, "yycc2ppm: preview %d x %d\n", width, height);
+
+	snprintf(header, sizeof(header), headformat, width, height);
+	header[sizeof(header)-1] = '\0';
+
+	/* For every four bytes of YYCC after the header, generate 6 of RGB */
+	*ppmsize = strlen(header) + 6 * (len - 4) / 4;
+
+	ppm = malloc(*ppmsize);
+	if (!ppm) {
+		fprintf(stderr,"yycc2ppm: couldn't alloc %d bytes\n",*ppmsize);
+		return NULL;
+	}
+	strcpy(ppm, header);
+
+	for (i=4, j=strlen(header); i<len; i+=4) {
+		Y1 = c[i];
+		Y2 = c[i+1];
+		Cb = c[i+2] - 128;
+		Cr = c[i+3] - 128;
+
+		Roff = (359*Cr + 128) >> 8;
+		Goff = (-88*Cb - 183*Cr + 128) >> 8;
+		Boff = (454*Cb + 128) >> 8;
+
+		#define CLIP(x) (((x)<0) ? 0 : (((x)>255) ? 255 : (x)))
+		ppm[j++] = CLIP(Y1+Roff);
+		ppm[j++] = CLIP(Y1+Goff);
+		ppm[j++] = CLIP(Y1+Boff);
+		ppm[j++] = CLIP(Y2+Roff);
+		ppm[j++] = CLIP(Y2+Goff);
+		ppm[j++] = CLIP(Y2+Boff);
+	}
+
+	if (i != len)
+		fprintf(stderr, "yycc2ppm: warn: preview had %d extra bytes.\n",
+			i - len);
+	return ppm;
+}
+
 
 struct Image *fuji_get_preview (){
   FILE *fd;
@@ -1032,6 +1108,11 @@ struct Image *fuji_get_preview (){
   if (fuji_init()) return NULL;
 
   newimage=malloc(sizeof( struct Image));
+  if (!newimage) {
+    fprintf(stderr, "fuji_get_preview: failed to malloc newimage.\n");
+    return NULL;
+  }
+  memset(newimage, 0, sizeof(struct Image));
 
   if (!has_cmd[0x62] || !has_cmd[0x64]) {
     update_status("Cannot preview (unsupported command)");
@@ -1040,12 +1121,16 @@ struct Image *fuji_get_preview (){
 
   cmd0(0, 0x64);
   cmd0(0, 0x62);
-  newimage->image=malloc(fuji_count); /* What a hack!!!*/
-  memcpy(newimage->image,fuji_buffer,fuji_count);
+  newimage->image = yycc2ppm(fuji_buffer, fuji_count, &(newimage->image_size));
 
   reset_serial();
-  newimage->image_size = fuji_count;
 
+  if (!newimage->image) {
+    free(newimage);
+    return NULL;
+  }
+
+  strcpy(newimage->image_type, "ppm");
   return(newimage);
 };
 

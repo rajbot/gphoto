@@ -136,6 +136,7 @@ unref_camera (Camera *camera)
 printf ("Unrefing camera with ref_count = %i...\n", camera->ref_count);
 	gp_camera_unref (camera);
 
+#if 0
 	/* We don't want to keep USB cameras in cache */
 	if (camera->port->type & GP_PORT_USB)
 		for (sl = cameras; sl; sl = sl->next) {
@@ -149,6 +150,7 @@ printf ("I just destroyed a camera.\n");
 				break;
 			}
 		}
+#endif
 }
 
 typedef struct {
@@ -783,7 +785,7 @@ static gboolean do_is_local (
         GnomeVFSMethod*                 method,
 	const GnomeVFSURI*              uri)
 {
-	return (TRUE);
+	return (FALSE);
 }
 
 static GnomeVFSResult do_check_same_fs (

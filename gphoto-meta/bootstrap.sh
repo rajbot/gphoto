@@ -338,8 +338,24 @@ function builddist {
 	    cmd ./configure  --enable-maintainer-mode --prefix="${distroot}" ${configopts}
 	    cmd make dist
 
+	    # move .tar.gz source tarball to distribution files
 	    cmd mv "${module}-"[0-9]*.tar.gz "${distdir}/"
-	    [ -s "${module}-"[0-9]*.tar.bz2 ] && cmd mv "${module}-"[0-9]*.tar.bz2 "${distdir}/"
+
+	    # create .tar.bz2 source tarball if possible and not done yet
+	    if [ "${compression}" = "bz2" ]
+	    then
+		for f in "${module}-"[0-9]*.tar.gz
+		do
+		    local b
+		    b="$(basename "${f}" ".gz").bz2"
+		    if [ ! -s "$b" ]
+		    then
+			gunzip -c "$f" | bzip2 -c > "$b"
+		    fi
+		done
+		# move .tar.bz2 source tarball to distribution files, 
+		cmd mv "${module}-"[0-9]*.tar.bz2 "${distdir}/"
+	    fi
 
 	    if [ "$distopts" = "install" ]
 	    then

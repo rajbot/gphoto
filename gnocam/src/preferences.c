@@ -399,11 +399,16 @@ camera_check (GladeXML *xml, gboolean main_window, gchar *name, gchar *model, gc
 		gnome_error_dialog_parented (_("You have to indicate a model!"), window);
 		return (NULL);
 	}
-	if (gp_camera_new_by_name (&camera, model, &port_info) == GP_ERROR) {
+	if (gp_camera_new_by_name (&camera, model) == GP_OK) {
+		if (gp_camera_init (camera, &port_info) == GP_OK) {
+			return (camera);
+		} else {
+			gnome_error_dialog_parented (_("Could not initialize the camera!"), window);
+			return (NULL);
+		}
+	} else {
 		gnome_error_dialog_parented (_("Could not set camera model!"), window);
 		return (NULL);
-	} else {
-		return (camera);
 	}
 }
 
@@ -646,7 +651,7 @@ preferences_get (GladeXML *xml)
 	g_assert (app != NULL);
 
 	/* Restore 'other' settings. */
-	gnome_config_push_prefix ("/" PACKAGE "/Other/");
+	gnome_config_push_prefix ("/gphoto/Other/");
 	debug_level = gnome_config_get_int ("debug level");
 	gtk_object_set_data (GTK_OBJECT (app), "debug_level", GINT_TO_POINTER (debug_level));
 	prefix = gnome_config_get_string ("prefix");
@@ -673,7 +678,7 @@ preferences_get (GladeXML *xml)
 
 	/* Set up cameras. */
 	i = 0;
-	prefix = g_strdup_printf ("/" PACKAGE "/Camera %i/", i);
+	prefix = g_strdup_printf ("/gphoto/Camera %i/", i);
 	g_assert (prefix != NULL);
 	gnome_config_push_prefix (prefix);
 
@@ -701,7 +706,7 @@ preferences_get (GladeXML *xml)
 
 			gnome_config_pop_prefix ();
 			g_free (prefix);
-			prefix = g_strdup_printf ("/" PACKAGE "/Camera %i/", ++i);
+			prefix = g_strdup_printf ("/gphoto/Camera %i/", ++i);
 			g_assert (prefix != NULL);
 			gnome_config_push_prefix (prefix);
 
@@ -748,7 +753,7 @@ preferences_set (GladeXML *xml)
 	g_assert (app != NULL);
 
 	/* Store 'other' settings. */
-	gnome_config_push_prefix ("/" PACKAGE "/Other/");
+	gnome_config_push_prefix ("/gphoto/Other/");
 	gnome_config_set_int ("debug level", GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (app), "debug_level")));
 	gnome_config_set_string ("prefix", gtk_object_get_data (GTK_OBJECT (app), "prefix"));
 	gnome_config_pop_prefix ();
@@ -757,7 +762,7 @@ preferences_set (GladeXML *xml)
 	cameras = gtk_container_children (GTK_CONTAINER (glade_xml_get_widget (xml, "tree_cameras")));
 	if (cameras != NULL) {
 		for (i = 0; i < g_list_length (cameras); i++) {
-			prefix = g_strdup_printf ("/" PACKAGE "/Camera %i/", i);
+			prefix = g_strdup_printf ("/gphoto/Camera %i/", i);
 			gnome_config_push_prefix (prefix);
 			camera = gtk_object_get_data (GTK_OBJECT (g_list_nth_data (cameras, i)), "camera");
 			g_assert (camera != NULL);
@@ -772,7 +777,7 @@ preferences_set (GladeXML *xml)
 	}
 
 	/* Check if we have to clean up. */
-	prefix = g_strdup_printf ("/" PACKAGE "/Camera %i/", i++);
+	prefix = g_strdup_printf ("/gphoto/Camera %i/", i++);
 	gnome_config_push_prefix (prefix);
 	gnome_config_get_string_with_default ("model", &def);
 	if (def == FALSE) {
@@ -782,7 +787,7 @@ preferences_set (GladeXML *xml)
 			gnome_config_clean_section (prefix);
 			g_free (prefix);
 			gnome_config_pop_prefix ();
-			prefix = g_strdup_printf ("/" PACKAGE "/Camera %i/", i++);
+			prefix = g_strdup_printf ("/gphoto/Camera %i/", i++);
 			gnome_config_push_prefix (prefix);
 			gnome_config_get_string_with_default ("model", &def);
 		}

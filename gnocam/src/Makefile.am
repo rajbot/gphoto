@@ -24,7 +24,6 @@ bin_PROGRAMS = gnocam
 gnocam_SOURCES =\
  gnocam.h gnocam.c\
  callbacks.c\
- camera_properties.h camera_properties.c\
  preferences.h preferences.c\
  save.h save.c
 

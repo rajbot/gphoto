@@ -4,7 +4,6 @@
 #include <gdk-pixbuf/gdk-pixbuf-loader.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gphoto2.h>
-#include "camera_properties.h"
 #include "preferences.h"
 #include "save.h"
 #include "gnocam.h"
@@ -21,7 +20,6 @@ void on_button_delete_files_clicked (GtkButton *button, gpointer user_data);
 void on_save_previews_activate (GtkMenuItem *menuitem, gpointer user_data);
 void on_save_files_activate (GtkMenuItem *menuitem, gpointer user_data);
 void on_exit_activate (GtkMenuItem *menuitem, gpointer user_data);
-void on_camera_properties_activate (GtkMenuItem *menuitem, gpointer user_data);
 void on_preferences_activate (GtkMenuItem *menuitem, gpointer user_data);
 void on_about_activate (GtkMenuItem *menuitem, gpointer user_data);
 void on_clist_files_drag_data_get (GtkWidget *widget, GdkDragContext *context, GtkSelectionData *selection_data, guint info, guint time, gpointer data);
@@ -163,45 +161,6 @@ on_exit_activate (GtkMenuItem *menuitem, gpointer user_data)
 	preferences_set (xml);
 
 	gtk_main_quit ();
-}
-
-void
-on_camera_properties_activate (GtkMenuItem *menuitem, gpointer user_data)
-{
-	GladeXML *xml;
-	GnomeApp *app;
-	GtkWidget *item, *tree;
-	Camera *camera;
-	gboolean found;
-	GList *selection;
-	gint i;
-	gchar *path, *camera_name;
-
-	xml = gtk_object_get_data (GTK_OBJECT (menuitem), "xml");
-	g_assert (xml != NULL);
-        app = GNOME_APP (glade_xml_get_widget (xml, "app"));
-        g_assert (app != NULL);
-	tree = glade_xml_get_widget (xml, "tree_cameras");
-	g_assert (tree != NULL);
-
-        /* Check which cameras are selected. */
-	found = FALSE;
-        selection = g_list_first (GTK_TREE_SELECTION (tree));
-        for (i = 0; i < g_list_length (selection); i++) {
-		item = GTK_WIDGET (g_list_nth_data (selection, i));
-		path = gtk_object_get_data (GTK_OBJECT (item), "path");
-		g_assert (path != NULL);
-		if (strcmp (path, "/") == 0) {
-
-			/* The selected item is a camera. */
-			gtk_label_get (GTK_LABEL (GTK_BIN (item)->child), &camera_name);
-			camera = gtk_object_get_data (GTK_OBJECT (item), "camera");
-			g_assert (camera != NULL);
-			camera_properties (xml, camera, camera_name);
-			found = TRUE;
-		}
-	}
-	if (!found) gnome_app_error (app, _("Please select a camera first!"));
 }
 
 void
@@ -350,7 +309,7 @@ on_tree_cameras_selection_changed (GtkWidget *tree)
 				}
 
 				/* We got the file. Clean up. */
-				gp_interface_progress (camera, NULL, 0.0);
+				gp_frontend_progress (camera, NULL, 0.0);
 				row++;
 			}
 		} else {

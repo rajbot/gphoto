@@ -64,7 +64,7 @@ save (GladeXML *xml, gboolean file, gboolean temp)
 			}
 
 			/* Clean up. */
-			gp_interface_progress (camera, NULL, 0.0);
+			gp_frontend_progress (camera, NULL, 0.0);
                 }
                 g_free (camera_file);
         } else {

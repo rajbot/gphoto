@@ -11,27 +11,34 @@ static GladeXML *xml;
 
 /* Functions */
 
-int gp_interface_status (Camera *camera, char *status) 
+int gp_frontend_status (Camera *camera, char *status) 
 {
 	gnome_appbar_set_status (GNOME_APPBAR (glade_xml_get_widget (xml, "appbar")), status);
 	return (0);
 }
 
-int gp_interface_progress (Camera *camera, CameraFile *file, float percentage)
+int gp_frontend_progress (Camera *camera, CameraFile *file, float percentage)
 {
 	gnome_appbar_set_progress (GNOME_APPBAR (glade_xml_get_widget (xml, "appbar")), percentage / 100);
 	return (0);
 }
 
-int gp_interface_message (Camera *camera, char *message)
+int gp_frontend_message (Camera *camera, char *message)
 {
 	gnome_dialog_run_and_close (GNOME_DIALOG (gnome_app_warning (GNOME_APP (glade_xml_get_widget (xml, "app")), message)));
 	return (0);
 }
 
-int gp_interface_confirm (Camera *camera, char *message)
+int gp_frontend_confirm (Camera *camera, char *message)
 {
-	return 0;
+	//FIXME
+	return (0);
+}
+
+int gp_frontend_prompt (Camera *camera, CameraWidget *window)
+{
+	//FIXME
+	return (0);
 }
 
 int main (int argc, char *argv[]) 
@@ -48,7 +55,7 @@ int main (int argc, char *argv[])
         debug_level = gnome_config_get_int ("debug level");
 	gnome_config_pop_prefix ();
         gp_init (debug_level);
-	gp_frontend_register (gp_interface_status, gp_interface_progress, gp_interface_message, gp_interface_confirm);
+	gp_frontend_register (gp_frontend_status, gp_frontend_progress, gp_frontend_message, gp_frontend_confirm, gp_frontend_prompt);
 
 	/* Load the interface. */
 	xml = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "app");
@@ -65,7 +72,6 @@ int main (int argc, char *argv[])
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "save_previews")), "xml", xml);
         gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "save_files")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "exit")), "xml", xml);
-	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "camera_properties")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "preferences")), "xml", xml);
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "about")), "xml", xml);
 	// Camera tree

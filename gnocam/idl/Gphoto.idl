@@ -4,24 +4,39 @@
 #include <Bonobo.idl>
 
 module GNOME {
-module Gphoto {
 
-	enum DebugLevel {
-		DEBUG_LEVEL_NONE,
-		DEBUG_LEVEL_LOW,
-		DEBUG_LEVEL_MEDIUM,
-		DEBUG_LEVEL_HIGH
-	};
+	module Gphoto {
 
-	interface Backend : Bonobo::Unknown {
-	
 		exception GenericError {};
-		
-		void init (in DebugLevel level)
-			raises (GenericError);
-	};
 
-};
+		enum DebugLevel {
+			DEBUG_LEVEL_NONE,
+			DEBUG_LEVEL_LOW,
+			DEBUG_LEVEL_MEDIUM,
+			DEBUG_LEVEL_HIGH
+		};
+
+		interface Config : Bonobo::Control {
+
+		};
+
+		interface Camera : Bonobo::Storage {
+
+			Bonobo::PropertyBag getProperties ();
+
+		};
+
+		interface Backend : Bonobo::Unknown {
+		
+			exception CameraNotFound {};
+			
+			void init (in DebugLevel level);
+
+			Camera getCamera (in string name)
+				raises (CameraNotFound);
+		};
+
+	};
 };
 
 #endif 

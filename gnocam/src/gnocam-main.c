@@ -36,9 +36,6 @@ struct _GnoCamMainPrivate {
 
 #define GNOCAM_MAIN_UI														\
 "<Root>"															\
-"  <commands>"															\
-"    <cmd name=\"Preview\" _label=\"Preview\" _tip=\"View previews only\" type=\"toggle\"/>"					\
-"  </commands>"															\
 "  <menu>"															\
 "    <submenu name=\"File\" _label=\"_File\">"											\
 "      <placeholder name=\"FileOperations\"/>"											\

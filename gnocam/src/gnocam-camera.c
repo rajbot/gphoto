@@ -110,6 +110,9 @@ struct _GnoCamCameraPrivate
 "  <menuitem name=\"Preview\" verb=\"\"/>"	\
 "</placeholder>"
 
+#define GNOCAM_CAMERA_UI_PREVIEW_COMMAND							\
+"<cmd name=\"Preview\" _label=\"Preview\" _tip=\"View previews only\" type=\"toggle\"/>"
+
 /**************/
 /* Prototypes */
 /**************/
@@ -158,6 +161,7 @@ create_menu (gpointer user_data)
 	/* Preview? */
 	if (camera->priv->camera->abilities->file_preview) {
 		bonobo_ui_component_set_translate (camera->priv->component, "/menu/View", GNOCAM_CAMERA_UI_PREVIEW, NULL);
+		bonobo_ui_component_set_translate (camera->priv->component, "/commands", GNOCAM_CAMERA_UI_PREVIEW_COMMAND, NULL);
 		if (gconf_client_get_bool (camera->priv->client, "/apps/" PACKAGE "/preview", NULL))
 			bonobo_ui_component_set_prop (camera->priv->component, "/commands/Preview", "state", "1", NULL);
 		else 
@@ -333,7 +337,8 @@ on_preview_clicked (BonoboUIComponent* component, const gchar* path, Bonobo_UICo
 
 	g_return_if_fail (user_data);
 	camera = GNOCAM_CAMERA (user_data);
-	
+
+	g_message ("on_preview_clicked");
 	if (!strcmp ("0", state)) gconf_client_set_bool (camera->priv->client, "/apps/" PACKAGE "/preview", FALSE, NULL);
 	else gconf_client_set_bool (camera->priv->client, "/apps/" PACKAGE "/preview", TRUE, NULL);
 }

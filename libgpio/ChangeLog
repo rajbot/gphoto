@@ -1,3 +1,9 @@
+2000-07-15  Fabrice Bellet  <Fabrice.Bellet@creatis.insa-lyon.fr>
+
+	* gpio-usb.c : removed useless call to usb_release_interface()
+	  because the usbdev close ioctl already does the job for us.
+	  Compilation warning fix.
+
 2000-07-09  Fabrice Bellet  <Fabrice.Bellet@creatis.insa-lyon.fr>
 
 	* Makefile.am : fixed typo.

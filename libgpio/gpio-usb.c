@@ -26,6 +26,7 @@
 #include <errno.h>
 #include <sys/time.h>
 #include <dirent.h>
+#include <string.h>
 
 #include <usb.h>
 
@@ -97,14 +98,9 @@ int gpio_usb_close(gpio_device * dev)
 #ifdef GPIO_USB_DEBUG
 	printf ("gpio_usb_close() called\n");
 #endif
-	ret = usb_release_interface(dev->device_handle, dev->settings.usb.interface);
-	if (ret < 0) {
-		fprintf(stderr, "gpio_usb_open: could not release intf %d: %s\n",
-			dev->settings.usb.interface, strerror(errno));
-	}
 	if (usb_close(dev->device_handle) < 0)
 		fprintf(stderr, "gpio_usb_close: %s\n",
-			strerror());
+			strerror(errno));
 
 	dev->device_handle = NULL;
 

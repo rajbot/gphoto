@@ -64,7 +64,7 @@ void error_dialog(char *Error) {
         dialog = gtk_dialog_new();
         gtk_window_set_title(GTK_WINDOW(dialog), "gPhoto Message");
         gtk_container_border_width(GTK_CONTAINER(dialog), 5);
-	gtk_widget_set_usize(dialog, 200, 100);
+/*	gtk_widget_set_usize(dialog, 200, 100);*/
         label = gtk_label_new(Error);
         button = gtk_button_new_with_label("OK");
         GTK_WIDGET_SET_FLAGS (button, GTK_CAN_DEFAULT);

@@ -10,7 +10,7 @@ void configure_call();
 
 void takepicture_call();
 
-void del_pics (GtkWidget *dialog);
+void del_pics (GtkWidget *dialog, GtkObject *button);
 
 void del_dialog ();
 
@@ -58,16 +58,12 @@ void remove_image(int i);
 
 void closepic ();
 
-void saveselectedtodisk (GtkWidget *widget, gpointer *data);
+void saveselectedtodisk ();
 
 void savepic (GtkWidget *widget, GtkFileSelection *fwin);
 
-void batch_save_dialog();
-
-/* save picture being viewed as jpeg */
+/* save picture being viewed */
 void filedialog (gchar *a);
-
-void send_to_gimp ();
 
 void print_pic ();
 
@@ -92,3 +88,28 @@ void scale_half ();
 void scale_double ();
 
 extern GtkWidget * img_edit_new(struct ImageInfo *ii);
+
+/* For use with the Menu Factory */
+
+/* I will port the toolbar to the toolbar factory as well for common callbacks 	*/
+/* the callbacks need to be rehashed to be a little less confusing name-wise 	*/
+/*						-Scott				*/
+
+void save_images (gpointer data, guint action, GtkWidget *widget);
+		/* Saves all the selected images to disk */
+
+void open_images (gpointer data, guint action, GtkWidget *widget);
+		/* Opens all the selected images */
+
+void save_thumbs (gpointer data, guint action, GtkWidget *widget);
+		/* Saves all the selected thumbnails to disk */
+
+void open_thumbs (gpointer data, guint action, GtkWidget *widget);
+		/* Opens all the selected thumbnails */
+
+void save_both   (gpointer data, guint action, GtkWidget *widget);
+		/* Saves all the selected images & thumbnails to disk */
+
+void open_both   (gpointer data, guint action, GtkWidget *widget);
+		/* Saves all the selected images & thumbnails to disk */
+

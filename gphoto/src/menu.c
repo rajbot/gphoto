@@ -25,229 +25,183 @@
 #include "live.h"
 #include "developer_dialog.h"
 
+
 /* Build the Menu --------------------------------------------
    ----------------------------------------------------------- */
 #ifdef  GTK_HAVE_FEATURES_1_1_0
 GtkAccelGroup*  mainag;
 #endif
 
-void add_to_menu (gchar *label, GtkSignalFunc f, gpointer data, 
-		  GtkWidget *menu) {
+void menu_select (gpointer data, guint action, GtkWidget *widget) {
 
-	GtkWidget *menu_item;
-
-	if (strcmp(label, "") == 0)
-		menu_item = gtk_menu_item_new();
-	   else {
-		menu_item = gtk_menu_item_new_with_label(label);
-		gtk_signal_connect_object (GTK_OBJECT(menu_item), 
-					   "activate", f, data);
-	}
-	gtk_menu_append (GTK_MENU(menu), menu_item);
-	gtk_widget_show(menu_item);
-}
-
-
-/* 
-   Add a menu entry with a keyboard accelerator.
-      note that a modifier of 0 defines an unmodified keystroke
+/* use this until we can adapt the other callbacks to what the item
+ * factory expects for arguments.
+ * just note this is temporary. :) 
  */
-void add_to_menu_acc (gchar *label, GtkSignalFunc f, gpointer data, 
-		  GtkWidget *menu, char akey,GdkModifierType modmask) {
 
-	GtkWidget *menu_item;
+	switch (action) {
+		case 1: /* Open pic */
+			filedialog("o");
+			break;
+		case 2: /* Save pic */
+			filedialog("s");
+			break;
+		case 3: /* Print pic */
+			print_pic();
+			break;
+		case 4: /* Close pic */
+			closepic();
+			break;
+		case 5: /* Quit */
+			delete_event(widget, NULL, NULL);
+			break;
+		case 6: /* Rotate Clockwise */
+			manip_pic("r");
+			break;
+		case 7: /* Rotate Counter-clockwise */
+			manip_pic("l");
+			break;
+		case 8: /* Flip Horizontal */
+			manip_pic("h");
+			break;
+		case 9: /* Flip Vertical */
+			manip_pic("v");
+			break;
+		case 10: /* Scale Half */
+			scale_half();
+			break;
+		case 11: /* Scale Double */
+			scale_double();
+			break;
+		case 12: /* Resize */
+			resize_dialog();
+			break;
+		case 13: /* Select All */
+			select_all;
+			break;
+		case 14: /* Select Inverse */
+			select_inverse();
+			break;
+		case 15: /* Select None */
+			select_none();
+			break;
+		case 16: /* Get Thumbnails */
+			getindex();
+			break;
+		case 17: /* Get blank */
+			getindex_empty();
+			break;
+		case 20: /* Delete selected */
+			del_dialog();
+			break;
+		case 21: /* Take picture */
+			takepicture_call();
+			break;
+		case 22: /* Camera summary */
+			summary_dialog();
+			break;
+		case 23: /* Port / model */
+			port_dialog();
+			break;
+		case 24: /* Configure */
+			configure_call();
+			break;
+		case 25: /* HTML Gallery */
+			gallery_main();
+			break;
+		case 26: /* Live Camera */
+			live_main();
+			break;
+		case 27: /* Authors */
+			developer_dialog_create();
+			break;
+		case 28: /* License */
+			show_license();
+			break;
+		case 29: /* Version */
+			version_dialog();
+			break;
+		case 30: /* Users manual */
+			usersmanual_dialog();
+			break;
+		case 31: /* FAQ */
+			faq_dialog();
+			break;
 
-	if (strcmp(label, "") == 0)
-		menu_item = gtk_menu_item_new();
-	   else {
-		menu_item = gtk_menu_item_new_with_label(label);
-		gtk_signal_connect_object (GTK_OBJECT(menu_item), 
-					   "activate", f, data);
+		default:
 	}
-	gtk_menu_append (GTK_MENU(menu), menu_item);
-#ifdef  GTK_HAVE_FEATURES_1_1_0
-	gtk_accel_group_add(mainag,akey,modmask,
-			  GTK_ACCEL_VISIBLE||GTK_ACCEL_LOCKED,
-			  GTK_OBJECT(menu_item),"activate");
-#endif
-	gtk_widget_show(menu_item);
 }
+
+/* Oh WOW is this a lot easier :) */
+
+GtkItemFactoryEntry menu_items[] = {
+	{"/_File",						NULL, 0,		0,	"<Branch>"},
+	{"/File/_Open",					"<control>o", menu_select,	1},
+	{"/File/_Save Image...",			"<control>s", menu_select,	2},
+	{"/File/sep1",						NULL, 0,		0,	"<Separator>"},
+	{"/File/_Print",				"<control>p", menu_select,	3},
+	{"/File/sep2",						NULL, 0,		0,	"<Separator>"},
+	{"/File/_Close",					NULL, menu_select,	4},
+	{"/File/_Quit",					"<control>q", menu_select,	5},
+
+	{"/_Edit",						NULL, 0,		0,	"<Branch>"},
+	{"/Edit/Image _Orientation",				NULL, 0,		0,	"<Branch>"},
+	{"/Edit/Image Orientation/Rotate Clockwise", 		NULL, menu_select,	6},
+	{"/Edit/Image Orientation/Rotate Counter-Clockwise", 	NULL, menu_select,	7},
+	{"/Edit/Image Orientation/Flip Horizontal", 		NULL, menu_select,	8},
+	{"/Edit/Image Orientation/Flip Vertical", 		NULL, menu_select,	9},
+	{"/Edit/Image _Dimension",				NULL, 0,		0,	"<Branch>"},
+	{"/Edit/Image Dimension/Scale _Half",			NULL, menu_select,	10},
+	{"/Edit/Image Dimension/Scale _Double",			NULL, menu_select,	11},
+	{"/Edit/Image Dimension/_Scale",			NULL, menu_select,	12},
+	{"/Edit/Select _All",				  "<shift>a", menu_select,	13},
+	{"/Edit/Select _Inverse",			  "<shift>i", menu_select,	14},
+	{"/Edit/Select _None",			 	  "<shift>n", menu_select,	15},
+
+
+	{"/_Camera",					 	NULL, 0, 		0,	"<Branch>"},
+	{"/Camera/Get _Index",			        	NULL, 0,		0,	"<Branch>"},
+	{"/Camera/Get Index/_Thumbnails",		"<control>i", menu_select,	16},
+	{"/Camera/Get Index/_No Thumbnails",		"<control>e", menu_select,	17},
+	{"/Camera/Get _Selected",				NULL, 0,		0, 	"<Branch>"},
+	{"/Camera/Get Selected/_Images",			NULL, 0,		0,	"<Branch>"},
+	{"/Camera/Get Selected/Images/_Open in window",		NULL, open_images,	18},
+	{"/Camera/Get Selected/Images/_Save to disk...","<control>g", save_images,	19},
+	{"/Camera/Get Selected/_Thumbnails",			NULL, 0,		0,	"<Branch>"},
+	{"/Camera/Get Selected/Thumbnails/_Open in window",	NULL, open_thumbs,	0},
+	{"/Camera/Get Selected/Thumbnails/_Save to disk...",	NULL, save_thumbs,	0},
+	{"/Camera/Get Selected/_Both",				NULL, 0,		0,	"<Branch>"},
+	{"/Camera/Get Selected/Both/_Open in window",		NULL, open_both,	0},
+	{"/Camera/Get Selected/Both/_Save to disk...",		NULL, save_both,	0},
+	{"/Camera/_Delete Selected Images",			NULL, menu_select,	20},
+	{"/Camera/_Take Picture",				NULL, menu_select,	21},
+	{"/Camera/_Camera Summary",				NULL, menu_select,	22},
+	{"/C_onfigure",						NULL, 0,		0,	"<Branch>"},
+	{"/Configure/_Select Port-Camera Model",		NULL, menu_select,	23},
+	{"/Configure/_Configure Camera...",			NULL, menu_select,	24},
+
+	{"/_Plugins",						NULL, 0,		0,	"<Branch>"},
+	{"/Plugins/HTML _Gallery",				NULL, menu_select,	25},
+	{"/Plugins/_Live Camera!",				NULL, menu_select,	26},
+
+	{"/_Help",						NULL, 0,		0,	"<LastBranch>"},
+	{"/Help/_Authors",					NULL, menu_select,	27},
+	{"/Help/_License",					NULL, menu_select,	28},
+	{"/Help/_Version",					NULL, menu_select,	29},
+	{"/Help/_User's Manual",				NULL, menu_select,	30},
+	{"/Help/_How do I...",					NULL, menu_select,	31},
+};
+
 
 void create_menu (GtkWidget *menu_bar) {
 
-	GtkWidget *menu, *amenu, *dmenu, *root_menu;
-#ifdef  GTK_HAVE_FEATURES_1_1_0
+	GtkItemFactory *item_factory;
+	int menu_items_size = sizeof(menu_items) / sizeof (menu_items[0]);
+
 	mainag=gtk_accel_group_new();
-#endif
-	
-	/* File Menu ----------------------------------------------- */
-	menu = gtk_menu_new ();
-	add_to_menu_acc("Open", GTK_SIGNAL_FUNC(filedialog),
-		    (gpointer)"o", menu,'o',GDK_CONTROL_MASK);
-	add_to_menu_acc("Save Current Image...", GTK_SIGNAL_FUNC(filedialog),
-		    (gpointer)"s", menu,'s',GDK_CONTROL_MASK);
-/*	replaced by "save selected to disk..."
-	add_to_menu("Batch Save...", GTK_SIGNAL_FUNC(batch_save_dialog),
-		    (gpointer)"Batch Save", menu);
-*/
-/* 	Please see comments in callbacks.c for help...
-	add_to_menu("Send to GIMP", GTK_SIGNAL_FUNC(send_to_gimp),
-		    (gpointer)"SendToGimp", menu);
-*/
 
-	add_to_menu("", NULL,NULL, menu);
-	add_to_menu("Print", GTK_SIGNAL_FUNC(print_pic),
-		    (gpointer)"Print", menu);
-	add_to_menu("", NULL,NULL, menu);
-	add_to_menu_acc("Close", GTK_SIGNAL_FUNC(closepic),
-		    (gpointer)"Close", menu,'w',GDK_CONTROL_MASK);
-	add_to_menu_acc("Exit", GTK_SIGNAL_FUNC(delete_event),
-		    (gpointer)"Exit", menu,'q',GDK_CONTROL_MASK);
-	root_menu = gtk_menu_item_new_with_label("File");
-	gtk_widget_show(root_menu);
-	gtk_menu_item_set_submenu (GTK_MENU_ITEM(root_menu), menu);	
-	gtk_menu_bar_append(GTK_MENU_BAR(menu_bar), root_menu);
-
-	/* Edit Menu ----------------------------------------------- */
-	menu = gtk_menu_new ();
-	amenu = gtk_menu_new ();
-/*
-	add_to_menu("Copy", GTK_SIGNAL_FUNC(menu_selected),
-		    (gpointer)"Copy", menu);
-	add_to_menu("Paste", GTK_SIGNAL_FUNC(menu_selected),
-		    (gpointer)"Paste", menu);
-	add_to_menu("", NULL,NULL, menu);
-*/
- 	add_to_menu("Rotate Clockwise", 
- 		    GTK_SIGNAL_FUNC(manip_pic),
- 		    (gpointer)"r", amenu);
- 	add_to_menu("Rotate Counter-Clockwise", 
- 		    GTK_SIGNAL_FUNC(manip_pic), 
- 		    (gpointer)"l", amenu);
- 	add_to_menu("Flip Horizontal", 
- 		    GTK_SIGNAL_FUNC(manip_pic), 
- 		    (gpointer)"h", amenu);
- 	add_to_menu("Flip Vertical", 
- 		    GTK_SIGNAL_FUNC(manip_pic),
- 		    (gpointer)"v", amenu);
-
-	root_menu = gtk_menu_item_new_with_label("Image Orientation");
-	gtk_widget_show(root_menu);
-	gtk_menu_item_set_submenu (GTK_MENU_ITEM(root_menu), amenu);
-	gtk_menu_append(GTK_MENU(menu), root_menu);
-
-	add_to_menu("", NULL,NULL, menu);
-
-	dmenu = gtk_menu_new ();
-
-	add_to_menu_acc("Half (50%)",GTK_SIGNAL_FUNC(scale_half),
-		    (gpointer)"Half scale (50%)",dmenu,'-',GDK_CONTROL_MASK);
-	add_to_menu_acc("Double (200%)",GTK_SIGNAL_FUNC(scale_double),
-		    (gpointer)"Double scale (200%)",dmenu,'+',GDK_CONTROL_MASK);
- 	add_to_menu("Scale", 
- 		    GTK_SIGNAL_FUNC(resize_dialog),
- 		    (gpointer)"Scale", dmenu);
-
-	root_menu = gtk_menu_item_new_with_label("Image Dimension");
-	gtk_widget_show(root_menu);
-	gtk_menu_item_set_submenu (GTK_MENU_ITEM(root_menu), dmenu);
-	gtk_menu_append(GTK_MENU(menu), root_menu);
-
-	add_to_menu("", NULL,NULL, menu);
-
-	add_to_menu_acc("Select All", GTK_SIGNAL_FUNC(select_all),
-		    (gpointer)"Select all", menu,'a',GDK_CONTROL_MASK);
-	add_to_menu("Select Inverse", GTK_SIGNAL_FUNC(select_inverse),
-		    (gpointer)"Select Inverse", menu);
-	add_to_menu_acc("Select None", GTK_SIGNAL_FUNC(select_none),
-		    (gpointer)"Select none",menu,'n',GDK_CONTROL_MASK);
-	root_menu = gtk_menu_item_new_with_label("Edit");
-	gtk_widget_show(root_menu);
-	gtk_menu_item_set_submenu (GTK_MENU_ITEM(root_menu), menu);	
-	gtk_menu_bar_append(GTK_MENU_BAR(menu_bar), root_menu);
-
-	/* Camera Menu --------------------------------------------- */
-	menu = gtk_menu_new ();
-	amenu = gtk_menu_new ();
-	add_to_menu_acc("Thumbnails", GTK_SIGNAL_FUNC(getindex),
-		    (gpointer)"Get Index", amenu,'i',GDK_CONTROL_MASK);
-	add_to_menu_acc("No Thumbnails", GTK_SIGNAL_FUNC(getindex_empty),
-		    (gpointer)"Get Empty Index", amenu,'e',GDK_CONTROL_MASK);
-	root_menu = gtk_menu_item_new_with_label("Get Index");
-	gtk_widget_show(root_menu);
-	gtk_menu_item_set_submenu (GTK_MENU_ITEM(root_menu), amenu);
-	gtk_menu_append(GTK_MENU(menu), root_menu);
-
-	amenu = gtk_menu_new ();
-	add_to_menu("Open in window", GTK_SIGNAL_FUNC(getpics),
-		    NULL, amenu);
-	add_to_menu("Save to disk...", GTK_SIGNAL_FUNC(saveselectedtodisk),
-		    NULL, amenu);
-	root_menu = gtk_menu_item_new_with_label("Get Selected Images");
-	gtk_widget_show(root_menu);
-	gtk_menu_item_set_submenu (GTK_MENU_ITEM(root_menu), amenu);
-	gtk_menu_append(GTK_MENU(menu), root_menu);
-
-	add_to_menu("Delete Selected Images", GTK_SIGNAL_FUNC(del_dialog),
-		    NULL, menu);
-	add_to_menu("", NULL,NULL, menu);
-	add_to_menu("Take Picture", GTK_SIGNAL_FUNC(takepicture_call),
-		    NULL, menu);
-	add_to_menu("", NULL,NULL, menu);
-	add_to_menu("Camera Summary...", GTK_SIGNAL_FUNC(summary_dialog),
-		    NULL, menu);
-	root_menu = gtk_menu_item_new_with_label("Camera");
-	gtk_widget_show(root_menu);
-	gtk_menu_item_set_submenu (GTK_MENU_ITEM(root_menu), menu);	
-	gtk_menu_bar_append(GTK_MENU_BAR(menu_bar), root_menu);
-
-	/* Configure Menu ------------------------------------------ */
-	menu = gtk_menu_new ();
-	amenu = gtk_menu_new ();
-		add_to_menu("Select Port/Camera Model...", GTK_SIGNAL_FUNC(port_dialog),
-		    NULL, menu);
-	add_to_menu("Configure Camera...", GTK_SIGNAL_FUNC(configure_call),
-		    NULL, menu);
-
-/*    	add_to_menu("Options", GTK_SIGNAL_FUNC(menu_selected), */
-/*  		    (gpointer)"Options", menu);  */
-
-	root_menu = gtk_menu_item_new_with_label("Configure");
-	gtk_widget_show(root_menu);
-	gtk_menu_item_set_submenu (GTK_MENU_ITEM(root_menu), menu);	
-	gtk_menu_bar_append(GTK_MENU_BAR(menu_bar), root_menu);
-
-	/* Plugins Menu -------------------------------------------- */
-	menu = gtk_menu_new ();
-/*
-	add_to_menu("Animated GIF", GTK_SIGNAL_FUNC(menu_selected),
-		    (gpointer)"Animated Gif", menu);
-*/
-	add_to_menu("HTML Gallery", GTK_SIGNAL_FUNC(gallery_main),
-		    (gpointer)"HTML Gallery", menu);
-	add_to_menu("Live Camera!", GTK_SIGNAL_FUNC(live_main),
-		    (gpointer)"Live Camera!", menu);
-	root_menu = gtk_menu_item_new_with_label("Plugins");
-	gtk_menu_item_right_justify(GTK_MENU_ITEM(root_menu));
-	gtk_widget_show(root_menu);
-	gtk_menu_item_set_submenu (GTK_MENU_ITEM(root_menu), menu);	
-	gtk_menu_bar_append(GTK_MENU_BAR(menu_bar), root_menu);
-
-	/* Help Menu ----------------------------------------------- */
-	menu = gtk_menu_new ();
-	add_to_menu("Authors", GTK_SIGNAL_FUNC(developer_dialog_create),
-		    (gpointer)"Authors", menu);
-	add_to_menu("Show License", GTK_SIGNAL_FUNC(show_license),
-	            (gpointer)"Show License", menu);
-	add_to_menu("Version Info", GTK_SIGNAL_FUNC(version_dialog),
-		    (gpointer)"Version", menu);
-	add_to_menu("User's Manual", GTK_SIGNAL_FUNC(usersmanual_dialog),
-		    (gpointer)"How do I...", menu);
-	add_to_menu("FAQ's", GTK_SIGNAL_FUNC(faq_dialog),
-		    (gpointer)"FAQs", menu);
-	root_menu = gtk_menu_item_new_with_label("Help");
-	gtk_menu_item_right_justify(GTK_MENU_ITEM(root_menu));
-	gtk_widget_show(root_menu);
-	gtk_menu_item_set_submenu (GTK_MENU_ITEM(root_menu), menu);	
-	gtk_menu_bar_append(GTK_MENU_BAR(menu_bar), root_menu);
+	item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<gp>", mainag);
+	gtk_item_factory_create_items(item_factory, menu_items_size, menu_items, NULL);
+	gtk_box_pack_start (GTK_BOX(menu_bar), gtk_item_factory_get_widget(item_factory, "<gp>"),
+			FALSE, FALSE, 0);
 }

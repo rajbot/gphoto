@@ -98,9 +98,9 @@ int main (int argc, char *argv[]) {
 	gtk_widget_realize(mainWin);
 
 	/* set up the menu --------------------------------------- */
-	menu_bar = gtk_menu_bar_new();
+	menu_bar = gtk_vbox_new(FALSE, 0);
 	create_menu(menu_bar);
-	gtk_widget_show(menu_bar);
+	gtk_widget_show_all(menu_bar);
 
 	/* button bar -------------------------------------------- */
 	box = gtk_hbox_new(FALSE, 0);
@@ -147,7 +147,7 @@ int main (int argc, char *argv[]) {
 
 	progress = gtk_progress_bar_new();
 	gtk_widget_show(progress);
-	gtk_widget_set_usize(progress, 100, 16);
+/*	gtk_widget_set_usize(progress, 100, 16);*/
 	gtk_box_pack_end(GTK_BOX(sbox), progress, FALSE, FALSE, 0);
 
 	gtk_widget_show(library_name);

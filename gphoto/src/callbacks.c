@@ -91,7 +91,7 @@ void takepicture_call() {
 	update_status("Done.");
 }
 
-void del_pics (GtkWidget *dialog) {
+void del_pics (GtkWidget *dialog, GtkObject *button) {
 
         int i=1;
 
@@ -164,22 +164,19 @@ void del_dialog () {
 	gtk_widget_show(dialog);
 }
 
-void savepictodisk (int picNum, char *prefix) {
+void savepictodisk (int picNum, int thumbnail, char *prefix) {
 
 	FILE *fp;
 	struct Image *im = NULL; 
 	char fname[1024];
 
-	im = (*Camera->get_picture)(picNum, 0);
+	im = (*Camera->get_picture)(picNum, thumbnail);
 	sprintf(fname, "%s.%s", prefix, im->image_type);
-	fp = fopen(fname, "w");
-	fwrite(im->image, (size_t)sizeof(char), (size_t)im->image_size, fp);
-	fclose(fp);
-	free(im->image);
-	free(im);
+	save_image(im, fname);
+	free_image(im);
 }
 
-void saveselectedtodisk (GtkWidget *widget, gpointer *data) {
+void saveselectedtodisk () {
 
 	int i = 0, pic = 1;
 	char fname[1024];
@@ -187,7 +184,7 @@ void saveselectedtodisk (GtkWidget *widget, gpointer *data) {
 
 	struct ImageInfo *node = &Thumbnails;
 
-	GtkWidget *filesel, *label, *rad_im, *rad_thumb, *rad_both, *hbox;
+	GtkWidget *filesel, *label;
 	GtkWidget *entry;
 	GSList *group;
 
@@ -214,39 +211,6 @@ void saveselectedtodisk (GtkWidget *widget, gpointer *data) {
 	gtk_box_reorder_child(GTK_BOX(
 		GTK_FILE_SELECTION(filesel)->main_vbox), entry, 6);
 
-        rad_im = gtk_radio_button_new_with_label(NULL, "Pictures");
-        gtk_widget_show(rad_im);
-        group = gtk_radio_button_group(GTK_RADIO_BUTTON(rad_im));
-        rad_thumb = gtk_radio_button_new_with_label(group, "Thumbnails");
-        gtk_widget_show(rad_thumb);
-        group = gtk_radio_button_group(GTK_RADIO_BUTTON(rad_thumb));
-        rad_both = gtk_radio_button_new_with_label(group, "Both");
-        gtk_widget_show(rad_both);
-        gtk_button_clicked(GTK_BUTTON(rad_both));
-
-	hbox = gtk_hbox_new(FALSE, 5);
-	gtk_widget_show(hbox);
-	gtk_box_pack_start_defaults(GTK_BOX(hbox), rad_im);
-	gtk_box_pack_start_defaults(GTK_BOX(hbox), rad_thumb);
-	gtk_box_pack_start_defaults(GTK_BOX(hbox), rad_both);
-	gtk_box_pack_start_defaults(GTK_BOX(
-		GTK_FILE_SELECTION(filesel)->main_vbox), hbox);
-	gtk_box_reorder_child(GTK_BOX(
-		GTK_FILE_SELECTION(filesel)->main_vbox), hbox, 5);
-
-        gtk_signal_connect_object(GTK_OBJECT(
-		GTK_FILE_SELECTION(filesel)->cancel_button), "clicked",
-		GTK_SIGNAL_FUNC(gtk_widget_hide),
-		GTK_OBJECT(filesel));
-
-        gtk_signal_connect_object(GTK_OBJECT(
-		GTK_FILE_SELECTION(filesel)->ok_button), "clicked",
-		GTK_SIGNAL_FUNC(ok_click),
-		GTK_OBJECT(filesel));
-
-	gtk_object_set_data(GTK_OBJECT(filesel), "button", "CANCEL");
-	gtk_widget_show(filesel);
-	
 	/* if they clicked cancel, return  ------------- */
 	if (wait_for_hide(filesel, GTK_FILE_SELECTION(filesel)->ok_button, 
 	    GTK_FILE_SELECTION(filesel)->ok_button) == 0)
@@ -262,7 +226,7 @@ void saveselectedtodisk (GtkWidget *widget, gpointer *data) {
                 if (GTK_TOGGLE_BUTTON(node->button)->active) {
 			sprintf(fname, "%s%s-%i", filesel_dir, filesel_prefix,
 				pic);
-			savepictodisk(i, fname);
+			savepictodisk(i, 0, fname);
 			pic++;
 		}
 	}
@@ -635,6 +599,8 @@ Saving Images
 Batch Saving
 ------------
 
+	[Outdated]
+
 	Select \"Batch Save\" from the \"File\" menu. Then, select the
 	directory that will store all the images and click \"OK\".
 
@@ -647,6 +613,9 @@ Printing Images
 ---------------
 	Click on the tab of the image you want to print, and select
 	\"Print\" from the \"File\" menu.
+
+	You can specify options to send to \"lpr\" in the supplied box.
+
 	Note: it might take a minute for the image to print, depending
 	on how fast the image is spooled.
 
@@ -668,7 +637,7 @@ Selecting the Serial Port
 
 Configuring the Camera
 ----------------------
-	Select \"Configure\" from the \"Camera\" menu.
+	Select \"Configure Camera\" from the \"Configure\" menu.
 
 Live preview plugin
 -------------------
@@ -677,6 +646,9 @@ Live preview plugin
 
 Command line mode
 -----------------
+
+	[Outdated. type \"gphoto -h\" for options]
+
 	The command-line mode must be specified at run time
         with the \"-c\" parameter.
  
@@ -1067,144 +1039,6 @@ void closepic () {
 	}
 }
 
-void batch_save_dialog() {
-
-	int i=1;
-	int num_pictures_taken;
-	char fname[1024], status[20];
-	char *filesel_prefix, *filesel_dir, prefix[1024];
-	struct tm *tmTime;
-	time_t aTime;
-	GdkImlibImage *toSave;
-	GtkWidget *filesel, *label, *rad_im, *rad_thumb, *rad_both, *hbox;
-	GtkWidget *entry;
-	GSList *group;
-	struct Image *im;
-
-	filesel = gtk_file_selection_new(
-			"Select a directory to store the images...");
-
-	gtk_widget_hide(GTK_FILE_SELECTION(filesel)->file_list);
-	gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_text);
-	gtk_widget_hide(GTK_FILE_SELECTION(filesel)->selection_entry);
-
-	label = gtk_label_new("Enter the file prefix for the images:");
-	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
-	gtk_widget_show(label);
-	gtk_box_pack_start_defaults(GTK_BOX(
-		GTK_FILE_SELECTION(filesel)->main_vbox), label);
-	gtk_box_reorder_child(GTK_BOX(
-		GTK_FILE_SELECTION(filesel)->main_vbox), label, 5);
-
-        entry = gtk_entry_new();
-        gtk_widget_show(entry);
-        gtk_entry_set_max_length(GTK_ENTRY(entry), 25);
-	gtk_box_pack_start_defaults(GTK_BOX(
-		GTK_FILE_SELECTION(filesel)->main_vbox), entry);
-	gtk_box_reorder_child(GTK_BOX(
-		GTK_FILE_SELECTION(filesel)->main_vbox), entry, 6);
-
-        rad_im = gtk_radio_button_new_with_label(NULL, "Pictures");
-        gtk_widget_show(rad_im);
-        group = gtk_radio_button_group(GTK_RADIO_BUTTON(rad_im));
-        rad_thumb = gtk_radio_button_new_with_label(group, "Thumbnails");
-        gtk_widget_show(rad_thumb);
-        group = gtk_radio_button_group(GTK_RADIO_BUTTON(rad_thumb));
-        rad_both = gtk_radio_button_new_with_label(group, "Both");
-        gtk_widget_show(rad_both);
-        gtk_button_clicked(GTK_BUTTON(rad_both));
-
-	hbox = gtk_hbox_new(FALSE, 5);
-	gtk_widget_show(hbox);
-	gtk_box_pack_start_defaults(GTK_BOX(hbox), rad_im);
-	gtk_box_pack_start_defaults(GTK_BOX(hbox), rad_thumb);
-	gtk_box_pack_start_defaults(GTK_BOX(hbox), rad_both);
-	gtk_box_pack_start_defaults(GTK_BOX(
-		GTK_FILE_SELECTION(filesel)->main_vbox), hbox);
-	gtk_box_reorder_child(GTK_BOX(
-		GTK_FILE_SELECTION(filesel)->main_vbox), hbox, 5);
-
-        gtk_signal_connect_object(GTK_OBJECT(
-		GTK_FILE_SELECTION(filesel)->cancel_button), "clicked",
-		GTK_SIGNAL_FUNC(gtk_widget_hide),
-		GTK_OBJECT(filesel));
-
-        gtk_signal_connect_object(GTK_OBJECT(
-		GTK_FILE_SELECTION(filesel)->ok_button), "clicked",
-		GTK_SIGNAL_FUNC(ok_click),
-		GTK_OBJECT(filesel));
-
-	gtk_object_set_data(GTK_OBJECT(filesel), "button", "CANCEL");
-	gtk_widget_show(filesel);
-	
-	/* if they clicked cancel */
-	if (wait_for_hide(filesel, GTK_FILE_SELECTION(filesel)->ok_button, 
-	    GTK_FILE_SELECTION(filesel)->ok_button) == 0)
-		return;
-        /* -------------------------------- */
-
-	update_status("Saving all images...");
-
-	filesel_dir = gtk_file_selection_get_filename(
-			GTK_FILE_SELECTION(filesel));
-	filesel_prefix = gtk_entry_get_text(GTK_ENTRY(entry));
-
-	if (strlen(filesel_prefix) == 0)
-		sprintf(prefix, "%sImage", filesel_dir);
-	   else
-		sprintf(prefix, "%s%s", filesel_dir, filesel_prefix);
-	aTime = time(&aTime);
-	tmTime = localtime(&aTime);
-	num_pictures_taken = (*Camera->number_of_pictures)();
-	if (num_pictures_taken == 0)
-		return;
-
-	update_progress(0);
-	while (i <= num_pictures_taken) {
-		sprintf(status, "Saving image %i", i);
-		update_status(status);
-		if ((GTK_WIDGET_STATE(rad_im) == GTK_STATE_ACTIVE) ||
-		    (GTK_WIDGET_STATE(rad_both) == GTK_STATE_ACTIVE)) {
-			im = (*Camera->get_picture)(i, 0);
-			toSave = gdk_imlib_load_image_mem(im->image,
-							  im->image_size);
-			free(im->image);
-			free(im);
-			sprintf(fname, "%s-%i%02i%02i-%03i.jpg",
-				prefix, tmTime->tm_year+1900,
-				tmTime->tm_mon+1, tmTime->tm_mday, i);
-			if (gdk_imlib_save_image(toSave, fname, NULL) == 0) {
-				error_dialog("Could not save images.");
-				return;
-			}
-			gdk_imlib_kill_image(toSave);
-		}
-		if ((GTK_WIDGET_STATE(rad_thumb) == GTK_STATE_ACTIVE) ||
-		    (GTK_WIDGET_STATE(rad_both) == GTK_STATE_ACTIVE)) {
-			im = (*Camera->get_picture)(i, 1);
-			toSave = gdk_imlib_load_image_mem(im->image,
-							  im->image_size);
-			free(im->image);
-			free(im);
-			sprintf(fname, "%s-%i%02i%02i-%03i-thumb.jpg",
-				prefix, tmTime->tm_year+1900,
-				tmTime->tm_mon+1, tmTime->tm_mday, i);
-			if (gdk_imlib_save_image(toSave, fname, NULL) == 0) {
-				error_dialog("Could not save images.");
-				return;
-			}
-			gdk_imlib_kill_image(toSave);
-		}
-		update_progress((float)i/(float)num_pictures_taken);
-		i++;
-	}
-	sprintf(fname, "Done. Images saved as %s*.jpg", 
-		gtk_file_selection_get_filename(GTK_FILE_SELECTION(filesel)));
-	update_status(fname);
-	update_progress(0);
-	gtk_widget_destroy(GTK_WIDGET(filesel));
-}
-
 void savepic (GtkWidget *widget, GtkFileSelection *fwin) {
 
 	int i, x=0;
@@ -1281,67 +1115,6 @@ void filedialog (gchar *a) {
 			    (GtkSignalFunc) gtk_widget_hide,
                             GTK_OBJECT (filew));
 	gtk_file_selection_set_filename(GTK_FILE_SELECTION(filew),"*.*");
-}
-
-void send_to_gimp () {
-
-	error_dialog("Send to GIMP not yet implemented.");
-/*
-	------------------------------------------------------
-	Problem keeping this function from being used:
-		need to delete a temporary image AFTER
-		the GIMP is done loading it. don't know
-		how to either force gimp to create a lock-file
-		or wait and know when gimp is done loading.
-
-	thought about just creating a temp directory in
-	$HOME/.gphoto and then whenever gPhoto is started,
-	it cleans out that directory... but that's bad, and
-	should never have been thought up..
-
-	thought about some sort of lockfile, but how would
-	gimp know to create/remove it? ...
-
-	just need to know when the gimp is done loading
-	the image, then remove the temp file... 
-
-	so we need input, if you know how... :) thanx..
-			-SF
-	------------------------------------------------------
-	char **args;
-	char fname[1024], rm[1024];
-	int pid, currentPic, i=0;
-
-	struct ImageInfo *node = &Images;
-	currentPic = gtk_notebook_current_page (GTK_NOTEBOOK(notebook));
-	if (currentPic == 0) {
-		error_dialog("Can't send the index to the GIMP.");
-		return;
-	}
-
-	while (i < currentPic) {
-		node = node->next;
-		i++;
-	}
-
-	sprintf(fname, "%s/gphoto-%i.jpg", gphotoDir, picCounter);
-	sprintf(rm, "rm %s", fname);
-	picCounter++;
-	gdk_imlib_save_image(node->imlibimage, fname, NULL);
-
-	pid = fork();
-	if (pid == 0) {
-		args = malloc(3*sizeof(char*));
-		args[0] = malloc(5*sizeof(char));
-		strcpy (args[0], "gimp");
-		args[1] = malloc(20*sizeof(char));
-		strcpy (args[1], fname);
-		args[2] = NULL;
-		execvp(args[0], args);
-		_exit(0);
-	}
-	system(rm); 
-*/
 }
 
 void print_pic () {
@@ -1691,5 +1464,35 @@ void scale_half () { /* Scales image size by 50% */
 void scale_double () { /* Scales image size by 200% */
   update_status("Scaling image by 200%...");
   scale (200);
+}
+
+void save_images (gpointer data, guint action, GtkWidget *widget) {
+
+	saveselectedtodisk();
+}
+
+void open_images (gpointer data, guint action, GtkWidget *widget) {
+
+	getpics();
+}
+
+void save_thumbs (gpointer data, guint action, GtkWidget *widget) {
+
+	error_dialog("Saving Thumbnails is not yet supported");
+}
+
+void open_thumbs (gpointer data, guint action, GtkWidget *widget) {
+
+	error_dialog("Opening Thumbnails is not yet supported");
+}
+
+void save_both (gpointer data, guint action, GtkWidget *widget) {
+
+	error_dialog("Saving Thumbnails & Images is not yet supported");
+}
+
+void open_both (gpointer data, guint action, GtkWidget *widget) {
+
+	error_dialog("Opening Thumbnails & Images is not yet supported");
 }
 

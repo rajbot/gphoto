@@ -58,8 +58,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-host_alias = i686-pc-linux-gnu
-host_triplet = i686-pc-linux-gnu
+host_alias = i586-pc-linux-gnu
+host_triplet = i586-pc-linux-gnu
 AS = 
 CC = gcc
 CPP = gcc -E
@@ -78,7 +78,6 @@ IMLIB_LIBS = @IMLIB_LIBS@
 LD = /usr/bin/ld
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LN_S = ln -s
-MAINT = #
 MAKEINFO = /home/scottf/gphoto/missing makeinfo
 NM = /usr/bin/nm -B
 PACKAGE = gphoto
@@ -136,7 +135,7 @@ OBJECTS = $(gphoto_OBJECTS)
 all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .S .c .lo .o .s
-$(srcdir)/Makefile.in: # Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
 	cd $(top_srcdir) && $(AUTOMAKE) --gnu src/Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)

@@ -4,7 +4,7 @@
 
 /* The toolbar xpm icons */
 
-#include "batch_save.xpm"
+/* #include "batch_save.xpm" */
 #include "close_image.xpm"
 #include "configure.xpm"
 #include "delete_images.xpm"
@@ -63,8 +63,8 @@ void create_toolbar (GtkWidget *box, GtkWidget *mainWin) {
                  GTK_SIGNAL_FUNC(filedialog), "o", box, 1);
   add_to_toolbar(mainWin, "Save Current Image", save_current_image_xpm,
                  GTK_SIGNAL_FUNC(filedialog), "s", box, 1);
-  add_to_toolbar(mainWin, "Batch Save", batch_save_xpm,
-                 GTK_SIGNAL_FUNC(batch_save_dialog), NULL, box, 1);
+/*  add_to_toolbar(mainWin, "Batch Save", batch_save_xpm,
+                 GTK_SIGNAL_FUNC(batch_save_dialog), NULL, box, 1); */
   add_to_toolbar(mainWin, "Print Image", print_image_xpm,
                  GTK_SIGNAL_FUNC(print_pic), NULL, box, 1);
   add_to_toolbar(mainWin, "Close Image", delete_images_xpm,

@@ -52,6 +52,8 @@ gPhoto 0.6
 	output image size, lowres images, create gallery
 	in-place, internal tag parsing)
    - Send image via Email
+   - Overlay text
+   - Thumbnail rotation stack
    - Asynchronous I/O
    - Common serial I/O library
    - HTML gallery updates/changes 			(75%)

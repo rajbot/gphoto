@@ -1,3 +1,11 @@
+2001-08-29  Lutz Müller <urc8@rz.uni-karlsruhe.de>
+
+	Patch from Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr>:
+
+	* gnome-vfs-module/camera-method.c (do_get_file_info): Use 
+	gnome_vfs_uri_extract_short_name instead of gnome_vfs_uri_get_basename
+	because of potential trailing slashes
+
 2001-08-27  Lutz Müller <urc8@rz.uni-karlsruhe.de>
 
 	* libgnocam/gnocam-capplet-table.c: Update to new API.

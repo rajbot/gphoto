@@ -619,7 +619,8 @@ static GnomeVFSResult do_get_file_info (
 	Camera *camera;
 	CameraFileInfo camera_info;
 	CameraList *list;
-	const gchar *path, *basename, *name;
+	const gchar *path, *name;
+	char *basename;
 	guint i;
 	int count;
 
@@ -652,17 +653,22 @@ printf ("Getting camera (do_get_file_info)...\n");
 		return (result);
 	}
 
-	basename = gnome_vfs_uri_get_basename (uri);
+	/*
+	 * We cannot use get_basename here because of potential trailing
+	 * slashes.
+	 */
+	basename = gnome_vfs_uri_extract_short_name (uri);
+
 	parent = gnome_vfs_uri_get_parent (uri);
 	path = gnome_vfs_uri_get_path (parent);
 
-printf ("Getting folder list...\n");
 	result = GNOME_VFS_RESULT (gp_camera_folder_list_folders (camera, path,
 								  list));
 	if (result != GNOME_VFS_OK) {
 		gnome_vfs_uri_unref (parent);
 		unref_camera (camera);
 		gp_list_free (list);
+		g_free (basename);
 		G_UNLOCK (cameras);
 		return (result);
 	}
@@ -672,6 +678,7 @@ printf ("Getting folder list...\n");
 		gnome_vfs_uri_unref (parent);
 		unref_camera (camera);
 		gp_list_free (list);
+		g_free (basename);
 		G_UNLOCK (cameras);
 		return (GNOME_VFS_RESULT (count));
 	}
@@ -682,6 +689,7 @@ printf ("Getting folder list...\n");
 			gnome_vfs_uri_unref (parent);
 			unref_camera (camera);
 			gp_list_free (list);
+			g_free (basename);
 			G_UNLOCK (cameras);
 			return (result);
 		}
@@ -694,19 +702,20 @@ printf ("Getting folder list...\n");
 			gnome_vfs_uri_unref (parent);
 			unref_camera (camera);
 			gp_list_free (list);
+			g_free (basename);
 			G_UNLOCK (cameras);
 printf ("Found folder!\n");
 			return (GNOME_VFS_OK);
 		}
 	}
 
-printf ("Getting file list...\n");
 	result = GNOME_VFS_RESULT (gp_camera_folder_list_files (camera, path,
 								list));
 	if (result != GNOME_VFS_OK) {
 		gnome_vfs_uri_unref (parent);
 		unref_camera (camera);
 		gp_list_free (list);
+		g_free (basename);
 		G_UNLOCK (cameras);
 		return (result);
 	}
@@ -716,6 +725,7 @@ printf ("Getting file list...\n");
 		gnome_vfs_uri_unref (parent);
 		unref_camera (camera);
 		gp_list_free (list);
+		g_free (basename);
 		G_UNLOCK (cameras);
 		return (GNOME_VFS_RESULT (count));
 	} 
@@ -726,12 +736,14 @@ printf ("Getting file list...\n");
 			gnome_vfs_uri_unref (parent);
 			unref_camera (camera);
 			gp_list_free (list);
+			g_free (basename);
 			G_UNLOCK (cameras);
 			return (result);
 		}
 		if (!strcmp (name, basename)) {
 			result = GNOME_VFS_RESULT (gp_camera_file_get_info (
 					camera, path, basename, &camera_info));
+			g_free (basename);
 			unref_camera (camera);
 			gp_list_free (list);
 			if (result != GNOME_VFS_OK) {
@@ -747,6 +759,7 @@ printf ("Found file!\n");
 	}
 
 	gnome_vfs_uri_unref (parent);
+	g_free (basename);
 	unref_camera (camera);
 	gp_list_free (list);
 

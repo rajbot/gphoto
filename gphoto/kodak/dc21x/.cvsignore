@@ -4,3 +4,4 @@ Makefile
 *.lo
 .libs
 *.la
+dc21x_cam

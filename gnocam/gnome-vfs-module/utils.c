@@ -124,35 +124,30 @@ file_handle_new (GnomeVFSURI* uri, GnomeVFSOpenMode mode, GConfClient* client, G
 	if (!(camera = camera_new_by_uri (uri, client, client_mutex, context, result))) return (NULL);
 	if (gnome_vfs_context_check_cancellation (context)) {gp_camera_unref (camera); *result = GNOME_VFS_ERROR_CANCELLED; return (NULL);}
 
+	file = gp_file_new ();
+	dirname = gnome_vfs_uri_extract_dirname (uri);
+
 	/* Read or write? */
 	if (mode == GNOME_VFS_OPEN_READ) {
 	
-	        /* Get the file. */
-		dirname = gnome_vfs_uri_extract_dirname (uri);
-		file = gp_file_new ();
-
 		/* Preview? */
 		if (gnome_vfs_uri_get_user_name (uri) && (strcmp (gnome_vfs_uri_get_user_name (uri), "previews") == 0)) {
+			g_print ("PREVIEW\n");
 			*result = GNOME_VFS_RESULT (gp_camera_file_get_preview (camera, file, dirname, (gchar*) filename));
 		} else {
+			g_print ("NORMAL\n");
 			*result = GNOME_VFS_RESULT (gp_camera_file_get (camera, file, dirname, (gchar*) filename));
 		}
-		gp_camera_unref (camera);
 
 		/* Everything's ok? */
-		if (*result != GNOME_VFS_OK) {
-			gp_file_unref (file);
-			return (NULL);
-		}
+		if (*result != GNOME_VFS_OK) {gp_camera_unref (camera); gp_file_unref (file); return (NULL); }
 		
 	} else if (mode == GNOME_VFS_OPEN_WRITE) {
 
-		/* Create an empty file. */
-		file = gp_file_new ();
-		file->data = NULL;
+		/* Keep the filename. */
 		strcpy (file->name, filename);
 		
-	} else {*result = GNOME_VFS_ERROR_BAD_PARAMETERS; return (NULL);}
+	} else {*result = GNOME_VFS_ERROR_BAD_PARAMETERS; gp_file_unref (file); gp_camera_unref (camera); return (NULL);}
 
 	/* Create the file handle. */
 	file_handle = g_new (file_handle_t, 1);
@@ -176,8 +171,8 @@ file_handle_free (GnomeVFSMethodHandle* handle)
 	file_handle = (file_handle_t*) handle;
 	gp_file_unref (file_handle->file);
 	gnome_vfs_uri_unref (file_handle->uri);
-	if (file_handle->camera) gp_camera_unref (file_handle->camera);
-	if (file_handle->folder) g_free (file_handle->folder);
+	gp_camera_unref (file_handle->camera);
+	g_free (file_handle->folder);
 	g_free (file_handle);
 	return (GNOME_VFS_OK);
 }

@@ -207,7 +207,9 @@ static GnomeVFSResult do_open (
 
 	g_print ("CAMERA: do_open\n");
 	
-	if ((mode == GNOME_VFS_OPEN_READ) || (mode == GNOME_VFS_OPEN_WRITE)) *handle = file_handle_new (uri, mode, client, client_mutex, context, &result);
+	if ((mode == GNOME_VFS_OPEN_READ) || (mode == GNOME_VFS_OPEN_WRITE)) 
+		*handle = file_handle_new (uri, mode, client, client_mutex, context, &result);
+
 	else result = GNOME_VFS_ERROR_INVALID_OPEN_MODE;
 	
 	return (result);
@@ -231,6 +233,7 @@ static GnomeVFSResult do_close (
         GnomeVFSContext*                context)
 {
 	file_handle_t*		file_handle;
+	GnomeVFSResult		result;
 	
 	g_print ("CAMERA: do_close\n");
 
@@ -238,13 +241,15 @@ static GnomeVFSResult do_close (
 	g_return_val_if_fail ((file_handle->mode == GNOME_VFS_OPEN_WRITE) || (file_handle->mode == GNOME_VFS_OPEN_READ), GNOME_VFS_ERROR_BAD_PARAMETERS);
 	
 	if (file_handle->mode == GNOME_VFS_OPEN_WRITE) {
-		if (gp_camera_file_put (file_handle->camera, file_handle->file, file_handle->folder) != GP_OK) {
-			file_handle_free (handle);
-			return (GNOME_VFS_ERROR_GENERIC);
-		}
-	}
-	
-	return (file_handle_free (handle));
+		result = GNOME_VFS_RESULT (gp_camera_file_put (file_handle->camera, file_handle->file, file_handle->folder));
+		file_handle_free (handle);
+
+	} else if (file_handle->mode == GNOME_VFS_OPEN_READ) {
+		result = file_handle_free (handle);
+
+	} else result = GNOME_VFS_ERROR_BAD_PARAMETERS;
+
+	return (result);
 }
 
 static GnomeVFSResult do_read (
@@ -303,6 +308,8 @@ static GnomeVFSResult do_seek (
 	file_handle_t*		file_handle = NULL;
 	
 	g_return_val_if_fail (file_handle = (file_handle_t*) handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
+
+	g_print ("CAMERA: do_seek\n");
 
 	switch (position) {
 	case GNOME_VFS_SEEK_START:

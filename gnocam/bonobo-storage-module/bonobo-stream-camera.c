@@ -25,15 +25,19 @@ struct _BonoboStreamCameraPrivate {
 };
 
 static Bonobo_StorageInfo*
-camera_get_info (BonoboStream* s, const Bonobo_StorageInfoFields mask, CORBA_Environment* ev)
+camera_get_info (BonoboStream			*s, 
+		 const Bonobo_StorageInfoFields	 mask, 
+		 CORBA_Environment		*ev)
 {
-	BonoboStreamCamera*	stream;
-	Bonobo_StorageInfo*	info;
+	BonoboStreamCamera *stream;
+	Bonobo_StorageInfo *info;
 
 	stream = BONOBO_STREAM_CAMERA (s);
 
-	if (mask & ~(Bonobo_FIELD_CONTENT_TYPE | Bonobo_FIELD_SIZE | Bonobo_FIELD_TYPE)) {
-		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL); 
+	if (mask & ~(Bonobo_FIELD_CONTENT_TYPE | 
+		     Bonobo_FIELD_SIZE | Bonobo_FIELD_TYPE)) {
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, 
+				     ex_Bonobo_Storage_NotSupported, NULL); 
 		return CORBA_OBJECT_NIL; 
 	}
 
@@ -47,20 +51,24 @@ camera_get_info (BonoboStream* s, const Bonobo_StorageInfoFields mask, CORBA_Env
 }
 
 static void
-camera_write (BonoboStream* s, const Bonobo_Stream_iobuf* buffer, CORBA_Environment* ev)
+camera_write (BonoboStream 		*s, 
+	      const Bonobo_Stream_iobuf *buffer, 
+	      CORBA_Environment		*ev)
 {
-	BonoboStreamCamera* 	stream;
-	gint			i;
+	BonoboStreamCamera *stream;
+	gint		    i;
 	
 	stream = BONOBO_STREAM_CAMERA (s);
 
 	/* Check if we have to append data to the file. */
 	i = stream->priv->position + buffer->_length - stream->priv->file->size;
 	if (i > 0) {
-		CHECK_RESULT (gp_file_append (stream->priv->file, buffer->_buffer, i), ev);
+		CHECK_RESULT (gp_file_append (stream->priv->file,
+			    		      buffer->_buffer, i), ev);
 		if (BONOBO_EX (ev)) return;
 	}
-	memcpy (stream->priv->file->data + stream->priv->position, buffer->_buffer, buffer->_length);
+	memcpy (stream->priv->file->data + stream->priv->position, 
+		buffer->_buffer, buffer->_length);
 	stream->priv->position += buffer->_length;
 }
 

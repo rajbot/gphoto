@@ -2,10 +2,10 @@
 #include <applet-widget.h>
 
 #include <gtk/gtksignal.h>
-#include <gtk/gtkvbbox.h>
-#include <gtk/gtkbutton.h>
+#include <gtk/gtktoolbar.h>
 #include <gtk/gtkpixmap.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <libgnome/gnome-exec.h>
 #include <liboaf/liboaf.h>
 #include <bonobo/bonobo-main.h>
 #include <bonobo/bonobo-event-source.h>
@@ -80,15 +80,25 @@ do_capture (gpointer data)
 }
 
 static void
-on_button_clicked (GtkButton *button)
+on_capture_image_clicked (GtkButton *button)
 {
 	gtk_idle_add (do_capture, NULL);
+}
+
+static void
+on_show_contents_clicked (GtkButton *button)
+{
+	int argc = 2;
+	char * const argv [] = {"eog", "camera:/"};
+	
+	if (gnome_execute_async (NULL, argc, argv) == -1)
+		g_warning ("Could not start EOG!");
 }
 
 int
 main (int argc, char **argv)
 {
-	GtkWidget *applet, *bbox, *button, *image;
+	GtkWidget *applet, *image, *toolbar;
 	GdkPixbuf *pixbuf;
 	GdkPixmap *pixmap;
 	GdkBitmap *bitmap;
@@ -108,23 +118,31 @@ main (int argc, char **argv)
 	if (!applet)
 		g_error ("Cannot create GnoCam applet!");
 
-	bbox = gtk_vbutton_box_new ();
-	gtk_widget_show (bbox);
-	applet_widget_add (APPLET_WIDGET (applet), bbox);
-
-	button = gtk_button_new ();
-	gtk_widget_show (button);
-	gtk_container_add (GTK_CONTAINER (bbox), button);
-	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-			    GTK_SIGNAL_FUNC (on_button_clicked), NULL);
+	toolbar = gtk_toolbar_new (GTK_ORIENTATION_HORIZONTAL,
+				   GTK_TOOLBAR_ICONS);
+	gtk_widget_show (toolbar);
+	applet_widget_add (APPLET_WIDGET (applet), toolbar);
 
 	pixbuf = gdk_pixbuf_new_from_file (IMAGEDIR "/gnocam-small.xpm");
 	gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 1);
-	gdk_pixbuf_unref (pixbuf);
-
+	gdk_pixbuf_unref (pixbuf); 
 	image = gtk_pixmap_new (pixmap, bitmap);
-	gtk_widget_show (image);
-	gtk_container_add (GTK_CONTAINER (button), image);
+	gtk_toolbar_append_element (GTK_TOOLBAR (toolbar),
+				    GTK_TOOLBAR_CHILD_BUTTON, NULL,
+				    _("Capture image"), _("Capture image"),
+				    NULL, image,
+				    GTK_SIGNAL_FUNC (on_capture_image_clicked),
+				    NULL);
+	pixbuf = gdk_pixbuf_new_from_file (IMAGEDIR "/gnocam-folder.png");
+	gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 1);
+	gdk_pixbuf_unref (pixbuf);
+	image = gtk_pixmap_new (pixmap, bitmap); 
+	gtk_toolbar_append_element (GTK_TOOLBAR (toolbar),
+				    GTK_TOOLBAR_CHILD_BUTTON, NULL,
+				    _("Show contents"), _("Show contents"),
+				    NULL, image,
+				    GTK_SIGNAL_FUNC (on_show_contents_clicked),
+				    NULL);
 
 	gtk_widget_show (applet);
 

@@ -226,8 +226,8 @@ static GnomeVFSResult do_open_directory (
 	GnomeVFSResult result;
 #endif
 
-	CAM_VFS_DEBUG (("ENTER"));
 	MUTEX_LOCK (client_mutex);
+	CAM_VFS_DEBUG (("ENTER"));
 
 #ifdef USE_BONOBO
 	CORBA_exception_init (&ev);
@@ -289,7 +289,6 @@ static GnomeVFSResult do_close_directory (
 #endif
 
 	MUTEX_LOCK (client_mutex);
-	g_mutex_lock (client_mutex);
 	CAM_VFS_DEBUG (("ENTER"));
 	
 #ifdef USE_BONOBO
@@ -321,8 +320,8 @@ static GnomeVFSResult do_read_directory (
 	directory_handle_t*	h;
 #endif
 
-	CAM_VFS_DEBUG (("ENTER"));
 	MUTEX_LOCK (client_mutex);
+	CAM_VFS_DEBUG (("ENTER"));
 
 #ifdef USE_BONOBO
 	dh = (DirectoryHandle *) handle;
@@ -333,7 +332,7 @@ static GnomeVFSResult do_read_directory (
 	}
 #else
 	h = (directory_handle_t*) handle;
-	if (h->position < g_slist_length (h->folders) + 
+	if (h->position >= g_slist_length (h->folders) + 
 						g_slist_length (h->files)) {
 		h->position = -1; 
 		MUTEX_UNLOCK (client_mutex);

@@ -1,3 +1,9 @@
+2001-05-27	Fabrice Bellet  <fabrice@gnu.org>
+
+	* gnome-vfs-module/camera-method.c: Fixed the locking problem.
+	Also fixed the test when exceeding folders+files list length 
+	in do_read_directory().
+
 2001-05-24	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
 	* gnome-vfs-module/camera-method.c: Work on the bonoboized version.

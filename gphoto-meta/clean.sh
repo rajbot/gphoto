@@ -2,7 +2,7 @@
 
 . "$(dirname $0)/utils/common.sh"
 
-cmd rm -rf "${cvsorig}" "${cvssrc}" "${distdir}" "${srcdir}" "${distroot}" "${instroot}" "${tmpdir}" "${downloads}" "${toolroot}" "${toolsrc}"
+cmd rm -rf "${cvsorig}" "${cvssrc}" "${distdir}" "${srcdir}" "${distroot}" "${instroot}" "${tmpdir}" "${toolroot}" "${toolsrc}"
 
 cmd rm -f install-sh missing mkinstalldirs aclocal.m4 configure depcomp ltmain.sh
 cmd rm -f config.log config.status config.guess config.sub

@@ -13,7 +13,6 @@ libgpio.spec
 Makefile
 Makefile.in
 gpio-config
-gpio.h
 .deps
 .libs
 gpio_test

@@ -59,11 +59,6 @@ static GnomeVFSResult do_seek (
 	GnomeVFSSeekPosition		whence,
 	GnomeVFSFileOffset		offset,
 	GnomeVFSContext*		context);
-static GnomeVFSResult do_truncate_handle (
-        GnomeVFSMethod*                 method,
-        GnomeVFSMethodHandle*           handle,
-        GnomeVFSFileSize                where,
-        GnomeVFSContext*                context);
 static GnomeVFSResult do_open_directory (
 	GnomeVFSMethod*			method,
 	GnomeVFSMethodHandle**		handle,
@@ -110,10 +105,6 @@ static GnomeVFSResult do_move (
 	GnomeVFSURI*			new_uri,
 	gboolean			force_replace,
 	GnomeVFSContext*		context);
-static GnomeVFSResult do_unlink (
-	GnomeVFSMethod*			method,
-	GnomeVFSURI*			uri,
-	GnomeVFSContext*		context);
 static GnomeVFSResult do_check_same_fs (
 	GnomeVFSMethod*			method,
 	GnomeVFSURI*			a,
@@ -125,16 +116,6 @@ static GnomeVFSResult do_set_file_info (
 	GnomeVFSURI*			uri,
 	const GnomeVFSFileInfo*		file_info,
 	GnomeVFSSetFileInfoMask		mask,
-	GnomeVFSContext*		context);
-static GnomeVFSResult do_truncate (
-	GnomeVFSMethod*			method,
-	GnomeVFSURI*			uri,
-	GnomeVFSFileSize		where,
-	GnomeVFSContext*		context);
-static GnomeVFSResult do_create_symbolic_link (
-	GnomeVFSMethod*			method,
-	GnomeVFSURI*			uri,
-	const gchar*			target_reference,
 	GnomeVFSContext*		context);
 
 /********************/
@@ -148,8 +129,8 @@ static GnomeVFSMethod method = {
 	do_read,
 	do_write,
 	do_seek,
-	NULL, 				/* do_tell */
-	do_truncate_handle,
+	NULL, 				/* do_tell 			*/
+	NULL, 				/* do_truncate_handle		*/
 	do_open_directory,
 	do_close_directory,
 	do_read_directory,
@@ -159,12 +140,12 @@ static GnomeVFSMethod method = {
 	do_make_directory,
 	do_remove_directory,
 	do_move,
-	do_unlink,
+	NULL, 				/* do_unlink			*/
 	do_check_same_fs,
 	do_set_file_info,
-	do_truncate,
-	NULL,				/* do_find_directory */
-	do_create_symbolic_link};
+	NULL, 				/* do_truncate			*/
+	NULL,				/* do_find_directory 		*/
+	NULL};				/* do_create_symbolic_link	*/
 
 /*************/
 /* Functions */
@@ -224,10 +205,7 @@ static GnomeVFSResult do_open (
 {
 	GnomeVFSResult	result;
 	
-	g_print ("CAMERA: do_open (%s)\n", gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE));
-	
-	if ((mode == GNOME_VFS_OPEN_READ) || (mode = GNOME_VFS_OPEN_WRITE)) 
-		*handle = file_handle_new (uri, mode, client, client_mutex, context, &result);
+	if ((mode == GNOME_VFS_OPEN_READ) || (mode == GNOME_VFS_OPEN_WRITE)) *handle = file_handle_new (uri, mode, client, client_mutex, context, &result);
 	else result = GNOME_VFS_ERROR_INVALID_OPEN_MODE;
 	
 	return (result);
@@ -242,7 +220,6 @@ static GnomeVFSResult do_create (
         guint                           perm,
         GnomeVFSContext*                context)
 {
-	g_print ("CAMERA: do_create\n");
 	return (do_open (method, handle, uri, mode, context));
 }
 
@@ -255,8 +232,8 @@ static GnomeVFSResult do_close (
 	
 	g_print ("CAMERA: do_close\n");
 
-	if (!(file_handle = (file_handle_t*) handle)) return (GNOME_VFS_ERROR_BAD_PARAMETERS);
-	if ((file_handle->mode != GNOME_VFS_OPEN_WRITE) && (file_handle->mode != GNOME_VFS_OPEN_READ)) return (GNOME_VFS_ERROR_BAD_PARAMETERS);
+	g_return_val_if_fail (file_handle = (file_handle_t*) handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
+	g_return_val_if_fail ((file_handle->mode == GNOME_VFS_OPEN_WRITE) || (file_handle->mode == GNOME_VFS_OPEN_READ), GNOME_VFS_ERROR_BAD_PARAMETERS);
 	
 	if (file_handle->mode == GNOME_VFS_OPEN_WRITE) {
 		if (gp_camera_file_put (file_handle->camera, file_handle->file, file_handle->folder) != GP_OK) {
@@ -278,21 +255,15 @@ static GnomeVFSResult do_read (
 {
 	file_handle_t*		file_handle = NULL;
 
-	g_print ("CAMERA: do_read\n");
-	
-	if (!(file_handle = (file_handle_t*) handle)) return (GNOME_VFS_ERROR_BAD_PARAMETERS);
-	if (file_handle->mode != GNOME_VFS_OPEN_READ) return (GNOME_VFS_ERROR_BAD_PARAMETERS);
+	g_return_val_if_fail (file_handle = (file_handle_t*) handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
+	g_return_val_if_fail (file_handle->mode == GNOME_VFS_OPEN_READ, GNOME_VFS_ERROR_BAD_PARAMETERS);
 
-	if (gnome_vfs_context_check_cancellation (context)) return GNOME_VFS_ERROR_CANCELLED;
-
-	/* Check if num_bytes or less are left. */
+	/* Do we have num_bytes left? */
 	if (file_handle->position + num_bytes >= file_handle->file->size) {
-		*bytes_read = file_handle->file->size - file_handle->position;
+		if ((*bytes_read = file_handle->file->size - file_handle->position) <= 0) return (GNOME_VFS_ERROR_EOF);
 		memcpy (buffer, file_handle->file->data + file_handle->position, *bytes_read);
-		if (*bytes_read == 0) return (GNOME_VFS_ERROR_EOF);
 	} else {
-		*bytes_read = num_bytes;
-		memcpy (buffer, file_handle->file->data + file_handle->position, *bytes_read);
+		memcpy (buffer, file_handle->file->data + file_handle->position, (*bytes_read = num_bytes));
 	}
 	
 	file_handle->position += *bytes_read;
@@ -309,10 +280,8 @@ static GnomeVFSResult do_write (
 {
 	file_handle_t* 		file_handle = NULL;
 	
-	g_print ("CAMERA: do_write\n");
-
-	if (!(file_handle = (file_handle_t*) handle)) return (GNOME_VFS_ERROR_BAD_PARAMETERS);
-	if (file_handle->mode != GNOME_VFS_OPEN_WRITE) return (GNOME_VFS_ERROR_BAD_PARAMETERS);
+	g_return_val_if_fail (file_handle = (file_handle_t*) handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
+	g_return_val_if_fail (file_handle->mode == GNOME_VFS_OPEN_WRITE, GNOME_VFS_ERROR_BAD_PARAMETERS);
 	
 	*bytes_written = 0;
 	if (gp_file_append (file_handle->file, (gchar*) buffer, num_bytes) != GP_OK) return (GNOME_VFS_ERROR_GENERIC);
@@ -323,22 +292,27 @@ static GnomeVFSResult do_write (
 static GnomeVFSResult do_seek (
         GnomeVFSMethod*                 method,
         GnomeVFSMethodHandle*           handle,
-        GnomeVFSSeekPosition            whence,
+        GnomeVFSSeekPosition            position,
         GnomeVFSFileOffset              offset,
         GnomeVFSContext*                context)
 {
-	g_print ("CAMERA: do_seek\n");
-	return (GNOME_VFS_ERROR_INTERNAL);
-}
+	file_handle_t*		file_handle = NULL;
+	
+	g_return_val_if_fail (file_handle = (file_handle_t*) handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
 
-static GnomeVFSResult do_truncate_handle (
-        GnomeVFSMethod*                 method,
-        GnomeVFSMethodHandle*           handle, 
-        GnomeVFSFileSize                where,  
-        GnomeVFSContext*                context)
-{
-	g_print ("do_truncate_handle\n");
-	return (GNOME_VFS_ERROR_INTERNAL);
+	switch (position) {
+	case GNOME_VFS_SEEK_START:
+		file_handle->position = (long) offset;
+		return (GNOME_VFS_OK);
+	case GNOME_VFS_SEEK_CURRENT:
+		file_handle->position += (long) offset;
+		return (GNOME_VFS_OK);
+	case GNOME_VFS_SEEK_END:
+		file_handle->position = file_handle->file->size - 1 + (long) offset;
+		return (GNOME_VFS_OK);
+	default:
+		return (GNOME_VFS_ERROR_BAD_PARAMETERS);
+	}
 }
 
 static GnomeVFSResult do_open_directory (
@@ -362,8 +336,8 @@ static GnomeVFSResult do_close_directory (
         GnomeVFSMethodHandle*           handle,
 	GnomeVFSContext*                context)
 {
-	g_print ("CAMERA: do_close_directory\n");
-	if (!handle) return (GNOME_VFS_ERROR_BAD_PARAMETERS);
+	g_return_val_if_fail (handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
+	
 	return (directory_handle_free (handle));
 }
 
@@ -375,9 +349,8 @@ static GnomeVFSResult do_read_directory (
 {
 	directory_handle_t*	directory_handle;
 	
-	g_print ("CAMERA: do_read_directory\n");
-
-	directory_handle = (directory_handle_t*) handle;
+	g_return_val_if_fail (directory_handle = (directory_handle_t*) handle, GNOME_VFS_ERROR_BAD_PARAMETERS);
+	
 	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_NONE;
 	if (directory_handle->position < g_slist_length (directory_handle->folders)) {
 
@@ -500,7 +473,7 @@ static GnomeVFSResult do_make_directory (
 	GnomeVFSContext*                context)
 {
 	g_print ("do_make_directory\n");
-	return (GNOME_VFS_ERROR_INTERNAL);
+	return (GNOME_VFS_ERROR_NOT_SUPPORTED);
 }
 
 static GnomeVFSResult do_remove_directory (
@@ -509,7 +482,7 @@ static GnomeVFSResult do_remove_directory (
 	GnomeVFSContext*                context)
 {
 	g_print ("do_remove_directory\n");
-	return (GNOME_VFS_ERROR_INTERNAL);
+	return (GNOME_VFS_ERROR_NOT_SUPPORTED);
 }
 
 static GnomeVFSResult do_move (
@@ -520,16 +493,7 @@ static GnomeVFSResult do_move (
 	GnomeVFSContext*                context)
 {
 	g_print ("do_move\n");
-	return (GNOME_VFS_ERROR_INTERNAL);
-}
-
-static GnomeVFSResult do_unlink (
-	GnomeVFSMethod*                 method,
-	GnomeVFSURI*                    uri,
-	GnomeVFSContext*                context)
-{
-	g_print ("do_unlink\n");
-	return (GNOME_VFS_ERROR_INTERNAL);
+	return (GNOME_VFS_ERROR_NOT_SUPPORTED);
 }
 
 static GnomeVFSResult do_check_same_fs (
@@ -551,26 +515,7 @@ static GnomeVFSResult do_set_file_info (
 	GnomeVFSContext*                context)
 {
 	g_print ("do_set_file_info\n");
-	return (GNOME_VFS_ERROR_INTERNAL);
+	return (GNOME_VFS_ERROR_NOT_SUPPORTED);
 }
 
-static GnomeVFSResult do_truncate (
-	GnomeVFSMethod*                 method,
-	GnomeVFSURI*                    uri,
-	GnomeVFSFileSize                where,
-	GnomeVFSContext*                context)
-{
-	g_print ("do_truncate\n");
-	return (GNOME_VFS_ERROR_INTERNAL);
-}
-
-static GnomeVFSResult do_create_symbolic_link (
-	GnomeVFSMethod*                 method,
-	GnomeVFSURI*                    uri,
-	const gchar*                    target_reference,
-	GnomeVFSContext*                context)
-{
-	g_print ("do_create_symbolic_link\n");
-	return (GNOME_VFS_ERROR_INTERNAL);
-}
 

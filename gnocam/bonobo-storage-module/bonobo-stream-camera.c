@@ -14,9 +14,9 @@
 #include <libgnome/gnome-defs.h>
 #include <libgnome/gnome-util.h>
 #include <errno.h>
-#include <gconf/gconf-client.h>
-#include <parser.h>
+#include <bonobo/bonobo-exception.h>
 #include "bonobo-stream-camera.h"
+#include "utils.h"
 
 static BonoboStreamClass *bonobo_stream_camera_parent_class;
 
@@ -123,8 +123,12 @@ bonobo_stream_camera_destroy (GtkObject *object)
 {
 	BonoboStreamCamera *stream = BONOBO_STREAM_CAMERA (object);
 
+	/* Free uri. */
+	if (stream->uri) gnome_vfs_uri_unref (stream->uri);
+	stream->uri = NULL;
+
 	/* Free camera. */
-	if (stream->camera) g_return_if_fail (gp_camera_free (stream->camera) == GP_OK);
+	if (stream->camera) gp_camera_unref (stream->camera);
 	stream->camera = NULL;
 
 	/* Free data. */
@@ -196,22 +200,9 @@ bonobo_stream_camera_open (const char *path, gint flags, gint mode, CORBA_Enviro
 {
 	BonoboStreamCamera *stream;
 	Bonobo_Stream corba_stream;
-	GConfValue *value;
-	gchar *xml;
-	gchar *host;
-	gchar *id;
-	gchar *name;
-	gchar *model = NULL;
-	gchar *port = NULL;
-	gchar *speed = NULL;
-	gchar *dirname;
-	gchar *filename;
-	guint i;
-	xmlDocPtr doc;
-	xmlNodePtr node;
-	CameraFile *file;
-	CameraPortInfo info;
-	GSList* list;
+	CameraFile* file;
+	gchar* filename;
+	gchar* dirname;
 
 	printf ("bonobo_stream_camera_open (%s, %i, %i)\n", path, flags, mode);
 
@@ -228,64 +219,10 @@ bonobo_stream_camera_open (const char *path, gint flags, gint mode, CORBA_Enviro
 		return NULL;
 	}
 
-	/* Does GConf know about the camera (host)? */
-	g_assert (stream->uri = gnome_vfs_uri_new (path));
-	value = gconf_client_get (gconf_client_get_default (), "/apps/GnoCam/cameras", NULL);
-	if (!value) {
+	stream->uri = gnome_vfs_uri_new (path);
+	stream->camera = util_camera_new (stream->uri, ev);
+	if (BONOBO_EX (ev)) {
 		bonobo_object_unref (BONOBO_OBJECT (stream));
-		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
-		return NULL;
-	}
-	g_assert (value->type == GCONF_VALUE_LIST);
-	g_assert (gconf_value_get_list_type (value) == GCONF_VALUE_STRING);
-	g_assert (list = gconf_value_get_list (value));
-	g_assert (host = gnome_vfs_unescape_string (gnome_vfs_uri_get_host_name (stream->uri), NULL));
-	for (i = 0; i < g_slist_length (list); i++) {
-		value = g_slist_nth_data (list, i);
-		g_assert (value->type == GCONF_VALUE_STRING);
-		g_assert ((xml = g_strdup (gconf_value_get_string (value))));
-		if (!(doc = xmlParseMemory (xml, strlen (xml)))) continue;
-		g_assert (node = xmlDocGetRootElement (doc));
-		g_assert (id = xmlGetProp (node, "ID"));
-		g_assert (name = xmlGetProp (node, "Name"));
-		g_assert (model = xmlGetProp (node, "Model"));
-		g_assert (port = xmlGetProp (node, "Port"));
-		g_assert (speed = xmlGetProp (node, "Speed"));
-		if (!strcmp (name, host)) break;
-	}
-	g_free (host);
-	if (i == g_slist_length (list)) {
-		bonobo_object_unref (BONOBO_OBJECT (stream));
-		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
-		return NULL;
-	}
-
-	/* Make ready for connection. Beware of 'Directory Browse'.*/
-	if (!strcmp ("Directory Browse", model)) strcpy (info.path, "");
-	else {
-		for (i = 0; i < gp_port_count (); i++) {
-			if (gp_port_info (i, &info) != GP_OK) continue;
-			if (!strcmp (info.name, port)) break;
-		}
-		if ((i == gp_port_count ()) || (i < 0)) {
-			bonobo_object_unref (BONOBO_OBJECT (stream));
-			CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
-			return NULL;
-		}
-		info.speed = atoi (speed);
-	}
-
-	/* Create the camera. */
-	if (gp_camera_new_by_name (&(stream->camera), model) != GP_OK) {
-		bonobo_object_unref (BONOBO_OBJECT (stream));
-		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
-		return NULL;
-	}
-	
-	/* Connect to the camera. */
-	if (gp_camera_init (stream->camera, &info) != GP_OK) {
-		bonobo_object_unref (BONOBO_OBJECT (stream));
-		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
 		return NULL;
 	}
 

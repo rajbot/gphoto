@@ -3,6 +3,8 @@
 #define _BONOBO_STORAGE_CAMERA_H_
 
 #include <bonobo/bonobo-storage.h>
+#include <libgnomevfs/gnome-vfs.h>
+#include <gphoto2.h>
 
 BEGIN_GNOME_DECLS
 
@@ -14,6 +16,10 @@ BEGIN_GNOME_DECLS
 
 typedef struct {
 	BonoboStorage storage;
+
+	GnomeVFSURI *uri;
+
+	Camera *camera;
 } BonoboStorageCamera;
 
 typedef struct {

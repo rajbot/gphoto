@@ -38,7 +38,8 @@ libstorage_vfs_la_LIBADD =
 #
 libstorage_camera_la_SOURCES =\
  bonobo-storage-camera.h bonobo-storage-camera.c\
- bonobo-stream-camera.h bonobo-stream-camera.c
+ bonobo-stream-camera.h bonobo-stream-camera.c\
+ utils.h utils.c
 
 libstorage_camera_la_LDFLAGS =\
  $(GPHOTO2_LIBS)\

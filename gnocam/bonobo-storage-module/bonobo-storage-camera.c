@@ -11,9 +11,11 @@
 #include <libgnome/gnome-defs.h>
 #include <libgnome/gnome-util.h>
 #include <bonobo/bonobo-storage-plugin.h>
+#include <bonobo/bonobo-exception.h>
 #include <gconf/gconf-client.h>
 #include "bonobo-storage-camera.h"
 #include "bonobo-stream-camera.h"
+#include "utils.h"
 
 static BonoboStorageClass *bonobo_storage_camera_parent_class;
 static GConfClient *client = NULL;
@@ -81,10 +83,20 @@ bonobo_storage_camera_open (const char *path, gint flags, gint mode, CORBA_Envir
 
         corba_storage = bonobo_storage_corba_object_create (BONOBO_OBJECT (storage));
         if (corba_storage == CORBA_OBJECT_NIL) {
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
                 bonobo_object_unref (BONOBO_OBJECT (storage));
                 return NULL;
         }
 
+	storage->uri = gnome_vfs_uri_new (path);
+	storage->camera = util_camera_new (storage->uri, ev);
+	if (BONOBO_EX (ev)) {
+		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
+		gnome_vfs_uri_unref (storage->uri);
+		bonobo_object_unref (BONOBO_OBJECT (storage));
+		return NULL;
+	}
+	
         return bonobo_storage_construct (BONOBO_STORAGE (storage), corba_storage);
 }
 
@@ -104,6 +116,17 @@ camera_erase (BonoboStorage *storage, const CORBA_char *path, CORBA_Environment 
 static void
 bonobo_storage_camera_destroy (GtkObject *object)
 {
+	BonoboStorageCamera *storage = BONOBO_STORAGE_CAMERA (object);
+
+	/* Free camera. */
+	if (storage->camera) gp_camera_free (storage->camera);
+	storage->camera = NULL;
+
+	/* Free uri. */
+	if (storage->uri) gnome_vfs_uri_unref (storage->uri);
+	storage->uri = NULL;
+
+	GTK_OBJECT_CLASS (bonobo_storage_camera_parent_class)->destroy (object);
 }
 
 static void

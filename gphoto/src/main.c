@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
 	    command_line_mode = 0;
 
 	fprintf(stdout,
-		N_("gPhoto %s (%s) - the GNU digital camera application\n"),
+		N_("gPhoto %s (%s)\n"),
 		VERSION, __DATE__);
 	fprintf(stdout,
 		N_("Copyright (C) 1998-2000 Scott Fritzinger <scottf@unr.edu>\n\n"));
@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
 	/* set up the main window -------------------------------- */
 	mainWin = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_container_border_width(GTK_CONTAINER(mainWin), 0);
-	sprintf(title, "gPhoto %s - the GNU digital camera application", VERSION);
+	sprintf(title, "gPhoto %s", VERSION);
 	gtk_window_set_title(GTK_WINDOW(mainWin), title);
 	gtk_signal_connect(GTK_OBJECT(mainWin), "delete_event",
 			   GTK_SIGNAL_FUNC(delete_event), NULL);

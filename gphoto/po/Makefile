@@ -8,7 +8,7 @@
 # Please note that the actual code is *not* freely available.
 
 PACKAGE = gphoto
-VERSION = 0.4.4
+VERSION = 0.5.1
 
 SHELL = /bin/sh
 
@@ -16,7 +16,7 @@ SHELL = /bin/sh
 srcdir = .
 top_srcdir = ..
 
-prefix = /usr/local
+prefix = /opt/gphoto
 exec_prefix = ${prefix}
 datadir = $(prefix)/share
 localedir = $(datadir)/locale
@@ -36,7 +36,7 @@ XGETTEXT = PATH=../src:$$PATH /usr/bin/xgettext
 MSGMERGE = PATH=../src:$$PATH msgmerge
 
 DEFS = -DHAVE_CONFIG_H
-CFLAGS = -g -O2
+CFLAGS = -g -O2 -I../libgpio -I./libgpio -I../../libgpio -I../../../libgpio -I/usr/local/include
 CPPFLAGS = 
 
 INCLUDES = -I.. -I$(top_srcdir)/intl
@@ -44,25 +44,14 @@ INCLUDES = -I.. -I$(top_srcdir)/intl
 COMPILE = $(CC) -c $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $(XCFLAGS)
 
 SOURCES = cat-id-tbl.c
-POFILES =  no.po
-GMOFILES =  no.gmo
+POFILES =  da.po de.po hu.po it.po no.po ru.po sl.po sv.po uk.po
+GMOFILES =  da.gmo de.gmo hu.gmo it.gmo no.gmo ru.gmo sl.gmo sv.gmo uk.gmo
 DISTFILES = ChangeLog Makefile.in.in POTFILES.in $(PACKAGE).pot \
 stamp-cat-id $(POFILES) $(GMOFILES) $(SOURCES)
 
 POTFILES = \
-	../src/callbacks.c \
-	../src/commandline.c \
-	../src/developer_dialog.c \
-	../src/gallery.c \
-	../src/gphoto.c \
-	../src/img_edit.c \
-	../src/live.c \
-	../src/main.c \
-	../src/menu.c \
-	../src/toolbar.c \
-	../src/util.c
 
-CATALOGS = 
+CATALOGS =  da.gmo de.gmo hu.gmo it.gmo no.gmo ru.gmo sl.gmo sv.gmo uk.gmo
 CATOBJEXT = .gmo
 INSTOBJEXT = .mo
 

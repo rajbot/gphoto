@@ -10,8 +10,8 @@ extern struct _Camera fuji;
 extern struct _Camera kodak_dc2x;
 extern struct _Camera kodak_dc210;
 extern struct _Camera kodak;
-extern struct _Camera mustek_mdc800;
-extern struct _Camera mustek_mdc800;
+extern struct _Camera mustek_mdc800_rs232;
+extern struct _Camera mustek_mdc800_usb;
 extern struct _Camera ricoh_300z;
 extern struct _Camera olympus;
 extern struct _Camera samsung800k;
@@ -85,8 +85,8 @@ struct Model cameras[] = {
 	{"Konica Q-M100V(beta test)", &konica_qm1xx, 0, 0},
 	{"Konica Q-M200(beta test)",  &konica_qm2xx, 0, 0},
 	{"Minolta Dimage V", &dimage_v, 0, 0},
-	{"Mustek MDC 800 (rs232)",&mustek_mdc800, 0, 0},
-	{"Mustek MDC 800 (usb)",&mustek_mdc800, 0x055f,0xa800},
+	{"Mustek MDC 800 (rs232)",&mustek_mdc800_rs232, 0, 0},
+	{"Mustek MDC 800 (usb)",&mustek_mdc800_usb, 0x055f,0xa800},
 	{"Mustek VDC 3500", &dimera_3500, 0, 0},
 	{"Nikon CoolPix 100", &olympus, 0, 0},
 	{"Nikon CoolPix 300", &olympus, 0, 0},
@@ -148,6 +148,4 @@ struct Model cameras[] = {
 	{"WWF Camera", &barbie, 0, 0},
 	{NULL, NULL}
 };
-
-
 

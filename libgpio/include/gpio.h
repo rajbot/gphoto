@@ -136,7 +136,11 @@ struct gpio_device {
 	gpio_device_settings settings_saved;
 
 	int device_fd;
+#ifdef WIN32
+	HANDLE device_handle;
+#else
 	void *device_handle;
+#endif
 	int timeout; /* in milli seconds */
 
 	void *library_handle;

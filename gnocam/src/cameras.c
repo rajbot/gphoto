@@ -422,19 +422,19 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
 
 	/* Root items (camera != NULL) differ from non-root items. */
 
-	/* Create the storage. */
+	/* Create the storage. First try "rw", then "r". */
 	CORBA_exception_init (&ev);
 	if (camera) {
 		tmp = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE);
 		storage = bonobo_storage_open_full ("camera", tmp, 0664, Bonobo_Storage_READ | Bonobo_Storage_WRITE, &ev);
+		if (BONOBO_EX (&ev)) storage = bonobo_storage_open_full ("camera", tmp, 0664, Bonobo_Storage_READ, &ev);
 		g_free (tmp);
 	} else {
 		tmp = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_basename (uri));
 		corba_storage = Bonobo_Storage_openStorage (
-			gtk_object_get_data (GTK_OBJECT (tree->tree_owner), "corba_storage"), 
-			tmp,
-			Bonobo_Storage_READ | Bonobo_Storage_WRITE, 
-			&ev);
+			gtk_object_get_data (GTK_OBJECT (tree->tree_owner), "corba_storage"), tmp, Bonobo_Storage_READ | Bonobo_Storage_WRITE, &ev);
+		if (BONOBO_EX (&ev)) corba_storage = Bonobo_Storage_openStorage (
+			gtk_object_get_data (GTK_OBJECT (tree->tree_owner), "corba_storage"), tmp, Bonobo_Storage_READ, &ev);
 		g_free (tmp);
 	}
 	if (BONOBO_EX (&ev)) {

@@ -9,7 +9,6 @@ void delete	(GtkTreeItem* item);
 
 void camera_file_save (CameraFile* file, GnomeVFSURI* uri);
 void camera_file_save_as (CameraFile* file);
-void camera_file_upload (Camera* camera, gchar* path, CameraFile* file);
 
 
 

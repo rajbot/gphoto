@@ -252,7 +252,7 @@ preview_free (GtkWidget* preview)
 {
 	Camera*		camera;
 
-	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (preview), "camera")));
+	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (preview), "camera"));
 
 	/* Clean up. */
 	gp_camera_unref (camera);

@@ -1,114 +1,2047 @@
-1999-05-31  Ole Aamot  <oleaa@ifi.uio.no>
+1999-10-04 23:07  ole
 
-	* casio/Makefile: clean now removes config.log and config.stats
-	* removed the gphoto-bug script.  Use the "debbugs" module
-	* modified the "gnome-bugs" scripts, and added gphoto-bug
-	* added more supported models to camera.h
-	* removed some cruft from the FAQ
+	* AUTHORS, BUGS, FAQ, MANUAL, NEWS, README, THANKS, TODO,
+	gphoto.spec.in, configure.in, gphoto.spec.in: For 0.4.0.
 
-(a lot of changes by scottf and others, but not yet added here)
+1999-10-04 13:06  elegowsk
+
+	* konica/Makefile.am: Remove -g flag to reduce size of library.
+
+1999-10-04 00:33  ole
+
+	* src/cameras.h: Added Canon PowerShot A5
+
+1999-10-04 00:29  ole
+
+	* canon/: canon.c, psa50.c, psa50.h: Applied a patch with additions
+	for PowerShot A5 by Ole W. Saastad
+
+1999-10-03 20:26  ole
+
+	* src/menu.c: Cleaned up a bit.
+
+1999-10-03 11:51  ole
+
+	* Makefile.am, sony/Makefile.am: Moved SUBDIRS = sony/dscf55
+
+1999-10-03 11:47  ole
+
+	* konica_qmxxx/Makefile.am: Added *.h files to
+	libgphoto_konica_qmxxx_la_SOURCES and qmxxx_SOURCES
+
+1999-10-03 03:07  ole
+
+	* AUTHORS, INSTALL, NEWS: Misc. updates.
+
+1999-10-03 03:02  ole
+
+	* NEWS: Updated for 0.3.99 release.
+
+1999-10-03 02:48  ole
+
+	* konica_qmxxx/.cvsignore, mustek/.cvsignore, nikon/.cvsignore:
+	Foo.
+
+1999-10-03 02:48  ole
+
+	* sony/dscf55/: COPYING, Makefile.am, README, TODO, config.c,
+	rsony.c, serio.c, serio.h: Added Sony DSC-F55E still library by
+	Mark Davies <mdavies@dial.pipex.com>
+
+1999-10-03 02:42  ole
+
+	* Makefile.am, configure.in, src/Makefile.am, src/cameras.h: Added
+	Sony DSC-F55E to the build system.
+
+1999-10-03 02:42  ole
+
+	* AUTHORS: Added Mark Davies <mdavies@dial.pipex.com>
+
+1999-10-03 02:31  ole
+
+	* konica_qmxxx/Makefile.in: Oh dear.
+
+1999-10-03 02:31  ole
+
+	* NEWS, TODO, configure.in: Bumped from 0.3.9 to 0.3.99.
+
+1999-10-03 02:31  ole
+
+	* konica_qmxxx/: Makefile, Makefile.am, Makefile.in: Misc. changes
+	for dist.
+
+1999-10-03 02:09  ole
+
+	* konica_qmxxx/: Makefile, Makefile.am, Makefile.in, README, dcx.c,
+	dcx.h, log.c, log.h, main.c, os.c, os.h, qm.c: Code by
+	gphoto@fujisaw.gr.jp (Toshiki Fujisawa) KONICA CORPORATION
+	Development Dept. Camera & Digital Imaging Division
 	
-1999-01-08  Scott Fritzinger  <scottf@scs.unr.edu>
+	   This Sample source code works on FreeBSD/Linux to control Konica
+	   Q-M100/Q-M200 over serial port. We write it for the developer
+	such as
+	   gPhoto ( GNU Photo http://www.gphoto.org/ ) to show how to
+	control our
+	   camera. And this sample source code is distributed under GPL in
+	the
+	   hope that it will be useful, but WITHOUT ANY WARRANTY; without
+	even
+	   the implied warranty of MERCHANTABILITY or FITNESS FOR A
+	PARTICULAR
+	   PURPOSE.
 	
-	Here are the major changes to 0.2:
+	http://www.konica.co.jp/qscan/down/konica-qm-sio-sample-1.02.tgz
 
-        * updated the library interface
-                added "initialize", "summary", and "description"
-                only initialize and summary are used now. description
-                will be used when the model/port selection dialog is
-                updated, but it still needs to be defined. check
-                out the photopc/olympus.c file for examples on using
-                all 3 new functions.
+1999-10-03 01:41  ole
 
-        * updated the gphotorc file.
-                remove your old one from your $HOME/.gphoto/ directory
-                and then run gphoto and select your camera model.
+	* Makefile.am, configure.in, canon/serial.c, casio/sdComm.c,
+	kodak_generic/kodak_dc240.c, konica/setSpeed.c,
+	minolta/dimage_v_util.c, photopc/eph_io.c, ricoh/ricoh_300z.c,
+	src/Makefile.am, src/cameras.h, src/main.c, src/util.c: FreeBSD
+	(and Konica/Q-M200) patch by gphoto@fujisawa.gr.jp (Toshiki
+	Fujisawa)
 
-        * added fuji and ricoh libraries, and camera entries.
-                i don't own these cameras, so i don't know about their
-                status, but i'm sure matt and cliff kicked some ass!
+1999-10-02 18:30  ole
 
-        * current camera library displayed on status bar
-                i was getting confused when moving back and forth from
-                directory browse mode to my olympus D220-L, so a text
-                indicator is now down there... pretty handy.. :)
+	* autogen.sh: From automake's info manual:
+	
+	   The `--gnits' option does everything that `--gnu' does, and
+	checks
+	the following as well:
+	
+	   * `make dist' will check to make sure the `NEWS' file has been
+	     updated to the current version.
+	
+	   * The file `COPYING.LIB' is prohibited.  The LGPL is apparently
+	     considered a failed experiment.
+	
+	   * `VERSION' is checked to make sure its format complies with
+	Gnits
+	     standards.
+	
+	   * If `VERSION' indicates that this is an alpha release, and the
+	file
+	
+	   * The file `THANKS' is required.
 
-        * addition of directory browse mode.
-                in the "select model/port", select "Browse directory"
-                then, whenever you click on "get index", a file selector
-                pops up to ask you which directory to open. all images
-                in the directory are opened, and thumbnails are generated
-                for all of them... it's really handy if all the images are
-                already archived on your hard drive and you want to find
-                one... also, this can be used in the HTML gallery!
+1999-10-02 18:20  ole
 
-        * HTML gallery
-                the addition of this is a BIGGIE! this is really the first
-                step in making gPhoto "more" than just a digicam utility.
-                there is a "Default" theme included... to install it,
-                you MUST do a "make install" to copy all files to the
-                correct location (/usr/share/gphoto/gallery/) after   
-                you "make" the package
+	* CREDITS, THANKS: See 'gnits' in 'info automake'.
 
-                Using it:
-                        * get the index first
-                        * select the images to include in the gallery.
-                        * go to "plugins->HTML Gallery"   
-                        * type in a name for the Gallery
-                        * click on "Default" for the theme
-                        * "Change" the output directory to where you want
-                                it.
-                        * click on "create"
+1999-10-02 18:20  ole
 
-                it will go through the motions, and tell you when it's
-                done. it works the fastest in directory browse mode,
-                so try that first. or you can go straight for the jugular
-                and use the camera (works fine there too! not as fast
-                though)
+	* BUGS, Makefile.am, NEWS, PROGRAMMERS, README, SUPPORTED,
+	gphoto.spec.in, src/callbacks.c: Various changes.
 
-                ALSO: it currently requires "sed" to do the parsing of
-                the tags (until i nail down a faster way internally)
-                so you need that on your machine.
+1999-10-01 11:28  ole
 
-        * Makefile in root source tree
-                people don't need to change to the src directory anymore.
-                just change to the root source tree (gphoto-0.2-1) and
-                type "make" then "make install".. there is also
-                "make clean", and "make uninstall"
+	* mustek/: Makefile.am, README, mustek_mdc800.c: The patch for the
+	"take picture" problem...
+	
+	Pedro Caria (Maquina de Estados)
 
-        * Command-line mode
-                after building the gPhoto binary, type "gphoto -h" for
-                command-line options. here's the low-down:
+1999-09-29 09:57  ole
 
-	GNU Photo v.0.2
-	Usage: gphoto [-h] [-n] [-s # filename] [-t # filename]
-	              [-d #] [-l filename] 
-	        -n                      display the # of pictures
-	        -s # filename           save image # as filename
-	        -t # filename           save thumbnail # as filename
-	        -d #                    delete image # from camera
-	        -l filename             save live preview as filename
-	        -h                      display this help screen
+	* BUGS: Added details on how to report bugs to the GNOME and the
+	Debian track system
 
-                only catch is you MUST run gphoto in graphical
-                mode to initially set the camera library before
-                running in command-line mode!
+1999-09-28 12:41  ole
 
-                a simple script set up can automate a lot of things
-                (batch saving, webcam, delete all pics, etc..)
-                so maybe there should be some scripts written to
-                provide these things for users to download? :)
+	* directory/Makefile.am, kodak_generic/Makefile.am,
+	minolta/Makefile.am, philips/Makefile.am, photopc/Makefile.am,
+	sony/Makefile.am: Added @GDK_IMLIB_CFLAGS@ in Makefile.am's. 
+	Reported by Joseph Turian <joseph@turian.student.harvard.edu>
 
+1999-09-28 02:21  elegowsk
 
+	* konica/konica_qm100.c: [no log message]
 
+1999-09-28 02:10  elegowsk
 
+	* konica/: .cvsignore, ChangeLog, Makefile.am, configDialog.c,
+	configDialog.h, defs.h, dump.c, getStatus.c, konica_qm100.c,
+	konica_qm100.h, open.c, qm100.c, qm100.h, rcutil.c, rcutil.h,
+	takePic.c, transmission.c: 
+	General code cleanup, add progress indicator.
 
+1999-09-27 19:22  ole
 
+	* AUTHORS, Makefile.am, configure.in, mustek/AUTHOR,
+	mustek/Makefile.am, mustek/README, mustek/mustek_mdc800.c,
+	mustek/mustek_mdc800.h, src/Makefile.am, src/cameras.h: Driver for
+	Mustek MDC-800 digital cameras by Pedro Caria <pmiguel@maquina.com>
+	
+	  Base code was done in a few hours and gphoto integration was done
+	in
+	  2 days, very simple coding for gphoto and you get to see the
+	results
+	  right away.
 
+1999-09-14 09:59  mmartin
 
+	* fuji/fujilib.c: Added patch for image deletion on MX-2700 from
+	Dan Mosedale<dmose@mozilla.org>.
 
+1999-09-12 22:31  scottr
 
+	* kodak_generic/TODO: Updating the TODO after correcting some major
+	reset problems.
 
+1999-09-12 22:31  scottr
 
+	* kodak_generic/kodak_dc240_helpers.c: Changed the reset handling
+	to actually work correctly.  Now, the driver can recover from the
+	camera being turned off during operation (or having the camera
+	turned off when gphoto starts).
 
+1999-09-12 22:31  scottr
+
+	* kodak_generic/kodak_dc240.c: Updated "get_number_of_pictures" to
+	read all directories on the flash card instead of just the
+	\DCIM\100DC240\ directory.  This should make the driver work
+	correctly with the DC280 (as well as with flash cards that have
+	seen heavy use).
+
+1999-09-12 22:31  scottr
+
+	* kodak_generic/: state_machine.c, state_machine.h: Added a
+	"reinitialize" function to close and reopen the serial device. 
+	This is the only way that we can really restart the driver.  Any
+	other way just leaves us out of sync with the camera.
+
+1999-09-11 11:51  ole
+
+	* nikon/coolpix600.c: Added #include<signal.h>
+
+1999-09-09 13:15  ole
+
+	* AUTHORS, README: Added Nikon CP600 developer Michael McCormack
+	<mccormac@aals27.alcatel.com.au>
+
+1999-09-09 13:11  ole
+
+	* Makefile.am, configure.in, nikon/Makefile.am, nikon/coolpix600.c,
+	src/Makefile.am, src/cameras.h: Added a patch for the Nikon CoolPix
+	600 library by Michael McCormack <mccormac@aals27.alcatel.com.au>
+
+1999-09-05 13:53  ole
+
+	* src/callbacks.c: Removed the fopen call to the port.
+
+1999-09-03 20:21  ole
+
+	* cli/: ChangeLog, Makefile, README, TODO, photo.c: This is my
+	skeleton for photo, an imlib/X independent command line interface
+	that gradually will be able to call gPhoto libraries, use libjpeg
+	for file i/o, and be able to run in console/screen mode without X.
+
+1999-09-03 12:05  ole
+
+	* canon/: README, crc.c, crc.h, psa50.c: Fri Sep  3 12:03:32 1999 
+	Ole Kristian Aamot  <oka@gram.ifi.uio.no>
+	
+		* Patch from Werner Almesberger
+	<werner.almesberger@ica.epfl.ch>.
+		  This fixes an error with the "stdint.h" include in crc.h,
+	crc.c
+		  and psa50.c
+
+1999-09-03 09:09  mmartin
+
+	* fuji/fujilib.c: Expanding the buffer to (!gulp) 900K by request
+	of Dan Mosedale who is trying to get his MX-2700 working with the
+	Fuji driver.
+
+1999-09-02 08:35  mmartin
+
+	* fuji/fujilib.c: 
+	Increased buffer size to enable 1024x768 photos on DX-10.
+
+1999-09-01 17:59  ole
+
+	* AUTHORS: Added David Brownell <david-b@pacbell.net>
+
+1999-09-01 17:53  ole
+
+	* src/cameras.h: 
+	oops...
+
+1999-09-01 17:40  ole
+
+	* canon/: Protocol, README, canon.c, mkpatch, psa50.c, psa50.h,
+	serial.c: New Canon A50 patch by Werner Almesberger
+	<almesber@lrc.di.epfl.ch>
+	
+	Fixes a few minor problems and adds downloading of arbitrary files.
+	
+	The downloading can be reached via Configure/Configure Camera. The
+	window that appears has the following functions:  - clicking on any
+	file downloads that file  - "Clear camera cache" resets all camera
+	information cached in the driver.     This does _not_ include
+	images already downloaded into gPhoto or such.	   This function is
+	useful if camera and gPhoto have lost synchronization.	 - "Done"
+	simply closed the window
+	
+	Note that any change in the cached data while the configure window
+	is open is likely to produce a crash if clicking on a file name.
+	The main purpose of the download function is to explore the data
+	generated by the camera, e.g. the .CTG files, so it's not overly
+	user-friendly.
+	
+	- Werner
+
+1999-08-31 23:59  ole
+
+	* src/cameras.h: Added some reported camera models:
+	
+	Casio QV-10A, Casio QV-700, Casio QV-5000SX, Fuji DX-10, Fuji
+	MX-2700, Kodak DC210+ Zoom, Kodak DC220+, Kodak DC280, Konica Q-EZ,
+	Nikon CoolPix 950S, Olympus D-100Z, Olympus D-200L, Olympus D-330R,
+	Olympus D-340R, Olympus D-620L, Olympus C-900 Zoom, Panasonic
+	Cardshot NV-DCF5E
+
+1999-08-31 00:50  ole
+
+	* kodak_generic/kodak_dc240.c: Committing a Kodak patch by David
+	Brownell <MojoJojo@pacbell.net>:
+	
+		"It just sorts the in-memory copy of the directory, so that
+	the order gPhoto shows matches the order the camera shows.  There
+	are a couple comments to clarify what some of the structures are
+	for, and I got rid of one mallocation (which was tied to a memory
+	leak, and wasn't actually needed)."
+
+1999-08-30 05:50  scottr
+
+	* kodak_generic/kodak_dc240.c: Added filename display on status
+	line when downloading an image/thumbnail.
+
+1999-08-29 21:55  ole
+
+	* AUTHORS, README: Added more library authors.
+
+1999-08-29 21:55  ole
+
+	* canon/.cvsignore: foo
+
+1999-08-29 21:28  ole
+
+	* Makefile.am, configure.in, canon/Makefile.am, canon/Protocol,
+	canon/README, canon/canon.c, canon/canon.h, canon/crc.c,
+	canon/crc.h, canon/mkpatch, canon/psa50.c, canon/psa50.h,
+	canon/serial.c, canon/serial.h, canon/util.c, canon/util.h,
+	src/Makefile.am, src/cameras.h: This is an "asis" patch that adds
+	Canon A50 support to gphoto, *despite* Canon Inc.'s lack of
+	co-operation:
+	
+	From: Werner Almesberger <almesber@lrc.di.epfl.ch> Subject:
+	[gphoto-devel] Canon A50, 1st try To: gphoto-devel@gphoto.org Date:
+	Sun, 29 Aug 1999 13:12:41 +0200 (MET DST)
+	
+	There's a patch that adds a primitive Canon A50 driver to
+	gphoto-0.3.6-pre (as on CVS) in
+	ftp://lrcftp.epfl.ch/pub/people/almesber/junk/psa50-2.patch.gz
+	
+	It's the work of Wolfgang Reissnegger and me. Most of the details
+	were found my staring at Ray Newman's A5 traces. Also, the analysis
+	of the PS350 protocol by Anne Bezemer was quite helpful for
+	understanding the overall design.
+	
+	Note that I've taken over the gphoto/canon directory instead of
+	using a sub-directory, like gphoto/canon/ps350. I did this, because
+	the top and bottom ends of the protocols seems to be suficiently
+	similar that quite a bit of code may be shared, so we probably
+	don't need to treat the Canon cameras like completely different
+	devices. Needs more investigation, though.
+	
+	What works:   Camera/Get Index/No Thumbnails   Get Selected/Images 
+	 Camera/Camera Summary	 Configure/Configure Camera
+	
+	Things that are missing:  - bit rates different from 9600 bps  -
+	thumbnails  - any form of useful error recovery
+	
+	The driver is till quite ugly, and parts of it are rather
+	inefficient (e.g. my PII/233Mhz feels rather sluggish when the
+	serial code is at work), but if you have plenty of time, it will
+	eventually get all the pictures ...
+	
+	What would be very useful now are traces of the Windows software
+	for operations like:  - delete pictures  - get/set date  - a file
+	upload	- a download at low speed, during which the cable was
+	quickly removed
+	
+	I don't think the camera firmware supports "take picture" or
+	"preview" at all.
+	
+	Note that the driver probably doesn't work with A5 cameras, because
+	of some minor protocol details. Don't know about A5 Zoom.
+	
+	- Werner
+
+1999-08-29 01:35  scottr
+
+	* kodak_generic/TODO: Updated TODO file with current status of the
+	DC240 support.
+
+1999-08-29 01:35  scottr
+
+	* kodak_generic/kodak_dc240_helpers.c: Adding USB support from
+	David Brownell.  Adding support for "complex" commands that
+	transmit 1 packet and receive no packets (need this for "delete
+	picture" command).
+
+1999-08-29 01:35  scottr
+
+	* kodak_generic/kodak_dc240.c: Adding USB support from Dave
+	Brownell.  Adding support for ...delete_picture, ...take_picture,
+	and ...get_preview.
+
+1999-08-29 01:35  scottr
+
+	* kodak_generic/kodak_generic.h: Added a bunch of debugging defines
+	to turn on/off most of the various debugging code in the library.
+
+1999-08-29 01:35  scottr
+
+	* kodak_generic/kodak_command.c: Adding command name as part of the
+	debugging info this module displays.  Also made the debugging
+	conditionally compiled based on the setting of the COMMAND_DEBUG
+	define in kodak_generic.h.
+
+1999-08-29 01:35  scottr
+
+	* kodak_generic/: state_machine.h, state_machine.c: Adding USB
+	support from David Brownell.
+
+1999-08-29 01:35  scottr
+
+	* kodak_generic/kodak_command.h: Adding new commands for "get
+	filename of last picture taken" and "delete picture."
+
+1999-08-26 16:13  bpaauwe
+
+	* philips/TODO: Added #6, finish configuration dialog box.
+
+1999-08-26 16:13  bpaauwe
+
+	* philips/philips_io.c: Removed previous patch to send "do nothing"
+	command prior to getting thumbnails.
+	
+	Modified the send command routine (philips_execcmd) to retry if the
+	the camera doesn't respond to the package. The number of retries is
+	defined in philips_io.h.
+
+1999-08-26 16:13  bpaauwe
+
+	* philips/philips_io.h: Added a define PHILIPS_RESENDS that defines
+	the number of times the program will try to resend a failed command
+	to the camera.
+
+1999-08-26 05:57  bpaauwe
+
+	* src/cameras.h: Added Ricoh RDC-5000 to list of cameras (philips
+	library).
+
+1999-08-26 05:57  bpaauwe
+
+	* philips/check.c: Now supports features of Ricoh RDC-5000 camera.
+
+1999-08-26 05:57  bpaauwe
+
+	* philips/philips.h: Updated the camera description string. It now
+	lists the camera models that have been tested.
+
+1999-08-26 05:57  bpaauwe
+
+	* philips/philips_io.c: Added a camera init command to the getthumb
+	nail function for RDC-5000 cameras. It is failing for every other
+	thumbnail, maybe this will allow it to sync up and get them all.
+
+1999-08-26 05:57  bpaauwe
+
+	* philips/gphoto_philips.c: Changed camera summary function to
+	display the camera model number at the top.
+
+1999-08-26 05:57  bpaauwe
+
+	* philips/gphoto_philips_config.c: Added Ricoh RDC-5000 camera
+	features to configuration screens.
+	
+	Modified the various configuration screens so that they reflect the
+	actual features available on different cameras.
+
+1999-08-26 03:46  bpaauwe
+
+	* philips/check.c: Added a bunch of checks for RDC-5000 camera
+	features.
+
+1999-08-25 23:45  ole
+
+	* src/commandline.c: 1999-08-25  Ole Aamot  <oka@ifi.uio.no>
+	
+		* Added fflush(stdout). Kudos to John Nikolai
+	<jnikolai@is2inc.com>
+
+1999-08-25 16:13  bpaauwe
+
+	* philips/philips_io.c: Fixed the Ricoh model numbers, they were
+	spelled wrong :)
+
+1999-08-25 04:15  bpaauwe
+
+	* philips/philips_io.c: Change part of the camera initialization to
+	be conditional depending on the camera model.
+
+1999-08-25 04:15  bpaauwe
+
+	* philips/gphoto_philips.c: Modified thumbnail getting code to
+	return RDC-5000 thumbnails as JPEG instead of trying to process
+	them.
+
+1999-08-25 04:15  bpaauwe
+
+	* philips/check.c: Updates for RDC-5000 modes and some additional
+	checks to try and figure out more of the RDC-5000 modes.
+
+1999-08-24 05:19  bpaauwe
+
+	* philips/: debug.h, gphoto_philips_config.c, philips_io.c: Added
+	detail to one debugging messages in debug.h Added model number for
+	Ricoh RDC-5000 in philips_io.c Added debug message in
+	philips_getthumb in philips_io.c Changed philips_getcfginfo &
+	philips_setcfginfo so they don't error	 if macro mode isn't
+	supported in philips_io.c Added controls to configuration screen
+	for black & white and sepia   modes for RDC-4200 & RDC-5000 in
+	gphoto_philips_config.c
+
+1999-08-24 04:46  bpaauwe
+
+	* philips/Makefile.extras: Makefile for the extra command line
+	programs.
+
+1999-08-18 19:53  ole
+
+	* howto/digital-photo-HOWTO.sgml: [no log message]
+
+1999-08-18 00:50  elegowsk
+
+	* konica/konica_qm100.c: Improve readability of driver
+	identification string.
+
+1999-08-17 13:30  elegowsk
+
+	* konica/konica_qm100.c: Improve readability of the description
+	string in the Configure dialog.
+
+1999-08-17 13:03  elegowsk
+
+	* konica/: .cvsignore, ChangeLog, Makefile.am, TODO, close.c,
+	configDialog.c, configDialog.h, defs.h, dump.c, erasePic.c,
+	error.c, formatCF.c, getPicInfo.c, getStatus.c, getStatus.h,
+	gettraces, konica_qm100.c, lowlevel.c, lowlevel.h, open.c, qm100.c,
+	qm100.h, saveAllPics.c, savePic.c, saveThumb.c, setSpeed.c,
+	takePic.c, transmission.c: General code cleanup and improvements to
+	the data transfer code.  See ChangeLog for details.
+
+1999-08-14 20:39  ole
+
+	* src/: callbacks.c, commandline.c: 999-08-14  Ole Aamot 
+	<oleaa@ifi.uio.no>
+	
+		* commandline.c: gphoto -c shows a camera summary in text
+	modus
+		* callbacks.c: takepicture_call() appends the new image in
+	the notebook
+
+1999-08-11 17:03  ole
+
+	* gallery/CSStheme/Makefile.am, gallery/CSStheme/gphotobutton.png,
+	gallery/CSStheme/index_bottom.html,
+	gallery/CSStheme/index_top.html, gallery/CSStheme/picture.html,
+	gallery/CSStheme/styles.css, src/callbacks.c, src/gallery.c:
+	999-08-11  Ole Aamot  <oleaa@ifi.uio.no>
+	
+		* Fixes for HTML 4.0 compliance
+
+1999-08-08 13:44  phillh
+
+	* konica/: Makefile.am, close.c, configDialog.c, configDialog.h,
+	defs.h, dump.c, erasePic.c, error.c, error.h, formatCF.c,
+	formatCF.h, getPicInfo.c, getStatus.c, getStatus.h, konica_qm100.c,
+	konicarc.sample, lowlevel.c, open.c, qm100.c, savePic.c,
+	saveThumb.c, setSpeed.c, takePic.c, transmission.c, transmission.h:
+	[no log message]
+
+1999-08-06 09:18  mmartin
+
+	* fuji/: exif.c, fuji_exif.c: First cut at supporting JPEG encoded
+	thumbnails for newer fuji cameras.
+
+1999-08-05 09:41  mmartin
+
+	* fuji/: exif.c, fujilib.c, gphoto-exifdump.c: Minor clean-ups,
+	segfault proofing
+
+1999-08-05 04:59  scottr
+
+	* kodak_generic/kodak_dc240_helpers.c: Adding code to count
+	checksum/timeout errors.  When 8 errors occur in a single command,
+	the command is automatically aborted.  This change is used in
+	conjunction with the one that lowers the HPBS when an error occurs
+	to attempt to improve performance for those who suffer from chronic
+	timeout/checksum errors.
+
+1999-08-05 04:59  scottr
+
+	* kodak_generic/kodak_dc240.c: Updates to make the HPBS variable
+	based on the number of errors that were recieved.  When errors
+	occur, the HPBS is lowered toward the minimum value (512 bytes). 
+	When the error conditions no longer exist, the HPBS is raised
+	toward the maximum value (16384 bytes).
+	
+	The algorithm could probably use a little work (which is obvious
+	when you look at the code), but it appears to work well enough for
+	now.  This change was added to attempt to help those people that
+	suffer from chronic timeout/checksum errors in their packets.  By
+	reducing the HPBS, we should be reducing the probability that a
+	single packet will be corrupted.
+	
+	Remeber, however, that the larger the HPBS, the higher the
+	throughput because there are fewer "control" bytes passed around. 
+	So, don't think that you're solving the world's problems by leaving
+	HPBS set at 512 for all eternity.  Some of us actually want a
+	larger value.
+
+1999-08-05 04:59  scottr
+
+	* kodak_generic/kodak_dc240_helpers.c: Changing the checksum error
+	counter to require 8 checksum errors in a single packet.  It
+	certainly wouldnt be unreasnable to expect 8 errors during normal
+	operation when downloading a very large image from the camera.
+
+1999-08-04 17:08  scottf
+
+	* konica/: configDialog.c, configDialog.h, dump.c, dump.h,
+	konicarc.sample: actually added the files that should be added to
+	the konica directory. ;)
+
+1999-08-04 10:20  mmartin
+
+	* fuji/: exif.c, exif.h, fuji_exif.c, gphoto-exifdump.c: Exif
+	handling code fixes.  Fractions should be handled correctly now. 
+	Also, tags with multiple numbers should work.
+
+1999-08-03 17:00  scottf
+
+	* konica/: Makefile.am, close.c, defs.h, erasePic.c, error.c,
+	error.h, formatCF.c, getPicInfo.c, getPicInfo.h, getStatus.c,
+	getStatus.h, konica_qm100.c, konica_qm100.h, lowlevel.c,
+	lowlevel.h, open.c, open.h, qm100.c, qm100.h, saveAllPics.c,
+	savePic.c, savePic.h, saveThumb.c, saveThumb.h, setSpeed.c,
+	setSpeed.h, takePic.c, transmission.c, transmission.h: Added Ed
+	Legowski's patch to the konica lib. library should work now.  YAY!!
+	:)
+
+1999-08-03 04:30  scottr
+
+	* kodak_generic/kodak_dc240.c: Forcing index read before getting a
+	picture if it hasnt already been done (so that command-line
+	operation works).
+
+1999-08-01 23:01  scottr
+
+	* kodak_generic/state_machine.c: Changed timeout errors in the
+	middle of a packet into something that will resemble a checksum
+	error.	Hopefully, this will allow the software to request
+	retransmissions of corrupted packets from the camera.
+
+1999-07-26 09:22  mmartin
+
+	* fuji/fujilib.c: Updated help/list of supported cams
+
+1999-07-26 09:09  mmartin
+
+	* fuji/fujilib.c: More debugging output.
+
+1999-07-26 08:55  mmartin
+
+	* fuji/fujilib.c: [no log message]
+
+1999-07-26 08:47  mmartin
+
+	* fuji/: Makefile.am, configdialog.c, exif.c, exifdump.c,
+	fuji_exif.c, fujilib.c, gphoto-exifdump.c, gphoto_fuji.h: Minor bug
+	hunting, consistency checks,  still needs clean-up.
+	
+	Sub-IFD tag parsing working thanks to Paul Wood.
+	
+	Added exifdump into automake, seems to insist on installing it.
+	
+	Changed name to gphoto-exifdump to lessen chance of overwriting the
+	original    exifdump program (not from gphoto).
+
+1999-07-21 15:37  pauljenn
+
+	* man/.cvsignore, src/.cvsignore, src/icons/.cvsignore: 
+	Updated .cvsignores to ignore build stuff
+
+1999-07-21 15:37  pauljenn
+
+	* .cvsignore, casio/.cvsignore, directory/.cvsignore,
+	fuji/.cvsignore, gallery/.cvsignore, gallery/CSStheme/.cvsignore,
+	gallery/Default/.cvsignore, gallery/RedNGray/.cvsignore,
+	kodak/.cvsignore, kodak_generic/.cvsignore, konica/.cvsignore,
+	minolta/.cvsignore, philips/.cvsignore, photopc/.cvsignore,
+	ricoh/.cvsignore, sony/.cvsignore: 
+	Updated .cvsignores to ignore all build stuff
+
+1999-07-20 14:02  pauljenn
+
+	* configure.in: 
+	Moved to version 0.3.6-pre
+
+1999-07-20 14:02  pauljenn
+
+	* configure.in: 
+	Moved to gphoto version 0.3.5
+
+1999-07-18 14:55  pauljenn
+
+	* minolta/Makefile.am: 
+	added missing file to minolta/Makefile.am for make distcheck
+
+1999-07-17 05:42  bpaauwe
+
+	* philips/philips_io.c: Added debugging code back in. It was
+	removed a while back to try and improve performance of picture
+	uploads. Turns out this wasn't causing the performance problems. It
+	is very handy when trying to debug library problems.
+
+1999-07-17 05:38  bpaauwe
+
+	* philips/gphoto_philips.c: Fixed bug that was causing gphoto to
+	try and free memory that wasn't allocated because image_info_size
+	was a random value by adding line to set image_info_size to 0 in
+	philips_get_picture.
+
+1999-07-16 04:52  scottr
+
+	* kodak_generic/TODO: Updating the TODO file with the current
+	status of the driver
+
+1999-07-16 04:42  scottr
+
+	* kodak_generic/: kodak_dc240.c, kodak_dc240_helpers.c,
+	state_machine.c, state_machine.h: Actually fixed the directory bug
+	and tried to fix the "Is your camera turned on?" problems without
+	success.
+
+1999-07-16 02:18  scottr
+
+	* kodak_generic/kodak_dc240.c: Attempting to fix bug with
+	directories larger than one packet.
+
+1999-07-15 16:40  scottf
+
+	* ricoh/ricoh_300z.c: added cliff's patch to the ricoh lib.
+
+1999-07-14 18:26  scottf
+
+	* src/callbacks.c: move dialog destroying outside IF statement so
+	the dialog is destroyed properly.
+
+1999-07-14 18:26  scottf
+
+	* src/callbacks.c: quick fix again.
+
+1999-07-14 17:40  scottf
+
+	* src/: main.c, util.c: fixed command line mode.
+
+1999-07-14 17:27  scottf
+
+	* src/Makefile.am: cvs will now build with the minolta library
+	changed "kodak (everything else)" to dc240 (for non-confusion's
+	sake)
+
+1999-07-14 17:27  scottf
+
+	* src/cameras.h: [no log message]
+
+1999-07-14 17:21  scottf
+
+	* configure.in: [no log message]
+
+1999-07-14 15:38  ole
+
+	* src/callbacks.c: Replaced ugly system call with fopen.
+
+1999-07-14 15:26  ole
+
+	* src/callbacks.c: 1999-07-14  Ole Aamot  <oleaa@ifi.uio.no>
+	
+		* callbacks.c: Added error checking for serial device
+	permission.
+
+1999-07-14 06:10  ole
+
+	* src/menu.c: Ugh.
+
+1999-07-14 05:32  ole
+
+	* src/: commandline.c, commandline.h, main.c, main.h, menu.c,
+	toolbar.c, util.c, util.h: 1999-07-14  Ole Aamot 
+	<oleaa@ifi.uio.no>
+	
+		* Added Post-processing to Configure menu
+		* gphoto -v now lists some more details
+		* Moved various #define's
+
+1999-07-14 02:11  scottr
+
+	* kodak_generic/kodak_generic.c: Fixing bug where description would
+	cause seg fault when library was not initialized
+
+1999-07-13 17:38  hartmann
+
+	* configure.in: Added minolta/Makefile to the AC_OUTPUT() list in
+	configure.in .
+	
+	This should fix the broken Minolta build.
+
+1999-07-13 06:25  hartmann
+
+	* Makefile.am, minolta/BUGS, minolta/Makefile.am, minolta/README,
+	minolta/dimage_v.h, minolta/dimage_v_gphoto.c,
+	minolta/dimage_v_util.c, minolta/no_thumbs.h, src/cameras.h: I have
+	added the minolta module, and modified the top-level Makefile.am
+	and src/cameras.h to reflect this change.
+	
+	This is the initial commit of the Minolta code; it is in need of
+	testing in more diverse conditions.
+
+1999-07-13 04:53  scottr
+
+	* Makefile.am, configure.in: Adding kodak_generic to
+	automake/autoconf setup
+
+1999-07-13 04:53  scottr
+
+	* kodak_generic/: io.c, io.h: Removing old io routines
+
+1999-07-13 04:53  scottr
+
+	* src/cameras.h: Adding generic Kodak driver to cameras file
+
+1999-07-13 04:53  scottr
+
+	* src/Makefile.am: Adding kodak_generic library to makefile
+
+1999-07-13 04:53  scottr
+
+	* kodak_generic/: Makefile.am, TODO, kodak_command.c,
+	kodak_command.h, kodak_dc240.c, kodak_dc240.h,
+	kodak_dc240_helpers.c, kodak_dc240_helpers.h, kodak_generic.c,
+	kodak_generic.h, state_machine.c, state_machine.h: Adding generic
+	Kodak framework and DC240 driver (Randy Scott, scottr@wwa.com)
+
+1999-07-13 04:53  scottr
+
+	* kodak_generic/Makefile: Removing non-automake makefile
+
+1999-07-11 17:36  ole
+
+	* src/cameras.h: Support for Casio model QV-30 confirmed by
+	deanmills@home.com
+
+1999-07-11 15:49  ole
+
+	* canon/ps350/ps350init: Script to initialize the PS350 and get it
+	to 115200 at once. Needs system-dependent modifications!
+
+1999-07-11 15:43  ole
+
+	* canon/ps350/: COPYING, README, SerialIn, compu1, compu3, compu3c,
+	compu3d, compu3e-4, compu3f, compu5, compu6, notes.txt, ps350chk.c,
+	ps350proto.txt, renamejpg.c: "J.A. Bezemer"
+	<costar@panic.et.tudelft.nl> wrote:
+	
+	At the moment, I'll do nothing more than this because 1) I have no
+	need for a serial driver (PCMCIA gets 2MB in just under 4 sec!) and
+	2) I don't have time anyway. So I'll leave the programming to any
+	volunteer (and I understand there may be several).
+	Additions/corrections to my documents are of course still welcome.
+	
+	Please feel free to put the docs in the gphoto source tree and/or
+	on the gphoto website. The mentioned URL is not really a permanent
+	location.
+
+1999-07-09 16:49  scottf
+
+	* konica/: README, close.c, erasePic.c, error.c, formatCF.c,
+	getPicInfo.c, getPicInfo.h, getStatus.c, konica_qm100.c,
+	konica_qm100.h, open.c, open.h, savePic.c, savePic.h, saveThumb.c,
+	saveThumb.h, setSpeed.c, takePic.c, transmission.c, transmission.h:
+	found old konica library, did a port to updated image struct	  
+	(copied code directly from directory.c so it should be working) now
+	we hope and pray it works.
+
+1999-07-07 16:45  scottf
+
+	* TODO: updated 0.6 TODO again.
+
+1999-07-07 16:45  scottf
+
+	* TODO: updates 0.6 todo list
+
+1999-07-07 16:11  scottf
+
+	* quickcam/: Makefile.am, edge.c, exposure.c, histogram.c,
+	qcam-FreeBSD.c, qcam-FreeBSD.h, qcam-Linux.c, qcam-Linux.h, qcam.h,
+	qcam_drv.c, qcam_gfx.c, qcam_gfx.h, qcam_gphoto.c, scale.c: put the
+	quickcam lib back in, but it will not compile in until a patch is
+	made.
+
+1999-07-06 20:59  scottf
+
+	* src/callbacks.c: post processing won't give error if toggle
+	button isn't pressed.
+
+1999-07-06 20:10  scottf
+
+	* Makefile.am, configure.in, quickcam/Makefile.am, quickcam/edge.c,
+	quickcam/exposure.c, quickcam/histogram.c, quickcam/qcam-FreeBSD.c,
+	quickcam/qcam-FreeBSD.h, quickcam/qcam-Linux.c,
+	quickcam/qcam-Linux.h, quickcam/qcam.h, quickcam/qcam_drv.c,
+	quickcam/qcam_gfx.c, quickcam/qcam_gfx.h, quickcam/qcam_gphoto.c,
+	quickcam/scale.c, src/Makefile.am, src/cameras.h: removed the
+	quickcam library. in the process of providing a patch.
+
+1999-07-06 15:39  ole
+
+	* src/callbacks.c: [no log message]
+
+1999-07-06 13:55  pauljenn
+
+	* configure.in: 
+	updated CVS to 0.3.5-pre
+
+1999-07-06 13:55  pauljenn
+
+	* configure.in: 
+	updated to version 0.3.4 for release
+
+1999-07-06 05:32  ole
+
+	* CREDITS: Added David Dehaney <daveboy@ao.net>.
+
+1999-07-06 05:32  ole
+
+	* src/cameras.h: Added Sanyo VPC-X350.
+
+1999-07-05 20:26  ole
+
+	* src/toolbar.c: [no log message]
+
+1999-07-04 02:11  ole
+
+	* howto/digital-photo-HOWTO.sgml: Moved "Pitfalls" section into the
+	last chapter.
+
+1999-07-04 01:49  ole
+
+	* howto/: ChangeLog, Makefile.am, digital-photo-HOWTO.sgml,
+	template-html.dsl: 1999-07-04  Ole Aamot  <oleaa@ifi.uio.no>
+	
+		* Rewrote some SGML to comform with the Docbook dtd.
+		* Structured the sections like this:
+	
+		Introduction
+		      Acknowledgements
+		      Feedback
+		      Distribution Policy
+			    OpenContent License (OPL)
+			    LICENSE
+			    NO WARRANTY
+		Digital Photo Technologies
+		      Introducing digital imaging
+		      Film Scanners
+		      Paper Scanners
+		      Digital Cameras
+			    35mm Lens Equivalent
+			    Aperture
+			    Audio Recording
+			    Battery Type
+			    Color Depth
+			    Continuous Shooting
+			    Dimensions (HxWxD)
+			    Flash
+			    Focus
+			    Image Capacity
+			    Image Capacity at Max Res.
+			    Interface
+			    ISO Equivalent
+			    LCD Size (in)
+			    Macro
+			    Max. Resolution
+			    On Camera Editing
+			    Other Resolution Modes
+			    Red Eye Reduction
+			    Self Timer
+			    Shutter Speed
+			    Storage Type
+			    Video Out
+			    Viewfinder
+			    Zoom
+		      Pitfalls
+			    Kodak PhotoCD
+			    Canon PowerShot
+		Software for Digital Photo Devices
+		      Free Software
+			    DC20PACK
+			    FujiPlay
+			    gPhoto
+			    kdcpi
+			    NV-DC1000 / PV-DC1000
+			    OpenDiS
+			    PhotoPC
+			    Qvplay
+			    SANE
+		      Non-free Software
+			    JCam
+			    MotifCamedia
+	
+		* Added section regarding open specs and non-free software.
+
+1999-07-03 22:17  scottf
+
+	* src/: callbacks.c, gallery.c, main.c, util.c, util.h: rehashed
+	the confirmation of overwrite to be more modular.  fixed small
+	gallery bugs. this is a good release candidate.
+
+1999-07-03 04:05  scottf
+
+	* src/callbacks.c: fixed a minor gtk bug (packed a label twice)
+
+1999-07-03 03:53  scottf
+
+	* src/: callbacks.c, util.c: fixed the save selected to disk now
+	prompts to overwrite.
+
+1999-07-02 21:53  scottf
+
+	* src/: callbacks.c, gallery.c, util.c, util.h: fixing
+	saveselectedtodisk bug
+
+1999-07-02 21:53  scottf
+
+	* MANUAL: added some formatting to the MANUAL
+
+1999-07-02 01:11  scottf
+
+	* directory/directory.c, ricoh/ricoh_300z.c: fixed the ImageInfo
+	(now ImageMembers) references in ricoh and directory libraries.
+
+1999-07-02 00:49  pauljenn
+
+	* quickcam/Makefile.am: 
+	adding missing quickcam source files to distribution
+
+1999-07-02 00:26  scottf
+
+	* src/gallery.c: fixed up the html gallery dialog fixed up the live
+	Camera dialog
+
+1999-07-02 00:15  pauljenn
+
+	* config.guess, config.sub, ltconfig, ltmain.sh, missing,
+	mkinstalldirs: 
+	removed extra automake files
+
+1999-07-01 22:02  scottf
+
+	* src/: gallery.c, live.c: added several misc things
+
+1999-07-01 18:22  scottf
+
+	* src/: callbacks.c, callbacks.h, gallery.c, gphoto.h, img_edit.c,
+	main.c, util.c, util.h: renamed "struct ImageInfo" to "struct
+	ImageMembers" to avoid confusion added "free_imagemembers(struct
+	ImageMembers *im)" to util.c to centralize    removing the image
+	related widgets and images.  initialized all the ImageMembers
+	members to NULL fixed the core dump after retrieving 2 or 3
+	concurrent indexes.
+
+1999-07-01 02:27  scottf
+
+	* quickcam/: Makefile.am, edge.c, exposure.c, histogram.c,
+	qcam-FreeBSD.c, qcam-FreeBSD.h, qcam-Linux.c, qcam-Linux.h, qcam.h,
+	qcam_drv.c, qcam_gfx.c, qcam_gfx.h, qcam_gphoto.c, scale.c: last
+	commit. i promise. the actual files now.
+
+1999-07-01 02:27  scottf
+
+	* Makefile.am, configure.in, src/Makefile.am, src/cameras.h: added
+	quickcam library`
+
+1999-06-30 15:00  pauljenn
+
+	* install-sh, casio/Makefile.am: 
+	added ppm.h to casio Makefile.am
+
+1999-06-30 06:52  mmartin
+
+	* fuji/configdialog.c: Added configdialog.c.  Now quit yer
+	bitchin'.
+
+1999-06-30 02:17  scottf
+
+	* src/main.c: quick change: appended "/" to filesel_cwd so that the
+	fileselection will  get set correctly.
+
+1999-06-30 02:13  scottf
+
+	* src/: callbacks.c, gallery.c, gphoto.c, main.c, menu.c, util.c,
+	util.h, icons/get_index_empty.xpm: updated the "get blank index"
+	icon to be a little more consistent added
+	gtk_directory_selection_new() and related functions	  
+	(possible new GTK widget?) updated priority to go back to min
+	priority when execute_program is  called other misc fixes.
+
+1999-06-30 02:13  scottf
+
+	* directory/directory.c: added minor change
+	(gtk_dialog_selection_new)
+
+1999-06-29 21:48  scottf
+
+	* MANUAL: eek. some MANUAL typo fixes and a reword
+
+1999-06-29 21:48  scottf
+
+	* MANUAL: added command-line mode text/examples to MANUAL
+
+1999-06-29 21:48  scottf
+
+	* src/: callbacks.c, gallery.c, main.c, util.c: label rewording
+	added check for "%s" in the post-process command-line fixed some
+	gallery issues so that the $PWD is displayed in the label removed
+	the ugly scrollbars in the directory file_selection boxes.  other
+	misc fixes as well. (good day! :)
+
+1999-06-29 09:24  mmartin
+
+	* fuji/: fujilib.c, gphoto_fuji.h: Added the beginnings of
+	configuration gui.
+
+1999-06-29 09:24  mmartin
+
+	* fuji/Makefile.am: [no log message]
+
+1999-06-29 03:55  scottf
+
+	* src/: callbacks.c, callbacks.h, gallery.c, toolbar.c, util.c,
+	util.h: source code tidying. moved browse_ callbacks to callbacks.c
+	but left url_send_browse in util (could be very handy).  also
+	removed some toolbar icons (plug-ins) just to try to remove a
+	little clutter.
+
+1999-06-29 02:09  scottf
+
+	* config.guess, config.sub, ltconfig, ltmain.sh,
+	directory/directory.c, src/callbacks.c: fixed directory bug that
+	crashed whenever you retrieved an image fixed the tag displaying
+	(wasn't appending/showing tags) tried to speed up obtaining a
+	directory.
+
+1999-06-28 19:05  pauljenn
+
+	* config.guess, config.sub, gphoto.spec.in, install-sh, ltconfig,
+	ltmain.sh, missing, mkinstalldirs: 
+	updated RPM spec file to install share/gphoto/doc added automake
+	generated files recommended at developer.gnome.org
+
+1999-06-28 18:50  pauljenn
+
+	* Makefile.am, configure.in: 
+	autoconf clean-ups installed required documentation in
+	share/gphoto/doc
+
+1999-06-28 17:25  pauljenn
+
+	* configure.in: 
+	moved cvs to 0.3.4-pre release
+
+1999-06-28 17:25  pauljenn
+
+	* configure.in, casio/Makefile.am: 
+	upgraded to 0.3.3 release
+
+1999-06-28 09:39  mmartin
+
+	* fuji/fujilib.c: Fixed silly error, data download was accidentally
+	commented out.	First attempt at wierd-data dumping code.
+
+1999-06-26 19:59  mmartin
+
+	* src/callbacks.c: Created more robust tag accumulation to string
+	routine.
+
+1999-06-26 19:45  mmartin
+
+	* fuji/: exif.c, fujilib.c: Fixing some instabilities due to file
+	size estimation.  Picture size is still estimated for the DS7,
+	don't know about other cameras.
+
+1999-06-26 10:05  gdr
+
+	* casio/Makefile.am, fuji/Makefile.am, kodak/Makefile.am,
+	konica/Makefile.am, ricoh/Makefile.am: Added @GDK_IMLIB_CFLAGS@ to
+	CFLAGS. Needed if imlib and gtk lib are in different dirs
+
+1999-06-25 20:19  ole
+
+	* CREDITS, NEWS, README, SUPPORTED, THEMES, src/cameras.h: Misc.
+	changes for 0.4 (RSN!)
+
+1999-06-25 20:14  scottf
+
+	* MANUAL, fuji/gphoto_fuji.h, src/callbacks.c: updated the manual
+	rearranged a few callbacks.c lines
+
+1999-06-25 02:25  scottf
+
+	* photopc/olympus.c, src/callbacks.c: fixed a little photopc bug.
+
+1999-06-24 22:51  ole
+
+	* src/icons/splash.xpm: New splash.
+
+1999-06-24 20:49  scottf
+
+	* TODO: Updated the TODO. 0.4 should be ready.
+
+1999-06-24 20:33  scottf
+
+	* MANUAL, directory/directory.c, src/callbacks.c: Rewrote the
+	entire MANUAL.	Added some tag=value pairs to the directory library
+	for examples.  Updated the displaying of tag=value pairs in the
+	tooltips.
+
+1999-06-24 06:50  gdr
+
+	* casio/PROTOCOL: Removed from distribution.
+
+1999-06-24 06:13  scottf
+
+	* src/callbacks.c: added gary's resizing patch added the image_info
+	text to the tooptips on each thumbnail
+
+1999-06-23 23:17  ole
+
+	* gallery/CSStheme/: picture.html, index_bottom.html: Validated
+	CSS.
+
+1999-06-23 21:11  ole
+
+	* src/cameras.h: Added Casio QV-70 and Olympus D400L Zoom.
+
+1999-06-23 19:59  scottf
+
+	* src/: callbacks.c, callbacks.h, menu.c, toolbar.c, util.c: added
+	ability to save all opened images added double-click on loaded
+	thumbnail get the image
+
+1999-06-23 19:57  pauljenn
+
+	* Makefile.am, gallery/CSStheme/Makefile.am,
+	gallery/Default/Makefile.am, gallery/RedNGray/Makefile.am,
+	man/Makefile.am, src/Makefile.am: 
+	updated automake Makefile.am's to use autoconf defined variables
+
+1999-06-23 19:23  pauljenn
+
+	* configure.in: 
+	removed unused defines.h.in from configure.in
+
+1999-06-23 19:23  pauljenn
+
+	* acconfig.h, acinclude.m4, configure.in, defines.h.in: 
+	
+	DOCDIR defined in config.h by autoconf macro in acinclude.m4
+
+1999-06-22 21:24  scottf
+
+	* src/icons/: Makefile.am, getpic.xpm: removed unused icons
+
+1999-06-22 21:12  scottf
+
+	* src/util.c: fixed the open URL netscape execution
+
+1999-06-22 19:32  ole
+
+	* src/callbacks.c: [no log message]
+
+1999-06-22 18:13  gdr
+
+	* acconfig.h, configure.in, defines.h.in, src/Makefile.am,
+	src/developer_dialog.c: Remove DOCDIR from src/Makefile.am and put
+	into config.h. Well defines.h really but that gets included into
+	config.h.
+
+1999-06-22 17:43  gdr
+
+	* casio/Make.depend: No longer needed
+
+1999-06-22 17:30  scottf
+
+	* MANUAL, kodak/kodak_dc2x.c, konica/konica_qm100.c,
+	konica/savePic.c, konica/savePic.h, konica/saveThumb.c,
+	konica/saveThumb.h, ricoh/ricoh_300z.c, src/menu.c: updated the
+	MANUAL (fixed the log that actually showed ten dashes,	   messing
+	up the way the manual was displayed :) hopefully fixed the kodak
+	dc2x, ricoh, and konica libs.  minor /src revisions.
+
+1999-06-22 14:17  pauljenn
+
+	* src/: Makefile.am, callbacks.c, commandline.c,
+	developer_dialog.c, main.c: 
+	
+	included config.h in sources requiring VERSION to be defined
+
+1999-06-22 01:50  ole
+
+	* gallery/CSStheme/: Makefile.am, index_bottom.html, mwcos,
+	mwcos.png, vh40.gif, vh40.png: ...
+
+1999-06-22 01:50  ole
+
+	* gallery/CSStheme/picture.html: [no log message]
+
+1999-06-21 21:51  scottf
+
+	* howto/digital-photo-HOWTO.sgml: added more links to the software
+	package listing
+
+1999-06-21 21:32  scottf
+
+	* src/main.c: main window is wider to allow for newer button to fit
+	nicely.
+
+1999-06-21 21:28  scottf
+
+	* howto/digital-photo-HOWTO.sgml: added links to as many digicam
+	software packages i could find in 30 minutes. :)
+
+1999-06-21 20:26  ole
+
+	* src/gallery.c: Removed deactivate_button(browse_button);
+
+1999-06-21 20:04  ole
+
+	* howto/digital-photo-HOWTO.sgml, src/callbacks.c, src/callbacks.h,
+	src/developer_dialog.c, src/gallery.c, src/main.c, src/main.h,
+	src/menu.c, src/toolbar.c, src/util.c, src/icons/Makefile.am,
+	src/icons/mail_image.xpm, src/icons/web_browse.xpm: 1999-06-21	Ole
+	Aamot  <oleaa@ifi.uio.no>
+	
+		* callbacks.c: changed activate_button(..) a bit
+		* developer_dialog.c: added a clickable webpage button. :o)
+		* gallery.c: added browse_gallery();
+		* main.c: added browse_gphoto();
+		* menu.c: added menu-links to www.gphoto.org (loads in a
+	BROWSER)
+		* toolbar.c: added/changed icons (by tigert) for the
+	plugins
+		* util.c: added url_send_browser(..), and browse_* web
+	routines.
+
+1999-06-21 18:40  scottf
+
+	* src/menu.c: added "Open directory..." to the file menu
+
+1999-06-21 17:12  pauljenn
+
+	* gphoto.spec.in: 
+	
+	added CSStheme gallery theme to RPM
+
+1999-06-19 17:32  ole
+
+	* CONTACTS, SUPPORTED, src/gallery.c: Generated SUPPORTED from
+	http://www.gphoto.org/cameras.php3
+
+1999-06-19 16:14  ole
+
+	* src/icons/: get_index_empty.xpm, rotc.xpm, rotcc.xpm, stop.xpm:
+	The Gnome Stock icons from
+	http://tigert.gimp.org/gnome/gnome-stock/
+
+1999-06-19 15:23  pauljenn
+
+	* gallery/CSStheme/Makefile.am: 
+	
+	added CSStheme to installed gallery themes
+
+1999-06-19 15:23  pauljenn
+
+	* configure.in, gallery/Makefile.am, gallery/Default/Makefile.am,
+	gallery/RedNGray/Makefile.am: 
+	
+	added CSStheme to installed gallery themes used configure.in to set
+	gallery install location
+
+1999-06-19 14:09  ole
+
+	* howto/: ChangeLog, digital-photo-HOWTO.sgml: 1999-06-19  Ole
+	Aamot  <oleaa@ifi.uio.no>
+	
+		* Initial version.
+
+1999-06-18 20:17  scottf
+
+	* MANUAL, directory/directory.c, src/callbacks.c, src/gphoto.c:
+	updated the manual_dialog to read from DOCDIC/MANUAL. it expects
+	the beginning of the relevant manual text to begin with ten dashes
+	"----------"
+
+1999-06-18 17:57  gdr
+
+	* configure.in, src/Makefile.am, src/callbacks.c,
+	src/commandline.c, src/developer_dialog.c, src/main.c: Get version
+	number from configure.in rather than hardcode it in a string.
+
+1999-06-18 14:25  pauljenn
+
+	* ricoh/: Makefile.am, ricoh_300_io.c: 
+	
+	moved check for TERMIOS to autoconf
+
+1999-06-18 13:42  pauljenn
+
+	* configure.in: 
+	
+	updated version to 0.3.3
+
+1999-06-18 13:16  pauljenn
+
+	* configure.in, gphoto.spec, gphoto.spec.in: 
+	
+	build RPM spec file with autoconf version update to 0.3.2 for new
+	tarball
+
+1999-06-18 07:14  scottf
+
+	* TODO, kodak/kodak_dc2x.c, konica/savePic.c, konica/saveThumb.c,
+	ricoh/ricoh_300z.c: oh wow. the libs i blindly ported should now
+	work (reading data is good)
+
+1999-06-18 06:49  ole
+
+	* .cvsignore: -
+
+1999-06-18 01:45  scottf
+
+	* src/callbacks.c: eek! getting index never ended. it's fixed now.
+
+1999-06-18 01:31  scottf
+
+	* src/: callbacks.c, commandline.c, gphoto.c, util.c: wrapped all
+	the fopen() calls added hash-mark progress to command-line mode
+	wrapped all the command-line mode camera API calls
+
+1999-06-17 23:54  scottf
+
+	* src/callbacks.c: added stop functionality to getting the index :)
+
+1999-06-17 20:58  scottf
+
+	* src/callbacks.c: fixed the resize bug. now it resizes if you
+	change width and/or height :)
+
+1999-06-17 18:13  scottf
+
+	* src/util.c: added brian's patch to check to make sure the file in
+	savedialog can be written to.
+
+1999-06-17 18:13  scottf
+
+	* kodak/: dc210.h, kodak_dc210.c, kodak_dc210.h: added brian's more
+	recent patch, which include several bugfixes.
+
+1999-06-17 17:53  pauljenn
+
+	* philips/: Makefile.am, philips_io.c: 
+	
+	moved to config.h for test for termio header files
+
+1999-06-16 17:48  scottf
+
+	* AUTHORS, fuji/fujilib.c, kodak/kodak_dc210.c, kodak/kodak_dc2x.c,
+	philips/philips.h, photopc/olympus.c, src/callbacks.c: fine tuning
+	the "description()" strings, and updating the port_dialog
+	description label. Someone else fixed a bug i left in overnight to
+	work on this morning. Whoever that was, thanx :)
+
+1999-06-16 17:06  scottf
+
+	* src/util.c: fixed NASTY bug in the wait_for_hide. it will now
+	check to see if the window manager destroyed the window :P
+
+1999-06-16 14:24  pauljenn
+
+	* configure.in: 
+	
+	added checks for byteswap.h and endian.h
+
+1999-06-16 13:41  ole
+
+	* autogen.sh: [no log message]
+
+1999-06-16 06:18  scottf
+
+	* src/callbacks.c: updating the "description" label field in the
+	port_dialog
+
+1999-06-16 04:39  scottf
+
+	* src/icons/: post_processing_off.xpm, post_processing_on.xpm:
+	resized the post_processing xpm's
+
+1999-06-16 04:34  scottf
+
+	* ricoh/ricoh_300z.c: fixed the looking for "status_bar" widget to
+	compare to command_line_mode
+
+1999-06-16 02:19  scottf
+
+	* src/: callbacks.c, callbacks.h, toolbar.c, toolbar.h,
+	icons/Makefile.am, icons/stop.xpm: Added gary's stop button
+
+1999-06-15 21:51  scottf
+
+	* directory/directory.c: directory prompt now shows in middle of
+	screen.
+
+1999-06-15 21:44  scottf
+
+	* src/: callbacks.c, callbacks.h, commandline.c, commandline.h,
+	gallery.c, gallery.h, gphoto.c, live.c, live.h, main.c, main.h,
+	util.c, util.h: various updates to headers and sources added
+	constrain proportions to resize
+
+1999-06-15 18:05  scottf
+
+	* src/: Makefile.am, callbacks.c, developer_dialog.c, gallery.c,
+	img_edit.c, main.c, util.c: removed the #ifdef's for gtk < 1.2
+	windows show in middle of screen now instead of random places :)
+
+1999-06-15 17:41  scottf
+
+	* kodak/: Makefile.am, kodak_dc210.c: updated Makefile.am to
+	include all headers and sources
+
+1999-06-15 02:31  scottf
+
+	* photopc/olympus.c: added _summary() functionality to the photopc
+	camlib
+
+1999-06-15 02:31  scottf
+
+	* src/callbacks.c: changed camera selection to combo box
+
+1999-06-15 00:38  pauljenn
+
+	* Makefile, fuji/Makefile, kodak/Makefile, konica/Makefile,
+	philips/Makefile, ricoh/Makefile, sony/Makefile, src/Makefile: 
+	
+	removed automake generated Makefiles
+
+1999-06-14 23:41  scottf
+
+	* konica/konica_qm100.c: fixed the picCounter bug
+
+1999-06-14 21:37  scottf
+
+	* src/callbacks.c: re-refixed the config bug. ports 3&4 were being
+	saved as port 2.     and other misc items.
+
+1999-06-14 21:33  scottf
+
+	* src/: callbacks.c, cameras.h, main.c, main.h: fixed BIG time bug
+	in saving configuration in port_dialog()
+
+1999-06-14 21:17  phillh
+
+	* konica/README, konica/close.c, konica/erasePic.c,
+	konica/formatCF.c, konica/getPicInfo.c, konica/getPicInfo.h,
+	konica/getStatus.c, konica/konica_qm100.c, konica/konica_qm100.h,
+	konica/open.c, konica/open.h, konica/savePic.c, konica/saveThumb.c,
+	konica/setSpeed.c, konica/takePic.c, konica/transmission.c,
+	konica/transmission.h, src/util.c: Nothing great. Konica lib memory
+	issues tidied up.
+
+1999-06-14 20:35  scottf
+
+	* kodak/dc210.h: whoops. forgot to add the dc210.h
+
+1999-06-14 20:28  scottf
+
+	* kodak/: kodak_dc210.c, kodak_dc210.h: added support for the dc210
+	camera
+
+1999-06-14 20:28  scottf
+
+	* Makefile, fuji/Makefile, kodak/Makefile, kodak/Makefile.am,
+	kodak/kodak_dc2x.c, konica/Makefile, konica/konica_qm100.c,
+	konica/konica_qm100.h, konica/savePic.c, konica/savePic.h,
+	konica/saveThumb.c, konica/saveThumb.h, philips/Makefile,
+	photopc/olympus.c, ricoh/Makefile, ricoh/ricoh_300z.c,
+	sony/Makefile, src/Makefile, src/Makefile.am, src/cameras.h,
+	src/gphoto.c, src/gphoto.h, src/main.h, src/menu.c, src/util.c,
+	src/util.h: updated the following libs to return the struct:	   
+	 konicqa	 kodak dc2x	 ricoh
+	
+	testing needed on those libs.  broke out the
+	update_progress/update_status functions to gphoto.c	   updated
+	the Makefile.am file introduced "command_line_mode" flag in
+	gphoto.h.   allows for libs to detect command-line mode, and
+	configure      from there if need be.
+
+1999-06-14 01:40  scottf
+
+	* Makefile, TODO, fuji/Makefile, kodak/Makefile, konica/Makefile,
+	philips/Makefile, photopc/eph_cmd.c, ricoh/Makefile, sony/Makefile,
+	src/Makefile, src/main.c, src/main.h, src/util.c, src/util.h: added
+	update_progress functionality to the photopc library.	      (GUI
+	won't freeze now :)
+
+1999-06-13 07:44  gdr
+
+	* casio/: sdComm.c, sdCommDefines.h: Minor mods to serial devices
+	code.
+
+1999-06-12 14:22  ole
+
+	* autogen.sh: HTML tag-stripping added.
+
+1999-06-12 14:22  ole
+
+	* TODO: Added tags.
+
+1999-06-11 21:03  pauljenn
+
+	* Makefile.am, gphoto.spec: 
+	
+	added an RPM spec file to build RPMS
+
+1999-06-11 20:17  scottf
+
+	* src/: TODO, callbacks.c, callbacks.h, main.c, toolbar.c: Fixed
+	the "saving images actually saves thumbnails" bug      (only nice
+	if you always want small pictures ;) Implemented the
+	post-processing script, as well as added      an entry in the
+	gphotorc file to save it.  Added "load_config()" and
+	"save_config()" to provide a	  central place to save and load
+	the config file      (a good thing(tm)) Various other bugs.
+
+1999-06-11 19:50  pauljenn
+
+	* src/icons/Makefile.am: 
+	
+	added missing automake file
+
+1999-06-11 19:50  pauljenn
+
+	* Makefile.am, configure.in, fuji/Makefile.am,
+	gallery/Default/Makefile.am, gallery/RedNGray/Makefile.am,
+	konica/Makefile.am, man/Makefile.am, ricoh/Makefile.am,
+	src/Makefile.am: 
+	
+	automake and autoconf changes for make dist
+
+1999-06-11 17:39  pauljenn
+
+	* Makefile.am: 
+	
+	TODO and configure script added to make dist
+
+1999-06-11 17:29  pauljenn
+
+	* configure.in: 
+	
+	autoconf modified to check for GTK 1.2
+
+1999-06-11 07:44  bpaauwe
+
+	* TODO: ToDo list by version.
+
+1999-06-11 06:43  scottf
+
+	* src/: callbacks.c, main.c, main.h: Adding post-processing
+	capabilities
+
+1999-06-11 01:31  scottf
+
+	* src/: callbacks.c, callbacks.h, cameras.h, gallery.h, main.c,
+	main.h: Fixed a bug here and there Added the "post processing"
+	button/pixmap Now updates labels correctly when saving to disk	
+	(status bar)
+
+1999-06-11 01:31  scottf
+
+	* src/icons/: post_processing_off.xpm, post_processing_on.xpm:
+	Added the postprocessing icons (whoops!)
+
+1999-06-10 21:53  scottf
+
+	* src/: callbacks.c, callbacks.h, gallery.c, gallery.h, live.c,
+	main.c, main.h, util.c, util.h: Updated the functions wrappers to
+	check for errors everywhere Updated the gallery to display an error
+	if the thumbnails can't   be saved.  Updated so that now, the last
+	directory you selected is the one      "working directory" in most
+	fileselection boxes	    (reduces mouse clicks :)
+
+1999-06-10 18:38  scottf
+
+	* src/: Makefile, callbacks.c, callbacks.h, gallery.c, menu.c,
+	toolbar.c: Updated the callbacks.h file FIxed the gallery numbering
+	bug (again) Little fixes here and there
+
+1999-06-10 09:31  bpaauwe
+
+	* philips/gphoto_philips.c: Fixed bug in get_picture/thumbmails.
+	The image size returned was incorrect.
+
+1999-06-10 04:26  scottf
+
+	* src/: Makefile, TODO, callbacks.c, callbacks.h, main.c, menu.c,
+	toolbar.c, util.c: Many changes to menu.c (now itemfactory) and
+	started to rehash all callbacks to make them a little more
+	intuitive.  It's real easy to get real lost real quick :)
+
+1999-06-09 07:42  gdr
+
+	* casio/sdComm.c: Another attempt to fix the ioctl compile problem.
+
+1999-06-08 21:08  scottf
+
+	* directory/Makefile: removed the directory Makefile
+
+1999-06-08 21:08  scottf
+
+	* directory/: Makefile, directory.c: Fixed resizing bug. If images
+	were perfectly square, they wouldn't resize.
+
+1999-06-08 21:08  scottf
+
+	* src/: Makefile, callbacks.c, gallery.c, util.c, util.h: Fixed
+	several gallery.c bugs, and improved it a bit.	Added free_image
+	and save_image to util.c
+
+1999-06-08 21:08  scottf
+
+	* photopc/Makefile: Removed photopc/Makefile
+
+1999-06-08 18:09  pauljenn
+
+	* configure.in: 
+	
+	modified autoconf to check for GTK 1.0.6 instead of GTK 1.1.0
+
+1999-06-04 17:37  gdr
+
+	* src/: developer_dialog.c, Makefile.am: Fix for DOCDIR directory.
+
+1999-06-04 16:25  gdr
+
+	* casio/Makefile: Makefile now created by automake.
+
+1999-06-04 13:50  ole
+
+	* FAQ: [no log message]
+
+1999-06-04 13:41  ole
+
+	* FAQ, INSTALL: 1999-06-04  Ole Aamot  <oleaa@ifi.uio.no>
+	
+		* INSTALL, FAQ: Added ./autogen.sh line.
+
+1999-06-02 22:32  pauljenn
+
+	* Makefile.am, acconfig.h, autogen.sh, configure.in,
+	casio/Makefile.am, casio/PROTOCOL, casio/casio_qv.c,
+	casio/sdComm.c, directory/Makefile.am, fuji/Makefile.am,
+	gallery/Makefile.am, gallery/Default/Makefile.am,
+	gallery/RedNGray/Makefile.am, kodak/Makefile.am,
+	konica/Makefile.am, man/Makefile.am, philips/Makefile.am,
+	photopc/Makefile.am, ricoh/Makefile.am, sony/Makefile.am,
+	src/Makefile.am: 
+	
+	GNU autoconf and GNU automake build method added libraries built by
+	GNU libtool small changes to the casio library by Gary Ross
+
+1999-05-31 20:56  ole
+
+	* casio/: config.log, config.status: Hm... who put these in cvs?
+
+1999-05-31 20:51  ole
+
+	* ChangeLog, gphoto-bug, casio/Makefile, src/Makefile: 1999-05-31 
+	Ole Aamot  <oleaa@ifi.uio.no>
+	
+		* casio/Makefile: clean now removes config.log and
+	config.stats
+		* removed the gphoto-bug script.  Use the "debbugs" module
+
+1999-05-31 20:32  ole
+
+	* AUTHORS, CONTACTS, ChangeLog, FAQ, LETTER, NEWS, gphoto-bug,
+	src/Makefile, src/cameras.h: 1999-05-31  Ole Aamot 
+	<oleaa@ifi.uio.no>
+	
+		* modified the "gnome-bugs" script, and added gphoto-bug
+		* added more supported models to camera.h
+		* removed some cruft from the FAQ
+
+1999-05-28 22:24  ole
+
+	* src/: Makefile, callbacks.c: Gallery themes now installs
+	correctly.  Changed the URL for Help - FAQs entry.
+
+1999-05-28 19:08  ole
+
+	* FAQ: Updated URLs, CVS info, and various details.
+
+1999-05-28 15:29  phillh
+
+	* CONTACTS, FAQ, LETTER, casio/config.log, casio/config.status: [no
+	log message]
+
+1999-05-27 22:31  ole
+
+	* CVS-info: Obsolete.
+
+1999-05-27 22:31  ole
+
+	* INSTALL: Info about anonymous access to gPhoto in GNOME CVS and
+	build instructions.
+
+1999-05-27 20:32  scottf
+
+	* AUTHORS, COPYING, CREDITS, CVS-info, ChangeLog, FAQ, INSTALL,
+	MANUAL, Makefile, NEWS, PROGRAMMERS, README, THEMES,
+	casio/Make.depend, casio/Makefile, casio/PROTOCOL, casio/README,
+	casio/cam2jpgtab.h, casio/casio.prj, casio/casio_qv.c,
+	casio/casio_qv_defines.h, casio/command.c, casio/command.h,
+	casio/config.log, casio/config.status, casio/config_handler.c,
+	casio/config_handler.h, casio/configure.c, casio/configure.h,
+	casio/configure.in, casio/getuint.c, casio/getuint.h, casio/jpeg.c,
+	casio/jpeg.h, casio/jpegtab_f.h, casio/messages.h, casio/ppm.c,
+	casio/ppm.h, casio/printMsg.c, casio/printMsg.h, casio/qv_io.c,
+	casio/qv_io.h, casio/sdComm.c, casio/sdComm.h,
+	casio/sdCommDefines.h, casio/sdcMessages.h, directory/Makefile,
+	directory/directory.c, directory/directory.h, dynamic/Makefile,
+	dynamic/README, dynamic/callbacks.c, dynamic/callbacks.h,
+	dynamic/commandline.c, dynamic/commandline.h, dynamic/gallery.c,
+	dynamic/gallery.h, dynamic/gphoto.h, dynamic/live.c,
+	dynamic/live.h, dynamic/main.c, dynamic/main.h, dynamic/menu.c,
+	dynamic/menu.h, dynamic/toolbar.c, dynamic/toolbar.h,
+	dynamic/examples/Makefile, dynamic/examples/README,
+	dynamic/examples/dynamic.c, dynamic/examples/library.c,
+	dynamic/examples/math.c, dynamic/examples/runtime.c,
+	dynamic/examples/unified.c, fuji/Makefile, fuji/blank.xpm,
+	fuji/exif.c, fuji/exif.h, fuji/exif_tags.h, fuji/exifdump.c,
+	fuji/fuji_exif.c, fuji/fujilib.c, fuji/gphoto_fuji.h,
+	gallery/CSStheme/index_bottom.html,
+	gallery/CSStheme/index_top.html, gallery/CSStheme/mwcos,
+	gallery/CSStheme/picture.html, gallery/CSStheme/styles.css,
+	gallery/CSStheme/thumbnail.html, gallery/CSStheme/vh40.gif,
+	gallery/Default/banner.gif, gallery/Default/index.gif,
+	gallery/Default/index_bottom.html, gallery/Default/index_top.html,
+	gallery/Default/next.gif, gallery/Default/picture.html,
+	gallery/Default/previous.gif, gallery/Default/thumbnail.html,
+	gallery/RedNGray/backgrnd.gif, gallery/RedNGray/banner.gif,
+	gallery/RedNGray/index.gif, gallery/RedNGray/index_bottom.html,
+	gallery/RedNGray/index_top.html, gallery/RedNGray/next.gif,
+	gallery/RedNGray/picture.html, gallery/RedNGray/previous.gif,
+	gallery/RedNGray/thumbnail.html, kodak/Java.Notes, kodak/Makefile,
+	kodak/README, kodak/change_res.c, kodak/change_res.h,
+	kodak/comet_to_ppm.c, kodak/comet_to_ppm.h, kodak/convert_pic.c,
+	kodak/convert_pic.h, kodak/dc20.h, kodak/erase.c, kodak/erase.h,
+	kodak/get_info.c, kodak/get_info.h, kodak/get_pic.c,
+	kodak/get_pic.h, kodak/get_thumb.c, kodak/get_thumb.h,
+	kodak/hash_mark.c, kodak/hash_mark.h, kodak/init_dc20.c,
+	kodak/init_dc20.h, kodak/kodak_dc2x.c, kodak/main.c, kodak/main.h,
+	kodak/pics_to_file.c, kodak/pics_to_file.h, kodak/pixmaps.c,
+	kodak/pixmaps.h, kodak/read_data.c, kodak/read_data.h,
+	kodak/send_pck.c, kodak/send_pck.h, kodak/session.c,
+	kodak/session.h, kodak/shoot.c, kodak/shoot.h,
+	kodak/thumbs_to_file.c, kodak/thumbs_to_file.h,
+	kodak_generic/Makefile, kodak_generic/io.c, kodak_generic/io.h,
+	kodak_generic/kodak_generic.c, kodak_generic/kodak_generic.h,
+	konica/INSTALL, konica/Makefile, konica/PROTOCOL, konica/README,
+	konica/close.c, konica/close.h, konica/defs.h, konica/erasePic.c,
+	konica/erasePic.h, konica/error.c, konica/error.h,
+	konica/formatCF.c, konica/formatCF.h, konica/getPicInfo.c,
+	konica/getPicInfo.h, konica/getStatus.c, konica/getStatus.h,
+	konica/konica_qm100.c, konica/konica_qm100.h, konica/lowlevel.c,
+	konica/lowlevel.h, konica/open.c, konica/open.h, konica/qm100.c,
+	konica/qm100.h, konica/saveAllPics.c, konica/saveAllPics.h,
+	konica/savePic.c, konica/savePic.h, konica/saveThumb.c,
+	konica/saveThumb.h, konica/setSpeed.c, konica/setSpeed.h,
+	konica/takePic.c, konica/takePic.h, konica/transmission.c,
+	konica/transmission.h, man/gphoto.1, modular/Makefile,
+	modular/callbacks.c, modular/callbacks.h, modular/cameras.h,
+	modular/commandline.c, modular/commandline.h, modular/gallery.c,
+	modular/gallery.h, modular/gphoto.h, modular/live.c,
+	modular/live.h, modular/main.c, modular/main.h, modular/menu.c,
+	modular/menu.h, modular/toolbar.c, modular/toolbar.h,
+	philips/COPYING, philips/FUNCTIONS.TXT, philips/Makefile,
+	philips/PROTOCOL.TXT, philips/TODO, philips/check.c,
+	philips/crctab.h, philips/debug.h, philips/dump_pics.c,
+	philips/get_pic.c, philips/gphoto_philips.c,
+	philips/gphoto_philips_config.c, philips/philips.h,
+	philips/philips_io.c, philips/philips_io.h, philips/upload_test.c,
+	philips/webcam.c, photopc/Makefile, photopc/README,
+	photopc/comio.c, photopc/comio.h, photopc/eph_cmd.c,
+	photopc/eph_err.c, photopc/eph_io.c, photopc/eph_io.h,
+	photopc/eph_iob.c, photopc/eph_open.c, photopc/eph_priv.h,
+	photopc/eph_read.c, photopc/olympus.c, photopc/usleep.c,
+	photopc/usleep.h, ricoh/Makefile, ricoh/PROTOCOL, ricoh/crctab.c,
+	ricoh/permission, ricoh/ricoh_300_io.c, ricoh/ricoh_300z.c,
+	ricoh/ricoh_nopreview.xpm, sony/Makefile, sony/chotplay.c,
+	sony/chotplay.h, sony/chotrec.c, sony/command.c, sony/command.h,
+	sony/common.h, sony/config.h, sony/dsc_f1.c, sony/getuint.c,
+	sony/getuint.h, sony/pmp.h, sony/tty.c, sony/tty.h, src/Makefile,
+	src/README, src/callbacks.c, src/callbacks.h, src/cameras.h,
+	src/commandline.c, src/commandline.h, src/developer.h,
+	src/developer_dialog.c, src/developer_dialog.h, src/gallery.c,
+	src/gallery.h, src/gphoto.h, src/img_edit.c, src/live.c,
+	src/live.h, src/main.c, src/main.h, src/menu.c, src/menu.h,
+	src/toolbar.c, src/toolbar.h, src/util.c, src/util.h,
+	src/icons/batch_save.xpm, src/icons/brightness.xpm,
+	src/icons/cameraconfig.xpm, src/icons/close_image.xpm,
+	src/icons/colors.xpm, src/icons/configure.xpm,
+	src/icons/contrast.xpm, src/icons/delete_images.xpm,
+	src/icons/exit.xpm, src/icons/fliph.xpm, src/icons/flipv.xpm,
+	src/icons/gamma.xpm, src/icons/get_index.xpm,
+	src/icons/get_index_empty.xpm, src/icons/get_selected_images.xpm,
+	src/icons/getpic.xpm, src/icons/help.xpm, src/icons/open_image.xpm,
+	src/icons/print_image.xpm, src/icons/resize.xpm,
+	src/icons/rotc.xpm, src/icons/rotcc.xpm,
+	src/icons/save_current_image.xpm, src/icons/splash.xpm,
+	src/icons/take_picture.xpm, toshiba/Makefile, toshiba/README,
+	toshiba/io.c, toshiba/io.h, toshiba/test.c,
+	toshiba/doc/protocol.txt, toshiba/doc/session.log,
+	toshiba/doc/toshiba.rtb: gPhoto- digital camera utility
+
+1999-05-27 20:32  scottf
+
+	* AUTHORS, COPYING, CREDITS, CVS-info, ChangeLog, FAQ, INSTALL,
+	MANUAL, Makefile, NEWS, PROGRAMMERS, README, THEMES,
+	casio/Make.depend, casio/Makefile, casio/PROTOCOL, casio/README,
+	casio/cam2jpgtab.h, casio/casio.prj, casio/casio_qv.c,
+	casio/casio_qv_defines.h, casio/command.c, casio/command.h,
+	casio/config.log, casio/config.status, casio/config_handler.c,
+	casio/config_handler.h, casio/configure.c, casio/configure.h,
+	casio/configure.in, casio/getuint.c, casio/getuint.h, casio/jpeg.c,
+	casio/jpeg.h, casio/jpegtab_f.h, casio/messages.h, casio/ppm.c,
+	casio/ppm.h, casio/printMsg.c, casio/printMsg.h, casio/qv_io.c,
+	casio/qv_io.h, casio/sdComm.c, casio/sdComm.h,
+	casio/sdCommDefines.h, casio/sdcMessages.h, directory/Makefile,
+	directory/directory.c, directory/directory.h, dynamic/Makefile,
+	dynamic/README, dynamic/callbacks.c, dynamic/callbacks.h,
+	dynamic/commandline.c, dynamic/commandline.h, dynamic/gallery.c,
+	dynamic/gallery.h, dynamic/gphoto.h, dynamic/live.c,
+	dynamic/live.h, dynamic/main.c, dynamic/main.h, dynamic/menu.c,
+	dynamic/menu.h, dynamic/toolbar.c, dynamic/toolbar.h,
+	dynamic/examples/Makefile, dynamic/examples/README,
+	dynamic/examples/dynamic.c, dynamic/examples/library.c,
+	dynamic/examples/math.c, dynamic/examples/runtime.c,
+	dynamic/examples/unified.c, fuji/Makefile, fuji/blank.xpm,
+	fuji/exif.c, fuji/exif.h, fuji/exif_tags.h, fuji/exifdump.c,
+	fuji/fuji_exif.c, fuji/fujilib.c, fuji/gphoto_fuji.h,
+	gallery/CSStheme/index_bottom.html,
+	gallery/CSStheme/index_top.html, gallery/CSStheme/mwcos,
+	gallery/CSStheme/picture.html, gallery/CSStheme/styles.css,
+	gallery/CSStheme/thumbnail.html, gallery/CSStheme/vh40.gif,
+	gallery/Default/banner.gif, gallery/Default/index.gif,
+	gallery/Default/index_bottom.html, gallery/Default/index_top.html,
+	gallery/Default/next.gif, gallery/Default/picture.html,
+	gallery/Default/previous.gif, gallery/Default/thumbnail.html,
+	gallery/RedNGray/backgrnd.gif, gallery/RedNGray/banner.gif,
+	gallery/RedNGray/index.gif, gallery/RedNGray/index_bottom.html,
+	gallery/RedNGray/index_top.html, gallery/RedNGray/next.gif,
+	gallery/RedNGray/picture.html, gallery/RedNGray/previous.gif,
+	gallery/RedNGray/thumbnail.html, kodak/Java.Notes, kodak/Makefile,
+	kodak/README, kodak/change_res.c, kodak/change_res.h,
+	kodak/comet_to_ppm.c, kodak/comet_to_ppm.h, kodak/convert_pic.c,
+	kodak/convert_pic.h, kodak/dc20.h, kodak/erase.c, kodak/erase.h,
+	kodak/get_info.c, kodak/get_info.h, kodak/get_pic.c,
+	kodak/get_pic.h, kodak/get_thumb.c, kodak/get_thumb.h,
+	kodak/hash_mark.c, kodak/hash_mark.h, kodak/init_dc20.c,
+	kodak/init_dc20.h, kodak/kodak_dc2x.c, kodak/main.c, kodak/main.h,
+	kodak/pics_to_file.c, kodak/pics_to_file.h, kodak/pixmaps.c,
+	kodak/pixmaps.h, kodak/read_data.c, kodak/read_data.h,
+	kodak/send_pck.c, kodak/send_pck.h, kodak/session.c,
+	kodak/session.h, kodak/shoot.c, kodak/shoot.h,
+	kodak/thumbs_to_file.c, kodak/thumbs_to_file.h,
+	kodak_generic/Makefile, kodak_generic/io.c, kodak_generic/io.h,
+	kodak_generic/kodak_generic.c, kodak_generic/kodak_generic.h,
+	konica/INSTALL, konica/Makefile, konica/PROTOCOL, konica/README,
+	konica/close.c, konica/close.h, konica/defs.h, konica/erasePic.c,
+	konica/erasePic.h, konica/error.c, konica/error.h,
+	konica/formatCF.c, konica/formatCF.h, konica/getPicInfo.c,
+	konica/getPicInfo.h, konica/getStatus.c, konica/getStatus.h,
+	konica/konica_qm100.c, konica/konica_qm100.h, konica/lowlevel.c,
+	konica/lowlevel.h, konica/open.c, konica/open.h, konica/qm100.c,
+	konica/qm100.h, konica/saveAllPics.c, konica/saveAllPics.h,
+	konica/savePic.c, konica/savePic.h, konica/saveThumb.c,
+	konica/saveThumb.h, konica/setSpeed.c, konica/setSpeed.h,
+	konica/takePic.c, konica/takePic.h, konica/transmission.c,
+	konica/transmission.h, man/gphoto.1, modular/Makefile,
+	modular/callbacks.c, modular/callbacks.h, modular/cameras.h,
+	modular/commandline.c, modular/commandline.h, modular/gallery.c,
+	modular/gallery.h, modular/gphoto.h, modular/live.c,
+	modular/live.h, modular/main.c, modular/main.h, modular/menu.c,
+	modular/menu.h, modular/toolbar.c, modular/toolbar.h,
+	philips/COPYING, philips/FUNCTIONS.TXT, philips/Makefile,
+	philips/PROTOCOL.TXT, philips/TODO, philips/check.c,
+	philips/crctab.h, philips/debug.h, philips/dump_pics.c,
+	philips/get_pic.c, philips/gphoto_philips.c,
+	philips/gphoto_philips_config.c, philips/philips.h,
+	philips/philips_io.c, philips/philips_io.h, philips/upload_test.c,
+	philips/webcam.c, photopc/Makefile, photopc/README,
+	photopc/comio.c, photopc/comio.h, photopc/eph_cmd.c,
+	photopc/eph_err.c, photopc/eph_io.c, photopc/eph_io.h,
+	photopc/eph_iob.c, photopc/eph_open.c, photopc/eph_priv.h,
+	photopc/eph_read.c, photopc/olympus.c, photopc/usleep.c,
+	photopc/usleep.h, ricoh/Makefile, ricoh/PROTOCOL, ricoh/crctab.c,
+	ricoh/permission, ricoh/ricoh_300_io.c, ricoh/ricoh_300z.c,
+	ricoh/ricoh_nopreview.xpm, sony/Makefile, sony/chotplay.c,
+	sony/chotplay.h, sony/chotrec.c, sony/command.c, sony/command.h,
+	sony/common.h, sony/config.h, sony/dsc_f1.c, sony/getuint.c,
+	sony/getuint.h, sony/pmp.h, sony/tty.c, sony/tty.h, src/Makefile,
+	src/README, src/callbacks.c, src/callbacks.h, src/cameras.h,
+	src/commandline.c, src/commandline.h, src/developer.h,
+	src/developer_dialog.c, src/developer_dialog.h, src/gallery.c,
+	src/gallery.h, src/gphoto.h, src/img_edit.c, src/live.c,
+	src/live.h, src/main.c, src/main.h, src/menu.c, src/menu.h,
+	src/toolbar.c, src/toolbar.h, src/util.c, src/util.h,
+	src/icons/batch_save.xpm, src/icons/brightness.xpm,
+	src/icons/cameraconfig.xpm, src/icons/close_image.xpm,
+	src/icons/colors.xpm, src/icons/configure.xpm,
+	src/icons/contrast.xpm, src/icons/delete_images.xpm,
+	src/icons/exit.xpm, src/icons/fliph.xpm, src/icons/flipv.xpm,
+	src/icons/gamma.xpm, src/icons/get_index.xpm,
+	src/icons/get_index_empty.xpm, src/icons/get_selected_images.xpm,
+	src/icons/getpic.xpm, src/icons/help.xpm, src/icons/open_image.xpm,
+	src/icons/print_image.xpm, src/icons/resize.xpm,
+	src/icons/rotc.xpm, src/icons/rotcc.xpm,
+	src/icons/save_current_image.xpm, src/icons/splash.xpm,
+	src/icons/take_picture.xpm, toshiba/Makefile, toshiba/README,
+	toshiba/io.c, toshiba/io.h, toshiba/test.c,
+	toshiba/doc/protocol.txt, toshiba/doc/session.log,
+	toshiba/doc/toshiba.rtb: branches:  1.1.1; Initial revision
 

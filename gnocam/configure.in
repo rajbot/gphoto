@@ -148,6 +148,8 @@ capplet/help/C/Makefile
 libgnocam/Makefile
 tests/Makefile
 idl/gnocam.pc
+po/Makefile.in
+intl/Makefile
 ])
 
 dnl ---------------------------------------------------------------------------

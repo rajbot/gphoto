@@ -1,7 +1,7 @@
 [Desktop Entry]
 _Name=Digital Cameras
 _Comment=Configure digital cameras to make them accessible by GNOME applications
-Exec=camera-capplet
+Exec=gnocam-capplet
 Icon=gnocam-camera1.png
 Terminal=false
 Type=Application

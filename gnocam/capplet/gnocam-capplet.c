@@ -1,4 +1,4 @@
-#include "config.h"
+#include <config.h>
 #include "gnocam-capplet.h"
 #include "gnocam-chooser.h"
 
@@ -21,6 +21,8 @@
 #include <gdk/gdkkeysyms.h>
 
 #include <libgnome/gnome-help.h>
+
+#include <glade/glade.h>
 
 enum
 {
@@ -526,9 +528,10 @@ GtkWidget*
 gnocam_capplet_new (GConfClient *client)
 {
 	GnocamCapplet *c = gtk_type_new (GNOCAM_TYPE_CAPPLET);
-	GtkWidget *hbox, *image, *w, *b, *bbox;
+	GtkWidget *hbox, *w, *b;
 	GtkCellRenderer *r;
 	GtkTreeViewColumn *col;
+	GladeXML *xml;
 
 	/* Watch out for changes */
 	c->priv->c = client;
@@ -536,37 +539,29 @@ gnocam_capplet_new (GConfClient *client)
 	gconf_client_notify_add (client, "/desktop/gnome/cameras", notify_func,
 				 c, NULL, NULL);
 
-	/* Create a hbox */
-	gtk_widget_show (hbox = gtk_hbox_new (FALSE, 5));
-	gtk_box_set_spacing (GTK_BOX (hbox), 5);
+	xml = glade_xml_new (GNOCAM_GLADE_DIR "/gnocam-capplet.glade",
+			     "dialog_capplet_hbox_contents", NULL);
+	if (!xml) xml = glade_xml_new (GNOCAM_SRCDIR
+			"/capplet/gnocam-capplet.glade",
+			"dialog_capplet_hbox_contents", NULL);
+	if (!xml) return NULL;
+	hbox = glade_xml_get_widget (xml, "dialog_capplet_hbox_contents");
+	if (!hbox) {g_object_unref (xml); return NULL;}
 	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (c)->vbox), hbox,
 			    TRUE, TRUE, 0);
-	gtk_container_set_border_width (GTK_CONTAINER (hbox), 5);
 
 	/* Create the logo */
-	image = gtk_image_new_from_file (IMAGEDIR "/gnocam-camera2.png");
-	gtk_widget_show (image);
-	gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, FALSE, 0);
+	w = glade_xml_get_widget (xml, "image_camera");
+	gtk_image_set_from_file (GTK_IMAGE (w), IMAGEDIR "/gnocam-camera2.png");
 
-	/* Create the buttons */
-	gtk_widget_show (bbox = gtk_vbutton_box_new ());
-	gtk_box_set_spacing (GTK_BOX (bbox), 5);
-	gtk_button_box_set_layout (GTK_BUTTON_BOX (bbox), GTK_BUTTONBOX_START);
-	gtk_box_pack_end (GTK_BOX (hbox), bbox, FALSE, FALSE, 0);
-	gtk_widget_show (b = gtk_button_new_with_label (_("_New")));
-	gtk_box_pack_start (GTK_BOX (bbox), b, FALSE, FALSE, 0);
+	/* Connect some signals */
+	b = glade_xml_get_widget (xml, "button_add");
 	g_signal_connect (b, "clicked", G_CALLBACK (on_new_clicked), c);
-	gtk_widget_show (b = gtk_button_new_with_label (_("_Edit")));
-	gtk_box_pack_start (GTK_BOX (bbox), b, FALSE, FALSE, 0);
+	b = glade_xml_get_widget (xml, "button_properties");
 	g_signal_connect (b, "clicked", G_CALLBACK (on_edit_clicked), c);
-	gtk_widget_show (b = gtk_button_new_with_label (_("_Remove")));
-	gtk_box_pack_start (GTK_BOX (bbox), b, FALSE, FALSE, 0);
+	b = glade_xml_get_widget (xml, "button_remove");
 	g_signal_connect (b, "clicked", G_CALLBACK (on_remove_clicked), c);
-
-	/* Create the table */
-	gtk_widget_show (w = gtk_tree_view_new ());
-	gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (w), FALSE);
-	gtk_box_pack_start (GTK_BOX (hbox), w, TRUE, TRUE, 0);
+	w = glade_xml_get_widget (xml, "treeview_cameras");
 	g_signal_connect (w, "button_press_event",
 		G_CALLBACK (on_tree_view_button_press_event), c);
 	g_signal_connect (w, "key_press_event",
@@ -599,6 +594,9 @@ gnocam_capplet_new (GConfClient *client)
 
 	/* Load the current settings. */
 	gnocam_capplet_load (c);
+
+	/* We don't need the GLADE xml any more. */
+	g_object_unref (xml);
 
 	return (GTK_WIDGET (c));
 }

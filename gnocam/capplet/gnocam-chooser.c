@@ -408,12 +408,13 @@ gnocam_chooser_new (void)
 	GtkTreeIter iter;
 
 	/* Read the interface description */
-	xml = glade_xml_new (GNOCAM_GLADE_DIR "/gnocam.glade",
-			     "hbox_contents", NULL);
-	if (!xml) xml = glade_xml_new (GNOCAM_SRCDIR "/libgnocam/gnocam.glade",
-				       "hbox_contents", NULL);
+	xml = glade_xml_new (GNOCAM_GLADE_DIR "/gnocam-capplet.glade",
+			     "dialog_chooser_hbox_contents", NULL);
+	if (!xml) xml = glade_xml_new (GNOCAM_SRCDIR 
+				       "/capplet//gnocam-capplet.glade",
+				       "dialog_chooser_hbox_contents", NULL);
 	if (!xml) return NULL;
-	ui = glade_xml_get_widget (xml, "hbox_contents");
+	ui = glade_xml_get_widget (xml, "dialog_chooser_hbox_contents");
 	if (!ui) {
 		g_object_unref (xml);
 		return NULL;

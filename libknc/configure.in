@@ -52,24 +52,36 @@ AC_SUBST(LIBKNC_CFLAGS)
 AC_SUBST(LIBKNC_LIBS)
 
 AC_PATH_PROG(PKG_CONFIG,pkg-config,"You need pkg-config")
-AC_PATH_PROG(GP_PORT_CONFIG,gphoto2-port-config,"You need libgphoto2_port")
 
 dnl ---------------------------------------------------------------------------
-dnl Libraries we need for the test program
+dnl Libraries we need for libgknc
 dnl ---------------------------------------------------------------------------
-have_knctest=true
-LIBKNCTEST_CFLAGS="`$GP_PORT_CONFIG --cflags`"
-LIBKNCTEST_LIBS="`$GP_PORT_CONFIG --libs`"
-AM_CONDITIONAL(HAVE_KNCTEST, $have_knctest)
-AC_SUBST(LIBKNCTEST_CFLAGS)
-AC_SUBST(LIBKNCTEST_LIBS)
+have_gknc=false
+gknc_msg="no"
+PKG_CHECK_MODULES(GKNC, gtk+-2.0, [
+	have_gknc=true
+	gknc_msg="yes"])
+AM_CONDITIONAL(HAVE_GKNC, $have_gknc)
+AC_SUBST(GKNC_LIBS)
+AC_SUBST(GKNC_CFLAGS)
+
+dnl ---------------------------------------------------------------------------
+dnl Libraries we need for libgpknc
+dnl ---------------------------------------------------------------------------
+AC_PATH_PROG(GP_PORT_CONFIG,gphoto2-port-config,"You need libgphoto2_port")
+have_gpknc=true
+GPKNC_LIBS="`$GP_PORT_CONFIG --libs`"
+GPKNC_CFLAGS="`$GP_PORT_CONFIG --cflags`"
+AC_SUBST(GPKNC_LIBS)
+AC_SUBST(GPKNC_CFLAGS)
+AM_CONDITIONAL(HAVE_GPKNC, $have_gpknc)
 
 dnl ---------------------------------------------------------------------------
 dnl Libraries we need for the libgphoto2 plugin
 dnl ---------------------------------------------------------------------------
 have_gp=false
 gp_msg=no
-try_gp=true
+try_gp=$have_gpknc
 AC_ARG_WITH(gp, [  --without-libgphto2   Don't compile the libgphoto2 plugin],[
 	if test x$withval = xno; then
 		try_gp=false
@@ -90,7 +102,10 @@ dnl ---------------------------------------------------------------------------
 dnl libraries we need for the CORBA server
 dnl ---------------------------------------------------------------------------
 have_corba=false
-try_corba=true
+try_corba=$have_gknc
+if $try_corba; then
+	try_corba=$have_gpknc
+fi
 corba_msg=no
 AC_ARG_WITH(corba,[  --without-corba  Don't compile the corba server],[
 	if test x$withval = xno; then
@@ -119,12 +134,15 @@ AC_OUTPUT([ intl/Makefile
 Makefile
 libknc/Makefile
 libknc/libknc.pc
+libgknc/Makefile
+libgpknc/Makefile
 libgphoto2/Makefile
 corba/Makefile
 corba/icons/Makefile
 tests/Makefile
 tests/corba/Makefile
-tests/gp/Makefile
+tests/libgpknc/Makefile
+tests/libgknc/Makefile
 ])
 
 echo "

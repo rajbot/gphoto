@@ -1,6 +1,7 @@
 #include <config.h>
 #include "knc-c-preview.h"
-#include "knc-c-preview-widget.h"
+
+#include <libgknc/gknc-preview.h>
 
 #include <libknc/knc.h>
 
@@ -10,7 +11,7 @@
 
 struct _KncCPreviewPriv {
 	KncCntrl *c;
-	KncCPreviewWidget *p;
+	GkncPreview *p;
 };
 
 static GObjectClass *parent_class;
@@ -31,7 +32,7 @@ impl_refresh (PortableServer_Servant servant, CORBA_Environment *ev)
 {
 	KncCPreview *p = KNC_C_PREVIEW (bonobo_object (servant));
 
-	knc_c_preview_widget_refresh (p->priv->p, p->priv->c);
+	gknc_preview_refresh (p->priv->p, p->priv->c);
 }
 
 static void
@@ -39,7 +40,7 @@ impl_start (PortableServer_Servant servant, CORBA_Environment *ev)
 {
 	KncCPreview *p = KNC_C_PREVIEW (bonobo_object (servant));
 
-	knc_c_preview_widget_start (p->priv->p, p->priv->c);
+	gknc_preview_start (p->priv->p, p->priv->c);
 }
 
 static void
@@ -47,7 +48,7 @@ impl_stop (PortableServer_Servant servant, CORBA_Environment *ev)
 {
 	KncCPreview *p = KNC_C_PREVIEW (bonobo_object (servant));
 
-	knc_c_preview_widget_stop (p->priv->p);
+	gknc_preview_stop (p->priv->p);
 }
 
 static void
@@ -75,12 +76,13 @@ KncCPreview *
 knc_c_preview_new (KncCntrl *c)
 {
 	KncCPreview *p = g_object_new (KNC_C_TYPE_PREVIEW, NULL);
-	GtkWidget *w = g_object_new (KNC_C_TYPE_PREVIEW_WIDGET, NULL);
+	GtkWidget *w = g_object_new (GKNC_TYPE_PREVIEW, NULL);
 
 	p->priv->c = c;
 	knc_cntrl_ref (c);
-	p->priv->p = KNC_C_PREVIEW_WIDGET (w);
+	p->priv->p = GKNC_PREVIEW (w);
 
+	gtk_widget_show (w);
 	bonobo_control_construct (BONOBO_CONTROL (p), w);
 
 	return p;

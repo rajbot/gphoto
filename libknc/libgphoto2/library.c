@@ -11,6 +11,8 @@
 #include <libknc/knc.h>
 #include <libknc/knc-utils.h>
 
+#include <libgpknc/gpknc-cntrl.h>
+
 static int
 knc_cntrl2gp (KncCntrlRes r)
 {
@@ -434,34 +436,6 @@ camera_exit (Camera* camera, GPContext *context)
         return (GP_OK);
 }
 
-static KncCntrlRes
-read_func (unsigned char *buf, unsigned int size, unsigned int timeout,
-	   unsigned int *read, void *data)
-{
-        GPPort *p = data;
-        int r = GP_OK;
-
-        gp_port_set_timeout (p, timeout);
-        for (*read = 0; *read < size; (*read)++) {
-                r = gp_port_read (p, &buf[*read], 1);
-                if (r < 0) break;
-        }
-        if ((*read == 0) && (r < 0)) return KNC_CNTRL_RES_ERR;
-
-        return KNC_CNTRL_RES_OK;
-}
-
-static KncCntrlRes
-write_func (const unsigned char *buf, unsigned int size, void *data)
-{
-        GPPort *p = data;
-
-        if (gp_port_write (p, buf, size) < 0)
-                return KNC_CNTRL_RES_ERR;
-
-	return KNC_CNTRL_RES_OK;
-}
-
 static int
 set_info_func (CameraFilesystem *fs, const char *folder, const char *file,
                CameraFileInfo info, void *data, GPContext *context)
@@ -616,7 +590,7 @@ camera_init (Camera *camera, GPContext *context)
         memset (camera->pl, 0, sizeof (CameraPrivateLibrary));
 
         /* Initiate the connection */
-        C(gp_port_get_settings (camera->port, &s));
+        C (gp_port_get_settings (camera->port, &s));
 	s.serial.bits = 8;
 	s.serial.parity = 0;
 	s.serial.stopbits = 1;
@@ -624,8 +598,7 @@ camera_init (Camera *camera, GPContext *context)
 	for (i = 0; i < 10; i++) {
 		s.serial.speed = speeds[i];
 		C (gp_port_set_settings (camera->port, s));
-		if ((camera->pl->c = knc_cntrl_new (read_func, write_func,
-						    camera->port))) break;
+		if ((camera->pl->c = knc_cntrl_new_from_port (p))) break;
 	}
 	if (i == 10) {
 		gp_context_error (context, _("The camera could not be "

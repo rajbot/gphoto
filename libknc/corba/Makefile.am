@@ -27,9 +27,8 @@ knc_SOURCES = $(CORBA_GENERATED)	\
 	knc-c-if.h		knc-c-if.c		\
 	knc-c-prefs.h		knc-c-prefs.c		\
 	knc-c-preview.h		knc-c-preview.c		\
-	knc-c-preview-widget.h	knc-c-preview-widget.c	\
 	knc-c-mngr.h		knc-c-mngr.c
-knc_LDADD = ../libknc/libknc.la $(CORBA_LIBS)
+knc_LDADD = ../libknc/libknc.la ../libgknc/libgknc.la $(CORBA_LIBS)
 
 GNOME_C_Knc.server.in: GNOME_C_Knc.server.in.in
 	sed -e "s|\@LIBEXECDIR\@|$(libexecdir)|" $< > $@

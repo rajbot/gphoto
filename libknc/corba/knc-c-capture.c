@@ -1,8 +1,9 @@
 #include <config.h>
 #include "knc-c-capture.h"
-#include "knc-c-preview-widget.h"
 
 #include <libknc/knc.h>
+
+#include <libgknc/gknc-preview.h>
 
 #include <glade/glade.h>
 
@@ -71,7 +72,7 @@ on_refresh_clicked (GtkButton *button, KncCCapture *c)
 {
 	GtkWidget *w = glade_xml_get_widget (c->priv->xml, "custom_preview");
 
-	knc_c_preview_widget_refresh (KNC_C_PREVIEW_WIDGET (w), c->priv->c);
+	gknc_preview_refresh (GKNC_PREVIEW (w), c->priv->c);
 	return TRUE;
 }
 
@@ -81,10 +82,10 @@ on_refresh_continuously_toggled (GtkToggleButton *t, KncCCapture *c)
 	GtkWidget *w = glade_xml_get_widget (c->priv->xml, "custom_preview");
 
 	if (t->active)
-		knc_c_preview_widget_start (KNC_C_PREVIEW_WIDGET (w),
+		gknc_preview_start (GKNC_PREVIEW (w),
 					    c->priv->c);
 	else
-		knc_c_preview_widget_stop (KNC_C_PREVIEW_WIDGET (w));
+		gknc_preview_stop (GKNC_PREVIEW (w));
 	g_assert ((w = glade_xml_get_widget (c->priv->xml, "button_refresh")));
 	gtk_widget_set_sensitive (w, !t->active);
 }
@@ -112,6 +113,7 @@ knc_c_capture_new (KncCntrl *cntrl)
 	g_assert (c->priv->xml);
 	g_assert ((w = glade_xml_get_widget (c->priv->xml, "table_capture")));
 	bonobo_control_construct (BONOBO_CONTROL (c), w);
+	gtk_widget_show (glade_xml_get_widget (c->priv->xml, "custom_preview"));
 
 	/* Load the current settings */
 	g_warning ("Fixme!");

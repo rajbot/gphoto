@@ -1,1 +1,1 @@
-SUBDIRS = corba gp
+SUBDIRS = corba libgpknc libgknc

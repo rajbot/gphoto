@@ -1,11 +1,13 @@
 #include <config.h>
-#include "knc-c-preview-widget.h"
+#include "gknc-preview.h"
 
 #include <libknc/knc.h>
 
+#include <gtk/gtkstock.h>
+
 #include <gdk-pixbuf/gdk-pixbuf-loader.h>
 
-struct _KncCPreviewWidgetPriv {
+struct _GkncPreviewPriv {
 	KncCntrl *c;
 	guint id;
 };
@@ -14,11 +16,11 @@ struct _KncCPreviewWidgetPriv {
 static GObjectClass *parent_class;
  
 static void
-knc_c_preview_widget_finalize (GObject *o)
+gknc_preview_finalize (GObject *o)
 {
-	KncCPreviewWidget *p = KNC_C_PREVIEW_WIDGET (o);
+	GkncPreview *p = GKNC_PREVIEW (o);
 
-	knc_c_preview_widget_stop (p);
+	gknc_preview_stop (p);
 	g_free (p->priv);
 
 	G_OBJECT_CLASS (parent_class)->finalize (o);
@@ -40,7 +42,7 @@ func_data (const unsigned char *data, unsigned int size, void *d)
 }
 
 void
-knc_c_preview_widget_refresh (KncCPreviewWidget *p, KncCntrl *cntrl)
+gknc_preview_refresh (GkncPreview *p, KncCntrl *cntrl)
 {
         KncCntrlRes cntrl_res;
         KncCamRes cam_res;
@@ -74,24 +76,24 @@ knc_c_preview_widget_refresh (KncCPreviewWidget *p, KncCntrl *cntrl)
 static gboolean
 func_idle_preview (gpointer data)
 {
-        KncCPreviewWidget *p = KNC_C_PREVIEW_WIDGET (data);
+        GkncPreview *p = GKNC_PREVIEW (data);
 
-        knc_c_preview_widget_refresh (p, p->priv->c);
+        gknc_preview_refresh (p, p->priv->c);
         return TRUE;
 }
 
 void
-knc_c_preview_widget_start (KncCPreviewWidget *p, KncCntrl *c)
+gknc_preview_start (GkncPreview *p, KncCntrl *c)
 {
-	knc_c_preview_widget_stop (p);
+	gknc_preview_stop (p);
 	p->priv->c = c;
 	knc_cntrl_ref (c);
-	p->priv->id = g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
-					    func_idle_preview, p, NULL);
+	p->priv->id = g_idle_add_full (G_PRIORITY_LOW,
+				       func_idle_preview, p, NULL);
 }
 
 void
-knc_c_preview_widget_stop (KncCPreviewWidget *p)
+gknc_preview_stop (GkncPreview *p)
 {
 	if (p->priv->id) {
 		g_source_remove (p->priv->id);
@@ -101,45 +103,48 @@ knc_c_preview_widget_stop (KncCPreviewWidget *p)
 }
 
 static void
-knc_c_preview_widget_class_init (gpointer klass, gpointer class_data)
+gknc_preview_class_init (gpointer klass, gpointer class_data)
 {
 	GObjectClass *g_class = G_OBJECT_CLASS (klass);
 
 	parent_class = g_type_class_peek_parent (g_class);
 
-	 g_class->finalize = knc_c_preview_widget_finalize;
+	 g_class->finalize = gknc_preview_finalize;
 }
                                                                                 
 static void
-knc_c_preview_widget_init (GTypeInstance *instance, gpointer g_class)
+gknc_preview_init (GTypeInstance *instance, gpointer g_class)
 {
-	KncCPreviewWidget *p = KNC_C_PREVIEW_WIDGET (instance);
+	GkncPreview *p = GKNC_PREVIEW (instance);
 
-	p->priv = g_new0 (KncCPreviewWidgetPriv, 1);
+	p->priv = g_new0 (GkncPreviewPriv, 1);
 }
 
 GType
-knc_c_preview_widget_get_type (void)
+gknc_preview_get_type (void)
 {
 	static GType t = 0;
 
 	if (!t) {
 	    GTypeInfo ti = {
-		sizeof (KncCPreviewWidgetClass), NULL, NULL,
-		knc_c_preview_widget_class_init, NULL, NULL,
-		sizeof (KncCPreviewWidget), 0,
-		knc_c_preview_widget_init, NULL};
-	    t = g_type_register_static (PARENT_TYPE, "KncCPreviewWidget", &ti,
+		sizeof (GkncPreviewClass), NULL, NULL,
+		gknc_preview_class_init, NULL, NULL,
+		sizeof (GkncPreview), 0,
+		gknc_preview_init, NULL};
+	    t = g_type_register_static (PARENT_TYPE, "GkncPreview", &ti,
 			    		0);
 	}
 
 	return t;
 }
 
-KncCPreviewWidget *
-knc_c_preview_widget_new (void)
+GkncPreview *
+gknc_preview_new (void)
 {
-	KncCPreviewWidget *p = g_object_new (KNC_C_TYPE_PREVIEW_WIDGET, NULL);
+	GkncPreview *p = g_object_new (GKNC_TYPE_PREVIEW, NULL);
+
+	gtk_image_set_from_stock (GTK_IMAGE (p), GTK_STOCK_DIALOG_QUESTION,
+				  GTK_ICON_SIZE_DIALOG);
 
 	return p;
 }

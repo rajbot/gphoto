@@ -156,6 +156,7 @@ int main (int argc, char *argv[])
 		BONOBO_UI_UNSAFE_VERB ("SavePreviewsAs", on_save_previews_as_activate),
 		BONOBO_UI_UNSAFE_VERB ("SaveFiles", on_save_files_activate),
 		BONOBO_UI_UNSAFE_VERB ("SaveFilesAs", on_save_files_as_activate),
+		BONOBO_UI_UNSAFE_VERB ("Delete", on_delete_activate),
 		BONOBO_UI_VERB_END};
 
 	/* Use translated strings. */

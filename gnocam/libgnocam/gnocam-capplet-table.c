@@ -81,6 +81,7 @@ static void
 configure_camera (GnoCamCappletTable *table, guint number)
 {
 	Camera *camera;
+	CameraAbilities abilities;
 	CameraWidget *config;
 	const gchar *model, *port;
 	GtkWidget *widget;
@@ -98,7 +99,8 @@ configure_camera (GnoCamCappletTable *table, guint number)
 	}
 
 	/* Set the model */
-	result = gp_camera_set_model (camera, model);
+	gp_camera_abilities_by_name (model, &abilities);
+	result = gp_camera_set_abilities (camera, abilities);
 	if (result < 0) {
 		g_warning ("Could not set model: %s",
 			   gp_camera_get_result_as_string (camera, result));
@@ -152,6 +154,7 @@ static void
 get_info (GnoCamCappletTable *table, guint number)
 {
 	Camera *camera;
+	CameraAbilities abilities;
 	const gchar *model, *port;
 	gint result;
 	CameraText text;
@@ -168,7 +171,8 @@ get_info (GnoCamCappletTable *table, guint number)
 	}
 
 	/* Set the model */
-	result = gp_camera_set_model (camera, model);
+	gp_camera_abilities_by_name (model, &abilities);
+	result = gp_camera_set_abilities (camera, abilities);
 	if (result < 0) {
 		g_warning ("Could not set model: %s",
 			   gp_camera_get_result_as_string (camera, result));
@@ -342,9 +346,9 @@ gnocam_capplet_table_new (CappletWidget *capplet)
 	cell = e_cell_text_new (NULL, GTK_JUSTIFY_LEFT);
 	popup_cell = e_cell_combo_new ();
 	list = NULL;
-	number = gp_port_count_get ();
+	number = gp_port_core_count ();
 	for (i = 0; i < number; i++)
-		if (gp_port_info_get (i, &info) == GP_OK)
+		if (gp_port_core_get_info (i, &info) == GP_OK)
 			list = g_list_append (list, g_strdup (info.name));
 	e_cell_combo_set_popdown_strings (E_CELL_COMBO (popup_cell), list);
 	e_cell_popup_set_child (E_CELL_POPUP (popup_cell), cell);

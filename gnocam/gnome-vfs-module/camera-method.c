@@ -595,35 +595,38 @@ static void
 get_info_from_camera_info (CameraFileInfo *cfi, gboolean preview,
 			   GnomeVFSFileInfo *info)
 {
-	CameraFileInfoStruct cfis;
-
 	info->name = g_strdup (cfi->file.name);
 	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_TYPE;
 	info->type = GNOME_VFS_FILE_TYPE_REGULAR;
 
-	if (preview)
-		cfis = cfi->preview;
-	else
-		cfis = cfi->file;
-
-	if (cfis.fields & GP_FILE_INFO_SIZE) {
-		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_SIZE;
-		info->size = cfis.size;
+	if (preview) {
+		if (cfi->preview.fields & GP_FILE_INFO_SIZE) {
+			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_SIZE;
+			info->size = cfi->preview.size;
+		}
+		if (cfi->preview.fields & GP_FILE_INFO_TYPE) {
+			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+			info->mime_type = g_strdup (cfi->preview.type);
+		}
+	} else {
+		if (cfi->file.fields & GP_FILE_INFO_SIZE) {
+			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_SIZE;
+			info->size = cfi->file.size;
+		}
+		if (cfi->file.fields & GP_FILE_INFO_TYPE) {
+			info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+			info->mime_type = g_strdup (cfi->file.type);
+		}
 	}
 
-	if (cfis.fields & GP_FILE_INFO_TYPE) {
-		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
-		info->mime_type = g_strdup (cfis.type);
-	}
-
-	if (cfis.fields & GP_FILE_INFO_PERMISSIONS) {
+	if (cfi->file.fields & GP_FILE_INFO_PERMISSIONS) {
 		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_PERMISSIONS;
 		info->permissions = 0;
-		if (cfis.permissions & GP_FILE_PERM_READ)
+		if (cfi->file.permissions & GP_FILE_PERM_READ)
 			info->permissions |= GNOME_VFS_PERM_USER_READ |
 					     GNOME_VFS_PERM_GROUP_READ |
 					     GNOME_VFS_PERM_OTHER_READ;
-		if (cfis.permissions & GP_FILE_PERM_DELETE)
+		if (cfi->file.permissions & GP_FILE_PERM_DELETE)
 			info->permissions |= GNOME_VFS_PERM_USER_WRITE |
 					     GNOME_VFS_PERM_GROUP_WRITE |
 					     GNOME_VFS_PERM_OTHER_WRITE;

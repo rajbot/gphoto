@@ -1,0 +1,20 @@
+#include <Bonobo.idl>
+
+module GNOME {
+
+	interface Camera : Bonobo::Unknown {
+		/* The Camera can be accessed through BonoboStorage and
+		   BonoboControl, latter will give you access to the
+		   configuration options. */
+
+		Bonobo::Stream capturePreview ();
+		Bonobo::Stream captureImage ();
+		Bonobo::Stream captureMovie ();
+	};
+
+	interface GnoCam : Bonobo::Unknown {
+	
+		Camera getCamera (in string name);
+	};
+};
+

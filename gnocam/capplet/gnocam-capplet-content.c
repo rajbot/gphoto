@@ -102,7 +102,7 @@ gnocam_capplet_content_new (CappletWidget* capplet)
 	gtk_box_pack_start (GTK_BOX (new), hbox, FALSE, FALSE, 10);
 
 	/* Create the logo */
-	pixbuf = gdk_pixbuf_new_from_file (IMAGEDIR "/gnocam.png");
+	pixbuf = gdk_pixbuf_new_from_file (IMAGEDIR "/gnocam-camera2.png");
 	gdk_pixbuf_render_pixmap_and_mask (pixbuf, &pixmap, &bitmap, 4);
 	widget = gtk_pixmap_new (pixmap, bitmap);
 	gtk_widget_show (widget);

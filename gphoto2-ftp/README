@@ -40,10 +40,10 @@ local: gimp-menu.png remote: gimp-menu.png
 ftp> quit
 221 Goodbye.
 
-Why doesn't 'ls' work?
-----------------------
+Why doesn't 'ls' work as expected?
+----------------------------------
 
-Short question, short answer: It isn't implemented yet.
+Short question, short answer: It isn't fully implemented yet.
 
 Don't you have better things to do?
 -----------------------------------

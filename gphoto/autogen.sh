@@ -57,7 +57,7 @@ do
     libtoolize --copy --force; \
     aclocalinclude="$ACLOCAL_FLAGS"; \
     aclocal $aclocalinclude; \
-    autoheader; automake --add-missing --gnu $am_opt; autoconf)
+    autoheader; automake --add-missing --gnits $am_opt; autoconf)
 done
 
 ./configure "$@"

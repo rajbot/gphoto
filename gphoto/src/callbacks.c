@@ -391,14 +391,15 @@ void port_dialog() {
 
 	GtkWidget *dialog, *label, *button, *cbutton, *toggle;
 	GtkWidget *port0, *port1, *port2, *port3, *other, *ent_other;
-	GtkWidget *scrwin, *list, *list_item;
 	GtkWidget *hbox, *vbox, *vseparator;
+	GtkWidget *combo;
 	GSList *group;
-	GList *dlist;
+	GList *dlist, *list;
 	GtkObject *olist_item;
 
 	FILE *conf;
 	char serial_port_prefix[20], tempstring[20];
+	char *camera_selected;
 	int i=0;
 
 #ifdef linux
@@ -429,33 +430,20 @@ void port_dialog() {
 	gtk_widget_show(label);
         gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
-	list = gtk_list_new();
-	gtk_widget_show(list);
-	gtk_list_set_selection_mode (GTK_LIST(list),GTK_SELECTION_SINGLE);
+	list = NULL;
+	combo = gtk_combo_new();
+	gtk_widget_show(combo);	
+	gtk_box_pack_start(GTK_BOX(vbox), combo, FALSE, FALSE, 0);
 
- 	scrwin = gtk_scrolled_window_new(NULL, NULL);
- 	gtk_widget_show(scrwin);
-#ifndef GTK_HAVE_FEATURES_1_1_4
- 	gtk_container_add(GTK_CONTAINER(scrwin), list);
-#else
-	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrwin),
-					      list);
-#endif
-	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(index_window),
-                                        GTK_POLICY_AUTOMATIC,
-                                        GTK_POLICY_AUTOMATIC); 
-        gtk_box_pack_start_defaults(GTK_BOX(vbox),scrwin);
-
+	i=0;
 	while (strlen(cameras[i].name) > 0) {
-		list_item = gtk_list_item_new_with_label(cameras[i].name);
-		gtk_widget_show(list_item);
-		if (strcmp(cameras[i].name, camera_model) == 0)
-			gtk_widget_set_state(list_item,GTK_STATE_ACTIVE);
-		gtk_container_add(GTK_CONTAINER(list), list_item);
-		gtk_object_set_data(GTK_OBJECT(list_item),"model",
-					cameras[i].name);
+		list = g_list_append(list, cameras[i].name);
 		i++;
 	}
+	gtk_combo_set_popdown_strings(GTK_COMBO(combo), list);
+	gtk_entry_set_text(GTK_ENTRY(GTK_COMBO(combo)->entry),
+		camera_model);
+	gtk_entry_set_editable(GTK_ENTRY(GTK_COMBO(combo)->entry),FALSE);
 
 	vseparator = gtk_vseparator_new();
 	gtk_widget_show(vseparator);
@@ -465,6 +453,7 @@ void port_dialog() {
 	gtk_widget_show(vbox);
 	gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
+	group = NULL;
 	label = gtk_label_new("Port:");
 	gtk_widget_show(label);
 	port0 = gtk_radio_button_new_with_label(NULL, "Serial Port 1");
@@ -535,15 +524,10 @@ void port_dialog() {
 	if (wait_for_hide(dialog, button, cbutton) == 0)
 		return;
 
-	dlist = GTK_LIST(list)->selection;
-	if (!dlist) {
-		/* do nothing */
-	} else {
-		olist_item = GTK_OBJECT(dlist->data);
-		sprintf(camera_model, "%s",
-		(char*)gtk_object_get_data(olist_item,"model"));
-		set_camera(camera_model);
-	}
+	camera_selected = gtk_entry_get_text(
+		GTK_ENTRY(GTK_COMBO(combo)->entry));
+	strcpy(camera_model, camera_selected);
+	set_camera(camera_model);
 
 	if (GTK_WIDGET_STATE(port0) == GTK_STATE_ACTIVE) {
 		sprintf(tempstring, "%s0", serial_port_prefix);

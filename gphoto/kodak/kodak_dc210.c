@@ -1,197 +1,350 @@
 #include "dc210.h"
+#include "config.h"
 #include "kodak_dc210.h"
 
 #include "../src/gphoto.h"
+#include "../src/util.h"
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <byteswap.h>
-#include <errno.h>
+
+/* glib is used for byte swapping and endian checking */
+#include <glib.h>
 #include <gdk_imlib.h>
 #include <gdk/gdk.h>
+
+#include <errno.h>
+
+#ifdef HAVE_SELECT_H
+#include <sys/select.h>
+#endif /* HAVE_SELECT_H */
+
+#ifdef TIME_WITH_SYS_TIME
+#include <sys/time.h>
+#include <time.h>
+#else
+#    ifdef HAVE_SYS_TIME_H
+#    include <sys/time.h>
+#    else HAVE_SYS_TIME_H
+#    include <time.h>
+#    endif /* HAVE_SYS_TIME_H */
+#endif /* TIME_WITH_SYS_TIME */
 
 int kodak_dc210_send_command ( char serialdev, char command, char arg1, char arg2, char arg3, char arg4)
 {
   unsigned char ack;
+  int success = TRUE;
 
-  kodak_dc210_write_byte ( serialdev, command );
-  kodak_dc210_write_byte ( serialdev, 0x00 );
-  kodak_dc210_write_byte ( serialdev, arg1 );
-  kodak_dc210_write_byte ( serialdev, arg2 );
-  kodak_dc210_write_byte ( serialdev, arg3 );
-  kodak_dc210_write_byte ( serialdev, arg4 );
-  kodak_dc210_write_byte ( serialdev, 0x00 );
-  kodak_dc210_write_byte ( serialdev, 0x1A );
+  /* try to write 8 bytes in sequence to the camera */
+  success = success && kodak_dc210_write_byte ( serialdev, command );
+  success = success && kodak_dc210_write_byte ( serialdev, 0x00 );
+  success = success && kodak_dc210_write_byte ( serialdev, arg1 );
+  success = success && kodak_dc210_write_byte ( serialdev, arg2 );
+  success = success && kodak_dc210_write_byte ( serialdev, arg3 );
+  success = success && kodak_dc210_write_byte ( serialdev, arg4 );
+  success = success && kodak_dc210_write_byte ( serialdev, 0x00 );
+  success = success && kodak_dc210_write_byte ( serialdev, 0x1A );
 
-  /* Get ack from camera */
-  ack = kodak_dc210_read_byte( serialdev );
-  if (ack != DC_COMMAND_ACK)
+  /* if the command was sent successfully to the camera, continue */
+  if (success)
   {
-    fprintf(stderr,"kodak_dc210_send_command - bad ack from camera\n");
-    return(1);
+    /* read ack from camera */
+    success = kodak_dc210_read( serialdev, &ack, 1 );
+
+    if (success)
+    {
+      /* make sure the ack is okay */
+      if (ack != DC_COMMAND_ACK)
+      {
+	fprintf(stderr,"kodak_dc210_send_command - bad ack from camera\n");
+	success = FALSE;
+      }
+    }
+    else
+    {
+      fprintf(stderr,"kodak_dc210_send_command - failed to read ack from camera\n");
+      success = FALSE;
+    }
+  }
+  else
+  {
+    fprintf(stderr,"kodak_dc210_send_command - failed to send command to camera\n");
+    success = FALSE;
   }
 
-  return(0);
+  return(success);
 }
 
 int kodak_dc210_set_port_speed(int serialdev,int speed)
 {
+  int success = 1;
   int arg1, arg2;
   struct termios newt, oldt;
 
   /* get the termios structure */
   if (tcgetattr(serialdev, &oldt) < 0) 
+  {
+    success = 0;
     error_dialog("tcgetattr");
-
-  /* make a copy of the old termios structure */
-  memcpy((char *)&newt,(char *)&oldt, sizeof(struct termios));
-
-  if (speed == 9600)
-  {
-    arg1 = 0x96;
-    arg2 = 0x00;
-    cfsetospeed(&newt, B9600);
-    cfsetispeed(&newt, B9600);
-  }
-  else if (speed == 19200)
-  {
-    arg1 = 0x19;
-    arg2 = 0x20;
-    cfsetospeed(&newt, B19200);
-    cfsetispeed(&newt, B19200);
-  }
-  else if (speed == 38400)
-  {
-    arg1 = 0x38;
-    arg2 = 0x40;
-    cfsetospeed(&newt, B38400);
-    cfsetispeed(&newt, B38400);
-  }
-  else if (speed == 57600)
-  {
-    arg1 = 0x57;
-    arg2 = 0x60;
-    cfsetospeed(&newt, B57600);
-    cfsetispeed(&newt, B57600);
-  }
-  else if (speed == 115200)
-  {
-    arg1 = 0x11;
-    arg2 = 0x52;
-    cfsetospeed(&newt, B115200);
-    cfsetispeed(&newt, B115200);
   }
   else
   {
-    fprintf(stderr,"speed not supported %d",speed);
-    exit;
+    /* make a copy of the old termios structure */
+    memcpy((char *)&newt,(char *)&oldt, sizeof(struct termios));
+
+    if (speed == 9600)
+    {
+      arg1 = 0x96;
+      arg2 = 0x00;
+      cfsetospeed(&newt, B9600);
+      cfsetispeed(&newt, B9600);
+    }
+    else if (speed == 19200)
+    {
+      arg1 = 0x19;
+      arg2 = 0x20;
+      cfsetospeed(&newt, B19200);
+      cfsetispeed(&newt, B19200);
+    }
+    else if (speed == 38400)
+    {
+      arg1 = 0x38;
+      arg2 = 0x40;
+      cfsetospeed(&newt, B38400);
+      cfsetispeed(&newt, B38400);
+    }
+    else if (speed == 57600)
+    {
+      arg1 = 0x57;
+      arg2 = 0x60;
+      cfsetospeed(&newt, B57600);
+      cfsetispeed(&newt, B57600);
+    }
+    else if (speed == 115200)
+    {
+      arg1 = 0x11;
+      arg2 = 0x52;
+      cfsetospeed(&newt, B115200);
+      cfsetispeed(&newt, B115200);
+    }
+    else
+    {
+      success = 0;
+      fprintf(stderr,"speed not supported %d",speed);
+    }
+
+    if (success)
+    {
+      success = kodak_dc210_send_command(serialdev,DC_SET_SPEED,arg1,arg2,0x00,0x00);
+
+      if (success)
+      { 
+	if (tcsetattr(serialdev, TCSANOW, &newt) < 0) 
+        {
+	  error_dialog("Serial speed change problem");
+	  success = 0;
+        }
+      }
+    }
   }
 
-  kodak_dc210_send_command(serialdev,DC_SET_SPEED,arg1,arg2,0x00,0x00);
-
-  if (tcsetattr(serialdev, TCSANOW, &newt) < 0) 
-    error_dialog("Serial speed change problem");
+  return(success);
 }
 
 int kodak_dc210_command_complete (int serialdev)
 {
   int status = DC_BUSY;
+  int success = TRUE;
 
   /* Wait for the camera to be ready. */
   do
   {
-    status = kodak_dc210_read_byte(serialdev);
+    success = kodak_dc210_read(serialdev,&status,1);
   }
-  while (status == DC_BUSY);
+  while (success && (status == DC_BUSY));
 
-  if (status != DC_COMMAND_COMPLETE)
+  if (success)
   {
-    if (status == DC_ILLEGAL_PACKET)
+    if (status != DC_COMMAND_COMPLETE)
     {
-      fprintf(stderr,"kodak_dc210_command_complete - illegal packet received from host\n");
+      if (status == DC_ILLEGAL_PACKET)
+      {
+	fprintf(stderr,"kodak_dc210_command_complete - illegal packet received from host\n");
+      }
+      else
+      {
+	fprintf(stderr,"kodak_dc210_command_complete - command not completed\n");
+      }
+
+      /* status was not command complete - raise an error */
+      success = FALSE;
+    }
+  }
+  else
+  {
+    fprintf(stderr,"kodak_dc210_command_complete - failed to read status byte from camera\n");
+    success = FALSE;
+  }
+
+  return(success);
+}
+
+int kodak_dc210_read ( int serialdev, unsigned char *buf, int nbytes )
+{
+  int ret;
+  int numRead = 0;
+  int n;
+  int len;
+  fd_set readfds;
+  struct timeval timeout;
+
+  while (numRead < nbytes)
+  {
+    /* set parameters for select call */
+    n = serialdev + 1;
+    FD_ZERO(&readfds);
+    FD_SET(serialdev, &readfds);
+
+    /* declare a timeout of 1.500sec */
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 500000;
+
+    ret = select(n, &readfds, NULL, NULL, &timeout);
+
+    /* if the select failed or timed out, hanled it */
+    if(ret <= 0)
+    {
+      if (ret<0)
+      {
+	/* if the system call was interupted, retry */
+	if (errno == EINTR) 
+	  continue;
+        else
+	  perror("select");
+      }
+      else
+	fprintf(stderr, "kodak_dc210_read: read timed out\n");
+
+      return FALSE;
     }
     else
     {
-      fprintf(stderr,"kodak_dc210_command_complete - command not completed\n");
+      if (FD_ISSET(serialdev, &readfds))
+      {
+	len = read(serialdev, buf + numRead,
+		   nbytes - numRead);
+
+        if (len < 0)
+        {
+	  if (errno == EINTR) 
+	    continue;
+          else
+          { 
+	    fprintf(stderr, "kodak_dc210_read: read failed on a ready file handle\n");
+	    perror("read");
+	    return FALSE; 
+          }
+        }
+        else
+        {
+	  numRead += len;
+        }
+      }
+      else
+	return FALSE;
     }
   }
-}
 
-unsigned char kodak_dc210_read_byte ( int serialdev )
-{
-  unsigned char b;
-  int numread;
-
-  do
-  {
-    numread = read(serialdev, &b, 1);
-  } while (numread == 0);
-
-  return(b);
+  return TRUE;
 }
 
 int kodak_dc210_write_byte ( int serialdev, char b )
 {
+/*
+This function tries to write the supplied byte to the serial device.
+
+Args
+  int serieldev - a file handle
+  char b - the byte to write
+Returns
+  success - 1 if the command completed, 0 otherwise
+*/
   int numwrite;
 
+  /* write the bite to the serial device */
   numwrite = write(serialdev, &b, 1);
 
+  /* check to make sure the byte was written */
   if (numwrite != 1)
   {
-    fprintf(stderr,"could not write byte\n");
+    fprintf(stderr,"failed to write byte\n");
+    return(0);
+  }
+  else
+  {
+    return(1);
   }
 }
 
 int kodak_dc210_read_packet ( int serialdev, char *packet, int length)
 {
-  int sent_checksum;
   int numread = 0;
+  int success = TRUE;
   int r = 0;
+  unsigned char sent_checksum;
   unsigned char computed_checksum;
   unsigned char control_byte;
 
   /* Read the control byte from the camera - and packet coming from
      the camera must ALWAYS be 0x01 according to Kodak Host Protocol. */
-  control_byte = kodak_dc210_read_byte(serialdev);
-  if (control_byte != PKT_CTRL_RECV)
+  if (kodak_dc210_read(serialdev,&control_byte,1))
   {
-    fprintf(stderr,"kodak_dc210_read_packet - packet control byte invalid %x\n",control_byte);
-  }
-
-  do
-  {
-    r = read(serialdev,packet + numread,length-numread);
-
-    if (r > 0)
+    if (control_byte == PKT_CTRL_RECV)
     {
-      numread += r;
+      if (kodak_dc210_read(serialdev,packet,length))
+      {
+	/* read the checksum from the camera */
+	if (kodak_dc210_read(serialdev, &sent_checksum, 1))
+	{
+	  computed_checksum = kodak_dc210_checksum(packet,length);
+
+	  if (sent_checksum != computed_checksum)
+	  {
+	    fprintf(stderr,"kodak_dc210_read_packet: bad checksum %d != %d\n",computed_checksum,sent_checksum);
+	    kodak_dc210_write_byte(serialdev,DC_ILLEGAL_PACKET);
+	    success = FALSE;
+	  }
+	  else
+	  {
+	    kodak_dc210_write_byte(serialdev,DC_CORRECT_PACKET);
+	    success = TRUE;
+          }
+	}
+	else
+	{
+	  fprintf(stderr,"kodak_dc210_read_packet: failed to read checksum byte from camera\n");
+	  success = FALSE;
+	}
+      }
+      else
+      {
+	fprintf(stderr,"kodak_dc210_read_packet: failed to read paket from camera\n");
+	success = FALSE;
+      }
     }
-  }
-  while ((r >= 0) && (numread < length));
-
-  if (r < 0)
-  {
-    fprintf(stderr,"error reading packet %d, errno: %d\n",r,errno);
-    exit;
-  }
-  else if (numread != length)
-  {
-    fprintf(stderr,"read incomplete packet %d of %d bytes\n",numread,length);
-    exit;
-  }
-
-  sent_checksum = kodak_dc210_read_byte(serialdev);
-  computed_checksum = kodak_dc210_checksum(packet,length);
-
-  if (sent_checksum != computed_checksum)
-  {
-    fprintf(stderr,"bad checksum %d != %d\n",computed_checksum,sent_checksum);
-    kodak_dc210_write_byte(serialdev,DC_ILLEGAL_PACKET);
+    else
+    {
+      fprintf(stderr,"kodak_dc210_read_packet - packet control byte invalid %x\n",control_byte);
+      success = FALSE;
+    }
   }
   else
   {
-    kodak_dc210_write_byte(serialdev,DC_CORRECT_PACKET);
+    fprintf(stderr,"kodak_dc210_read_packet - failed to read control byte from camera\n");
+    success = FALSE;
   }
+
+  return success;
 }
 
 unsigned char kodak_dc210_checksum(char *packet,int length)
@@ -261,19 +414,19 @@ int kodak_dc210_close_camera (int serialdev)
 
 int kodak_dc210_number_of_pictures () 
 {
-
-  int serialdev = kodak_dc210_open_camera (serial_port);
+  int serialdev;
+  int numPics = 0;
   struct kodak_dc210_status status;
 
-  if (serialdev)
+  if (serialdev = kodak_dc210_open_camera (serial_port))
   {
-    kodak_dc210_send_command( serialdev,DC_STATUS,0x00,0x00,0x00,0x00);
-    kodak_dc210_read_packet( serialdev,(char *)&status,256);
-    kodak_dc210_command_complete( serialdev );
+    kodak_dc210_get_camera_status (serialdev, &status);
     kodak_dc210_close_camera ( serialdev );
+
+    numPics = status.num_pictures;
   }
 
-  return(status.num_pictures);
+  return(numPics);
 }
 
 int kodak_dc210_take_picture() 
@@ -290,12 +443,97 @@ int kodak_dc210_take_picture()
   return( kodak_dc210_number_of_pictures() );
 }
 
+int kodak_dc210_get_picture_info (int serialdev,
+                                  int picNum,
+                                  struct kodak_dc210_picture_info *picInfo)
+{
+  unsigned char packet[256];
+
+  picNum--;
+
+  /* send picture info command, receive data, send ack */
+  kodak_dc210_send_command( serialdev,DC_PICTURE_INFO,0x00,(char)picNum,0x00,0x00);
+  kodak_dc210_read_packet( serialdev,packet,256);
+  kodak_dc210_command_complete( serialdev );
+
+  picInfo->resolution    = packet[3];
+  picInfo->compression   = packet[4];
+  picInfo->pictureNumber = packet[6] * 0x100 + packet[7];
+
+  picInfo->fileSize      = (guint32)packet[8]  * 0x1000000 + 
+			   (guint32)packet[9]  * 0x10000 + 
+                           (guint32)packet[10] * 0x100 + 
+                           (guint32)packet[11];
+
+  picInfo->elapsedTime   = (guint32)packet[12] * 0x1000000 + 
+			   (guint32)packet[13] * 0x10000 + 
+		           (guint32)packet[14] * 0x100 + 
+			   (guint32)packet[15];
+
+  strncpy(picInfo->fileName,packet + 32,12);
+}
+
+int kodak_dc210_get_camera_status (int serialdev,
+                                   struct kodak_dc210_status *status)
+{
+  unsigned char packet[256];
+  int success = TRUE;
+
+  if (kodak_dc210_send_command( serialdev,DC_STATUS,0x00,0x00,0x00,0x00))
+  {
+    if (kodak_dc210_read_packet( serialdev,packet,256))
+    {
+      kodak_dc210_command_complete( serialdev );
+
+      memset((char*)status,0,sizeof(struct kodak_dc210_status));
+
+      status->camera_type_id        = packet[1];
+      status->firmware_major        = packet[2];
+      status->firmware_minor        = packet[3];
+      status->batteryStatusId       = packet[8];
+      status->acStatusId            = packet[9];
+
+      /* seconds since unix epoc */
+      status->time = CAMERA_EPOC + (
+				packet[12] * 0x1000000 + 
+				packet[13] * 0x10000 + 
+				packet[14] * 0x100 + 
+				packet[15]) / 2;
+
+      status->zoomMode              = packet[15];
+      status->flash_charged         = packet[17];
+      status->compression_mode_id   = packet[18];
+      status->flash_mode            = packet[19];
+      status->exposure_compensation = packet[20];
+      status->picture_size          = packet[21];
+      status->file_Type             = packet[22];
+      status->totalPicturesTaken    = packet[25] * 0x100 + packet[26];
+      status->totalFlashesFired     = packet[27] * 0x100 + packet[28];
+      status->num_pictures          = packet[56] * 0x100 + packet[57];
+      strncpy(status->camera_ident,packet + 90,32); 
+    }
+    else
+    {
+      fprintf(stderr,"kodak_dc210_get_camera_status: send command failed\n");
+      success = FALSE;
+    }
+  }
+  else
+  {
+    fprintf(stderr,"kodak_dc210_get_camera_status: send command failed\n");
+    success = FALSE;
+  }
+
+  return success;
+}
+
+
 struct Image *kodak_dc210_get_thumbnail (int serialdev, int picNum) 
 {
-  FILE *fh;
   struct Image *im = NULL;
   int i,j;
   int numRead = 0;
+  int success = TRUE;
   int fileSize = 20736;
   int blockSize = 1024;
   char *picData;
@@ -318,41 +556,63 @@ struct Image *kodak_dc210_get_thumbnail (int serialdev, int picNum)
   /* allocate space for the image data */
   imData = (char *)malloc(fileSize + 54);
 
-  kodak_dc210_send_command(serialdev,DC_PICTURE_THUMBNAIL,0x00,(char)picNum,0x01,0x00);
-  while (numRead < fileSize)
-  {
-    kodak_dc210_read_packet( serialdev,picData+numRead,blockSize);
-    numRead += blockSize;
-    fprintf(stderr,"%d - %d of %d\n",(char)picNum,numRead,fileSize);
-  }
-  kodak_dc210_command_complete(serialdev);
+  update_progress(0.00);
 
-  /* allocate memory for image structure */
-  if ( (im = (struct Image *)malloc ( sizeof(struct Image) )) == NULL ) 
+  if (kodak_dc210_send_command(serialdev,DC_PICTURE_THUMBNAIL,0x00,(char)picNum,0x01,0x00))
   {
-    error_dialog("Could not allocate memory for image structure.");
-    return ( NULL );
-  }
-  
-  memcpy(imData,bmpHeader, sizeof(bmpHeader));
+    while (success && (numRead < fileSize))
+    {
+      if (kodak_dc210_read_packet( serialdev,picData+numRead,blockSize))
+      {
+	numRead += blockSize;
 
-  /* reverse the thumbnail data */
-  for (j=fileSize-1,i=54; j >= 0 ; j--)
+	/* on the last block numRead will be > fileSize, so don't report it
+	   in these situations */
+	if (numRead <= fileSize)
+	  update_progress((float)numRead / (float)fileSize);
+      }
+      else
+      {
+	fprintf(stderr,"kodak_dc210_get_thumbnail - bad packet read from camera\n");
+	success = FALSE;
+      }
+    }
+
+    /* get to see if the thumbnail was retreived */
+    if (success)
+    {
+      kodak_dc210_command_complete(serialdev);
+      update_progress(1.00);
+
+      /* allocate memory for image structure */
+      if ( (im = (struct Image *)malloc ( sizeof(struct Image) )) == NULL ) 
+      {
+	error_dialog("Could not allocate memory for image structure.");
+	return ( NULL );
+      }
+    
+      memcpy(imData,bmpHeader, sizeof(bmpHeader));
+
+      /* reverse the thumbnail data */
+      for (j=fileSize-1,i=54; j >= 0 ; j--)
+      {
+	imData[i++] = picData[j];
+      }
+
+      strcpy ( im->image_type, "bmp" );
+      im->image_info = NULL;
+      im->image_info_size = 0;
+      im->image_size = fileSize+54;
+      im->image = imData;
+    }
+  }
+  else
   {
-    imData[i++] = picData[j];
+    fprintf(stderr,"kodak_dc210_get_thumbnail: failed to get thumbnail command to camera\n");
+    success = FALSE;
   }
-
-  strcpy ( im->image_type, "bmp" );
-  im->image_info = NULL;
-  im->image_info_size = 0;
-  im->image_size = fileSize+54;
-  im->image = imData;
 
   free(picData);
-
-  fh = fopen("/tmp/2.bmp","w");
-  fwrite(imData,fileSize+54,1,fh);
-  fclose(fh);
 
   return im;
 }
@@ -366,8 +626,6 @@ struct Image *kodak_dc210_get_picture (int picNum, int thumbnail)
   int fileSize;
   int numRead;
   int serialdev;
-  FILE *fh;
-  struct kodak_dc210_status status;
   struct kodak_dc210_picture_info picInfo;
   char *picData;
 
@@ -379,21 +637,11 @@ struct Image *kodak_dc210_get_picture (int picNum, int thumbnail)
     }
     else
     {
+      /* get information (size, name, etc) about the picture */
+      kodak_dc210_get_picture_info (serialdev, picNum, &picInfo);
+
       /* DC210 addresses pictures 0..n-1 instead of 1..n */
       picNum--;
-
-      kodak_dc210_send_command( serialdev,DC_STATUS,0x00,0x00,0x00,0x00);
-      kodak_dc210_read_packet( serialdev,(char *)&status,256);
-      kodak_dc210_command_complete( serialdev );
-
-      /* send picture info command, receive data, send ack */
-      kodak_dc210_send_command( serialdev,DC_PICTURE_INFO,0x00,(char)picNum,0x00,0x00);
-      kodak_dc210_read_packet( serialdev,(char *)&picInfo,256);
-      kodak_dc210_command_complete( serialdev );
-
-      picInfo.fileSize = bswap_32(picInfo.fileSize);
-      picInfo.elapsedTime = bswap_32(picInfo.elapsedTime);
-      picInfo.pictureNumber = bswap_16(picInfo.pictureNumber);
 
       /* send the command to start transfering the picture */
       kodak_dc210_send_command( serialdev, DC_PICTURE_DOWNLOAD, 0x00, (char)picNum, 0x00, 0x00);
@@ -403,18 +651,18 @@ struct Image *kodak_dc210_get_picture (int picNum, int thumbnail)
       picData = (char *)malloc(fileSize + blockSize);
       numRead = 0;
 
+      update_progress(0.00);
       while (numRead < fileSize)
       {
 	kodak_dc210_read_packet( serialdev,picData+numRead,blockSize);
 	numRead += blockSize;
-	fprintf(stderr,"%d - %d of %d\n",(char)picNum,numRead,fileSize);
-      }
 
-/*      fh = fopen("/tmp/1.jpg","w");
-      fwrite(picData,fileSize,1,fh);
-      fclose(fh);*/
-    
+	if (numRead <= fileSize)
+	  update_progress((float)numRead / (float)fileSize);
+      }
+      fprintf(stderr,"%d/%d\n",numRead,fileSize);
       kodak_dc210_command_complete( serialdev );
+      update_progress(1.00);
 
       /* allocate memory for image structure */
       if ( (im = (struct Image *)malloc ( sizeof(struct Image) )) == NULL ) 
@@ -460,15 +708,15 @@ struct Image *kodak_dc210_get_preview ()
   int numPicBefore;
   int numPicAfter;
   struct Image *im = NULL;
- 
-  /* find out how many pictures are in the camera so we can 
+
+  /* find out how many pictures are in the camera so we can
      make sure a picture was taken later */
   numPicBefore = kodak_dc210_number_of_pictures();
 
   /* take a picture -- it returns the picture number taken */
   numPicAfter = kodak_dc210_take_picture();
 
-  /* if a picture was taken then get the picture from the camera and 
+  /* if a picture was taken then get the picture from the camera and
      then delete it */
   if (numPicBefore + 1 == numPicAfter)
   {
@@ -479,6 +727,7 @@ struct Image *kodak_dc210_get_preview ()
   return(im);
 }
 
+
 int kodak_dc210_configure () 
 {
 
@@ -487,69 +736,51 @@ int kodak_dc210_configure ()
 
 }
 
-
-
 char *kodak_dc210_summary() 
 {
-
-  char summary_string[2048];
+  static char summary_string[2048] = "";
   char buff[1024];
   int serialdev = kodak_dc210_open_camera (serial_port);
-  FILE *fd;
   struct kodak_dc210_status status;
 
   if (serialdev)
   {
-    kodak_dc210_send_command( serialdev,DC_STATUS,0x00,0x00,0x00,0x00);
-    kodak_dc210_read_packet( serialdev,(char *)&status,256);
-    kodak_dc210_command_complete( serialdev );
+    if (kodak_dc210_get_camera_status (serialdev, &status))
+    {
+      strcpy(summary_string,"Kodak DC210\n");
+
+      snprintf(buff,1024,"Camera Identification: %s\n",status.camera_ident);
+      strcat(summary_string,buff);
+
+      snprintf(buff,1024,"Camera Type: %d\n",status.camera_type_id);
+      strcat(summary_string,buff);
+
+      snprintf(buff,1024,"Firmware: %d.%d\n",status.firmware_major,status.firmware_minor);
+      strcat(summary_string,buff);
+
+      snprintf(buff,1024,"Battery Status: %d\n",status.batteryStatusId);
+      strcat(summary_string,buff);
+
+      snprintf(buff,1024,"AC Status: %d\n",status.acStatusId);
+      strcat(summary_string,buff);
+
+      strftime(buff,1024,"Time: %a, %d %b %y %T\n",localtime(&status.time));
+      strcat(summary_string,buff);
+
+      fprintf(stderr,"step 4\n");
+      snprintf(buff,1024,"Total Pictures Taken: %d\n",status.totalPicturesTaken);
+      strcat(summary_string,buff);
+
+      snprintf(buff,1024,"Total Flashes Fired: %d\n",status.totalFlashesFired);
+      strcat(summary_string,buff);
+
+      snprintf(buff,1024,"Pictures in Camera: %d\n",status.num_pictures);
+      strcat(summary_string,buff);
+
+    }
     kodak_dc210_close_camera ( serialdev );
   }
 
-  strcpy(summary_string,"Kodak DC210\n");
-
-  snprintf(buff,1024,"Camera Type: %d\n",status.camera_type_id);
-  strcat(summary_string,buff);
-
-  snprintf(buff,1024,"Firmware: %d.%d\n",status.firmware_major,status.firmware_minor);
-  strcat(summary_string,buff);
-
-  snprintf(buff,1024,"Battery Status: %d\n",status.batteryStatusId);
-  strcat(summary_string,buff);
-
-  snprintf(buff,1024,"AC Status: %d\n",status.acStatusId);
-  strcat(summary_string,buff);
-
-  snprintf(buff,1024,"Time: %d\n",status.time);
-  strcat(summary_string,buff);
-
-  snprintf(buff,1024,"Total Pictures Taken: %d\n",status.totalPicturesTaken);
-  strcat(summary_string,buff);
-
-  snprintf(buff,1024,"Total Flashes Fired: %d\n",status.totalFlashesFired);
-  strcat(summary_string,buff);
-
-  snprintf(buff,1024,"Pictures in Camera: %d\n",status.num_pictures);
-  strcat(summary_string,buff);
-
-  snprintf(buff,1024,"Camera Identification: %s\n",status.camera_ident);
-  strcat(summary_string,buff);
-
-  fd = fopen("/tmp/poop", "w+");
-  fwrite(&status,sizeof(status),1,fd);
-  fclose(fd);
-
-
-/*struct kodak_dc210_status {*/
-/*   short zoomMode;     	     	/* 17-18 */
-/*   char flash_charged;		/* 20 */
-/*   char compression_mode_id;	/* 21 */
-/*  char flash_mode;		/* 22 */
-/*   char exposure_compensation;	/* 23 */
-/*   char picture_size;		/* 24 */
-/*   char file_Type;		/* 25 */
-/**/
-/*  error_dialog("No summary.");*/
   return (&summary_string);
 }
 
@@ -558,7 +789,9 @@ char *kodak_dc210_description()
 
   return(
 "Kodak DC210 support
-by Brian Hirt <bhirt@berkhirt.com>.");
+by Brian Hirt <bhirt@mobygames.com> 
+http://www.mobygames.com");
+
 }
 
 

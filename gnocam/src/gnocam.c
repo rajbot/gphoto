@@ -19,8 +19,8 @@ static GladeXML *xml;
 /* Prototypes */
 /**************/
 
-void camera_add_to_tree (GladeXML *xml, Camera *camera, gchar *name, gint position);
-void folder_build (GladeXML *xml, GtkWidget *item, Camera *camera, gchar *path);
+void camera_add_to_tree (GladeXML *xml, Camera *camera, gchar *name, gint camera_id, gint position);
+void folder_build (GladeXML *xml, GtkWidget *item, Camera *camera, gint camera_id, gchar *path);
 
 void on_drag_data_received (GtkWidget *widget, GdkDragContext *context, gint x, gint y, GtkSelectionData *selection_data, guint info, guint time);
 
@@ -79,10 +79,23 @@ on_camera_setup_changed (GConfClient* client, guint notify_id, GConfEntry* entry
 {
 	GladeXML*	xml;
 	GSList*		list_cameras;
+	GList*		tree_list;
+	GtkObject*	object;
+	GtkTree*	tree;
 	guint 		i;
+	guint		j;
 	GConfValue*	value;
+	gchar*		camera_description;
+	gint		camera_id;
+	gchar*		name;
+	gchar*		model;
+	gchar*		port;
+	gchar*		speed;
+	guint		count;
+	Camera*		camera;
 
 	g_assert ((xml = user_data) != NULL);
+	g_assert ((tree = GTK_TREE (glade_xml_get_widget (xml, "tree_cameras"))) != NULL);
 
 	if (entry->value == NULL) {
 		//FIXME: What happens here?
@@ -92,16 +105,77 @@ on_camera_setup_changed (GConfClient* client, guint notify_id, GConfEntry* entry
 		list_cameras = gconf_value_get_list (entry->value);
 		g_assert (entry->value->type == GCONF_VALUE_LIST);
 		g_assert (gconf_value_get_list_type (entry->value) == GCONF_VALUE_STRING);
+		tree_list = g_list_first (tree->children);
+		
+		/* Mark each camera in the tree as unchecked. */
+		for (i = 0; i < g_list_length (tree_list); i++) 
+			gtk_object_set_data (GTK_OBJECT (g_list_nth_data (tree_list, i)), "checked", GINT_TO_POINTER (0));
+
 		for (i = 0; i < g_slist_length (list_cameras); i++) {
+			tree_list = g_list_first (tree->children);
+			count = 0;
 			value = g_slist_nth_data (list_cameras, i);
 			g_assert (value->type == GCONF_VALUE_STRING);
-			//FIXME: Update the camera tree.
+	                camera_description = (gchar*) gconf_value_get_string (value);
+	                for (j = 0; camera_description[j] != '\0'; j++) {
+	                        if (camera_description[j] == '\n') {
+	                                camera_description[j] = '\0';
+	                                count++;
+	                        }
+	                }
+	                g_assert (count == 4);
+			camera_id = atoi (camera_description);
+			for (j = 0; camera_description[j] != '\0'; j++);
+	                name = g_strdup (&camera_description[++j]);
+	                for (; camera_description[j] != '\0'; j++);
+	                model = g_strdup (&camera_description[++j]);
+        	        for (; camera_description[j] != '\0'; j++);
+	                port = g_strdup (&camera_description[++j]);
+		        for (; camera_description[j] != '\0'; j++);
+		        speed = g_strdup (&camera_description[++j]);
+			
+			/* Do we have this camera in the tree? */
+			for (j = 0; j < g_list_length (tree_list); j++) {
+				g_assert (GTK_IS_OBJECT (g_list_nth_data (tree_list, j)));
+				object = GTK_OBJECT (g_list_nth_data (tree_list, j)); 
+				if (GPOINTER_TO_INT (gtk_object_get_data (object, "camera_id")) == camera_id) {
+					//FIXME: Check if the port/speed/model/name changed!
+					g_assert (GPOINTER_TO_INT (gtk_object_get_data (object, "checked")) == 0);
+					gtk_object_set_data (object, "checked", GINT_TO_POINTER (1));
+					break;
+				}
+			}
+			if (j == g_list_length (tree_list)) {
+
+				/* We don't have the camera in the tree (yet). */
+				camera = gp_camera_new_by_description (model, port, speed);
+	                        if (camera) {
+        	                        camera_add_to_tree (xml, camera, name, camera_id, -1);
+                	        }
+			}
+
+			g_free (name);
+			g_free (model);
+			g_free (port);
+			g_free (speed);
+		}
+
+		/* Delete all unchecked cameras. */
+		tree_list = g_list_first (tree->children);
+		for (j = 0; j < g_list_length (tree_list); j++) {
+			object = GTK_OBJECT (g_list_nth_data (tree_list, j));
+			if (GPOINTER_TO_INT (gtk_object_get_data (object, "checked")) == 0) {
+				gp_camera_free (gtk_object_get_data (object, "camera"));
+				//FIXME: There is more to free - perhaps a whole subtree...
+				gtk_tree_remove_item (tree, GTK_WIDGET (object));
+				tree_list = g_list_first (tree->children);
+			}
 		}
 	}
 }
 
 void
-folder_build (GladeXML *xml, GtkWidget *item, Camera *camera, gchar *path)
+folder_build (GladeXML *xml, GtkWidget *item, Camera *camera, gint camera_id, gchar *path)
 {
         CameraList folder_list;
         CameraListEntry *folder_list_entry;
@@ -134,8 +208,9 @@ folder_build (GladeXML *xml, GtkWidget *item, Camera *camera, gchar *path)
                                 gtk_tree_append (GTK_TREE (subtree), item);
                                 path = g_strdup_printf ("%s/%s", path, folder_list_entry->name);
                                 gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
+				gtk_object_set_data (GTK_OBJECT (item), "camera_id", GINT_TO_POINTER (camera_id));
                                 gtk_object_set_data (GTK_OBJECT (item), "path", path);
-                                folder_build (xml, item, camera, path);
+                                folder_build (xml, item, camera, camera_id, path);
                         }
                 }
         } else {
@@ -144,7 +219,7 @@ folder_build (GladeXML *xml, GtkWidget *item, Camera *camera, gchar *path)
 }
 
 void
-camera_add_to_tree (GladeXML *xml, Camera *camera, gchar *name, gint position)
+camera_add_to_tree (GladeXML *xml, Camera *camera, gchar *name, gint camera_id, gint position)
 {
         gchar *path;
         GnomeApp *app;
@@ -176,12 +251,14 @@ camera_add_to_tree (GladeXML *xml, Camera *camera, gchar *name, gint position)
         gtk_signal_connect (GTK_OBJECT (item), "button_press_event", GTK_SIGNAL_FUNC (on_tree_cameras_button_press_event), NULL);
         /* Store some data. */
         gtk_object_set_data (GTK_OBJECT (item), "camera", camera);
+	gtk_object_set_data (GTK_OBJECT (item), "camera_id", GINT_TO_POINTER (camera_id));
         gtk_object_set_data (GTK_OBJECT (item), "path", path);
         gtk_object_set_data (GTK_OBJECT (item), "xml", xml);
+	gtk_object_set_data (GTK_OBJECT (item), "checked", GINT_TO_POINTER (1));
         
         /* Do we have folders? */
         if (gp_camera_folder_list (camera, &folder_list, path) == GP_OK) {
-                folder_build (xml, item, camera, path);
+                folder_build (xml, item, camera, camera_id, path);
         } else {
                 gnome_app_error (app, _("Could not get folder list!"));
         }
@@ -201,12 +278,14 @@ int main (int argc, char *argv[])
 	guint		i;
 	guint		j;
 	guint		position;
+	guint		count = 0;
 	Camera*		camera;
-	gchar*		name = NULL;
-	gchar*		model = NULL;
-	gchar*		port = NULL;
-	gchar*		speed = NULL;
-	gchar*		camera_description = NULL;
+	gchar*		camera_id;
+	gchar*		name;
+	gchar*		model;
+	gchar*		port;
+	gchar*		speed;
+	gchar*		camera_description;
 	gchar*		prefix = NULL;
 	gchar*		home = NULL;
 	gchar*		message = NULL;
@@ -254,18 +333,30 @@ int main (int argc, char *argv[])
 			value = g_slist_nth_data (list_cameras, i);
 			g_assert (value->type == GCONF_VALUE_STRING);
                         camera_description = (gchar*) gconf_value_get_string (value);
-                        for (j = 0; camera_description[j] != '\0'; j++) if (camera_description[j] == '\n') camera_description[j] = '\0';
-                        name = camera_description;
-                        for (j = 0; camera_description[j] != '\0'; j++);
-                        model = &camera_description[++j];
+                        for (j = 0; camera_description[j] != '\0'; j++) {
+                                if (camera_description[j] == '\n') {
+                                        camera_description[j] = '\0';
+                                        count++;
+                                }
+                        }
+			camera_id = g_strdup (camera_description);
+			for (j = 0; camera_description[j] != '\0'; j++);
+                        name = g_strdup (&camera_description[++j]);
                         for (; camera_description[j] != '\0'; j++);
-                        port = &camera_description[++j];
+                        model = g_strdup (&camera_description[++j]);
                         for (; camera_description[j] != '\0'; j++);
-                        speed = &camera_description[++j];
+                        port = g_strdup (&camera_description[++j]);
+	                for (; camera_description[j] != '\0'; j++);
+        	        speed = g_strdup (&camera_description[++j]);
 			camera = gp_camera_new_by_description (model, port, speed);
 			if (camera) {
-				camera_add_to_tree (xml, camera, name, position++);
+				camera_add_to_tree (xml, camera, name, atoi (camera_id), position++);
 			}
+			g_free (camera_id);
+			g_free (name);
+			g_free (model);
+			g_free (port);
+			g_free (speed);
 		}
 		gconf_value_free (value_list);
 	} 

@@ -53,6 +53,9 @@ on_button_camera_add_clicked (GtkButton *button, gpointer user_data)
 	gchar*		name;
 	gchar*		text[4];
 	GConfChangeSet*	change_set;
+	gchar*		camera_id;
+	gint		i;
+	guint		j;
 
 	g_assert ((xml_preferences = gtk_object_get_data (GTK_OBJECT (button), "xml_preferences")) != NULL);
 	g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml_preferences, "clist_cameras"))) != NULL);
@@ -71,6 +74,15 @@ on_button_camera_add_clicked (GtkButton *button, gpointer user_data)
 	} else if (*model == '\0') {
 		gnome_error_dialog_parented (_("Please indicate a model!"), window);
 	} else {
+	
+		/* Search for unused id. */
+		for (i = 0; ; i++) {
+			for (j = 0; j < clist->rows; j++) {
+				if (atoi (gtk_clist_get_row_data (clist, j)) == i) break;
+			}
+			if (j == clist->rows) break;
+		}
+		camera_id = g_strdup_printf ("%i", i);
 
 		/* Add entry to clist. */
 		text[0] = name;
@@ -78,6 +90,7 @@ on_button_camera_add_clicked (GtkButton *button, gpointer user_data)
 		text[2] = port;
 		text[3] = speed;
 		gtk_clist_append (clist, text);
+		gtk_clist_set_row_data (clist, clist->rows - 1, camera_id);
 
 		dialog_preferences_cameras_changed (xml_preferences);
 		dialog_preferences_update_sensitivity (xml_preferences);
@@ -115,10 +128,10 @@ on_button_camera_update_clicked (GtkButton *button, gpointer user_data)
 			row = GPOINTER_TO_INT (selection->data);
 	
 			/* Get the user's entries. */
-		        name = gtk_entry_get_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "entry_name")));
-		        model = gtk_entry_get_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_model")));
-		        speed = gtk_entry_get_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_speed")));
-	        	port = gtk_entry_get_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_port")));
+		        g_assert ((name = gtk_entry_get_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "entry_name")))) != NULL);
+		        g_assert ((model = gtk_entry_get_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_model")))) != NULL);
+		        g_assert ((speed = gtk_entry_get_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_speed")))) != NULL);;
+	        	g_assert ((port = gtk_entry_get_text (GTK_ENTRY (glade_xml_get_widget (xml_preferences, "combo_entry_port")))) != NULL);
 	
 			/* Add entry at previous position to list. */
 			text[0] = name;
@@ -126,6 +139,7 @@ on_button_camera_update_clicked (GtkButton *button, gpointer user_data)
 			text[2] = port;
 			text[3] = speed;
 			gtk_clist_insert (clist, row, text);
+			gtk_clist_set_row_data (clist, row, gtk_clist_get_row_data (clist, row + 1));
 
 			/* Remove the old entry in the list. */
 			gtk_clist_remove (clist, row + 1);
@@ -161,6 +175,7 @@ on_button_camera_delete_clicked (GtkButton *button, gpointer user_data)
 		/* Remove the rows in the camera list. */
 		while (selection != NULL) {
 			row = GPOINTER_TO_INT (selection->data);
+			g_free (gtk_clist_get_row_data (clist, row));
 			gtk_clist_remove (clist, row);
 			selection = g_list_first (clist->selection);
 		}
@@ -427,6 +442,8 @@ dialog_preferences_cameras_update (GladeXML* xml_preferences, GSList* list_camer
 	gchar*		camera_description;
 	guint		i;
 	guint		j;
+	gchar*		camera_id;
+	guint		count;
 
 	g_assert (xml_preferences != NULL);
         g_assert ((clist = GTK_CLIST (glade_xml_get_widget (xml_preferences, "clist_cameras"))) != NULL);
@@ -436,15 +453,26 @@ dialog_preferences_cameras_update (GladeXML* xml_preferences, GSList* list_camer
                 value = g_slist_nth_data (list_cameras, i);
                 g_assert (value->type = GCONF_VALUE_STRING);
                 camera_description = (gchar*) gconf_value_get_string (value);
-                for (j = 0; camera_description[j] != '\0'; j++) if (camera_description[j] == '\n') camera_description[j] = '\0';
-                text[0] = camera_description;
-                for (j = 0; camera_description[j] != '\0'; j++);
-                text[1] = &camera_description[++j];
+		count = 0;
+                for (j = 0; camera_description[j] != '\0'; j++) {
+			if (camera_description[j] == '\n') {
+				camera_description[j] = '\0';
+				count++;
+			}
+		}
+		g_assert (count == 4);
+		camera_id = g_strdup (camera_description);
+		for (j = 0; camera_description[j] != '\0'; j++);
+                text[0] = g_strdup (&camera_description[++j]);
                 for (; camera_description[j] != '\0'; j++);
-                text[2] = &camera_description[++j];
+                text[1] = g_strdup (&camera_description[++j]);
                 for (; camera_description[j] != '\0'; j++);
-                text[3] = &camera_description[++j];
+                text[2] = g_strdup (&camera_description[++j]);
+	        for (; camera_description[j] != '\0'; j++);
+	        text[3] = g_strdup (&camera_description[++j]);
                 gtk_clist_append (clist, text);
+		gtk_clist_set_row_data (clist, clist->rows - 1, camera_id);
+		for (j = 0; j < 4; j++) g_free (text[j]);
         }
 }
 
@@ -454,13 +482,14 @@ dialog_preferences_cameras_changed (GladeXML* xml_preferences)
 	GConfChangeSet*	change_set;
 	GtkObject*	object;
 	GtkCList*	clist;
-	guint		i;
+	gint		i;
 	gchar*		camera_description;
 	GSList*		list_cameras = NULL;
 	gchar*		name;
 	gchar*		model;
 	gchar*		port;
 	gchar*		speed;
+	gchar*		camera_id;
 
 	g_assert (xml_preferences != NULL);
 	g_assert ((object = GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences"))) != NULL);
@@ -469,11 +498,12 @@ dialog_preferences_cameras_changed (GladeXML* xml_preferences)
 
         /* Build up the camera list for gconf from scratch. */
         for (i = 0; i < clist->rows; i++) {
+		camera_id = gtk_clist_get_row_data (clist, i);
 		gtk_clist_get_text (clist, i, 0, &name);
 		gtk_clist_get_text (clist, i, 1, &model);
 		gtk_clist_get_text (clist, i, 2, &port);
 		gtk_clist_get_text (clist, i, 3, &speed);
-                camera_description = g_strdup_printf ("%s\n%s\n%s\n%s", name, model, port, speed);
+                camera_description = g_strdup_printf ("%s\n%s\n%s\n%s\n%s", camera_id, name, model, port, speed);
 		list_cameras = g_slist_append (list_cameras, camera_description);
         }
 
@@ -534,14 +564,15 @@ dialog_preferences_apply (GladeXML *xml_preferences)
 	if (!(revert_change_set = gtk_object_get_data (object, "revert_change_set"))) {
 
 		/* Create the revert changeset on the first apply. */
-		revert_change_set = gconf_client_change_set_from_current (
-			client, 
-			NULL, 
-			"/apps/" PACKAGE "/cameras",
-			"/apps/" PACKAGE "/prefix",
-			"/apps/" PACKAGE "/debug_level",
-			NULL);
-		gtk_object_set_data (object, "revert_change_set", revert_change_set);
+//FIXME: Revert does not work with revert_change_set. The camera list gets totally mixed up. I have no idea why...
+//		revert_change_set = gconf_client_change_set_from_current (
+//			client, 
+//			NULL, 
+//			"/apps/" PACKAGE "/cameras",
+//			"/apps/" PACKAGE "/prefix",
+//			"/apps/" PACKAGE "/debug_level",
+//			NULL);
+//		gtk_object_set_data (object, "revert_change_set", revert_change_set);
 	}
 
 	gconf_client_commit_change_set (client, change_set, TRUE, NULL);
@@ -652,7 +683,7 @@ preferences (GladeXML *xml)
 	gchar 		buffer[1024];
 	gint 		number_of_models;
 	gint		number_of_ports;
-	guint		i;
+	gint		i;
 	GtkCombo*	combo;
 	GtkWindow*	window;
 	gchar*		name;
@@ -696,7 +727,7 @@ preferences (GladeXML *xml)
 	gtk_object_set_data (GTK_OBJECT (window), "done", GINT_TO_POINTER (1));
 
         /* Build model list. */
-	combo = GTK_COMBO (glade_xml_get_widget (xml_preferences, "combo_model"));
+	g_assert ((combo = GTK_COMBO (glade_xml_get_widget (xml_preferences, "combo_model"))) != NULL);
         list = NULL;
 	if ((number_of_models = gp_camera_count ()) != GP_ERROR) {
                 for (i = 0; i < number_of_models; i++) {
@@ -704,7 +735,7 @@ preferences (GladeXML *xml)
                                 gnome_error_dialog_parented (_("Could not get model name!"), window);
                                 strcpy (buffer, "?");
                         }
-                        name = g_strdup_printf ("%s", buffer);
+			name = g_strdup_printf ("%s", buffer);
                         list = g_list_append (list, name);
                 }
                 if (list != NULL) {
@@ -716,7 +747,7 @@ preferences (GladeXML *xml)
 	}
 
         /* Build port list. */
-	combo = GTK_COMBO (glade_xml_get_widget (xml_preferences, "combo_port"));
+	g_assert ((combo = GTK_COMBO (glade_xml_get_widget (xml_preferences, "combo_port"))) != NULL);
 	list = NULL;
         if ((number_of_ports = gp_port_count ()) != GP_ERROR) {
                 for (i = 0; i < number_of_ports; i++) {

@@ -38,7 +38,7 @@ compileinstall() {
     bool=true
     for ext in .tar.gz .tar.bz2
     do
-	if ! ls "${distdir}"/*${ext} >& /dev/null
+	if ! ls "${distdir}"/*${ext} > /dev/null 2>&1
 	then
 	    echo "$0: No *${ext} source distributions found."
 	else

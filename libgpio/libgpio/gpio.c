@@ -204,24 +204,26 @@ int gpio_free(gpio_device *dev)
 int gpio_write(gpio_device *dev, char *bytes, int size)
         /* Called to write "bytes" to the IO device */
 {
-	int x, retval;
+	int x, retval, dsize;
 	char t[8];
 	char *buf;
 
 	if (device_debug == GPIO_DEBUG_HIGH) {
-		buf = (char*)malloc(sizeof(size));
-		buf[0] = 0;
-		gpio_debug_printf("gpio_write: size=%i", size);
+		buf = (char*)malloc(size+64);
+		sprintf(buf, "gpio_write: (size=%05i) DATA: ", size);
 		for (x=0; x<size; x++) {
 			sprintf(t, "%02x ", (unsigned char)bytes[x]);
 			strcat(buf, t); 
 		}
-		gpio_debug_printf("gpio_write: DATA : %s", buf);
+		gpio_debug_printf(buf);
 		free(buf);
 	}
         retval =  dev->ops->write(dev, bytes, size);
 
-	gpio_debug_printf("gpio_write: write %s", retval < 0? "error":"ok");
+	if (retval == GPIO_TIMEOUT)
+		gpio_debug_printf("gpio_write: write timeout");
+	if (retval == GPIO_ERROR)
+		gpio_debug_printf("gpio_write: write error");
 
 	return (retval);
 }
@@ -238,16 +240,20 @@ int gpio_read(gpio_device *dev, char *bytes, int size)
 	retval = dev->ops->read(dev, bytes, size);
 
 	if ((retval > 0)&&(device_debug == GPIO_DEBUG_HIGH)) {
-		buf = (char*)malloc(sizeof(size));
-		buf[0] = 0;
-		gpio_debug_printf("gpio_read: bytes read=%i", retval);		
+		buf = (char*)malloc(retval+64);
+		sprintf(buf, "gpio_read: (size=%05i) DATA: ", retval);
 		for (x=0; x<retval; x++) {
 			sprintf(t, "%02x ", (unsigned char)bytes[x]);
 			strcat(buf, t); 
 		}
-		gpio_debug_printf("gpio_read: DATA : %s", buf);
+		gpio_debug_printf(buf);
 		free(buf);
 	}
+
+	if (retval == GPIO_TIMEOUT)
+		gpio_debug_printf("gpio_read: read timeout");
+	if (retval == GPIO_ERROR)
+		gpio_debug_printf("gpio_read: read error");
 
 	return (retval);
 }

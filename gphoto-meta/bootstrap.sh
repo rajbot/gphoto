@@ -68,6 +68,7 @@ builddist() {
     export PKG_CONFIG_PATH="${distroot}/lib/pkgconfig:${PKG_CONFIG_PATH}"
     export LD_LIBRARY_PATH="${distroot}/lib:${LD_LIBRARY_PATH}"
     export PATH="${distroot}/bin:${PATH}"
+    cmd mkdir -p "${distdir}"
     while read CVSROOT module releasetag autogenopts configopts restofline
     do
 	if ls "${distdir}/${module}-"[0-9]* >& /dev/null

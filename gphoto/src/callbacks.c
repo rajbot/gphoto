@@ -1392,6 +1392,7 @@ void color_dialog() {
 GtkWidget *resize_dialog_width, *resize_dialog_height,
 	  *resize_dialog_constrain;
 char	  resize_dialog_w[10], resize_dialog_h[10];
+guint	  resize_dialog_width_handler,resize_dialog_height_handler;
 
 void resize_dialog_update(GtkWidget *entry) {
 
@@ -1400,6 +1401,11 @@ void resize_dialog_update(GtkWidget *entry) {
 	
 	if (!GTK_TOGGLE_BUTTON(resize_dialog_constrain)->active)
 		return;
+
+	gtk_signal_handler_block(GTK_OBJECT(resize_dialog_width),
+		resize_dialog_width_handler);
+	gtk_signal_handler_block(GTK_OBJECT(resize_dialog_height),
+		resize_dialog_height_handler);
 
 	oldw = atoi(resize_dialog_w);
 	oldh = atoi(resize_dialog_h);
@@ -1414,7 +1420,6 @@ void resize_dialog_update(GtkWidget *entry) {
 		sprintf(newentry, "%i", newvalue);
 		gtk_entry_set_text(GTK_ENTRY(resize_dialog_height),
 			newentry);
-		return;
 	}
 
 	if (entry == resize_dialog_height) {
@@ -1425,8 +1430,12 @@ void resize_dialog_update(GtkWidget *entry) {
 		sprintf(newentry, "%i", newvalue);
 		gtk_entry_set_text(GTK_ENTRY(resize_dialog_width),
 			newentry);
-		return;
 	}
+
+	gtk_signal_handler_unblock(GTK_OBJECT(resize_dialog_width),
+		resize_dialog_width_handler);
+	gtk_signal_handler_unblock(GTK_OBJECT(resize_dialog_height),
+		resize_dialog_height_handler);
 }
 
 void resize_dialog() {
@@ -1474,7 +1483,8 @@ void resize_dialog() {
 	gtk_entry_set_max_length(GTK_ENTRY(resize_dialog_width), 10);
 	gtk_entry_set_text(GTK_ENTRY(resize_dialog_width),
 		resize_dialog_w);
-	gtk_signal_connect_object(GTK_OBJECT(resize_dialog_width),
+	resize_dialog_width_handler = 
+		gtk_signal_connect_object(GTK_OBJECT(resize_dialog_width),
 		"changed", GTK_SIGNAL_FUNC(resize_dialog_update),	
 		GTK_OBJECT(resize_dialog_width));
 	gtk_box_pack_start_defaults(GTK_BOX(hbox),resize_dialog_width);
@@ -1496,9 +1506,10 @@ void resize_dialog() {
 	gtk_entry_set_max_length(GTK_ENTRY(resize_dialog_height), 10);
 	gtk_entry_set_text(GTK_ENTRY(resize_dialog_height), 
 		resize_dialog_h);
-	gtk_signal_connect_object(GTK_OBJECT(resize_dialog_width),
+	resize_dialog_height_handler = 
+		gtk_signal_connect_object(GTK_OBJECT(resize_dialog_height),
 		"changed", GTK_SIGNAL_FUNC(resize_dialog_update),	
-		GTK_OBJECT(resize_dialog_width));
+		GTK_OBJECT(resize_dialog_height));
 	gtk_box_pack_start_defaults(GTK_BOX(hbox), resize_dialog_height);
 
 	resize_dialog_constrain = gtk_check_button_new_with_label(

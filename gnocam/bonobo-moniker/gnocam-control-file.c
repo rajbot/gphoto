@@ -9,14 +9,19 @@
 
 #include "utils.h"
 
-#define PARENT_TYPE gnocam_control_get_type ()
+#define PARENT_TYPE bonobo_control_get_type ()
 static BonoboControlClass* gnocam_control_file_parent_class = NULL;
 
 struct _GnoCamControlFilePrivate
 {
+	Camera*	camera;
 	gchar*	dirname;
 	gchar*	filename;
 };
+
+/***************************/
+/* Bonobo-Control specific */
+/***************************/
 
 static void
 activate (BonoboControl* object, gboolean state)
@@ -33,16 +38,11 @@ activate (BonoboControl* object, gboolean state)
         if (state) {
                 gint            result;
                 CameraWidget*   widget = NULL;
-                Camera*         camera;
 
-                /* Get the camera from our parent */
-                camera = gnocam_control_get_camera (GNOCAM_CONTROL (object));
-                if (camera) {
+                /* Create the menu */
+                result = gp_camera_file_config_get (control->priv->camera, &widget, control->priv->dirname, control->priv->filename);
+                if (result == GP_OK) menu_setup (object, control->priv->camera, widget, _("File Configuration"), control->priv->dirname, control->priv->filename);
 
-                        /* Create the menu */
-                        result = gp_camera_file_config_get (camera, &widget, control->priv->dirname, control->priv->filename);
-                        if (result == GP_OK) menu_setup (GNOCAM_CONTROL (control), widget, "File Configuration", control->priv->dirname, control->priv->filename);
-                }
 	} else {
                 bonobo_ui_component_unset_container (component);
         }
@@ -55,12 +55,15 @@ activate (BonoboControl* object, gboolean state)
 static void
 destroy (GtkObject* object)
 {
-	GnoCamControlFile* file;
+	GnoCamControlFile* control;
 
-	file = GNOCAM_CONTROL_FILE (object);
-	if (file->priv->dirname) g_free (file->priv->dirname);
-	if (file->priv->filename) g_free (file->priv->filename);
-	g_free (file->priv);
+	control = GNOCAM_CONTROL_FILE (object);
+
+	if (control->priv->camera) gp_camera_unref (control->priv->camera);
+	if (control->priv->dirname) g_free (control->priv->dirname);
+	if (control->priv->filename) g_free (control->priv->filename);
+	
+	g_free (control->priv);
 }
 
 static void
@@ -88,7 +91,7 @@ init (GnoCamControlFile* file)
 }
 
 GnoCamControlFile*
-gnocam_control_file_new (BonoboMoniker* moniker, const Bonobo_ResolveOptions* options, Bonobo_Stream stream, CORBA_Environment* ev)
+gnocam_control_file_new (Camera* camera, BonoboMoniker* moniker, const Bonobo_ResolveOptions* options, Bonobo_Stream stream, CORBA_Environment* ev)
 {
 	GtkWidget*		widget;
 	GnoCamControlFile*	new;
@@ -105,6 +108,8 @@ gnocam_control_file_new (BonoboMoniker* moniker, const Bonobo_ResolveOptions* op
 	new = gtk_type_new (gnocam_control_file_get_type ());
 	new->priv->filename = g_strdup (g_basename (name));
 	new->priv->dirname = g_dirname (name);
+	new->priv->camera = camera;
+	gp_camera_ref (camera);
 	
 	widget = bonobo_widget_new_control_from_objref (subcontrol, CORBA_OBJECT_NIL);
 	bonobo_control_construct (BONOBO_CONTROL (new), widget);

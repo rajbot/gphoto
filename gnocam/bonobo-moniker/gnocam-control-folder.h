@@ -1,8 +1,9 @@
 
-#ifndef _GNOCAM_CONTROL_FOLDER_H_
-#define _GNOCAM_CONTROL_FOLDER_H_
+#ifndef __GNOCAM_CONTROL_FOLDER_H__
+#define __GNOCAM_CONTROL_FOLDER_H__
 
-#include "gnocam-control.h"
+#include <gphoto2.h>
+#include <bonobo.h>
 
 BEGIN_GNOME_DECLS
 
@@ -17,19 +18,19 @@ typedef struct _GnoCamControlFolderPrivate	GnoCamControlFolderPrivate;
 typedef struct _GnoCamControlFolderClass	GnoCamControlFolderClass;
 
 struct _GnoCamControlFolder {
-	GnoCamControl           	parent;
+	BonoboControl			parent;
 
 	GnoCamControlFolderPrivate*	priv;
 };
 
 struct _GnoCamControlFolderClass {
-	GnoCamControlClass 	parent_class;
+	BonoboControlClass		parent_class;
 };
 
 
 GtkType    		gnocam_control_folder_get_type		(void);
-GnoCamControlFolder*	gnocam_control_folder_new		(BonoboMoniker* moniker, Bonobo_Storage storage, CORBA_Environment* ev);
+GnoCamControlFolder*	gnocam_control_folder_new		(Camera* camera, Bonobo_Storage storage, const gchar* path);
 
 END_GNOME_DECLS
 
-#endif /* _GNOCAM_CONTROL_FOLDER_H_ */
+#endif /* __GNOCAM_CONTROL_FOLDER_H__ */

@@ -17,18 +17,19 @@ typedef struct _GnoCamControlFilePrivate	GnoCamControlFilePrivate;
 typedef struct _GnoCamControlFileClass	GnoCamControlFileClass;
 
 struct _GnoCamControlFile {
-	GnoCamControl 			parent;
+	BonoboControl 			parent;
 
 	GnoCamControlFilePrivate*	priv;
 };
 
 struct _GnoCamControlFileClass {
-	GnoCamControlClass 	parent_class;
+	BonoboControlClass	 	parent_class;
 };
 
 
 GtkType    		gnocam_control_file_get_type	(void);
-GnoCamControlFile*	gnocam_control_file_new		(BonoboMoniker* moniker, const Bonobo_ResolveOptions* options, Bonobo_Stream stream, CORBA_Environment* ev);
+GnoCamControlFile*	gnocam_control_file_new		(Camera* camera, BonoboMoniker* moniker, const Bonobo_ResolveOptions* options, 
+							Bonobo_Stream stream, CORBA_Environment* ev);
 
 END_GNOME_DECLS
 

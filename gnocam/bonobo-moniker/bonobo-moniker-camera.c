@@ -52,45 +52,13 @@ camera_resolve (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options, co
 
 	/* Control? */
 	if (!strcmp (requested_interface, "IDL:Bonobo/Control:1.0")) {
-		GnoCamControlFolder*	control;
-		CORBA_Environment	ev_internal;
-		Bonobo_Storage		storage;
-		gchar*			tmp;
-
-		/* For now, we assume that we've got to display a folder... */
-		
-		/* Try to get a storage */
-                tmp = g_strconcat (bonobo_moniker_get_prefix (moniker), bonobo_moniker_get_name (moniker), NULL);
-		CORBA_exception_init (&ev_internal);
-                storage = bonobo_get_object (tmp, "IDL:Bonobo/Storage:1.0", &ev_internal);
-		if (BONOBO_EX (&ev_internal)) {
-			GnoCamControlFile*	control;
-			Bonobo_Stream		stream;
-
-			CORBA_exception_free (&ev_internal);
-
-			/* Try to get a stream */
-			stream = bonobo_get_object (tmp, "IDL:Bonobo/Stream:1.0", ev);
-			g_free (tmp);
-			if (BONOBO_EX (ev)) return (CORBA_OBJECT_NIL);
-			g_return_val_if_fail (stream, CORBA_OBJECT_NIL);
-
-			/* Create the control */
-			control = gnocam_control_file_new (moniker, stream, ev);
-			if (BONOBO_EX (ev)) return (CORBA_OBJECT_NIL);
-			g_return_val_if_fail (control, CORBA_OBJECT_NIL);
-
-			return (CORBA_Object_duplicate (BONOBO_OBJREF (control), ev));
-		}
-		CORBA_exception_free (&ev_internal);
-                g_free (tmp);
-		g_return_val_if_fail (storage, CORBA_OBJECT_NIL);
+		GnoCamControl*	control;
 
 		/* Create the control */
-		control = gnocam_control_folder_new (moniker, storage, ev);
+		control = gnocam_control_new (moniker, ev);
 		if (BONOBO_EX (ev)) return (CORBA_OBJECT_NIL);
 		g_return_val_if_fail (control, CORBA_OBJECT_NIL);
-		
+
 		return (CORBA_Object_duplicate (BONOBO_OBJREF (control), ev));
 	}
 

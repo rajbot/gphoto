@@ -30,7 +30,6 @@ void on_adjustment_value_changed 	(GtkObject* object, gpointer user_data);
 void on_togglebutton_toggled 		(GtkObject* object, gpointer user_data);
 void on_date_changed 			(GtkObject* object, gpointer user_data);
 
-void menu_setup 	(GnoCamControl* control, CameraWidget* widget, gchar* name, gchar* folder, gchar* file);
 void menu_prepare       (CameraWidget* widget, xmlNodePtr popup, xmlNodePtr command, xmlNsPtr ns);
 void menu_fill          (BonoboUIComponent* component, Camera* camera, gchar* path, CameraWidget* window, CameraWidget* widget, gchar* folder, gchar* file);
 
@@ -172,7 +171,7 @@ on_date_changed (GtkObject* object, gpointer user_data)
 /*************/
 
 void
-menu_setup (GnoCamControl* control, CameraWidget* widget, gchar* name, gchar* folder, gchar* file)
+menu_setup (BonoboControl* control, Camera* camera, CameraWidget* widget, gchar* name, gchar* folder, gchar* file)
 {
         gchar*          tmp = NULL;
         xmlDocPtr       doc = xmlNewDoc ("1.0");
@@ -196,16 +195,14 @@ menu_setup (GnoCamControl* control, CameraWidget* widget, gchar* name, gchar* fo
         /* Send it to the component. */
         xmlDocDumpMemory (doc, (xmlChar**) &tmp, &i);
         xmlFreeDoc (doc);
-        bonobo_ui_component_set_translate (bonobo_control_get_ui_component (BONOBO_CONTROL (control)), "/", tmp, NULL);
+        bonobo_ui_component_set_translate (bonobo_control_get_ui_component (control), "/", tmp, NULL);
         g_free (tmp);
 
 	/* Finish. */
 	tmp = g_strconcat ("/menu/Edit/", name, NULL);
 	{
 		BonoboUIComponent*	component;
-		Camera* 		camera;
 
-		camera = gnocam_control_get_camera (control);
 		component = bonobo_control_get_ui_component (BONOBO_CONTROL (control));
 		menu_fill (component, camera, tmp, widget, widget, folder, file);
 	}

@@ -8,13 +8,19 @@
 
 #include "utils.h"
 
-#define PARENT_TYPE gnocam_control_get_type ()
+#define PARENT_TYPE bonobo_control_get_type ()
 static BonoboControlClass* gnocam_control_folder_parent_class = NULL;
 
 struct _GnoCamControlFolderPrivate
 {
-	gchar*	dirname;
+	Camera*	camera;
+	
+	gchar*	path;
 };
+
+/************************/
+/* Bonobo-Control stuff */
+/************************/
 
 static void
 activate (BonoboControl* object, gboolean state)
@@ -31,16 +37,10 @@ activate (BonoboControl* object, gboolean state)
 	if (state) {
 		gint		result;
 		CameraWidget*	widget = NULL;
-		Camera*		camera;
 
-		/* Get the camera from our parent */
-		camera = gnocam_control_get_camera (GNOCAM_CONTROL (object));
-		if (camera) {
-
-			/* Create the menu */
-			result = gp_camera_folder_config_get (camera, &widget, control->priv->dirname);
-			if (result == GP_OK) menu_setup (GNOCAM_CONTROL (control), widget, "Folder Configuration", control->priv->dirname, NULL);
-		}
+		/* Create the menu */
+		result = gp_camera_folder_config_get (control->priv->camera, &widget, control->priv->path);
+		if (result == GP_OK) menu_setup (object, control->priv->camera, widget, "Folder Configuration", control->priv->path, NULL);
 	} else {
 		bonobo_ui_component_unset_container (component);
 	}
@@ -56,7 +56,10 @@ destroy (GtkObject* object)
 	GnoCamControlFolder* folder;
 
 	folder = GNOCAM_CONTROL_FOLDER (object);
-	if (folder->priv->dirname) g_free (folder->priv->dirname);
+
+	if (folder->priv->camera) gp_camera_unref (folder->priv->camera);
+	if (folder->priv->path) g_free (folder->priv->path);
+	
 	g_free (folder->priv);
 }
 
@@ -85,7 +88,7 @@ init (GnoCamControlFolder* folder)
 }
 
 GnoCamControlFolder*
-gnocam_control_folder_new (BonoboMoniker* moniker, Bonobo_Storage storage, CORBA_Environment* ev)
+gnocam_control_folder_new (Camera* camera, Bonobo_Storage storage, const gchar* path)
 {
 	GtkWidget*			widget;
 	GnoCamControlFolder*		new;
@@ -93,15 +96,20 @@ gnocam_control_folder_new (BonoboMoniker* moniker, Bonobo_Storage storage, CORBA
 	gchar*				row [] = {NULL, NULL, NULL};
 	gint				i;
 	gchar*				name;
+	CORBA_Environment		ev;
 
-        list = Bonobo_Storage_listContents (storage, "", Bonobo_FIELD_TYPE, ev);
-        if (BONOBO_EX (ev)) return (NULL);
+	CORBA_exception_init (&ev);
+        list = Bonobo_Storage_listContents (storage, "", Bonobo_FIELD_TYPE, &ev);
+        if (BONOBO_EX (&ev)) {
+		CORBA_exception_free (&ev);
+		return (NULL);
+	}
+	CORBA_exception_free (&ev);
 
 	new = gtk_type_new (gnocam_control_folder_get_type ());
-	
-	/* Extract the dirname */
-	for (name = (gchar*) bonobo_moniker_get_name (moniker) + 2; *name != 0; name++) if (*name == '/') break;
-	new->priv->dirname = g_strdup (name);
+	new->priv->camera = camera;
+	new->priv->path = g_strdup (path);
+	gp_camera_ref (camera);
 
         widget = gtk_clist_new (2);
         gtk_widget_show (widget);
@@ -122,8 +130,6 @@ gnocam_control_folder_new (BonoboMoniker* moniker, Bonobo_Storage storage, CORBA
         }
 
 	bonobo_control_construct (BONOBO_CONTROL (new), widget);
-
-	gnocam_control_complete (GNOCAM_CONTROL (new), moniker);
 
 	return (new);
 }

@@ -21,7 +21,6 @@
 /* External Variables */
 /**********************/
 
-extern GConfClient*	gconf_client;
 extern GtkWindow*	main_window;
 
 /**************/
@@ -287,7 +286,7 @@ save (GtkTreeItem* item, gboolean preview)
 	GnomeVFSURI*	uri;
 
 	g_return_if_fail (item);
-        g_return_if_fail (value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL));
+        g_return_if_fail (value = gconf_client_get (gconf_client_get_default (), "/apps/" PACKAGE "/prefix", NULL));
         g_return_if_fail (value->type == GCONF_VALUE_STRING);
 
 	/* Save the file in the 'tmp' directory. */

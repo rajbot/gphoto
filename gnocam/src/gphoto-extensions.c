@@ -10,7 +10,7 @@
 /*************/
 
 gint
-gp_camera_new_by_description (gint id, gchar* name, gchar* model, gchar* port, gint speed, Camera** camera)
+gp_camera_new_by_description (gint id, gchar* name, gchar* model, gchar* port, Camera** camera)
 {
 	gint 			number_of_ports, i;
 	gint			result = GP_OK;
@@ -30,15 +30,13 @@ gp_camera_new_by_description (gint id, gchar* name, gchar* model, gchar* port, g
 	if (strcmp ("Directory Browse", model) != 0) {
 	
 		/* Check port. */
-		if ((number_of_ports = gp_port_count ()) < 0) return (result);
+		if ((number_of_ports = gp_port_count_get ()) < 0) return (result);
 		for (i = 0; i < number_of_ports; i++) {
-			if ((result = gp_port_info (i, (*camera)->port)) != GP_OK) return (result);
+			if ((result = gp_port_info_get (i, (*camera)->port)) != GP_OK) return (result);
 			if (strcmp ((*camera)->port->name, port) == 0) break;
 		}
 		if (i == number_of_ports) return (GP_ERROR);
-	
-		/* Nothing to check for what concerns speed. */
-		(*camera)->port->speed = speed;
+		(*camera)->port->speed = 0;
 		
 	} else strcpy ((*camera)->port->path, "");
 

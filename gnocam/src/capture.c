@@ -19,7 +19,6 @@
 /* External Variables */
 /**********************/
 
-extern GConfClient* 	gconf_client;
 extern GtkWindow*	main_window;
 
 /**************/
@@ -187,7 +186,7 @@ on_capture_save_activate (BonoboUIComponent* component, gpointer user_data, cons
         GnomeVFSURI*            uri;
 
         if ((file = gtk_object_get_data (GTK_OBJECT (component), "file"))) {
-                g_return_if_fail ((value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL)));
+                g_return_if_fail ((value = gconf_client_get (gconf_client_get_default (), "/apps/" PACKAGE "/prefix", NULL)));
                 g_return_if_fail (value->type == GCONF_VALUE_STRING);
                 filename = g_strdup_printf ("%s/%s", gconf_value_get_string (value), file->name);
                 uri = gnome_vfs_uri_new (filename);

@@ -1,16 +1,15 @@
 
 /* Prototypes */
 
-void camera_tree_folder_add 		(GtkTree* tree, Camera* camera, GnomeVFSURI* uri);
+void camera_tree_folder_add 		(GtkTree* tree, Camera* camera, gchar* url);
 void camera_tree_folder_populate	(GtkTreeItem* folder);
 void camera_tree_folder_clean 		(GtkTreeItem* folder);
 
-void camera_tree_file_add       	(GtkTree* tree, GnomeVFSURI* uri);
+void camera_tree_file_add       	(GtkTree* tree, gchar* url);
 
 void camera_tree_item_popup_create 	(GtkTreeItem* item);
-void camera_tree_item_storage_create 	(GtkTreeItem* item);
 
-void main_tree_update (GConfValue* value);
+void main_tree_update (void);
 
 
 

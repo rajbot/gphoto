@@ -12,16 +12,15 @@
 #include "frontend.h"
 #include "preferences.h"
 #include "file-operations.h"
+#include "Gphoto.h"
 
 /********************/
 /* Global Variables */
 /********************/
 
-GConfClient*		gconf_client 	= NULL;
 Bonobo_UIContainer	corba_container = CORBA_OBJECT_NIL;
 BonoboUIComponent*      main_component	= NULL;
 GtkTree*		main_tree 	= NULL;
-GnoCamViewMode		view_mode 	= GNOCAM_VIEW_MODE_PREVIEW;
 GtkWindow*		main_window	= NULL;
 gint			counter		= 0;
 EPaned*			main_paned	= NULL;
@@ -32,7 +31,6 @@ EPaned*			main_paned	= NULL;
 
 void on_camera_setup_changed (GConfClient* client, guint notify_id, GConfEntry* entry, gpointer user_data);
 
-void on_view_mode_activate		(GtkWidget* widget, gpointer user_data);
 void on_save_previews_activate 		(GtkWidget* widget, gpointer user_data);
 void on_save_previews_as_activate 	(GtkWidget* widget, gpointer user_data);
 void on_save_files_activate		(GtkWidget* widget, gpointer user_data);
@@ -46,13 +44,7 @@ void on_gnocam_delete_activate		(GtkWidget* widget, gpointer user_data);
 void
 on_camera_setup_changed (GConfClient* client, guint notify_id, GConfEntry* entry, gpointer user_data)
 {
-        main_tree_update (entry->value);
-}
-
-void
-on_view_mode_activate (GtkWidget* widget, gpointer user_data)
-{
-	view_mode = GPOINTER_TO_INT (user_data);
+        main_tree_update ();
 }
 
 void
@@ -99,12 +91,9 @@ on_gnocam_delete_activate (GtkWidget* widget, gpointer user_data)
 
 int main (int argc, char *argv[]) 
 {
+	GConfClient*		client;
 	GError*			gerror = NULL;
-	GConfValue*		value = NULL;
-	guint 			notify_id_cameras;
 	GtkWidget*		widget;
-	GtkWidget*		menu;
-	GtkWidget*		menu_item;
 	GtkWidget*		scrolledwindow;
 	BonoboUIContainer*      container;
 	BonoboUIVerb		verb [] = {
@@ -117,6 +106,10 @@ int main (int argc, char *argv[])
 		BONOBO_UI_UNSAFE_VERB ("SaveFilesAs", on_save_files_as_activate),
 		BONOBO_UI_UNSAFE_VERB ("Delete", on_gnocam_delete_activate),
 		BONOBO_UI_VERB_END};
+	gint			result;
+	Bonobo_Unknown		bag, property;
+	CORBA_Environment	ev;
+	CORBA_any*		value;
 
 	/* Use translated strings. */
 	bindtextdomain (PACKAGE, GNOME_LOCALEDIR);
@@ -132,20 +125,43 @@ int main (int argc, char *argv[])
 		gnome_error_dialog (g_strdup_printf (_("Could not initialize gconf!\n\n%s"), gerror->message));
 		return (1);
 	}
-        g_return_val_if_fail (gconf_client = gconf_client_get_default (), 1);
-	gconf_client_add_dir (gconf_client, "/apps/" PACKAGE "", GCONF_CLIENT_PRELOAD_NONE, NULL);
+	g_return_val_if_fail (client = gconf_client_get_default (), 1);
+
+	/* Init exception. */
+	CORBA_exception_init (&ev);
+
+	/* Do we already have a debug level stored in our preferences? */
+	bag = bonobo_get_object ("config:/" PACKAGE, "IDL:Bonobo/PropertyBag:1.0", &ev);
+	if (BONOBO_EX (&ev)) g_error (_("Could not get property bag for " PACKAGE "! (%s)"), bonobo_exception_get_text (&ev));
+	property = Bonobo_PropertyBag_getPropertyByName (bag, "debug_level", &ev);
+	if (BONOBO_EX (&ev)) g_error (_("Could not get property 'debug_level! (%s)"), bonobo_exception_get_text (&ev));
+	if (property == CORBA_OBJECT_NIL) {
+                Bonobo_Unknown  property;
+		BonoboArg*	arg;
+
+                property = bonobo_get_object ("config:/" PACKAGE "/debug_level", "IDL:Bonobo/Property:1.0", &ev);
+                if (BONOBO_EX (&ev)) g_error (_("Could not get property 'debug_level'! (%s)"), bonobo_exception_get_text (&ev));
+                arg = bonobo_arg_new (TC_GNOME_Gphoto_DebugLevel);
+                BONOBO_ARG_SET_GENERAL (arg, GNOME_Gphoto_DEBUG_LEVEL_NONE, TC_GNOME_Gphoto_DebugLevel, int, NULL);
+                Bonobo_Property_setValue (property, arg, &ev);
+		bonobo_arg_release (arg);
+                if (BONOBO_EX (&ev)) g_error (_("Could not set property 'debug_level'! (%s)"), bonobo_exception_get_text (&ev));
+	}
 
 	/* Init gphoto2 backend with debug level as stored in database.	*/ 
-	/* If there is no debug level stored, init with GP_DEBUG_NONE. 	*/
-	if ((value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/debug_level", NULL))) {
-		g_assert (value->type == GCONF_VALUE_INT);
-		gp_init (gconf_value_get_int (value));
-		gconf_value_free (value);
-	} else gp_init (GP_DEBUG_NONE);
+	property = Bonobo_PropertyBag_getPropertyByName (bag, "debug_level", &ev);
+	if (BONOBO_EX (&ev)) g_error (_("Could not get property 'debug_level! (%s)"), bonobo_exception_get_text (&ev));
+	g_assert (property != CORBA_OBJECT_NIL);
+	value = Bonobo_Property_getValue (property, &ev);
+	if (BONOBO_EX (&ev)) g_error (_("Could not get property 'debug_level'! (%s)"), bonobo_exception_get_text (&ev));
+	//FIXME: How do I cast CORBA_any to the debug level???
+	if ((result = gp_init (GP_DEBUG_NONE)) != GP_OK) {
+		g_warning (_("Could not initialize gphoto! (%s)"), gp_result_as_string (result));
+	}
 	gp_frontend_register (gp_frontend_status, gp_frontend_progress, gp_frontend_message, gp_frontend_confirm, NULL);
 
 	/* Create the window. */
-	gtk_widget_show (GTK_WIDGET (main_window = GTK_WINDOW (bonobo_window_new (PACKAGE, PACKAGE))));
+	main_window = GTK_WINDOW (bonobo_window_new (PACKAGE, PACKAGE));
 	gtk_signal_connect (GTK_OBJECT (main_window), "delete_event", GTK_SIGNAL_FUNC (gtk_main_quit), NULL);
 
 	/* Create the tree. */
@@ -167,46 +183,23 @@ int main (int argc, char *argv[])
         bonobo_ui_component_add_verb_list (main_component, verb);
         bonobo_ui_util_set_ui (main_component, GNOCAM_DATADIR, "gnocam-main.xml", PACKAGE);
 
-	/* Add the view mode selection to the toolbar. */
-	gtk_widget_show (widget = gtk_option_menu_new ());
-	gtk_widget_show (menu = gtk_menu_new ());
-	gtk_widget_show (menu_item = gtk_menu_item_new_with_label (_("None")));
-	gtk_menu_append (GTK_MENU (menu), menu_item);
-	gtk_signal_connect (GTK_OBJECT (menu_item), "activate", GTK_SIGNAL_FUNC (on_view_mode_activate), GINT_TO_POINTER (GNOCAM_VIEW_MODE_NONE));
-	gtk_widget_show (menu_item = gtk_menu_item_new_with_label (_("Preview")));
-	gtk_menu_append (GTK_MENU (menu), menu_item);
-	gtk_signal_connect (GTK_OBJECT (menu_item), "activate", GTK_SIGNAL_FUNC (on_view_mode_activate), GINT_TO_POINTER (GNOCAM_VIEW_MODE_PREVIEW));
-	gtk_widget_show (menu_item = gtk_menu_item_new_with_label (_("File")));
-	gtk_menu_append (GTK_MENU (menu), menu_item);
-	gtk_signal_connect (GTK_OBJECT (menu_item), "activate", GTK_SIGNAL_FUNC (on_view_mode_activate), GINT_TO_POINTER (GNOCAM_VIEW_MODE_FILE));
-	gtk_option_menu_set_menu (GTK_OPTION_MENU (widget), menu);
-	gtk_option_menu_set_history (GTK_OPTION_MENU (widget), 1);
-	bonobo_ui_component_object_set (main_component, "/Toolbar/ViewMode", bonobo_object_corba_objref (BONOBO_OBJECT (bonobo_control_new (widget))), NULL);
-
-	/* Do we already have a prefix in the database? */
-	if (!(value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL))) {
-		gchar*	prefix;
+	if (!gconf_client_get_string (gconf_client_get_default (), "/" PACKAGE "/prefix", NULL)) {
+		gchar*			prefix;
 		
 		/* Set prefix to HOME by default. */
-		value = gconf_value_new (GCONF_VALUE_STRING);
-		prefix = g_strdup_printf ("file:%s", g_get_home_dir ());
-		gconf_value_set_string (value, prefix);
-		gconf_client_set (gconf_client, "/apps/" PACKAGE "/prefix", value, NULL);
+		prefix = g_strconcat ("file:", g_get_home_dir (), NULL);
+		gconf_client_set_string (gconf_client_get_default (), "/" PACKAGE "/prefix", prefix, NULL);
 		g_free (prefix);
 
 		/* Popup a welcome message. */
 		g_assert ((glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "welcome_messagebox")));
 	} 
-	gconf_value_free (value);
 
         /* Populate the camera tree. */
-	if ((value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/cameras", NULL))) {
-		main_tree_update (value);
-		gconf_value_free (value);
-	}
+	main_tree_update ();
 
-	/* Notifications. */
-	notify_id_cameras = gconf_client_notify_add (gconf_client, "/apps/" PACKAGE "/cameras", on_camera_setup_changed, NULL, NULL, NULL);
+	/* Show what we have done so far. */
+	gtk_widget_show (GTK_WIDGET (main_window));
 
 	/* Start the event loop. */
 	bonobo_main ();
@@ -220,11 +213,7 @@ int main (int argc, char *argv[])
 	gp_exit ();
 
 	/* Clean up (gconf). */
-	gconf_client_notify_remove (gconf_client, notify_id_cameras);
-	gerror = NULL;
-	gconf_client_suggest_sync (gconf_client, &gerror);
-	if (gerror) g_warning ("GConf Error: %s", gerror->message);
-	gtk_object_unref (GTK_OBJECT (gconf_client));
+	gtk_object_unref (GTK_OBJECT (client));
 
 	return (0);
 }

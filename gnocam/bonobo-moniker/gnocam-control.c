@@ -59,6 +59,7 @@ gnocam_control_new (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options
 	/* Create the control. */
 	if (!bonobo_control_construct (BONOBO_CONTROL (control), vbox)) return (NULL);
 	control->path = g_strdup (name + i);
+	control->camera = camera;
 	control->config_camera = NULL;
 	control->config_folder = NULL;
 	control->config_file = NULL;
@@ -76,9 +77,6 @@ gnocam_control_new (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options
 		gtk_widget_show (widget);
 		gtk_container_add (GTK_CONTAINER (vbox), widget);
 	}
-
-	/* Keep the camera. */
-	control->camera = camera;
 
 	/* Free exception. */
 	CORBA_exception_free (&ev);
@@ -107,13 +105,6 @@ gnocam_control_destroy (GtkObject *object)
 }
 
 static void
-gnocam_control_init (GnoCamControl *control)
-{
-	/* Don't do anything here... */
-}
-
-
-static void
 gnocam_control_class_init (GnoCamControl *klass)
 {
         GtkObjectClass *object_class = (GtkObjectClass *)klass;
@@ -138,7 +129,7 @@ gnocam_control_get_type (void)
                         sizeof (GnoCamControl),
                         sizeof (GnoCamControlClass),
                         (GtkClassInitFunc)  gnocam_control_class_init,
-                        (GtkObjectInitFunc) gnocam_control_init,
+                        (GtkObjectInitFunc) NULL,
                         NULL, /* reserved 1 */
                         NULL, /* reserved 2 */
                         (GtkClassInitFunc) NULL

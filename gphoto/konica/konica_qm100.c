@@ -73,8 +73,9 @@ struct Image *konica_qm100_get_picture (int picNum, int thumbnail)
   serialdev = qm100_open(serial_port);
   qm100_setSpeed(serialdev, B115200);
   
-  sprintf(tempName, "%s/gphoto-%i-%i.jpg", gphotoDir, pid, picCounter);
-  picCounter++;
+  sprintf(tempName, "%s/gphoto-%i-%i.jpg", gphotoDir, pid,
+	konica_picCounter);
+  konica_picCounter++;
   
   picNum = qm100_getRealPicNum(serialdev, picNum);
   

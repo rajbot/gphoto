@@ -10,11 +10,7 @@
 #include <gtkhtml/gtkhtml.h>
 #include <bonobo.h>
 #include <bonobo/bonobo-stream-memory.h>
-#include <libgnomeprint/gnome-print.h>
-#include <libgnomeprint/gnome-print-master.h>
-#include <libgnomeprint/gnome-print-master-preview.h>
 #include "gnocam.h"
-#include "cameras.h"
 #include "file-operations.h"
 #include "information.h"
 #include "gallery.h"

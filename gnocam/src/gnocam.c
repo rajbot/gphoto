@@ -8,7 +8,6 @@
 #include <bonobo.h>
 #include <gphoto2.h>
 #include "gnocam.h"
-#include "gphoto-extensions.h"
 #include "cameras.h"
 #include "information.h"
 #include "frontend.h"

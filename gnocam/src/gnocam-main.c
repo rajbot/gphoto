@@ -39,7 +39,9 @@ struct _GnoCamMainPrivate {
 "  <menu>"															\
 "    <submenu name=\"File\" _label=\"_File\">"											\
 "      <placeholder name=\"FileOperations\"/>"											\
-"      <menuitem name=\"Exit\" verb=\"\" _label=\"E_xit\" pixtype=\"stock\" pixname=\"Quit\"/>\n"				\
+"      <placeholder name=\"Dummy\" delimit=\"top\">"										\
+"        <menuitem name=\"Exit\" verb=\"\" _label=\"E_xit\" pixtype=\"stock\" pixname=\"Quit\"/>"				\
+"      </placeholder>"														\
 "    </submenu>"														\
 "    <placeholder name=\"Folder\"/>"												\
 "    <placeholder name=\"Camera\"/>"												\

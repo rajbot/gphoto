@@ -2,7 +2,7 @@
 #ifndef _GNOCAM_CONTROL_FOLDER_H_
 #define _GNOCAM_CONTROL_FOLDER_H_
 
-#include <bonobo.h>
+#include "gnocam-control.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,18 +20,18 @@ typedef struct _GnoCamControlFolderPrivate	GnoCamControlFolderPrivate;
 typedef struct _GnoCamControlFolderClass	GnoCamControlFolderClass;
 
 struct _GnoCamControlFolder {
-	BonoboControl           	parent;
+	GnoCamControl           	parent;
 
 	GnoCamControlFolderPrivate*	priv;
 };
 
 struct _GnoCamControlFolderClass {
-	BonoboControl 	parent_class;
+	GnoCamControlClass 	parent_class;
 };
 
 
 GtkType    		gnocam_control_folder_get_type		(void);
-GnoCamControlFolder*	gnocam_control_folder_new		(Bonobo_Storage storage, CORBA_Environment* ev);
+GnoCamControlFolder*	gnocam_control_folder_new		(BonoboMoniker* moniker, Bonobo_Storage storage, CORBA_Environment* ev);
 
 #ifdef __cplusplus
 }

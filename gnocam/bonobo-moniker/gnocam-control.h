@@ -25,22 +25,15 @@ struct _GnoCamControl {
 	BonoboControl 		control;
 
 	GnoCamControlPrivate*	priv;
-
-	Camera* 		camera;
-
-	CameraWidget*		config_camera;
-	CameraWidget*		config_folder;
-	CameraWidget*		config_file;
-
-	gchar*			path;
 };
 
 struct _GnoCamControlClass {
 	BonoboControlClass parent_class;
 };
 
-GtkType         gnocam_control_get_type	(void);
-GnoCamControl*	gnocam_control_new	(BonoboMoniker *moniker, const Bonobo_ResolveOptions *options, CORBA_Environment* ev);
+GtkType gnocam_control_get_type		(void);
+void	gnocam_control_complete 	(GnoCamControl* control, BonoboMoniker* moniker);
+Camera*	gnocam_control_get_camera 	(GnoCamControl* control);
 
 #ifdef __cplusplus
 }

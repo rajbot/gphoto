@@ -2,6 +2,8 @@
 #ifndef _GNOCAM_CONTROL_FILE_H_
 #define _GNOCAM_CONTROL_FILE_H_
 
+#include "gnocam-control.h"
+
 #ifdef __cplusplus
 extern "C" {
 #pragma }
@@ -18,18 +20,18 @@ typedef struct _GnoCamControlFilePrivate	GnoCamControlFilePrivate;
 typedef struct _GnoCamControlFileClass	GnoCamControlFileClass;
 
 struct _GnoCamControlFile {
-	GtkVBox 			parent;
+	GnoCamControl 			parent;
 
 	GnoCamControlFilePrivate*	priv;
 };
 
 struct _GnoCamControlFileClass {
-	GtkVBoxClass parent_class;
+	GnoCamControlClass 	parent_class;
 };
 
 
 GtkType    		gnocam_control_file_get_type	(void);
-GnoCamControlFile*	gnocam_control_file_new		(void);
+GnoCamControlFile*	gnocam_control_file_new		(BonoboMoniker* moniker, const Bonobo_ResolveOptions* options, Bonobo_Stream stream, CORBA_Environment* ev);
 
 #ifdef __cplusplus
 }

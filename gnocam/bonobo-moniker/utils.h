@@ -3,7 +3,7 @@
 /* Prototypes */
 /**************/
 
-void menu_create	(GnoCamControl* control);
+void menu_setup (GnoCamControl* control, CameraWidget* widget, gchar* name, gchar* folder, gchar* file);
 
 
 

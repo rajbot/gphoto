@@ -36,6 +36,7 @@ struct Model cameras[] = {
 	{"Barbie Camera", &barbie, 0, 0},
 	{"Canon PowerShot A5", &canon, 0, 0},
 	{"Canon PowerShot A50", &canon, 0, 0},
+	{"Canon PowerShot G1", &canon, 0x4a9,0x3048},
 	{"Canon PowerShot S10", &canon, 0x4a9, 0x3041},
 	{"Canon PowerShot S20", &canon, 0x4a9, 0x3043},
     {"Canon PowerShot S100", &canon, 0x4a9, 0x3045},

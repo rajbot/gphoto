@@ -2,7 +2,7 @@
 #include <gnome.h>
 #include <glade/glade.h>
 #include <gphoto2.h>
-#include <libxml/parser.h>
+#include <parser.h>
 #include "information.h"
 #include "properties.h"
 #include "gnocam.h"

@@ -3,7 +3,7 @@
 #include <glade/glade.h>
 #include <gphoto2.h>
 #include <gconf/gconf-client.h>
-#include <libxml/parser.h>
+#include <parser.h>
 #include "preferences.h"
 #include "callbacks.h"
 #include "gnocam.h"

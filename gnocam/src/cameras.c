@@ -11,7 +11,7 @@
 #include <gphoto2.h>
 #include <gconf/gconf-client.h>
 #include <gdk-pixbuf/gdk-pixbuf-loader.h>
-#include <libxml/parser.h>
+#include <parser.h>
 #include "gphoto-extensions.h"
 #include "callbacks.h"
 #include "gnocam.h"

@@ -15,7 +15,9 @@ libgpfs_la_SOURCES = 		\
 	gpfs-file.c		\
 	gpfs.c			\
 	gpfs-if.c		\
-	gpfs-info-type.c
+	gpfs-info.c		\
+	gpfs-val.c		\
+	gpfs-val-type.c
 
 # The header files
 libgpfsincludedir = $(includedir)/libgpfs
@@ -27,7 +29,8 @@ libgpfsinclude_HEADERS =	\
 	gpfs.h			\
 	gpfs-if.h		\
 	gpfs-info.h		\
-	gpfs-info-type.h
+	gpfs-val.h		\
+	gpfs-val-type.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libgpfs.pc

@@ -1,5 +1,9 @@
 Lutz Müller <lutz@users.sourceforge.net>
 
+	* libgpfs/*: Support ranges.
+
+Lutz Müller <lutz@users.sourceforge.net>
+
 	* libgpfs/gpfs-info-type.[c,h]: New
 	* libgpfs/gpfs-if.[c,h]: Support setting pieces of information.
 	* libgpfs/Makefile.am: Add new files.

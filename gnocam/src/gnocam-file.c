@@ -10,8 +10,8 @@
 #include "utils.h"
 #include "gnocam-configuration.h"
 
-#define PARENT_TYPE BONOBO_X_OBJECT_TYPE
-static BonoboObjectClass* parent_class;
+#define PARENT_TYPE GTK_TYPE_VBOX
+static GtkVBoxClass* parent_class;
 
 struct _GnoCamFilePrivate
 {
@@ -35,13 +35,6 @@ struct _GnoCamFilePrivate
 	gchar*			filename;
 	gchar*			path;
 };
-
-enum {
-	WIDGET_CHANGED,
-        LAST_SIGNAL
-};
-
-static unsigned int signals[LAST_SIGNAL] = { 0 };
 
 #define GNOCAM_FILE_UI 						\
 "<placeholder name=\"FileOperations\">"				\
@@ -134,15 +127,16 @@ create_menu (gpointer user_data)
 static void
 create_error_widget (GnoCamFile* file, CORBA_Environment* ev)
 {
-	gchar*	tmp;
+	gchar*		tmp;
 
 	g_return_if_fail (file);
 
         /* Create label with error message */
         tmp = g_strdup_printf (_("Could not display '%s': %s!"), file->priv->path, bonobo_exception_get_text (ev));
         file->priv->widget = e_clipped_label_new (tmp);
-        gtk_widget_ref (file->priv->widget);
         g_free (tmp);
+	gtk_widget_show (file->priv->widget);
+	gtk_container_add (GTK_CONTAINER (file), file->priv->widget);
 }
 
 static void
@@ -158,18 +152,6 @@ create_widget (GnoCamFile* file)
 	OAF_ActivationID        ret_id;
 	CORBA_Environment	ev;
 
-	/* Clean up */
-	if (file->priv->control != CORBA_OBJECT_NIL) {
-		CORBA_exception_init (&ev);
-		Bonobo_Control_activate (file->priv->control, FALSE, &ev);
-		file->priv->control = CORBA_OBJECT_NIL;
-		CORBA_exception_free (&ev);
-	}
-	if (file->priv->widget != NULL) {
-		gtk_widget_unref (file->priv->widget);
-		file->priv->widget = NULL;
-	}
-
 	CORBA_exception_init (&ev);
 
         /* Open the stream */
@@ -177,18 +159,12 @@ create_widget (GnoCamFile* file)
 	if (file->priv->camera->abilities->file_preview && gconf_client_get_bool (file->priv->client, "/apps/" PACKAGE "/preview", NULL))
 		mode |= Bonobo_Storage_COMPRESSED;
 	stream = Bonobo_Storage_openStream (BONOBO_OBJREF (file->priv->storage), file->priv->path, mode, &ev);
-        if (BONOBO_EX (&ev)) {
-		g_warning ("Could not get stream");
-		goto exit_clean;
-	}
+        if (BONOBO_EX (&ev)) goto exit_clean;
         g_return_if_fail (stream);
 
         /* Get information about the stream */
         info = Bonobo_Stream_getInfo (stream, Bonobo_FIELD_CONTENT_TYPE, &ev);
-        if (BONOBO_EX (&ev)) {
-		g_warning ("Could not get info");
-		goto exit_clean;
-	}
+        if (BONOBO_EX (&ev)) goto exit_clean;
         g_return_if_fail (info);
         mime_type = g_strdup (info->content_type);
         CORBA_free (info);
@@ -201,41 +177,30 @@ create_widget (GnoCamFile* file)
         /* Activate the object */
 	object = oaf_activate (oaf_requirements, NULL, 0, &ret_id, &ev);
         g_free (oaf_requirements);
-        if (BONOBO_EX (&ev)) {
-		g_warning ("Could not get object");
-		goto exit_clean;
-	}
+        if (BONOBO_EX (&ev)) goto exit_clean;
         g_return_if_fail (object != CORBA_OBJECT_NIL);
 
         /* Get the persist stream interface */
          persist = Bonobo_Unknown_queryInterface (object, "IDL:Bonobo/PersistStream:1.0", &ev);
-         if (BONOBO_EX (&ev)) {
-	 	g_warning ("Could not get persist");
-		goto exit_clean;
-	}
+         if (BONOBO_EX (&ev)) goto exit_clean;
         g_return_if_fail (persist != CORBA_OBJECT_NIL);
 
         /* Load the persist stream */
         Bonobo_PersistStream_load (persist, stream, (const Bonobo_Persist_ContentType) mime_type, &ev);
         g_free (mime_type);
 	mime_type = NULL;
-        if (BONOBO_EX (&ev)) {
-		g_warning ("Could not load");
-		goto exit_clean;
-	}
+        if (BONOBO_EX (&ev)) goto exit_clean;
 
 	/* Get the control */
 	file->priv->control = Bonobo_Unknown_queryInterface (object, "IDL:Bonobo/Control:1.0", &ev);
-        if (BONOBO_EX (&ev)) {
-		g_warning ("Could not get control");
-		goto exit_clean;
-	}
+        if (BONOBO_EX (&ev)) goto exit_clean;
 	g_return_if_fail (file->priv->control != CORBA_OBJECT_NIL);
 
 	CORBA_exception_free (&ev);
 
 	file->priv->widget = bonobo_widget_new_control_from_objref (file->priv->control, BONOBO_OBJREF (file->priv->container));
-	gtk_widget_ref (file->priv->widget);
+	gtk_widget_show (file->priv->widget);
+	gtk_container_add (GTK_CONTAINER (file), file->priv->widget);
 
 	return;
 
@@ -279,12 +244,19 @@ on_delete_clicked (BonoboUIComponent* component, gpointer user_data, const gchar
 static void
 on_preview_changed (GConfClient *client, guint cnxn_id, GConfEntry* entry, gpointer user_data)
 {
-	GnoCamFile*	file;
+	GnoCamFile*		file;
+
+printf ("on_preview_changed\n");
 
 	file = GNOCAM_FILE (user_data);
 
+        /* Clean up */
+        if (file->priv->widget != NULL) {
+		gtk_container_remove (GTK_CONTAINER (file), file->priv->widget);
+                file->priv->widget = NULL;
+        }
+
 	create_widget (file);
-	gtk_signal_emit (GTK_OBJECT (file), signals [WIDGET_CHANGED]);
 }
 
 static void
@@ -314,12 +286,6 @@ void
 gnocam_file_show_menu (GnoCamFile* file)
 {
 	gtk_idle_add (set_container, file);
-}
-
-GtkWidget*
-gnocam_file_get_widget (GnoCamFile* file)
-{
-	return (file->priv->widget);
 }
 
 /****************************/
@@ -366,15 +332,6 @@ gnocam_file_class_init (GnoCamFileClass* klass)
 	object_class = GTK_OBJECT_CLASS (klass);
 	object_class->destroy = gnocam_file_destroy;
 
-        signals[WIDGET_CHANGED] = gtk_signal_new ("widget_changed",
-                                        GTK_RUN_LAST,
-                                        object_class->type,
-                                        GTK_SIGNAL_OFFSET (GnoCamFileClass, widget_changed),
-					gtk_marshal_NONE__NONE, 
-                                        GTK_TYPE_NONE, 0);
-
-        gtk_object_class_add_signals (object_class, signals, LAST_SIGNAL);
-
 	parent_class = gtk_type_class (PARENT_TYPE);
 }
 
@@ -386,21 +343,24 @@ gnocam_file_init (GnoCamFile* file)
 	file->priv->control = CORBA_OBJECT_NIL;
 }
 
-GnoCamFile*
+GtkWidget*
 gnocam_file_new (Camera* camera, BonoboStorage* storage, const gchar* path, BonoboUIContainer* container, GConfClient* client, GtkWindow* window)
 {
 	GnoCamFile*		new;
 
 	g_return_val_if_fail (camera, NULL);
 
+	/* Create the widget */
 	new = gtk_type_new (GNOCAM_TYPE_FILE);
+	gtk_box_set_homogeneous (GTK_BOX (new), FALSE);
+
 	new->priv->filename = g_strdup (g_basename (path));
 	new->priv->path = g_strdup (path);
 	new->priv->container = container;
 	new->priv->window = window;
 	gp_camera_ref (new->priv->camera = camera);
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
-	new->priv->cnxn = gconf_client_notify_add (client, "/apps/" PACKAGE "/preview", on_preview_changed, new, NULL, NULL);
+	new->priv->cnxn = gconf_client_notify_add (new->priv->client, "/apps/" PACKAGE "/preview", on_preview_changed, new, NULL, NULL);
 	new->priv->storage = storage;
 	
         /* Dirname? */  
@@ -415,9 +375,8 @@ gnocam_file_new (Camera* camera, BonoboStorage* storage, const gchar* path, Bono
 
 	create_widget (new);
 
-	return (new);
+	return (GTK_WIDGET (new));
 }
 
-BONOBO_X_TYPE_FUNC_FULL (GnoCamFile, GNOME_GnoCam_file, PARENT_TYPE, gnocam_file);
-									   
+E_MAKE_TYPE (gnocam_file, "GnoCamFile", GnoCamFile, gnocam_file_class_init, gnocam_file_init, PARENT_TYPE);
 

@@ -289,37 +289,6 @@ show_current_menu (GnoCamCamera* camera)
 /*************/
 
 static void
-on_widget_changed (GnoCamFile* file, gpointer user_data)
-{
-	GnoCamCamera*	camera;
-	GtkWidget*	widget;
-	gint		page, current_page;
-	
-	g_return_if_fail (user_data);
-	camera = GNOCAM_CAMERA (user_data);
-
-	current_page = gtk_notebook_get_current_page (GTK_NOTEBOOK (camera->priv->notebook));
-
-	/* Remove old page */
-	page = GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (file), "page"));
-	widget = gtk_notebook_get_nth_page (GTK_NOTEBOOK (camera->priv->notebook), page);
-	gtk_notebook_remove_page (GTK_NOTEBOOK (camera->priv->notebook), page);
-	gtk_widget_unref (widget);
-
-	/* Show the new widget */
-	widget = gnocam_file_get_widget (file);
-	g_return_if_fail (widget);
-	gtk_widget_show (widget);
-	gtk_widget_ref (widget);
-	gtk_notebook_insert_page (GTK_NOTEBOOK (camera->priv->notebook), widget, NULL, page);
-
-	gtk_notebook_set_page (GTK_NOTEBOOK (camera->priv->notebook), current_page);
-
-	/* Could well be that the menu changed, too */
-	gnocam_file_show_menu (file);
-}
-
-static void
 on_configuration_clicked (BonoboUIComponent* component, gpointer user_data, const gchar* cname)
 {
 	GnoCamCamera*	camera;
@@ -338,13 +307,16 @@ on_preview_clicked (BonoboUIComponent* component, const gchar* path, Bonobo_UICo
 	GnoCamCamera*	camera;
 	gboolean	current;
 
-	g_return_if_fail (user_data);
+printf ("on_preview_clicked\n");
+
 	camera = GNOCAM_CAMERA (user_data);
 
 	/* Did the state really change? */
 	current = gconf_client_get_bool (camera->priv->client, "/apps/" PACKAGE "/preview", NULL);
 	if (current && !strcmp ("1", state)) return;
 	if (!current && !strcmp ("0", state)) return;
+
+printf ("SET!\n");
 
 	/* Tell GConf about the change */
 	if (!strcmp ("0", state)) gconf_client_set_bool (camera->priv->client, "/apps/" PACKAGE "/preview", FALSE, NULL);
@@ -415,8 +387,7 @@ static void
 on_file_selected (GnoCamStorageView* storage_view, const gchar* path, void* data)
 {
 	GnoCamCamera*		camera;
-	GtkWidget*		widget;
-	GnoCamFile*		file;
+	GtkWidget*		file;
 	GdkPixbuf*		pixbuf;
 
 	camera = GNOCAM_CAMERA (data);
@@ -431,26 +402,19 @@ on_file_selected (GnoCamStorageView* storage_view, const gchar* path, void* data
 		file = gnocam_file_new (camera->priv->camera, camera->priv->storage, g_basename (path), camera->priv->container, 
 			camera->priv->client, camera->priv->window);
 		g_return_if_fail (file);
-
-		/* Get the widget */
-		widget = gnocam_file_get_widget (file);
-		g_return_if_fail (widget);
-		gtk_widget_show (widget);
-		gtk_widget_ref (widget);
+		gtk_widget_show (file);
 
 		/* Append the page, store the page number */
-		gtk_notebook_append_page (GTK_NOTEBOOK (camera->priv->notebook), widget, NULL);
-		gtk_object_set_data (GTK_OBJECT (file), "page", GINT_TO_POINTER (gtk_notebook_page_num (GTK_NOTEBOOK (camera->priv->notebook), widget)));
+		gtk_notebook_append_page (GTK_NOTEBOOK (camera->priv->notebook), file, NULL);
+		gtk_object_set_data (GTK_OBJECT (file), "page", GINT_TO_POINTER (gtk_notebook_page_num (GTK_NOTEBOOK (camera->priv->notebook), file)));
 
-		gtk_signal_connect (GTK_OBJECT (file), "widget_changed", GTK_SIGNAL_FUNC (on_widget_changed), camera);
-		
 		g_hash_table_insert (camera->priv->hash_table, g_strdup (path), file);
 	}
 	
 	hide_current_menu (camera);
 	camera->priv->current_is_folder = FALSE;
-	camera->priv->file = file;
-	gnocam_file_show_menu (file);
+	camera->priv->file = GNOCAM_FILE (file);
+	gnocam_file_show_menu (GNOCAM_FILE (file));
 
 	e_shell_folder_title_bar_set_title (E_SHELL_FOLDER_TITLE_BAR (camera->priv->title_bar), path);
 	if ((pixbuf = util_pixbuf_file ()))
@@ -662,7 +626,6 @@ GtkWidget*
 gnocam_camera_new (const gchar* url, BonoboUIContainer* container, GtkWindow* window, GConfClient* client, CORBA_Environment* ev)
 {
 	GnoCamCamera*		new;
-	gchar*			name;
 	gint			position;
 	Camera*			camera;
 	BonoboStorage*		storage;
@@ -692,7 +655,11 @@ gnocam_camera_new (const gchar* url, BonoboUIContainer* container, GtkWindow* wi
 	}
 	g_return_val_if_fail (storage, NULL);
 
+	/* Create the widget */
 	new = gtk_type_new (GNOCAM_TYPE_CAMERA);
+	gtk_box_set_homogeneous (GTK_BOX (new), FALSE);
+	gtk_container_set_border_width (GTK_CONTAINER (new), 2);
+	
 	new->priv->window = window;
 	gp_camera_ref (new->priv->camera = camera);
 	gtk_object_ref (GTK_OBJECT (new->priv->client = client));
@@ -704,10 +671,6 @@ gnocam_camera_new (const gchar* url, BonoboUIContainer* container, GtkWindow* wi
 	/* Callbacks for the backend */
 	camera->frontend_data = (void*) new;
 	gp_frontend_register (gp_frontend_status, NULL, gp_frontend_message, gp_frontend_confirm, NULL);
-
-	/* Create the basic layout */
-	gtk_box_set_homogeneous (GTK_BOX (new), FALSE);
-	gtk_container_set_border_width (GTK_CONTAINER (new), 2);
 
 	/* Create the title bar */
 	gtk_widget_show (new->priv->title_bar = e_shell_folder_title_bar_new ());

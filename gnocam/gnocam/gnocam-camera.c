@@ -2,6 +2,7 @@
 #include "gnocam-camera.h"
 
 #include <gtk/gtksignal.h>
+#include <gtk/gtkmain.h>
 #include <bonobo/Bonobo.h>
 #include <bonobo/bonobo-storage.h>
 #include <bonobo/bonobo-stream-memory.h>
@@ -128,14 +129,51 @@ on_capture_close (GnomeDialog *dialog, gpointer data)
 	return (FALSE);
 }
 
+static gboolean 
+do_capture (gpointer data)
+{
+	GnoCamCamera *c;
+	CORBA_Environment ev;
+	BonoboArg *arg;
+	gchar *txt;
+	CameraFilePath path;
+
+	g_return_val_if_fail (GNOCAM_IS_CAMERA (data), FALSE);
+	c = GNOCAM_CAMERA (data);
+
+	CORBA_exception_init (&ev);
+
+	CHECK_RESULT (gp_camera_capture (c->priv->camera,
+				GP_OPERATION_CAPTURE_IMAGE, &path), &ev);
+	if (BONOBO_EX (&ev)) {
+		txt = g_strdup_printf (_("Could not capture image: %s"),
+				       bonobo_exception_get_text (&ev));
+		gnome_error_dialog (txt);
+		g_free (txt);
+	} else {
+		arg = bonobo_arg_new (BONOBO_ARG_STRING);
+		txt = g_concat_dir_and_file (path.folder, path.name);
+		g_message ("The picture is in '%s'.", txt);
+		BONOBO_ARG_SET_STRING (arg, txt);
+		bonobo_event_source_notify_listeners_full (
+					c->priv->event_source,
+					"GNOME/Camera", "CaptureImage",
+					"Action", arg, NULL);
+		bonobo_arg_release (arg);
+	}
+	
+	CORBA_exception_free (&ev);
+
+	bonobo_object_unref (BONOBO_OBJECT (c));
+
+	return (FALSE);
+}
+
 static void
 on_capture_clicked (GnomeDialog *dialog, gint button_number, gpointer data)
 {
 	GnoCamCamera *c;
-	CameraFilePath path;
 	BonoboArg *arg;
-	CORBA_Environment ev;
-	gchar *txt;
 
 	g_return_if_fail (GNOCAM_IS_CAMERA (data));
 	c = GNOCAM_CAMERA (data);
@@ -154,28 +192,8 @@ on_capture_clicked (GnomeDialog *dialog, gint button_number, gpointer data)
 		bonobo_arg_release (arg);
 		break;
 	case 0: /* Ok */
-		CORBA_exception_init (&ev);
-
-		/* Capture the image */
-		CHECK_RESULT (gp_camera_capture (c->priv->camera,
-				GP_OPERATION_CAPTURE_IMAGE, &path), &ev);
-		if (BONOBO_EX (&ev)) {
-			txt = g_strdup_printf (_("Could not capture image: %s"),
-					       bonobo_exception_get_text (&ev));
-			gnome_error_dialog (txt);
-			g_free (txt);
-		} else {
-			arg = bonobo_arg_new (BONOBO_ARG_STRING);
-			txt = g_concat_dir_and_file (path.folder, path.name);
-			g_message ("The picture is in '%s'.", txt);
-			BONOBO_ARG_SET_STRING (arg, txt);
-			bonobo_event_source_notify_listeners_full (
-					c->priv->event_source,
-					"GNOME/Camera", "CaptureImage",
-					"Action", arg, NULL);
-			bonobo_arg_release (arg);
-		}
-		CORBA_exception_free (&ev);
+		bonobo_object_ref (BONOBO_OBJECT (c));
+		gtk_idle_add (do_capture, c);
 		break;
 	default:
 		g_warning ("Unhandled button: %i", button_number);

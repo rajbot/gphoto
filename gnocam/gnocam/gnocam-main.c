@@ -2,6 +2,7 @@
 #include <gphoto2.h>
 #include "gnocam-main.h"
 
+#include <gtk/gtkmain.h>
 #include <gconf/gconf-client.h>
 #include <bonobo/bonobo-exception.h>
 #include <libgnomeui/gnome-dialog.h>
@@ -106,6 +107,8 @@ impl_GNOME_GnoCam_getCamera (PortableServer_Servant servant,
 			name = gnocam_camera_selector_get_name (
 					GNOCAM_CAMERA_SELECTOR (selector));
 			gnome_dialog_close (selector);
+			while (gtk_events_pending ())
+				gtk_main_iteration ();
 
 			/* It can well be that the user clicked autodetect */
 			if (gconf_client_get_bool (gnocam_main->priv->client,

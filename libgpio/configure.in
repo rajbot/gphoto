@@ -51,7 +51,7 @@ AC_TRY_COMPILE([#include <sys/ioctl.h>], [int foo = TIOCM_RTS;],
 			AC_DEFINE(HAVE_RTS_IOCTL))
 
 GPIO_LIBDIR='-L${libdir}'
-GPIO_INCLUDEDIR='-I${includedir}/gpio'
+GPIO_INCLUDEDIR='-I${includedir}'
 GPIO_LIBS="-lgpio"
 
 dnl

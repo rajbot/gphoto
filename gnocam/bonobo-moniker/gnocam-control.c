@@ -11,7 +11,6 @@
 
 struct _GnoCamControlPrivate {
         GtkWidget*	vbox;
-	CameraWidget*	config_camera;
 };
 
 static BonoboControlClass *gnocam_control_parent_class;
@@ -23,68 +22,10 @@ static BonoboControlClass *gnocam_control_parent_class;
 static void
 gnocam_control_activate (BonoboControl *object, gboolean state)
 {
-	GnoCamControl*		control = GNOCAM_CONTROL (object);
-	CORBA_Environment	ev;
-													
+        if (state) menu_create (GNOCAM_CONTROL (object));
+	else bonobo_ui_component_unset_container (bonobo_control_get_ui_component (object));
 
-printf ("BEGIN: gnocam_control_activate\n");
-
-        if (state) {
-                Bonobo_UIContainer container;
-
-                container = bonobo_control_get_remote_ui_container (object);
-                if (container != CORBA_OBJECT_NIL) {
-			BonoboUIComponent* component = bonobo_control_get_ui_component (object);
-
-			/* Init exception. */
-			CORBA_exception_init (&ev);
-			
-			bonobo_ui_component_set_container (component, container);
-			if (control->camera->abilities->config) {
-				gint	result;
-				
-				if ((result = gp_camera_config_get (control->camera, &(control->priv->config_camera))) != GP_OK) 
-					g_warning (_("Could not get widget for camera configuration!"));
-				else {
-					gchar*		tmp = NULL;
-					xmlDocPtr 	doc = xmlNewDoc ("1.0");
-					xmlNsPtr	ns = xmlNewGlobalNs (doc, "xxx", "xxx");
-					xmlNodePtr	node, child;
-					xmlNodePtr	commands = xmlNewNode (ns, "commands");
-					gint		i;
-					
-					/* Set up the basic structure. */
-					xmlDocSetRootElement (doc, node = xmlNewNode (ns, "Root"));
-					xmlAddChild (node, commands);
-					xmlAddChild (node, child = xmlNewNode (ns, "menu"));
-					xmlAddChild (child, node = xmlNewNode (ns, "submenu"));
-					xmlSetProp (node, "name", "Edit");
-					menu_prepare (control->priv->config_camera, node, commands, ns);
-
-					/* Send it to the component. */
-					xmlDocDumpMemory (doc, (xmlChar**) &tmp, &i);
-				        xmlFreeDoc (doc);
-					bonobo_ui_component_set_translate (component, "/", tmp, &ev);
-					if (BONOBO_EX (&ev)) g_warning (_("Could not display menu for camera configuration! (%s)"), bonobo_exception_get_text (&ev));
-
-					/* Finish. */
-					menu_fill (control, "/menu/Edit", control->priv->config_camera, control->priv->config_camera, TRUE);
-				}
-			}
-                        bonobo_object_release_unref (container, NULL);
-
-			/* Free exception. */
-			CORBA_exception_free (&ev);
-                } 
-	} else {
-		bonobo_ui_component_unset_container (bonobo_control_get_ui_component (object));
-	}
-
-        if (BONOBO_CONTROL_CLASS (gnocam_control_parent_class)->activate)
-                BONOBO_CONTROL_CLASS (gnocam_control_parent_class)->activate (object, state);
-
-	printf ("END: gnocam_control_activate\n");
-
+        if (BONOBO_CONTROL_CLASS (gnocam_control_parent_class)->activate) BONOBO_CONTROL_CLASS (gnocam_control_parent_class)->activate (object, state);
 }
 
 
@@ -100,20 +41,26 @@ gnocam_control_construct (GnoCamControl* control, BonoboMoniker *moniker, const 
 
 printf ("BEGIN: gnocam_control_construct\n");
 	
-	/* Create camera. */
+	/* Disassemble the moniker's name. */
 	name_full = bonobo_moniker_get_name (moniker);
 	name = (gchar*) name_full + 8;
 	if (name[0] == '/') {
+		
+		/* Create the camera. */
 		for (i = 0; name[i] != 0; i++) if (name[i] == '/') break;
 		name = g_strndup (name, i);
 		camera = util_camera_new (name, &ev);
-		g_free (name);
 	}
+	
 	g_return_val_if_fail (camera, NULL);
 	
 	gtk_widget_show (control->priv->vbox = gtk_vbox_new (TRUE, 0));
 
+	/* Create the control. */
 	if (!bonobo_control_construct (BONOBO_CONTROL (control), control->priv->vbox)) return (NULL);
+	control->path = g_strdup (name + i);
+	control->config_camera = NULL;
+	control->config_object = NULL;
 
 	/* Init exception. */
 	CORBA_exception_init (&ev);

@@ -31,6 +31,11 @@ struct _GnoCamControl {
 
 	Camera* 	camera;
 
+	CameraWidget*	config_camera;
+	CameraWidget*	config_object;
+
+	gchar*		path;
+
 	GnoCamControlPrivate *priv;
 };
 

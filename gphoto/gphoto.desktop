@@ -1,6 +1,8 @@
 [Desktop Entry]
 Name=gPhoto
+Name[sv]=gPhoto
 Comment=GNU Digital Still Camera program
+Comment[sv]=Digitalt kameraprogram
 TryExec=gphoto
 Exec=gphoto
 Icon=gnome-qeye.png

@@ -17,11 +17,5 @@ gpio.h
 .deps
 .libs
 gpio_test
-gpio.lo
-gpio-serial.lo
-gpio-parallel.lo
-gpio-network.lo
-gpio-ieee1394.lo
-gpio-usb.lo
 gpioConf.sh
 libgpio.la

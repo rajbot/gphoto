@@ -80,12 +80,38 @@ else
 *** version from http://www.gnome.org.])
 fi
 
+dnl *********
+dnl gnome-xml
+dnl *********
+AC_MSG_CHECKING(for gnome-xml >= 2.0.0)
+if xml-config --version > /dev/null 2>&1; then
+    vers=`xml-config --version | awk 'BEGIN { FS = "."; } { printf "%d", ($1 * 1000 + $2) * 1000 + $3;}'`
+    if test "$vers" -ge 2000000; then
+	AC_MSG_RESULT(found)
+    else
+	AC_MSG_ERROR([
+*** You need at least libxml2-2.0.0 for this version of ${PACKAGE}.
+*** Get the latest version from http://www.gnome.org.])
+    fi
+else
+    AC_MSG_ERROR([
+*** You need libxml (gnome-xml) for this version of ${PACKAGE}.
+*** Get the latest version from http://www.gnome.org.])
+fi
+
 dnl *****
 dnl GConf
 dnl *****
-AC_MSG_CHECKING(for gconf)
+AC_MSG_CHECKING(for gconf >= 0.10)
 if gconf-config --version > /dev/null 2>&1; then
-    AC_MSG_RESULT(found)
+    vers=`gconf-config --version | awk 'BEGIN { FS = "."; } { printf "%d", $1 * 1000 + $2;}'`
+    if test "$vers" -ge 10; then
+        AC_MSG_RESULT(found)
+    else 
+        AC_MSG_ERROR([
+*** You need at least gconf-0.10 for this version of ${PACKAGE}. 
+*** Get the latest version from http://www.gnome.org.])
+    fi
 else
     AC_MSG_ERROR([
 *** You need gconf for this version of ${PACKAGE}. Get the latest
@@ -103,11 +129,13 @@ if gnome-config --libs libglade > /dev/null 2>&1; then
 	AC_MSG_RESULT(found)
     else
 	AC_MSG_ERROR([
-*** You need a least libglade 0.11 for this version of ${PACKAGE}.])
+*** You need a least libglade 0.11 for this version of ${PACKAGE}.
+*** Get the latest version from http://www.gnome.org.])
     fi
 else
     AC_MSG_ERROR([
-*** You need libglade for this version of ${PACKAGE}.])
+*** You need libglade for this version of ${PACKAGE}.
+** Get the latest version from http://www.gnome.org.])
 fi
 
 dnl *******
@@ -151,6 +179,8 @@ dnl *********
 AC_OUTPUT([
 gnocam.spec
 Makefile
+doc/Makefile
+doc/C/Makefile
 intl/Makefile
 macros/Makefile
 po/Makefile.in

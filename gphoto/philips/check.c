@@ -247,26 +247,14 @@ resolution_test ()
 	printf ( "set to %x, (%d)\n", size, rtn );
 	sleep (3);
 
-	printf ( "  Setting resolution to 5 (???)..." );
+	printf ( "  Setting resolution to 5 (900 x 600)..." );
 	rtn = philips_setresolution(5);
 	philips_getresolution(&size);
 	printf ( "set to %x, (%d)\n", size, rtn );
 	sleep (3);
 
-	printf ( "  Setting resolution to 6 (???)..." );
+	printf ( "  Setting resolution to 6 (1800 x 1200)..." );
 	rtn = philips_setresolution(6);
-	philips_getresolution(&size);
-	printf ( "set to %x, (%d)\n", size, rtn );
-	sleep (3);
-
-	printf ( "  Setting resolution to 7 (???)..." );
-	rtn = philips_setresolution(7);
-	philips_getresolution(&size);
-	printf ( "set to %x, (%d)\n", size, rtn );
-	sleep (3);
-
-	printf ( "  Setting resolution to 8 (???)..." );
-	rtn = philips_setresolution(8);
 	philips_getresolution(&size);
 	printf ( "set to %x, (%d)\n", size, rtn );
 	sleep (3);
@@ -336,20 +324,32 @@ flash_test ()
 	printf ( "set to %x, (%d)\n", size, rtn );
 	sleep (2);
 
-	printf ( "  Setting flash to 2 (on)..." );
+	printf ( "  Setting flash to 2 (on or synchro/RDC-5000)..." );
 	rtn = philips_setflash(2);
 	philips_getflash(&size);
 	printf ( "set to %x, (%d)\n", size, rtn );
 	sleep (2);
 
-	printf ( "  Setting flash to 3 (???)..." );
+	printf ( "  Setting flash to 3 (on [RDC-5000])..." );
 	rtn = philips_setflash(3);
 	philips_getflash(&size);
 	printf ( "set to %x, (%d)\n", size, rtn );
 	sleep (2);
 
-	printf ( "  Setting flash to 4 (???)..." );
+	printf ( "  Setting flash to 4 (auto w/ redeye [RDC-5000])..." );
 	rtn = philips_setflash(4);
+	philips_getflash(&size);
+	printf ( "set to %x, (%d)\n", size, rtn );
+	sleep (2);
+
+	printf ( "  Setting flash to 5 (synchro w/ redeye [RDC-5000])..." );
+	rtn = philips_setflash(5);
+	philips_getflash(&size);
+	printf ( "set to %x, (%d)\n", size, rtn );
+	sleep (2);
+
+	printf ( "  Setting flash to 6 (on w/ redeye [RDC-5000])..." );
+	rtn = philips_setflash(6);
 	philips_getflash(&size);
 	printf ( "set to %x, (%d)\n", size, rtn );
 	sleep (2);
@@ -450,14 +450,20 @@ white_test ()
 	printf ( "set to %x, (%d)\n", size, rtn );
 	sleep (1);
 	
-	printf ( "  Setting white level to 4 (B&W - Ricoh 4200 only)..." );
+	printf ( "  Setting white level to 4 (B&W - Ricoh 4200/5000 only)..." );
 	rtn = philips_setwhitelevel(4);
 	philips_getwhitelevel(&size);
 	printf ( "set to %x, (%d)\n", size, rtn );
 	sleep (1);
 	
-	printf ( "  Setting white level to 5 (Sepia - Ricoh 4200 only)..." );
+	printf ( "  Setting white level to 5 (Sepia - Ricoh 4200/5000 only)..." );
 	rtn = philips_setwhitelevel(5);
+	philips_getwhitelevel(&size);
+	printf ( "set to %x, (%d)\n", size, rtn );
+	sleep (1);
+	
+	printf ( "  Setting white level to 6 (Overcast - Ricoh 5000 only)..." );
+	rtn = philips_setwhitelevel(6);
 	philips_getwhitelevel(&size);
 	printf ( "set to %x, (%d)\n", size, rtn );
 	sleep (1);

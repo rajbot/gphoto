@@ -32,7 +32,7 @@ main (int argc, char** argv)
 	gtk_main ();
 
 	/* Clean up */
-	g_object_unref (G_OBJECT (client));
+	g_object_unref (client);
 
 	return 0;
 }

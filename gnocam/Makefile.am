@@ -1,4 +1,4 @@
-SUBDIRS = art gnocam applet tests po
+SUBDIRS = intl m4 po art gnocam applet capplet tests
 
 EXTRA_DIST = \
  AUTHORS\

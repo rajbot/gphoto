@@ -1,3 +1,7 @@
+2002-12-07  Lutz Müller <lutz@users.sourceforge.net>
+
+	* capplet/*: You can now add cameras to a list.
+
 2002-11-29  Lutz Müller <lutz@users.sourceforge.net>
 
 	* capplet/*: Prepare plugin for gnome-control-center.

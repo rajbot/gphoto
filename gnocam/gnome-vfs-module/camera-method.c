@@ -149,6 +149,7 @@ unref_camera (Camera *camera)
 				cameras = g_slist_remove_link (cameras, sl);
 				gp_camera_unref (entry->camera);
 				g_free (entry);
+printf ("I just destroyed a camera.\n");
 			}
 		}
 	g_mutex_unlock (cameras_mutex);
@@ -177,6 +178,8 @@ static GnomeVFSResult do_open (
 	FileHandle *file_handle;
 	const gchar *filename;
 	gchar *dirname;
+
+printf ("ENTER: do_open\n");
 
 	result = get_camera (uri, &camera);
 	if (result != GNOME_VFS_OK)
@@ -215,6 +218,7 @@ static GnomeVFSResult do_open (
 	file_handle->create = FALSE;
 	file_handle->preview = (gnome_vfs_uri_get_user_name (uri) != NULL);
 	*handle = (GnomeVFSMethodHandle *) file_handle;
+printf ("EXIT: do_open\n");
 
 	return (GNOME_VFS_OK);
 }
@@ -291,6 +295,7 @@ static GnomeVFSResult do_read (
 	const char *data;
 	long int size;
 	GnomeVFSResult result;
+printf ("ENTER: do_read\n");
 
 	result = gp_file_get_data_and_size (fh->file, &data, &size);
 	if (result != GNOME_VFS_OK)
@@ -302,6 +307,7 @@ static GnomeVFSResult do_read (
 
 	memcpy (buffer, data + fh->pos, *bytes_read);
 	fh->pos += *bytes_read;
+printf ("EXIT: do_read\n");
 	
 	return (GNOME_VFS_OK);
 }

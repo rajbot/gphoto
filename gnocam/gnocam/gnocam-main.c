@@ -12,7 +12,7 @@
 #include "gnocam-camera-selector.h"
 
 #define PARENT_TYPE BONOBO_X_OBJECT_TYPE
-static BonoboObjectClass *parent_class;
+static BonoboXObjectClass *parent_class;
 
 struct _GnoCamMainPrivate
 {

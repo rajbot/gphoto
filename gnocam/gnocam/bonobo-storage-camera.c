@@ -13,6 +13,7 @@
 
 #include <bonobo/bonobo-exception.h>
 #include <libgnome/gnome-util.h>
+#include <gal/util/e-util.h>
 
 #include "bonobo-stream-camera.h"
 #include "gnocam-util.h"
@@ -461,5 +462,5 @@ bonobo_storage_camera_init (BonoboStorageCamera* storage)
 	storage->priv = g_new (BonoboStorageCameraPrivate, 1);
 }
 
-BONOBO_X_TYPE_FUNC (BonoboStorageCamera, PARENT_TYPE, bonobo_storage_camera); 
+E_MAKE_TYPE (bonobo_storage_camera, "BonoboStorageCamera", BonoboStorageCamera, bonobo_storage_camera_class_init, bonobo_storage_camera_init, PARENT_TYPE)
 

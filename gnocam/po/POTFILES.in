@@ -1,5 +1,11 @@
 src/callbacks.c
-src/gnocam.c
-src/preferences.c
-src/save.c
 src/cameras.c
+src/file-operations.c
+src/frontend.c
+src/gnocam.c
+src/gphoto-extensions.c
+src/information.c
+src/notification.c
+src/preferences.c
+src/preview.c
+src/properties.c

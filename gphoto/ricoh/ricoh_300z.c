@@ -502,7 +502,7 @@ int ricoh_300z_configure () {
 
 	ricoh_300_getID(info);
 	gtk_entry_set_text(GTK_ENTRY(Config.cam_id), info);
-	update_progress(.125);
+	update_progress(12);
 
 	/* image quality ---------------------- */
 	label = gtk_label_new("Image Quality:");
@@ -525,7 +525,7 @@ int ricoh_300z_configure () {
 	gtk_table_attach_defaults(GTK_TABLE(table),spacer,0,2,5,6);	
 
 	ricoh_300_getdesqual(&value);
-	update_progress(.25);
+	update_progress(25);
 	switch (value) {
 		case 1:
 			gtk_widget_activate(Config.qual_econ);
@@ -538,7 +538,7 @@ int ricoh_300z_configure () {
 	}
 			
 
-	update_progress(.50);
+	update_progress(50);
 
 	/* white balance ---------------------- */
 	label = gtk_label_new("White Balance:");
@@ -580,7 +580,7 @@ int ricoh_300z_configure () {
 	gtk_table_attach_defaults(GTK_TABLE(table),spacer,0,2,11,12);	
 
 	ricoh_300_getdeswhite(&value);
-	update_progress(.25);
+	update_progress(65);
 	switch (value) {
 		case 4:
 			gtk_widget_activate(Config.white_bw);
@@ -638,7 +638,7 @@ int ricoh_300z_configure () {
 	gtk_table_attach_defaults(GTK_TABLE(table),spacer,3,5,5,6);	
 
 	ricoh_300_getflash(&value);
-	update_progress(.75);
+	update_progress(75);
 	switch (value) {
 	    case 2:
 		gtk_widget_activate(Config.flash_force);
@@ -655,7 +655,7 @@ int ricoh_300z_configure () {
 	  "clicked",GTK_SIGNAL_FUNC(white_mode), Config.flash_none);
 
 	
-	update_progress(.875);
+	update_progress(87);
 
 	/* exposure compensation  ---------------------- */
 	label = gtk_label_new("Exposure Compensation:");
@@ -667,7 +667,7 @@ int ricoh_300z_configure () {
 	gtk_widget_show(Config.expose_manual);
 	ricoh_300_getdesexposure(&value);
 	fvalue = (value > 9 ? 0 : value - 5) * .5;
-	update_progress(.375);
+	update_progress(95);
 	adj = gtk_adjustment_new(fvalue, -2, 2, .5, 0, 0);
 	Config.exposure = gtk_hscale_new(GTK_ADJUSTMENT(adj));
 	gtk_range_set_update_policy(GTK_RANGE(Config.exposure),
@@ -700,7 +700,7 @@ int ricoh_300z_configure () {
 	gtk_table_attach_defaults(GTK_TABLE(table),label,3,4,10,11);
 
 	ricoh_300_getcamdate(&camtime);
-	update_progress(1.0);
+	update_progress(100);
 	atime = ctime(&camtime);
 	label = gtk_label_new(atime);
 	gtk_widget_show(label);
@@ -759,7 +759,7 @@ int ricoh_300z_configure () {
 	camID = gtk_entry_get_text(GTK_ENTRY(Config.cam_id));
 	if(strcmp(camID, info) != 0)
 	    ricoh_300_setID(camID);
-	update_progress(.125);
+	update_progress(12);
 
 
 	/* Set image quality... */
@@ -771,7 +771,7 @@ int ricoh_300z_configure () {
 	  else
 		value = 2;
 	ricoh_300_setqual(value);
-	update_progress(.25);
+	update_progress(25);
 
 	/* white balance */
 	if((ricoh_camera_model == RICOH_300 || ricoh_camera_model == RICOH_300Z)
@@ -786,7 +786,7 @@ int ricoh_300z_configure () {
 	else
 	    value = 0;
 	ricoh_300_setwhite(value);
-	update_progress(.375);
+	update_progress(37);
 
 	/* Set flash mode... */
 	if (GTK_WIDGET_STATE(Config.flash_auto) == GTK_STATE_ACTIVE)
@@ -796,7 +796,7 @@ int ricoh_300z_configure () {
 	 else
  		value = 1;
 	ricoh_300_setflash(value);
-	update_progress(.50);
+	update_progress(50);
 
 	/* exposure compensation */
 	if(GTK_WIDGET_STATE(Config.expose_auto) == GTK_STATE_ACTIVE)
@@ -804,18 +804,18 @@ int ricoh_300z_configure () {
 	else
 	    value = (int)(((GtkAdjustment *)adj)->value * 2.) + 5;
 	ricoh_300_setexposure(value);
-	update_progress(.625);
+	update_progress(62);
 
-	update_progress(.75);
+	update_progress(75);
 
-	update_progress(.875);
+	update_progress(87);
 
 	/* Set the clock... */
 	if (GTK_WIDGET_STATE(Config.clk_comp) == GTK_STATE_ACTIVE) {
 		camtime = time(&camtime);
 		ricoh_300_setcamdate(camtime);
 	}
-	update_progress(1.00);
+	update_progress(100);
 	ricoh_300z_close_camera();
 	gtk_widget_destroy(dialog);
 	update_status("Done.");

@@ -557,7 +557,7 @@ struct Image *kodak_dc210_get_thumbnail (int serialdev, int picNum)
   /* allocate space for the image data */
   imData = (char *)malloc(fileSize + 54);
 
-  update_progress(0.00);
+  update_progress(0);
 
   if (kodak_dc210_send_command(serialdev,DC_PICTURE_THUMBNAIL,0x00,(char)picNum,0x01,0x00))
   {
@@ -570,7 +570,7 @@ struct Image *kodak_dc210_get_thumbnail (int serialdev, int picNum)
 	/* on the last block numRead will be > fileSize, so don't report it
 	   in these situations */
 	if (numRead <= fileSize)
-	  update_progress((float)numRead / (float)fileSize);
+	  update_progress( 100 * numRead / fileSize);
       }
       else
       {
@@ -583,7 +583,7 @@ struct Image *kodak_dc210_get_thumbnail (int serialdev, int picNum)
     if (success)
     {
       kodak_dc210_command_complete(serialdev);
-      update_progress(1.00);
+      update_progress(100);
 
       /* allocate memory for image structure */
       if ( (im = (struct Image *)malloc ( sizeof(struct Image) )) == NULL ) 
@@ -658,18 +658,18 @@ struct Image *kodak_dc210_get_picture (int picNum, int thumbnail)
       picData = (char *)malloc(fileSize + blockSize);
       numRead = 0;
 
-      update_progress(0.00);
+      update_progress(0);
       while (numRead < fileSize)
       {
 	kodak_dc210_read_packet( serialdev,picData+numRead,blockSize);
 	numRead += blockSize;
 
 	if (numRead <= fileSize)
-	  update_progress((float)numRead / (float)fileSize);
+	  update_progress( 100 * numRead / fileSize);
       }
       fprintf(stderr,"%d/%d\n",numRead,fileSize);
       kodak_dc210_command_complete( serialdev );
-      update_progress(1.00);
+      update_progress(100);
 
       /* allocate memory for image structure */
       if ( (im = (struct Image *)malloc ( sizeof(struct Image) )) == NULL ) 

@@ -342,7 +342,7 @@ int oly_configure () {
 
 	info[0] = '\0'; info_size=2048;
 	eph_getvar(iob,0x16,&info,&info_size);
-	update_progress(.125);
+	update_progress(12);
 	gtk_entry_set_text(GTK_ENTRY(Config.cam_id), info);
 
 	/* image quality ---------------------- */
@@ -368,7 +368,7 @@ int oly_configure () {
 	gtk_table_attach_defaults(GTK_TABLE(table),spacer,0,2,5,6);	
 
 	eph_getint(iob,1,&value);
-	update_progress(.25);
+	update_progress(25);
 	switch (value) {
 		case 1:
 			gtk_widget_activate(Config.qual_std);
@@ -382,7 +382,7 @@ int oly_configure () {
 	label = gtk_label_new("LCD Brightness:");
 	gtk_widget_show(label);
 	eph_getint(iob,35,&value);
-	update_progress(.375);
+	update_progress(37);
 	adj = gtk_adjustment_new(value, 1, 7, 1, 0, 0);
 	Config.lcd = gtk_hscale_new(GTK_ADJUSTMENT(adj));
 	gtk_range_set_update_policy(GTK_RANGE(Config.lcd),GTK_UPDATE_CONTINUOUS);
@@ -428,7 +428,7 @@ int oly_configure () {
 	spacer = gtk_hseparator_new();
 	gtk_widget_show(spacer);
 	gtk_table_attach_defaults(GTK_TABLE(table),spacer,0,2,12,13);	
-	update_progress(.50);
+	update_progress(50);
 
 	/* lens mode ----------------------- */
 	label = gtk_label_new("Lens Mode:");
@@ -443,7 +443,7 @@ int oly_configure () {
 	gtk_table_attach_defaults(GTK_TABLE(table),Config.lens_mac,1,2,14,15);	
 	
 	eph_getint(iob,33,&value);
-	update_progress(.625);
+	update_progress(62);
 	switch (value) {
 		case 1:
 			gtk_widget_activate(Config.lens_mac);
@@ -477,7 +477,7 @@ int oly_configure () {
 	gtk_table_attach_defaults(GTK_TABLE(table),spacer,3,5,6,7);	
 
 	eph_getint(iob,7,&value);
-	update_progress(.75);
+	update_progress(75);
 	switch (value) {
 		case 1:
 			gtk_widget_activate(Config.flash_force);
@@ -509,7 +509,7 @@ int oly_configure () {
 	gtk_table_attach_defaults(GTK_TABLE(table),spacer,3,5,9,10);	
 	
 	eph_getint(iob,41,&value);
-	update_progress(.875);
+	update_progress(87);
 	switch (value) {
 		case 2:
 			gtk_widget_activate(Config.date_ddmmhh);
@@ -524,7 +524,7 @@ int oly_configure () {
 	gtk_table_attach_defaults(GTK_TABLE(table),label,3,4,10,11);
 
 	eph_getint(iob,2,&camtime);
-	update_progress(1.0);
+	update_progress(100);
 	atime = ctime(&camtime);
 	label = gtk_label_new(atime);
 	gtk_widget_show(label);
@@ -581,7 +581,7 @@ int oly_configure () {
 	/* Set camera name... */
 	camID = gtk_entry_get_text(GTK_ENTRY(Config.cam_id));
 	eph_setvar(iob,0x16,camID,strlen(camID));
-	update_progress(.125);
+	update_progress(12);
 
 
 	/* Set image quality... */
@@ -591,7 +591,7 @@ int oly_configure () {
 		value = 2;
 
 	eph_setint(iob,1,value);
-	update_progress(.25);
+	update_progress(25);
 
 	/* Set flash mode... */
 	if (GTK_WIDGET_STATE(Config.flash_auto) == GTK_STATE_ACTIVE)
@@ -603,7 +603,7 @@ int oly_configure () {
 	 else 
  		value = 4;
 	eph_setint(iob,7,value);
-	update_progress(.375);
+	update_progress(37);
 
 	/* Set lens mode... */
 	if (GTK_WIDGET_STATE(Config.lens_mac) == GTK_STATE_ACTIVE)
@@ -611,7 +611,7 @@ int oly_configure () {
 	   else
 		value = 2;
 	eph_setint(iob,33,value);
-	update_progress(.50);
+	update_progress(50);
 
 	/* Set date format... */
 	if (GTK_WIDGET_STATE(Config.date_yymmdd) == GTK_STATE_ACTIVE)
@@ -619,13 +619,13 @@ int oly_configure () {
 	   else
 		value = 2;
 	eph_setint(iob,41,value);
-	update_progress(.625);
+	update_progress(62);
 
 	/* Set LCD brightness ... */
 	adjustment = gtk_range_get_adjustment(GTK_RANGE(Config.lcd));
 	value = adjustment->value;
 	eph_setint(iob,35,value);
-	update_progress(.75);
+	update_progress(75);
 
 	/* Set power savings ... */
 	adjustment = gtk_range_get_adjustment(GTK_RANGE(Config.docked));
@@ -634,7 +634,7 @@ int oly_configure () {
 	adjustment = gtk_range_get_adjustment(GTK_RANGE(Config.undocked));
 	value = adjustment->value;
 	eph_setint(iob,24,value);
-	update_progress(.875);
+	update_progress(87);
 
 	/* Set the clock... */
 	if (GTK_WIDGET_STATE(Config.clk_comp) == GTK_STATE_ACTIVE) {
@@ -642,7 +642,7 @@ int oly_configure () {
 		eph_setint(iob,2,camtime);
 		sleep(1);
 	}
-	update_progress(1.00);
+	update_progress(100);
 	oly_close_camera();
 	gtk_widget_destroy(dialog);
 	update_status("Done.");

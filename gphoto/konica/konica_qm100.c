@@ -31,7 +31,7 @@ int konica_qm100_formatCF()
 static void dlprogress(void)
 {
    qm100_percent += qm100_percentIncr;
-   update_progress(qm100_percent);
+   update_progress((int)(100.0 * qm100_percent));
 }
 int konica_qm100_initialize()
 {
@@ -179,7 +179,7 @@ char *konica_qm100_summary()
   char summary[512];
   int serialdev;
   QM100_CAMERA_INFO  cinfo;
-  update_progress(0.);
+  update_progress(0);
   if (setjmp(qm100_jmpbuf))
      return qm100_errmsg;
   serialdev = qm100_open(serial_port);
@@ -194,7 +194,7 @@ char *konica_qm100_summary()
           cinfo.year+1900, cinfo.month, cinfo.day,
           cinfo.hour, cinfo.min, cinfo.sec);
   qm100_close(serialdev);
-  update_progress(1.);
+  update_progress(100);
   return (strdup(summary));
 }
 char *konica_qm100_description()

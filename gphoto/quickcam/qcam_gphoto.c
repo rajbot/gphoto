@@ -40,7 +40,7 @@ void qcam_populate() {
 
 	qcam_num_pictures = qcam_num_pictures_max;
 	for (x=0; x<qcam_num_pictures; x++) {
-		update_progress ((float)x/(float)11);
+		update_progress (100 * x/11);
 		qcam_pictures[x] = qcam_get_preview();
 	}
 	update_progress(0);
@@ -155,4 +155,3 @@ struct _Camera quickcam = {qcam_initialize,
                            qcam_configure,
                            qcam_summary,
                            qcam_description};
-

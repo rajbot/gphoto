@@ -96,7 +96,7 @@ extern char      serial_port[20];      /* Serial port                  */
 extern int	camera_type;
 #endif
 
-void update_progress (float percentage);
+void update_progress (int percentage);
 void update_status   (char *newStatus);
 
 #endif /* _GPHOTO_H */

@@ -309,7 +309,7 @@ int mdc800_setupDialog (void)
 		return -1;
 
 	mdc800_ComboBox_SetEntry (mdc800_dialog.image_quality, mdc800_image_quality_string, value);
-	update_progress (0.125);
+	update_progress (12);
 
 
 	if (!mdc800_getWBandExposure (&tmp, &value))
@@ -323,19 +323,19 @@ int mdc800_setupDialog (void)
 		case 8: value=3; break;
 	}
 	mdc800_ComboBox_SetEntry (mdc800_dialog.light,mdc800_wb_string,value);
-	update_progress (0.25);
+	update_progress (25);
 
 
 	/* flash mode ---------------------- */
 	value = mdc800_getFlashLightStatus ();
 	mdc800_ComboBox_SetEntry (mdc800_dialog.flash,mdc800_flash_light_string,value);
-	update_progress (0.375);
+	update_progress (37);
 
 
 	/* LCD ON/OFF ---------------------- */
 	if (mdc800_isLCDEnabled ())
 		gtk_widget_activate(mdc800_dialog.lcd_on);
-	update_progress (0.5);
+	update_progress (50);
 
 
 	/* Storage Source ---------------------- */
@@ -343,7 +343,7 @@ int mdc800_setupDialog (void)
 	if (value < 0)
 		return -1;
 	mdc800_ComboBox_SetEntry (mdc800_dialog.source, mdc800_storage_source_string, value);
-	update_progress (0.875);
+	update_progress (87);
 
 
 	/* Set exposure Mode ---------------------- */
@@ -351,13 +351,13 @@ int mdc800_setupDialog (void)
 	if (value < 0)
 		return -1;
 	mdc800_ComboBox_SetEntry (mdc800_dialog.exp_mode, mdc800_exposure_mode_string, value);
-	update_progress (0.95);
+	update_progress (95);
 	
 	/* Baudrate */
 	if (!mdc800_io_using_usb)
 		mdc800_ComboBox_SetEntry (mdc800_dialog.baud, mdc800_baud_rate_string, mdc800_getSpeed ());
 		
-	update_progress (1);
+	update_progress (100);
 	update_status("Done.");
 	
 	update_progress (0);
@@ -379,14 +379,14 @@ int mdc800_setupConfig (void)
 		return -1;
 	if (!mdc800_setImageQuality (value))
 		return -1;
-	update_progress (0.125);
+	update_progress (12);
 	
 	
 	/* set exposure setting */
 	value= GTK_ADJUSTMENT(mdc800_dialog.lcd_adj)->value;
 	if (!mdc800_setExposure (value))
 		return -1;
-	update_progress(0.25);
+	update_progress(25);
 
 
 	/* Set flash mode... */
@@ -395,7 +395,7 @@ int mdc800_setupConfig (void)
 		return -1;
 	if (!mdc800_setFlashLight (value))
 		return -1;
-	update_progress(0.375);
+	update_progress(37);
 
 
 	/* Set White Balance... */
@@ -411,7 +411,7 @@ int mdc800_setupConfig (void)
 	}
 	if (!mdc800_setWB (value))
 		return -1;
-	update_progress(0.5);
+	update_progress(50);
 
 
 	/* Set LCD ON/OFF... */
@@ -419,19 +419,19 @@ int mdc800_setupConfig (void)
 	  	mdc800_enableLCD (1);
 	else 
 	  	mdc800_enableLCD (0);
-	update_progress(0.625);
+	update_progress(62);
 
 
 	/* Set Storage Source... */
 	value = mdc800_ComboBox_GetEntry (mdc800_dialog.source, mdc800_storage_source_string,2);
 	if (value < 0)
 		return -1;
-	update_progress(0.75);		
+	update_progress(75);		
 
 
 	if (!mdc800_setStorageSource (value))
 		return -1;
-	update_progress(0.875);
+	update_progress(87);
 
 
 	mdc800_setTarget (1);
@@ -443,7 +443,7 @@ int mdc800_setupConfig (void)
 		return -1;
 	if (!mdc800_setExposureMode (value))
 		return -1;
-	update_progress (0.95);
+	update_progress (95);
 			
 		
 	/* Change BaudRate */
@@ -455,7 +455,7 @@ int mdc800_setupConfig (void)
 		mdc800_changespeed (value);
 	}
 	
-	update_progress(1);
+	update_progress(100);
 
 	update_status("Done.");
 	update_progress(0);

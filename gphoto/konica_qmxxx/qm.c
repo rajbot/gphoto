@@ -178,7 +178,7 @@ qm_summary()
 
 	#if 0 /* delete 1999.10.1 for gphoto-0.3.9 */
 	update_progress(0);
-	update_progress(1);
+	update_progress(100);
 	#endif
 
 	sprintf(buf, 

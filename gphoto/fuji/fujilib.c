@@ -341,8 +341,8 @@ rd_pkt:
 		  if (fuji_debug){
 		    printf("Recd %d of %d\n",fuji_count,fuji_size);
 		  };
-		  update_progress((1.0*fuji_count/fuji_size>1.0)?1.0:
-				  1.0*fuji_count/fuji_size);
+		  update_progress((1.0*fuji_count/fuji_size>1.0)?100:
+				  100*fuji_count/fuji_size);
 
 		};
 		/* More packets ? */
@@ -1178,4 +1178,3 @@ struct _Camera fuji = {fuji_initialize,
 		       fuji_summary,
 		       fuji_description
 };
-

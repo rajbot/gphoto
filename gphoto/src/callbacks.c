@@ -173,7 +173,7 @@ void format(GtkWidget *dialog, GtkObject *button)
 			remove_thumbnail(i);
 			sprintf(error, "Deleting %i...\n", i);
 			update_status(error);
-			update_progress((float)i/(float)no_pics);
+			update_progress(100 * i / no_pics);
 		} else  {
 			sprintf(error, "Could not delete #%i\n", i);
 			error_dialog(error);
@@ -1298,7 +1298,7 @@ fprintf(stderr, "num_pictures_taken is %d\n", num_pictures_taken);
 				 node->button,
 				 i%6,i%6+1,i/6,i/6+1,
 				 GTK_FILL,GTK_FILL,5,5);
-		update_progress((float)i/(float)(num_pictures_taken - 1));
+		update_progress(100*i/(num_pictures_taken - 1));
 	}
 	deactivate_button(stop_button);
 	update_progress(0);
@@ -1365,7 +1365,7 @@ void getpics(char *pictype)
 			gtk_toggle_button_set_state(
 				GTK_TOGGLE_BUTTON(node->button),
 				FALSE);
-			update_progress((float)y/(float)x);
+			update_progress(100*y/x);
 		}
 	}
 

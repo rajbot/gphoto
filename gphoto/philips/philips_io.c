@@ -37,7 +37,7 @@
 
 #ifdef GPHOTO
 #include "config.h"
-void update_progress (float percentage);
+void update_progress (int percentage);
 void update_status (char *message);
 #endif
 
@@ -2313,7 +2313,7 @@ void philips_progress_bar ( float progress, char *message )
 	if ( progress == 0.0 ) {
 #ifdef GPHOTO
 		update_status ( message );
-		update_progress ( progress );
+		update_progress ( (int)(100.0 * progress) );
 #else
 		printf ( "%s", message );
 		fflush ( stdout );
@@ -2323,7 +2323,7 @@ void philips_progress_bar ( float progress, char *message )
 	if ( progress > 0.0 && progress < 0.99 ) {
 		/* Display progress.... */
 #ifdef GPHOTO
-		update_progress ( progress );
+		update_progress ( (int)(100.0 * progress) );
 #else
 		printf ( "*" );
 		fflush ( stdout );
@@ -2331,7 +2331,7 @@ void philips_progress_bar ( float progress, char *message )
 		}
 	if ( progress > .99 ) {
 #ifdef GPHOTO
-		update_progress ( progress );
+		update_progress ( (int)(100.0 * progress) );
 		update_status ( "Done." );
 #else
 		printf ( "\n" );

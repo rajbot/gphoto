@@ -9,8 +9,8 @@
 */   
 char serial_port[20];
 
-void update_progress(float percentage) {
-	fprintf(stderr,"Retrieval at % 3.4f\n", percentage);
+void update_progress(int percentage) {
+	fprintf(stderr,"Retrieval at %i\n", percentage);
 	return;
 }
 

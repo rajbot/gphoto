@@ -21,12 +21,13 @@ void update_status(char *newStatus)
 		gtk_main_iteration();
 }
 
-void update_progress(float percentage)
+void update_progress(int percentage)
 {
 	/*
 	 * sets the progress bar to percentage% at the bottom
 	 *of the main window
 	 */
+	float p;
 
 	if (command_line_mode) {
 		fprintf(stdout, "#");
@@ -34,8 +35,9 @@ void update_progress(float percentage)
 		return;
 	}
 
-	if (percentage >= 0)
-		gtk_progress_bar_update(GTK_PROGRESS_BAR(progress), percentage);
+	p = (float)percentage/100.0;
+	if ((p >= 0.0) && (p <= 1.0))
+		gtk_progress_bar_update(GTK_PROGRESS_BAR(progress), p);
 
 	while (gtk_events_pending())
 		gtk_main_iteration();

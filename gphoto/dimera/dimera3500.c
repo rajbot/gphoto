@@ -395,7 +395,7 @@ Dimera_Get_Full_Image( int picnum, struct Image *image )
 	ia.inc2 = 128;
 	ia.inc3 = ia.inc4 = 0;
 
-	update_progress( 0.0 );
+	update_progress( 0 );
 
 	for ( ia.row = 4, b = rbuffer; ia.row < (height + 4) ;
 			ia.row += ia.row_cnt, b += s )
@@ -425,7 +425,7 @@ Dimera_Get_Full_Image( int picnum, struct Image *image )
 			image->image_size = 0;
 			return 0;
 		}
-		update_progress( (float)ia.row /(float)(height + 4) );
+		update_progress( 100 * ia.row /(height + 4) );
 	}
 	return Dimera_convert_raw( rbuffer, height, width, image );
 }

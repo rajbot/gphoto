@@ -58,7 +58,7 @@ typedef struct _dimage_v_buffer
 /* GPhoto globals */
 extern char	serial_port[20];
 extern void update_status(char *newStatus);
-extern void update_progress(float percentage);
+extern void update_progress(int percentage);
 extern void error_dialog(char *Error);
 
 /* Globals for my own use. */

@@ -200,7 +200,7 @@ int philips_configure () {
 		}
 	philips_close_camera();
 
-	update_progress(.125);
+	update_progress(12);
 
 	sprintf ( title, "Configure Camera %s", philips_model(cameraid) );
 	info = (char *)malloc(2048);
@@ -218,11 +218,11 @@ int philips_configure () {
 
 	/* add a page to the notebook */
 	philips_cfg_page1 ( notebook, &controls, pcfginfo );
-	update_progress(.25);
+	update_progress(25);
 	philips_cfg_page2 ( notebook, &controls, pcfginfo );
-	update_progress(.50);
+	update_progress(50);
 	philips_cfg_page3 ( notebook, &controls, pcfginfo );
-	update_progress(.75);
+	update_progress(75);
 	philips_cfg_page4 ( notebook, &controls, pcfginfo );
 
 
@@ -239,7 +239,7 @@ int philips_configure () {
 	gtk_box_pack_end ( GTK_BOX(GTK_DIALOG(dialog)->action_area), button, TRUE, FALSE, 0 );
 	gtk_widget_show ( button );
 
-	update_progress(1.0);
+	update_progress(100);
 
 	gtk_widget_show ( dialog );
 	update_status ( "Done." );

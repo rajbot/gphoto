@@ -403,7 +403,7 @@ SDSC_ReadImage (int picnum, int thumbnail)
       return 0;
     }
 
-  update_progress (0.0);
+  update_progress (0);
 
   sendcommand (SDSC_BINARY);    /*Put into image mode */
   sendcommand (SDSC_START);     /*Start reading */
@@ -431,7 +431,7 @@ SDSC_ReadImage (int picnum, int thumbnail)
       left -= 0x400;
       i += 0x400;
 
-      update_progress ((float) i / (float) size);
+      update_progress (100 * i / size);
 
       sendcommand (SDSC_BINARY);  /*Next block */
     }

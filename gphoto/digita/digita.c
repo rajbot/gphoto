@@ -112,7 +112,7 @@ struct Image *digita_get_picture(int index, int thumbnail)
 	}
 	memset(data, 0, buflen);
 
-	update_progress(0.00);
+	update_progress(0);
 
 	if (digita_get_file_data(dev, thumbnail, &fn, &tag, data) < 0) {
 		printf("digita_get_picture: digita_get_file_data failed\n");
@@ -132,7 +132,7 @@ struct Image *digita_get_picture(int index, int thumbnail)
 	len = ntohl(tag.filesize);
 	pos = ntohl(tag.length);
 	while (pos < len) {
-		update_progress((float)pos / (float)len);
+		update_progress(100 * pos / len);
 		tag.offset = htonl(pos);
 		if ((len - pos) > GFD_BUFSIZE)
 			tag.length = htonl(GFD_BUFSIZE);
@@ -146,7 +146,7 @@ struct Image *digita_get_picture(int index, int thumbnail)
 		pos += ntohl(tag.length);
 	}
 
-	update_progress(1.00);
+	update_progress(100);
 
 	if (thumbnail) {
 		unsigned char *rgb, *ps;

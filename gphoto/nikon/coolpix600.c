@@ -430,7 +430,7 @@ static struct Image *DSC_ReadImage(int picnum, int thumbnail)
         return 0;
     }
 
-    update_progress(0.0);
+    update_progress(0);
     for(i=0; i<blocks; i++) 
     {
         if(0>DSC_ReadBlock(fd,
@@ -444,7 +444,7 @@ static struct Image *DSC_ReadImage(int picnum, int thumbnail)
             free(image);
             return NULL;
         }
-        update_progress((float)i/(float)blocks);
+        update_progress(100 * i/ blocks);
     }
 
     strcpy(image->image_type,"jpg");
@@ -512,4 +512,3 @@ struct _Camera coolpix600 =
 	DSC_Summary,
 	DSC_Description,
 };
-

@@ -61,4 +61,34 @@ knc_unescape (char *buf, unsigned int *size)
 	}
 }
 
+static struct {
+	const char *manufacturer;
+	const char *model;
+} Devices[] = {
+	{"Konica", "Q-EZ"},
+	{"Konica", "Q-M100"},
+	{"Konica", "Q-M100V"},
+	{"Konica", "Q-M200"},
+	{"Hewlett Packard", "PhotoSmart"},
+	{"Hewlett Packard", "PhotoSmart C20"},
+	{"Hewlett Packard", "PhotoSmart C20"},
+	{"Hewlett Packard", "PhotoSmart C200"},
+};
 
+unsigned int
+knc_count_devices (void)
+{
+	return sizeof (Devices) / sizeof (Devices[0]);
+}
+
+const char *
+knc_get_device_manufacturer (unsigned int n)
+{
+	return (n < knc_count_devices ()) ? Devices[n].manufacturer : NULL;
+}
+
+const char *
+knc_get_device_model (unsigned int n)
+{
+	return (n < knc_count_devices ()) ? Devices[n].model : NULL;
+}

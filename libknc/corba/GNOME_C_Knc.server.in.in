@@ -1,0 +1,24 @@
+<oaf_info>
+
+<oaf_server iid="OAFIID:GNOME_C_Knc_Factory" type="exe"
+  location="@LIBEXECDIR@/knc">
+  <oaf_attribute name="repo_ids" type="stringv">
+    <item value="IDL:Bonobo/GenericFactory:2.0"/>
+    <item value="IDL:Bonobo/Unknown:1.0"/>
+  </oaf_attribute>
+  <oaf_attribute name="name" type="string" _value="Konica camera factory"/>
+  <oaf_attribute name="description" type="string"
+    _value="Konica camera factory"/>
+</oaf_server>
+
+<oaf_server iid="OAFIID:GNOME_C_Knc" type="factory"
+  location="OAFIID:GNOME_C_Knc_Factory">
+  <oaf_attribute name="repo_ids" type="stringv">
+    <item value="IDL:GNOME/C/Mngr"/>
+    <item value="IDL:Bonobo/Unknown:1.0"/>
+  </oaf_attribute>
+  <oaf_attribute name="name" type="string" _value="Konica camera"/>
+  <oaf_attribute name="description" type="string" _value="Konica camera"/>
+</oaf_server>
+
+</oaf_info>

@@ -9,6 +9,7 @@
 
 #include <libknc/knc-i18n.h>
 #include <libknc/knc.h>
+#include <libknc/knc-utils.h>
 
 static int
 knc_cntrl2gp (KncCntrlRes r)
@@ -45,20 +46,6 @@ knc_cntrl2gp (KncCntrlRes r)
 #define C_NULL(r) {if (!(r)) return (GP_ERROR_BAD_PARAMETERS);}
 #define PING_TIMEOUT 60
 
-static struct {
-	const char *model;
-} konica_cameras[] = {
-	{"Konica Q-EZ"},
-	{"Konica Q-M100"},
-	{"Konica Q-M100V"},
-	{"Konica Q-M200"},
-	{"HP PhotoSmart"},
-	{"HP PhotoSmart C20"},
-	{"HP PhotoSmart C30"}, 
-	{"HP PhotoSmart C200"},
-	{NULL}
-};
-
 struct _CameraPrivateLibrary {
 	KncCntrl *c;
 	unsigned int speed, timeout;
@@ -78,10 +65,12 @@ camera_abilities (CameraAbilitiesList* list)
         int i;
         CameraAbilities a;
 
-        for (i = 0; konica_cameras [i].model; i++) {
+        for (i = 0; i < knc_count_devices (); i++) {
                 memset(&a, 0, sizeof(a));
                 a.status = GP_DRIVER_STATUS_PRODUCTION;
-                strcpy (a.model, konica_cameras [i].model);
+		strcpy (a.model, knc_get_device_manufacturer (i));
+		strcat (a.model, ":");
+		strcat (a.model, knc_get_device_model (i));
                 a.port = GP_PORT_SERIAL;
                 a.speed[0]     = 300;
                 a.speed[1]     = 600;
@@ -602,7 +591,6 @@ camera_init (Camera *camera, GPContext *context)
 {
 	int i;
 	GPPortSettings s;
-	CameraAbilities a;
 	unsigned int speeds[] = {115200, 9600, 57600, 38400, 19200, 
 				 4800, 2400, 1200, 600, 300};
 
@@ -622,13 +610,6 @@ camera_init (Camera *camera, GPContext *context)
         camera->functions->capture_preview      = camera_capture_preview;
         camera->functions->summary              = camera_summary;
         camera->functions->about                = camera_about;
-
-         /* Lookup model information */
-        gp_camera_get_abilities (camera, &a);
-        for (i = 0; konica_cameras [i].model; i++)
-                if (!strcmp (konica_cameras [i].model, a.model)) break;
-        if (!konica_cameras [i].model)
-                return (GP_ERROR_MODEL_NOT_FOUND);
 
         /* Store some data we constantly need. */
         camera->pl = malloc (sizeof (CameraPrivateLibrary));

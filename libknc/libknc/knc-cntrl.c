@@ -40,6 +40,8 @@
 #define EOT     0x04
 
 struct _KncCntrl {
+	KncCntrlFuncFree func_free;
+	void *func_free_data;
 
 	KncCntrlFuncRead  func_read;
 	KncCntrlFuncWrite func_write;
@@ -63,18 +65,18 @@ knc_cntrl_log (KncCntrl *c, const char *format, ...)
 {
 	va_list args;
 
-	if (!c || !c->func_log) return;
+	if (!c) return;
 
 	va_start (args, format);
-	c->func_log (format, args, c->func_log_data);
+	if (c->func_log) c->func_log (format, args, c->func_log_data);
 	va_end (args);
 }
 
 static KncCntrlRes
 knc_cntrl_data (KncCntrl *c, const char *buf, unsigned int size)
 {
-	if (!c || !c->func_data) return KNC_CNTRL_RES_ERR_ILLEGAL_PARAMETER;
-	if (!size) return KNC_CNTRL_RES_OK;
+	if (!c) return KNC_CNTRL_RES_ERR_ILLEGAL_PARAMETER;
+	if (!size || !c->func_data) return KNC_CNTRL_RES_OK;
 
 	return c->func_data (buf, size, c->func_data_data);
 }
@@ -88,7 +90,25 @@ knc_cntrl_prot (KncCntrl *c)
 static void
 knc_cntrl_free (KncCntrl *c)
 {
+	if (!c) return;
+	if (c->func_free) c->func_free (c, c->func_free_data);
 	free (c);
+}
+
+void
+knc_cntrl_set_func_free (KncCntrl *c, KncCntrlFuncFree f, void *f_data)
+{
+	if (!c) return;
+	c->func_free = f;
+	c->func_free_data = f_data;
+}
+
+void
+knc_cntrl_get_func_free (KncCntrl *c, KncCntrlFuncFree *f, void **f_data)
+{
+	if (!c) return;
+	if (f) *f = c->func_free;
+	if (f_data) *f_data = c->func_free_data;
 }
 
 static KncCntrlRes

@@ -19,19 +19,24 @@ typedef KncCntrlRes (* KncCntrlFuncRead)  (unsigned char *, unsigned int,
 typedef KncCntrlRes (* KncCntrlFuncWrite) (const unsigned char *,
 					   unsigned int, void *);
 
+/* Life-cycle */
 KncCntrl *knc_cntrl_new   (KncCntrlFuncRead, KncCntrlFuncWrite, void *);
 void      knc_cntrl_ref   (KncCntrl *);
 void      knc_cntrl_unref (KncCntrl *);
+typedef void (* KncCntrlFuncFree) (KncCntrl *, void *);
+void      knc_cntrl_set_func_free (KncCntrl *, KncCntrlFuncFree  , void  *);
+void      knc_cntrl_get_func_free (KncCntrl *, KncCntrlFuncFree *, void **);
 
+/* Transmitting data */
 typedef KncCntrlRes (* KncCntrlFuncData)  (const unsigned char *,
 					   unsigned int, void *);
 void knc_cntrl_set_func_data (KncCntrl *, KncCntrlFuncData, void *);
-
-KncCntrlProt knc_cntrl_prot       (KncCntrl *c);
-
 KncCntrlRes knc_cntrl_transmit   (KncCntrl *,
 				  const unsigned char *, unsigned int,
 				        unsigned char *, unsigned int *);
+
+/* Querying the protocol used */
+KncCntrlProt knc_cntrl_prot       (KncCntrl *c);
 
 /* For debugging */
 typedef void (* KncCntrlFuncLog) (const char *format, va_list, void *);

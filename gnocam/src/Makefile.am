@@ -24,7 +24,6 @@ LDFLAGS = @LDFLAGS@\
 bin_PROGRAMS = gnocam
 
 gnocam_SOURCES =\
- callbacks.c\
  cameras.h cameras.c\
  file-operations.h file-operations.c\
  frontend.h frontend.c\

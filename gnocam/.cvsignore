@@ -9,4 +9,6 @@ stamp-h
 gnocam.spec
 Makefile
 Makefile.in
+intl
+intl/*
 

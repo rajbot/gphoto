@@ -2,6 +2,8 @@
 
 . "$(dirname $0)/utils/common.sh"
 
+cmd rm -f build-tool-list.boot
+
 cmd rm -rf "${cvsorig}" "${cvssrc}" "${distdir}" "${srcdir}" "${distroot}" "${instroot}" "${tmpdir}" "${toolroot}" "${toolsrc}"
 
 cmd rm -f install-sh missing mkinstalldirs aclocal.m4 configure depcomp ltmain.sh

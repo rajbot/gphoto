@@ -5,9 +5,32 @@ gPhoto 0.4 User's Manual
 gPhoto has been written to be as intuitive as possible from the start of
 the project.
 
-			-----------------
-			Setting up gPhoto
-------------------------=================------------------------
+Table of Contents
+-----------------
+	Setting up gPhoto
+	Using the Camera
+		Getting a Thumbnail Index
+		Downloading Picture/Thumbnails
+		Deleting Pictures from the Camera
+		Taking a Picture through gPhoto
+		Configuring Your Camera
+		Getting a Summary of Your Camera
+	Directory Browsing
+	Editing Images
+		Image Orientation
+		Image Dimension
+	Post-Processing
+	Saving Opened Images
+	Printing Pictures
+	Plug-Ins
+		Live Camera!
+		HTML Gallery
+-----------------------------------------------------------------
+
+-----------------
+Setting up gPhoto
+----------------------------------------------------------------
+
 When you first run gPhoto, you will be given a dialog to select a
 serial port, and a camera model. Choose your camera, and the correct
 serial port, and then click "save" to then save the information. If you
@@ -15,11 +38,11 @@ need to change the settings later, go to the "Configure" menu, and choose
 "Select Port-Camera Model".
 
 
-			----------------
-			Using the Camera
-------------------------================------------------------
+----------------
+Using the Camera
+----------------------------------------------------------------
 
-Getting a Thumbnail index:
+Getting a Thumbnail Index:
 	The thumbnail index is a "preview" of what is on the camera.
 	It lets you select which images to download. In gPhoto, it
 	is possible to get two different types of an index:
@@ -112,9 +135,9 @@ Getting a Summary of Your Camera:
 	and therefore different cameras will return different
 	pieces of information.
 
-			------------------
-			Directory Browsing
-------------------------==================-----------------------
+------------------
+Directory Browsing
+----------------------------------------------------------------
 
 It is now possible in gPhoto to browse entire directories of images. In
 the "File" menu, select "Open Directory...". You can then select the
@@ -133,9 +156,9 @@ present in the directory browse mode, with the exception of
 "Take Picture", "Delete Selected Images", and the "Live Preview" plug-in
 (Note that the HTML gallery generator will work!).
 
-			--------------
-			Editing Images
-------------------------==============------------------------
+--------------
+Editing Images
+----------------------------------------------------------------
 
 To edit an image, you need to first have the image opened in gPhoto.
 This can be done either by getting pictures from the camera and
@@ -160,9 +183,47 @@ images.
 Toolbar buttons exist for all but two (double/half scaling) of the above
 editing options.
 
-			--------------------
-			Saving Opened Images
-------------------------====================-----------------------
+---------------
+Post-Processing
+----------------------------------------------------------------
+
+Post-processing lets you extend gPhoto's manipulation and processing
+abilities. If post-processing is enabled, then after each image is
+downloaded, a specified script is run to work on the image. Rotation,
+resizing, gamma correction, and anything else you imagine can be
+automatically performed on each image after it is retrieved from the
+camera, but before it is opened in gPhoto or saved to disk.
+
+Click on "Post-Process" at the bottom of the main gPhoto window to bring
+up the post-processing dialog. You can turn on or off post-processing by
+clicking the "Enable Post-Processing". In the text box, you can type in
+the command-line to run for each downloaded image with "%s" representing
+the name of the image.
+
+Example:
+	If you have a pre-written script in /usr/local/bin that takes
+	the degrees to rotate and the image path/name as arguments, you
+	could use this as a post-process command line to rotate all
+	downloaded images by 90 degrees:
+
+		/usr/local/bin/rotate 90 %s
+
+	(when executed, the %s will be replaced by the full path and name
+	of the image).
+
+Tip: ImageMagick is already installed on your system if you have gPhoto
+running. It contains a host of useful tools for image manipulation, and
+most notably "mogrify". Type "man mogrify" at the prompt for more
+information. You can do pretty much anything with this tool, including
+time/date stamp, resizing, cropping, etc.
+
+Note to post-processing script authors: the script will need to work on
+the image IN PLACE because gPhoto will open the same image after the
+post-processing script has exited if "Open in window" is selected.
+
+--------------------
+Saving Opened Images
+----------------------------------------------------------------
 
 You can choose to save one or all of the opened images. Under the "File"
 menu, select "Save Opened Image(s)". There is also a toolbar icon.
@@ -183,9 +244,9 @@ image number, and a ".jpg" extension. For example: a filename prefix of
 "MyCat" for 2 opened images would save the pictures as "MyCat-001.jpg" and
 "MyCat-002.jpg".
 
-			-----------------
-			Printing Pictures
-------------------------=================-----------------------
+-----------------
+Printing Pictures
+----------------------------------------------------------------
 
 Printing pictures is rather straight-forward. Have the image you want to
 print opened in gPhoto, and select "Print" from the "File" menu. There is
@@ -204,9 +265,9 @@ print command that you are given should work fine on most systems given
 that lpr is working properly. For more information on lpr, and other
 linux-related printing questions, please read the PRINTING-HOWTO.
 
-			--------
-			Plug-Ins			
-------------------------========-----------------------
+--------
+Plug-Ins			
+----------------------------------------------------------------
 
 Currently, there are 2 plug-ins included in gPhoto:
 
@@ -231,9 +292,9 @@ Currently, there are 2 plug-ins included in gPhoto:
 		please visit http://www.gphoto.org/docs.php3 and
 		view the "HTML Gallery engine specs".
 
-			----------------
-			More Information
-------------------------================-----------------------
+----------------
+More Information
+----------------------------------------------------------------
 
 The first place you look for any information regarding gPhoto should be
 the gPhoto web site at http://www.gphoto.org
@@ -243,7 +304,8 @@ This is a mailing list which you can subscribe to. Head to
 http://www.gphoto.org/lists.php3 and subscribe to the gphoto list.
 
 
----------------------------------------------------------------
+----------------------------------------------------------------
 Send Changes and Corrections to:
 	Author: Scott Fritzinger (scottf@unr.edu)
 	  Date: June 24, 1999
+       Updated: June 25, 1999

@@ -1486,8 +1486,12 @@ void resize_dialog() {
 	/* ------------------------------------- */
 
         dimension = gtk_entry_get_text(GTK_ENTRY(resize_dialog_width));
+	if (strlen(dimension) == 0)
+		return;
         w = atoi(dimension);
         dimension = gtk_entry_get_text(GTK_ENTRY(resize_dialog_height));
+	if (strlen(dimension) == 0)
+		return;
         h = atoi(dimension);
 
         scaledImage = gdk_imlib_clone_scaled_image(node->imlibimage,w,h);

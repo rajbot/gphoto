@@ -3,7 +3,7 @@
 chmod 0700 "$0"
 
 base=$(dirname "$0")
-cd "$base" || exit 1
+cd "$HOME/$base" || exit 1
 
 if [ -d "bz2" ]
 then
@@ -14,15 +14,17 @@ fi
 
 for d in bz2 gz
 do
-    if cd $d
+    if cd "$HOME/$base/$d"
     then
 	ln -s ../SUPPORTED-CAMERAS
     fi
 done
 
+cd "$HOME/$base"
+
 chmod a+r SUPPORTED-CAMERAS
 
-for file in *.tar.bz2 bz2/*.tar.bz2
+for file in bz2/*.tar.bz2
 do
     chmod a+r "$file"
     new="$(echo "$file" | sed -e 's/bz2/gz/g')"
@@ -38,7 +40,8 @@ chmod 0705 .
 
 cd .. || exit 2
 
-rm -f *.tar.bz2 *.tar.gz SUPPORTED-CAMERAS bz2 gz
-ln -s "$(basename "$base")"/* .
+rm -f SUPPORTED-CAMERAS latest-bz2 latest-gz
+ln -s "$(basename "$base")"/bz2 latest-bz2
+ln -s "$(basename "$base")"/gz latest-gz
 
 chmod 0705 .

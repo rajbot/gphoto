@@ -87,7 +87,7 @@ void create_toolbar (GtkWidget *box, GtkWidget *mainWin) {
 
   add_to_toolbar(mainWin, "Open Image", open_image_xpm,
                  GTK_SIGNAL_FUNC(open_dialog), NULL, box, 1);
-  add_to_toolbar(mainWin, "Save Current Image", save_current_image_xpm,
+  add_to_toolbar(mainWin, "Save Opened Image(s)", save_current_image_xpm,
                  GTK_SIGNAL_FUNC(save_dialog), NULL, box, 1);
   add_to_toolbar(mainWin, "Print Image", print_image_xpm,
                  GTK_SIGNAL_FUNC(print_pic), NULL, box, 1);

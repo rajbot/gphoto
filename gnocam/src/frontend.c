@@ -4,7 +4,6 @@
 #include <gphoto2.h>
 #include "frontend.h"
 #include "gnocam.h"
-#include "properties.h"
 
 /**********************/
 /* External Variables */

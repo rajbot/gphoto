@@ -234,6 +234,8 @@ preview_new (Camera* camera)
 		xmlAddChild (node, node_child = xmlNewNode (ns, "menu"));
 		xmlAddChild (node_child, node = xmlNewNode (ns, "submenu"));
 		xmlSetProp (node, "name", "Edit");
+		xmlSetProp (node, "_label", "_Edit");
+		xmlSetProp (node, "_tip", "Edit");
 		popup_prepare (component, window_camera, node, command, ns);
 		xmlDocDumpMemory (doc, (xmlChar**) &tmp, &i);
 		xmlFreeDoc (doc);

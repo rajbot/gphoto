@@ -156,13 +156,11 @@ on_manual_activate (BonoboUIComponent* component, gpointer folder, const gchar* 
 gboolean
 on_tree_item_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
-	GtkMenu*	menu;
-
         /* Did the user right-click? */
         if (event->button != 3) return (FALSE);
 
 	/* If needed, create the popup. */
-	if (!(menu = gtk_object_get_data (GTK_OBJECT (widget), "menu"))) camera_tree_item_popup_create (GTK_TREE_ITEM (widget));
+	if (!gtk_object_get_data (GTK_OBJECT (widget), "menu")) camera_tree_item_popup_create (GTK_TREE_ITEM (widget));
         gtk_menu_popup (gtk_object_get_data (GTK_OBJECT (widget), "menu"), NULL, NULL, NULL, NULL, 3, 0);
         return (TRUE);
 }

@@ -4,6 +4,7 @@ extern struct _Camera philips;
 extern struct _Camera fuji;
 extern struct _Camera kodak_dc2x;
 extern struct _Camera kodak_dc210;
+extern struct _Camera kodak;
 extern struct _Camera ricoh_300z;
 extern struct _Camera olympus;
 extern struct _Camera sony_dscf1;
@@ -36,6 +37,7 @@ struct Model cameras[] = {
 	{"Kodak DC25", &kodak_dc2x},
 	{"Kodak DC200+", &kodak_dc210},
 	{"Kodak DC210", &kodak_dc210},
+        {"Kodak (everything else)", &kodak},
 	{"Konica QM100", &konica_qm100},
 	{"Konica QM100V", &konica_qm100},
 	{"Minolta Dimmage", &olympus},
@@ -76,13 +78,3 @@ struct Model cameras[] = {
 	{"Sony DSC-F1", &sony_dscf1},
 	{"", NULL}
 };
-
-
-
-
-
-
-
-
-
-

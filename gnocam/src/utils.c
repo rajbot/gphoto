@@ -16,7 +16,6 @@
 /**********************/
 
 extern GtkWindow*	main_window;
-extern gint		counter;
 
 /**************/
 /* Prototypes */

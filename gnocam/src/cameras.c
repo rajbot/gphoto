@@ -106,6 +106,7 @@ on_upload_activate (BonoboUIComponent* component, gpointer folder, const gchar* 
 void
 on_save_preview_activate (BonoboUIComponent* component, gpointer file, const gchar* name)
 {
+	save (GTK_TREE_ITEM (file), TRUE);
 }
 
 void
@@ -123,6 +124,7 @@ on_delete_activate (BonoboUIComponent* component, gpointer file, const gchar* na
 void
 on_save_file_activate (BonoboUIComponent* component, gpointer file, const gchar* name)
 {
+	save (GTK_TREE_ITEM (file), FALSE);
 }
 
 void

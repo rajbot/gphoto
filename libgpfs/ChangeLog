@@ -1,3 +1,7 @@
+2002-12-17  Lutz Müller <lutz@users.sourceforge.net>
+
+	* libgpfs/gpfs-cache.[c,h]: Work to be continued.
+
 2002-12-16  Lutz Müller <lutz@users.sourceforge.net>
 
 	* libgpfs/*: Put some commonly used stuff into gpfs-obj.[c,h].

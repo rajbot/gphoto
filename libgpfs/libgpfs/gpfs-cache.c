@@ -10,14 +10,35 @@ typedef struct _GPFsCacheIf GPFsCacheIf;
 struct _GPFsCacheIf {
 	GPFsIf *i;
 
-	/* Read */
-	unsigned int l_read;
+	unsigned int limit;
+
 	GPFsIfFuncRead f_read; void *f_data_read;
+
 	char *data;
 	unsigned int size;
+};
 
-	/* Prop */
-	unsigned int l_prop;
+typedef struct _GPFsCacheBag GPFsCacheBag;
+struct _GPFsCacheBag {
+	GPFsBag *b;
+
+	unsigned int limit;
+
+	GPFsBagFuncCount   f_bag_count  ; void *f_data_bag_count  ;
+	GPFsBagFuncBagGet  f_bag_get    ; void *f_data_bag_get    ;
+	GPFsBagFuncBagAdd  f_bag_add    ; void *f_data_bag_add    ;
+	GPFsBagFuncRemove  f_bag_remove ; void *f_data_bag_remove ;
+
+	GPFsBagFuncCount   f_prop_count ; void *f_data_prop_count ;
+	GPFsBagFuncPropGet f_prop_get   ; void *f_data_prop_get   ;
+	GPFsBagFuncPropAdd f_prop_add   ; void *f_data_prop_add   ;
+	GPFsBagFuncRemove  f_prop_remove; void *f_data_prop_remove;
+
+	GPFsBag **bag;
+	unsigned int bag_count;
+
+	GPFsProp **prop;
+	unsigned int prop_count;
 };
 
 struct _GPFsCache {
@@ -25,6 +46,9 @@ struct _GPFsCache {
 
 	GPFsCacheIf *i;
 	unsigned int i_count;
+
+	GPFsCacheBag *b;
+	unsigned int b_count;
 };
 
 static void
@@ -71,7 +95,7 @@ f_read_cb (GPFsIf *i, GPFsErr *e, const char *data, unsigned int size, void *ud)
 	/* ... and cache it. Do not cache if we would violate the limit. */
 	if (d->cache_failed)
 		return;
-	if (d->c->size + size > d->c->l_read) {
+	if (d->c->size + size > d->c->limit) {
 		free (d->c->data);
 		d->c->data = NULL;
 		d->c->size = 0;
@@ -171,7 +195,7 @@ gpfs_cache_if_remove (GPFsCache *c, GPFsIf *i)
 }
 
 void
-gpfs_cache_if_set_limit_read (GPFsCache *c, GPFsIf *i, unsigned int l)
+gpfs_cache_if_set_limit (GPFsCache *c, GPFsIf *i, unsigned int l)
 {
 	unsigned int n;
 
@@ -181,7 +205,7 @@ gpfs_cache_if_set_limit_read (GPFsCache *c, GPFsIf *i, unsigned int l)
 	for (n = 0; (n < c->i_count) && (c->i[n].i != i); n++);
 	if (n == c->i_count)
 		return;
-	c->i[n].l_read = l;
+	c->i[n].limit = l;
 	if (c->i[n].size > l) {
 		free (c->i[n].data);
 		c->i[n].data = NULL;
@@ -189,40 +213,22 @@ gpfs_cache_if_set_limit_read (GPFsCache *c, GPFsIf *i, unsigned int l)
 	}
 }
 
-void
-gpfs_cache_if_set_limit_prop (GPFsCache *c, GPFsIf *i, unsigned int l)
+unsigned int
+gpfs_cache_if_get_limit (GPFsCache *c, GPFsIf *i)
 {
 	unsigned int n;
 
-	if (!c || !i)
-		return;
-
+	if (!c || !i) return 0;
 	for (n = 0; (n < c->i_count) && (c->i[n].i != i); n++);
-	if (n == c->i_count)
-		return;
-	c->i[n].l_prop = l;
+	return (n == c->i_count) ? 0 : c->i[n].limit;
 }
 
 unsigned int
-gpfs_cache_if_get_limit_prop (GPFsCache *c, GPFsIf *i)
+gpfs_cache_bag_get_limit (GPFsCache *c, GPFsBag *b)
 {
 	unsigned int n;
 
-	if (!c || !i)
-		return 0;
-
-	for (n = 0; (n < c->i_count) && (c->i[n].i != i); n++);
-	return (n == c->i_count) ? 0 : c->i[n].l_prop;
-}
-
-unsigned int
-gpfs_cache_if_get_limit_read (GPFsCache *c, GPFsIf *i)
-{
-	unsigned int n;
-
-	if (!c || !i)
-		return 0;
-
-	for (n = 0; (n < c->i_count) && (c->i[n].i != i); n++);
-	return (n == c->i_count) ? 0 : c->i[n].l_read;
+	if (!c || !b) return 0;
+	for (n = 0; (n < c->b_count) && (c->b[n].b != b); n++);
+	return (n == c->b_count) ? : c->b[n].limit;
 }

@@ -3,6 +3,7 @@
 #include <gconf/gconf-client.h>
 #include <gphoto2.h>
 #include <bonobo.h>
+#include <libgnomevfs/gnome-vfs.h>
 #include "gnocam.h"
 #include "cameras.h"
 #include "notification.h"

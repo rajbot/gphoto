@@ -136,7 +136,7 @@ upload (GtkTreeItem* folder, gchar* filename)
 
 	g_return_if_fail (folder);
 	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (folder), "camera"));
-	g_return_if_fail (path = gtk_object_get_data (GTK_OBJECT (folder), "path"));
+	g_return_if_fail (path = (gchar*) gnome_vfs_uri_get_path (gtk_object_get_data (GTK_OBJECT (folder), "uri")));
 
 	if (filename) {
 		uri = gnome_vfs_uri_new (filename);
@@ -303,9 +303,6 @@ void
 save_all_selected (GtkTree* tree, gboolean preview, gboolean save_as, gboolean temporary)
 {
         gint            i;
-        Camera*         camera;
-        gchar*          path;
-        gchar*          filename;
 	GtkTreeItem*	item;
 
         g_return_if_fail (tree);
@@ -314,30 +311,22 @@ save_all_selected (GtkTree* tree, gboolean preview, gboolean save_as, gboolean t
 	/* Look into folders first. */
 	for (i = 0; i < g_list_length (tree->children); i++) {
 		item = GTK_TREE_ITEM (g_list_nth_data (tree->children, i));
-		g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
-                g_return_if_fail (path = gtk_object_get_data (GTK_OBJECT (item), "path"));
 		
 		/* Is this item a folder? */
-		if (!(filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) {
-
-			/* Save selected files in subfolders. */
-			if (item->subtree) save_all_selected (GTK_TREE (item->subtree), preview, save_as, temporary);
-		}
+		if (item->subtree) save_all_selected (GTK_TREE (item->subtree), preview, save_as, temporary);
 	}
 
-	/* Files. */
+	/* Save files. */
 	for (i = 0; i < g_list_length (tree->selection); i++) {
 		item = GTK_TREE_ITEM (g_list_nth_data (tree->selection, i));
-		if ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) {
-			save (item, preview, save_as, temporary);
-		}
+		if (!item->subtree) save (item, preview, save_as, temporary);
 	}
 }
 
 void
 save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 {
-	gchar*		path;
+	gchar*		path = NULL;
 	gchar*		filename;
 	gchar*		filename_user;
 	gchar*		message;
@@ -349,8 +338,9 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 
 	g_return_if_fail (item);
 	g_return_if_fail (!(save_as && temporary));
-	g_return_if_fail (path = gtk_object_get_data (GTK_OBJECT (item), "path"));
-	g_return_if_fail (filename = gtk_object_get_data (GTK_OBJECT (item), "filename"));
+	g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (item), "uri"));
+	g_return_if_fail (filename = (gchar*) gnome_vfs_uri_get_basename (uri));
+	g_return_if_fail (path = (gchar*) gnome_vfs_uri_get_path (uri));
 	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
         g_return_if_fail (value = gconf_client_get (gconf_client, "/apps/" PACKAGE "/prefix", NULL));
         g_return_if_fail (value->type == GCONF_VALUE_STRING);
@@ -405,7 +395,6 @@ save (GtkTreeItem* item, gboolean preview, gboolean save_as, gboolean temporary)
 void
 delete_all_selected (GtkTree* tree)
 {
-        gchar*          filename;
 	gint		i;
 	GtkTreeItem*	item;
 
@@ -416,32 +405,31 @@ delete_all_selected (GtkTree* tree)
                 item = GTK_TREE_ITEM (g_list_nth_data (tree->children, i));
 
                 /* Is this item a folder? */
-                if (!(filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) {
-
-			/* Delete in subfolder. */
-			if (item->subtree) delete_all_selected (GTK_TREE (item->subtree));
-                }
+		if (item->subtree) delete_all_selected (GTK_TREE (item->subtree));
         }
 
         /* Files. */
         for (i = 0; i < g_list_length (tree->selection); i++) {
                 item = GTK_TREE_ITEM (g_list_nth_data (tree->selection, i));
-                if ((filename = gtk_object_get_data (GTK_OBJECT (item), "filename"))) delete (item);
+                if (!item->subtree) delete (item);
 	}
 }
 
 void
 delete (GtkTreeItem* item)
 {
-	gchar*	path;
-	gchar*	filename;
-	gchar*	message;
-	Camera*	camera;
-	gint	result;
+	GnomeVFSURI*	uri;
+	gchar*		message;
+	Camera*		camera;
+	gint		result;
+	gchar*		filename;
+	gchar*		path;
 
-	g_return_if_fail (path = gtk_object_get_data (GTK_OBJECT (item), "path"));
-	g_return_if_fail (filename = gtk_object_get_data (GTK_OBJECT (item), "filename"));
+	g_return_if_fail (item);
+	g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (item), "uri"));
 	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
+	g_return_if_fail (path = (gchar*) gnome_vfs_uri_get_path (uri));
+	g_return_if_fail (filename = (gchar*) gnome_vfs_uri_get_basename (uri));
 
 	if ((result = gp_camera_file_delete (camera, path, filename)) == GP_OK) camera_tree_item_remove (item);
 	else {

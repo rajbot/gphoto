@@ -13,3 +13,4 @@
 # comment lines begin with '#'
 syncmail Error checking out syncmail into CVSROOT
 ciabot Error checking out ciabot into CVSROOT
+common-error-check Error checking out common-error-check into CVSROOT

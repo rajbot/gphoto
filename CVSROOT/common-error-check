@@ -1,0 +1,4 @@
+#!/bin/bash
+# Check for common errors in source files and disallow commit if one is detected
+
+exit 0

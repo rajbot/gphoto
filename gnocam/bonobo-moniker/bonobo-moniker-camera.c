@@ -8,6 +8,7 @@
  */
 #include <config.h>
 #include <bonobo.h>
+#include <bonobo/bonobo-moniker-extender.h>
 #include <gphoto2.h>
 
 #include "gnocam-control.h"

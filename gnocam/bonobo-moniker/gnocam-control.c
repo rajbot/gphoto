@@ -5,6 +5,7 @@
 #include <gtk/gtktypeutils.h>
 #include <gphoto2.h>
 #include <tree.h>
+#include <bonobo/bonobo-moniker-extender.h>
 
 #include "gnocam-control.h"
 #include "utils.h"
@@ -49,7 +50,7 @@ gnocam_control_new (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options
 	/* Create the viewer through the moniker-extender. */
 	subcontrol = bonobo_moniker_use_extender ("OAFIID:Bonobo_MonikerExtender_stream", moniker, options, "IDL:Bonobo/Control:1.0", &ev);
 	if (BONOBO_EX (&ev)) {
-		g_warning (_("Could not create viewer! (%s)"), bonobo_exception_get_text (&ev));
+		g_warning (_("Could not create viewer for '%s'! (%s)"), name, bonobo_exception_get_text (&ev));
 		return (NULL);
 	}
 
@@ -85,8 +86,6 @@ gnocam_control_new (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options
 static void
 gnocam_control_finalize (GtkObject *object)
 {
-        GnoCamControl*	control = GNOCAM_CONTROL (object);
-
 	g_warning ("BEGIN: gnocam_control_finalize");
 
         GTK_OBJECT_CLASS (gnocam_control_parent_class)->finalize (object);

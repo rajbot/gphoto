@@ -11,7 +11,6 @@ static struct {
 	{KNC_CNTRL_RES_ERR_CANCEL, N_("Command cancelled")},
 	{KNC_CNTRL_RES_ERR_NO_MEMORY, N_("Not enough memory")},
 	{KNC_CNTRL_RES_ERR_ILLEGAL_PARAMETER, N_("Illegal parameter")},
-	{KNC_CNTRL_RES_ERR_NOT_CONNECTED, N_("Not connected")},
 	{0, NULL}
 };
 

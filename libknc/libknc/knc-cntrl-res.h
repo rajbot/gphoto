@@ -7,7 +7,6 @@ typedef enum {
 	KNC_CNTRL_RES_ERR_CANCEL,
 	KNC_CNTRL_RES_ERR_NO_MEMORY,
 	KNC_CNTRL_RES_ERR_ILLEGAL_PARAMETER,
-	KNC_CNTRL_RES_ERR_NOT_CONNECTED
 } KncCntrlRes;
 
 const char *knc_cntrl_res_name (KncCntrlRes);

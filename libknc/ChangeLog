@@ -1,5 +1,9 @@
 2003-01-01  Lutz Müller <lutz@users.sourceforge.net>
 
+	* libgphoto2: Driver for libgphoto2.
+
+2003-01-01  Lutz Müller <lutz@users.sourceforge.net>
+
 	* libknc: Various clean-ups.
 
 2003-01-01  Lutz Müller <lutz@users.sourceforge.net>

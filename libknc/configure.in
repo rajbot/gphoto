@@ -76,10 +76,33 @@ AM_CONDITIONAL(HAVE_KNCTEST, $have_knctest)
 AC_SUBST(LIBKNCTEST_CFLAGS)
 AC_SUBST(LIBKNCTEST_LIBS)
 
+dnl ---------------------------------------------------------------------------
+dnl Libraries we need for the libgphoto2 plugin
+dnl ---------------------------------------------------------------------------
+have_gp=false
+gp_msg=no
+try_gp=true
+AC_ARG_WITH(gp, [  --without-libgphto2   Don't compile the libgphoto2 plugin],[
+	if test x$withval = xno; then
+		try_gp=false
+		gp_msg="no (not requested)"
+	fi])
+if $try_gp; then
+	PKG_CHECK_MODULES(GP, libgphoto2, [
+		GP_PATH=`${$PKG_CONFIG} --variable=driverdir libgphoto2`
+		have_gp=true
+		gp_msg="yes"])
+fi
+AM_CONDITIONAL(HAVE_GP, $have_gp)
+AC_SUBST(GP_PATH)
+AC_SUBST(GP_CFLAGS)
+AC_SUBST(GP_LIBS)
+
 AC_OUTPUT([
 Makefile
 libknc/Makefile
 libknc/libknc.pc
+libgphoto2/Makefile
 tests/Makefile
 ])
 
@@ -90,4 +113,6 @@ Configuration (libknc):
 	Source code location:      ${srcdir}
 	Version:                   ${VERSION}
 	Compiler:                  ${CC}
+
+	libgphoto2 plugin:         ${gp_msg}
 "

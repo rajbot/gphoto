@@ -6,7 +6,6 @@
 typedef struct {
 	guint		id;
 	gchar* 		name;
-	GtkTreeItem*	item;
 } frontend_data_t;
 
 typedef enum {

@@ -22,6 +22,7 @@ extern gint		counter;
 /* Prototypes */
 /**************/
 
+void on_button_clicked			(GtkObject* object, gpointer user_data);
 void on_entry_changed			(GtkObject* object, gpointer user_data);
 void on_radio_button_activate 		(GtkObject* object, gpointer user_data);
 void on_adjustment_value_changed 	(GtkObject* object, gpointer user_data);
@@ -34,6 +35,27 @@ void on_duration_button_cancel_clicked  (GtkButton* button, gpointer user_data);
 /*************/
 /* Callbacks */
 /*************/
+
+void
+on_button_clicked (GtkObject* object, gpointer user_data)
+{
+	Camera*			camera;
+	CameraWidget*		widget;
+	CameraWidgetCallback	callback;
+	gint			result;
+	gchar*			tmp;
+	
+	g_return_if_fail (object);
+	g_return_if_fail (widget = gtk_object_get_data (object, "widget"));
+	g_return_if_fail (camera = gtk_object_get_data (object, "camera"));
+
+	callback = gp_widget_callback (widget);
+	if ((result = callback (camera, widget)) != GP_OK) {
+		tmp = g_strdup_printf ("Could not set configuration!\n(%s)", gp_camera_result_as_string (camera, result));
+		gnome_error_dialog_parented (tmp, main_window);
+		g_free (tmp);
+	}
+}
 
 void
 on_entry_changed (GtkObject* object, gpointer user_data)
@@ -352,17 +374,11 @@ popup_prepare (BonoboUIComponent* component, CameraWidget* widget, xmlNodePtr po
 		case GP_WIDGET_RADIO:
 		case GP_WIDGET_DATE:
 		case GP_WIDGET_TOGGLE:
+		case GP_WIDGET_BUTTON:
 		case GP_WIDGET_RANGE:
 			xmlAddChild (popup, node = xmlNewNode (ns, "control"));
 			xmlSetProp (node, "name", id);
 			xmlSetProp (node, "_tip", gp_widget_label (child));
-			break;
-		case GP_WIDGET_BUTTON:
-			xmlAddChild (popup, node = xmlNewNode (ns, "menuitem"));
-			xmlSetProp (node, "name", id);
-			xmlSetProp (node, "_label", gp_widget_label (child));
-			xmlSetProp (node, "_tip", gp_widget_label (child));
-			g_warning ("GP_WIDGET_BUTTON is not yet implemented!");
 			break;
 		default:
 			g_warning ("Encountered unsupported widget!");
@@ -500,7 +516,14 @@ popup_fill (BonoboUIComponent* component, gchar* path, CameraWidget* window, Cam
 			g_free (tmp);
 			break;
 		case GP_WIDGET_BUTTON:
-			g_warning ("GP_WIDGET_BUTTON not implemented!");
+			gtk_widget_show (gtkwidget = gtk_button_new_with_label (gp_widget_label (child)));
+			gtk_object_set_data (GTK_OBJECT (gtkwidget), "camera", camera);
+			gtk_object_set_data (GTK_OBJECT (gtkwidget), "widget", child);
+			if (for_camera) gtk_object_set_data (GTK_OBJECT (gtkwidget), "for_camera", GINT_TO_POINTER (1));
+			gtk_signal_connect (GTK_OBJECT (gtkwidget), "clicked", GTK_SIGNAL_FUNC (on_button_clicked), NULL);
+			tmp = g_strdup_printf ("%s/%i", path, gp_widget_id (child));
+			bonobo_ui_component_object_set (component, tmp, bonobo_object_corba_objref (BONOBO_OBJECT (bonobo_control_new (gtkwidget))), NULL);
+			g_free (tmp);
 			break;
 		default:
 			g_warning ("Encountered unsupported widget!");

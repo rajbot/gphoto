@@ -24,29 +24,6 @@
 	fflush (stdout);\
 }G_STMT_END
 
-//Ok, we need to
-//#define USE_LOCK
-//because ORBit is not thread safe. Michael Meeks answered:
-//
-//> I thought redirecting all request to a moniker could be the solution.
-//> One moniker, several apps. Indeed, this works if I serialize the
-//> requests in the module using a global mutex. If I just pass all
-//> requests to the moniker, something hangs.
-//
-//Sadly, you are probably discovering that ORBit-stable ( and bonobo
-//) are not thread safe in Gnome 1.4 - this is addressed in Gnome 2.0 with
-//ORBit 2.0 [ and some pending bonobo work ]. You can only make CORBA calls
-//[ and most bonobo calls ] from a single thread of execution.
-
-#ifdef USE_LOCK
-static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
-#  define MUTEX_LOCK(mutex) g_static_mutex_lock (&(mutex));
-#  define MUTEX_UNLOCK(mutex) g_static_mutex_unlock (&(mutex))
-#else
-#  define MUTEX_LOCK(mutex)
-#  define MUTEX_UNLOCK(mutex)
-#endif
-
 static GnomeVFSResult
 GNOME_VFS_RESULT (CORBA_Environment *ev)
 {
@@ -332,7 +309,6 @@ static GnomeVFSResult do_open_directory (
 	gchar *moniker;
 
 	CAM_VFS_DEBUG (("ENTER"));
-	MUTEX_LOCK (mutex);
 
 	CORBA_exception_init (&ev);
 	
@@ -345,7 +321,6 @@ static GnomeVFSResult do_open_directory (
 	if (BONOBO_EX (&ev)) {
 		result = GNOME_VFS_RESULT (&ev);
 		CORBA_exception_free (&ev);
-		MUTEX_UNLOCK (mutex);
 		return (result);
 	}
 
@@ -360,7 +335,6 @@ static GnomeVFSResult do_open_directory (
 	if (BONOBO_EX (&ev)) {
 		result = GNOME_VFS_RESULT (&ev);
 		CORBA_exception_free (&ev);
-		MUTEX_UNLOCK (mutex);
 		return (result);
 	}
 	
@@ -373,7 +347,6 @@ static GnomeVFSResult do_open_directory (
 	directory_handle->pos = 0;
 	*handle = (GnomeVFSMethodHandle *) directory_handle;
 
-	MUTEX_UNLOCK (mutex);
 	CAM_VFS_DEBUG (("EXIT"));
 
 	return (GNOME_VFS_OK);
@@ -539,7 +512,6 @@ static GnomeVFSResult do_get_file_info (
 	GnomeVFSURI *tmp_uri;
 
 	CAM_VFS_DEBUG (("ENTER"));
-	MUTEX_LOCK (mutex);
 
 	CORBA_exception_init (&ev);
 
@@ -566,7 +538,6 @@ static GnomeVFSResult do_get_file_info (
 		g_free (basename);
 		result = GNOME_VFS_RESULT (&ev);
 		CORBA_exception_free (&ev);
-		MUTEX_UNLOCK (mutex);
 		return (result);
 	}
 
@@ -578,7 +549,6 @@ static GnomeVFSResult do_get_file_info (
 	if (BONOBO_EX (&ev)) {
 		result = GNOME_VFS_RESULT (&ev);
 		CORBA_exception_free (&ev);
-		MUTEX_UNLOCK (mutex);
 		return (result);
 	}
 
@@ -588,7 +558,6 @@ static GnomeVFSResult do_get_file_info (
 	CAM_VFS_DEBUG (("size: %i", (int) info->size));
 	CAM_VFS_DEBUG (("type: %i", info->type));
 	
-	MUTEX_UNLOCK (mutex);
 	CAM_VFS_DEBUG (("EXIT"));
 	
 	return (GNOME_VFS_OK);

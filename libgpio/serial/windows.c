@@ -165,6 +165,9 @@ int gpio_serial_write(gpio_device * dev, char *bytes, int size)
 	}
 
 	WriteFile(dev->device_handle, bytes, size, &len, NULL); 
+	if (size != len)
+		printf("Timeout!*******************************\n");
+	
 	return GPIO_OK;
 }
 
@@ -176,17 +179,21 @@ int gpio_serial_read(gpio_device * dev, char *bytes, int size)
 
 //	printf("read\n");
 	t.ReadIntervalTimeout		 = dev->timeout; 
-    t.ReadTotalTimeoutMultiplier = 1;
-    t.ReadTotalTimeoutConstant   = 100000; 
-	t.WriteTotalTimeoutMultiplier= 1; 
-    t.WriteTotalTimeoutConstant  = 100000; 
+    t.ReadTotalTimeoutMultiplier = 10;
+    t.ReadTotalTimeoutConstant   = dev->timeout;
+	t.WriteTotalTimeoutMultiplier= 10; 
+    t.WriteTotalTimeoutConstant  = dev->timeout; 
 	if (!SetCommTimeouts(dev->device_handle, &t)) {
 		printf("SetCommTimeouts\n");
 		return GPIO_ERROR;
 	}
 
 	ReadFile(dev->device_handle, bytes, size, &len, NULL);
-	return len;
+	if (len != size)
+		/* Better way to check? */
+		return GPIO_TIMEOUT;
+
+	return size;
 }
 
 /*

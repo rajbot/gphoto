@@ -115,7 +115,7 @@ gpio_device *gpio_new(gpio_device_type type)
                 settings.serial.parity = 0;
                 settings.serial.stopbits = 1;
                 gpio_set_settings(dev, settings);
-                gpio_set_timeout(dev, 5000);
+                gpio_set_timeout(dev, 500);
                 break;
         case GPIO_DEVICE_PARALLEL:
 #ifdef GPIO_PARALLEL

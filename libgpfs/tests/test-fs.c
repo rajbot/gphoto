@@ -39,39 +39,60 @@ func_read2 (GPFsIf *i, GPFsErr *e, GPFsIfFuncReadCb f, void *f_data, void *d)
 }
 
 static unsigned int
-func_count_info (GPFsIf *i, GPFsErr *e, void *ud)
+func_count_prop (GPFsIf *i, GPFsErr *e, void *ud)
 {
-	return 2;
+	return 3;
 }
 
-static void
-func_get_info (GPFsIf *i, GPFsErr *e, unsigned int n, GPFsInfo *info, void *ud)
+static GPFsProp *
+func_get_prop (GPFsIf *interface, GPFsErr *e, unsigned int n, void *ud)
 {
-	gpfs_info_init (info);
+	GPFsVal v;
+	GPFsProp *i = NULL;
+
 	switch (n) {
 	case 0:
-		info->id = strdup ("size");
-		info->name = strdup (_("Size"));
-		info->description = strdup (_("The size of the file"));
-		info->t = GPFS_INFO_TYPE_UINT;
-		info->v.v_uint = sizeof ("Hello world!");
+		gpfs_val_init (&v);
+		v.t = GPFS_VAL_TYPE_UINT;
+		v.v.v_uint = sizeof ("Hello world!");
+		i = gpfs_prop_new ("size", _("Size"),
+				_("The size of the file"), &v);
+		gpfs_val_clear (&v);
 		break;
 	case 1:
-		info->id = strdup ("description");
-		info->name = strdup (_("Description"));
-		info->description = strdup (_("The description of the "
-					      "interface"));
-		info->t = GPFS_INFO_TYPE_STRING;
-		if (!strcmp (gpfs_if_get_name (i), "default"))
-			info->v.v_string = strdup (_("The default interface"));
+		gpfs_val_init (&v);
+		v.t = GPFS_VAL_TYPE_STRING;
+		if (!strcmp (gpfs_if_get_name (interface), "default"))
+			v.v.v_string = strdup (_("The default interface"));
 		else
-			info->v.v_string = strdup (_("The interface supplying "
-						     "a preview"));
+			v.v.v_string = strdup (_("The interface supplying a "
+					         "preview"));
+		i = gpfs_prop_new ("description", _("Description"),
+				_("The description of the interface"), &v);
+		gpfs_val_clear (&v);
+		break;
+	case 2:
+		gpfs_val_init (&v);
+		v.t = GPFS_VAL_TYPE_STRING;
+		v.v.v_string = strdup ("image/png");
+		i = gpfs_prop_new ("mime_type", _("Mime type"),
+				_("The mime type of the file"), &v);
+		gpfs_val_clear (&v);
+		i->t = GPFS_ALT_TYPE_VALS;
+		i->alt.vals.vals_count = 2;
+		i->alt.vals.vals = malloc (sizeof (GPFsVal) *
+					   i->alt.vals.vals_count);
+		i->alt.vals.vals[0].t = GPFS_VAL_TYPE_STRING;
+		i->alt.vals.vals[0].v.v_string = strdup ("image/png");
+		i->alt.vals.vals[1].t = GPFS_VAL_TYPE_STRING;
+		i->alt.vals.vals[1].v.v_string = strdup ("image/jpeg");
 		break;
 	default:
 		gpfs_err_set (e, GPFS_ERR_TYPE_BAD_PARAMETERS,
-			      _("Unknown piece of information."));
+			      _("Unknown property."));
 	}
+
+	return i;
 }
 
 static GPFsFile *
@@ -86,16 +107,16 @@ func_get_file (GPFs *fs, GPFsErr *e, const char *folder, unsigned int n, void *d
 	/* Interface 'default' */
 	i = gpfs_if_new ("default");
 	gpfs_if_set_func_read (i, func_read1, NULL);
-	gpfs_if_set_func_count_info (i, func_count_info, NULL);
-	gpfs_if_set_func_get_info (i, func_get_info, NULL);
+	gpfs_if_set_func_count_prop (i, func_count_prop, NULL);
+	gpfs_if_set_func_get_prop (i, func_get_prop, NULL);
 	gpfs_file_add_if (f, i);
 	gpfs_if_unref (i);
 
 	/* Interface 'preview' */
 	i = gpfs_if_new ("preview");
 	gpfs_if_set_func_read (i, func_read2, NULL);
-	gpfs_if_set_func_count_info (i, func_count_info, NULL);
-	gpfs_if_set_func_get_info (i, func_get_info, NULL);
+	gpfs_if_set_func_count_prop (i, func_count_prop, NULL);
+	gpfs_if_set_func_get_prop (i, func_get_prop, NULL);
 	gpfs_file_add_if (f, i);
 	gpfs_if_unref (i);
 
@@ -130,7 +151,7 @@ main (int argc, char **argv)
 	GPFsFile *f;
 	GPFsIf *i;
 	GPFsCache *c;
-	GPFsInfo info;
+	GPFsProp *prop;
 
 	/* Create a cache */
 	c = gpfs_cache_new ();
@@ -156,27 +177,11 @@ main (int argc, char **argv)
 		gpfs_cache_add_if (c, i);
 		gpfs_cache_if_set_limit_read (c, i, j * 20);
 
-		printf (" %i: Interface '%s' with %i piece(s) of information\n",
-			j, gpfs_if_get_name (i), gpfs_if_count_info (i, NULL));
-		for (k = 0; k < gpfs_if_count_info (i, NULL); k++) {
-			gpfs_info_init (&info);
-			gpfs_if_get_info (i, NULL, k, &info);
-			printf ("     * '%s' (type '%s'): '%s'\n", info.name,
-				gpfs_info_type_get_name (info.t),
-				info.description);
-			switch (info.t) {
-			case GPFS_INFO_TYPE_STRING:
-				printf ("       Value: '%s'\n",
-					info.v.v_string);
-				break;
-			case GPFS_INFO_TYPE_INT:
-				printf ("       Value: %i\n", info.v.v_int);
-				break;
-			case GPFS_INFO_TYPE_UINT:
-				printf ("       Value: %i\n", info.v.v_uint);
-				break;
-			}
-			gpfs_info_clear (&info);
+		printf (" %i: Interface '%s' with %i properties\n",
+			j, gpfs_if_get_name (i), gpfs_if_count_prop (i, NULL));
+		for (k = 0; k < gpfs_if_count_prop (i, NULL); k++) {
+			prop = gpfs_if_get_prop (i, NULL, k);
+			gpfs_prop_dump (prop);
 		}
 	}
 

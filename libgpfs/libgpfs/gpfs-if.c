@@ -87,7 +87,7 @@ gpfs_if_count_prop (GPFsIf *i, GPFsErr *e)
 
 	if (!i->f_count_prop) {
 		gpfs_err_set (e, GPFS_ERR_TYPE_NOT_SUPPORTED,
-			    _("This interface doesn't supply proprmation."));
+			    _("This interface doesn't have properties."));
 		return 0;
 	}
 
@@ -102,7 +102,7 @@ gpfs_if_get_prop (GPFsIf *i, GPFsErr *e, unsigned int n)
 	if (!i->f_get_prop) {
 		gpfs_err_set (e, GPFS_ERR_TYPE_NOT_SUPPORTED,
 			_("The interface '%s' doesn't support "
-			  "getting pieces of proprmation."),
+			  "getting properties."),
 			gpfs_if_get_name (i));
 		return NULL;
 	}

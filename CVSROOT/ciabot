@@ -20,7 +20,7 @@ stripnewlines=false
 
 # If your logs don't include the name of the modified file, and you want to
 # show it, turn this on
-includefilename=true
+includefilename=false
 #includefilename=true
 
 # Deliver directly to the bot:

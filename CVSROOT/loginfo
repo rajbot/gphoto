@@ -25,6 +25,6 @@
 # or
 #DEFAULT (echo ""; id; echo %{sVv}; date; cat) >> $CVSROOT/CVSROOT/commitlog
 #
-CVSROOT/        ${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} hun@users.sourceforge.net
-DEFAULT         ${CVSROOT}/CVSROOT/syncmail -q -R gphoto-devel@lists.sourceforge.net -u %{sVv} gphoto-cvs@lists.sourceforge.net
-ALL		$CVSROOT/CVSROOT/ciabot %{sVv}
+CVSROOT	${CVSROOT}/CVSROOT/syncmail -q -u %{sVv} hun@users.sourceforge.net
+DEFAULT	${CVSROOT}/CVSROOT/syncmail -q -R gphoto-devel@lists.sourceforge.net -u %{sVv} gphoto-cvs@lists.sourceforge.net
+ALL	$CVSROOT/CVSROOT/ciabot %{sVv}

@@ -177,6 +177,10 @@ on_camera_tree_popup_file_save_preview_as_activate (GtkMenuItem* menuitem, gpoin
 	save (gtk_object_get_data (GTK_OBJECT (menuitem), "item"), TRUE, TRUE, FALSE);
 }
 
+/***********/
+/* Pop ups */
+/***********/
+
 gboolean
 on_tree_item_file_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
@@ -244,6 +248,45 @@ on_tree_item_folder_button_press_event (GtkWidget *widget, GdkEventButton *event
 		return (TRUE);
 
 	} else return (FALSE);
+}
+
+gboolean
+on_tree_item_camera_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+{
+        GladeXML*       xml_popup;
+        Camera*         camera;
+        gchar*          path;
+
+        g_assert (event != NULL);
+        g_assert ((camera = gtk_object_get_data (GTK_OBJECT (widget), "camera")) != NULL);
+        g_assert ((path = gtk_object_get_data (GTK_OBJECT (widget), "path")) != NULL);
+
+        /* Did the user right-click? */
+        if (event->button == 3) {
+
+                /* Create the dialog. */
+                g_assert ((xml_popup = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "camera_tree_popup_camera")) != NULL);
+
+                /* Store some data. */
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_video")), "camera", camera);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_image")), "camera", camera);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_preview")), "camera", camera);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_properties")), "camera", camera);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_upload_file")), "camera", camera);
+                gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_upload_file")), "path", path);
+
+                /* Connect the signals. */
+                glade_xml_signal_autoconnect (xml_popup);
+
+                /* Pop up the dialog. */
+                gtk_menu_popup (GTK_MENU (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera")), NULL, NULL, NULL, NULL, event->button, event->time);
+
+                /* Reference the camera. */
+                gp_camera_ref (camera);
+
+                return (TRUE);
+
+        } else return (FALSE);
 }
 
 void
@@ -459,45 +502,6 @@ on_tree_item_deselect (GtkTreeItem* item, gpointer user_data)
 
 	gtk_object_set_data (GTK_OBJECT (item), "page", NULL);
 	gtk_notebook_remove_page (notebook, gtk_notebook_page_num (notebook, page));
-}
-
-gboolean
-on_tree_item_camera_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
-{
-	GladeXML*	xml_popup;
-	Camera*		camera;
-	gchar*		path;
-
-	g_assert (event != NULL);
-	g_assert ((camera = gtk_object_get_data (GTK_OBJECT (widget), "camera")) != NULL);
-	g_assert ((path = gtk_object_get_data (GTK_OBJECT (widget), "path")) != NULL);
-
-	/* Did the user right-click? */
-	if (event->button == 3) {
-		
-		/* Create the dialog. */
-		g_assert ((xml_popup = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "camera_tree_popup_camera")) != NULL);
-
-		/* Store some data. */
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_video")), "camera", camera);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_image")), "camera", camera);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_capture_preview")), "camera", camera);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_properties")), "camera", camera);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_upload_file")), "camera", camera);
-		gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera_upload_file")), "path", path);
-
-		/* Connect the signals. */
-		glade_xml_signal_autoconnect (xml_popup);
-
-		/* Pop up the dialog. */
-		gtk_menu_popup (GTK_MENU (glade_xml_get_widget (xml_popup, "camera_tree_popup_camera")), NULL, NULL, NULL, NULL, event->button, event->time);
-
-		/* Reference the camera. */
-		gp_camera_ref (camera);
-
-		return (TRUE);
-
-	} else return (FALSE);
 }
 
 void

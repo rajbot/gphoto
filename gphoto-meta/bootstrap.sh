@@ -91,6 +91,7 @@ autoconf	ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.53.tar.bz2
 automake	ftp://ftp.gnu.org/gnu/automake/automake-1.6.3.tar.bz2
 libtool		ftp://ftp.gnu.org/gnu/libtool/libtool-1.4.2.tar.gz
 gettext		ftp://ftp.gnu.org/gnu/gettext/gettext-0.11.5.tar.gz
+pkg-config	http://www.freedesktop.org/software/pkgconfig/releases/pkgconfig-0.12.0.tar.gz
 EOF
 }
 
@@ -142,6 +143,7 @@ auto	autoconf
 auto	automake
 auto	gettext
 auto	libtool
+auto	pkg-config
 autocnd	wget
 EOF
 

@@ -3,8 +3,9 @@
  
  Fuji Camera library for the gphoto project, 
  (C) 2000 Matthew G. Martin <matt.martin@ieee.org>
-  This routine works for Fuji DS-7 and DX-5,7,10 and MX-500,600,700,2700, 
-  Apple QuickTake 200,Samsung Kenox SSC-350N cameras and possibly others.
+  This routine works for Fuji DS-7 and DX-5,7,10 and 
+  MX-500,600,700,1200,1700,2700,2900,  Apple QuickTake 200,
+  Samsung Kenox SSC-350N,Leica Digilux Zoom cameras and possibly others.
 
    Preview and take_picture fixes and preview conversion integrated 
    by Michael Smith <michael@csuite.ns.ca>.
@@ -103,7 +104,7 @@ int interrupted = 0;
 int pending_input = 0;
 struct pict_info *pinfo = NULL;
 
-#define FUJI_MAXBUF_DEFAULT 2000000
+#define FUJI_MAXBUF_DEFAULT 8000000
 
 unsigned char answer[5000];
 static char *fuji_buffer;

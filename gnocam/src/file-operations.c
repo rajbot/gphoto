@@ -79,7 +79,7 @@ on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
                 g_assert ((client = bonobo_widget_get_server (BONOBO_WIDGET (glade_xml_get_widget (xml_gallery, "editor")))));
                 g_assert ((interface =  bonobo_object_client_query_interface (client, "IDL:Bonobo/PersistFile:1.0", NULL)));
                 CORBA_exception_init (&ev);
-                Bonobo_PersistFile_load (interface, gtk_file_selection_get_filename (fileselection), &ev);
+                Bonobo_PersistFile_save (interface, gtk_file_selection_get_filename (fileselection), &ev);
                 if (ev._major != CORBA_NO_EXCEPTION) dialog_information (_("Could not load gallery."));
 		CORBA_exception_free (&ev);
                 break;

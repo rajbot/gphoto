@@ -35,21 +35,32 @@ void on_editor_drag_data_received (GtkWidget* widget, GdkDragContext* context, g
         CORBA_Environment       ev;
         BonoboObjectClient*     client;
 	BonoboStream*		stream;
+	Bonobo_Stream		bonobo_stream;
+	gchar*			text;
 
 	CORBA_exception_init (&ev);
 	g_assert ((client = bonobo_widget_get_server (BONOBO_WIDGET (widget))));
 	g_assert ((interface =  bonobo_object_client_query_interface (client, "IDL:Bonobo/PersistStream:1.0", NULL)));
 
 	/* Get the current content. */
-//FIXME: How do I do that?
+//FIXME:
+	g_assert ((stream = bonobo_stream_mem_create ("Sorry, not yet implemented.", strlen ("Sorry, not yet implemented."), FALSE, TRUE)));
+	bonobo_stream = bonobo_object_corba_objref (BONOBO_OBJECT (stream));
+//	bonobo_stream_client_read_string (bonobo_stream, &text, &ev);
+//	g_assert (ev._major == CORBA_NO_EXCEPTION);
+//	printf ("TEXT:%s\n", text);
+//	bonobo_stream_client_write_string (bonobo_stream, "Sorry, not yet implemented!", TRUE, &ev);
+//	g_assert (ev._major == CORBA_NO_EXCEPTION);
+//	bonobo_stream_client_read_string (bonobo_stream, &text, &ev);
+//	g_assert (ev._major == CORBA_NO_EXCEPTION);
+//	printf ("TEXT:%s\n", text);
 
 	/* Add the picture. */
 //FIXME: Implement that.
 
 	/* Set the new content. */
 //FIXME: Implement that.
-	stream = bonobo_stream_mem_create ("Sorry, not yet implemented.", strlen ("Sorry, not yet implemented."), TRUE, FALSE);
-	Bonobo_PersistStream_load (interface, (Bonobo_Stream) bonobo_object_corba_objref (BONOBO_OBJECT (stream)), "text/html", &ev);
+	Bonobo_PersistStream_load (interface, bonobo_stream, "text/html", &ev);
 	if (ev._major != CORBA_NO_EXCEPTION) dialog_information (_("Could not load the new gallery!"));
 	if (ev._major != CORBA_SYSTEM_EXCEPTION) CORBA_Object_release (interface, &ev);
 	Bonobo_Unknown_unref (interface, &ev);

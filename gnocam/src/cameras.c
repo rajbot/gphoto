@@ -55,8 +55,8 @@ gboolean on_tree_item_button_press_event (GtkWidget *widget, GdkEventButton *eve
 void on_tree_item_expand        (GtkTreeItem* tree_item, gpointer user_data);
 void on_tree_item_collapse      (GtkTreeItem* tree_item, gpointer user_data);
 
-void on_tree_item_deselect      (GtkTreeItem* item, gpointer user_data);
-void on_tree_item_select        (GtkTreeItem* item, gpointer user_data);
+void on_tree_item_folder_select	(GtkTreeItem* item, gpointer user_data);
+void on_tree_item_file_select	(GtkTreeItem* item, gpointer user_data);
 
 void on_drag_data_received                      (GtkWidget* widget, GdkDragContext* context, gint x, gint y, GtkSelectionData* selection_data, guint info, guint time);
 void on_camera_tree_file_drag_data_get          (GtkWidget* widget, GdkDragContext* context, GtkSelectionData* selection_data, guint info, guint time, gpointer data);
@@ -170,9 +170,76 @@ on_tree_item_collapse (GtkTreeItem* tree_item, gpointer user_data)
 }
 
 void
-on_tree_item_select (GtkTreeItem* item, gpointer user_data)
+on_tree_item_folder_select (GtkTreeItem* folder, gpointer user_data)
 {
-	gchar*			tmp = NULL;
+	CORBA_Environment	ev;
+	Bonobo_Control		control;
+	GtkWidget*		widget;
+	GtkWidget*		scrolledwindow;
+	GtkWidget*		table;
+	Camera*			camera = gtk_object_get_data (GTK_OBJECT (folder), "camera");
+	guint			row = 0, column = 0;
+	gint			i;
+	
+	g_return_if_fail (folder);
+	g_return_if_fail (camera);
+
+	if (!gtk_object_get_data (GTK_OBJECT (folder), "populated")) camera_tree_folder_populate (folder);
+	
+	/* We don't display anything if the user selected GNOCAM_VIEW_MODE_NONE. */
+	if (view_mode == GNOCAM_VIEW_MODE_NONE) return;
+
+	/* Init exceptions. */
+	CORBA_exception_init (&ev);
+
+	/* If there is an old viewer, destroy it. */
+	if (main_paned->child2) gtk_container_remove (GTK_CONTAINER (main_paned), main_paned->child2);
+
+	/* Create the table for the images. */
+	gtk_widget_show (scrolledwindow = gtk_scrolled_window_new (NULL, NULL));
+	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+	e_paned_pack2 (main_paned, scrolledwindow, TRUE, TRUE);
+	gtk_widget_show (widget = gtk_viewport_new (NULL, NULL));
+	gtk_container_add (GTK_CONTAINER (scrolledwindow), widget);
+	gtk_widget_show (table = gtk_table_new (0, 3, TRUE));
+	gtk_container_add (GTK_CONTAINER (widget), table);
+
+	for (i = 0; i < g_list_length (GTK_TREE (folder->subtree)->children); i++) {
+		GtkTreeItem* item = g_list_nth_data (GTK_TREE (folder->subtree)->children, i);
+		gchar* tmp = g_strdup_printf ("file:%s/%s", g_get_tmp_dir (), gnome_vfs_uri_get_basename (gtk_object_get_data (GTK_OBJECT (item), "uri")));
+		GnomeVFSURI *uri = gnome_vfs_uri_new (tmp);
+		download (item, uri, camera->abilities->file_preview && (view_mode == GNOCAM_VIEW_MODE_PREVIEW));
+		gnome_vfs_uri_unref (uri);
+		
+		/* Get the control. */
+		control = bonobo_get_object (tmp, "IDL:Bonobo/Control:1.0", &ev);
+		g_free (tmp);
+		if (BONOBO_EX (&ev)) {
+			tmp = g_strdup_printf (_("Could not get any widget for\ndisplaying the contents of the file!\n(%s)"), bonobo_exception_get_text (&ev));
+			gnome_error_dialog_parented (tmp, main_window);
+			g_free (tmp);
+			CORBA_exception_free (&ev);
+			return;
+		}
+		gtk_widget_show (widget = bonobo_widget_new_control_from_objref (control, corba_container));
+		if (column == 3) {
+			row++;
+			gtk_table_resize (GTK_TABLE (table), row, 3);
+			column = 0;
+		}
+		gtk_table_attach_defaults (GTK_TABLE (table), widget, column, column + 1, row, row + 1);
+		column++;
+		while (gtk_events_pending ()) gtk_main_iteration ();
+	}
+
+	/* Clean up. */
+	CORBA_exception_free (&ev);
+}
+
+void
+on_tree_item_file_select (GtkTreeItem* item, gpointer user_data)
+{
+	gchar*			tmp;
 	CORBA_Environment	ev;
 	Bonobo_Control		control;
 	GtkWidget*		widget;
@@ -183,8 +250,8 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 	g_return_if_fail (main_paned);
 	g_return_if_fail (camera);
 
-	/* We don't display anything if a folder gets selected or if the user selected GNOCAM_VIEW_MODE_NONE. */
-	if (!gtk_object_get_data (GTK_OBJECT (item), "file") || view_mode == GNOCAM_VIEW_MODE_NONE) return;
+	/* We don't display anything if the user selected GNOCAM_VIEW_MODE_NONE. */
+	if (view_mode == GNOCAM_VIEW_MODE_NONE) return;
 
 	/* Init exceptions. */
 	CORBA_exception_init (&ev);
@@ -215,12 +282,6 @@ on_tree_item_select (GtkTreeItem* item, gpointer user_data)
 
 	/* Clean up. */
 	CORBA_exception_free (&ev);
-}
-
-void
-on_tree_item_deselect (GtkTreeItem* item, gpointer user_data)
-{
-	/* Nothing to do here. */
 }
 
 void
@@ -375,8 +436,7 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
         gtk_signal_connect (GTK_OBJECT (item), "drag_data_received", GTK_SIGNAL_FUNC (on_drag_data_received), NULL);
 	gtk_signal_connect (GTK_OBJECT (item), "expand", GTK_SIGNAL_FUNC (on_tree_item_expand), NULL);
         gtk_signal_connect (GTK_OBJECT (item), "collapse", GTK_SIGNAL_FUNC (on_tree_item_collapse), NULL);
-        gtk_signal_connect (GTK_OBJECT (item), "select", GTK_SIGNAL_FUNC (on_tree_item_select), NULL);
-        gtk_signal_connect (GTK_OBJECT (item), "deselect", GTK_SIGNAL_FUNC (on_tree_item_deselect), NULL);
+        gtk_signal_connect (GTK_OBJECT (item), "select", GTK_SIGNAL_FUNC (on_tree_item_folder_select), NULL);
 	gtk_signal_connect (GTK_OBJECT (item), "drag_data_get", GTK_SIGNAL_FUNC (on_camera_tree_folder_drag_data_get), NULL);
 	gtk_signal_connect (GTK_OBJECT (item), "button_press_event", GTK_SIGNAL_FUNC (on_tree_item_button_press_event), NULL);
 
@@ -426,8 +486,7 @@ camera_tree_file_add (GtkTree* tree, GnomeVFSURI* uri)
 	gtk_drag_source_set (item, GDK_BUTTON1_MASK | GDK_BUTTON3_MASK, target_table, 1, GDK_ACTION_COPY);
 
         /* Connect the signals. */
-        gtk_signal_connect (GTK_OBJECT (item), "select", GTK_SIGNAL_FUNC (on_tree_item_select), NULL);
-        gtk_signal_connect (GTK_OBJECT (item), "deselect", GTK_SIGNAL_FUNC (on_tree_item_deselect), NULL);
+        gtk_signal_connect (GTK_OBJECT (item), "select", GTK_SIGNAL_FUNC (on_tree_item_file_select), NULL);
         gtk_signal_connect (GTK_OBJECT (item), "button_press_event", GTK_SIGNAL_FUNC (on_tree_item_button_press_event), NULL);
 	gtk_signal_connect (GTK_OBJECT (item), "drag_data_get", GTK_SIGNAL_FUNC (on_camera_tree_file_drag_data_get), NULL);
 

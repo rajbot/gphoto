@@ -238,7 +238,7 @@ camera_tree_folder_clean (GtkTreeItem* folder)
 			if (BONOBO_EX (&ev)) g_warning (_("Could not get storage for '%s'! (%s)"), url, bonobo_exception_get_text (&ev));
 #else
 			//FIXME: Above doesn't work. Why???
-			storage = BONOBO_OBJREF (bonobo_storage_open_full ("camera", url, 0644, Bonobo_Storage_READ, &ev));
+			storage = BONOBO_OBJREF (bonobo_storage_open_full ("camera", url + 7, 0644, Bonobo_Storage_READ, &ev));
 			if (BONOBO_EX (&ev)) g_warning (_("Could not get storage for '%s'! (%s)"), url, bonobo_exception_get_text (&ev));
 #endif
 		}
@@ -312,8 +312,23 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, gchar* url)
 	if (!camera) g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (tree->tree_owner), "camera"));
 
 	/* Create the item. */
-	if (root) gtk_widget_show (item = gtk_tree_item_new_with_label (((frontend_data_t*) camera->frontend_data)->name));
-	else gtk_widget_show (item = gtk_tree_item_new_with_label (url));
+	if (root) {
+
+		/* Extract the camera's name. */
+		gchar* 	tmp = url + 9;
+		gint	i;
+		gchar*	name;
+
+		for (i = 0; *tmp != 0; i++) {
+			if (*tmp == '/') break;
+			tmp++;
+		}
+
+		name = g_strndup (url + 9, i);
+		gtk_widget_show (item = gtk_tree_item_new_with_label (name));
+		g_free (name);
+		
+	} else gtk_widget_show (item = gtk_tree_item_new_with_label (url));
         gtk_tree_append (tree, item);
 
 	/* The camera is ours. */
@@ -351,7 +366,7 @@ camera_tree_file_add (GtkTree* tree, gchar* url)
 	g_return_if_fail (url);
 
 	/* Add the file to the tree. */
-        gtk_widget_show (item = gtk_tree_item_new_with_label (url));
+        gtk_widget_show (item = gtk_tree_item_new_with_label (g_basename (url)));
         gtk_tree_append (tree, item);
 
 	gtk_object_set_data_full (GTK_OBJECT (item), "url", g_strdup (url), (GtkDestroyNotify) g_free);
@@ -404,20 +419,19 @@ main_tree_update (void)
 
 	                /* Do we have this camera in the tree? */
 	                for (j = 0; j < g_list_length (main_tree->children); j++) {
-				GtkTreeItem* item = GTK_TREE_ITEM (g_list_nth_data (main_tree->children, j));
+				GtkTreeItem* 	item = GTK_TREE_ITEM (g_list_nth_data (main_tree->children, j));
+				gchar*		label;
+				
 	                	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
-	                        if (i == ((frontend_data_t*) camera->frontend_data)->id) {
-					gchar* label;
 	
-	                                /* We found the camera. Changed? */
-					gtk_label_get (GTK_LABEL (GTK_BIN (item)->child), &label);
-					if ((strcmp (label, name) != 0) || (strcmp (camera->model, model) != 0) || (strcmp (camera->port->name, port) != 0)) {
-	
-						/* We simply remove the camera and add a new one to the tree. */
-						gtk_container_remove (GTK_CONTAINER (main_tree), GTK_WIDGET (item));
-						j = g_list_length (main_tree->children) - 1;
-					}
-	                        }
+                                /* We found the camera. Changed? */
+				gtk_label_get (GTK_LABEL (GTK_BIN (item)->child), &label);
+				if ((strcmp (label, name) != 0) || (strcmp (camera->model, model) != 0) || (strcmp (camera->port->name, port) != 0)) {
+
+					/* We simply remove the camera and add a new one to the tree. */
+					gtk_container_remove (GTK_CONTAINER (main_tree), GTK_WIDGET (item));
+					j = g_list_length (main_tree->children) - 1;
+				}
 	                }
 	                if (j == g_list_length (main_tree->children)) {
 				gint result;
@@ -430,6 +444,7 @@ main_tree_update (void)
 					g_free (tmp);
 				} else {
 					gchar* url = g_strdup_printf ("camera://%s/", name);
+					
 					camera_tree_folder_add (main_tree, camera, url);
 					g_free (url);
 					gp_camera_unref (camera);

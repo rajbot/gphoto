@@ -36,6 +36,7 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 	}
 	
         /* Does GConf know about the camera? */
+	g_warning ("Looking for camera '%s'...", name);
 	for (i = 0; ; i++) {
 		gchar* tmp;
 		gchar* path = g_strdup_printf ("/apps/" PACKAGE "/camera/%i", i);
@@ -56,6 +57,7 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 			tmp = g_strconcat (path, "/name", NULL);
 			name_gconf = gconf_client_get_string (client, tmp, NULL);
 			g_free (tmp);
+			g_warning ("GConf found camera '%s'...", name_gconf);
 			if (strcmp (name, name_gconf)) {
 				g_free (path);
 				g_free (name_gconf);

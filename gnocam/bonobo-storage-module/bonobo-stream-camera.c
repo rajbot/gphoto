@@ -246,13 +246,12 @@ bonobo_stream_camera_open (const char *path, gint flags, gint mode, CORBA_Enviro
 	Bonobo_Stream 		corba_stream;
 	Camera*			camera = NULL;
 
-	g_warning ("bonobo_stream_camera_open (%s, ?, ?, ?)", path);
+	g_warning ("BEGIN: bonobo_stream_camera_open (%s, ?, ?, ?)", path);
 
 	/* Create camera. */
 	CHECK_RESULT (gp_camera_new_from_gconf (&camera, path), ev);
 	if (BONOBO_EX (ev)) return (NULL);
 
-	g_print ("Creating stream...\n");
 	stream = gtk_type_new (bonobo_stream_camera_get_type ());
 	if (stream == NULL) {
 		g_warning ("Could not create stream!");
@@ -260,7 +259,6 @@ bonobo_stream_camera_open (const char *path, gint flags, gint mode, CORBA_Enviro
 		return (NULL);
 	}
 
-	g_print ("Creating corba stream...\n");
 	corba_stream = bonobo_stream_corba_object_create (BONOBO_OBJECT (stream));
 	if (corba_stream == CORBA_OBJECT_NIL) {
 		g_warning ("Could not create corba stream!");
@@ -269,13 +267,14 @@ bonobo_stream_camera_open (const char *path, gint flags, gint mode, CORBA_Enviro
 		return (NULL);
 	}
 
+	for (path += 2; *path != 0; path++) if (*path == '/') break;
 	stream->dirname = g_dirname (path);
 	stream->filename = g_strdup (g_basename (path));
 	stream->mode = mode;
 	stream->camera = camera;
 
 	/* Get the file. */
-	g_print ("Getting file...\n");
+	g_warning ("Getting file '%s' (folder '%s')...", stream->filename, stream->dirname);
 	stream->file = gp_file_new ();
 #if 0
 	if (mode & Bonobo_Storage_COMPRESSED)
@@ -291,6 +290,7 @@ bonobo_stream_camera_open (const char *path, gint flags, gint mode, CORBA_Enviro
 		return NULL;
 	}
 
-	g_print ("Returning...\n");
+	g_warning ("END: bonobo_stream_camera_open");
+
 	return BONOBO_STREAM (bonobo_object_construct (BONOBO_OBJECT (stream), corba_stream));
 }

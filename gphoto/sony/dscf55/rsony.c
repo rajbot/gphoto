@@ -14,6 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    http://www.gnu.org/copyleft/gpl.html
 
 */
 
@@ -37,7 +38,7 @@ char serialbuff[64];
 
 int ReadCommByte(unsigned char *byte);
 int ReadFileByte(unsigned char *byte);
-Packet *ReadPacket(int(*readfunc(unsigned char *)));
+Packet *ReadPacket(int(*readfunc)(unsigned char *));
 
 
 static const char version_string[] = "0.3.0";
@@ -245,7 +246,7 @@ int sony_dscf55_number_of_pictures()
 */
 int sony_dscf55_configure()
 {
-	return 1;
+	return 0;
 }
 
 
@@ -256,7 +257,7 @@ int sony_dscf55_configure()
 */
 char *sony_dscf55_summary()
 {
-	return "";
+	return "Not Supported";
 }
 
 
@@ -267,7 +268,12 @@ char *sony_dscf55_summary()
 */
 char *sony_dscf55_description()
 {
-	return "Sony DSC F55\nStill image support";
+	return "Sony DSC F55/505 gPhoto Library
+Mark Davies <mdavies@dial.pipex.com>
+Sony DSC F55 and DSC F505 cameras.
+Still image support.
+* Mpegs are not downloadable yet
+";
 }
 
 
@@ -287,7 +293,7 @@ int ReadFileByte(unsigned char *byte)
 *
 *
 */
-Packet *ReadPacket(int(*readfunc(unsigned char *)))
+Packet *ReadPacket(int(*readfunc)(unsigned char *))
 {
 	unsigned int n;
 	unsigned int o;

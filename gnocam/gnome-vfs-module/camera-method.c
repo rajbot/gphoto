@@ -6,15 +6,7 @@
 #include <libgnomevfs/gnome-vfs-private.h>
 #include <parser.h>
 #include "gphoto-extensions.h"
-
-/********************/
-/* Type Definitions */
-/********************/
-
-typedef struct {
-	CameraFile*	file;
-	glong		position;
-} file_handle_t;
+#include "utils.h"
 
 /**************/
 /* Prototypes */
@@ -165,9 +157,9 @@ static GnomeVFSMethod method = {
 	do_seek,
 	do_tell,
 	do_truncate_handle,
-	NULL, //do_open_directory,
-	NULL, //do_close_directory,
-	NULL, //do_read_directory,
+	do_open_directory,
+	do_close_directory,
+	do_read_directory,
 	do_get_file_info,
 	do_get_file_info_from_handle,
 	do_is_local,
@@ -178,7 +170,7 @@ static GnomeVFSMethod method = {
 	do_check_same_fs,
 	do_set_file_info,
 	do_truncate,
-	do_find_directory,
+	NULL, //do_find_directory,
 	do_create_symbolic_link};
 
 /*************/
@@ -189,6 +181,7 @@ GnomeVFSMethod*
 vfs_module_init (const gchar* method_name, const gchar* args)
 {
 	g_print ("vfs_module_init\n");
+
 	gp_init (GP_DEBUG_NONE);
 	return &method;
 }
@@ -208,70 +201,13 @@ static GnomeVFSResult do_open (
 	GnomeVFSOpenMode 		mode, 
 	GnomeVFSContext* 		context)
 {
-	GConfClient*		client;
-	GConfValue*		value;
-	gchar*			xml;
-	gchar*			id = NULL;
-	gchar*			name= NULL;
-	gchar*			model = NULL;
-	gchar*			port = NULL;
-	gchar*			speed = NULL;
-	const gchar*		filename;
-	gchar*			dirname;
-	gint			i;
-	xmlDocPtr		doc;
-	xmlNodePtr		node;
-	GSList*			list;
-	Camera*			camera;
-	CameraFile*		file;
-	file_handle_t*		file_handle;
-
+	GnomeVFSResult	result;
+	
 	g_print ("do_open\n");
-	/* Do we really have a file? */
-	if (!(filename = gnome_vfs_uri_get_basename (uri))) return (GNOME_VFS_ERROR_IS_DIRECTORY);
 	
-	/* Does gconf know about the camera (host)? */
-	g_assert (client = gconf_client_get_default ());
-	if (!(value = gconf_client_get (client, "/apps/" PACKAGE "/cameras", NULL))) {
-		gtk_object_unref (GTK_OBJECT (client));
-		return (GNOME_VFS_ERROR_HOST_NOT_FOUND);
-	}
-	g_assert (value->type == GCONF_VALUE_LIST);
-	g_assert (gconf_value_get_list_type (value) == GCONF_VALUE_STRING);
-	list = gconf_value_get_list (value);
-	for (i = 0; i < g_slist_length (list); i++) {
-		value = g_slist_nth_data (list, i);
-        	g_assert (value->type == GCONF_VALUE_STRING);
-        	g_assert ((xml = g_strdup (gconf_value_get_string (value))));
-		if (!(doc = xmlParseMemory (xml, strlen (xml)))) continue;
-		g_assert (node = xmlDocGetRootElement (doc));
-		g_assert (id = xmlGetProp (node, "ID"));
-		g_assert (name = xmlGetProp (node, "Name"));
-		g_assert (model = xmlGetProp (node, "Model"));
-		g_assert (port = xmlGetProp (node, "Port"));
-		g_assert (speed = xmlGetProp (node, "Speed"));
-		if (strcmp (name, gnome_vfs_uri_get_host_name (uri)) == 0) break;
-	}
-	if (i == g_slist_length (list)) {
-		gtk_object_unref (GTK_OBJECT (client));
-		return (GNOME_VFS_ERROR_HOST_NOT_FOUND);
-	}
-	gtk_object_unref (GTK_OBJECT (client));
-
-	/* Connect to the camera (host). */
-	if (!(camera = gp_camera_new_by_description (atoi (id), name, model, port, atoi (speed)))) return (GNOME_VFS_ERROR_SERVICE_NOT_AVAILABLE);
-
-	/* Get the file. */
-	dirname = gnome_vfs_uri_extract_dirname (uri);
-	file = gp_file_new ();
-	if (gp_camera_file_get_preview (camera, file, dirname, (gchar*) filename) != GP_OK) return (GNOME_VFS_ERROR_GENERIC);
-	gp_file_ref (file);
-	file_handle = g_new (file_handle_t, 1);
-	file_handle->file = file;
-	file_handle->position = 0;
-	handle = (GnomeVFSMethodHandle) &file_handle;
+	*handle = file_handle_new (uri, &result);
 	
-	return (GNOME_VFS_OK);
+	return (result);
 }
 
 static GnomeVFSResult do_create ( 
@@ -292,14 +228,9 @@ static GnomeVFSResult do_close (
         GnomeVFSMethodHandle*           handle,
         GnomeVFSContext*                context)
 {
-	file_handle_t*		file_handle = NULL;
-	
 	g_print ("do_close\n");
-	g_return_val_if_fail ((file_handle = (file_handle_t*) handle), GNOME_VFS_ERROR_INTERNAL);
 
-	gp_file_unref (file_handle->file);
-	g_free (file_handle);
-	return (GNOME_VFS_OK);
+	return (file_handle_free (handle));
 }
 
 static GnomeVFSResult do_read (
@@ -374,8 +305,12 @@ static GnomeVFSResult do_open_directory (
         const GnomeVFSDirectoryFilter*  filter,
         GnomeVFSContext*                context)
 {
-	g_print ("do_open_directory\n");
-	return (GNOME_VFS_OK);
+	GnomeVFSResult		result;
+	
+	g_print ("do_open_directory (%s)\n", gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE));
+	
+	*handle = directory_handle_new (uri, &result);
+	return (result);
 }
 
 static GnomeVFSResult do_close_directory (
@@ -384,16 +319,43 @@ static GnomeVFSResult do_close_directory (
 	GnomeVFSContext*                context)
 {
 	g_print ("do_close_directory\n");
-	return (GNOME_VFS_OK);
+
+	return (directory_handle_free (handle));
 }
 
 static GnomeVFSResult do_read_directory (
 	GnomeVFSMethod*                 method,
 	GnomeVFSMethodHandle*           handle,
-	GnomeVFSFileInfo*               file_info,
+	GnomeVFSFileInfo*		info,
 	GnomeVFSContext*                context)
 {
+	directory_handle_t*	directory_handle;
+	
 	g_print ("do_read_directory\n");
+
+	info->valid_fields = 0;
+	directory_handle = (directory_handle_t*) handle;
+	if (directory_handle->position < g_slist_length (directory_handle->folders)) {
+
+		/* Folder */
+		info->name = g_strdup (g_slist_nth_data (directory_handle->folders, directory_handle->position));
+		info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
+		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
+		g_print ("  %s read...\n", info->name);
+	} else if (directory_handle->position < g_slist_length (directory_handle->folders) + g_slist_length (directory_handle->files)) {
+
+		/* File */
+		info->name = g_strdup (g_slist_nth_data (directory_handle->files, directory_handle->position - g_slist_length (directory_handle->folders)));
+		info->type = GNOME_VFS_FILE_TYPE_REGULAR;
+		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
+		info->mime_type = g_strdup ("image/jpeg");
+		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+		info->flags = GNOME_VFS_FILE_FLAGS_NONE;
+		info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_FLAGS;
+		g_print ("  %s read...\n", info->name);
+	} else return (GNOME_VFS_ERROR_EOF);
+	
+	directory_handle->position++;
 	return (GNOME_VFS_OK);
 }
 
@@ -406,10 +368,17 @@ static GnomeVFSResult do_get_file_info (
 {
 	g_print ("do_get_file_info\n");
 	file_info->valid_fields = 0;
+	g_print ("BASENAME: %s\n", gnome_vfs_uri_get_basename (uri));
 	file_info->name = g_strdup (gnome_vfs_uri_get_basename (uri));
+
+	/* Type of file? */
 	file_info->type = GNOME_VFS_FILE_TYPE_REGULAR;
+	file_info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_TYPE;
+
+	/* Mime type? */
 	file_info->mime_type = g_strdup ("image/jpeg");
 	file_info->valid_fields |= GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
+	
 	return (GNOME_VFS_OK);
 }
 
@@ -429,7 +398,6 @@ static gboolean do_is_local (
 	const GnomeVFSURI*              uri)
 {
 	g_print ("do_is_local\n");
-	/* We don't have local files. */
 	return (FALSE);
 }
 
@@ -448,6 +416,7 @@ static GnomeVFSResult do_remove_directory (
 	GnomeVFSURI*                    uri,
 	GnomeVFSContext*                context)
 {
+	g_print ("do_remove_directory\n");
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 
@@ -458,6 +427,7 @@ static GnomeVFSResult do_move (
 	gboolean                        force_replace,
 	GnomeVFSContext*                context)
 {
+	g_print ("do_move\n");
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 
@@ -466,6 +436,7 @@ static GnomeVFSResult do_unlink (
 	GnomeVFSURI*                    uri,
 	GnomeVFSContext*                context)
 {
+	g_print ("do_unlink\n");
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 
@@ -476,6 +447,7 @@ static GnomeVFSResult do_check_same_fs (
 	gboolean*                       same_fs_return,
 	GnomeVFSContext*                context)
 {
+	g_print ("do_check_same_fs\n");
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 
@@ -486,6 +458,7 @@ static GnomeVFSResult do_set_file_info (
 	GnomeVFSSetFileInfoMask         mask,
 	GnomeVFSContext*                context)
 {
+	g_print ("do_set_file_info\n");
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 
@@ -495,6 +468,7 @@ static GnomeVFSResult do_truncate (
 	GnomeVFSFileSize                where,
 	GnomeVFSContext*                context)
 {
+	g_print ("do_truncate\n");
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 
@@ -508,6 +482,7 @@ static GnomeVFSResult do_find_directory (
 	guint                           permissions,
 	GnomeVFSContext*                context)
 {
+	g_print ("do_find_directory\n");
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 
@@ -517,6 +492,7 @@ static GnomeVFSResult do_create_symbolic_link (
 	const gchar*                    target_reference,
 	GnomeVFSContext*                context)
 {
+	g_print ("do_create_symbolic_link\n");
 	return (GNOME_VFS_ERROR_INTERNAL);
 }
 

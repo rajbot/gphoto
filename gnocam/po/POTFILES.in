@@ -5,7 +5,6 @@ src/frontend.c
 src/gallery.c
 src/gnocam.c
 src/gphoto-extensions.c
-src/information.c
 src/notification.c
 src/preferences.c
 src/preview.c

@@ -1,7 +1,9 @@
+#include <config.h>
+#include <gphoto2.h>
 #include <gnome.h>
 #include <bonobo.h>
 #include <glade/glade.h>
-#include <gphoto2.h>
+
 #include "frontend.h"
 #include "gnocam.h"
 

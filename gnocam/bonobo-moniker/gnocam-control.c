@@ -1,13 +1,15 @@
 #include <config.h>
+
+#include "gnocam-control.h"
+
 #include <stdio.h>
 #include <gtk/gtksignal.h>
 #include <gtk/gtkmarshal.h>
 #include <gtk/gtktypeutils.h>
-#include <gphoto2.h>
-#include <tree.h>
 #include <bonobo/bonobo-moniker-extender.h>
 
-#include "gnocam-control.h"
+#include <gphoto-extensions.h>
+
 #include "utils.h"
 
 static BonoboControlClass *gnocam_control_parent_class;
@@ -30,17 +32,18 @@ gnocam_control_new (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options
 {
         GnoCamControl*		control;
 	Bonobo_Unknown 		subcontrol;
-	gint			i;
-	gchar*			name;
+	gint			i, result;
+	const gchar*		name;
 	GtkWidget*		vbox;
 	GtkWidget*		widget;
 	CORBA_Environment	ev;
 	Bonobo_UIContainer	container;
+	Camera*			camera;
 
-	/* Make sure we are given a camera name. */
-	name = (gchar*) bonobo_moniker_get_name (moniker);
-	if ((strlen(name) < 2) || (name [0] != '/') || (name [1] != '/')) {
-		g_warning (_("Could not find camera name in '%s'!"), name);
+	/* Create the camera. */
+	name = bonobo_moniker_get_name (moniker);
+	if ((result = gp_camera_new_from_gconf (&camera, name)) != GP_OK) {
+		g_warning (_("Could not create camera '%s'!"), name);
 		return (NULL);
 	}
 
@@ -68,17 +71,12 @@ gnocam_control_new (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options
 	gtk_container_add (GTK_CONTAINER (vbox), widget);
 
 	/* Initialize our variables. */
-	name += 2;
-	for (i = 0; name[i] != 0; i++) if (name[i] == '/') break;
-	control->path = g_strdup (name + i);
+	for (i = 2; name[i] != 0; i++) if (name[i] == '/') break;
+	control->path = g_strdup (name + i + 2);
 	control->config_camera = NULL;
 	control->config_folder = NULL;
 	control->config_file = NULL;
-	
-	/* Create the camera. */
-	name = g_strndup (name, i);
-	if (!(control->camera = util_camera_new (name))) g_warning (_("Could not create camera '%s'!"), name);
-	g_free (name);
+	control->camera = camera;
 
 	return (control);
 }

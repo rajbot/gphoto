@@ -2,9 +2,8 @@
 #ifndef _BONOBO_STREAM_CAMERA_H_
 #define _BONOBO_STREAM_CAMERA_H_
 
-#include <bonobo/bonobo-stream.h>
-#include <libgnomevfs/gnome-vfs.h>
 #include <gphoto2.h>
+#include <bonobo/bonobo-stream.h>
 
 BEGIN_GNOME_DECLS
 
@@ -19,16 +18,16 @@ typedef struct _BonoboStreamCamera BonoboStreamCamera;
 typedef struct _BonoboStreamCameraPrivate BonoboStreamCameraPrivate;
 
 struct _BonoboStreamCamera {
-	BonoboStream stream;
+	BonoboStream 	stream;
 
-	GnomeVFSURI* uri;
+	gchar* 		dirname;
+	gchar* 		filename;
 
-	gint mode;
-
-	Camera *camera;
-
-	CameraFile *file;
-	long position;
+	Camera*		camera;
+	CameraFile*	file;
+	
+	gint		mode;
+	long 		position;
 };
 
 typedef struct {

@@ -6,15 +6,17 @@
  */
 
 #include <config.h>
+#include <gphoto2.h>
 #include <bonobo.h>
 #include <gnome.h>
 #include <glade/glade.h>
-#include <gphoto2.h>
 #include <gconf/gconf-client.h>
 #include <parser.h>
 #include <libgnomevfs/gnome-vfs.h>
 #include <gal/e-paned/e-hpaned.h>
-#include "gphoto-extensions.h"
+
+#include <gphoto-extensions.h>
+
 #include "gnocam.h"
 #include "cameras.h"
 #include "file-operations.h"
@@ -422,7 +424,7 @@ main_tree_update (void)
 	
 	                        /* We don't have the camera in the tree (yet). */
 				camera = NULL;
-	                        if ((result = gp_camera_new_by_description (i, name, model, port, &camera)) != GP_OK) {
+	                        if ((result = gp_camera_new_from_gconf (&camera, name)) != GP_OK) {
 					gchar* tmp = g_strdup_printf (_("Could not connect to the camera!\n(%s)"), gp_camera_result_as_string (camera, result));
 					gnome_error_dialog_parented (tmp, main_window);
 					g_free (tmp);

@@ -1,10 +1,14 @@
 INCLUDES =\
+ -I$(top_srcdir)/libgnocam\
  -DGNOMELOCALEDIR=\""$(datadir)/locale"\"\
  -I.\
  -I$(srcdir) -I$(top_srcdir)\
  -I$(top_builddir)\
- -I$(top_srcdir)/bonobo\
- -I$(includedir)
+ -I$(includedir)\
+ $(EXTRA_GNOME_CFLAGS)\
+ $(EXTRA_WARNING_CFLAGS)\
+ $(GCONF_CFLAGS)\
+ $(GPHOTO_CFLAGS)
 
 OAF_FILES =\
  Bonobo_Moniker_camera.oaf.in
@@ -14,13 +18,6 @@ oaf_DATA = $(OAF_FILES:.oaf.in=.oaf)
 
 @XML_I18N_MERGE_OAF_RULE@
 
-CFLAGS = @CFLAGS@\
- `gphoto2-port-config --cflags`\
- `gphoto2-config --cflags`\
- `gconf-config --cflags`\
- `gnome-config --cflags bonobo bonobox xml vfs`\
- `xml-config --cflags`
-    
 bin_PROGRAMS = \
  bonobo-moniker-camera
 
@@ -30,7 +27,9 @@ bonobo_moniker_camera_SOURCES =\
  utils.h utils.c
 
 bonobo_moniker_camera_LDADD=\
- $(GPHOTO2_LIBS)\
- $(VFS_LIBS)\
- $(BONOBO_LIBS)
+ ../libgnocam/libgnocam.la\
+ $(EXTRA_GNOME_LIBS)\
+ $(GPHOTO_LIBS)
+
+EXTRA_DIST = Bonobo_Moniker_camera.oaf.in
 

@@ -8,6 +8,9 @@
  * Copyright 2000, Helix Code Inc.
  */
 #include <config.h>
+
+#include "bonobo-stream-camera.h"
+
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -15,8 +18,8 @@
 #include <libgnome/gnome-util.h>
 #include <errno.h>
 #include <bonobo/bonobo-exception.h>
-#include "bonobo-stream-camera.h"
-#include "utils.h"
+
+#include <gphoto-extensions.h>
 
 #define CHECK_RESULT(result,ev)         G_STMT_START{                                                                           \
         if (result <= 0) {                                                                                                      \
@@ -151,12 +154,9 @@ static void
 camera_commit (BonoboStream *stream, CORBA_Environment *ev)
 {
 	BonoboStreamCamera *s = BONOBO_STREAM_CAMERA (stream);
-	gchar *dirname;
 	
 	/* Send the file to the camera. */
-	dirname = gnome_vfs_uri_extract_dirname (s->uri);
-	CHECK_RESULT (gp_camera_file_put (s->camera, s->file, dirname), ev);
-	g_free (dirname);
+	CHECK_RESULT (gp_camera_file_put (s->camera, s->file, s->dirname), ev);
 }
 
 static void
@@ -172,12 +172,12 @@ camera_revert (BonoboStream *stream, CORBA_Environment *ev)
 static void
 bonobo_stream_camera_destroy (GtkObject *object)
 {
-	BonoboStreamCamera *stream = BONOBO_STREAM_CAMERA (object);
+	BonoboStreamCamera *s = BONOBO_STREAM_CAMERA (object);
 
-	/* Unref uri, camera, and file. */
-	if (stream->uri) gnome_vfs_uri_unref (stream->uri);
-	if (stream->camera) gp_camera_unref (stream->camera);
-	if (stream->file) gp_file_unref (stream->file);
+	if (s->dirname) g_free (s->dirname);
+	g_free (s->filename);
+	if (s->camera) gp_camera_unref (s->camera);
+	if (s->file) gp_file_unref (s->file);
 	
 	GTK_OBJECT_CLASS (bonobo_stream_camera_parent_class)->destroy (object);	
 }
@@ -201,9 +201,6 @@ bonobo_stream_camera_class_init (BonoboStreamCameraClass *klass)
 	sclass->revert   = camera_revert;
 
 	object_class->destroy = bonobo_stream_camera_destroy;
-
-	/* Make sure gnome-vfs is initialized. */
-	if (!gnome_vfs_initialized ()) gnome_vfs_init ();
 }
 
 /**
@@ -245,9 +242,13 @@ bonobo_stream_camera_get_type (void)
 BonoboStream *
 bonobo_stream_camera_open (const char *path, gint flags, gint mode, CORBA_Environment *ev)
 {
-	BonoboStreamCamera *stream;
-	Bonobo_Stream corba_stream;
-	gchar* dirname;
+	BonoboStreamCamera*	stream;
+	Bonobo_Stream 		corba_stream;
+	Camera*			camera;
+
+	/* Create camera. */
+	CHECK_RESULT (gp_camera_new_from_gconf (&camera, path), ev);
+	if (BONOBO_EX (ev)) return (NULL);
 
 	g_print ("Creating stream...\n");
 	stream = gtk_type_new (bonobo_stream_camera_get_type ());
@@ -266,44 +267,27 @@ bonobo_stream_camera_open (const char *path, gint flags, gint mode, CORBA_Enviro
 		return (NULL);
 	}
 
-	g_print ("Creating uri...\n");
-	stream->uri = gnome_vfs_uri_new (path);
-	if (stream->uri == NULL) {
-		g_warning ("Could not create uri!");
-		bonobo_object_unref (BONOBO_OBJECT (stream));
-		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
-		return (NULL);
-	}
-
-	/* Connect to the camera. */
+	stream->dirname = g_dirname (path);
+	stream->filename = g_strdup (g_basename (path));
 	stream->mode = mode;
-	g_print ("Creating camera...\n");
-	stream->camera = util_camera_new (stream->uri, ev);
-	if (BONOBO_EX (ev)) {
-		g_warning ("Could not create camera!");
-		bonobo_object_unref (BONOBO_OBJECT (stream));
-		return NULL;
-	}
+	stream->camera = camera;
 
 	/* Get the file. */
 	g_print ("Getting file...\n");
 	stream->file = gp_file_new ();
-	dirname = gnome_vfs_uri_extract_dirname (stream->uri);
 #if 0
 	if (mode & Bonobo_Storage_COMPRESSED)
 #endif
-		CHECK_RESULT (gp_camera_file_get_preview (stream->camera, stream->file, dirname, (gchar*) gnome_vfs_uri_get_basename (stream->uri)), ev);
+		CHECK_RESULT (gp_camera_file_get_preview (stream->camera, stream->file, stream->dirname, stream->filename), ev);
 #if 0
 	else
-		CHECK_RESULT (gp_camera_file_get (stream->camera, stream->file, dirname, (gchar*) gnome_vfs_uri_get_basename (stream->uri)), ev);
+		CHECK_RESULT (gp_camera_file_get (stream->camera, stream->file, stream->dirname, stream->filename), ev);
 #endif
 	if (BONOBO_EX (ev)) {
 		g_warning ("Could not get file!");
-		g_free (dirname);
 		bonobo_object_unref (BONOBO_OBJECT (stream));
 		return NULL;
 	}
-	g_free (dirname);
 
 	g_print ("Returning...\n");
 	return BONOBO_STREAM (bonobo_object_construct (BONOBO_OBJECT (stream), corba_stream));

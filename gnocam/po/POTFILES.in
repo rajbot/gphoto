@@ -4,7 +4,6 @@ src/file-operations.c
 src/frontend.c
 src/gnocam.c
 src/gnocam.glade
-src/gphoto-extensions.c
 src/preferences.c
 src/ui/gnocam-main.xml
 src/ui/gnocam-capture.xml

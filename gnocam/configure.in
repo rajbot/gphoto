@@ -51,13 +51,11 @@ fi
 dnl ******
 dnl bonobo
 dnl ******
-AC_MSG_CHECKING(for bonobo>=0.31)
+AC_MSG_CHECKING(for bonobo>=0.35)
 if gnome-config --libs bonobox > /dev/null 2>&1; then
     vers=`gnome-config --modversion bonobo | awk 'BEGIN { FS = "."; } { printf "%d", $1 * 1000 + $2;}'`
-        if test "$vers" -ge 31; then
+        if test "$vers" -ge 35; then
             AC_MSG_RESULT(found)
-	    BONOBO_LIBS="`gnome-config --libs bonobo bonobox`"
-	    AC_SUBST(BONOBO_LIBS)
         else
             AC_MSG_ERROR([
 *** You need at least bonobo-0.31 for this version of ${PACKAGE}. 
@@ -125,28 +123,10 @@ else
 *** Mirrors can be found at http://www.gnome.org/mirrors.])
 fi
 
-dnl *****
+dnl ******************************
 dnl GConf
-dnl *****
-AC_MSG_CHECKING(for gconf >= 0.10)
-if gconf-config --version > /dev/null 2>&1; then
-    vers=`gconf-config --version | awk 'BEGIN { FS = "."; } { printf "%d", $1 * 1000 + $2;}'`
-    if test "$vers" -ge 10; then
-    	GCONF_LIBS="`gconf-config --libs`"
-	AC_SUBST(GCONF_LIBS)
-        AC_MSG_RESULT(found)
-    else 
-        AC_MSG_ERROR([
-*** You need at least gconf-0.10 for this version of ${PACKAGE}. 
-*** Get the latest version from http://www.gnome.org.
-*** Mirrors can be found at http://www.gnome.org/mirrors.])
-    fi
-else
-    AC_MSG_ERROR([
-*** You need gconf for this version of ${PACKAGE}. Get the latest
-*** version from http://www.gnome.org. Mirrors can be found at
-*** http://www.gnome.org/mirrors.])
-fi
+dnl ******************************
+AM_PATH_GCONF(0.12,,,gconf-gtk)
 
 dnl ********
 dnl libglade
@@ -169,21 +149,69 @@ else
 *** Mirrors can be found at http://www.gnome.org/mirrors.])
 fi
 
+dnl ******************************
+dnl More compiler warnings
+dnl ******************************
+AC_ARG_ENABLE(more-warnings, [  --enable-more-warnings  Maximum compiler warnings], set_more_warnings="$enableval",[set_more_warnings=no])
+warning_flags=
+realsave_CFLAGS="$CFLAGS"
+AC_MSG_CHECKING(for more warnings, including -Werror)
+if test "$GCC" = "yes" -a "$set_more_warnings" != "no"; then
+        AC_MSG_RESULT(yes)
+        warning_flags="-Wall -Wchar-subscripts -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wpointer-arith -Werror"
+        CFLAGS="$warning_flags $CFLAGS"
+
+        for option in -Wsign-promo -Wno-sign-compare; do
+                SAVE_CFLAGS="$CFLAGS"
+                CFLAGS="$CFLAGS $option"
+                AC_MSG_CHECKING([whether gcc understands $option])
+                AC_TRY_COMPILE([], [],
+                        has_option=yes,
+                        has_option=no,)
+                CFLAGS="$SAVE_CFLAGS"
+                AC_MSG_RESULT($has_option)
+                if test $has_option = yes; then
+                  warning_flags="$warning_flags $option"
+                fi
+                unset has_option
+                unset SAVE_CFLAGS
+        done
+        unset option
+else
+        AC_MSG_RESULT(no)
+fi
+CFLAGS="$realsave_CFLAGS"
+EXTRA_WARNING_CFLAGS="$warning_flags"
+AC_SUBST(EXTRA_WARNING_CFLAGS)
+
+dnl ******************************
+dnl Check for OAF
+dnl ******************************
+AM_PATH_OAF(0.6.2)
+
+AC_SUBST(OAF_LIBS)
+AC_SUBST(OAF_CFLAGS)
+
 dnl **********
 dnl libgphoto2
 dnl **********
 AC_MSG_CHECKING(for libgphoto2 >= 2.0)
 if gnome-config --libs libgphoto2 > /dev/null 2>&1; then
     AC_MSG_RESULT(found)
-    GPHOTO2_CFLAGS="`gphoto2-config --cflags`"
-    GPHOTO2_LIBS="`gphoto2-config --libs`"
 else
     AC_MSG_ERROR([
 *** You need libgphoto2 for this version of ${PACKAGE}.
 *** Get it from http://sourceforge.net/projects/gphoto/])
 fi
-AC_SUBST(GPHOTO2_CFLAGS)
-AC_SUBST(GPHOTO2_LIBS)
+GPHOTO_CFLAGS="`gphoto2-config --cflags` `gphoto2-port-config --cflags`"
+GPHOTO_LIBS="`gphoto2-config --libs` `gphoto2-port-config --cflags`"
+AC_SUBST(GPHOTO_CFLAGS)
+AC_SUBST(GPHOTO_LIBS)
+
+EXTRA_GNOME_CFLAGS=`gnome-config --cflags libglade bonobo bonobox bonobox_print gal vfs`
+EXTRA_GNOME_LIBS=`gnome-config --libs libglade bonobo bonobox bonobox_print gal vfs`
+AC_SUBST(EXTRA_GNOME_CFLAGS)
+AC_SUBST(EXTRA_GNOME_LIBS)
 
 AC_SUBST(CFLAGS)
 AC_SUBST(CPPFLAGS)
@@ -204,6 +232,7 @@ src/ui/Makefile
 bonobo-moniker/Makefile
 bonobo-storage-module/Makefile
 gnome-vfs-module/Makefile
+libgnocam/Makefile
 ])
 
 dnl *********************

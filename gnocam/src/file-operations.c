@@ -1,10 +1,11 @@
 #include <config.h>
+#include <gphoto2.h>
 #include <gnome.h>
 #include <libgnomevfs/gnome-vfs.h>
 #include <gconf/gconf-client.h>
 #include <glade/glade.h>
-#include <gphoto2.h>
 #include <bonobo.h>
+
 #include "cameras.h"
 #include "file-operations.h"
 #include "frontend.h"

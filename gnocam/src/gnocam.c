@@ -1,4 +1,5 @@
 #include <config.h>
+#include <gphoto2.h>
 #include <gnome.h>
 #include <libgnomevfs/gnome-vfs.h>
 #include <glade/glade.h>
@@ -7,6 +8,7 @@
 #include <bonobo.h>
 #include <gphoto2.h>
 #include <gal/e-paned/e-hpaned.h>
+
 #include "gnocam.h"
 #include "cameras.h"
 #include "frontend.h"

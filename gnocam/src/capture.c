@@ -1,13 +1,14 @@
 #include <config.h>
+#include <gphoto2.h>
 #include <gnome.h>
 #include <glade/glade.h>
-#include <gphoto2.h>
 #include <gdk-pixbuf/gdk-pixbuf-loader.h>
 #include <gconf/gconf-client.h>
 #include <bonobo.h>
 #include <bonobo/bonobo-stream-memory.h>
 #include <libgnomevfs/gnome-vfs.h>
 #include <tree.h>
+
 #include "gnocam.h"
 #include "capture.h"
 #include "file-operations.h"
@@ -214,9 +215,6 @@ on_capture_refresh_activate (BonoboUIComponent* component, gpointer user_data, c
 GtkWidget*
 capture_new (Camera* camera, CameraCaptureType type)
 {
-	xmlDocPtr		doc;
-	xmlNodePtr		node, command, node_child;
-	xmlNsPtr		ns;
 	GtkWidget*		window;
 	BonoboUIComponent*	component;
 	BonoboUIContainer*	container;
@@ -233,10 +231,6 @@ capture_new (Camera* camera, CameraCaptureType type)
 		BONOBO_UI_UNSAFE_VERB ("Preferences", preferences),
 		BONOBO_UI_VERB ("About", on_about_activate),
 		BONOBO_UI_VERB_END};
-	gchar*			tmp;
-	gint			i;
-	CameraWidget*		window_camera = NULL;
-	CORBA_Environment	ev;
 
         g_return_val_if_fail (camera, NULL);
 	g_return_val_if_fail (type & (GP_CAPTURE_IMAGE | GP_CAPTURE_PREVIEW | GP_CAPTURE_VIDEO), NULL);

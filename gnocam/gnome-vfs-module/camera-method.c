@@ -1,17 +1,11 @@
-#include <stdlib.h>
-#include <gtk/gtk.h>
 #include <gphoto2.h>
-#include <gconf/gconf-client.h>
+#include <gnome.h>
 #include <libgnomevfs/gnome-vfs.h>
-#include <libgnomevfs/gnome-vfs-private.h>
-#include <parser.h>
+#include <libgnomevfs/gnome-vfs-private-types.h>
+
+#include <gphoto-extensions.h>
+
 #include "utils.h"
-
-/********************/
-/* Static variables */
-/********************/
-
-static GSList*	list = NULL;
 
 /**************/
 /* Prototypes */
@@ -158,27 +152,6 @@ static GnomeVFSMethod method = {
 GnomeVFSMethod*
 vfs_module_init (const gchar* method_name, const gchar* args)
 {
-	gchar*		argv[] = {"dummy"};
-	GSList*		gconf_list;
-	gint		i;
-	GConfValue*	value;
-	GConfClient*	client;
-	
-	/* GConf */
-	if (!gconf_is_initialized ()) gconf_init (1, argv, NULL);
-	client = gconf_client_get_default ();
-	g_assert (value = gconf_client_get (client, "/apps/GnoCam/cameras", NULL));
-	g_assert (value->type == GCONF_VALUE_LIST);
-	g_assert (gconf_value_get_list_type (value) == GCONF_VALUE_STRING);
-	gconf_list = gconf_value_get_list (value);
-	for (i = 0; i < g_slist_length (gconf_list); i++) {
-		value = g_slist_nth_data (gconf_list, i);
-		g_assert (value->type == GCONF_VALUE_STRING);
-		list = g_slist_append (list, g_strdup (gconf_value_get_string (value)));
-	}
-	gtk_object_unref (GTK_OBJECT (client));
-	
-	/* GPhoto */
 	gp_init (GP_DEBUG_NONE);
 	gp_frontend_register (NULL, NULL, NULL, NULL, NULL);
 	
@@ -188,14 +161,6 @@ vfs_module_init (const gchar* method_name, const gchar* args)
 void
 vfs_module_shutdown (GnomeVFSMethod* method)
 {
-	gint	i;
-	
-	for (i = g_slist_length (list); i > 0; i--) {
-		g_free (g_slist_nth_data (list, 0));
-		list = g_slist_remove_link (list, list);
-	}
-
-	/* GPhoto */
 	gp_exit ();
 	
 	return;
@@ -213,7 +178,7 @@ static GnomeVFSResult do_open (
 	g_print ("CAMERA: do_open\n");
 	
 	if ((mode == GNOME_VFS_OPEN_READ) || (mode == GNOME_VFS_OPEN_WRITE)) 
-		*handle = file_handle_new (uri, mode, list, context, &result);
+		*handle = file_handle_new (uri, mode, context, &result);
 
 	else result = GNOME_VFS_ERROR_INVALID_OPEN_MODE;
 	
@@ -358,7 +323,7 @@ static GnomeVFSResult do_open_directory (
 
 	g_print ("CAMERA: do_open_directory\n");
 	
-	*handle = directory_handle_new (uri, list, options, context, &result);
+	*handle = directory_handle_new (uri, options, context, &result);
 	return (result);
 }
 
@@ -433,8 +398,19 @@ static GnomeVFSResult do_get_file_info (
 
 	g_print ("CAMERA: do_get_file_info\n");
 	
-	/* Connect to the camera. */
-	if (!(camera = camera_new_by_uri (uri, list, context, &result))) return (result);
+        /* Connect to the camera. */
+        {
+                gchar* url = gnome_vfs_unescape_string (gnome_vfs_uri_get_host_name (uri), NULL);
+
+                if (!url) {
+                        return (GNOME_VFS_ERROR_HOST_NOT_FOUND);
+                }
+                if ((result = GNOME_VFS_RESULT (gp_camera_new_from_gconf (&camera, url))) != GNOME_VFS_OK) {
+                        g_free (url);
+                        return (result);
+                }
+                g_free (url);
+        }
 
 	info->valid_fields = GNOME_VFS_FILE_INFO_FIELDS_NONE;
 	filename = (gchar*) gnome_vfs_uri_get_basename (uri);

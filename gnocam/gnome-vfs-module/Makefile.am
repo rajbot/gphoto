@@ -14,31 +14,27 @@ libvfs_camera_la_SOURCES =\
 
 INCLUDES =\
  -I$(top_srcdir)\
+ -I$(top_srcdir)/libgnocam\
  -D_POSIX_PTHREAD_SEMANTICS\
- $(GLIB_CFLAGS)\
+ $(GPHOTO_CFLAGS)\
+ $(GCONF_CFLAGS)\
+ $(GNOME_INCLUDEDIR)\
+ $(EXTRA_WARNING_CFLAGS)\
+ $(GNOME_CFLAGS)\
  $(NULL)
 
 libvfs_camera_la_LIBADD =\
+ ../libgnocam/libgnocam.la\
+ $(GNOME_LIBS)\
+ $(GNOME_LIBDIR)\
+ $(GNOME_LIBS)\
+ $(INTLLIBS)\
+ $(GPHOTO_LIBS)\
  $(NULL)
 
 libvfs_camera_la_LDFLAGS =\
  -export_dynamic\
- -avoid-version\
- $(GPHOTO2_LIBS)
-
-CFLAGS = @CFLAGS@\
- `gphoto2-port-config --cflags`\
- `gphoto2-config --cflags`\
- `gnome-config --cflags vfs`\
- `gconf-config --cflags`\
- `xml-config --cflags`\
- `glib-config --cflags`
-
-LDFLAGS =@LDFLAGS@\
- `gnome-config --libs vfs`\
- `gconf-config --libs`\
- `xml-config --libs`\
- `glib-config --libs`
+ -avoid-version
 
 modulesconfdir = $(sysconfdir)/vfs/modules
 modulesconf_DATA = camera-methods.conf

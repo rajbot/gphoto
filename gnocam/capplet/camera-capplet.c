@@ -7,43 +7,6 @@
 #include "capplet.h"
 
 
-int 
-gp_frontend_status (Camera *camera, char *status)
-{
-        //FIXME: Yet to come...
-        return (0);
-}
-
-
-int 
-gp_frontend_progress (Camera *camera, CameraFile *file, float percentage)
-{
-        //FIXME: Yet to come...
-        return (0);
-}
-
-int
-gp_frontend_message (Camera *camera, char *message)
-{
-        //FIXME: Do that better...
-        gnome_error_dialog (message);
-        return (0);
-}
-
-int
-gp_frontend_confirm (Camera *camera, char *message)
-{
-        //FIXME: Yet to come...
-        return (0);
-}
-
-int
-gp_frontend_prompt (Camera *camera, CameraWidget *window)
-{
-        //FIXME: Yet to come...
-        return (0);
-}
-
 gint
 main (gint argc, char *argv[])
 {
@@ -58,7 +21,6 @@ main (gint argc, char *argv[])
 
 	/* Init several libraries. */
 	gp_init (GP_DEBUG_NONE);
-	gp_frontend_register (gp_frontend_status, gp_frontend_progress, gp_frontend_message, gp_frontend_confirm, gp_frontend_prompt);
 	init_result = gnome_capplet_init ("camera-capplet", VERSION, argc, argv, NULL, 0, NULL);
 
 	/* ? */

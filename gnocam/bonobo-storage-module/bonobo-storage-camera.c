@@ -2,10 +2,14 @@
 /*
  * gnome-storage-camera.c: Camera storage implementation
  *
- * Author:
+ * Authors:
  *   Michael Meeks <michael@helixcode.com>
+ *   Lutz Müller <urc8@rz.uni-karlsruhe.de>
  */
 #include <config.h>
+
+#include "bonobo-storage-camera.h"
+
 #include <sys/stat.h>
 #include <unistd.h>
 #include <libgnome/gnome-defs.h>
@@ -13,9 +17,10 @@
 #include <bonobo/bonobo-storage-plugin.h>
 #include <bonobo/bonobo-exception.h>
 #include <gconf/gconf-client.h>
-#include "bonobo-storage-camera.h"
+
+#include <gphoto-extensions.h>
+
 #include "bonobo-stream-camera.h"
-#include "utils.h"
 
 #define CHECK_RESULT(result,ev)         G_STMT_START{                                                                           \
         if (result <= 0) {                                                                                                      \
@@ -81,7 +86,7 @@ camera_open_stream (BonoboStorage *storage, const CORBA_char *filename, Bonobo_S
 
 	/* Does the requested file exist? */
 	if (mode & Bonobo_Storage_FAILIFEXIST) {
-		CHECK_RESULT (gp_camera_file_list (s->camera, &list, (gchar*) gnome_vfs_uri_get_path (s->uri)), ev);
+		CHECK_RESULT (gp_camera_file_list (s->camera, &list, s->path), ev);
 		if (BONOBO_EX (ev)) return NULL;
 		for (i = 0; i < gp_list_count (&list); i++) {
 			if (strcmp ((gp_list_entry (&list, i))->name, filename) == 0) {
@@ -95,9 +100,9 @@ camera_open_stream (BonoboStorage *storage, const CORBA_char *filename, Bonobo_S
 	if (mode & Bonobo_Storage_READ) {
 		file = gp_file_new ();
 		if (mode & Bonobo_Storage_COMPRESSED) 
-			CHECK_RESULT (gp_camera_file_get_preview (s->camera, file, (gchar*) gnome_vfs_uri_get_path (s->uri), (gchar*) filename), ev);
+			CHECK_RESULT (gp_camera_file_get_preview (s->camera, file, s->path, (gchar*) filename), ev);
 		else 
-			CHECK_RESULT (gp_camera_file_get (s->camera, file, (gchar*) gnome_vfs_uri_get_path (s->uri), (gchar*) filename), ev);
+			CHECK_RESULT (gp_camera_file_get (s->camera, file, s->path, (gchar*) filename), ev);
 		if (BONOBO_EX (ev)) {
 			gp_file_unref (file);
 			return NULL;
@@ -112,7 +117,8 @@ camera_open_stream (BonoboStorage *storage, const CORBA_char *filename, Bonobo_S
 
 	/* Store some data in this stream. */
 	stream->mode = mode;
-	stream->uri = gnome_vfs_uri_append_file_name (gnome_vfs_uri_dup (s->uri), filename);
+	stream->dirname = g_strdup (s->path);
+	stream->filename = g_strdup (filename);
 	stream->camera = s->camera;
 	gp_camera_ref (s->camera);
 	stream->position = 0;
@@ -197,32 +203,31 @@ camera_list_contents (BonoboStorage *storage, const CORBA_char *path, Bonobo_Sto
 static BonoboStorage *
 bonobo_storage_camera_open (const char *path, gint flags, gint mode, CORBA_Environment *ev)
 {
-        BonoboStorageCamera *storage;
-	gchar* tmp;
-	CameraList list;
+        BonoboStorageCamera*	storage;
+	CameraList 		list;
+	Camera*			camera;
 
         /* Reject some unsupported open modes. */
 	if (mode & (Bonobo_Storage_COMPRESSED | Bonobo_Storage_TRANSACTED)) {
         	CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
         	return NULL;
         }
+
+	/* Create the camera. */
+	CHECK_RESULT (gp_camera_new_from_gconf (&camera, path), ev);
+	if (BONOBO_EX (ev)) {
+		return (NULL);
+	}
 							
 	/* Create the storage. */
         storage = gtk_type_new (bonobo_storage_camera_get_type ());
 
 	/* Connect to the camera. */
-	storage->uri = gnome_vfs_uri_new (path);
-	storage->camera = util_camera_new (storage->uri, ev);
-	if (BONOBO_EX (ev)) {
-		CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Storage_NotSupported, NULL);
-		bonobo_object_unref (BONOBO_OBJECT (storage));
-		return NULL;
-	}
+	storage->path = g_strdup (path);
+	storage->camera = camera;
 
 	/* Does the folder exist? */
-	tmp = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_path (storage->uri));
-	CHECK_RESULT (gp_camera_folder_list (storage->camera, &list, tmp), ev);
-	g_free (tmp);
+	CHECK_RESULT (gp_camera_folder_list (storage->camera, &list, (gchar*) path), ev);
 	if (BONOBO_EX (ev)) {
 		bonobo_object_unref (BONOBO_OBJECT (storage));
 		return NULL;
@@ -247,7 +252,7 @@ camera_open_storage (BonoboStorage *storage, const CORBA_char *path, Bonobo_Stor
 							
 	/* Does the folder exist? */
 	if (mode & Bonobo_Storage_FAILIFEXIST) {
-		CHECK_RESULT (gp_camera_file_list (s->camera, &list, (gchar*) gnome_vfs_uri_get_path (s->uri)), ev);
+		CHECK_RESULT (gp_camera_file_list (s->camera, &list, s->path), ev);
 		if (BONOBO_EX (ev)) return NULL;
 		for (i = 0; i < gp_list_count (&list); i++) {
 			if (strcmp ((gp_list_entry (&list, i))->name, path) == 0) {
@@ -261,7 +266,8 @@ camera_open_storage (BonoboStorage *storage, const CORBA_char *path, Bonobo_Stor
 	storage_new = gtk_type_new (bonobo_storage_camera_get_type ());
 	storage_new->camera = s->camera;
 	gp_camera_ref (s->camera);
-	storage_new->uri = gnome_vfs_uri_append_path (gnome_vfs_uri_dup (s->uri), path);
+	if (!strcmp (s->path, "/")) storage_new->path = g_strconcat (s->path, path, NULL);
+	else storage_new->path = g_strconcat (s->path, G_DIR_SEPARATOR, path, NULL);
 
 	return (BONOBO_STORAGE (storage_new));
 }
@@ -272,7 +278,7 @@ camera_erase (BonoboStorage *storage, const CORBA_char *path, CORBA_Environment 
 	BonoboStorageCamera *s = BONOBO_STORAGE_CAMERA (storage);
 
 	/* Delete the file. */
-	CHECK_RESULT (gp_camera_file_delete (s->camera, (gchar*) gnome_vfs_uri_get_path (s->uri), (gchar*) path), ev);
+	CHECK_RESULT (gp_camera_file_delete (s->camera, s->path, (gchar*) path), ev);
 }
 
 static void
@@ -280,9 +286,8 @@ bonobo_storage_camera_destroy (GtkObject *object)
 {
 	BonoboStorageCamera *storage = BONOBO_STORAGE_CAMERA (object);
 
-	/* Unref camera and URI. */
+	g_free (storage->path);
 	gp_camera_unref (storage->camera);
-	gnome_vfs_uri_unref (storage->uri);
 }
 
 static void
@@ -305,9 +310,6 @@ bonobo_storage_camera_class_init (BonoboStorageCameraClass *class)
 	sclass->erase          = camera_erase;
 
 	object_class->destroy = bonobo_storage_camera_destroy;
-
-	/* Make sure gnome-vfs is initialized. */
-	if (!gnome_vfs_initialized ()) gnome_vfs_init ();
 }
 
 static void 

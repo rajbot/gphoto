@@ -1,3 +1,4 @@
+
 /********************/
 /* Type Definitions */
 /********************/
@@ -24,11 +25,8 @@ typedef struct {
 
 GnomeVFSResult GNOME_VFS_RESULT (int result);
 
-Camera*	camera_new_by_uri (GnomeVFSURI* uri, GSList* list, GnomeVFSContext* context, GnomeVFSResult* result);
-
 GnomeVFSMethodHandle*	directory_handle_new (
 				GnomeVFSURI* 		uri,
-				GSList*			list,
 				GnomeVFSFileInfoOptions options, 
 				GnomeVFSContext*	context,
 				GnomeVFSResult* 	result);
@@ -37,7 +35,6 @@ GnomeVFSResult		directory_handle_free (GnomeVFSMethodHandle* handle);
 GnomeVFSMethodHandle*	file_handle_new	(
 				GnomeVFSURI* 		uri, 
 				GnomeVFSOpenMode 	mode, 
-				GSList*			list,
 				GnomeVFSContext*	context,
 				GnomeVFSResult* 	result);
 GnomeVFSResult		file_handle_free (GnomeVFSMethodHandle* handle);

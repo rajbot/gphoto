@@ -3,6 +3,7 @@ SUBDIRS =\
  intl\
  macros\
  po\
+ libgnocam\
  bonobo-storage-module\
  bonobo-moniker\
  gnome-vfs-module\

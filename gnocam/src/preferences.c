@@ -1,11 +1,13 @@
 #include <config.h>
+#include <gphoto2.h>
 #include <gnome.h>
 #include <glade/glade.h>
-#include <gphoto2.h>
 #include <gconf/gconf-client.h>
 #include <bonobo.h>
+
+#include <Gphoto.h>
+
 #include "preferences.h"
-#include "Gphoto.h"
 #include "gnocam.h"
 
 /**********************/

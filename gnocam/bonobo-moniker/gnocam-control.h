@@ -11,6 +11,7 @@
 #ifndef _GNOCAM_CONTROL_H_
 #define _GNOCAM_CONTROL_H_
 
+#include <gphoto2.h>
 #include <bonobo.h>
 
 BEGIN_GNOME_DECLS

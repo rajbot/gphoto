@@ -7,9 +7,8 @@
  * Copyright (c) 2000 Helix Code, Inc.
  */
 #include <config.h>
-#include <bonobo.h>
-#include <bonobo/bonobo-moniker-extender.h>
 #include <gphoto2.h>
+#include <bonobo/bonobo-moniker-extender.h>
 
 #include "gnocam-control.h"
 #include "bonobo-moniker-camera.h"

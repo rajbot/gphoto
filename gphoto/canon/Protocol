@@ -1,44 +1,86 @@
+==========================================
+======   Canon Powershot Series     ======
+====  Serial Protocol Specifications =====
+==========================================
+
+The following  document is an  overview of the  Canon Powershot serial
+protocol. It  should  be a  valid  reference for models   ranging from
+Powershot A5 to S10.  Please not that  no USB functions are documented
+here.
+
+No  information present  in this   document was  obtained from  Canon.
+Everything is  the result of observations  and logical analysis. It is
+by no means guaranteed to be accurate, nor even right. Nevertheless, a
+lot of people have managed to communicate with their Powershot cameras
+using these commands, so cannot be completely wrong either !
+
+An  implementation of this   communication  protocol was made  for the
+GPhoto digital camera software, available at www.gphoto.org.
+
+
+Introduction
+============
+
+  We have chosen to describe  the Canon Serial Protocol as  successive
+layers:
+
+   a. Lower layer:
+        Responsible for framing, escaping and checksuming messages
+
+   b. Packet layer:
+        Responsible for dividing messages into packets of known length.
+        This layer also handles handshaking, retries, etc.
+
+   c. Message layer:
+        Last layer, carrying whole messages, such as download requests,
+        image data, and such information.
+
+ Currently, most  of these layers   are documented, but we  still lack
+ information on how to handle protocol retries, and errors in general.
+
+
 Lower protocol layers
 =====================
 
 The following figure illustrates the lower layers of the protocol
 used by some Canon PowerShot A-series cameras:
 
-[ Upper protocol layers ]	Example: 00 C0 01
+[ Upper protocol layers ]       Example: 00 C0 01
    | ^
-   | |		   00 C0    01
+   | |             00 C0    01
   <CRC>
-   | |		   00 C0    01 12 34	(fictious CRC)
+   | |             00 C0    01 12 34    (fictious CRC)
   <Escaping>
-   | |		   00 7E E0 01 12 34
+   | |             00 7E E0 01 12 34
   <Framing>
-   | |		C0 00 7E E0 01 12 34 C1
+   | |          C0 00 7E E0 01 12 34 C1
    v |
 [ Wire format ]
 
-The upper layers are described in the file "UpperLayers" in this
-directory.
+The upper layers are described later in this file.
 
 
 0) Serial timing
 ----------------
 
-Initialization: PC sends sequences of "U" bytes at 9600 bps until the
+Initialization: PC sends sequences of "U" bytes at  9600 bps until the
 camera responds. Each sequence has a length of 2-8 bytes. The interval
 between sequences is 0.9-1.04 sec (measured for 8 bytes).
 
-It is not known yet how the bit rate can be changed.
+When  the camera sends  its id,  the  computer can  ask the  camera to
+change to a higher speed. The speed can go up to 115200  bps but it is
+not fully reliable even at 57600 with the current driver.
 
-Afterwards, a larger timeout should be set. E.g. retrieving a directory
-with 1200 files takes several seconds.
+Afterwards,  a  larger  timeout   should be  set.   E.g. retrieving  a
+directory with 1200 files takes several seconds.
 
 
 1) Framing
 ----------
 
-Each message begins with the byte C0 and ends with the byte C1. The length
-of a message including the framing bytes and any escape bytes (see below)
-never exceeds 1024 bytes.
+Each  message begins with the  byte C0 and ends  with the byte C1. The
+length of a message  including the framing bytes  and any escape bytes
+(see below) never exceeds 1024 bytes.
 
 
 2) Escaping
@@ -65,7 +107,7 @@ which the CRC is taken.
 
 
 [1] Assuming the use of
-    http://www.cse.fau.edu/~sam/course/dc_htm/src_dir/crc_att.c,
+    [11]http://www.cse.fau.edu/~sam/course/dc_htm/src_dir/crc_att.c,
     generator polynom 0102010 (octal), the initial value of "crc" is
     the CRC generator's initial value (in the original code always
     zero).
@@ -74,9 +116,9 @@ which the CRC is taken.
 Upper protocol layers
 =====================
 
-Communication is with messages, which may be split into several fragments,
-which are then sent as individual packets. Packets are framed as described
-earlier in this file.
+Communication   is done through  messages,   which  may be split  into
+several fragments, which are then sent  as individual packets. Packets
+are framed as described earlier in this file.
 
 
 Packet level
@@ -89,35 +131,40 @@ Each packet consists of the following two-byte header:
 
 <sequence> <ptype>
 
-There are two sequence numbers: the message sequence number <mseq>
-and the fragment sequence number <fseq>. They are counted independently
-and start at zero. <mseq> is reset at the beginning of a session,
+There are two sequence numbers: the message sequence number <mseq> and
+the fragment sequence   number <fseq>. They are  counted independently
+and  start at  zero.  <mseq> is reset at   the beginning of a session,
 while <fseq> is reset at the beginning of each message.
 
 The following packet types are known:
-  00	Message fragment
-  03	Unknown 03
-  04	EOT
-  05	ACK
-  06	Compatibility?
+  00    Message fragment
+  03    Speed message from computer
+  04    EOT
+  05    ACK
+  06    Compatibility?
 
-A packet with type 03 is sent once, early in the initialization.
+A packet with type  03 is sent once, early  in the initialization  for
+the computer to ask the camera to switch to a higher speed.
 
 EOT has the following format:
 xx 04 xx 00 00 00
 |     |
 |     indication of the message length. Known values:
-<mseq>		00	empty message (no fragments)
-		01	short message (one fragment)
-		ff	maximum length data packet, more to follow
-		else	data packet, at end (observed values: 0f, 7f)
+<mseq>          00      empty message (no fragments)
+                01      short message (one fragment)
+                ff      maximum length data packet, more to follow
+                else    data packet, at end (observed values: 0f, 7f)
 
 ACK has the following format:
-xx 05 00 00 00 00
-|
-<mseq>
+xx 05 xx 00 00 00
+|     |
+|     error code
+<mseq>  00 No error, acknowledged
+                01 Not acknowledged
+                else other values not known
 
-A packet with type 06 is sent once, as the first packet coming from
+
+A packet  with type 06  is sent once, as  the first packet coming from
 the camera. It contains a length, just like a normal message fragment,
 but the message structure is different.
 
@@ -139,8 +186,8 @@ xx 00 xx xx ...
 |     data length, LSB
 <fseq>
 
-The data length is the length (in bytes) of the fragment data that
-follows the length. Fragment data is simply concatenated to form the
+The data length  is the length  (in  bytes) of the  fragment data that
+follows  the length. Fragment data is  simply concatenated to form the
 complete message.
 
 
@@ -150,38 +197,42 @@ Message level
 All messages (except the one with type 03) have the following structure:
 
 00 02 00 00  xx 00 00 xx  xx xx 00 00  ...
-	     |        |   |  |         |
-	     |        |   |  |         message payload
+             |        |   |  |         |
+             |        |   |  |         message payload
              |        |   |  message length, MSB
              |        |   message length, LSB
-	     |        direction code <dir>
+             |        direction code <dir>
              message type <mtype>
 
-The message length is the length of the entire message, including the
+The message length is the length  of the entire message, including the
 header shown above.
 
-The first four bytes of the message payload <fffb> seem to depend on
+The first four bytes  of the message payload  <fffb> seem to depend on
 the message type. The following combinations have been sighted:
 
-<mtype> <dir> <fffb>	    Operation
+<mtype> <dir> <fffb>        Operation
+
+01      12    14 f7 8a 00   Identify camera request
+01      22    14 f7 8a 00   Identify camera response
 01      11    6a 08 79 04   Download image request
 01      11    aa 06 79 04   Download "thumbnail" request (see below)
-01      12    14 f7 8a 00   Identify camera request
 01      21    6a 08 79 04   Image data
 01      21    aa 06 79 04   "Thumbnail" data
-01      22    14 f7 8a 00   Identify camera response
+04      12    08 d3 9d 00   Set date
+05      12    fc d2 9d 00   Change Owner name
 09      11    d8 f7 8a 00   Disk info request
 09      21    d8 f7 8a 00   Disk info response
 0a      11    dc f7 8a 00   Get disk(s) request
-0a      12    70 f6 8a 00   Unknown
 0a      21    dc f7 8a 00   Get disk(s) response
+0a      12    70 f6 8a 00   Unknown
 0a      22    70 f6 8a 00   Unknown response
 0b      11    94 f6 8a 00   List without date request
-0b      11    a8 f6 8a 00   List with date request
 0b      21    94 f6 8a 00   List without date response
+0b      11    a8 f6 8a 00   List with date request
 0b      21    a8 f6 8a 00   List with date response
+0d      11    8c f4 7b 00   Delete image request
+0d      21    8c f4 7b 00   Delete image response
 
-Below, I'm describing some message contents, without <fffb>.
 
 
 Identify camera
@@ -191,6 +242,20 @@ The identify camera request has no data.
 
 The identify camera response has the following structure:
 00 00 00 00  00 02 00 00  00 00 00 01  <camera_name> 00  (more 00s)
+
+
+Change Owner Name
+----------------
+
+The name (payload) can be 30 characters max.
+
+
+Set Date
+--------
+
+The  payload  of this message  is 4  bytes, it  must  be the same unix
+format  as in   the directory with    date  request, for  example  the
+01/01/2000 is 80 43 6D 38.
 
 
 Get disk(s)
@@ -236,8 +301,8 @@ Failure:
 
 Success:
 00 00 00 00  xx 80 00 00  00 00 00 00  00 00 00 00
-	     |
-	     01 if last message, 00 if more
+             |
+             01 if last message, 00 if more
 <directory_name> 00
 <type> 00 <size> <date> <entry_name> 00
 ...
@@ -269,17 +334,27 @@ Download and Data
 
 Download requests have the following structure:
 00 00 00 00  00 xx 00 00  <name> 00
-	         |
-		 Length of name (including terminating \0)
+                 |
+                 Length of name (including terminating \0)
 
 Data messages have the following structure:
 00 00 00 00  xx xx xx xx  xx xx xx xx  xx xx xx xx  xx 00 00 00 ...
-	     |		  |	       |            |           |
-	     |		  |	       |            |           data
-	     |		  |	       |            00 if more, 01 at end
-	     |		  |	       data size in this message
-	     |		  current offset
+             |            |            |            |           |
+             |            |            |            |           data
+             |            |            |            00 if more, 01 at end
+             |            |            data size in this message
+             |            current offset
              total length
 
-All lengths are measured in bytes. Note that the "image" and the
-"thumbnail" variants seem to perform exactly the same operation.
+All lengths are measured in bytes.
+
+The camera only sends the 10813 first bytes from the image for the thumbnail
+download request. However it is not a valid thumbnail image, the first part
+is the Exif header, the second part is the thumbnail itself between a FF D8
+and a FF D9, the remaining is the beginning of the picture.
+
+
+The camera always sends 8 messages then waits for an ACK from the computer,
+if the computer has not received everything, it sends an ACK with an error
+value asking to retransmit one of the eight packet sent. These error values
+are not yet known.

@@ -336,6 +336,8 @@ function builddist {
 			cmd cp -f "${docroot}/man/gphoto2_port.3" doc/gphoto2_port.3
 			;;
 		esac
+	    else
+		echo "##### \"$docroot\" is no directory. -> Not installing generated man pages"
 	    fi
 	    echo "##### Press enter when asked to. And complain to the gettextize guys,"
 	    echo "    # not to me. Or run this with \"echo $0 | at now\"."

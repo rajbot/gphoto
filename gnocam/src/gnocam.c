@@ -209,7 +209,6 @@ int main (int argc, char *argv[])
 	/* Clean up the main window. */
 	bonobo_object_unref (BONOBO_OBJECT (main_component));
 	bonobo_object_unref (BONOBO_OBJECT (container));
-	gtk_widget_destroy (GTK_WIDGET (main_window));
 
 	/* Clean up (gphoto). */
 	gp_exit ();

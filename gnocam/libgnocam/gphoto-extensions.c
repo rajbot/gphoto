@@ -99,20 +99,22 @@ gp_camera_new_from_gconf (Camera** camera, const gchar* name_or_url)
 		/* Prepare initialization. */
 		(*camera)->port->speed = 0;
 
-		/* Search for port */
-		for (i = 0; i < gp_port_count_get (); i++) {
-			if ((result = gp_port_info_get (i, (*camera)->port)) != GP_OK) {
-				g_warning (_("Could not get port info for port %i! (%s)\n"), i, gp_result_as_string (result));
-				continue;
+		/* Search for port. Beware of "Directory Browse"... */
+		if (strcmp ((*camera)->model, "Directory Browse")) {
+			for (i = 0; i < gp_port_count_get (); i++) {
+				if ((result = gp_port_info_get (i, (*camera)->port)) != GP_OK) {
+					g_warning (_("Could not get port info for port %i! (%s)\n"), i, gp_result_as_string (result));
+					continue;
+				}
+				if (!strcmp ((*camera)->port->name, port)) break;
 			}
-			if (!strcmp ((*camera)->port->name, port)) break;
-		}
-		if ((i == gp_port_count_get ()) || (i < 0)) {
-			g_warning (_("Port '%s' not found!"), port);
-			gp_camera_unref (*camera);
-			*camera = NULL;
-			g_free (port);
-			return (GP_ERROR);
+			if ((i == gp_port_count_get ()) || (i < 0)) {
+				g_warning (_("Port '%s' not found!"), port);
+				gp_camera_unref (*camera);
+				*camera = NULL;
+				g_free (port);
+				return (GP_ERROR);
+			}
 		}
 		g_free (port);
 

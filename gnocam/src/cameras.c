@@ -423,14 +423,16 @@ main_tree_update (void)
 				gchar*		label;
 				
 	                	g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (item), "camera"));
-	
-                                /* We found the camera. Changed? */
 				gtk_label_get (GTK_LABEL (GTK_BIN (item)->child), &label);
-				if ((strcmp (label, name) != 0) || (strcmp (camera->model, model) != 0) || (strcmp (camera->port->name, port) != 0)) {
+				if (!strcmp (label, name)) {
+	
+	                                /* We found the camera. Changed? */
+					if ((strcmp (camera->model, model)) || (strcmp (camera->port->name, port))) {
 
-					/* We simply remove the camera and add a new one to the tree. */
-					gtk_container_remove (GTK_CONTAINER (main_tree), GTK_WIDGET (item));
-					j = g_list_length (main_tree->children) - 1;
+						/* We simply remove the camera and add a new one to the tree. */
+						gtk_container_remove (GTK_CONTAINER (main_tree), GTK_WIDGET (item));
+						j = g_list_length (main_tree->children) - 1;
+					}
 				}
 	                }
 	                if (j == g_list_length (main_tree->children)) {
@@ -499,7 +501,6 @@ camera_tree_item_popup_create (GtkTreeItem* item)
         /* Create the component. */
         component = bonobo_ui_component_new_default ();
         bonobo_ui_component_set_container (component, corba_container);
-        gtk_object_set_data_full (GTK_OBJECT (item), "component", component, (GtkDestroyNotify) bonobo_object_unref);
 	
 	/* Ref the camera. */
 	gp_camera_ref (camera);

@@ -1,4 +1,5 @@
 SUBDIRS =\
+ art\
  idl\
  intl\
  macros\

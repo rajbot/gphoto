@@ -1,13 +1,13 @@
 
 SUBDIRS = ui
 
-gladedir = $(datadir)/$(PACKAGE)/
-
 INCLUDES = \
  -I$(top_srcdir)/libgnocam\
  -DGNOME_LOCALEDIR=\""$(datadir)/locale"\"\
  -DGNOCAM_GLADEDIR=\""$(gladedir)"\"\
  -DGNOCAM_DATADIR=\""$(datadir)"\"\
+ -DGNOCAM_ICONSDIR=\""$(iconsdir)"\"\
+ -DG_LOG_DOMAIN=\"$(PACKAGE)\"\
  $(GCONF_CFLAGS)\
  $(EXTRA_WARNING_CFLAGS)\
  $(EXTRA_GNOME_CFLAGS)\
@@ -27,7 +27,10 @@ gnocam_LDFLAGS =\
  $(GPHOTO2_LIBS)\
  $(GPIO_LIBS)
 
+gladedir = $(datadir)/$(PACKAGE)/
 glade_DATA = gnocam.glade
+
+iconsdir = $(datadir)/images/$(PACKAGE)
 
 gnocam_LDADD =\
  $(EXTRA_GNOME_LIBS)\

@@ -223,6 +223,7 @@ dnl *********
 AC_OUTPUT([
 gnocam.spec
 Makefile
+art/Makefile
 idl/Makefile
 intl/Makefile
 macros/Makefile

@@ -6,7 +6,7 @@
   <program_name>gnocam</program_name>
   <directory></directory>
   <source_directory>src</source_directory>
-  <pixmaps_directory>stock</pixmaps_directory>
+  <pixmaps_directory>pixmaps</pixmaps_directory>
   <language>C</language>
   <gnome_support>True</gnome_support>
   <gettext_support>True</gettext_support>
@@ -148,21 +148,6 @@
 		<last_modification_time>Sat, 10 Feb 2001 15:34:29 GMT</last_modification_time>
 	      </signal>
 	      <label>New</label>
-	      <relief>GTK_RELIEF_NORMAL</relief>
-	    </widget>
-
-	    <widget>
-	      <class>GtkButton</class>
-	      <name>button_camera_edit</name>
-	      <tooltip>Update settings of selected camera.</tooltip>
-	      <can_default>True</can_default>
-	      <can_focus>True</can_focus>
-	      <signal>
-		<name>clicked</name>
-		<handler>on_button_camera_edit_clicked</handler>
-		<last_modification_time>Sat, 10 Feb 2001 15:09:56 GMT</last_modification_time>
-	      </signal>
-	      <label>Edit</label>
 	      <relief>GTK_RELIEF_NORMAL</relief>
 	    </widget>
 
@@ -1055,7 +1040,7 @@ Enjoy!</message>
     <widget>
       <class>GnomeDruidPageStart</class>
       <name>druidpagestart</name>
-      <title>Welcome to GnoCam</title>
+      <title>Welcome to GnoCam!</title>
       <text>Hello and Welcome to GnoCam!
 
 With GnoCam, you can access your digital camera through
@@ -1064,8 +1049,9 @@ tell us what camera model you have got.</text>
       <title_color>255,255,255</title_color>
       <text_color>0,0,0</text_color>
       <background_color>25,25,112</background_color>
-      <logo_background_color>255,255,255</logo_background_color>
-      <textbox_color>255,255,255</textbox_color>
+      <logo_background_color>24,24,112</logo_background_color>
+      <textbox_color>211,211,211</textbox_color>
+      <logo_image>logo.png</logo_image>
     </widget>
 
     <widget>
@@ -1076,10 +1062,11 @@ tell us what camera model you have got.</text>
 	<handler>on_druidpagestandard_model_prepare</handler>
 	<last_modification_time>Sat, 10 Feb 2001 17:25:42 GMT</last_modification_time>
       </signal>
-      <title></title>
+      <title>Model?</title>
       <title_color>255,255,255</title_color>
       <background_color>25,25,112</background_color>
-      <logo_background_color>255,255,255</logo_background_color>
+      <logo_background_color>23,23,112</logo_background_color>
+      <logo_image>logo.png</logo_image>
 
       <widget>
 	<class>GtkVBox</class>
@@ -1349,10 +1336,11 @@ tell us what camera model you have got.</text>
 	<handler>on_druidpagestandard_port_prepare</handler>
 	<last_modification_time>Sat, 10 Feb 2001 16:59:27 GMT</last_modification_time>
       </signal>
-      <title></title>
+      <title>Port?</title>
       <title_color>255,255,255</title_color>
       <background_color>25,25,112</background_color>
-      <logo_background_color>255,255,255</logo_background_color>
+      <logo_background_color>23,23,112</logo_background_color>
+      <logo_image>logo.png</logo_image>
 
       <widget>
 	<class>GtkVBox</class>
@@ -1507,22 +1495,23 @@ tell us what camera model you have got.</text>
 
     <widget>
       <class>GnomeDruidPageFinish</class>
-      <name>druidpagefinish1</name>
+      <name>druidpagefinish</name>
       <signal>
 	<name>finish</name>
 	<handler>on_druid_finish</handler>
 	<last_modification_time>Sat, 10 Feb 2001 15:30:55 GMT</last_modification_time>
       </signal>
-      <title></title>
+      <title>Finish!</title>
       <text>GnoCam now has all information it needs to access your
 camera.
 
 Thank you for using GnoCam!</text>
       <background_color>25,25,112</background_color>
-      <logo_background_color>255,255,255</logo_background_color>
-      <textbox_color>255,255,255</textbox_color>
+      <logo_background_color>23,23,112</logo_background_color>
+      <textbox_color>213,213,213</textbox_color>
       <text_color>0,0,0</text_color>
       <title_color>255,255,255</title_color>
+      <logo_image>logo.png</logo_image>
     </widget>
   </widget>
 </widget>

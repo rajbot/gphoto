@@ -23,10 +23,9 @@ extern GtkWindow*	main_window;
 void on_druidpagestandard_model_prepare			(GnomeDruidPage* page, GtkWidget* druid);
 void on_druidpagestandard_port_prepare 			(GnomeDruidPage* page, GtkWidget* druid);
 void on_druid_finish					(GnomeDruidPage* page, GtkWidget* druid);
-void on_druid_cancel					(GnomeDruidPage* page, GtkWidget* druid);
+void on_druid_cancel					(GnomeDruid* druid);
 
 void on_button_camera_new_clicked 			(GtkButton* button);
-void on_button_camera_edit_clicked 			(GtkButton* button);
 void on_button_camera_delete_clicked 			(GtkButton* button);
 
 void on_dialog_preferences_button_ok_clicked 		(GtkButton* button);
@@ -160,7 +159,7 @@ on_druid_finish (GnomeDruidPage* page, GtkWidget* druid)
 }
 
 void
-on_druid_cancel (GnomeDruidPage* page, GtkWidget* druid)
+on_druid_cancel (GnomeDruid* druid)
 {
 	gtk_widget_destroy (glade_xml_get_widget (gtk_object_get_data (GTK_OBJECT (druid), "xml"), "window_druid"));
 }
@@ -174,12 +173,6 @@ on_button_camera_new_clicked (GtkButton* button)
 	g_return_if_fail (xml = glade_xml_new (GNOCAM_GLADEDIR "gnocam.glade", "window_druid"));
 	gtk_object_set_data (GTK_OBJECT (glade_xml_get_widget (xml, "druid")), "xml", xml);
 	glade_xml_signal_autoconnect (xml);
-}
-
-void
-on_button_camera_edit_clicked (GtkButton *button)
-{
-	g_warning (_("Not yet implemented!"));
 }
 
 void

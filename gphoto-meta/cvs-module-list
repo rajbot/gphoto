@@ -13,7 +13,8 @@ libusb		HEAD	:pserver:anonymous@cvs.libusb.sourceforge.net:/cvsroot/libusb	insta
 
 libexif 	HEAD	:pserver:anonymous@cvs.libexif.sourceforge.net:/cvsroot/libexif	install
 
-#gphoto2-manual	HEAD	:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto	install
+# gphoto2-manual	HEAD	:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto	install
+
 libgphoto2	HEAD	:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto	install
 gphoto2		HEAD	:pserver:anonymous@cvs.gphoto.sourceforge.net:/cvsroot/gphoto   install
 

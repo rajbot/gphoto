@@ -1059,4 +1059,33 @@
   <comments>GnoCam - a small but powerful front-end to gphoto2 for the GNOME desktop</comments>
 </widget>
 
+<widget>
+  <class>GtkMenu</class>
+  <name>menu_tree_cameras_popup</name>
+
+  <widget>
+    <class>GtkMenuItem</class>
+    <name>tree_cameras_popup_capture_image</name>
+    <signal>
+      <name>activate</name>
+      <handler>on_tree_cameras_popup_capture_image_activate</handler>
+      <last_modification_time>Mon, 18 Sep 2000 15:49:12 GMT</last_modification_time>
+    </signal>
+    <label>Capture Image</label>
+    <right_justify>False</right_justify>
+  </widget>
+
+  <widget>
+    <class>GtkMenuItem</class>
+    <name>tree_cameras_popup_capture_video</name>
+    <signal>
+      <name>activate</name>
+      <handler>on_tree_cameras_popup_capture_video_activate</handler>
+      <last_modification_time>Mon, 18 Sep 2000 15:49:01 GMT</last_modification_time>
+    </signal>
+    <label>Capture Video</label>
+    <right_justify>False</right_justify>
+  </widget>
+</widget>
+
 </GTK-Interface>

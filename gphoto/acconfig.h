@@ -6,3 +6,6 @@
 #undef VERSION
 
 #define HAVE_RTS_IOCTL 0
+
+@BOTTOM@
+#include "defines.h"

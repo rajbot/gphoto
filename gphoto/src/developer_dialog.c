@@ -19,7 +19,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * $Log$
+ * Revision 1.7  1999/06/22 16:13:58  gdr
+ * Remove DOCDIR from src/Makefile.am and put into config.h. Well
+ * defines.h really but that gets included into config.h.
+ *
  * Revision 1.6  1999/06/22 12:17:12  pauljenn
+ *
+ *
  * included config.h in sources requiring VERSION to be defined
  *
  * Revision 1.5  1999/06/21 18:04:11  ole
@@ -72,6 +78,7 @@
 #include <string.h>
 #include "gtk/gtk.h"
 #include "developer.h"
+#include "config.h"
 
 #define FILE_NAME "AUTHORS"
 

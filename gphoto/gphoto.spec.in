@@ -8,7 +8,7 @@ Version: %ver
 Release: %rel
 Copyright: GPL
 Group: X11/Utilities
-Source: http://www.mustec.eu.org/~psj/downloads/gphoto-%{ver}.tar.gz
+Source: ftp://ftp.gphoto.org/projects/gphoto/pub/tar/gphoto/0.3/gphoto-%{ver}.tar.gz
 BuildRoot: /var/tmp/gphoto-root
 URL: http://www.gphoto.org/
 Docdir: %{prefix}/doc
@@ -41,6 +41,7 @@ rm -rf $RPM_BUILD_ROOT
 %{prefix}/man/man1/gphoto.1
 %{prefix}/bin/*
 %{prefix}/share/gphoto/drivers/*
+%{prefix}/share/gphoto/doc/*
 %{prefix}/share/gphoto/gallery/Default/*
 %{prefix}/share/gphoto/gallery/RedNGray/*
 %{prefix}/share/gphoto/gallery/CSStheme/*

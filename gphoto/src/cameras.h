@@ -115,6 +115,8 @@ struct Model cameras[] = {
 	{"Sanyo VPC-X350", &olympus},
 	{"Sony DSC-F1", &sony_dscf1},
 	{"Sony DSC-F55", &sony_dscf55},
+	{"Sony DSC-F505", &sony_dscf55},
+	{"Sony Memory Stick Adapter", &sony_dscf55},
 	{"Toshiba PDR-M1", &fuji},
 	{"", NULL}
 };

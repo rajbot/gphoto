@@ -45,6 +45,7 @@ typedef struct
 {
    int fd;
    int baud;
+   int is_usb;
 
    int current;
    int num_states;

@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 1999, Randy Scott <scottr@wwa.com>.  All rights reserved.
+ *
+ * Linux USB support from David Brownell <david-b@pacbell.net>.
  */
 
 #include <termios.h>
@@ -12,6 +14,7 @@
 #include <sys/time.h>
 #include <errno.h>
 
+#include "kodak_generic.h"
 #include "state_machine.h"
 
 #define BAUDCASE(x) case (x): { ret = B##x; break; }
@@ -22,6 +25,10 @@ static int baudconv(int);
 * FUNCTION: state_machine_construct
 *
 * DESCRIPTION:
+*	Constructs and initializes state machine, as well as setting up
+*	initial communications to the camera.  If communicating over USB,
+*	sets an internal flag to avoid the serial line control operations.
+*
 ******************************************************************************/
 STATE_MACHINE_INSTANCE *
 state_machine_construct
@@ -45,6 +52,7 @@ state_machine_construct
       return NULL;
    }
 
+   self->is_usb = FALSE;
    state_machine_set_baud(self, template->baud_rate);
 
    template->driver_init(self);
@@ -89,6 +97,12 @@ state_machine_destruct
 * FUNCTION: state_machine_set_baud
 *
 * DESCRIPTION:
+*
+*	Sets serial line speed.  If this fails the first time through,
+*	we assume the connection is to a USB camera, which doesn't
+*	support serial line control operations (such as changing the
+*	transfer speed or sending a break).
+*
 ******************************************************************************/
 void
 state_machine_set_baud
@@ -99,9 +113,18 @@ state_machine_set_baud
 {
    struct termios t;
 
+   if (self->is_usb)
+   {
+      return;
+   }
+
    if (tcgetattr(self->fd, &t) < 0)
    {
       perror("state_machine_set_baud: tcgetattr");
+
+      self->is_usb = TRUE;
+      fprintf (stderr, "Assuming USB connection.\n");
+
       return;
    }
 
@@ -199,7 +222,15 @@ state_machine_run
       int written;
 
       /* Empty the read queue before writing */
-      tcflush(self->fd, TCIOFLUSH);
+      if (!self->is_usb)
+      {
+         tcflush(self->fd, TCIOFLUSH);
+      }
+
+#ifdef SM_DEBUG
+      printf ("S %d - write %d byte(s)\n", self->current,
+         (line->bytes_write - self->num_tx));
+#endif
 
       written = write(self->fd, buffer + self->num_tx,
          (line->bytes_write - self->num_tx));
@@ -207,7 +238,15 @@ state_machine_run
       if (written == -1)
       {
          perror("state_machine_run: write");
-         next_state = line->error_handler(line->descriptor, ERROR_WRITE);
+
+         /* Assume that we'll be aborting this sequence */
+         next_state = STATE_ABORT;
+
+         /* If an error handler exists for this state, execute it. */
+         if (line->error_handler)
+         {
+            next_state = line->error_handler(line->descriptor, ERROR_WRITE);
+         }
       }
       else
       {
@@ -219,7 +258,11 @@ state_machine_run
          else
          {
             /* Ensure that all data was actually written */
-            tcdrain(self->fd);
+            if (!self->is_usb)
+            {
+               tcdrain(self->fd);
+            }
+
             self->rx_buffer = NULL;
          }
       }
@@ -279,8 +322,18 @@ state_machine_run
             self->rx_buffer = (unsigned char *)malloc(line->bytes_read);
          }
 
+#ifdef SM_DEBUG
+         printf ("S %d - read %d byte(s) ... ", self->current,
+            (line->bytes_read - self->num_rx));
+         fflush (stdout);
+#endif
+
          num = read (self->fd, self->rx_buffer + self->num_rx,
             (line->bytes_read - self->num_rx));
+
+#ifdef SM_DEBUG
+         printf ("got %d\n", num);
+#endif
 
          if (num == -1)
          {
@@ -356,6 +409,10 @@ state_machine_run
 * FUNCTION: state_machine_assert_break
 *
 * DESCRIPTION:
+*
+*	If the camera is connected by a serial line, sends a break
+*	to reset communications and restore the 9600 baud default.
+*
 ******************************************************************************/
 void
 state_machine_assert_break
@@ -363,6 +420,11 @@ state_machine_assert_break
    STATE_MACHINE_INSTANCE *self
 )
 {
+   if (self->is_usb)
+   {
+      return;
+   }
+
    /* Assert break for between 0.25 and 0.5 seconds */
    tcsendbreak(self->fd, 0);
 

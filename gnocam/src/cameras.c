@@ -170,11 +170,17 @@ camera_tree_folder_populate (GtkTreeItem* folder)
 void
 camera_tree_folder_refresh (GtkTreeItem* folder)
 {
+	gboolean expanded;
+
+	expanded = folder->expanded;
+
 	/* Clean the folder... */
 	camera_tree_folder_clean (folder);
 
 	/* ... and fill it. */
 	camera_tree_folder_populate (folder);
+
+	if (expanded) gtk_tree_item_expand (folder);
 }
 
 void

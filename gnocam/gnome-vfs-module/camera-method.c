@@ -132,7 +132,7 @@ printf ("No. Camera isn't in cache.\n");
 printf ("Found %s in database!\n", host);
 			}
 
-	result = GNOME_VFS_RESULT (gp_camera_init (*camera));
+	result = GNOME_VFS_RESULT (gp_camera_init (*camera, NULL));
 	if (result != GNOME_VFS_OK) {
 		gp_camera_unref (*camera);
 printf ("Could not initialize camera!\n");
@@ -157,7 +157,7 @@ unref_camera (Camera *camera)
 	GSList *sl;
 #endif
 
-	gp_camera_exit (camera);
+	gp_camera_exit (camera, NULL);
 	gp_camera_unref (camera);
 
 #if 0
@@ -221,10 +221,12 @@ printf ("ENTER: do_open\n");
 	filename = gnome_vfs_uri_get_basename (uri);
 	if (gnome_vfs_uri_get_user_name (uri) != NULL)
 		result = GNOME_VFS_RESULT (gp_camera_file_get (camera, dirname,
-					filename, GP_FILE_TYPE_PREVIEW, file));
+					filename, GP_FILE_TYPE_PREVIEW, file,
+					NULL));
 	else
 		result = GNOME_VFS_RESULT (gp_camera_file_get (camera, dirname,
-					filename, GP_FILE_TYPE_NORMAL, file));
+					filename, GP_FILE_TYPE_NORMAL, file,
+					NULL));
 	if (result != GNOME_VFS_OK) {
 		gp_file_unref (file);
 		unref_camera (camera);
@@ -303,7 +305,7 @@ static GnomeVFSResult do_close (
 
 	if (fh->create)
 		result = GNOME_VFS_RESULT (gp_camera_folder_put_file (
-				fh->camera, fh->dirname, fh->file));
+				fh->camera, fh->dirname, fh->file, NULL));
 
 	unref_camera (fh->camera);
 	gp_file_unref (fh->file);
@@ -466,7 +468,7 @@ printf ("Getting list of files...\n");
 		return (result);
 	}
 	result = GNOME_VFS_RESULT (gp_camera_folder_list_files (camera, path,
-								files));
+								files, NULL));
 	if (result != GNOME_VFS_OK) {
 		gp_list_free (files);
 		unref_camera (camera);
@@ -484,7 +486,7 @@ printf ("Getting list of directories...\n");
 		return (result);
 	}
 	result = GNOME_VFS_RESULT (gp_camera_folder_list_folders (camera, path,
-								  dirs));
+								  dirs, NULL));
 	if (result != GNOME_VFS_OK) {
 		unref_camera (camera);
 		gp_list_free (files);
@@ -578,7 +580,7 @@ printf ("ENTER: do_read_directory\n");
 		info->type = GNOME_VFS_FILE_TYPE_REGULAR;
 printf ("Trying to get file info for '%s'...\n", name);
 		result = GNOME_VFS_RESULT (gp_camera_file_get_info (
-			dh->camera, dh->dirname, name, &camera_info));
+			dh->camera, dh->dirname, name, &camera_info, NULL));
 printf ("... done.\n");
 		if (result == GNOME_VFS_OK)
 			get_info_from_camera_info (&camera_info, FALSE, info);
@@ -690,7 +692,7 @@ printf ("Getting camera (do_get_file_info)...\n");
 	path = gnome_vfs_uri_get_path (parent);
 
 	result = GNOME_VFS_RESULT (gp_camera_folder_list_folders (camera, path,
-								  list));
+								  list, NULL));
 	if (result != GNOME_VFS_OK) {
 		gnome_vfs_uri_unref (parent);
 		unref_camera (camera);
@@ -737,7 +739,7 @@ printf ("Found folder!\n");
 	}
 
 	result = GNOME_VFS_RESULT (gp_camera_folder_list_files (camera, path,
-								list));
+								list, NULL));
 	if (result != GNOME_VFS_OK) {
 		gnome_vfs_uri_unref (parent);
 		unref_camera (camera);
@@ -769,7 +771,8 @@ printf ("Found folder!\n");
 		}
 		if (!strcmp (name, basename)) {
 			result = GNOME_VFS_RESULT (gp_camera_file_get_info (
-					camera, path, basename, &camera_info));
+					camera, path, basename, &camera_info,
+					NULL));
 			g_free (basename);
 			unref_camera (camera);
 			gp_list_free (list);
@@ -813,7 +816,8 @@ static GnomeVFSResult do_get_file_info_from_handle (
 	result = GNOME_VFS_RESULT (gp_camera_file_get_info (fh->camera,
 							    fh->dirname,
 							    name,
-							    &camera_info));
+							    &camera_info,
+							    NULL));
 	if (result != GNOME_VFS_OK) {
 		G_UNLOCK (cameras);
 		return (result);
@@ -891,7 +895,7 @@ vfs_module_init (const gchar *method_name, const gchar *args)
 	client = gconf_client_get_default ();
 
 	gp_abilities_list_new (&al);
-	gp_abilities_list_load (al);
+	gp_abilities_list_load (al, NULL);
 
 	gp_port_info_list_new (&il);
 	gp_port_info_list_load (il);

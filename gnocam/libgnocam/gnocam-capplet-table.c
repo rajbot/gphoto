@@ -137,7 +137,7 @@ configure_camera (GnoCamCappletTable *table, guint number)
 	}
 
 	/* Initialize camera */
-	result = gp_camera_init (camera);
+	result = gp_camera_init (camera, NULL);
 	if (result < 0) {
 		g_warning ("Could not initialize camera: %s",
 			   gp_result_as_string (result));
@@ -145,7 +145,7 @@ configure_camera (GnoCamCappletTable *table, guint number)
 	}
 
 	/* Get the configuration */
-	result = gp_camera_get_config (camera, &config);
+	result = gp_camera_get_config (camera, &config, NULL);
 	if (result < 0) {
 		g_warning ("Could not get configuration: %s",
 			   gp_result_as_string (result));
@@ -213,7 +213,7 @@ get_info (GnoCamCappletTable *table, guint number)
 	}
 
 	/* Initialize camera */
-	result = gp_camera_init (camera);
+	result = gp_camera_init (camera, NULL);
 	if (result < 0) {
 		g_warning ("Could not initialize camera: %s",
 			   gp_result_as_string (result));
@@ -221,7 +221,7 @@ get_info (GnoCamCappletTable *table, guint number)
 	}
 
 	/* Get the summary */
-	result = gp_camera_get_summary (camera, &text);
+	result = gp_camera_get_summary (camera, &text, NULL);
 	if (result < 0) {
 		g_warning ("Could not get summary: %s",
 			   gp_result_as_string (result));
@@ -357,7 +357,7 @@ gnocam_capplet_table_new (CappletWidget *capplet)
 	table = gtk_type_new (GNOCAM_TYPE_CAPPLET_TABLE);
 
 	gp_abilities_list_new (&(table->priv->al));
-	gp_abilities_list_load (table->priv->al);
+	gp_abilities_list_load (table->priv->al, NULL);
 	gp_port_info_list_new (&(table->priv->il));
 	gp_port_info_list_load (table->priv->il);
 

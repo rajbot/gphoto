@@ -14,12 +14,15 @@ export PATH LD_LIBRARY_PATH PKG_CONFIG_PATH
 
 parm_update="false"
 parm_tools="false"
+check="false"
+build_docs="false"
 while :
 do
     case "$1" in
 	--update) parm_update="true" ;;
 	--tools)  parm_tools="true"  ;;
 	--check)  check="true"       ;;
+	--docs)   build_docs="true"  ;;
 	--help)   cat<<EOF
 Usage: $this [OPTION]...
 Bootstrap the gphoto-meta package, i.e. download and build distribution 
@@ -30,6 +33,7 @@ tarballs of all gphoto and related packages.
                  automake, libtool, gettext), download and install them
                  if required
      --check     run "make distcheck" instead of "make dist"
+     --docs      build documentation
 EOF
 		  exit
 		  ;;
@@ -363,15 +367,18 @@ builddist() {
 		mkdir -p "$docroot"
 	    fi
 
-	    # special config options
-	    case "${module}" in
-		libgphoto2)
-		    configopts="$configopts --enable-docs --with-html-dir=${docroot}/api-html"
-		    ;;
-		gphoto2-manual)
-		    configopts="$configopts --with-doc-formats=man,html,txt,pdf"
-		    ;;
-	    esac
+	    # special config options for documentation
+	    if "${build_docs}"
+	    then
+	    	case "${module}" in
+		    libgphoto2)
+			configopts="$configopts --enable-docs --with-html-dir=${docroot}/api-html"
+			;;
+		    gphoto2-manual)
+			configopts="$configopts --with-doc-formats=man,html,txt,pdf"
+			;;
+		esac
+	    fi
 
 	    echo "##### Press enter when asked to. And complain to the gettextize guys,"
 	    echo "    # not to me. Or run this with \"echo $0 | at now\"."

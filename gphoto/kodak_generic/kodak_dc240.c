@@ -140,6 +140,8 @@ static CC_RESPONSE_TYPE kdc240_take_picture_read (
    PICTURE_FILENAME_PACKET_TYPE *, unsigned char *);
 
 static int kdc240_number_of_pictures(void);
+static void kdc240_get_picture_directory (unsigned char *);
+static void kdc240_add_picture (unsigned char *, unsigned char *);
 static unsigned char *kdc240_number_of_pictures_tx_filename (
    DIRECTORY_PACKET_TYPE *);
 static CC_RESPONSE_TYPE kdc240_number_of_pictures_read (
@@ -706,7 +708,6 @@ kdc240_number_of_pictures
    void
 )
 {
-   int retval;
    int i;
 
    DIRECTORY_PACKET_TYPE buffer;
@@ -720,7 +721,7 @@ kdc240_number_of_pictures
    kdc240_open_card();
 
    buffer.valid = FALSE;
-   buffer.filename = kdc240_create_filename("\\DCIM\\100DC240\\*.JPG", 0, 0);
+   buffer.filename = kdc240_create_filename("\\DCIM\\*.*", 0, 0);
    buffer.rx_bytes = 0;
    buffer.rx_buffer = NULL;
 
@@ -728,45 +729,89 @@ kdc240_number_of_pictures
 
    free(buffer.filename);
 
-   kdc240_close_card();
+   /* Free the old picture index (if any) */
+   if (picture_index)
+   {
+      free(picture_index);
+   }
 
-   retval = 0;
+   number_of_pictures = 0;
+
    if (buffer.valid)
    {
-      if (picture_index)
+      for (i = 0; i < buffer.rx_buffer->num_entries; i++)
       {
-         free(picture_index);
-      }
-
-      picture_index = (PICTURE_TYPE *)malloc(
-         sizeof(PICTURE_TYPE) * buffer.rx_buffer->num_entries);
-
-      if (picture_index == NULL)
-      {
-         printf ("kdc240_number_of_pictures: picture_index == NULL\n");
-      }
-      else
-      {
-         retval = buffer.rx_buffer->num_entries;
-         for (i = 0; i < retval; i++)
+         if (buffer.rx_buffer->entries[i].filename[0] != '.')
          {
-             PICTURE_TYPE *t = &picture_index[i];
+            unsigned char *filename = (unsigned char *)malloc(20);
 
-             t->valid = FALSE;
-             memset(t->filename, 0, sizeof t->filename);
-             strcpy (t->filename, "\\DCIM\\100DC240\\");
-             memcpy (t->filename + strlen(t->filename),
-                buffer.rx_buffer->entries[i].filename, 8);
-             t->filename[strlen(t->filename)] = '.';
-             memcpy (t->filename + strlen(t->filename),
-                buffer.rx_buffer->entries[i].filename + 8, 3);
+            memset(filename, 0, 20);
+            strcpy(filename, "\\DCIM\\");
+            memcpy(filename + 6, buffer.rx_buffer->entries[i].filename, 11);
+            *strchr(filename, ' ') = '\0';
+            strcat(filename, "\\");
+
+            kdc240_get_picture_directory(filename);
+
+            free(filename);
+         }
+      }
+
+      /* Sort the pictures in the list */
+      qsort (picture_index, number_of_pictures, sizeof (picture_index[0]),
+         compare_picture_names);
+   }
+
+   kdc240_close_card();
+
+   if (buffer.rx_buffer)
+   {
+      free(buffer.rx_buffer);
+   }
+
+   return number_of_pictures;
+}
+
+static void
+kdc240_get_picture_directory
+(
+   unsigned char *directory
+)
+{
+   unsigned char *filename;
+   int i;
+
+   DIRECTORY_PACKET_TYPE buffer;
+   CC_STRUCT_TYPE cc_struct = 
+   {
+      (int)&buffer,
+      58,  (void *)kdc240_number_of_pictures_tx_filename,
+      256, (void *)kdc240_number_of_pictures_read
+   };
+
+   filename = (unsigned char *)malloc(strlen(directory) + 10);
+   strcpy(filename, directory);
+   strcat(filename, "*.JPG");
 
 #ifdef DIRECTORY_DEBUG
-             printf ("    Entry %d: %s\n", i, t->filename);
+   printf ("  searching: %s\n", filename);
 #endif
-	 }
-	 qsort (picture_index, retval, sizeof picture_index [0],
-	 	compare_picture_names);
+
+   buffer.valid = FALSE;
+   buffer.filename = kdc240_create_filename(filename, 0, 0);
+   buffer.rx_bytes = 0;
+   buffer.rx_buffer = NULL;
+
+   kdc240_complex_command(&cc_struct, KODAK_CAMERA_DC240, CMD_READ_DIRECTORY);
+
+   free(filename);
+   free(buffer.filename);
+
+   if (buffer.valid)
+   {
+      for (i = 0; i < buffer.rx_buffer->num_entries; i++)
+      {
+         kdc240_add_picture(directory, buffer.rx_buffer->entries[i].filename);
       }
    }
 
@@ -774,10 +819,46 @@ kdc240_number_of_pictures
    {
       free(buffer.rx_buffer);
    }
+}
 
-   number_of_pictures = retval;
+static void
+kdc240_add_picture
+(
+   unsigned char *directory,
+   unsigned char *filename
+)
+{
+   PICTURE_TYPE *t;
 
-   return retval;
+   /* If this is the first picture, initialize the pointer */
+   if (number_of_pictures == 0)
+   {
+      picture_index = NULL;
+   }
+
+   /* Increment the total number of pictures */
+   number_of_pictures++;
+
+   /* Allocate space for the new picture */
+   picture_index = (PICTURE_TYPE *)realloc(picture_index,
+      sizeof(PICTURE_TYPE) * number_of_pictures);
+
+   /* Create a temporary pointer to the new picture */
+   t = &picture_index[number_of_pictures - 1];
+
+   /* Indicate that we haven't gotten information on this picture yet */
+   t->valid = FALSE;
+
+   /* Fill in the filename */
+   memset(t->filename, 0, sizeof(t->filename));
+   strcpy (t->filename, directory);
+   memcpy (t->filename + strlen(t->filename), filename, 8);
+   t->filename[strlen(t->filename)] = '.';
+   memcpy (t->filename + strlen(t->filename), filename + 8, 3);
+
+#ifdef DIRECTORY_DEBUG
+   printf ("adding %s\n", t->filename);
+#endif
 }
 
 static unsigned char *

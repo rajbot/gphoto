@@ -6,13 +6,13 @@ INCLUDES =\
  -DGNOMELOCALEDIR=\""$(datadir)/locale"\"\
  $(APPLET_CFLAGS)
 
-bin_PROGRAMS = gnocam-applet
+if APPLET
+bin_PROGRAMS=gnocam-applet
+else
+bin_PROGRAMS=
+endif
 
-CORBA_GENERATED =\
- GnoCam.h\
- GnoCam-common.c\
- GnoCam-skels.c\
- GnoCam-stubs.c
+CORBA_GENERATED = GnoCam.h GnoCam-common.c GnoCam-skels.c GnoCam-stubs.c
 
 gnocam_applet_SOURCES =\
  $(CORBA_GENERATED)\
@@ -26,12 +26,16 @@ CLEANFILES=$(CORBA_GENERATED)
 
 gnocam_applet_LDADD = $(APPLET_LIBS)
 
-sysdir = $(datadir)/applets/Multimedia
-sys_predata = gnocam-applet.desktop.in
-sys_DATA = $(sys_predata:.desktop.in=.desktop)
+sysdir=$(datadir)/applets/Multimedia
+sys_predata=gnocam-applet.desktop.in
+if APPLET
+sys_DATA=$(sys_predata:.desktop.in=.desktop)
+endif
 @XML_I18N_MERGE_DESKTOP_RULE@
 
-gnorbadir = $(sysconfdir)/CORBA/servers
-gnorba_DATA = gnocam-applet.gnorba
+gnorbadir=$(sysconfdir)/CORBA/servers
+if APPLET
+gnorba_DATA=gnocam-applet.gnorba
+endif
 
-EXTRA_DIST = $(gnorba_DATA) $(sys_DATA)
+EXTRA_DIST=gnocam-applet.gnorba gnocam-applet.desktop

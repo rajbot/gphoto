@@ -53,120 +53,108 @@ else
 fi
 
 dnl ******
-dnl bonobo
+dnl GnoCam
 dnl ******
-AC_MSG_CHECKING(for bonobo>=0.37)
-if gnome-config --libs bonobo > /dev/null 2>&1; then
-    vers=`gnome-config --modversion bonobo | sed -e 's/^bonobo-//' | awk -F. '{ printf "%d", $1 * 1000 + $2;}'`
-        if test "$vers" -ge 37; then
-            AC_MSG_RESULT(found)
-        else
-            AC_MSG_ERROR([
-*** You need at least bonobo-0.37 for this version of ${PACKAGE}. 
-*** Get the latest version from http://www.gnome.org. Mirrors can
-*** be found at http://www.gnome.org/mirrors.])
-        fi
-else
-    AC_MSG_ERROR([
-*** You need bonobo for this version of ${PACKAGE}. Get the latest 
-*** version from http://www.gnome.org. Mirrors can be found at
-*** http://www.gnome.org/mirrors.]) 
+try_gnocam=false
+have_gnocam=false
+gnocam_msg=no
+AC_ARG_WITH(gnocam, [ --with-gnocam   Compile GnoCam.],
+	if test x$withval = xyes; then
+		try_gnocam=true
+	fi
+)
+if $try_gnocam; then
+	AC_MSG_CHECKING(for bonobo)
+	if gnome-config --libs bonobo > /dev/null 2>&1; then
+		AC_MSG_RESULT(found)
+		have_gnocam=true
+		gnocam_msg=yes
+	else
+		AC_MSG_RESULT(not found)
+	fi
 fi
+AM_CONDITIONAL(GNOCAM, $have_gnocam)
 
-dnl ***
-dnl gal
-dnl ***
-AC_MSG_CHECKING(for GAL >= 0.7.0.0)
-if gnome-config --libs gal > /dev/null 2>&1; then
-    vers=`gnome-config --modversion gal | sed -e "s/gal-//" -e 's/cvs$//' -e 's/pre$//' | \
-        awk 'BEGIN { FS = "."; } { print $1 * 1000000 + $2 * 10000 + $3 * 100 + $4;}'`
-    if test "$vers" -ge 70000; then
-        AC_MSG_RESULT(found)
-    else
-        AC_MSG_ERROR([
-*** You need at least GAL 0.7.0.0 for this version of ${PACKAGE}.
-*** Get the latest version from http://www.gnome.org. Mirrors can 
-*** be found at http://www.gnome.org/mirrors.])
-    fi
-else
-    AC_MSG_ERROR([
-*** You need GAL for this version of ${PACKAGE}. Get the latest
-*** version from http://www.gnome.org. Mirrors can be found at
-*** http://www.gnome.org/mirrors.])
+dnl ****************
+dnl GNOME vfs-module
+dnl ****************
+try_vfs_module=true
+have_vfs_module=false
+vfs_module_msg=no
+AC_ARG_WITH(vfs-module, [ --without-vfs-module   Don't compile vfs-module.],
+	if test x$withval = xno; then
+		try_vfs_module=false
+	fi
+)
+if $try_vfs_module; then
+	AC_MSG_CHECKING(for vfs)
+	if gnome-config --libs vfs > /dev/null 2>&1; then
+		AC_MSG_RESULT(found)
+		VFS_LIBS="`gnome-config --libs vfs` `gphoto2-config --libs`"
+		VFS_CFLAGS="`gnome-config --cflags vfs` `gphoto2-config --cflags`"
+		AC_SUBST(VFS_LIBS)
+		AC_SUBST(VFS_CFLAGS)
+		vfs_module_msg=yes
+		have_vfs_module=true
+	else
+		AC_MSG_RESULT(not found)
+	fi
 fi
-
-dnl *********
-dnl gnome-vfs
-dnl *********
-AC_MSG_CHECKING(for vfs)
-if gnome-config --libs vfs > /dev/null 2>&1; then
-    AC_MSG_RESULT(found)
-    VFS_LIBS="`gnome-config --libs vfs` `gphoto2-config --libs`"
-    VFS_CFLAGS="`gnome-config --cflags vfs` `gphoto2-config --cflags`"
-    AC_SUBST(VFS_LIBS)
-    AC_SUBST(VFS_CFLAGS)
-else
-    AC_MSG_ERROR([
-*** You need gnome-vfs for this version of ${PACKAGE}. Get the latest 
-*** version from http://www.gnome.org. Mirrors can be found at 
-*** http://www.gnome.org/mirrors.])
-fi
-
-dnl ******************************
-dnl gnome-print
-dnl ******************************
-AC_MSG_CHECKING(for GnomePrint libraries >= 0.16)
-if gnome-config --libs print > /dev/null 2>&1; then 
-    vers=`gnome-config --modversion print | sed -e "s/gnome-print-//" | awk 'BEGIN { FS = "."; } { print $1 * 1000 + $2;}'`
-    if test "$vers" -ge 16; then
-        AC_MSG_RESULT(found)
-    else
-    	AC_MSG_ERROR([
-*** You need at least gnome-print 0.16 for this version of ${PACKAGE}.
-*** Get the latest version from http://www.gnome.org.
-*** Mirrors can be found at http://www.gnome.org/mirrors.])
-    fi
-else
-    AC_MSG_ERROR([
-*** You need at least gnome-print 0.16 for this version of ${PACKAGE}.
-*** Get the latest version from http://www.gnome.org.
-*** Mirrors can be found at http://www.gnome.org/mirrors.])
-fi
+AM_CONDITIONAL(VFS_MODULE, $have_vfs_module)
 
 dnl ******************************
 dnl Capplet
 dnl ******************************
-AC_MSG_CHECKING(for capplet libraries)
-if gnome-config --libs capplet > /dev/null 2>&1; then
-	AC_MSG_RESULT(found)
-	CAPPLET_LIBS="`gnome-config --libs capplet`"
-	CAPPLET_CFLAGS="`gnome-config --cflags capplet`"
-	AC_SUBST(CAPPLET_LIBS)
-	AC_SUBST(CAPPLET_CFLAGS)
-else
-	AC_MSG_ERROR([
-*** You need the capplet library installed for this version of
-*** ${PACKAGE}. Get a stable version of the GNOME control-center
-*** from http://www.gnome.org.
-*** Mirrors can be found at http://www.gnome.org/mirrors.])
+try_capplet=true
+have_capplet=false
+capplet_msg=no
+AC_ARG_WITH(capplet, [ --without-capplet   Don't compile capplet.],
+	if test x$withval = xno; then
+		try_capplet=false
+	fi
+)
+if $try_capplet; then
+	AC_MSG_CHECKING(for capplet libraries)
+	if gnome-config --libs capplet > /dev/null 2>&1; then
+		AC_MSG_RESULT(found)
+		CAPPLET_LIBS="`gnome-config --libs capplet`"
+		CAPPLET_CFLAGS="`gnome-config --cflags capplet`"
+		AC_SUBST(CAPPLET_LIBS)
+		AC_SUBST(CAPPLET_CFLAGS)
+		have_capplet=true
+		capplet_msg=yes
+	else
+		AC_MSG_RESULT(not found)
+	fi
 fi
+AM_CONDITIONAL(CAPPLET, $have_capplet)
 
 dnl ******************************
 dnl Applet
 dnl ******************************
-AC_MSG_CHECKING(for applet libraries)
-if gnome-config --libs applets > /dev/null 2>&1; then
-	AC_MSG_RESULT(found)
-	APPLET_LIBS="`gnome-config --libs applets bonobo gdk_pixbuf`"
-	APPLET_CFLAGS="`gnome-config --cflags applets bonobo gdk_pixbuf`"
-	AC_SUBST(APPLET_LIBS)
-	AC_SUBST(APPLET_CFLAGS)
-else
-	AC_MSG_ERROR([
-*** You need the applet library installed for this version of
-*** ${PACKAGE}. Get a stable version from  http://www.gnome.org.
-*** Mirrors can be found at http://www.gnome.org/mirrors.])
+try_applet=false
+have_applet=false
+applet_msg=no
+AC_ARG_WITH(applet, [ --with-applet       Compile applet.],
+	if test x$withval = xyes; then
+		try_applet=true
+	fi
+)
+if $try_applet; then
+	AC_MSG_CHECKING(for applet libraries)
+	if gnome-config --libs applets > /dev/null 2>&1; then
+		AC_MSG_RESULT(found)
+		APPLET_LIBS="`gnome-config --libs applets bonobo gdk_pixbuf`"
+		APPLET_CFLAGS="`gnome-config --cflags applets bonobo gdk_pixbuf`"
+		AC_SUBST(APPLET_LIBS)
+		AC_SUBST(APPLET_CFLAGS)
+		applet_msg=yes
+		have_applet=true
+	else
+		AC_MSG_RESULT(not found)
+	fi
 fi
+AM_CONDITIONAL(APPLET, $have_applet)
 
 dnl ******************************
 dnl GConf
@@ -227,20 +215,13 @@ dnl *********************
 
 echo "
 
-***
-I didn't check for an image or movie viewer. If you 
-would like to view images or movies with ${PACKAGE}, 
-you would probably like to install for example eog
-for viewing images.
-***
-
-I AM CURRENTLY MOVING GNOCAM TO USE MORE BONOBO STUFF, THEREFORE I 
-RECOMMENT YOU TO STAY AWAY FROM THIS PACKAGE UNLESS YOU KNOW WHAT YOU
-ARE DOING. Contact me (urc8@rz.uni-karlsruhe.de) if you'd like to have
-more info.
-
 Configuration
 
 	Source code location: ${srcdir}
 	Compiler:             ${CC}
+
+	Capplet:              $capplet_msg
+	Applet:               $applet_msg
+	VFS module:           $vfs_module_msg
+	GnoCam:               $gnocam_msg
 "

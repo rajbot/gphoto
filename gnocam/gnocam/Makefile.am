@@ -6,7 +6,11 @@ INCLUDES =\
  $(GCONF_CFLAGS)\
  $(EXTRA_GNOME_CFLAGS)
 
-bin_PROGRAMS = gnocam
+if GNOCAM
+bin_PROGRAMS=gnocam
+else
+bin_PROGRAMS=
+endif
 
 CORBA_GENERATED =\
  GnoCam.h\
@@ -46,10 +50,12 @@ CLEANFILES=$(BUILT_SOURCES)
 
 oafdir = $(datadir)/oaf
 oaf_in_files = GNOME_GnoCam.oaf.in
+if GNOCAM
 oaf_DATA = $(oaf_in_files:.oaf.in=.oaf)
+endif
 @XML_I18N_MERGE_OAF_RULE@
 
-EXTRA_DIST = $(oaf_in_files) $(oaf_DATA)
+EXTRA_DIST=$(oaf_in_files) $(oaf_DATA)
 
 dist-hook:
 	cd $(distdir); rm -f $(BUILT_SOURCES)

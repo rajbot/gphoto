@@ -3,10 +3,10 @@ INCLUDES =\
  $(EXTRA_GNOME_CFLAGS)\
  $(GPHOTO_CFLAGS)
 
-OAF_FILES = Bonobo_Moniker_camera.oaf
-
-oafdir = $(datadir)/oaf
-oaf_DATA = $(OAF_FILES)
+oafdir=$(datadir)/oaf
+if GNOCAM
+oaf_DATA=Bonobo_Moniker_camera.oaf
+endif
 
 Bonobo_Moniker_camera.oaf: $(srcdir)/Bonobo_Moniker_camera.oaf.in $(top_builddir)/config.status
 	sed -e "s|\@MONIKER_LIBDIR\@|$(monikerdir)|" \
@@ -21,7 +21,11 @@ CORBA_GENERATED =\
  GnoCam-skels.c
 
 monikerdir = $(libdir)/bonobo/monikers
-moniker_LTLIBRARIES = libmoniker_camera.la
+if GNOCAM
+moniker_LTLIBRARIES=libmoniker_camera.la
+else
+moniker_LTLIBRARIES=
+endif
 
 libmoniker_camera_la_SOURCES =\
  $(CORBA_GENERATED)\
@@ -33,7 +37,7 @@ $(CORBA_GENERATED): $(top_srcdir)/idl/GnoCam.idl
 	$(ORBIT_IDL) $(top_srcdir)/idl/GnoCam.idl `$(GNOME_CONFIG) --cflags idl`
 
 BUILT_SOURCES=$(CORBA_GENERATED)
-CLEANFILES=$(BUILT_SOURCES) $(OAF_FILES)
+CLEANFILES=$(CORBA_GENERATED) Bonobo_Moniker_camera.oaf
 EXTRA_DIST = Bonobo_Moniker_camera.oaf.in
 
 

@@ -10,7 +10,11 @@ INCLUDES = \
  $(EXTRA_GNOME_CFLAGS)\
  $(GPHOTO_CFLAGS)
 
-bin_PROGRAMS = camera-capplet
+if CAPPLET
+bin_PROGRAMS=camera-capplet
+else
+bin_PROGRAMS=
+endif
 
 camera_capplet_SOURCES =\
  gnocam-capplet-content.c gnocam-capplet-content.h\
@@ -23,11 +27,14 @@ camera_capplet_LDADD =\
  $(EXTRA_GNOME_LIBS)\
  $(GPHOTO_LIBS)
 
-EXTRA_DIST = camera-capplet.desktop
+sysdir=$(datadir)/control-center/Peripherals
+if CAPPLET
+sys_DATA=camera-capplet.desktop
+endif
 
-sysdir = $(datadir)/control-center/Peripherals
-sys_DATA = camera-capplet.desktop
+deskdir=$(datadir)/gnome/apps/Settings/Peripherals
+if CAPPLET
+desk_DATA=camera-capplet.desktop
+endif
 
-deskdir = $(datadir)/gnome/apps/Settings/Peripherals
-desk_DATA = camera-capplet.desktop
-
+EXTRA_DIST=camera-capplet.desktop

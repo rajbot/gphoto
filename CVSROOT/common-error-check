@@ -1,4 +1,11 @@
 #!/bin/bash
 # Check for common errors in source files and disallow commit if one is detected
 
+while [ "$1" != "" ]
+do
+	file="$1"
+	echo "Arg: $file"
+	shift
+done
+
 exit 0

@@ -2,14 +2,12 @@
 #define MAINWINDOW_H
 
 #include <kmainwindow.h>
-//#include <kmenubar.h>
-//#include <kiconview.h>
-
-#include <qpopupmenu.h>
 
 /* Forward declarations */
 class KIconView;
 class KMenuBar;
+class KAction;
+class KPopupMenu;
 
 /* MainWindow class */
 class MainWindow : public KMainWindow
@@ -27,10 +25,12 @@ private:
     KMenuBar *menu;
     KPopupMenu *fileMenu, *editMenu, *commandMenu, *cameraMenu, *help;
     KIconView *iconView;
-    enum { InitCameraID, DownloadThumbsID,  SaveSelectedID,
-           DeleteSelectedID };
-    enum { DownloadThumbsMenuID, DeleteSelectedMenuID, SaveSelectedMenuID };
-
+    KAction *saveAction, *deleteAction, *quitAction, *selectWorkDirAction,
+            *downloadThumbsAction, *selectAllAction, *invertSelectionAction,
+            *clearSelectionAction, *selectCameraAction, *initCameraAction, 
+            *configureCameraAction,*cameraInformationAction, 
+            *cameraManualAction, *cameraAboutAction;
+    
 private slots:
     void initCamera();
     void downloadThumbs();

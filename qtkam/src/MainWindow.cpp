@@ -9,6 +9,8 @@
 #include <kfiledialog.h>
 #include <ktoolbarbutton.h>
 #include <klocale.h>
+#include <kaction.h>
+#include <kstdaction.h>
 #include <qpixmap.h>
 #include <qiconview.h>
 #include <qwidget.h>
@@ -57,7 +59,41 @@ void MainWindow::initWidgets()
 {
     setPlainCaption("QtKam");
 
-    /* Icon view */
+    /* Construct Actions */
+    saveAction = KStdAction::save(this, SLOT(saveSelected()),this); 
+    quitAction = KStdAction::quit(this, SLOT(close()),this);
+    selectWorkDirAction = new KAction(i18n("Set &Working Directory"),
+                    CTRL + Key_W, this, SLOT(selectWorkDir()), this);
+    deleteAction = new KAction(i18n("Delete"), "edittrash",
+                    Key_Delete, this, SLOT(deleteSelected()), this);
+    downloadThumbsAction = new KAction(i18n("Download Thumbs"), "queue",
+                    CTRL + Key_T, this, SLOT(downloadThumbs()), this);
+    selectAllAction = new KAction(i18n("Select &All"), SHIFT + Key_A,
+                    this, SLOT(selectAll()), this);      
+    invertSelectionAction = new KAction(i18n("&Invert Selection"),
+                    SHIFT + Key_I, this, SLOT(selectInverse()), this); 
+    clearSelectionAction = new KAction(i18n("&Clear Selection"),
+                    SHIFT + Key_N, this, SLOT(selectNone()), this);
+    selectCameraAction = new KAction(i18n("Select &Camera"),  
+                    CTRL + Key_C, this, SLOT(selectCamera()), this);
+    initCameraAction = new KAction(i18n("Initialize Camera"),
+                    "connect_creating", CTRL + Key_I, this, 
+                    SLOT(initCamera()), this);
+    configureCameraAction = new KAction(i18n("&Configure"), 
+                    0, this, SLOT(configureCamera()), this);
+    cameraInformationAction = new KAction(i18n("&Information"),
+                    0, this, SLOT(cameraInformation()), this);
+    cameraManualAction = new KAction(i18n("&Manual"), 
+                    0, this, SLOT(cameraManual()), this);
+    cameraAboutAction = new KAction(i18n("&About the driver"),
+                    0, this, SLOT(cameraAbout()), this);
+                 
+    /* Initialize actions */
+    saveAction->setEnabled(false);
+    deleteAction->setEnabled(false);
+    downloadThumbsAction->setEnabled(false);
+
+    /* Create & initialize icon view */
     iconView = new KIconView(this);
     iconView->setMode(KIconView::Select);
     iconView->setSelectionMode(KIconView::Multi);
@@ -65,58 +101,37 @@ void MainWindow::initWidgets()
     iconView->setResizeMode(KIconView::Adjust);
     connect(iconView,SIGNAL(selectionChanged()),
             this,SLOT(selectionChanged()));
-    
-    /* FIXME: Iconviews don't support background pixmaps ? */
-    /*iconView->setBackgroundPixmap( KApplication::kApplication()->iconLoader()->loadIcon("canvas",KIcon::Desktop));
-    iconView->setBackgroundMode(QWidget::FixedPixmap);*/
     setCentralWidget(iconView);
-                      
-    /* File menu */
-    fileMenu = new KPopupMenu();
-    fileMenu->insertItem(i18n("&Save Selected Photos"),
-                         this, SLOT(saveSelected()),
-                         CTRL + Key_S, SaveSelectedMenuID);
-    fileMenu->setItemEnabled(SaveSelectedMenuID,false);
-    fileMenu->insertSeparator();
-    fileMenu->insertItem(i18n("Set &Working Directory"),
-                         this, SLOT(selectWorkDir()), CTRL + Key_W);
-    fileMenu->insertSeparator();
-    fileMenu->insertItem(i18n("&Exit"),
-                         this, SLOT(close()), CTRL + Key_X);
-
-    /* Edit menu */
-    editMenu = new KPopupMenu();
-    editMenu->insertItem(i18n("Select &All"), this, SLOT(selectAll()), 
-                         SHIFT + Key_A);
-    editMenu->insertItem(i18n("&Invert Selection"), 
-                         this, SLOT(selectInverse()), SHIFT + Key_I);
-    editMenu->insertItem(i18n("&Clear Selection"), 
-                         this, SLOT(selectNone()), SHIFT + Key_N);
     
-    /* Command menu */
+    /* Create file menu */
+    fileMenu = new KPopupMenu();
+    saveAction->plug(fileMenu);
+    deleteAction->plug(fileMenu);
+    fileMenu->insertSeparator();
+    selectWorkDirAction->plug(fileMenu);
+    fileMenu->insertSeparator();
+    quitAction->plug(fileMenu);
+
+    /* Create edit menu */
+    editMenu = new KPopupMenu();
+    selectAllAction->plug(editMenu);
+    invertSelectionAction->plug(editMenu); 
+    clearSelectionAction->plug(editMenu);
+    
+    /* Create command menu */
     commandMenu = new KPopupMenu();
-    commandMenu->insertItem(i18n("Download Thumbnails"), this, 
-                            SLOT(downloadThumbs()), CTRL + Key_T,
-                            DownloadThumbsMenuID);
-    commandMenu->setItemEnabled(DownloadThumbsMenuID,false);
-    commandMenu->insertSeparator();
-    commandMenu->insertItem(i18n("Delete Selected"), 
-                            this, SLOT(deleteSelected()), 
-                            CTRL + Key_D, DeleteSelectedMenuID);
-    commandMenu->setItemEnabled(DeleteSelectedMenuID,false);
+    initCameraAction->plug(commandMenu);
+    downloadThumbsAction->plug(commandMenu);
     
     /* Camera menu */
     cameraMenu = new KPopupMenu();
-    cameraMenu->insertItem(i18n("Select Camera"), this, SLOT(selectCamera()), 
-                           CTRL + Key_C);
+    selectCameraAction->plug(cameraMenu);
     cameraMenu->insertSeparator();
-    cameraMenu->insertItem(i18n("&Configure"), this, SLOT(configureCamera()));
-    cameraMenu->insertItem(i18n("&Information"), this, 
-                           SLOT(cameraInformation()));
-    cameraMenu->insertItem(i18n("&Manual"), this, SLOT(cameraManual()));
-    cameraMenu->insertItem(i18n("&About the driver"), this, 
-                           SLOT(cameraAbout()));
-    
+    configureCameraAction->plug(cameraMenu);
+    cameraInformationAction->plug(cameraMenu);
+    cameraManualAction->plug(cameraMenu);
+    cameraAboutAction->plug(cameraMenu);
+
     /* Help menu */
     help = helpMenu();
     
@@ -127,19 +142,13 @@ void MainWindow::initWidgets()
     menuBar()->insertItem(i18n("C&amera"),cameraMenu);
     menuBar()->insertItem(i18n("&Help"), help);
    
-    toolBar()->insertButton("connect_creating", InitCameraID, SIGNAL(clicked()),
-                            this, SLOT(initCamera()), true,
-                            i18n("Initialize Camera"));
-    toolBar()->insertButton("queue", DownloadThumbsID, SIGNAL(clicked()),
-                            this, SLOT(downloadThumbs()), false,
-                            i18n("Download thumbnails"));
-    toolBar()->insertButton("filesave", SaveSelectedID, SIGNAL(clicked()),
-                            this, SLOT(saveSelected()), false, 
-                            i18n("Save Selected Pictures")); 
-    toolBar()->insertButton("edittrash", DeleteSelectedID, SIGNAL(clicked()),
-                            this, SLOT(deleteSelected()), false,
-                            i18n("Delete Selected Pictures"));
+    /* Create toolbar */
+    initCameraAction->plug(toolBar());
+    downloadThumbsAction->plug(toolBar());
+    saveAction->plug(toolBar());
+    deleteAction->plug(toolBar());
 }
+
 
 void MainWindow::initCamera()
 {
@@ -152,16 +161,14 @@ void MainWindow::initCamera()
         statusBar()->message(i18n("Camera ready"));
 
         /* Enable downloading of thumbs */
-        toolBar()->setItemEnabled(DownloadThumbsID,true);
-        commandMenu->setItemEnabled(DownloadThumbsMenuID,true);
+        downloadThumbsAction->setEnabled(true);
 
         /* Change window title */
         setCaption(GPInterface::getCamera());
     }
     catch (QString msg) {
         /* Disable downloading of thumbs */
-        toolBar()->setItemEnabled(DownloadThumbsID,false);
-        commandMenu->setItemEnabled(DownloadThumbsMenuID,false);
+        downloadThumbsAction->setEnabled(false);
 
         /* Change window title */
         setPlainCaption("QtKam");
@@ -230,22 +237,27 @@ void MainWindow::selectCamera()
         initCamera();
 }
 
+
+/**
+ * Notify that the selection has changed.
+ * Will check if there are still items selected, and will enable
+ * actions based on the result. 
+ */
 void MainWindow::selectionChanged()
 {
-    if (iconView->count() > 0) {
-        toolBar()->getButton(SaveSelectedID)->setOn(true);
-        toolBar()->getButton(DeleteSelectedID)->setOn(true);
-        fileMenu->setItemEnabled(SaveSelectedMenuID,true);
-        commandMenu->setItemEnabled(DeleteSelectedMenuID,true);
-    }
-    else {
-        toolBar()->getButton(SaveSelectedID)->setOn(false);
-        toolBar()->getButton(DeleteSelectedID)->setOn(false);
-        fileMenu->setItemEnabled(SaveSelectedMenuID,false);
-        commandMenu->setItemEnabled(DeleteSelectedMenuID,false);
-    }
+    /* Check if there are items selected */
+    bool selected = false;
+    for (QIconViewItem *i = iconView->firstItem(); i; i = i->nextItem())
+        selected = selected || i->isSelected();
+        
+    saveAction->setEnabled(selected);
+    deleteAction->setEnabled(selected);
 }
 
+
+/**
+ * Deletes the selected files (after asking for confirmation).
+ */
 void MainWindow::deleteSelected()
 {
     if (KMessageBox::questionYesNo(this, 

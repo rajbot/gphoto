@@ -5,4 +5,4 @@
 - Make use of i18n
 - KDE doesn't seem to like the use of exceptions. Remove it.
 - 'make dist' doesn't do the right job
-- Use KAction instead of manually inserting menus
+- 'Camera not ready' message on startup

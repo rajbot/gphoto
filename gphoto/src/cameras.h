@@ -117,7 +117,7 @@ struct Model cameras[] = {
   {"Panasonic Cardshot NV-DCF5E", &olympus, "None since 2000/03/05.\nMail gphoto-devel@gphoto.org."},
   {"Philips ESP60", &philips, "Scott Matthews <overhead@charter.net>"},
   {"Philips ESP80", &philips, "Bob Paauwe <bpaauwe@bobsplace.com>"},
-  {"Polaroid PDC 640", &olympus, "Brad Willson <cpu@ifixcomputers.com>"},
+  {"Polaroid PDC 640", &olympus, "Brad Willson <cpu@ifixcomputers.com>\nNick <npaul@monarch.papillion.ne.us>"},
   {"Ricoh RDC-300", &ricoh_300z, "Clifford Wright <cliff@snipe444.org>"},
   {"Ricoh RDC-300Z", &ricoh_300z, "None since 2000/03/05.\nMail gphoto-devel@gphoto.org."},
   {"Ricoh RDC-4200", &philips, "None since 2000/03/05.\nMail gphoto-devel@gphoto.org."},

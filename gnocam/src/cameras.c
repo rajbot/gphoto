@@ -270,6 +270,7 @@ camera_tree_folder_clean (GtkTreeItem* folder)
 	GtkWidget*			tree;
 
 	g_return_if_fail (folder);
+	g_return_if_fail (!gtk_object_get_data (GTK_OBJECT (folder), "file"));
 	g_return_if_fail (corba_storage = gtk_object_get_data (GTK_OBJECT (folder), "corba_storage"));
 	g_return_if_fail (uri = gtk_object_get_data (GTK_OBJECT (folder), "uri"));
 
@@ -360,9 +361,8 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
 	if (!camera) g_return_if_fail (camera = gtk_object_get_data (GTK_OBJECT (tree->tree_owner), "camera"));
 
 	/* Create the item. */
-	if (root) {
-		gtk_widget_show (item = gtk_tree_item_new_with_label (((frontend_data_t*) camera->frontend_data)->name));
-	} else {
+	if (root) gtk_widget_show (item = gtk_tree_item_new_with_label (((frontend_data_t*) camera->frontend_data)->name));
+	else {
 		tmp = gnome_vfs_unescape_string_for_display (gnome_vfs_uri_get_basename (uri));
 		gtk_widget_show (item = gtk_tree_item_new_with_label (tmp));
 		g_free (tmp);
@@ -398,8 +398,8 @@ camera_tree_folder_add (GtkTree* tree, Camera* camera, GnomeVFSURI* uri)
 	/* Clean the item (in order to check if the folder is empty or not). */
 	camera_tree_folder_clean (GTK_TREE_ITEM (item));
 
-        /* Store some data. */
-        gtk_object_set_data (GTK_OBJECT (item), "checked", GINT_TO_POINTER (1));
+	/* Prevent this folder from being removed. */
+	gtk_object_set_data (GTK_OBJECT (item), "checked", GINT_TO_POINTER (1));
 }
 
 void
@@ -481,7 +481,7 @@ main_tree_update (GConfValue* value)
 
         /* Mark each camera in the tree as unchecked. */
         for (i = 0; i < g_list_length (main_tree->children); i++) 
-		gtk_object_set_data (GTK_OBJECT (g_list_nth_data (main_tree->children, i)), "checked", GINT_TO_POINTER (0));
+		gtk_object_set_data (GTK_OBJECT (g_list_nth_data (main_tree->children, i)), "checked", NULL);
 
 	/* Investigate if the new cameras are in the tree. */
         for (i = 0; i < g_slist_length (list_cameras); i++) {
@@ -546,7 +546,7 @@ main_tree_update (GConfValue* value)
         /* Delete all unchecked cameras. */
         for (j = g_list_length (main_tree->children) - 1; j >= 0; j--) {
                 item = GTK_TREE_ITEM (g_list_nth_data (main_tree->children, j));
-                if (GPOINTER_TO_INT (gtk_object_get_data (GTK_OBJECT (item), "checked")) == 0) gtk_container_remove (GTK_CONTAINER (main_tree), GTK_WIDGET (item));
+        	if (!gtk_object_get_data (GTK_OBJECT (item), "checked")) gtk_container_remove (GTK_CONTAINER (main_tree), GTK_WIDGET (item));
         }
 }
 

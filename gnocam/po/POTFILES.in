@@ -1,7 +1,6 @@
 src/file-operations.c
 src/gnocam.c
 src/gnocam.glade
-src/preferences.c
 src/ui/gnocam-main.xml
 bonobo-moniker/Bonobo_Moniker_camera.oaf.in
 bonobo-moniker/bonobo-moniker-camera.c

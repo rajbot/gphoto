@@ -9,6 +9,15 @@ GnoCam actually is a quick hack, assembled by code from gtCam and several
 GNOME applications like gedit, gftp, etc. See TODO for a list of things that
 remain to do.
 
+GnoCam requires at least the following libraries. Please get the latest 
+version from http://www.gnome.org. 
+ * gnome-libs
+ * libglade
+ * gnome-vfs
+ * gconf
+If you experience compilation errors, don't hesitate to report them.
+
+
 If you feel that GnoCam is worth being developed further, send an e-mail to me.
 
 

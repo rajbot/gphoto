@@ -83,7 +83,7 @@ int main (int argc, char *argv[])
                         "should probably first open the \n"
                         "preferences dialog and add a \n"
                         "camera.\n\n"
-                        "Enjoy!\n\n(Default prefix has been set to '%s')"), prefix);
+                        "Enjoy!\n\n(Default prefix has been set to '%s'.)"), prefix);
 		g_free (prefix);
 		gnome_app_message (GNOME_APP (glade_xml_get_widget (xml, "app")), message);
 		g_free (message);

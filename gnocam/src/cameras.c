@@ -251,7 +251,7 @@ void
 update_pixmap (GtkPixmap* pm, CameraFile* file)
 {
 	GdkInterpType		interpolation = 0;
-	gint			magnification;
+	gfloat			magnification;
 	GConfValue*		value;
         GdkPixbuf*              pixbuf;
         GdkPixbufLoader*        loader;
@@ -269,8 +269,8 @@ update_pixmap (GtkPixmap* pm, CameraFile* file)
                 /* Magnification? */
                 value = gconf_client_get_without_default (client, "/apps/" PACKAGE "/magnification", NULL);
                 if (value) {
-                        g_assert (value->type = GCONF_VALUE_INT);
-                        magnification = gconf_value_get_int (value);
+                        g_assert (value->type = GCONF_VALUE_FLOAT);
+                        magnification = gconf_value_get_float (value);
                 } else magnification = 1;
 
                 /* Interpolation? */

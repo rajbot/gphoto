@@ -272,7 +272,7 @@ on_adjustment_magnification_value_changed (GtkAdjustment* adjustment, gpointer u
 {
 	/* Did the user really change something? */
 	if (gtk_object_get_data (GTK_OBJECT (glade_xml_get_widget (xml_preferences, "dialog_preferences")), "done")) {
-		gconf_change_set_set_int (change_set, "/apps/" PACKAGE "/magnification", adjustment->value);
+		gconf_change_set_set_float (change_set, "/apps/" PACKAGE "/magnification", adjustment->value);
 		dialog_preferences_update_sensitivity ();
 	}
 }
@@ -577,10 +577,10 @@ dialog_preferences_populate ()
 		gconf_value_free (value);
 	}
 	if ((value = gconf_client_get (client, "/apps/" PACKAGE "/magnification", NULL))) {
-		g_assert (value->type = GCONF_VALUE_INT);
+		g_assert (value->type = GCONF_VALUE_FLOAT);
 		gtk_adjustment_set_value (
 			gtk_range_get_adjustment (GTK_RANGE (glade_xml_get_widget (xml_preferences, "hscale_magnification"))), 
-			gconf_value_get_int (value));
+			gconf_value_get_float (value));
 		gconf_value_free (value);
 	}
 		

@@ -6,10 +6,16 @@ What can you do with gphoto-meta?
 1. run bootstrap.sh - if you downloaded gphoto-meta via CVS
 ===========================================================
 
-Downloads sources for all subprojects from CVS into cvs-orig/. 
+If you don't have current autoconf, automake, gettext and libtool
+installed, run bootstrap.sh with the "--tools" parameter and it will 
+download, build and locally install all these tools.
+
+Downloads sources for all subprojects from CVS into cvs-orig/.
+
 Then initializes the build system in a copy in cvs-src/.
-Then configures the copy, builds distribution tarballs in dist/ and
-installs into dist-root/.
+
+Then configures the copy, builds distribution tarballs in 
+dist-files/ and installs into dist-root/ if necessary.
 
 Unfortunately, (due to usage of pkgconfig), we have to install
 libgphoto2 before gtkam or gphoto2 will even configure.
@@ -25,7 +31,9 @@ to press enter for each gettextize invocation:
 
 Unpacks the source packages from dist/ in src/ and installs them
 to ${instroot} (default is inst-root/, but the dir can be given as
-parameter to compileinstall.sh).
+parameter to compileinstall.sh):
+
+   compileinstall /absolute/path
 
 
 3. run "autogen.sh; configure; make dist"

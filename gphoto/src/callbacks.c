@@ -586,9 +586,7 @@ void port_dialog() {
 		strcpy(serial_port, tempstring);
 	}
 	
-	sprintf(tempstring, "/bin/touch %s", serial_port);
-
-	if ( system (tempstring) ) {
+	if ( !fopen(serial_port, "w") ) {
 		message_window ( "Missing Serial Device Permissions",
 				 "The user doesn't have read or write access to the selected serial device.
 Please check the permissions (see the manual pages to learn about chown/chmod).

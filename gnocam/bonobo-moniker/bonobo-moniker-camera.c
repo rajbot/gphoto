@@ -17,43 +17,54 @@ static Bonobo_Unknown
 camera_resolve (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options, const CORBA_char *requested_interface, CORBA_Environment *ev)
 {
 
-	g_warning ("camera_resolve (?, ?, %s, ?)", requested_interface);
+	g_warning ("BEGIN: camera_resolve (?, ?, %s, ?)", requested_interface);
 
 	/* Stream? */
 	if (!strcmp (requested_interface, "IDL:Bonobo/Stream:1.0")) {
-		BonoboStream *stream;
-
+		BonoboStream* stream;
+		
 		stream = bonobo_stream_open_full ("camera", bonobo_moniker_get_name (moniker), Bonobo_Storage_READ | Bonobo_Storage_WRITE, 0644, ev);
-		if (BONOBO_EX (ev)) stream = bonobo_stream_open_full ("camera", bonobo_moniker_get_name (moniker), Bonobo_Storage_READ, 0644, ev);
-		if (BONOBO_EX (ev)) return CORBA_OBJECT_NIL;
-		g_return_val_if_fail (stream != NULL, CORBA_OBJECT_NIL);
+		if (BONOBO_EX (ev)) {
+			g_warning ("Could not get stream: %s", bonobo_exception_get_text (ev));
+			return CORBA_OBJECT_NIL;
+		}
+		g_return_val_if_fail (stream, CORBA_OBJECT_NIL);
 
+		g_warning ("END: camera_resolve");
 		return CORBA_Object_duplicate (BONOBO_OBJREF (stream), ev);
 	}
 
 	/* Storage? */
 	if (!strcmp (requested_interface, "IDL:Bonobo/Storage:1.0")) {
-		BonoboStorage *storage;
+		BonoboStorage* storage;
 
-		g_warning ("Trying to open READ/WRITE...");
 		storage = bonobo_storage_open_full ("camera", bonobo_moniker_get_name (moniker), Bonobo_Storage_READ | Bonobo_Storage_WRITE, 0644, ev);
 		if (BONOBO_EX (ev)) {
-			CORBA_exception_free (ev);
-			CORBA_exception_init (ev);
-			g_warning ("Trying to open READ...");
-			storage = bonobo_storage_open_full ("camera", bonobo_moniker_get_name (moniker), Bonobo_Storage_READ, 0644, ev);
+			g_warning ("Could not get storage: %s", bonobo_exception_get_text (ev));
+			return CORBA_OBJECT_NIL;
 		}
-		if (BONOBO_EX (ev)) return CORBA_OBJECT_NIL;
+		g_return_val_if_fail (storage, CORBA_OBJECT_NIL);
 
-		g_warning ("Returning storage...");
+		g_warning ("END: camera_resolve");
 		return CORBA_Object_duplicate (BONOBO_OBJREF (storage), ev);
 	}
 
 	/* Control? */
 	if (!strcmp (requested_interface, "IDL:Bonobo/Control:1.0")) {
-		return (CORBA_Object_duplicate (BONOBO_OBJREF (gnocam_control_new (moniker, options)), ev));
+		GnoCamControl* control;
+		
+		control = gnocam_control_new (moniker, options, ev);
+		if (BONOBO_EX (ev)) {
+			g_warning ("Could not get control: %s", bonobo_exception_get_text (ev));
+			return (CORBA_OBJECT_NIL);
+		}
+		g_return_val_if_fail (control, CORBA_OBJECT_NIL);
+		
+		g_warning ("END: camera_resolve");
+		return (CORBA_Object_duplicate (BONOBO_OBJREF (control), ev));
 	}
 
+	g_warning ("END: camera_resolve");
 	return bonobo_moniker_use_extender ("OAFIID:Bonobo_MonikerExtender_stream", moniker, options, requested_interface, ev);
 }
 

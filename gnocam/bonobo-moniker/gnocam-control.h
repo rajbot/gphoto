@@ -42,8 +42,8 @@ struct _GnoCamControlClass {
 	BonoboControlClass parent_class;
 };
 
-GtkType           gnocam_control_get_type                    (void);
-GnoCamControl    *gnocam_control_new                         (BonoboMoniker *moniker, const Bonobo_ResolveOptions *options);
+GtkType           gnocam_control_get_type	(void);
+GnoCamControl    *gnocam_control_new		(BonoboMoniker *moniker, const Bonobo_ResolveOptions *options, CORBA_Environment* ev);
 
 END_GNOME_DECLS
 

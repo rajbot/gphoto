@@ -95,7 +95,7 @@ struct pict_info *pinfo = NULL;
 
 unsigned char answer[5000];
 static char *fuji_buffer;
-long fuji_maxbuf=200000;
+long fuji_maxbuf=300000;
 int answer_len = 0;
 
 static int get_raw_byte (void)

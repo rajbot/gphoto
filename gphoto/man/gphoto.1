@@ -1,0 +1,81 @@
+.\" Man Page for gPhoto by scott... :)
+.\" groff -man -Tascii foo.1
+.\"
+.TH GPHOTO 1 "DECEMBER 1998" Linux "User Manuals"
+.SH NAME
+gPhoto (GNU Photo) \- Digital Camera utility
+.SH SYNOPSIS
+.B gphoto [-h] [-n] [-s # 
+.I filename 
+.B ] 
+.B [-t # 
+.I filename 
+.B ]
+
+.B gphoto [-d #] [-l 
+.I filename
+.B ]
+.SH DESCRIPTION
+.B gPhoto
+is an universal, free GTK+ application that will allow
+downloading, saving, and manipulation of images from several
+different digital still camera models.
+
+gPhoto has a basic command line interface, which is handy,
+if you want to set up a web camera, and use gphoto in a 
+script, e.g. with Perl/PHP.
+
+Currently, gPhoto has integrated Eugene Crosser's PhotoPC
+library, and is working on more support. Cameras reported to
+work are Epson, Olympus, Agfa, Sanyo, and Nikon (CoolPix) digital
+models. For a complete list, visit the camera support page at
+http://gphoto.fix.no/cameras.shtml
+
+.SH USAGE
+.IP gphoto <option> <# of picture> <filename>
+.SH OPTIONS
+.TP
+.I "\-n"
+display the # of pictures
+.TP
+.I "\-s # filename"
+save image # as filename
+.TP
+.I "\-t # filename"
+save thumbnail # as filename
+.TP
+.I "\-d #"
+delete image # from camera
+.TP
+.I "\-l filename"
+save live preview as filename
+.TP
+.I "\-h"
+display help screen
+.SH FILES
+.I $HOME/.gphoto/gphotorc
+.RS
+gPhoto configuration file
+.SH BUGS
+At times, gPhoto may crash when closing opened images.
+This is a known bug and is being worked on. Additionally,
+images may not save correctly. Again, this is being worked
+on. Be sure to type the image extension of the desired format
+in the filename.
+.SH AUTHORS
+.BR Scott	Fritzinger	<scottf@unr.edu>
+
+Camera libraries, patches, fixes, plugins, extensions, 
+scripts and more from lots and lots of people including 
+but not limited to:
+
+.BR Matt		Martin		<matt.martin@ieee.org>
+.BR Bob		Paauwe		<bpaauwe@bobsplace.com>
+.BR Del		Simmons		<del@cimedia.com>
+.BR Clifford	Wright		<cliff@snipe444.org>
+.BR Ole		Aamot		<oleaa@ifi.uio.no>
+.BR Phill	Hugo			<phill@gphoto.org>
+.SH "SEE ALSO"
+.BR gdk, 
+.BR gtk+, 
+.BR imlib

@@ -1,0 +1,223 @@
+int philips_get_mode ();
+
+    Get the cameras current mode. It seems to two (or three) modes,
+    picture taking, and picture viewing, (and picture deleting).
+
+    Returns:
+             0 - picture viewing mode
+             1 - picture taking mode
+
+int philips_gettotalbytes ( int *size );
+
+    Get the total memory size installed in the camera.  Takes
+    one argument, a pointer to an int that is used to return the
+    data.
+
+    Returns: camera error code
+
+int philips_getavailbytes ( int *size );
+
+    Get the number of bytes free in the camera. Takes one argument,
+    a pointer to an int that is used to return the data.
+
+    Returns: camera error code
+
+char *philips_getthumb ( int pict, int *size );
+    
+    Gets a thumbnail version of a picture. It takes two arguments, 
+    the picture number to get and a pointer to an int that will
+    will use to return the size of the thumbnail data. 
+
+    Returns: pointer to the thumbnail data
+
+int philips_getexposure ( int *setting );
+    
+    Gets the curent camera exposure setting. Takes one argument,
+    a pointer to an int that is used to return the setting.
+
+    Returns: camera error code
+
+int philips_getwhitelevel ( int *setting );
+    
+    Gets the curent camera white level setting. Takes one argument,
+    a pointer to an int that is used to return the setting.
+
+    Returns: camera error code
+
+int philips_getzoom ( int *setting );
+    
+    Gets the curent camera zoom setting. Takes one argument,
+    a pointer to an int that is used to return the setting.
+
+    Returns: camera error code
+
+int philips_getflash ( int *setting );
+    
+    Gets the curent camera flash setting. Takes one argument,
+    a pointer to an int that is used to return the setting.
+
+    Returns: camera error code
+
+int philips_getrecordmode ( int *setting );
+    
+    Gets the curent camera recording mode setting. Takes one
+    argument, a pointer to an int that is used to return the setting.
+
+    Returns: camera error code
+
+int philips_getcompression ( int *setting );
+    
+    Gets the curent camera compression setting. Takes one argument,
+    a pointer to an int that is used to return the setting.
+
+    Returns: camera error code
+
+int philips_getresolution ( int *setting );
+    
+    Gets the curent camera resolution setting. Takes one argument,
+    a pointer to an int that is used to return the setting.
+
+    Returns: camera error code
+
+int philips_getcopyright ( char *string );
+    
+    Gets the curent camera copyright string setting. Takes one
+    argument, a pointer to a character array that is used to return
+    the setting. Make sure the array is at least 20 characters long.
+
+    Returns: camera error code
+
+int philips_getmacro ( int *setting );
+    
+    Gets the curent camera macro setting. Takes one argument,
+    a pointer to an int that is used to return the setting.
+
+    Returns: camera error code
+
+int philips_getnpicts ( int *number_of_pictures );
+
+    Gets the number of pictures currentlly stored in the cameras
+    memory. Takes one argument, a point to an int that is used
+    to return the value.
+
+    Returns: camera error code/number of pictures
+
+int philips_getpictnum ( int *pictnum );
+
+    Gets the picture number for the active picture in the camera.
+    Takes one argument, a pointer to an int that is used to
+    return the value.
+
+    Returns: camera error code/picture number
+
+int philips_getpictname ( int number, char *name );
+
+    Gets the name of a picture in the camera's memory. Takes two
+    arguments, the picture number and a pointer to a character
+    array to hold the name. Typical names are RIM00001.JPG so
+    make sure the array is large enought to hold the name.
+
+    Returns: camera error code
+
+int philips_getpictmemo ( int number, char *memo );
+
+    Gets the memo entry of a picture in the camera's memory. Takes
+    two arguments, the picture number and a pointer to a character
+    array to hold the entry.  Make sure the array is large enought
+    to hold the entry.
+
+    Returns: camera error code
+
+int philips_getpictsize ( int number, int *size );
+
+    Gets the size of a picture in the camera's memory. Takes
+    two arguments, the picture number and a pointer to an int
+    to hold the size.
+
+    Returns: camera error code
+
+int philips_getpictdate ( int number, char *date );
+
+    Gets the date/time of a picture in the camera's memory. Takes
+    two arguments, the picture number and a pointer to a character
+    array to hold the date. The date is returned as it is sent
+    from the camera: 0xYY 0xMM 0xDD 0xHH 0xMM
+
+    Returns: camera error code
+
+int philips_set_mode ( int mode );
+int philips_setexposure();
+int philips_setwhitelevel();
+int philips_setzoom();
+int philips_setflash();
+int philips_setrecordmode();
+int philips_setcompression();
+int philips_setresolution();
+int philips_setcopyright();
+int philips_setmacro();
+
+int philips_wait ( int length );
+
+	Gets bytes from the camera over the serial port and stores
+	them in the local receive buffer. The 'length' argument 
+	specifies the minimum number of bytes needed by the calling
+	routine.  The routine times out if it doesn't receive anything
+	from the camera for 4 seconds.
+
+	Returns: 1 if there was an error
+	         0 if the received buffer was filled
+
+int philips_get ( u_char *buffer, int length, int called_from );
+
+	Get 'length' bytes from the receive buffer and return them
+	in 'buffer'. If the receive buffer doesn't have enough data
+	to satisfy the request, philips_wait is called to fill the
+	receive buffer. The 'called_from' value is set to the section
+	of code that is calling this function. It is used to display
+	a more meaningfull error message.
+
+	Returns: 0 if successful
+	         1 if an error occured
+
+int philips_put ( u_char *buffer, int length );
+
+	Send 'length' bytes of data from 'buffer' to the camera over
+	the serial port.
+
+	Returns: 0 if successful
+	         1 if an error occured
+
+int philips_getpacket ( struct CAM_DATA *data );
+
+	Get a data packet from the camera. It expects to get 3 packets
+	in order:
+	   1. Acknowledgement that the command was received by the camera
+	   2. The data requested (may just be a success/error code)
+	   3. CRC code for the data
+	
+	If there is a case where these 3 packets aren't sent, this 
+	code will break.
+
+	Returns: 0 if successful
+	         1 if an error occured
+			-1 if the command wasn't accepted and the camera wants
+			   it resent.
+	
+int philips_setspeed ( int baud );
+
+	Set both the camera's and serial ports baud rate. This sends
+	the camera a command telling it what baud rate to use and then
+	configures the computers serial port to the same rate.
+
+	Returns: 0 if successful
+	         1 if an error occured
+
+int philips_hello();
+int philips_init_query();
+int philips_bye();
+int philips_execcmd();
+void philips_flush ();
+void philips_dump_stream();
+static void *philips_close_handler();
+speed_t philips_baudconv();
+int philips_setbaud();

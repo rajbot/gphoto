@@ -1,0 +1,127 @@
+Serial protocol for the Philips ESP80SXG camera
+
+Basic structure of command:
+
+HOST -> CAMERA   [command packet]
+CAMERA -> HOST   [acknowledged]
+CAMERA -> HOST   [return packet]
+HOST -> CAMERA   [acknowledged]
+
+    [command packet]
+           10 02 <command type> <length> <command/data>
+           10 03 <checksum> <length of data in 10 02 packet that was checksumed>
+    [return packet]
+           10 02 <command type> <length> [return code] <data>
+           10 03 <checksum> <length of data in 10 02 packet that was checksumed>
+    [acknowledged]
+           10 06
+
+Camera return codes:
+
+00 04 ff  - camera busy, please wait
+00 00     - OK, command completed successfully
+03 00     - incomplete command?
+04 00     - invalid parameter.
+05 00     - ???
+06 00     - camera is in the wrong mode to execute that command
+07 00     - ???
+18 00     - ???
+
+
+Type codes:
+
+31 - 00 00 00 hello initalize and send back a camera ID
+32 - 07       Set baud rate 7 = 115200, use 1,2,3,4,5,6 for other baud rates. 
+37 -          Disconnect from the camera
+51 - 00 00    Request camera operating mode 
+51 - 00 01    Request number of images
+51 - 00 05    Request total bytes
+51 - 00 06    Request available bytes
+51 - 03       Request current exposure setting (01 - 09, FF)
+51 - 04       Request current white level (00 - 03)
+51 - 05       Request current zoom setting (00 - 08)
+51 - 06       Request current flash setting (00 - 02)
+51 - 07       Request current recording mode (00, 01, 03, 04, 06)
+51 - 08       Request current compression setting (see below for values)
+51 - 09       Request current resolution setting (01, 04)
+51 - 0A       Request current date/time (format 00 00 00 yy mm dd hh mm 00 )
+51 - 0F       Request copyright string
+51 - 12       Request current camera state (00 00 01 = ready to take picture)
+                                           (00 00 00 = ready to send pictures)
+
+ ** the request commands can be executed with the camera in either mode
+   
+50 - 03 FF     Set exposure to automatic
+50 - 03 01     Set exposure to -2
+     ...
+50 - 03 09     Set exposure to +2
+50 - 04 00     Set white level to automatic
+50 - 04 01     Set white level to outdoors
+50 - 04 02     Set white level to fluorescent
+50 - 04 03     Set white level to incandescent
+50 - 05 00     Set to no zoom
+     ...
+50 - 05 08     Set zoom to maximum
+50 - 06 00     Set flash to automatic
+50 - 06 01     Set flash to off
+50 - 06 02     Set flash to on
+50 - 07 00     Set image record mode
+50 - 07 01     Set character record mode
+50 - 07 03     Set sound record mode
+50 - 07 04     Set image+sound record mode
+50 - 07 06     Set character+sound record mode
+50 - 08 00 00  Set image compress to none
+50 - 08 01 01  Set image compress to maximum
+50 - 08 02 01  Set image compress to normal
+50 - 08 04 01  Set image compress to minimum
+50 - 09 01     Set resolution to 640 x 480
+50 - 09 04     Set resolution to 1280 x 960
+50 - 0A        Set date/time (format yyyy mm dd hh mm 00)
+50 - 0F        Set copyright string
+50 - 12 00     Set camera mode to send pictures
+50 - 12 01     Set camera mode to take picture (display on, lens open)
+50 - 16 00     Set macro mode off
+50 - 16 01     Set macro mode on
+
+ ** the set commands will only work if the camera is in the picture taking mode
+
+60 - 01        Take a picture (camera will keep responding busy until recording done)
+
+92 - [## ##]     Delete image [#] from camera memory
+93 - [## ##]     Select image [#] while in delete mode
+94 - [## ##] ..  Write a memo for image [#] to camera memory
+
+95 - 02 [01 00]  Send image memo entry  (image number in []'s)
+95 - 03 [01 00]  Send image date/time (image number in []'s)
+95 - 04 [01 00]  Send image size (in bytes) (image number in []'s)
+95 - 00 [02 00]  Send image name (image number in []'s)
+
+96 -             Request current image number
+97 -             Put the camera in delete mode
+A0 - [## ##]     Send image [#] to computer.
+A1 - name, size  Tell camera about the image we are about to send
+A2 - data...     Write a block of data to the camera memory
+A4 - [02 00]     Send image [#2] as a thumbnail.
+
+
+Block transfers to/from camera:
+
+A4 - [## 00]   Send image [#] as thumbnail
+               [camera sent 18 bytes (current image name)?] then data packets:
+               A2 -           <128 bytes of data>
+               .
+               .
+               10 03 <checksum for data>
+
+Image Transfer
+host request image size with 10 02 95 02 [image number]
+
+A0 - [## ##]   Send image #
+               [camer sent 18 bytes (current image name) then data packets::
+               A2 -           <128 bytes of data>
+               .
+               .
+               10 03 <checksum for data>
+               
+
+

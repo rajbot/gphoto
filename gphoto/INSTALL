@@ -1,0 +1,25 @@
+$Id$
+
+$Log$
+Revision 1.1  1999/05/27 18:32:01  scottf
+Initial revision
+
+Revision 1.2  1999/05/05 19:47:58  ole
+Initial revision
+
+
+INSTALLATION:
+
+	1) Untar/zip the archive by:
+
+		tar zxvf gphoto-{version}.tgz
+
+	   (but you knew that because you're reading this :-)
+
+	2) Enter the GPhoto/src directory, and type 'make'.
+
+	   This will build each camera model library, and 
+           also build the gphoto binary.
+
+	3) Type 'make install' to install the gphoto
+           executable into /usr/local/bin/gphoto

@@ -1,0 +1,45 @@
+TOSHIBA PDR M1 DIGITAL STILL CAMERA DATA TRANSFER PROTOCOL
+----------------------------------------------------------
+
+@....@ is a comment.
+everything else is EBNF.
+
+
+paket   := prefix command datalen data postfix checksum.
+prefix  := "0x10 0x02 0x00" | "0x10 0x02 0x01".
+command := @one command sequence from commands overview list [1 byte]@
+datalen := @length of data [2 bytes, LSB MSB]@
+data    := @<datalen> bytes of data [<datalen> bytes]@
+postfix := "0x10 0x03".
+checksum := @checksum of data. probably a 8bit CRC [1 byte]@
+
+
+response overview:
+"0x04"		nack
+"0x05"		ack
+"0x06"		ack
+"0x15"		nack
+
+
+commands overview:
+"0x02"		request thumbnail
+"0x04"		answer for image name req;
+"0x05"		camera version/model answer;
+"0x06"		answer telling how many pics in cam;
+"0x07"		port speed???;
+"0x09"		camera version/model request;
+"0x0a"		request for image name;
+"0x0b"		request for images on camera;
+"0x20"		request;
+"0x21"		answer to req "0x20";
+"0x24"		answer to req "0x2a": ?? volume id??;
+"0x25"		camera description answer;
+"0x26"		answer to req "0x2b";
+"0x29"		camera description request;
+"0x2a"		request;
+"0x2b"		request;
+"0x4c"		register information request;
+"0x4d"		register information answer;
+"0x51"		request for register from camera;
+"0x52"		answer from camera for "0x51";
+

@@ -1,0 +1,106 @@
+$Id$
+
+1999-01-08  Scott Fritzinger  <scottf@scs.unr.edu>
+	
+	Here are the major changes to 0.2:
+
+        * updated the library interface
+                added "initialize", "summary", and "description"
+                only initialize and summary are used now. description
+                will be used when the model/port selection dialog is
+                updated, but it still needs to be defined. check
+                out the photopc/olympus.c file for examples on using
+                all 3 new functions.
+
+        * updated the gphotorc file.
+                remove your old one from your $HOME/.gphoto/ directory
+                and then run gphoto and select your camera model.
+
+        * added fuji and ricoh libraries, and camera entries.
+                i don't own these cameras, so i don't know about their
+                status, but i'm sure matt and cliff kicked some ass!
+
+        * current camera library displayed on status bar
+                i was getting confused when moving back and forth from
+                directory browse mode to my olympus D220-L, so a text
+                indicator is now down there... pretty handy.. :)
+
+        * addition of directory browse mode.
+                in the "select model/port", select "Browse directory"
+                then, whenever you click on "get index", a file selector
+                pops up to ask you which directory to open. all images
+                in the directory are opened, and thumbnails are generated
+                for all of them... it's really handy if all the images are
+                already archived on your hard drive and you want to find
+                one... also, this can be used in the HTML gallery!
+
+        * HTML gallery
+                the addition of this is a BIGGIE! this is really the first
+                step in making gPhoto "more" than just a digicam utility.
+                there is a "Default" theme included... to install it,
+                you MUST do a "make install" to copy all files to the
+                correct location (/usr/share/gphoto/gallery/) after   
+                you "make" the package
+
+                Using it:
+                        * get the index first
+                        * select the images to include in the gallery.
+                        * go to "plugins->HTML Gallery"   
+                        * type in a name for the Gallery
+                        * click on "Default" for the theme
+                        * "Change" the output directory to where you want
+                                it.
+                        * click on "create"
+
+                it will go through the motions, and tell you when it's
+                done. it works the fastest in directory browse mode,
+                so try that first. or you can go straight for the jugular
+                and use the camera (works fine there too! not as fast
+                though)
+
+                ALSO: it currently requires "sed" to do the parsing of
+                the tags (until i nail down a faster way internally)
+                so you need that on your machine.
+
+        * Makefile in root source tree
+                people don't need to change to the src directory anymore.
+                just change to the root source tree (gphoto-0.2-1) and
+                type "make" then "make install".. there is also
+                "make clean", and "make uninstall"
+
+        * Command-line mode
+                after building the gPhoto binary, type "gphoto -h" for
+                command-line options. here's the low-down:
+
+	GNU Photo v.0.2
+	Usage: gphoto [-h] [-n] [-s # filename] [-t # filename]
+	              [-d #] [-l filename] 
+	        -n                      display the # of pictures
+	        -s # filename           save image # as filename
+	        -t # filename           save thumbnail # as filename
+	        -d #                    delete image # from camera
+	        -l filename             save live preview as filename
+	        -h                      display this help screen
+
+                only catch is you MUST run gphoto in graphical
+                mode to initially set the camera library before
+                running in command-line mode!
+
+                a simple script set up can automate a lot of things
+                (batch saving, webcam, delete all pics, etc..)
+                so maybe there should be some scripts written to
+                provide these things for users to download? :)
+
+
+
+
+
+
+
+
+
+
+
+
+
+

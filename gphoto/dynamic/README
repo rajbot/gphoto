@@ -1,0 +1,88 @@
+I've rehashed every file to contain only the headers it needs.
+
+The ifdef blah_yada_h stuff is removed becuase it was aweful ;)
+
+gphoto.h is the file to include in Libraries. It'll give you access to the
+globals that libraries can use. DON'T add non library useful libraries to
+this file - put them in main.h if they are really global (but not library
+global) or module.h where module is the code module that needs it (in
+which case it wasn't global at all).
+
+In theory the updates to the library speficiation can be acheived by only
+changing gphoto.lib and the parts that manipuate the info in there.
+
+I've reimplimented Directroy and Konica as dynamic libraries (I'll ifdef
+the files soon for runtime functionality soon). Please convert all
+libraries to dynamics in the same way. Nothing else outside of the main
+program need then be done to allow runtime loading of drivers.
+
+The configure script will be set up to do the following for the following.
+
+#ifdef _runtime_
+
+Code to be used if the build is runtime loading libaries.
+
+#ifdef _dynamic_
+
+Code to be used if the build is dynamically loading libraries.
+
+#ifdef _static_
+
+Code to be used if the build is statically linking libraries.
+
+Generally _static_ and _dynamic_ are assumed and will not need
+differences. Put them inside _runtime_ and protect the general code with
+either _static_ or _dynamic_ (Only the compile time linking is different
+in these cases - the code for dynamic and static will be identical.
+
+eg..
+
+#ifdef _runtime_
+ (void)*function(int)=dlsym(cameralib, "open_camera");
+ (*function)(parameter);
+#else
+ open_camera(parameter);
+#endif
+
+I know it is messier than just doing the static or dynamic compile
+time link where types and whatnot are solved by the compiler but "Billy
+Newto Linux" will love us forever when he buys a new camera and just has
+to download one file, pop it in the folder and select it in the list.
+
+You'll notice that all the dlsym thing is really doing is declaring a
+function at runtime.
+
+void function(int); == (void)*function)(int)
+
+The address of function is loaded from dlsym (rather than given by the
+linker at compile time). As such you can define a few pointers to your
+functions - even call them the same thing - at the top of your code, fill
+in the addresses with dlsym, then dlclose the library. From there after
+you can do this...
+
+#ifdef _runtime_
+ void *library = dlopen("library.so", RTLD_LAZY);
+ void (*open_camera)(int, int, *char) = dlsym(library, "open_camera");
+ void (*close_camera)(int, int, *char) = dlsym(library, "close_camera");
+ dlclose(library);
+#else
+ extern void open_camera(int, int, *char);
+ extern void close_camera(int, int, *char);
+#endif
+
+(open_camera)(1, 2, "This works either way now");
+*close_camera(1, 2, "As does this");
+open_camera(1, 2, "And this");
+(*close_camera)(1, 2, "this too);
+
+Neat huh. I've left all the ways of notating it since you may wish to
+distinguish remote runtime calls from locally linked one. There is no
+difference between all the above notations (the 2nd open_camera being the
+normal one) but using the first open_camera call style will make code
+clearer.
+
+Please stick to this convention. It'll aid matters no end.
+
+Phill
+
+

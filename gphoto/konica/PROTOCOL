@@ -1,0 +1,41 @@
+Transmission takes a fairly standard send / ack routine.
+
+Camera lies dormant until 0x05 is receieved. It then responds 0x06 to show it is awake. The Windows application send 0x05's 0.3 seconds apart until the camera shows interest.
+
+$Init$ is then sent. The QM100 packet format takes the following form...
+
+0x02 LEN1 LEN2 CODE1 CODE2 CODE3 ... CODEn 0x03 SUM
+
+Where LEN1 and LEN2 is the length of the CODE section. Least Sig Byte first.
+
+CODEx is the code sent to the camera.
+
+SUM holds the sum of all the bytes in the packet (except 0x02). Thus an $Init$ packet looks like...
+
+0x02 0x04 0x00 0x00 0x90 0x00 0x00 0x03 0x97
+INIT LEN1 LEN2 CDE1 CDE2 CDE3 CDE4 ENDP SUMP
+
+SUMP is masked with 0xFF to keep it byte sized. It is only used as a checksum so the most significant part is negligable once the LS part checks OK.
+
+Certain bytes require escaping with 0x1B prefixed. These are...
+
+0x02 => 0xfd
+0x03 => 0xfc
+0x05 => 0xfa
+0x06 => 0xf9
+0x11 => 0xee
+0x1b => 0xe4
+
+Any of these bytes are sent and received as 0x1B 0xFD. This does not include the packet INIT 0x02 or the packet ENDP 0x03.
+
+The codes themselves are below. Here are the sequences.
+
+-> 0x05
+-> 0x05
+<- 0x06
+-> INIT
+<- 0x06
+-> 0x04
+<- 0x05
+-> 0x06
+<- 0x02 0x08 0x00 0x00 0x09 0x00 0x00 0xff 0x1b 0xfc 0x1f 0x00 0x03 0xBC

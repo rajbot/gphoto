@@ -1,0 +1,162 @@
+Ricoh DC-3 protocol
+$Id$
+
+NOTE1:	If the this text meets the actual practice, it is just a coincidence:-)
+NOTE2:	All digits in protocol description are displayed in hexadecimal.
+	(for example, "1B" means escape char, "41" means "A")
+
+Packet construction overview
+============================
+	Packet flow looks like as follows.  Items in [] denotes a packet,
+	i.e. [dat] means data packet.
+
+	1. command with simple acknowledgement
+	CPU: [dat] [crc]
+	CAM:             [ack]
+
+	2. command with reply
+	CPU: [dat] [crc]                   [ack]
+	CAM:             [ack] [dat] [crc]
+
+	3. command with multiple command packet
+	(no example found yet)
+
+	4. command with multiple reply packet
+	CPU: [dat] [crc]                   [ack]             [ack]
+	CAM:             [ack] [dat] [crc]       [dat] [crc]
+
+General rules
+-------------
+	"10" is used as "attention char".
+
+Data packet
+-----------
+	10 02 CH LN xx xx xx
+
+	CH: command type character
+	LN: length
+	xx: data part (LN bytes)
+		Note that the character "10" will be escaped
+		by duplicating them, if they are in the data part.
+		(It applies to both direction, of course)
+		LN expresses the length before escapement.
+		Example: to transmit a data packet with command char="30"
+			and data part="10 10", use the following packet:
+
+			10 02 30 02 10 10 10 10
+
+CRC packet
+----------
+	10 03 xx xx LN yy
+
+	xx xx: CRC of a data packet.
+		Standard 16bit CRC used in xmodem/ymodem by using data
+		packet (from CH to the last byte of the data part).
+		Intel-endian order.
+		Data packet must be transmitted right before CRC packet.
+
+		10 02 CH LN xx xx xx
+		      <------------> take 16bit CRC of this region
+	LN: the length of CRC'ed data
+		Usually, it is (LN in data packet) + 2.
+	yy: block number
+		Used in commands with multiple command/reply packet,
+		such as image transfer.
+		Starts from 0, and monotonically increased by 1.
+		Since it only has 8bits, value will be mod 256 of actual
+		block number.
+
+Acknowledge packet
+------------------
+	10 06
+
+Negative acknowledge packet
+---------------------------
+	10 15
+
+Commands
+========
+	For simplicity, we omit details of crc packets.
+
+    31 00 00 00: connect to the camera
+	COM: 10 02 31 03 00 00 00 [crc]
+	CAM: [ack] 10 02 31 06 00 00 03 00 00 00 [crc]
+	COM: [ack]
+
+	Details unknown.
+
+    32 xx: set baudrate
+	COM: 10 02 32 01 xx [crc]
+	CAM: [ack] 10 02 32 02 00 00 [crc]
+	COM: [ack] (*)
+
+	xx: baudrate
+		00: 2400bps	01: 4800bps	02: 9600bps
+		03: 19200bps	04: 38400bps	05: 57600bps
+		06: ???		07: 115200bps
+
+	Note: after changing baudrate at (*), one should make a idle loop
+	for 1 second.
+
+    37 00: disconnect
+	COM: 10 02 37 01 00 [crc]
+	CAM: [ack] 10 02 37 02 00 00 [crc]
+	COM: [ack]
+
+	Disconnects camera from PC.  Without this operation, camera will
+	not go back to the usual record/play mode.
+
+    51 00 00: ???
+	COM: 10 02 51 02 00 00 [crc]
+	CAM: [ack] 10 02 51 03 00 00 00 [crc]
+	COM: [ack]
+
+    51 00 01: get # of picts in the camera??
+	COM: 10 02 51 02 00 01 [crc]
+	CAM: [ack] 10 02 51 04 00 00 xx xx [crc]
+	COM: [ack]
+
+	xx: # of picts in camera (intel endian)
+
+    51 12: ???
+	COM: 10 02 51 01 12 [crc]
+	CAM: [ack] 10 02 51 03 00 00 00 [crc]
+	COM: [ack]
+
+    96: ???
+	COM: 10 02 96 [crc]
+	CAM: [ack] 10 02 96 ?? xx .. xx [crc]
+	COM: [ack]
+
+	xx: length/content varies by situation to situation.
+
+    A0/A2: download image
+
+	Download consist of the following steps:
+		initiate-transmission;
+		while (transferred-len < totallen)
+			image-transfer-for-single-packet;
+	The length of the image file is managed by PC side, not the
+	camera side.
+
+      initiaing transmission:
+	COM: 10 02 A0 02 xx xx [crc]
+	CAM: [ack] 10 02 A0 12 00 00 "R0300001.JPG" yy yy yy yy [crc]
+	COM: [ack]
+
+	xx xx: image # to download, in intel-endian
+	"R0300001.JPG": filename for the image
+	yy yy yy yy: file size of the image, in intel-endian.
+		there's no end mark, so you should count the following packets.
+
+      image transfer for single packet:
+	CAM: 10 02 A2 80 xx .. xx [crc]
+	COM: [ack]
+
+	xx: image data. 
+	[crc]: note that you have packet # on the crc packet.
+		XXX selective retransmission possible???
+
+Retransmission
+==============
+	Unknown.

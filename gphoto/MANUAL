@@ -1,0 +1,117 @@
+$Id$
+
+$Log$
+Revision 1.1  1999/05/27 18:32:01  scottf
+Initial revision
+
+Revision 1.2  1999/05/05 19:48:51  ole
+Initial revision
+
+gPhoto 0.1-DR User's Manual
+---------------------------
+
+gPhoto was designed to be as intuitive as possible. The toolbar provides
+shortcuts to many of the features listed below.
+
+Getting Thumbnails/Previews
+---------------------------
+	In the "Camera" menu, select "Get Index"
+
+Downloading Images
+------------------
+	After getting the index, select the images you want to download
+	by clicking on them (border will turn red). Then, in the
+	"Camera" menu, select "Get Selected Images".
+
+Manipulating Images
+-------------------
+	After downloading an image, view it by clicking on its tab.
+	Then, click the desired manipulation. Available are
+	rotate clockwise, rotate counter-clockwise, flip horizontal,
+	flip vertical, and resize.
+
+	* For intensive image manipulation, fire up the GIMP!
+
+Send to the GIMP
+----------------
+	Not currently supported.
+
+Saving Images
+-------------
+	Click on the tab of the image you want to save, and select
+	"Save" from the "File" menu. Select the directory you want
+	to save the image in, and type in a name for the image.
+	The extension will determine which format the image is saved
+	in.
+
+	Example: image.jpg
+
+	Supported: jpg gif png tif (and others...)
+	(whatever is supported by your installation of imlib)
+
+Batch Saving
+------------
+
+	Select "Batch Save" from the "File" menu. Then, select the
+	directory that will store all the images and click "OK".
+
+	* Currently, gPhoto only supports saving ALL images and/or
+	  thumbnails.
+
+	* Pictures are all stored as JPEG images by default.
+
+Printing Images
+---------------
+	Click on the tab of the image you want to print, and select
+	"Print" from the "File" menu.
+	Note: it might take a minute for the image to print, depending
+	on how fast the image is spooled.
+
+Closing Downloaded Images
+-------------------------
+	Click on the tab of the image you want to close, and select
+	"Close" from the "File" menu.
+
+Deleting Images from the Camera
+-------------------------------
+	In the image index, select the images you wish to remove from
+	the camera by clicking on the thumnail (border will turn red).
+	Then, from the "Camera" menu, select "Delete Selected Images".
+	A confirmation will appear. Click "yes" or "no".
+
+Selecting the Serial Port
+-------------------------
+	Select "Select Port" from the "Camera" menu.
+
+Configuring the Camera
+----------------------
+	Select "Configure" from the "Camera" menu.
+
+Live preview plugin
+-------------------
+        Select "Live cam" from the "Plugins" menu.
+	Click on "Take picture" to update preview.
+
+Command line mode
+-----------------
+	The command-line mode must be specified at run time
+        with the "-c" parameter.
+
+	$ gphoto -c filename
+	where "filename" is the path and image name (+ extension)
+	to save a preview snapshot.
+
+	Example:
+	$ gphoto -c /home/httpd/html/livepic.jpg
+
+	The command line mode is handy, if you want to set up a web
+	camera, and use gphoto in a script, e.g. with Perl/PHP. :-)
+					  
+Tips and Tricks
+---------------
+	* Make sure your camera is connected and turned ON. :-)
+	* If something fails (getting index, configuring camera, ...)
+	  try again. There are some things that need to be done still
+	  to make sure the camera does what you want it to do.
+	* Have fun, and give us feedback if your camera fail or succeed
+          to <gphoto-devel@lists.styx.net>.  Thanks for using gPhoto!

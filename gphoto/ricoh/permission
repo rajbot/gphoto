@@ -1,0 +1,49 @@
+Return-Path: itojun@iijlab.net
+Delivery-Date: Tue Dec 22 02:24:42 1998
+Received: from snipe444.org (vixen.snipe444.org [127.0.0.1])
+	by snipe444.org (8.8.8/8.8.8) with ESMTP id CAA01363
+	for <cliff>; Tue, 22 Dec 1998 02:24:41 -0800 (PST)
+Received: from coconut.itojun.org (root@coconut.itojun.org [210.160.95.97])
+	by cncware.cncware.com (8.8.7/8.8.7) with ESMTP id CAA02296
+	for <cliff@snipe444.org>; Tue, 22 Dec 1998 02:24:43 -0800
+Received: from kiwi.itojun.org (itojun@localhost.itojun.org [127.0.0.1])
+	by coconut.itojun.org (8.9.1+3.1W/3.7W) with ESMTP id TAA00462
+	for <cliff@snipe444.org>; Tue, 22 Dec 1998 19:05:13 +0900 (JST)
+To: Clifford Wright <cliff@snipe444.org>
+In-reply-to: cliff's message of Sun, 20 Dec 1998 20:03:11 PST.
+      <199812210403.UAA19602@snipe444.org> 
+X-Template-Reply-To: itojun@itojun.org
+X-Template-Return-Receipt-To: itojun@itojun.org
+X-PGP-Fingerprint: F8 24 B4 2C 8C 98 57 FD  90 5F B4 60 79 54 16 E2
+Subject: Re: Ricoh software for gphoto 
+From: Jun-ichiro itojun Hagino <itojun@iijlab.net>
+Date: Tue, 22 Dec 1998 19:05:13 +0900
+Message-ID: <458.914321113@coconut.itojun.org>
+Sender: itojun@itojun.org
+Status:   
+
+
+>Gphoto ( http://gphoto.fix.no/gphoto/ ) is a Gtk based application for 
+>controlling, and down-loading a digital camera. I have been writing software 
+>for the Ricoh RDC-300Z, and would like to contribute this software to the 
+>project.  However much of the software has been taken from your dc3play 
+>program, and I need permission to use this. Quoting from the dc3play package:
+>/*
+> * Copyright(c) 1997 by Jun-ichiro Itoh. All rights reserved.
+> * Freely redistributable unless otherwise noted.  Absolutely no warranty.
+>
+>REDISTRIBUTION
+>        Prohibited at this moment, since we are currently in alpha-test
+>        period.
+>
+>I have moddified, and added to this package, but would of course put your name 
+>on the software as you see fit. With this in mind I request permission to use 
+>part of your software from the rdc3play package.
+
+	I'm happy with inclusion of (part of) dc3play into gphoto.  It is
+	okay to redistribute.
+
+	If you have fixed any problems in dc3play, I would be happy to
+	receive the patches.  I would like to make future dc3play better.
+
+itojun

@@ -1,0 +1,72 @@
+# $Id$
+
+Scott Fritzinger (scottf@scs.unr.edu)
+GUI, HTML gallery, Live Cam! plugins
+Fujitsu chipset library
+
+Eugene Crosser (crosser@average.org)
+Fujitsu chipset protocol
+
+Matt Martin (matt.martin@ieee.org)
+Fuji DS-7 library
+Bug fixing and GUI features
+
+Gary Ross (gdr@hooked.net)
+Casio QV library
+
+Del Simmons (del@gphoto.org)
+Kodak DC20/25 library
+CVS maintaining
+
+Bob Paauwe (bpaauwe@bobsplace.com)
+Philips ESP 80 library
+Bug fixing
+
+Cliff Wright (cliff@snipe444.org)
+Ricoh RDC 300/300Z library
+Bug fixing
+
+Phill Hugo (phill@gphoto.org)
+Konica Q-M100, HP-C20/30 library
+Rewrote dynamic loaded libraries
+
+Beat Christen (spiff@longstreet.ch)
+Toshiba PDR M1 library
+
+Warren Baird (wjbaird@bigfoot.com)
+Bug fixing
+
+Brent D. Metz (bmetz@vt.edu)
+Kodak 200/210 library
+
+Mandrake (mandrake@lobotomy.com)
+Kodak DC210 library hacking
+
+Randy D. Scott (scottr@wwa.com)
+Kodak DC240 library
+
+Paul S. Jenner (psj@mustec.eu.org)
+GNU AutoConf scripts
+
+Tuomas Kuosmanen (tigert@gimp.org)
+Misc. toolbar icons
+
+Ole Aamot (oleaa@ifi.uio.no)
+Mailinglists, web, FAQ, bug fixing
+
+If you feel left out, then please
+add yourself to the file "AUTHORS",
+or mail gphoto-devel@gphoto.org!
+
+The gPhoto project is the easiest
+way for Digital Camera Companies
+to support potential customers.
+
+Emailing the gPhoto developers' list
+<gphoto-devel@gphoto.org> is a good
+place to start in procuring talents.
+
+Often it takes nothing more than open
+access to the technical details and a
+camera or two for testing/development.
+

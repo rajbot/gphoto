@@ -1,0 +1,19 @@
+This folder contains some proofs of concepts showing dynamic loading
+working.
+
+Its easy isn't it ;)
+
+Math shows the "man dlopen" example code
+
+Unified is the called back concept in one file
+
+Dynamic is the called back concept called in and out of a library in two
+file, linked at compile time
+
+Runtime is the called back concept called in and out of a dynamically
+loaded file at runtime.
+
+The Runtime concepts show enough to provide dynamic loading of camera
+libraries.
+
+Phill

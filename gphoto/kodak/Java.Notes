@@ -1,0 +1,145 @@
+/*
+
+Date: Sat, 2 Jan 1999 17:40:25 +0000 (GMT)
+From: Ferenc Papai <feri@wuzwuz.ucg.ie>
+To: Del Simmons <del@cimedia.com>
+Subject: Re: Question about your Kodak DC25 support.
+
+	Hi Del
+
+I was away these days, but now I'm back !
+
+
+> By the way, it doesn't work on the DC20, so you might wanna disable that
+> in a future version of JCam. JCam just hangs, (so I've been told) when
+> trying to delete a single picture from the DC20. I have not confirmed
+> that myself but it comes from a reliable source who owns a DC20. It
+> seems to work fine on my DC25, however, and I will always be endebted to
+> you for sharing that info with me.
+
+I have a DC 25 and I could not try it with a DC 20. Thanks for the
+information, it wil be removed in the next wersion.
+
+
+
+> I have one other question for you. I hope you don't mind.
+> 
+> The question relates to downloading thumbnail images from the DC25. Here
+> is what I could find on the net about getting the thumbnails out of the
+> camera.
+> 
+
+I included the thumb download function and the decoding in the files
+included in the attchmnt. Tell me if they worked.
+
+	best regards,
+	feri
+
+*/
+
+
+
+private Image getImage( DigitalCamera camera, byte[] thumbnail )        
+    throws IOException
+{
+    Image image = null;
+    
+    Dimension d = camera.getThumbnailSize();
+    int[] rgbMIS = new int[ d.width * d.height ];
+    
+    if( camera.getThumbnailType() == DigitalCamera.THUMBNAIL_RGB )
+	// Kodak DC25   - Casio qv10 qv100
+	{
+	    for( int h = 0; h< d.width * d.height * 3; h += 3 )
+		rgbMIS[ h/3 ] = ( 255 << 24 ) | ( ( 0xFF&thumbnail[h] ) << 16 ) |
+		    ( ( 0xFF&thumbnail[h+1] ) << 8 ) | ( 0xFF& thumbnail[h+2] );
+	}
+    else if( camera.getThumbnailType() == DigitalCamera.THUMBNAIL_GRAY )
+	//Kodak DC20    
+	{
+	    for( int h = 0; h< d.width * d.height; h++ )
+		rgbMIS[ h ] = ( 255 << 24 ) | ( ( 0xFF&thumbnail[h] ) << 16 ) |
+		    ( ( 0xFF&thumbnail[h] ) << 8 ) | ( 0xFF& thumbnail[h] );
+	}
+    
+    MemoryImageSource mis = new MemoryImageSource( d.width, d.height, rgbMIS, 0, d.width
+						   ); 
+    Canvas  canvas = new Canvas();
+    image =  canvas.createImage( mis );
+    MediaTracker imageTracker = new MediaTracker( canvas );
+    imageTracker.addImage( image, 0 );
+    try{ imageTracker.waitForID( 0 ); }catch( Exception ie ){}
+    
+    return image;   
+}
+
+
+
+
+public byte[] getThumbnail( int number ) throws IOException
+{
+    /**
+     *       thumbize is 15360;
+     *       but it reads 'packets' number of blocks, a little bit more
+     *       then it needs since ti can read only blocks of data.
+     *       So it will send tatalBytesRead in the packet event
+     */
+    int             thumbSize       = 15360;
+    int             b; 
+    byte[]  string  = new byte[ IMAGE_BLOCK_SIZE ];
+    byte[]  image   = new byte[ thumbSize ];
+    /* different number of packages in dc20-dc25*/
+    int             blocks  = dc25 ? 15 : 5;
+    int             totalBytesRead = blocks * IMAGE_BLOCK_SIZE;
+    
+    CameraEvent cevent = new CameraEvent( this, number );
+    
+    //setSpeed( CURRENT_SPEED );    
+    //setSpeed();
+    
+    beginThumbnail( cevent );
+    
+    thumbCmd[ 3 ] = (byte)number;   
+    sendCmd( thumbCmd );
+    
+    int pos         = 0;
+    
+    for( int i = 0; i < blocks; i++ )
+	{
+	    boolean error;  
+	    ImagePacketEvent ipe;
+	    
+	    do{
+		error = false;
+		b = readData( string );
+		
+		if( !checksum( string, port.getByte() ) )
+		    {
+			error = true; 
+			ipe = new ImagePacketEvent( this, ((i+1)*IMAGE_BLOCK_SIZE),
+						    totalBytesRead, number, true, false );
+			fireImagePacket( ipe );
+			port.putByte( (byte)DC_ILLEGAL_PACKET );
+		    }
+	    }while( error );                
+	    
+	    ipe = new ImagePacketEvent( this, (i+1)*IMAGE_BLOCK_SIZE,
+					totalBytesRead, number, true );
+	    fireImagePacket( ipe );
+	    port.putByte( (byte)DC_CORRECT_PACKET );
+	    
+	    int length = (i == 14) ? 704 : IMAGE_BLOCK_SIZE; //i don't know yet how long a thumbnail is		System.arraycopy( string, 0, image, pos, IMAGE_BLOCK_SIZE );
+	    pos += IMAGE_BLOCK_SIZE;
+	}
+    getCmdStatus();
+    
+    endThumbnail( cevent );
+    
+    //setInitSpeed();
+    //initCmd();
+    
+    return image;
+}
+
+
+

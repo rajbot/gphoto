@@ -1,0 +1,16 @@
+getuint.o: getuint.c config.h
+ppm.o: ppm.c config.h
+jpeg.o: jpeg.c config.h casio_qv_defines.h getuint.h cam2jpgtab.h \
+ jpegtab_f.h
+printMsg.o: printMsg.c
+sdComm.o: sdComm.c config.h sdCommDefines.h sdcMessages.h printMsg.h
+configure.o: configure.c config_handler.h configure.h \
+ casio_qv_defines.h
+config_handler.o: config_handler.c configure.h config_handler.h \
+ casio_qv_defines.h
+qv_io.o: qv_io.c sdComm.h sdCommDefines.h casio_qv_defines.h
+command.o: command.c config.h sdComm.h sdCommDefines.h ../src/gphoto.h \
+ printMsg.h messages.h qv_io.h casio_qv_defines.h
+casio_qv.o: casio_qv.c ../src/gphoto.h sdComm.h sdCommDefines.h \
+ printMsg.h messages.h configure.h command.h qv_io.h \
+ casio_qv_defines.h

@@ -1,0 +1,37 @@
+
+
+I started working on the protocol for Toshiba's PDR M1
+
+
+
+AUTHOR
+	Beat Christen <spiff@longstreet.ch>
+	
+PROBLEMS
+
+	- The camera seems to expect some kind of handshaking/flow-control
+	  behaviour from the computers side. If you are familiar with
+          Comlite (Windows Serial Line Sniffer) please have a look at
+          the file ./doc/toshiba.rtb :
+	  the flags(?) DDCD, DCTS have to go high, that the camera starts
+	  sending zeros, which then is acknowledged by the computer with
+	  0x05. (see session.log)
+	- the CRC used at the end of packets is magic. Probably saving
+          some CRC'd packets plus their CRC and feeding this into a CRC
+	  analyzer (that just tries all polynoms) might work.
+
+
+WHATS WHERE?
+.
+|-- Makefile
+|-- README                :this file
+|-- doc
+|   |-- protocol.txt      :same knowledge about the protocol
+|   |-- session.log       :describes the unix session and what goes wrong
+|   `-- toshiba.rtb       :Comlite32 saved session     
+|-- io.c                  :my io lib
+|-- io.h                  
+`-- test.c                :test program
+
+(c) Copyright 1999 Beat Christen 
+

@@ -70,7 +70,7 @@ compileinstall() {
 		    cmd tar xvfz "${tarball}"
 		    ;;
 		*.tar.bz2)
-		    cmd tar xvfj "${tarball}"
+		    cmd bzip2 -z -c "${tarball}" | tar xvf  -
 		    ;;
 	    esac
 	    cmd cd "${srcdir}/${base}"

@@ -85,7 +85,7 @@ function installautotools {
 		ext=".tar.gz"
 		;;
 	    *.tar.bz2)
-		cmd bunzip2 -c "$tarball" | tar xvf -
+		cmd bzip2 -z -c "$tarball" | tar xvf -
 		ext=".tar.bz2"
 		;;
 	    *)
@@ -98,8 +98,9 @@ function installautotools {
 	cmd ./configure --prefix="${toolroot}"
 	cmd make install
     done <<EOF
-autoconf	ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.53.tar.bz2
-automake	ftp://ftp.gnu.org/gnu/automake/automake-1.6.3.tar.bz2
+m4	ftp://ftp.gnu.org/gnu/m4/m4-1.4.tar.gz
+autoconf	ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.53.tar.${compression}
+automake	ftp://ftp.gnu.org/gnu/automake/automake-1.6.3.tar.${compression}
 libtool		ftp://ftp.gnu.org/gnu/libtool/libtool-1.4.2.tar.gz
 gettext		ftp://ftp.gnu.org/gnu/gettext/gettext-0.11.5.tar.gz
 pkg-config	http://www.freedesktop.org/software/pkgconfig/releases/pkgconfig-0.12.0.tar.gz
@@ -151,6 +152,7 @@ function checktools {
 fatal	cvs
 fatal	grep
 fatal	egrep
+auto	m4
 auto	autoconf
 auto	automake
 auto	gettext
@@ -322,8 +324,7 @@ function builddist {
 	    echo "#        configopts:  $configopts"
 	    echo "########################################################################"
 	    cmd rm -rf "${cvssrc}/${module}"
-	    # FIXME: relies on GNU cp
-	    cmd cp -a "${cvsorig}/${module}" "${cvssrc}/"
+	    cmd cp -R "${cvsorig}/${module}" "${cvssrc}/"
 	    cmd cd "${cvssrc}/${module}"
 	    local docroot="${distroot}/share/doc/gphoto2-manual-"[0-9]*
 	    if [ -d "$docroot" ]
@@ -429,6 +430,16 @@ function die {
     echo "$this: Fatal error. Dying."
     exit 13
 }
+
+
+if bzip2 --version < /dev/null > /dev/null 2>&1
+then
+	echo "bzip2 found."
+	compression="bz2"
+else
+	echo "bzip2 not found."
+	compression="gz"
+fi
 
 checktools || die
 cvslogin || die

@@ -331,6 +331,9 @@ static GnomeVFSResult do_open_directory (
 	/* Get the storage */
 	moniker = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_NONE);
 	CAM_VFS_DEBUG (("Getting storage for %s...", moniker));
+	//FIXME: WHY IS THIS NEEDED??? BLAME ORBIT/BONOBO/OAF/NAUTILUS/THREADS
+	//...
+	sleep (2);
 	storage = bonobo_get_object (moniker, "IDL:Bonobo/Storage:1.0", &ev);
 	CAM_VFS_DEBUG (("... done."));
 	g_free (moniker);
@@ -683,7 +686,11 @@ vfs_module_init (const gchar *method_name, const gchar *args)
 
 	/* Initialize bonobo */
 	if (!bonobo_init (orb, NULL, NULL))
-		g_error ("Cannot init bonobo");
+		g_error ("Cannot init Bonobo!");
+
+	/* Activate the Bonobo POA manager */
+	if (!bonobo_activate ())
+		g_error ("Cannot activate Bonobo POA manager!");
 
 	CAM_VFS_DEBUG (("EXIT"));
 

@@ -1,4 +1,10 @@
-2001-06-05	Lutz Müller  <urc8@rz.uni-karlsruhe.de
+2001-06-05	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
+
+	* gnome-vfs-module/camera-method.c: (do_open_directory): Let us
+	sleep for 2 seconds so that bonobo/oaf/whatever isn't angry with our
+	super-giga-multi-thread-high-speed-processing. BAD UGLY HACK.
+
+2001-06-05	Lutz Müller  <urc8@rz.uni-karlsruhe.de>
 
 	* tests/[.cvsignore,Makefile.am]: New directory including files.
 	* tests/test-vfs-module.c: New file. Test program to test the

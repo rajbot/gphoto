@@ -1,0 +1,17 @@
+Things to do for the DC240 Driver:
+----------------------------------
+   - Need to add recovery from a packet timeout during data transfers.
+     The problem is that the error function doesn't know what type of
+     error occured.  This information needs to be passed into the error
+     handler function so that it can decide to retry the packet in the
+     event of a timeout.
+
+   - There is a nasty problem with reading the directory when the directory
+     has more entries than will fit into a single packet.  When this
+     happens, the driver causes a SEGV when reading the second packet.
+     The strange thing is that the correct amount of space was allocated
+     by malloc at the start of the operation, but by the time that the
+     next packet arrives, everything goes haywire.
+
+Things to do for the generic Kodak support:
+-------------------------------------------

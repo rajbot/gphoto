@@ -1,9 +1,5 @@
-#include <string.h>
-#include "kodak_generic.h"
-
 /*
- *      Portions Copyright (C) 1999 Brent D. Metz <bmetz@vt.edu>
- *      Portions Copyright (C) 1998 Beat Christen <spiff@longstreet.ch>
+ *      Copyright (C) 1999 Randy Scott <scottr@wwa.com>
  *
  *      This program is free software; you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published 
@@ -20,240 +16,252 @@
  *      Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* 
-  It may say generic on the filename, but right now this isn't very generic :)
-*/
+#include "../src/gphoto.h"
+#include "kodak_generic.h"
 
-void dump(char *str, char *buf, int len) 
-{  
-  printf("%s [ ", str);
+static struct Kodak_Camera *cams[KODAK_CAMERA_NUM_CAMERAS];
+static int current;
+static int registered = 0;
 
-  if(len>0) 
-  {
-    int p = 1;
-
-    printf("0x%x", buf[0]);
-
-    while(p<len)
-      printf(", 0x%x", buf[p++]);
-  }
-  printf(" ]\n");
-}
-
-
-int             kodak_generic_initialize()
+/*******************************************************************************
+* FUNCTION: kodak_register
+*
+* DESCRIPTION:
+*******************************************************************************/
+void
+kodak_register
+(
+   struct Kodak_Camera *camera
+)
 {
-  return 1;
+   cams[registered++] = camera;
 }
-	
-GdkImlibImage * kodak_generic_get_picture(int a, int b)
+
+/*******************************************************************************
+* FUNCTION: kodak_initialize
+*
+* DESCRIPTION:
+*******************************************************************************/
+int
+kodak_initialize
+(
+   void
+)
 {
-  return NULL;
+   /*
+    * Allow each of the Kodak cameras to register themselves with the generic
+    * driver.
+    *
+    * When you add a new camera, add a call to your register function here.
+    * The cameras are detected in the order that they registered, so pay
+    * attention to the ordering if your camera has special detection
+    * requirements.
+    */
+   kdc240_register();
+
+   /* All of the cameras have registered, detect the connected camera. */
+   for (current = 0; current < registered; current++)
+   {
+      /* Check to see if the "current" camera is connected */
+      if (cams[current]->detect())
+      {
+         /* Camera was detected.  Exit the loop. */
+         break;
+      }
+   }
+
+   if (current < registered)
+   {
+      /* Allow the detected camera to initialize */
+      return cams[current]->initialize();
+   }
+   else
+   {
+      return 0;
+   }
 }
 
-GdkImlibImage * kodak_generic_get_preview()
+/*******************************************************************************
+* FUNCTION: kodak_get_picture
+*
+* DESCRIPTION:
+*******************************************************************************/
+struct Image *
+kodak_get_picture
+(
+   int picture,
+   int thumbnail
+)
 {
-  return NULL;
+   /* If the camera supports this operation, perform it. */
+   if (cams[current]->get_picture != NULL)
+   {
+      return cams[current]->get_picture(picture, thumbnail);
+   }
+
+   /* Camera does not support this operation. */
+   return NULL;
 }
 
-int             kodak_generic_delete_picture(int a)
+/*******************************************************************************
+* FUNCTION: kodak_get_preview
+*
+* DESCRIPTION:
+*******************************************************************************/
+struct Image *
+kodak_get_preview
+(
+   void
+)
 {
-  return 0;
+   /* If the camera supports this operation, perform it. */
+   if (cams[current]->get_preview != NULL)
+   {
+      return cams[current]->get_preview();
+   }
+
+   /* Camera does not support this operation. */
+   return NULL;
 }
 
-int             kodak_generic_take_picture()
+/*******************************************************************************
+* FUNCTION: kodak_delete_picture
+*
+* DESCRIPTION:
+*******************************************************************************/
+int
+kodak_delete_picture
+(
+   int picture
+)
 {
-  return 0;
+   /* If the camera supports this operation, perform it. */
+   if (cams[current]->delete_picture != NULL)
+   {
+      return cams[current]->delete_picture(picture);
+   }
+
+   /* Camera does not support this operation. */
+   return 0;
 }
 
-int             kodak_generic_number_of_pictures()
+/*******************************************************************************
+* FUNCTION: kodak_take_picture
+*
+* DESCRIPTION:
+*******************************************************************************/
+int
+kodak_take_picture
+(
+   void
+)
 {
-  return 0;
+   /* If the camera supports this operation, perform it. */
+   if (cams[current]->take_picture != NULL)
+   {
+      return cams[current]->take_picture();
+   }
+
+   /* Camera does not support this operation. */
+   return 0;
 }
 
-int             kodak_generic_configure()
+/*******************************************************************************
+* FUNCTION: kodak_number_of_pictures
+*
+* DESCRIPTION:
+*******************************************************************************/
+int
+kodak_number_of_pictures
+(
+   void
+)
 {
-  return 0;
+   /* If the camera supports this operation, perform it. */
+   if (cams[current]->number_of_pictures != NULL)
+   {
+      return cams[current]->number_of_pictures();
+   }
+
+   /* Camera does not support this operation. */
+   return 0;
 }
 
-io_link * kodak_generic_open(char *device)
+/*******************************************************************************
+* FUNCTION: kodak_configure
+*
+* DESCRIPTION:
+*******************************************************************************/
+int
+kodak_configure
+(
+   void
+)
 {
-    io_link *dev;
-    char buf[20];
-    int retries;
-        
-    dev = io_open("/dev/ttyS1");
+   /* If the camera supports this operation, perform it. */
+   if (cams[current]->configure != NULL)
+   {
+      return cams[current]->configure();
+   }
 
-    io_set_baudrate(dev, 9600);
-
-    buf[0] = 0x72;
-    buf[1] = 0x00;
-    buf[2] = 0xFF;
-    buf[3] = 0x00;
-    buf[4] = 0x00;
-    buf[5] = 0x00;
-    buf[6] = 0x00;
-    buf[7] = 0x1A;
-    dump("send: ", buf, 8);
-    io_sendbuffer(dev, buf, 8);
-
-    io_recvbuffer(dev, 1);      
-    dump("recv: ", dev->buf, dev->buflen);
-    for (retries=0;(retries<3) && (dev->buf[0] != (char)0xD1);retries++) {
-      printf("Retrying..\n");
-      dev->buflen=0;
-      io_sendbuffer(dev, buf, 8);
-      io_recvbuffer(dev, 1);
-    }
-    if (retries == 3)
-      return NULL;
-    dev->buflen=0;
-    io_recvbuffer(dev, 1);
-    printf("Got here\n");
-    io_recvbuffer(dev, 1);
-    dump("Buf recv: ", dev->buf, dev->buflen);
-
-    return dev; 
+   /* Camera does not support this operation. */
+   return 0;
 }
 
-char *          kodak_generic_summary()
+/*******************************************************************************
+* FUNCTION: kodak_summary
+*
+* DESCRIPTION:
+*******************************************************************************/
+char *
+kodak_summary
+(
+   void
+)
 {
-  io_link *dev;
-  char buf[8];
-  char format_buf[100];
-  unsigned char *summary_buf;
-  unsigned char checksum;
-  int i;
+   /* If the camera supports this operation, perform it. */
+   if (cams[current]->summary != NULL)
+   {
+      return cams[current]->summary();
+   }
 
-  summary_buf = (char *)calloc(4096, sizeof(unsigned char));
-
-  if ((dev = kodak_generic_open("/dev/ttyS1")) == NULL) {
-    return NULL;
-  }
-
-  for (i=0;i<8;i++) {
-    buf[i] = 0;
-  }
-
-  buf[0] = 0x7F;
-  buf[7] = 0x1A;
-
-  io_sendbuffer(dev, buf, 8);
-  dev->buflen=0;
-  io_recvbuffer(dev, 258);
-  dump("recv: ", dev->buf, dev->buflen);
-
-  if (dev->buflen != 259)
-    printf("Strange buffer length %d\n", dev->buflen);
-
-  checksum = 0;
-  for (i=2;i<(dev->buflen-1);i++) {
-    checksum ^= dev->buf[i]; 
-  }
-
-  if (checksum != dev->buf[258]) {
-    printf("Checksum error!\n");
-    buf[0] = 0xE3;
-    io_sendbuffer(dev, buf, 1);
-    dev->buflen=0;
-    io_recvbuffer(dev, 258);
-    dump("recv: ", dev->buf, dev->buflen);
-    checksum = 0;
-    for (i=2;i<(dev->buflen-1);i++) {
-      checksum ^= dev->buf[i];
-    }
-  }
-
-  strcat (summary_buf, "Camera is a Kodak Digital Science DC");
-  strcat (summary_buf, ((dev->buf[3] == 3)?"200":"210"));
-  strcat (summary_buf, "\n");
-  
-  strcat (summary_buf,"Firmware version: ");
-  sprintf(format_buf, "%d.%s%d\n", dev->buf[4], ((dev->buf[5] < 10)?"0":""), dev->buf[5]);
-  strcat (summary_buf, format_buf);
-
-  strcat (summary_buf, "Power Source: ");
-  if (dev->buf[11] == 0)
-    strcat (summary_buf, "Batteries");
-  else
-    strcat (summary_buf, "AC Adapter");
-  strcat(summary_buf, "\n");
-
-  strcat (summary_buf, "Compression: ");
-  if (dev->buf[21] == 1)
-    strcat (summary_buf, "High");
-  else if (dev->buf[21] == 2)
-    strcat (summary_buf, "Medium");
-  else
-    strcat (summary_buf, "Low");
-  strcat(summary_buf, "\n");
-
-  strcat(summary_buf, "Compression Method: ");
-  if (dev->buf[25] == 3)
-    strcat(summary_buf, "JPEG");
-  else if (dev->buf[25] == 4)
-    strcat(summary_buf, "FlashPix");
-  strcat(summary_buf, "\n");
-
-  strcat (summary_buf, "Flash Mode: ");
-  switch (dev->buf[22]) {
-    case 0:    strcat(summary_buf, "Auto");
-               break;
-    case 1:    strcat(summary_buf, "Fill");
-               break;
-    case 2:    strcat(summary_buf, "Off");
-               break;
-    case 3:    strcat(summary_buf, "Auto Red-Eye");
-               break;
-    case 4:    strcat(summary_buf, "Fill Red-Eye");
-               break;
-  }
-  strcat(summary_buf, "\n");
-
-  strcat(summary_buf, "Resolution: ");
-  if (dev->buf[24] == 0)
-    strcat(summary_buf, "640x480");
-  else if (dev->buf[24] == 1)
-    strcat(summary_buf, "1152x864"); 
-  strcat(summary_buf, "\n");
-
-  strcat(summary_buf, "Total # of Pictures Ever Taken: ");
-  sprintf(format_buf, "%d\n", ((unsigned char)dev->buf[27] << 8) | ((unsigned char)dev->buf[28]));
-  strcat(summary_buf, format_buf); 
-
-  strcat(summary_buf, "Total # of Flashes Fired: ");
-  sprintf(format_buf, "%d\n", ((unsigned char)dev->buf[29] << 8) | ((unsigned char)dev->buf[30]));
-  strcat(summary_buf, format_buf);
-
-  strcat(summary_buf, "Number of Pictures in Camera: ");
-  sprintf(format_buf, "%d\n", ((unsigned char)dev->buf[58] << 8) | ((unsigned char)dev->buf[59]));
-  strcat(summary_buf, format_buf);
-
-  strcat(summary_buf, "Remaining Pictures at High Compression: ");
-  sprintf(format_buf, "%d\n", ((unsigned char)dev->buf[70] << 8) | ((unsigned char)dev->buf[71]));
-  strcat(summary_buf, format_buf);
-
-  strcat(summary_buf, "Remaining Pictures at Medium Compression: ");  
-  sprintf(format_buf, "%d\n", ((unsigned char)dev->buf[72] << 8) | ((unsigned char)dev->buf[73]));
-  strcat(summary_buf, format_buf);
-
-  strcat(summary_buf, "Remaining Pictures at Low Compression: ");  
-  sprintf(format_buf, "%d\n", ((unsigned char)dev->buf[74] << 8) | ((unsigned char)dev->buf[75]));
-  strcat(summary_buf, format_buf);
-
-  strcat(summary_buf, "Camera ID: ");
-  for (i=0;i<32;i++)
-    format_buf[i] = dev->buf[i+92];
-  format_buf[32] = 0;
-  strcat(summary_buf, format_buf);
-  strcat(summary_buf, "\n");
-
-  return summary_buf;
-  
-  /*strdup("This driver is not ready");*/
+   /* Camera does not support this operation. */
+   return NULL;
 }
 
-char *          kodak_generic_description()
+/*******************************************************************************
+* FUNCTION: kodak_description
+*
+* DESCRIPTION:
+*******************************************************************************/
+char *
+kodak_description
+(
+   void
+)
 {
-  return strdup("This is the Generic Kodak driver");
+   /* If the camera supports this operation, perform it. */
+   if (cams[current]->description != NULL)
+   {
+      return cams[current]->description();
+   }
+
+   /* Camera does not support this operation. */
+   return NULL;
 }
+
+/*******************************************************************************
+* Function Table
+*******************************************************************************/
+struct _Camera kodak =
+{
+   kodak_initialize,
+   kodak_get_picture,
+   kodak_get_preview,
+   kodak_delete_picture,
+   kodak_take_picture,
+   kodak_number_of_pictures,
+   kodak_configure,
+   kodak_summary,
+   kodak_description
+};

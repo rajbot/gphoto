@@ -27,7 +27,6 @@ util_camera_new (GnomeVFSURI* uri, CORBA_Environment* ev)
 
 	g_return_val_if_fail (gconf_is_initialized (), NULL);
 
-#if 0
         /* Does GConf know about the camera (host)? */
 	g_print ("Looking up host...\n");
         value = gconf_client_get (gconf_client_get_default (), "/apps/GnoCam/cameras", NULL);
@@ -59,7 +58,6 @@ util_camera_new (GnomeVFSURI* uri, CORBA_Environment* ev)
                 CORBA_exception_set (ev, CORBA_USER_EXCEPTION, ex_Bonobo_Stream_NotSupported, NULL);
                 return NULL;
         }
-#endif
 
 	/* Create the camera. */
 	g_print ("Creating camera...\n");
@@ -70,19 +68,9 @@ util_camera_new (GnomeVFSURI* uri, CORBA_Environment* ev)
 	}
 
         /* Make ready for connection. Beware of 'Directory Browse'.*/
-#if 0
 	strcpy (camera->model, model);
-#else
-	strcpy (camera->model, "HP PhotoSmart C30");
-	port = g_strdup ("Serial Port 0");
-	speed = g_strdup ("0");
-#endif
 	g_print ("Looking for port...\n");
-#if 0
         if (!strcmp ("Directory Browse", model)) strcpy (camera->port->path, "");
-#else
-	if (FALSE);
-#endif
         else {
                 for (i = 0; i < gp_port_count_get (); i++) {
                         if (gp_port_info_get (i, camera->port) != GP_OK) continue;

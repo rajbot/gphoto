@@ -130,8 +130,9 @@ values_set (GladeXML* xml_properties, CameraWidget *camera_widget)
                         if ((preference_widget = gtk_object_get_data (object, gp_widget_choice (camera_widget, k))) == NULL) break;
                         if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (preference_widget))) {
 				value_new = gp_widget_choice (camera_widget, k);
-				if (value_new != gp_widget_value_get (camera_widget))
+				if (strcmp (value_new, gp_widget_value_get (camera_widget)) != 0) {
 	                                gp_widget_value_set (camera_widget, value_new);
+				}
 			}
                 }
                 break;

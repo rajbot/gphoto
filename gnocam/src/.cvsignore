@@ -6,4 +6,5 @@ gnocam.glade.bak
 gnocam.o
 preferences.o
 save.o
+.deps
 

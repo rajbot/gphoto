@@ -12,6 +12,7 @@
 #include "information.h"
 #include "cameras.h"
 #include "gphoto-extensions.h"
+#include "frontend.h"
 
 /**********************/
 /* External Variables */
@@ -32,16 +33,6 @@ void upload_common (Camera* camera, gchar* path, gchar* filename);
 /*************/
 /* Callbacks */
 /*************/
-
-//void
-//on_reply (gint reply, gpointer data)
-//{
-//        GtkWidget *app;
-//
-//        app = glade_xml_get_widget (xml, "app");
-//        g_assert (app != NULL);
-//        gtk_object_set_data (GTK_OBJECT (app), "reply", GINT_TO_POINTER (reply));
-//}
 
 void
 on_fileselection_ok_button_clicked (GtkButton *button, gpointer user_data)
@@ -100,7 +91,7 @@ upload (Camera* camera, gchar* path, gchar* filename)
 	GladeXML*		xml_fileselection;
 	GtkFileSelection*	fileselection;
 	GtkObject*		object;
-        guint                   j, k;
+        gint			j, k;
         GnomeVFSURI*            uri;
         GnomeVFSHandle*         handle;
         GnomeVFSFileSize        bytes_read;
@@ -116,7 +107,16 @@ upload (Camera* camera, gchar* path, gchar* filename)
 		/* Read the data and upload the file. */
 		file = gp_file_new ();
 	        file->data = g_new (gchar, 1025);
-		strcpy (file->name, filename);
+
+		/* Quick hack to get the filename excluding path. */
+		for (k = strlen (filename) - 1; k >= 0; k--) {
+			if (filename[k] == '/') {
+				k++;
+				break;
+			}
+		}
+		strcpy (file->name, &filename[k]);
+
 	        uri = gnome_vfs_uri_new (filename);
 	        if ((result = gnome_vfs_open_uri (&handle, uri, GNOME_VFS_OPEN_READ)) != GNOME_VFS_OK) {
 	                dialog_information (_("An error occurred while trying to open file '%s' (%s)."), filename, gnome_vfs_result_to_string (result));

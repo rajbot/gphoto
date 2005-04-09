@@ -24,7 +24,7 @@
 # character to interpose another module into the current module.  This
 # can be useful for creating a module that consists of many directories
 # spread out over the entire source repository.
-m4	libgphoto2/libgphoto2_port/m4
-gtkam	gtkam &m4
-gphoto2	gphoto2 &m4
+m4m	libgphoto2/libgphoto2_port/m4
+gtkam	gtkam &m4m
+gphoto2	gphoto2 &m4m
 # End of file modules.

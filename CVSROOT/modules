@@ -26,3 +26,5 @@
 # spread out over the entire source repository.
 m4	libgphoto2/libgphoto2_port/m4
 gtkam	gtkam &m4
+gphoto2	gphoto2 &m4
+# End of file modules.

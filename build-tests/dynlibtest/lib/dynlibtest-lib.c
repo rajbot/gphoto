@@ -1,14 +1,10 @@
 #define __DYNLIBTEST_LIB__
 #include <dynlibtest.h>
 
-#ifndef WIN32
-#define __declspec(foo)
-#endif
+char *me(MODULE, lib_data) = "<MODULE>" MODULE_STRING "</MODULE>";
 
-__declspec(dllexport) char *lib_data;
-
-FUNC_BODY(0)
-FUNC_BODY(1)
-FUNC_BODY(2)
-FUNC_BODY(3)
-FUNC_BODY(4)
+FUNC_BODY(MODULE,0)
+FUNC_BODY(MODULE,1)
+FUNC_BODY(MODULE,2)
+FUNC_BODY(MODULE,3)
+FUNC_BODY(MODULE,4)

@@ -95,17 +95,23 @@ test(const char *testname, const char *symname,
 static int
 foreach_func (const char *filename, lt_ptr data)
 {
-  printf("Filename: %s\n", filename);
+  const char *symname = (const char *) data;
+  assert(symname != NULL);
+  printf("Filename: %s (%s)\n", filename, symname);
   total_count++;
   lt_dlhandle handle = NULL;
   dynlibtest_func func = NULL;  
   assert(lt_dlinit() == 0);
   handle = lt_dlopenext(filename);
   assert(handle != NULL);
-  func = lt_dlsym (handle, "dynlibtest0");
-  assert(func != NULL);
-  succ_count++;
-  printf("  Result: %s\n", func(NULL));
+  func = lt_dlsym (handle, symname);
+  if (func != NULL) {
+    succ_count++;
+    printf("  Result: \"%s\"\n", func(NULL));
+  } else {
+    printf("  lt_dlsym of failed:    %s\n",
+           lt_dlerror());
+  }
   assert(lt_dlexit() == 0);
   return 0;
 }
@@ -153,7 +159,9 @@ static void
 test_path(const char *path)
 {
   printf("Starting path search for: \"%s\"\n", path);
-  lt_dlforeachfile (TESTLIBDIR, foreach_func, NULL);
+  lt_dlforeachfile (TESTLIBDIR, foreach_func, "dynlibtest0");
+  lt_dlforeachfile (TESTLIBDIR, foreach_func, "bar_LTX_dynlibtest0");
+  lt_dlforeachfile (TESTLIBDIR, foreach_func, "foo_LTX_dynlibtest0");
 }
 
 

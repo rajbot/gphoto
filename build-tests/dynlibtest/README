@@ -1,1 +1,97 @@
-Just a test package to check the dynamic loading of libraries.
+=======================================================================
+dynlibtest - package to check the dynamic loading of libraries
+=======================================================================
+
+
+Requirements and Consequences:
+------------------------------
+
+  R1  One sourcecode, many platforms.
+  
+      Avoid lots of #ifdefs in the code.
+      This should be easiest to achieve by relying on libltdl and
+      removing dlopen() code.
+
+
+  R2  Build on systems without libltdl
+  
+      If not present on the system, use included libltdl.
+
+
+  R3  Build suitable libraries for these platforms:
+
+      In decreasing importance:
+      a) GNU/Linux (alpha, ppc, x86, amd64)
+      b) FreeBSD (x86, ...)
+      c) MacOS X / darwin (ppc)
+      d) Windows/MinGW32 (x86, amd64)
+      e) OpenBSD (x86, ...)
+      f) NetBSD (...)
+      g) Solaris (x86, sparc)
+      
+      And, if possible:
+      h) IRIX (mips)
+      i) OS/2 (x86)
+      j) ...
+  
+  
+  R4  Concurrent use of multiple driver modules with conflicting symbol names
+
+      So that one can load multiple different camlibs which all implement
+      the same interface.
+
+
+  R5  System specifics: Win32
+  
+      - linking stuff compiled with MSVC, Watcom or other compilers against
+        our code must be possible
+      - This implies we have to build .DLL files, DLL specs, DLL .libs, and
+        other strange stuff.
+
+
+  R6  System specifics: MacOS X
+  
+      - must integratable with other applications/desktop
+
+
+  R7  System specifics: OS/2
+  
+      - Is there a reasonable build system for OS/2? If not, let's ditch it.
+
+
+  R8  Support two kinds of modules:
+
+      - system specific library (.so, .dll, .dylib, .a, ...) for
+        libgphoto2, libgphoto2_port
+      - some internal format (like e.g. .la + .a) for the camlibs
+
+
+  R9  C preprocessor macros for reasonable symbol definitions (if possible)
+
+      Should be compatible with non-GNU C preprocessors.
+
+
+
+More Detailed Remarks:
+----------------------
+
+
+  R1  Completely relying on libltdl may
+      - cause problems with non-GNU compilers (really?)
+
+
+  R2  Same should go for libintl, libiconv, popt, and other stuff.
+
+
+  R3  This requires installing and keeping the *.la files around.
+
+
+  R4  Should be achievable by following the example in
+
+          (libtool.info.gz)Modules for libltdl
+
+
+
+=======================================================================
+End of README.
+=======================================================================

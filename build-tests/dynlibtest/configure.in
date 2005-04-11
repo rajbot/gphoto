@@ -4,6 +4,7 @@ AC_INIT([dynamic library load test], [0.3.1],
         [gphoto-devel@lists.sourceforge.net], [dynlibtest])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIR([m4m])
 AM_INIT_AUTOMAKE([gnu 1.8 dist-bzip2])
 
 GP_CHECK_SHELL_ENVIRONMENT
@@ -20,6 +21,8 @@ dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
+dnl AC_DISABLE_STATIC
+dnl AC_DISABLE_SHARED
 AC_LIBLTDL_INSTALLABLE([libltdl])
 dnl AC_LIBLTDL_CONVENIENCE([libltdl])
 AC_LIBTOOL_WIN32_DLL

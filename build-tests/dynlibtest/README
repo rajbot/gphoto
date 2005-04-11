@@ -20,19 +20,19 @@ Requirements and Consequences:
 
   R3  Build suitable libraries for these platforms:
 
-      In decreasing importance:
-      a) GNU/Linux (alpha, ppc, x86, amd64)
-      b) FreeBSD (x86, ...)
-      c) MacOS X / darwin (ppc)
-      d) Windows/MinGW32 (x86, amd64)
-      e) OpenBSD (x86, ...)
-      f) NetBSD (...)
-      g) Solaris (x86, sparc)
+      In approximate order of decreasing importance:
+        a) GNU/Linux (alpha, ppc, x86, amd64)
+        b) FreeBSD (x86, ...)
+        c) MacOS X / darwin (ppc)
+        d) Windows/MinGW32 (x86, amd64)
+        e) OpenBSD (x86, ...)
+        f) NetBSD (...)
+        g) Solaris (x86, sparc)
       
       And, if possible:
-      h) IRIX (mips)
-      i) OS/2 (x86)
-      j) ...
+        h) IRIX (mips)
+        i) OS/2 (x86)
+        j) ...
   
   
   R4  Concurrent use of multiple driver modules with conflicting symbol names

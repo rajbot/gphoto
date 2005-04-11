@@ -41,6 +41,7 @@ alloc_pathjoin(const char *a, const char *b)
 }
 
 
+int something_worked = 0;
 int succ_count = 0;
 int total_count = 0;
 
@@ -109,7 +110,7 @@ foreach_func (const char *filename, lt_ptr data)
     succ_count++;
     printf("  Result: \"%s\"\n", func(NULL));
   } else {
-    printf("  lt_dlsym of failed:    %s\n",
+    printf("  lt_dlsym failed:\n    %s\n",
            lt_dlerror());
   }
   assert(lt_dlexit() == 0);
@@ -144,6 +145,7 @@ explicit_loads(const int argc, const char *argv[])
 {
   int i;
   printf("Starting explicit loads\n");
+  something_worked += succ_count;
   total_count = 0;
   succ_count = 0;
   explicit_load("static", TESTLIBDIR, "dynlibtest1", "dynlibtest2");
@@ -170,6 +172,7 @@ test_pathes(const int argc, const char *argv[])
 {
   int i;
   printf("Starting path searches\n");
+  something_worked += succ_count;
   total_count = 0;
   succ_count = 0;
   test_path(TESTLIBDIR);
@@ -187,5 +190,6 @@ int main(const int argc, const char *argv[])
   explicit_loads(argc, argv);
   test_pathes(argc, argv);
   printf("dynlibtest-bin: Finished.\n");
-  return 0;
+  something_worked += succ_count;
+  return (something_worked > 0)?0:7;
 }

@@ -71,6 +71,16 @@ Requirements and Consequences:
       Should be compatible with non-GNU C preprocessors.
 
 
+  R10 Multi-threaded applications should be supported
+
+
+  R11 Support static linking
+
+      It should be possible to statically link an application against
+      libgphoto2, libgphoto2_port and a (number of) camlib(s) for use
+      on embedded systems.
+
+
 
 More Detailed Remarks:
 ----------------------
@@ -78,6 +88,9 @@ More Detailed Remarks:
 
   R1  Completely relying on libltdl may
       - cause problems with non-GNU compilers (really?)
+      - if any system should not work with libltdl, we can still register 
+        our own module loader with libltdl:
+	(libtool.info.gz)Module loaders for libltdl
 
 
   R2  Same should go for libintl, libiconv, popt, and other stuff.

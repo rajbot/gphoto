@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.59)
-AC_INIT([dynamic library load test], [0.4],
+AC_INIT([dynamic library load test], [0.4.1],
         [gphoto-devel@lists.sourceforge.net], [dynlibtest])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -42,7 +42,7 @@ GP_DYNAMIC_LIBRARIES
 
 
 # module directory
-AC_SUBST([moddir],["\$(libdir)/dynlibtest"])
+AC_SUBST([moddir],["\$(libdir)/\$(PACKAGE_TARNAME)-\$(PACKAGE_VERSION)"])
 
 AM_CPPFLAGS="$AM_CPPFLAGS -DMODULE_DIR=\\\"\$(moddir)\\\""
 AM_CPPFLAGS="$AM_CPPFLAGS -I\$(top_srcdir)/lib"

@@ -36,7 +36,9 @@ int
 dlt_exit (void);
 
 int
-dlt_test (const int argc, const char *argv[]);
+dlt_test (const int argc, const char *argv[],
+	  const int load_explicit_files,
+	  const int try_non_modules);
 
 
 #endif /* ! __DLT_LIB_H__ */

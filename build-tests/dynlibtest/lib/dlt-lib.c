@@ -2,42 +2,51 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <dynlibtest.h>
+#include <dlt-lib.h>
+
 #include <ltdl.h>
 #include <config.h>
 
 
-#ifndef assert
-#define assert(expr) do { if (!(expr)) { fprintf(stderr, __FILE__ ":%d: Assertion failed: %s\n", __LINE__, #expr); exit(13); } } while (0)
-#endif
-
-
-#if defined(WIN32) || defined(OS2)
-#  define DIRSEP '\\'
-#else
-#  define DIRSEP '/'
-#endif
+typedef char *(*dynlibtest_func)(const char *);
 
 
 static char *
+alloc_stringjoin(const char sep, const char *a, const char *b)
+{
+  assert(a != NULL);
+  assert(b != NULL);
+  if (1) {
+    size_t al = strlen(a);
+    size_t bl = strlen(b);
+    size_t rl = al+bl+2;
+    char *s, *d;
+    char *res = malloc(rl);
+    assert(res != NULL);
+    s = (char *)a;
+    d = res;
+    while (*s != '\0')
+      *d++ = *s++;
+    *d++ = sep;
+    s = (char *)b;
+    while (*s != '\0')
+      *d++ = *s++;
+    *d++ = '\0';
+    return res;
+  }
+}
+
+
+#ifdef LT_DIRSEP_CHAR
+#define DIRSEP_CHAR LT_DIRSEP_CHAR
+#else
+#define DIRSEP_CHAR '/'
+#endif
+
+inline static char *
 alloc_pathjoin(const char *a, const char *b)
 {
-  size_t al = strlen(a);
-  size_t bl = strlen(b);
-  size_t rl = al+bl+2;
-  char *s, *d;
-  char *res = malloc(rl);
-  assert(res != NULL);
-  s = (char *)a;
-  d = res;
-  while (*s != '\0')
-    *d++ = *s++;
-  *d++ = DIRSEP;
-  s = (char *)b;
-  while (*s != '\0')
-    *d++ = *s++;
-  *d++ = '\0';
-  return res;
+  return alloc_stringjoin(DIRSEP_CHAR, a, b);
 }
 
 
@@ -93,40 +102,69 @@ test(const char *testname, const char *symname,
 }
 
 
+static void
+load_and_test (lt_dlhandle handle, const char *symname)
+{
+    dynlibtest_func func = NULL;
+
+    func = lt_dlsym (handle, symname);
+    if (func != NULL) {
+      succ_count++;
+      printf("    Result of %s():\n      \"%s\"\n", symname, func(NULL));
+    } else {
+      printf("    lt_dlsym of %s() failed:\n      %s\n",
+	     symname, lt_dlerror());
+    }
+
+}
+
+
 static int
 foreach_func (const char *filename, lt_ptr data)
 {
   const char *symname = (const char *) data;
-  assert(symname != NULL);
-  printf("Filename: %s (%s)\n", filename, symname);
-  total_count++;
   lt_dlhandle handle = NULL;
-  dynlibtest_func func = NULL;  
+
+  assert(filename != NULL);
+  assert(symname != NULL);
+  printf("  Filename: %s\n", filename);
+  total_count++;
+
   assert(lt_dlinit() == 0);
+
   handle = lt_dlopenext(filename);
-  assert(handle != NULL);
-  func = lt_dlsym (handle, symname);
-  if (func != NULL) {
-    succ_count++;
-    printf("  Result: \"%s\"\n", func(NULL));
-  } else {
-    printf("  lt_dlsym failed:\n    %s\n",
-           lt_dlerror());
+  if (handle != NULL) {
+    char *module_name = NULL;
+
+    if (1) {
+      const lt_dlinfo *dlinfo = lt_dlgetinfo(handle);
+      if (dlinfo != NULL) {
+	if (dlinfo->name) {
+	  printf("    Module name: \"%s\"\n", dlinfo->name);
+	  module_name = dlinfo->name;
+	}
+	printf("    Module filename: \"%s\"\n", dlinfo->filename);
+      } else {
+	printf("    No module information:\n    %s\n",
+	       lt_dlerror());
+      }
+    }
+    
+    load_and_test(handle, symname);
+
+    if (module_name) {
+      const char *my_tmpname = 
+	alloc_stringjoin('_', "LTX", symname);
+      const char *my_symname = 
+	alloc_stringjoin('_', module_name, my_tmpname);
+      load_and_test(handle, my_symname);
+    }
+
   }
+
   assert(lt_dlexit() == 0);
   return 0;
 }
-
-
-#if defined(WIN32)
-#  define SOEXT ".dll"
-#elif defined(OS2)
-#  define SOEXT ".dll"
-#elif defined(DARWIN)
-#  define SOEXT ".dynlib"
-#else
-#  define SOEXT ".so"
-#endif
 
 
 static void
@@ -148,7 +186,7 @@ explicit_loads(const int argc, const char *argv[])
   something_worked += succ_count;
   total_count = 0;
   succ_count = 0;
-  explicit_load("static", TESTLIBDIR, "dynlibtest1", "dynlibtest2");
+  explicit_load("static", MODULE_DIR, "dynlibtest1", "dynlibtest2");
   for (i=1; i<argc; i++) {
     explicit_load(argv[i], argv[i], "dynlibtest3", "dynlibtest4");
   }
@@ -160,10 +198,9 @@ explicit_loads(const int argc, const char *argv[])
 static void
 test_path(const char *path)
 {
-  printf("Starting path search for: \"%s\"\n", path);
-  lt_dlforeachfile (TESTLIBDIR, foreach_func, "dynlibtest0");
-  lt_dlforeachfile (TESTLIBDIR, foreach_func, "bar_LTX_dynlibtest0");
-  lt_dlforeachfile (TESTLIBDIR, foreach_func, "foo_LTX_dynlibtest0");
+  printf("Path search in directory \"%s\": Starting.\n", path);
+  lt_dlforeachfile (path, foreach_func, "dynlibtest0");
+  printf("Path search in directory \"%s\": Done.\n", path);
 }
 
 
@@ -175,7 +212,7 @@ test_pathes(const int argc, const char *argv[])
   something_worked += succ_count;
   total_count = 0;
   succ_count = 0;
-  test_path(TESTLIBDIR);
+  test_path(MODULE_DIR);
   for (i=1; i<argc; i++) {
     test_path(argv[i]);
   }
@@ -184,12 +221,30 @@ test_pathes(const int argc, const char *argv[])
 }
 
 
-int main(const int argc, const char *argv[])
+int
+dlt_init (void)
 {
-  printf("dynlibtest-bin (" PACKAGE_NAME ") " PACKAGE_VERSION "\n");
-  explicit_loads(argc, argv);
+  printf("dlt-lib (" PACKAGE_NAME ") " PACKAGE_VERSION "\n");
+  return 0;
+}
+
+
+int
+dlt_exit (void)
+{
+  printf("dlt-lib: Finished.\n");
+  return 0;  
+}
+
+
+int
+dlt_test (const int argc, const char *argv[])
+{
+  if (0) {
+    explicit_loads(argc, argv);
+    printf("---------------------------------------------------------\n");
+  }
   test_pathes(argc, argv);
-  printf("dynlibtest-bin: Finished.\n");
   something_worked += succ_count;
-  return (something_worked > 0)?0:7;
+  return (something_worked > 0)?0:1;
 }

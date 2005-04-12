@@ -2,6 +2,9 @@
 #define __DLT_MOD_H__
 
 
+#include <dlt-lib.h>
+
+
 /* not sure whether we need this when using libltdl */
 #ifndef WIN32
 #define __declspec(foo)
@@ -58,6 +61,7 @@
 		if (string) { \
 			return string; \
 		} \
+		dlt_mod_callback(); \
 		return "Hello, this is the \"" _MODULE_STRING(MODULE) \
 			"\" module function dynlibtest"#number"()"; \
 	}

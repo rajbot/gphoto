@@ -62,6 +62,8 @@ alloc_pathjoin(const char *a, const char *b)
  * Common test infrastructure
  **********************************************************************/
 
+int mod_callback_count = 0;
+
 int something_worked = 0;
 int succ_count = 0;
 int total_count = 0;
@@ -231,11 +233,13 @@ load_and_test (lt_dlhandle handle, const char *symname)
     dynlibtest_func func = NULL;
 
     func = lt_dlsym (handle, symname);
+    mod_callback_count = 0;
     if (func != NULL) {
       char *tmp = func(NULL);
       succ_count++;
-      printf("    Result of %s():\n      \"%s\"\n", symname, tmp);
-      return (tmp == NULL);
+      printf("    Result of %s() (%d callbacks):\n      \"%s\"\n",
+	     symname, mod_callback_count, tmp);
+      return ((tmp == NULL) || (mod_callback_count != 1));
     } else {
       printf("    lt_dlsym of %s() failed:\n      %s\n",
 	     symname, lt_dlerror());
@@ -380,4 +384,10 @@ dlt_test (const int argc, const char *argv[],
 	    argc, argv, try_non_modules);
   print_big_separator();
   return (primary_error == 0)?0:1;
+}
+
+void
+dlt_mod_callback (void)
+{
+  mod_callback_count++;
 }

@@ -6,8 +6,6 @@
  * 
  * Production modules will handle this differently, of course.
  *
- * FIXME:
- *   Link to a function in libdlt
  */
 
 #include <dlt-mod.h>

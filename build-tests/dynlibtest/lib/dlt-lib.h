@@ -28,6 +28,8 @@
 
 #define ENV_MOD_DIR "DLT_MODULE_DIR"
 
+void
+dlt_mod_callback (void);
 
 int
 dlt_init (void);

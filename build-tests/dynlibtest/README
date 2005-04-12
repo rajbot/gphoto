@@ -81,6 +81,15 @@ Requirements and Consequences:
       on embedded systems.
 
 
+  R12 Run time configurable location of modules and translations
+  
+      lt_open(), bindtextdomain(), etc. should use user configurable
+      pathes, probably environment variables, something like
+      
+          foo=env('FOO_PATH');
+	  lt_open(foo?foo:STATIC_FOO_PATH, flags);
+
+
 
 More Detailed Remarks:
 ----------------------

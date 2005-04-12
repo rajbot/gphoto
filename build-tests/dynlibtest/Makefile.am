@@ -1,4 +1,4 @@
-SUBDIRS = m4m lib mod @subdirs@ bin
+SUBDIRS = m4m @subdirs@ lib mod bin
 
 EXTRA_DIST = run-test.sh
 

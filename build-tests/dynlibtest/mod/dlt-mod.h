@@ -20,9 +20,11 @@
 #define foerks(prefix,ident) prefix ## ident
 #define foerks2(prefix,ident) foerks(_ ## prefix,ident)
 
-#define PUBSYM(mod,ident) foerks(mod ## _LTX_, ident)
-#define _PRISYM(mod,ident) foerks2(mod ## _, ident)
-#define PRISYM(mod,ident) _PRISYM(mod,ident)
+#define __PUBSYM(mod,ident) foerks(mod ## _LTX_, ident)
+#define __PRISYM(mod,ident) foerks2(mod ## _, ident)
+
+#define _PUBSYM(mod,ident) __PUBSYM(mod,ident)
+#define _PRISYM(mod,ident) __PRISYM(mod,ident)
 
 #else
 
@@ -30,38 +32,46 @@
 
 #define MODULE ("dummy module")
 #define _MODULE_STRING(mod) "undefined"
-#define MODULE_STRING _MODULE_STRING(MODULE)
-#define PUBSYM(mod,ident) ident
-#define PRISYM(mod,ident) ident
+#define _PUBSYM(mod,ident) ident
+#define _PRISYM(mod,ident) ident
 
 #endif
 
+#define MODULE_STRING _MODULE_STRING(MODULE)
+#define PUBSYM(ident) _PUBSYM(MODULE,ident)
+#define PRISYM(ident) _PRISYM(MODULE,ident)
 
 /**
  * Define prototype for test function
  **/
-#define FUNC_PROTO(mod,number) \
+#define FUNC_PROTO(number) \
 	const char * \
-	PUBSYM(mod, dynlibtest ## number) (const char *string);
+	_PUBSYM(MODULE, dynlibtest ## number) (const char *string);
 
 /**
  * Define body for test function
  **/
-#define FUNC_BODY(mod,number) \
+#define FUNC_BODY(number) \
 	const char * \
-	PUBSYM(mod, dynlibtest ## number) (const char *string) \
+	_PUBSYM(MODULE, dynlibtest ## number) (const char *string) \
 	{ \
 		if (string) { \
 			return string; \
 		} \
-		return "Hello, this is the \"" _MODULE_STRING(mod) \
+		return "Hello, this is the \"" _MODULE_STRING(MODULE) \
 			"\" module function dynlibtest"#number"()"; \
 	}
 
-FUNC_PROTO(MODULE,0)
-FUNC_PROTO(MODULE,1)
-FUNC_PROTO(MODULE,2)
-FUNC_PROTO(MODULE,3)
-FUNC_PROTO(MODULE,4)
+FUNC_PROTO(0)
+FUNC_PROTO(1)
+FUNC_PROTO(2)
+FUNC_PROTO(3)
+FUNC_PROTO(4)
+
+#define test_func_with_mod PUBSYM(test_func_with_mod)
+const char * test_func_with_mod (void);
+const char * test_func_without_mod (void);
+
+#define public_test_data PUBSYM(public_test_data)
 
 #endif /* !__DLT_MOD_H__ */

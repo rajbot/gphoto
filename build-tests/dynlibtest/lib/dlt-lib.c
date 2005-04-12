@@ -11,6 +11,10 @@
 typedef char *(*dynlibtest_func)(const char *);
 
 
+/**********************************************************************
+ * Utility functions
+ **********************************************************************/
+
 static char *
 alloc_stringjoin(const char sep, const char *a, const char *b)
 {
@@ -27,7 +31,8 @@ alloc_stringjoin(const char sep, const char *a, const char *b)
     d = res;
     while (*s != '\0')
       *d++ = *s++;
-    *d++ = sep;
+    if (sep != '\0')
+      *d++ = sep;
     s = (char *)b;
     while (*s != '\0')
       *d++ = *s++;
@@ -37,11 +42,13 @@ alloc_stringjoin(const char sep, const char *a, const char *b)
 }
 
 
+/*
 #ifdef LT_DIRSEP_CHAR
 #define DIRSEP_CHAR LT_DIRSEP_CHAR
 #else
+*/
 #define DIRSEP_CHAR '/'
-#endif
+/* #endif */
 
 inline static char *
 alloc_pathjoin(const char *a, const char *b)
@@ -50,57 +57,164 @@ alloc_pathjoin(const char *a, const char *b)
 }
 
 
+
+/**********************************************************************
+ * Common test infrastructure
+ **********************************************************************/
+
 int something_worked = 0;
 int succ_count = 0;
 int total_count = 0;
 
 
+inline static void
+print_big_separator (void)
+{
+  printf("========================================================================\n");
+}
+
+
+inline static void
+print_separator (void)
+{
+  printf("-------------------------------------------------------\n");
+}
+
+
+typedef void (*test_iter_func) (const char *name, const char *directory);
+
+static void
+test_iter(const char *name, test_iter_func test_func,
+	  const int argc, const char *argv[])
+{
+  assert(test_func != NULL);
+
+  print_big_separator();
+  printf("Iterations for \"%s\": Started.\n", name);
+
+  something_worked += succ_count;
+  total_count = 0;
+  succ_count = 0;
+
+  if (1) {
+    char *tmp = alloc_stringjoin(' ', name, "(build default)");
+    print_separator();
+    test_func(tmp, MODULE_DIR);
+    free(tmp);
+  }
+
+  if (1) {
+    const char *env = getenv(ENV_MOD_DIR);
+    if (env) {
+      char *tmp = alloc_stringjoin(' ', name, 
+					 "(envvar " ENV_MOD_DIR ")");
+      print_separator();
+      test_func(tmp, env);
+      free(tmp);
+    }
+  }
+
+  if (argc > 1) {
+    int i;
+    for (i=1; i<argc; i++) {
+      char *tmp = alloc_stringjoin(' ', name, "(cmdline)");
+      char *tmp2 = alloc_stringjoin(' ', tmp, argv[i]);
+      print_separator();
+      test_func(tmp2, argv[i]);
+      free(tmp2);
+      free(tmp);
+    }
+  }
+
+  print_separator();
+  printf("%d total, %d successful, %d errors.\n",
+	 total_count, succ_count, total_count - succ_count);
+  printf("Iterations for \"%s\": Finished.\n", name);
+}
+
+
+/**********************************************************************
+ * Test explicitly loading modules
+ **********************************************************************/
+
 static void 
-test(const char *testname, const char *symname,
+test(const char *symname,
      const char *dirname, const char *filename)
 {
   char *fpath = alloc_pathjoin(dirname, filename);
-  assert(fpath != NULL);
-  printf("Test \"%s\":\n", testname);
   total_count++;
-  if (lt_dlinit()) {
-    printf("    libltdl NOT initialized\n");
+
+  lt_dlhandle handle = NULL;
+  handle = lt_dlopen(fpath);
+  if (handle) {
+    dynlibtest_func func = NULL;
+    printf("  module file \"%s\" loaded\n", fpath);
+    func = lt_dlsym (handle, symname);
+    if (func) {
+      char *val;
+      printf("    symbol \"%s\" loaded\n", symname);
+      val = func(NULL);
+      printf("    return value: \"%s\"\n", val);
+      succ_count++;
+    } else {
+      printf("    symbol \"%s\" could NOT loaded:\n        %s\n",
+	     symname, lt_dlerror());
+    }
+    if (lt_dlclose(handle)) {
+      printf("    module NOT unloaded\n");
+    } else {
+      printf("    module unloaded\n");
+    }
   } else {
-    lt_dlhandle handle = NULL;
-    printf("    libltdl initialized\n");
-    handle = lt_dlopen(fpath);
-    if (handle) {
-      dynlibtest_func func = NULL;
-      printf("    module \"%s\" loaded\n", fpath);
-      func = lt_dlsym (handle, symname);
-      if (func) {
-	char *val;
-	printf("    symbol \"%s\" loaded\n", symname);
-	val = func(NULL);
-	printf("    return value: \"%s\"\n", val);
-	succ_count++;
-      } else {
-	printf("    symbol \"%s\" could NOT loaded:\n        %s\n",
-	       symname, lt_dlerror());
-      }
-      if (lt_dlclose(handle)) {
-	printf("    module NOT unloaded\n");
-      } else {
-	printf("    module unloaded\n");
-      }
-    } else {
-      printf("    library file \"%s\" NOT loaded:\n        %s\n",
-	     fpath, lt_dlerror());
-    }
-    free(fpath);
-    if (lt_dlexit()) {
-      printf("    libltdl NOT shut down\n");
-    } else {
-      printf("    libltdl shut down\n");
-    }
+    printf("    library file \"%s\" NOT loaded:\n        %s\n",
+	   fpath, lt_dlerror());
   }
+  free(fpath);
 }
 
+typedef struct {
+  char *symbol;
+  char *fileext;
+} sym_ext_tuple;
+
+static void
+explicit_load(const char *testname, const char *dir)
+{
+  static const char *module_list[] = {
+    "mod_a",
+    "mod_b",
+    "mod_c",
+    "mod_d",
+    "mod_e",
+    NULL
+  };
+  static const sym_ext_tuple symexts[] = {
+    { "dynlibtest1", SOEXT },
+    { "dynlibtest2", ".la" },
+    { NULL, NULL }
+  };
+  printf("Test \"%s\": Starting.\n", testname);
+  assert(lt_dlinit() == 0);
+  if (1) {
+    int i;
+    for (i=0; module_list[i] != NULL; i++) {
+      int j;
+      for (j=0; symexts[j].symbol != NULL; j++) {
+	char *tmp = alloc_stringjoin('\0', 
+				     module_list[i], symexts[j].fileext);
+	test(symexts[j].symbol, dir, tmp);
+	free(tmp);
+      }
+    }
+  }
+  assert(lt_dlexit() == 0);
+  printf("Test \"%s\": Finished.\n", testname);
+}
+
+
+/**********************************************************************
+ * Test loading modules from path
+ **********************************************************************/
 
 static void
 load_and_test (lt_dlhandle handle, const char *symname)
@@ -124,13 +238,16 @@ foreach_func (const char *filename, lt_ptr data)
 {
   const char *symname = (const char *) data;
   lt_dlhandle handle = NULL;
+  /* This is a cheap version of a set.
+   * If we get the elements in order, we only need to compare to
+   * the last element we have handled.
+   */
+  static char *last_real_file = "";
 
   assert(filename != NULL);
   assert(symname != NULL);
   printf("  Filename: %s\n", filename);
   total_count++;
-
-  assert(lt_dlinit() == 0);
 
   handle = lt_dlopenext(filename);
   if (handle != NULL) {
@@ -140,10 +257,15 @@ foreach_func (const char *filename, lt_ptr data)
       const lt_dlinfo *dlinfo = lt_dlgetinfo(handle);
       if (dlinfo != NULL) {
 	if (dlinfo->name) {
-	  printf("    Module name: \"%s\"\n", dlinfo->name);
 	  module_name = dlinfo->name;
+	  printf("    Module name: \"%s\"\n", module_name);
 	}
-	printf("    Module filename: \"%s\"\n", dlinfo->filename);
+	printf("    Module filename: \"%s\" (refcount %d)\n",
+	       dlinfo->filename, dlinfo->ref_count);
+	if (strcmp(last_real_file, dlinfo->filename) == 0) {
+	  printf("      (duplicate module)\n");
+	}
+	last_real_file = dlinfo->filename;
       } else {
 	printf("    No module information:\n    %s\n",
 	       lt_dlerror());
@@ -157,69 +279,31 @@ foreach_func (const char *filename, lt_ptr data)
 	alloc_stringjoin('_', "LTX", symname);
       const char *my_symname = 
 	alloc_stringjoin('_', module_name, my_tmpname);
+      total_count++;
       load_and_test(handle, my_symname);
     }
 
+    lt_dlclose(handle);
   }
 
-  assert(lt_dlexit() == 0);
   return 0;
 }
 
 
 static void
-explicit_load(const char *testname, const char *dir,
-	      const char *sym1, const char *sym2)
+test_path(const char *testname, const char *dirname)
 {
-  test("static", sym1, dir, "foo" SOEXT);
-  test("static", sym2, dir, "foo.la");
-  test("static", sym1, dir, "bar" SOEXT);
-  test("static", sym2, dir, "bar.la");
+  printf("Test \"%s\" in \"%s\": Starting\n", testname, dirname);
+  assert(lt_dlinit() == 0);
+  lt_dlforeachfile(dirname, foreach_func, "dynlibtest0");
+  assert(lt_dlexit() == 0);
+  printf("Test \"%s\" in \"%s\": Finished\n", testname, dirname);
 }
 
 
-static void
-explicit_loads(const int argc, const char *argv[])
-{
-  int i;
-  printf("Starting explicit loads\n");
-  something_worked += succ_count;
-  total_count = 0;
-  succ_count = 0;
-  explicit_load("static", MODULE_DIR, "dynlibtest1", "dynlibtest2");
-  for (i=1; i<argc; i++) {
-    explicit_load(argv[i], argv[i], "dynlibtest3", "dynlibtest4");
-  }
-  printf("%d total, %d successful, %d errors.\n",
-	 total_count, succ_count, total_count - succ_count);
-}
-
-
-static void
-test_path(const char *path)
-{
-  printf("Path search in directory \"%s\": Starting.\n", path);
-  lt_dlforeachfile (path, foreach_func, "dynlibtest0");
-  printf("Path search in directory \"%s\": Done.\n", path);
-}
-
-
-static void
-test_pathes(const int argc, const char *argv[])
-{
-  int i;
-  printf("Starting path searches\n");
-  something_worked += succ_count;
-  total_count = 0;
-  succ_count = 0;
-  test_path(MODULE_DIR);
-  for (i=1; i<argc; i++) {
-    test_path(argv[i]);
-  }
-  printf("%d total, %d successful, %d errors.\n",
-	 total_count, succ_count, total_count - succ_count);
-}
-
+/**********************************************************************
+ * Public library functions
+ **********************************************************************/
 
 int
 dlt_init (void)
@@ -240,11 +324,11 @@ dlt_exit (void)
 int
 dlt_test (const int argc, const char *argv[])
 {
-  if (0) {
-    explicit_loads(argc, argv);
-    printf("---------------------------------------------------------\n");
+  if (1) {
+    test_iter("explicit loads", explicit_load,
+	      argc, argv);
   }
-  test_pathes(argc, argv);
-  something_worked += succ_count;
+  test_iter("path search", test_path, argc, argv);
+  print_big_separator();
   return (something_worked > 0)?0:1;
 }

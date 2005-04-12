@@ -26,6 +26,9 @@
 #endif
 
 
+#define ENV_MOD_DIR "DLT_MODULE_DIR"
+
+
 int
 dlt_init (void);
 

@@ -1,5 +1,7 @@
 # The modules
 
+EXTRA_DIST = dlt-mod.sym dlt-mod-empty.sym
+
 mod_LTLIBRARIES = mod_a.la mod_b.la mod_c.la mod_d.la mod_e.la
 
 # symbol names according to libtool.info

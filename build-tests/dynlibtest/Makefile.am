@@ -18,7 +18,9 @@ upload.stamp: dist-bzip2
 	true > $@
 
 public: upload.stamp
-	@tag="$(PACKAGE_TARNAME)-$$(echo "$(PACKAGE_VERSION)" | sed 'y|.-|__|')-release"; \
+	@pkg="$$(echo "$(PACKAGE_TARNAME)" | sed 'y|.-|__|')"; \
+	ver="$$(echo "$(PACKAGE_VERSION)" | sed 'y|.-|__|')"; \
+	tag="$${pkg}-$${ver}-release"; \
 	echo "Press ENTER to run \`cvs tag $$tag', Ctrl-C to abort."; \
 	read; \
 	cd $(srcdir) && cvs tag "$$tag" && echo "Done."

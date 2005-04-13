@@ -6,7 +6,8 @@ lib_LTLIBRARIES = libdlt.la
 
 libdlt_la_SOURCES = dlt-lib.c dlt-lib.h
 libdlt_la_LDFLAGS = $(AM_LDFLAGS) \
-	-export-dynamic -export-symbols $(srcdir)/dlt-lib.sym
+	-no-undefined \
+	-export-symbols $(srcdir)/dlt-lib.sym
 libdlt_la_LIBADD = \
 	$(LIBLTDL)
 # The libtool docs describe these params, but they don't build.

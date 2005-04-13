@@ -62,7 +62,7 @@ alloc_pathjoin(const char *a, const char *b)
  * Common test infrastructure
  **********************************************************************/
 
-int mod_callback_count = 0;
+volatile int mod_callback_count = 0;
 
 int something_worked = 0;
 int succ_count = 0;
@@ -311,6 +311,7 @@ foreach_func (const char *filename, lt_ptr data)
       primary_total++;
       if (load_and_test(handle, params->symbol_name)
 	  ^ invert_primary_logic) {
+	printf("    PRIMARY error\n");
 	primary_error++;
       }
       

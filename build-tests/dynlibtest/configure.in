@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.59)
-AC_INIT([dynamic library load test], [0.4.5],
+AC_INIT([dynamic library load test], [0.4.6],
         [gphoto-devel@lists.sourceforge.net], [dynlibtest])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -21,7 +21,7 @@ dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
-dnl AC_DISABLE_STATIC
+AC_DISABLE_STATIC
 dnl AC_DISABLE_SHARED
 AC_LIBLTDL_INSTALLABLE([libltdl])
 dnl AC_LIBLTDL_CONVENIENCE([libltdl])

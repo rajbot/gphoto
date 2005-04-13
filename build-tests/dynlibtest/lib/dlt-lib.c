@@ -308,11 +308,22 @@ foreach_func (const char *filename, lt_ptr data)
       const int invert_primary_logic = 
 	((module_name != NULL) && 
 	 (strcmp(module_name, "mod_e") == 0));
+      const int test_result = load_and_test(handle, params->symbol_name);
       primary_total++;
-      if (load_and_test(handle, params->symbol_name)
-	  ^ invert_primary_logic) {
-	printf("    PRIMARY error\n");
-	primary_error++;
+      if (test_result) {
+	if (invert_primary_logic) {
+	  printf("    The symbol was supposed to be local. Good.\n");
+	} else {
+	  printf("    PRIMARY error\n");
+	  primary_error++;
+	}
+      } else {
+	if (invert_primary_logic) {
+	  printf("    Strange. The symbol was supposed to be local.\n");
+	  succ_count--;
+	} else {
+	  /* Everything OK. */
+	}
       }
       
       if (module_name) {

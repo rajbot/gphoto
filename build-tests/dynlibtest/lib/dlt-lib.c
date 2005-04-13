@@ -151,10 +151,10 @@ static void
 test(const char *symname,
      const char *dirname, const char *filename)
 {
+  lt_dlhandle handle = NULL;
   char *fpath = alloc_pathjoin(dirname, filename);
   total_count++;
 
-  lt_dlhandle handle = NULL;
   handle = lt_dlopen(fpath);
   if (handle) {
     dynlibtest_func func = NULL;

@@ -18,7 +18,9 @@ upload.stamp: dist-bzip2
 	true > $@
 
 public: upload.stamp
-	@echo "You may want to run"
-	@echo "    (cd $(srcdir) && cvs tag $(PACKAGE_TARNAME)-$$(echo "$(PACKAGE_VERSION)" | sed 'y|.-|__|')-release)"
+	@tag="$(PACKAGE_TARNAME)-$$(echo "$(PACKAGE_VERSION)" | sed 'y|.-|__|')-release"; \
+	echo "Press ENTER to run \`cvs tag $$tag', Ctrl-C to abort."; \
+	read; \
+	cd $(srcdir) && cvs tag "$$tag" && echo "Done."
 
 CLEANFILES = upload.stamp

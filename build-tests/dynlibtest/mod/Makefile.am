@@ -1,4 +1,6 @@
 # The modules
+#
+# FIXME: The *_LIBADD doesn't work when compiling for MinGW32
 
 EXTRA_DIST = dlt-mod.sym dlt-mod-empty.sym
 

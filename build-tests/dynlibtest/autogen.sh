@@ -296,11 +296,12 @@ if cd "${dir}"; then
     if test "x$AG_LIBLTDL_DIR" != "x"; then
 	# We have to run libtoolize --ltdl ourselves because
 	#   - autoreconf doesn't run it at all
-	# And we have to clean up the generated files after it because
-	#   - we still want symlinks for the files
-	#   - but we want to AC_CONFIG_SUBDIR ourselves
 	echo "Running <<" ${LIBTOOLIZE-"libtoolize"} --ltdl ">>"
 	${LIBTOOLIZE-"libtoolize"} --ltdl
+	# And we have to clean up the generated files after libtoolize because
+	#   - we still want symlinks for the files
+	#   - but we want to (implicitly) AC_CONFIG_SUBDIR and that writes to
+	#     these files.
 	(cd "${AG_LIBLTDL_DIR}" && rm -f aclocal.m4 config.guess config.sub configure install-sh ltmain.sh Makefile.in missing)
     fi
     echo "Running <<" autoreconf --install --symlink ${AUTORECONF_OPTS} ">>"

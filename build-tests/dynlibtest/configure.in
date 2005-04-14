@@ -1,6 +1,6 @@
 dnl Process this file with autoreconf to produce a configure script.
 AC_PREREQ(2.59)
-AC_INIT([dynamic library load test], [0.5.1],
+AC_INIT([dynamic library load test], [0.5.2],
         [gphoto-devel@lists.sourceforge.net], [dynlibtest])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -13,7 +13,7 @@ GP_CONFIG_MSG([Source code location],[${srcdir}])
 dnl Something with the sequences is not quite alright yet.
 dnl SED is supposed to be set in AC_LIBTOOL_SETUP, but the
 dnl sequence seems to get mixed up.
-SED=sed
+SED=${SED-sed}
 
 AM_CPPFLAGS="$CPPFLAGS"
 AM_LDFLAGS="$LDFLAGS"

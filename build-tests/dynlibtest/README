@@ -44,7 +44,7 @@ Requirements and Consequences:
   R5  System specifics: Win32
   
       - linking stuff compiled with MSVC, Watcom or other compilers against
-        our code must be possible
+        our code must be possible (DLL/DEF/LIB plus .h file)
       - This implies we have to build .DLL files, DLL specs, DLL .libs, and
         other strange stuff.
 
@@ -63,7 +63,7 @@ Requirements and Consequences:
 
       - system specific library (.so, .dll, .dylib, .a, ...) for
         libgphoto2, libgphoto2_port
-      - some internal format (like e.g. .la + .a) for the camlibs
+      - some internal format (like e.g. .la + something) for the camlibs
 
 
   R9  C preprocessor macros for reasonable symbol definitions (if possible)
@@ -108,9 +108,30 @@ More Detailed Remarks:
   R3  This requires installing and keeping the *.la files around.
 
 
-  R4  Should be achievable by following the example in
+  R4  This is no problem at all as long as we don't link the library with
+      "-dlopen mod.la" for use with platforms which need the dlopenpreload.
+      To support these platforms, we'd need to follow the example from
 
           (libtool.info.gz)Modules for libltdl
+
+      Apart from that, we can use conflicting names without problems.
+
+  R11 Statically linking all that stuff together reminds me of
+      dlopenpreload and "-dlopen foo.la". Perhaps this could just
+      be forced?
+
+
+
+Issues:
+-------
+
+  I1  SF.net CF x86-solaris1 doesn't build
+      Reason: There is no "ar". Bummer.
+
+
+  I2  SF.net CF ppc-osx1 (darwin 5.5) "make check" doesn't work
+      
+      It only works after installation, and in the installation dir.
 
 
 

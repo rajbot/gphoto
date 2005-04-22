@@ -1,0 +1,16 @@
+#!/bin/sh
+
+dltbin="false"
+while read tmp
+do
+	if test -x "$tmp"; then
+		dltbin="$tmp"
+		break
+	fi
+done<<EOF
+./bin/dlt-bin
+@bindir@/dlt-bin
+EOF
+
+set -x
+env DLT_MODULE_DIR="$(pwd)/mod" "$dltbin" mod/.libs

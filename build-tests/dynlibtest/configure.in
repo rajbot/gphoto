@@ -1,6 +1,6 @@
 dnl Process this file with autoreconf to produce a configure script.
 AC_PREREQ(2.59)
-AC_INIT([dynamic library load test], [0.5.2],
+AC_INIT([dynamic library load test], [0.5.3],
         [gphoto-devel@lists.sourceforge.net], [dynlibtest])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -8,6 +8,7 @@ AC_CONFIG_MACRO_DIR([m4m])
 AM_INIT_AUTOMAKE([gnu 1.8 dist-bzip2])
 
 GP_CHECK_SHELL_ENVIRONMENT
+GP_CONFIG_MSG([Build])
 GP_CONFIG_MSG([Source code location],[${srcdir}])
 
 dnl Something with the sequences is not quite alright yet.
@@ -38,7 +39,6 @@ AC_SUBST([LIBLTDL])
 
 GP_CONFIG_MSG([Compiler],[${CC}])
 AC_DEFINE_UNQUOTED(HAVE_CC,"$CC",[The C compiler we're using])
-GP_CONFIG_MSG()
 
 
 dnl Find out how to dynamically load libraries

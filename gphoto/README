@@ -1,3 +1,56 @@
+
+
+    **** THE "gphoto" PROGRAM IS OBSOLETE ****
+
+
+    Use libgphoto2 and one of its frontends:
+       - gphoto2 for the command line
+       - gtkam, digikam, flphoto for X11
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 This is a development release of gPhoto, the GNU digital camera utility.
 
 DESCRIPTION

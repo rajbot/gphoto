@@ -28,4 +28,8 @@ m4m	libgphoto2/libgphoto2_port/m4
 gtkam	gtkam &m4m
 gphoto2	gphoto2 &m4m
 dynlibtest	build-tests/dynlibtest	&m4m
+# gphoto-suite & Co.
+src/gphoto2	gphoto2 &m4m
+src/libgphoto2	libgphoto2 &m4m
+gphoto-suite	gphoto-suite &m4m &src/gphoto2 &src/libgphoto2
 # End of file modules.

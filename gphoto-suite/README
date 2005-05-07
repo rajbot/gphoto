@@ -1,0 +1,5 @@
+gphoto-suite is intended to be an "umbrelly package" which
+contains all the commonly required subpackages for people
+compiling from scratch.
+
+However, this is just a test so far (2005-05-06).

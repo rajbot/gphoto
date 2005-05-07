@@ -256,6 +256,7 @@ AC_CONFIG_FILES([
   po/Makefile.in
   Makefile
   m4m/Makefile
+  i18n-test/Makefile
 ])
 AC_OUTPUT
 

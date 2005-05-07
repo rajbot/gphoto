@@ -33,7 +33,7 @@ $(srcdir)/ChangeLog.cvs:
 
 .PHONY: update-manpages
 update-manpages:
-	if test -d "$(top_srcdir)/gphoto2-manual"; then \
+	if test -d "$(top_builddir)/src/gphoto2-manual"; then \
 		cp "$(top_builddir)/src/gphoto2-manual/src/man/libgphoto2.3" \
 			"$(top_builddir)/src/libgphoto2/doc/"; \
 		cp "$(top_builddir)/src/gphoto2-manual/src/man/libgphoto2_port.3" \

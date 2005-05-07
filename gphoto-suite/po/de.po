@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gphoto-suite 0.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-07 12:29+0200\n"
+"POT-Creation-Date: 2005-05-07 14:06+0200\n"
 "PO-Revision-Date: 2005-05-07 12:32+0200\n"
 "Last-Translator: Hans Ulrich Niedermann <gp@n-dimensional.de>\n"
 "Language-Team: German <de@li.org>\n"
@@ -15,6 +15,6 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: i18n-test/i18n-test.c:6
+#: i18n-test/i18n-test.c:15
 msgid "Erk"
 msgstr "Örks"

@@ -1,0 +1,12 @@
+# source this file
+for d in {.,src/{libusb,libexif{,-gtk,/m4m},{lib,}gphoto2,libgphoto2/libgphoto2_port/m4,gphoto2-manual,gtkam}}; do
+	pushd .
+	if cd "$d"; then 
+		(cvs up;
+		cvs diff > patch;
+		cat patch | filterdiff -x '*/*.po' > patch.without-po; 
+		cat patch | filterdiff -i '*/*.po' > patch.only-po) &
+	fi
+	popd
+done
+wait

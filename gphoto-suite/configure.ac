@@ -167,6 +167,7 @@ else
       AC_CONFIG_SUBDIRS([src/popt])
       AC_SUBST([POPT_CFLAGS],["-I${gp_top_srcdir}/src/popt"])
       AC_SUBST([POPT_LIBS],["${gp_top_builddir}/src/popt/libpopt.la"])
+      have_popt=:
    else
       AC_MSG_WARN([
 popt library neither found on the system nor is it shipped with
@@ -178,6 +179,7 @@ fi
 if test -d ${srcdir}/src/libexif; then
 
    AC_CONFIG_SUBDIRS([src/libexif])
+   GP_AUTOGEN_SUBDIR([src/libexif])
 
    AC_SUBST([LIBEXIF_CFLAGS],["-I${gp_top_builddir}/src/libexif -I${gp_top_srcdir}/src/libexif"])
    AC_SUBST([LIBEXIF_LIBS],["${gp_top_builddir}/src/libexif/libexif/libexif.la"])
@@ -191,20 +193,24 @@ FATAL: ${PACKAGE_NAME} requires libexif source in src/libexif!
 
    if "$have_popt" && test -d ${srcdir}/src/exif; then
       AC_CONFIG_SUBDIRS([src/exif])
+      GP_AUTOGEN_SUBDIR([src/exif])
    fi
 
    if "$have_gtk" && test -d ${srcdir}/src/libexif-gtk; then
       AC_CONFIG_SUBDIRS([src/libexif-gtk])
+      GP_AUTOGEN_SUBDIR([src/libexif-gtk])
       AC_SUBST([LIBEXIF_GTK_CFLAGS],["-I${gp_top_builddir}/src/libexif-gtk -I${gp_top_srcdir}/src/libexif-gtk"])
       AC_SUBST([LIBEXIF_GTK_LIBS],["${gp_top_builddir}/src/libexif-gtk/libexif-gtk/libexif-gtk.la"])
       export LIBEXIF_GTK_LIBS LIBEXIF_GTK_CFLAGS
       if test -d ${srcdir}/src/gexif; then
          AC_CONFIG_SUBDIRS([src/gexif])
+         GP_AUTOGEN_SUBDIR([src/gexif])
       fi
    fi
 
    if "$have_libusb_system" && test -d ${srcdir}/src/libusb; then
       AC_CONFIG_SUBDIRS([src/libusb])
+      GP_AUTOGEN_SUBDIR([src/libusb])
       # LIBUSB_LIBS="\$(top_builddir)/../../src/libusb/libusb.la"
       # Use absolute directory as workaround. LIBUSB_LIBS will be used
       # in libgphoto2_port, which is second-level [AC_CONFIG_SUBDIRS]
@@ -216,19 +222,23 @@ FATAL: ${PACKAGE_NAME} requires libexif source in src/libexif!
 
    if test -d "$srcdir/src/gphoto2-manual"; then
       AC_CONFIG_SUBDIRS([src/gphoto2-manual])
+      GP_AUTOGEN_SUBDIR([src/gphoto2-manual])
    fi
 
    if test -d ${srcdir}/src/libgphoto2; then
       AC_CONFIG_SUBDIRS([src/libgphoto2])
+      GP_AUTOGEN_SUBDIR([src/libgphoto2])
       AC_SUBST([LIBGPHOTO2_CFLAGS],["-I${gp_top_builddir}/src/libgphoto2 -I${gp_top_builddir}/src/libgphoto2/gphoto2"])
       AC_SUBST([LIBGPHOTO2_LIBS],["${gp_top_builddir}/src/libgphoto2/libgphoto2/libgphoto2.la ${gp_top_builddir}/src/libgphoto2/libgphoto2_port/libgphoto2_port/libgphoto2_port.la"])
       export LIBGPHOTO2_LIBS LIBGPHOTO2_CFLAGS
       if test -d ${srcdir}/src/gphoto2; then
          AC_CONFIG_SUBDIRS([src/gphoto2])
+         GP_AUTOGEN_SUBDIR([src/gphoto2])
       fi
       if "$have_gtk" && test -d ${srcdir}/src/libexif-gtk && test -d ${srcdir}/src/gtkam
       then
          AC_CONFIG_SUBDIRS([src/gtkam])      
+         GP_AUTOGEN_SUBDIR([src/gtkam])
       fi
    fi
 
@@ -239,14 +249,11 @@ FATAL: src/libexif subproject subdirectory not found.
 ])
 fi
 
-AM_CONDITIONAL([HAVE_EXIF_CLI],[ test -f "$srcdir/src/exif/configure" ])
-
 # set variables depending on subdirs
 for sd in ${subdirs}; do
 	varname="have_subdir_$(basename "$sd" | sed 'y/-/_/')"
 	eval "${varname}=yes"
 done
-AM_CONDITIONAL([HAVE_SUBDIR_EXIF],[test "x$have_subdir_exif" = "xyes"])
 
 
 dnl ---------------------------------------------------------------------------

@@ -18,9 +18,7 @@
 ./src/gphoto2		CVS	:pserver:anonymous@cvs.sourceforge.net:/cvsroot/gphoto	gphoto2
 #./src/gtkam		CVS	:pserver:anonymous@cvs.sourceforge.net:/cvsroot/gphoto	gtkam
 
-# FIXME:
-# - Add a few libraries like popt here, and use our version if none is
-#   found on the system.
-src/popt		URLTAR	ftp://ftp.rpm.org/pub/rpm/dist/rpm-4.1.x/popt-1.7.tar.gz	popt-1.7
+#./src/popt		URLTAR	ftp://ftp.rpm.org/pub/rpm/dist/rpm-4.1.x/popt-1.7.tar.gz	popt-1.7
+./src/popt		CVS	:pserver:anonymous@cvs.rpm.org:/cvs/devel	popt
 
 # End of file `build-config.txt'.

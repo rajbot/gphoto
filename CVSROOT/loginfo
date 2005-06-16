@@ -27,5 +27,4 @@
 #
 CVSROOT	/cvsroot/sitedocs/CVSROOT/cvstools/syncmail -q                                       -u %{sVv} hun@users.sourceforge.net
 DEFAULT	${CVSROOT}/CVSROOT/syncmail              -p -q -R gphoto-devel@lists.sourceforge.net -u %{sVv} gphoto-cvs@lists.sourceforge.net
-# The CIABOT E-Mail addr is out of order. Uncomment when it is operating again.
-#ALL	${CVSROOT}/CVSROOT/ciabot %{}
+ALL	${CVSROOT}/CVSROOT/ciabot %{}

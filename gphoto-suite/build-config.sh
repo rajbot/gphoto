@@ -164,6 +164,9 @@ while read rdir method restofline <&5; do
 				sed "s,${sedrexp},${dir}        \1://\2\3/${module}${cmtag},g" >&3
 		fi
 		;;
+	*)	echo "Error: Unhandled method \`$method'. Aborting."
+		exit 133
+		;;
 	esac
 done 3>> "$cm_config" 5< "$config"
 

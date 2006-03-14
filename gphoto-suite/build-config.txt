@@ -6,6 +6,9 @@
 # Line syntax, Method CVS:
 # Directory		Method	CVSROOT							Module			<CVS Tag>
 
+#./src/popt		URLTAR	ftp://ftp.rpm.org/pub/rpm/dist/rpm-4.1.x/popt-1.7.tar.gz	popt-1.7
+./src/popt		CVS	:pserver:anonymous@cvs.rpm.org:/cvs/devel	popt
+
 #.			CVS	:pserver:anonymous@cvs.sourceforge.net:/cvsroot/gphoto	gphoto-suite
 ./src/libexif		CVS	:pserver:anonymous@cvs.sourceforge.net:/cvsroot/libexif	libexif
 
@@ -14,12 +17,10 @@
 
 #./src/libusb-win32	CVS	:pserver:anonymous@cvs.sourceforge.net:/cvsroot/libusb-win32	libusb
 ./src/libusb		CVS	:pserver:anonymous@cvs.sourceforge.net:/cvsroot/libusb	libusb
-./src/libgphoto2	SVN	https://svn.sourceforge.net/svnroot/gphoto/trunk	libgphoto2
-./src/gphoto2		SVN	https://svn.sourceforge.net/svnroot/gphoto/trunk	gphoto2
-#./src/gphoto2		CVS	:pserver:anonymous@cvs.sourceforge.net:/cvsroot/gphoto	gphoto2
-#./src/gtkam		CVS	:pserver:anonymous@cvs.sourceforge.net:/cvsroot/gphoto	gtkam
 
-#./src/popt		URLTAR	ftp://ftp.rpm.org/pub/rpm/dist/rpm-4.1.x/popt-1.7.tar.gz	popt-1.7
-./src/popt		CVS	:pserver:anonymous@cvs.rpm.org:/cvs/devel	popt
+# gphoto2 provided by svn:externals by default
+# libgphoto2 provided by svn:externals by default
+# Fetching SVN is not supported yet!
+#./src/gtkam		SVN	https://svn.sourceforge.net/svnroot/gphoto/trunk	gtkam
 
 # End of file `build-config.txt'.

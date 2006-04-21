@@ -24,4 +24,7 @@
 # gphotofs		provided by svn:externals by default
 # gtkam			provided by svn:externals by default
 
+# External software
+#./src/banshee		CVS	:pserver:anonymous@anoncvs.gnome.org:/cvs/gnome	banshee
+
 # End of file `build-config.txt'.

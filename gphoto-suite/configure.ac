@@ -3,7 +3,7 @@ dnl Use a short version and package name here, or "make dist" will fail
 dnl packaging [...]/libgphoto2_port/gphoto2-port-portability-os2.h
 dnl because tar only handles 99 chars per file path. Oh, and GNU tar 1.13
 dnl will fail silently.
-AC_INIT([gphoto suite],[0.0.0],[gphoto-devel@lists.sourceforge.net])
+AC_INIT([gphoto suite],[20060316],[gphoto-devel@lists.sourceforge.net],[gphoto-suite-trunk])
 AC_CONFIG_SRCDIR([build-config.sh])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([gnu 1.8 dist-bzip2])
@@ -18,6 +18,7 @@ dnl compiler stuff
 dnl ---------------------------------------------------------------------------
 AC_PROG_CC
 AC_C_CONST
+_AM_PROG_TAR([pax])dnl 'pax' aka 'posix'
 AM_PROG_LIBTOOL
 AM_CFLAGS="$CFLAGS"
 AM_LDFLAGS="$LDFLAGS"
@@ -140,6 +141,7 @@ GP_SUBMODULE([gexif])
 GP_SUBMODULE([libusb])
 GP_SUBMODULE([libgphoto2])
 GP_SUBMODULE([gphoto2])
+GP_SUBMODULE([gphotofs])
 GP_SUBMODULE([gtkam])
 
 
@@ -234,6 +236,10 @@ FATAL: ${PACKAGE_NAME} requires libexif source in src/libexif!
       if test -d ${srcdir}/src/gphoto2; then
          AC_CONFIG_SUBDIRS([src/gphoto2])
          GP_AUTOGEN_SUBDIR([src/gphoto2])
+      fi
+      if test "x$have_submod_gphotofs" = "xyes" && test -d ${srcdir}/src/gphotofs; then
+         AC_CONFIG_SUBDIRS([src/gphotofs])
+         GP_AUTOGEN_SUBDIR([src/gphotofs])
       fi
       if "$have_gtk" && test -d ${srcdir}/src/libexif-gtk && test -d ${srcdir}/src/gtkam
       then

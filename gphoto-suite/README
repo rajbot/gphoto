@@ -2,7 +2,7 @@
 		------------
 		
 gphoto-suite is an "umbrelly package" which contains all the commonly
-required subpackages related to libgphoto2 in one convenient package.
+required (sub)packages related to libgphoto2 in one convenient package.
 
 gphoto-suite makes compiling and installing from scratch easier for
 
@@ -18,20 +18,19 @@ gphoto-suite includes multiple packages which are mostly licensed under
 GPL or LGPL. See the respective packages for details.
 
 
-Getting gphoto-suite from CVS:
+Getting gphoto-suite from SVN:
 ------------------------------
 
-If you happen to have a non-anonymous access method to the CVS of some
-module mentioned in build-config.txt, you may want to add a line
-"${anonymous_cvsroot} ${your_cvsroot} to build-config.cvsroot.map.
+If you happen to have a non-anonymous access method to the CVS
+of some module mentioned in build-config.txt, you may want to add a
+line "${anonymous_cvsroot} ${your_cvsroot}" to build-config.cvsroot.map.
 
-Get gphoto-suite via CVS and change into its directory:
+Get gphoto-suite via SVN and change into its directory:
 
-    cvs -z3 -d :pserver:anonymous@cvs.sourceforge.net:/cvsroot/gphoto \
-	checkout -P gphoto-suite
+    svn co https://svn.sourceforge.net/svnroot/gphoto/trunk/gphoto-suite gphoto-suite
     cd gphoto-suite
 
-This downloads the programs from the gphoto project CVS. If you also
+This downloads the programs from the gphoto project SVN. If you also
 want to add third party software (e.g. libusb, libexif, popt), then
 run
 
@@ -56,9 +55,11 @@ you can also run build-config.sh
 Initialize the buildsystem:
 ---------------------------
 
-This step is only required for CVS checkouts or if you have just
-added new CVS directories to src/. If you have only added the contents
-of a source tarball to src/, then you do *not* need this step:
+This step is only required for SVN/CVS checkouts or if you have just
+added new CVS/SVN directories to src/.
+
+If you have only added the contents of a source tarball to src/, then
+you do *not* need it.
 
     ./autogen.sh
 

@@ -2,4 +2,7 @@
 
 5. Find a regex.h implementation for W32 (for libgphoto2_port).
 
+6. Build and test all bindings. Use reimplementations of programs
+   using different bindings to compare their output.
+
 

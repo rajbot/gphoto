@@ -1,7 +1,7 @@
                 gphoto-suite
 		------------
 		
-gphoto-suite is an "umbrelly package" which contains all the commonly
+gphoto-suite is an "umbrella package" which contains all the commonly
 required (sub)packages related to libgphoto2 in one convenient package.
 
 gphoto-suite makes compiling and installing from scratch easier for

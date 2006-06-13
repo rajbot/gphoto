@@ -192,6 +192,7 @@ if test -d ${srcdir}/src/libexif; then
 FATAL: ${PACKAGE_NAME} requires libexif source in src/libexif!
 ])
    fi
+fi
 
    if "$have_popt" && test -d ${srcdir}/src/exif; then
       AC_CONFIG_SUBDIRS([src/exif])
@@ -248,12 +249,12 @@ FATAL: ${PACKAGE_NAME} requires libexif source in src/libexif!
       fi
    fi
 
-else
-   AC_MSG_ERROR([
-FATAL: src/libexif subproject subdirectory not found.
-       The README file describes how to create subproject subdirs.
-])
-fi
+dnl else
+dnl   AC_MSG_ERROR([
+dnl FATAL: src/libexif subproject subdirectory not found.
+dnl        The README file describes how to create subproject subdirs.
+dnl ])
+dnl fi
 
 # set variables depending on subdirs
 for sd in ${subdirs}; do

@@ -22,8 +22,8 @@ Getting gphoto-suite from SVN:
 ------------------------------
 
 If you happen to have a non-anonymous access method to the CVS
-of some module mentioned in build-config.txt, you may want to add a
-line "${anonymous_cvsroot} ${your_cvsroot}" to build-config.cvsroot.map.
+of some module mentioned in checkout-config.txt, you may want to add a
+line "${anonymous_cvsroot} ${your_cvsroot}" to checkout-config.cvsroot.map.
 
 Get gphoto-suite via SVN and change into its directory:
 
@@ -34,14 +34,14 @@ This downloads the programs from the gphoto project SVN. If you also
 want to add third party software (e.g. libusb, libexif, popt), then
 run
 
-    ./build-config.sh
+    ./checkout-config.sh
 
-or, if that fails (build-config.sh isn't tested all that well),
+or, if that fails (checkout-config.sh isn't tested all that well),
 
     cd src
 
 and check out the other modules according to the definitions from
-build-config.txt.
+checkout-config.txt.
 
 
 Getting gphoto-suite from source tarball:
@@ -49,7 +49,7 @@ Getting gphoto-suite from source tarball:
 
 If you got gphoto-suite from a tarball, the source subdirectories
 should already be there. To add missing subdirectories to a tarball,
-you can also run build-config.sh
+you can also run checkout-config.sh
 
 
 Initialize the buildsystem:

@@ -4,7 +4,7 @@ dnl packaging [...]/libgphoto2_port/gphoto2-port-portability-os2.h
 dnl because tar only handles 99 chars per file path. Oh, and GNU tar 1.13
 dnl will fail silently.
 AC_INIT([gphoto suite],[20060316],[gphoto-devel@lists.sourceforge.net],[gphoto-suite-trunk])
-AC_CONFIG_SRCDIR([build-config.sh])
+AC_CONFIG_SRCDIR([checkout-config.sh])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([gnu 1.8 dist-bzip2])
 

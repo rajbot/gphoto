@@ -1,12 +1,12 @@
 #!/bin/sh
-# build-config.sh - build source tree according to configuration
+# checkout-config.sh - build source tree according to configuration
 #
 # Syntax:
-#   ./build-config.sh [<configfile> [<subdir-to-build-in>]]
+#   ./checkout-config.sh [<configfile> [<subdir-to-build-in>]]
 #
 # Default <subdir-to-build-in> is the current directory.
-# Default <configfile> is build-config.txt from the directory
-#         where build-config.sh resides.
+# Default <configfile> is checkout-config.txt from the directory
+#         where checkout-config.sh resides.
 #
 # Yes, "config manager" already does that, but hardly anyone has it installed.
 # So we write something similar with restricted functionality in sh.
@@ -15,7 +15,7 @@
 # * A on-checked-out "." top-level directory is not handled correctly.
 # * Checking out modules sometimes messes up the directories
 #
-# If you run into a bug, use a shell, build-config.txt, and your brain.
+# If you run into a bug, use a shell, checkout-config.txt, and your brain.
 
 # shell sanity check
 if test "x$(pwd)" != "x`pwd`"; then exit 13; fi
@@ -28,7 +28,7 @@ selfdir="$(cd "$(dirname "$0")" && pwd)"
 if test "x$1" != "x"; then
     config="$1"
 else
-    config="${selfdir}/build-config.txt"
+    config="${selfdir}/checkout-config.txt"
 fi
 if test "x$2" != "x"; then
     topdir="$2/"
@@ -40,11 +40,11 @@ fi
 echo "# Building source tree according to configuration:"
 echo "#    \`${config}'"
 
-cvsrootmap="${selfdir}/build-config.cvsroot.map"
-cvsrootnew="${selfdir}/build-config.cvsroot.new"
+cvsrootmap="${selfdir}/checkout-config.cvsroot.map"
+cvsrootnew="${selfdir}/checkout-config.cvsroot.new"
 echo "# Line syntax: <anonymous cvsroot> <whitespace> <personal cvsroot>" > "$cvsrootnew"
 if test ! -f "$cvsrootmap"; then ln "$cvsrootnew" "$cvsrootmap"; fi
-cm_config="${selfdir}/build-config.cm"
+cm_config="${selfdir}/checkout-config.cm"
 
 echo "# Automatically generated configuration for \"config manager\" (cm)" > "$cm_config"
 echo "# Source file: ${config}" >> "$cm_config"

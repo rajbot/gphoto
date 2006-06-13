@@ -1,7 +1,7 @@
 # @subdirs@ are the configured subproject directories
 SUBDIRS = po m4m po i18n-test @subdirs@
 
-EXTRA_DIST = autogen.sh build-config.sh build-config.txt
+EXTRA_DIST = autogen.sh checkout-config.sh checkout-config.txt
 
 ACLOCAL_AMFLAGS = -I m4m
 

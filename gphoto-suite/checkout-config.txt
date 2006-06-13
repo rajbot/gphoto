@@ -1,4 +1,4 @@
-# build-config.txt - What source code to place in what directory
+# checkout-config.txt - What source code to place in what directory
 #
 # Line syntax, general:
 # Directory             Method	<Method specific stuff>
@@ -27,4 +27,4 @@
 # External software
 #./src/banshee		CVS	:pserver:anonymous@anoncvs.gnome.org:/cvs/gnome	banshee
 
-# End of file `build-config.txt'.
+# End of file `checkout-config.txt'.

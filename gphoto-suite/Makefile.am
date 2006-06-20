@@ -1,5 +1,5 @@
 # @subdirs@ are the configured subproject directories
-SUBDIRS = po m4m po i18n-test @subdirs@
+SUBDIRS = m4m po i18n-test @subdirs@
 
 EXTRA_DIST = autogen.sh checkout-config.sh checkout-config.txt
 

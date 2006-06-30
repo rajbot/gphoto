@@ -16,7 +16,8 @@
 #./src/gexif		CVS	:pserver:anonymous@cvs.sourceforge.net:/cvsroot/libexif	gexif
 
 #./src/libusb-win32	CVS	:pserver:anonymous@cvs.sourceforge.net:/cvsroot/libusb-win32	libusb
-./src/libusb		CVS	:pserver:anonymous@cvs.sourceforge.net:/cvsroot/libusb	libusb
+
+#./src/libusb		provided by svn:externals by default
 
 # libgphoto2		provided by svn:externals by default
 # gphoto2		provided by svn:externals by default

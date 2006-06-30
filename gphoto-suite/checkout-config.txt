@@ -11,11 +11,12 @@
 #./src/popt		URLTAR	ftp://ftp.rpm.org/pub/rpm/dist/rpm-4.1.x/popt-1.7.tar.gz	popt-1.7
 ./src/popt		CVS	:pserver:anonymous@cvs.rpm.org:/cvs/devel	popt
 
-./src/libexif		CVS	:pserver:anonymous@cvs.sourceforge.net:/cvsroot/libexif	libexif
-./src/libexif-gtk	CVS	:pserver:anonymous@cvs.sourceforge.net:/cvsroot/libexif	libexif-gtk
-#./src/gexif		CVS	:pserver:anonymous@cvs.sourceforge.net:/cvsroot/libexif	gexif
+./src/libexif		CVS	:pserver:anonymous@libexif.cvs.sourceforge.net:/cvsroot/libexif	libexif
+./src/exif		CVS	:pserver:anonymous@libexif.cvs.sourceforge.net:/cvsroot/libexif	exif
+./src/libexif-gtk	CVS	:pserver:anonymous@libexif.cvs.sourceforge.net:/cvsroot/libexif	libexif-gtk
+#./src/gexif		CVS	:pserver:anonymous@libexif.cvs.sourceforge.net:/cvsroot/libexif	gexif
 
-#./src/libusb-win32	CVS	:pserver:anonymous@cvs.sourceforge.net:/cvsroot/libusb-win32	libusb
+#./src/libusb-win32	CVS	:pserver:anonymous@libusb-win32.cvs.sourceforge.net:/cvsroot/libusb-win32	libusb-win32
 
 #./src/libusb		provided by svn:externals by default
 

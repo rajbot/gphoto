@@ -2,8 +2,9 @@ AC_PREREQ(2.59)
 dnl Use a short version and package name here, or "make dist" will fail
 dnl packaging [...]/libgphoto2_port/gphoto2-port-portability-os2.h
 dnl because tar only handles 99 chars per file path. Oh, and GNU tar 1.13
-dnl will even fail silently.
-AC_INIT([gphoto suite],[2.2.1.4.trunk],[gphoto-devel@lists.sourceforge.net],[gphoto-suite])
+dnl even used to fail silently before automake got the filename-length-max=99
+dnl parameter.
+AC_INIT([gphoto suite],[2.2.1.4.t],[gphoto-devel@lists.sourceforge.net],[gp-s])
 AC_CONFIG_SRCDIR([README.gphoto-suite])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror gnu 1.9 dist-bzip2 check-news filename-length-max=99])
@@ -68,7 +69,7 @@ fi
 if test -d ${srcdir}/src/libgphoto2; then
    AC_CONFIG_SUBDIRS([src/libgphoto2])
    GP_AUTOGEN_SUBDIR([src/libgphoto2])
-   AC_SUBST([LIBGPHOTO2_CFLAGS],["-I${gp_top_srcdir}/src/libgphoto2 -I${gp_top_builddir}/src/libgphoto2 -I${gp_top_srcdir}/src/libgphoto2/libgphoto2_port/libgphoto2_port -I${gp_top_builddir}/src/libgphoto2/libgphoto2_port/libgphoto2_port"])
+   AC_SUBST([LIBGPHOTO2_CFLAGS],["-I${gp_top_srcdir}/src/libgphoto2/libgphoto2 -I${gp_top_builddir}/src/libgphoto2/libgphoto2 -I${gp_top_srcdir}/src/libgphoto2/libgphoto2_port/libgphoto2_port -I${gp_top_builddir}/src/libgphoto2/libgphoto2_port/libgphoto2_port"])
    AC_SUBST([LIBGPHOTO2_LIBS],["${gp_top_builddir}/src/libgphoto2/libgphoto2/libgphoto2.la ${gp_top_builddir}/src/libgphoto2/libgphoto2_port/libgphoto2_port/libgphoto2_port.la"])
    export LIBGPHOTO2_LIBS LIBGPHOTO2_CFLAGS
 fi

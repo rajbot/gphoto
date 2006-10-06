@@ -1,7 +1,7 @@
                 gphoto-suite
 		------------
 		
-gphoto-suite is an "umbrella package" which contains all the commonly
+gphoto-suite is an "umbrella package" which contains 
 required (sub)packages related to libgphoto2 in one convenient package.
 
 gphoto-suite makes compiling and installing from scratch easier for
@@ -21,42 +21,26 @@ GPL or LGPL. See the respective packages for details.
 Getting gphoto-suite from SVN:
 ------------------------------
 
-If you happen to have a non-anonymous access method to the CVS
-of some module mentioned in checkout-config.txt, you may want to add a
-line "${anonymous_cvsroot} ${your_cvsroot}" to checkout-config.cvsroot.map.
-
 Get gphoto-suite via SVN and change into its directory:
 
     svn co https://svn.sourceforge.net/svnroot/gphoto/trunk/gphoto-suite gphoto-suite
     cd gphoto-suite
 
-This downloads the programs from the gphoto project SVN. If you also
-want to add third party software (e.g. libusb, libexif, popt), then
-run
-
-    ./checkout-config.sh
-
-or, if that fails (checkout-config.sh isn't tested all that well),
-
-    cd src
-
-and check out the other modules according to the definitions from
-checkout-config.txt.
+This downloads the programs from the gphoto project SVN.
 
 
 Getting gphoto-suite from source tarball:
 -----------------------------------------
 
 If you got gphoto-suite from a tarball, the source subdirectories
-should already be there. To add missing subdirectories to a tarball,
-you can also run checkout-config.sh
+should already be there.
 
 
 Initialize the buildsystem:
 ---------------------------
 
 This step is only required for SVN/CVS checkouts or if you have just
-added new CVS/SVN directories to src/.
+added new SVN directories to src/.
 
 If you have only added the contents of a source tarball to src/, then
 you do *not* need it.
@@ -77,8 +61,8 @@ Run
 to get help on all the parameters for subprojects.
 
 Note that some subproject options will be automatically set by
-libexif-testsuite. This mostly concerns the *_CFLAGS and *_LIBS
-for the libraries libexif-testsuite provides by itself.
+gphoto-suite. This mostly concerns the *_CFLAGS and *_LIBS
+for the libraries gphoto-suite provides by itself.
 
 Then run (for an in-tree build)
 

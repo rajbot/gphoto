@@ -1,0 +1,4 @@
+gphoto-suite 2.2.1.4.trunk
+
+ * First shot at a "gphoto-suite" which contains just the stuff we
+   usually release in a coordinated manner: libgphoto2 and gphoto2.

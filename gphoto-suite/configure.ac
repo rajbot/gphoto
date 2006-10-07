@@ -7,6 +7,7 @@ dnl parameter.
 AC_INIT([gphoto suite],[2.2.1.4.t],[gphoto-devel@lists.sourceforge.net],[gp-s])
 AC_CONFIG_SRCDIR([README.gphoto-suite])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([-Wall -Werror gnu 1.9 dist-bzip2 check-news filename-length-max=99])
 
 

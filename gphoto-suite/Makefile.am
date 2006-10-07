@@ -1,8 +1,6 @@
 # @subdirs@ are the configured subproject directories
 SUBDIRS = m4m @subdirs@
 
-noinst_PROGRAMS = dummy
-
 EXTRA_DIST = autogen.sh COPYING.LIB README.gphoto-suite
 
 ACLOCAL_AMFLAGS = -I m4m

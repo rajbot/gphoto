@@ -4,6 +4,13 @@ dnl packaging [...]/libgphoto2_port/gphoto2-port-portability-os2.h
 dnl because tar only handles 99 chars per file path. Oh, and GNU tar 1.13
 dnl even used to fail silently before automake got the filename-length-max=99
 dnl parameter.
+dnl If we want to use a package name like "gphoto-suite-2.2.4", then we have to
+dnl remove libgphoto2_port from libgphoto2 and give it its own subdirectory:
+dnl   src/libgphoto2_port/libgphoto2_port/gphoto2-port-portability-os2.h
+dnl   src/libgphoto2/libgphoto2/...
+dnl   src/libgphoto2/camlibs/...
+dnl   src/gphoto2/...
+dnl That would change the standard module people check out to "gphoto-suite".
 AC_INIT([gphoto suite],[2.2.1.4.t],[gphoto-devel@lists.sourceforge.net],[gp-s])
 AC_CONFIG_SRCDIR([README.gphoto-suite])
 AC_CONFIG_HEADERS([config.h])

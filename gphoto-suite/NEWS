@@ -1,3 +1,7 @@
+gphoto-suite 2.2.1.5.t
+
+ * libgphoto2-2.2.1.5.trunk
+
 gphoto-suite 2.2.1.4.trunk
 
  * First shot at a "gphoto-suite" which contains just the stuff we

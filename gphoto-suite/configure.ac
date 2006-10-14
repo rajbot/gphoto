@@ -16,7 +16,11 @@ dnl
 dnl "/src/libgphoto2/libgphoto2_port/libgphoto2_port/gphoto2/gphoto2-port-portability.h"
 dnl is 82 characters, which leaves 17 characters for the distdir name. 
 dnl "gphoto-suite-2.3.0" whould be 18 characters - one too many: 82+18=100 > 99 :-(
-AC_INIT([gphoto suite],[2.2.1.4.t],[gphoto-devel@lists.sourceforge.net],[gp-s])
+dnl
+dnl However, "/src/libgphoto2/libgphoto2_port/gphoto2/gphoto2-port-portability.h"
+dnl is 66 characters, which leaves 33 characters for the distdir name. 
+dnl "gphoto-suite-2.3.0" whould be 18 characters - bingo!
+AC_INIT([gphoto suite],[2.2.1.5.t],[gphoto-devel@lists.sourceforge.net],[gphoto-suite])
 AC_CONFIG_SRCDIR([README.gphoto-suite])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([.])
@@ -82,7 +86,7 @@ fi
 if test -d ${srcdir}/src/libgphoto2; then
    AC_CONFIG_SUBDIRS([src/libgphoto2])
    GP_AUTOGEN_SUBDIR([src/libgphoto2])
-   AC_SUBST([LIBGPHOTO2_CFLAGS],["-I${gp_top_srcdir}/src/libgphoto2/libgphoto2 -I${gp_top_builddir}/src/libgphoto2/libgphoto2 -I${gp_top_srcdir}/src/libgphoto2/libgphoto2_port/libgphoto2_port -I${gp_top_builddir}/src/libgphoto2/libgphoto2_port/libgphoto2_port"])
+   AC_SUBST([LIBGPHOTO2_CFLAGS],["-I${gp_top_srcdir}/src/libgphoto2 -I${gp_top_builddir}/src/libgphoto2 -I${gp_top_srcdir}/src/libgphoto2/libgphoto2_port -I${gp_top_builddir}/src/libgphoto2/libgphoto2_port"])
    AC_SUBST([LIBGPHOTO2_LIBS],["${gp_top_builddir}/src/libgphoto2/libgphoto2/libgphoto2.la ${gp_top_builddir}/src/libgphoto2/libgphoto2_port/libgphoto2_port/libgphoto2_port.la"])
    export LIBGPHOTO2_LIBS LIBGPHOTO2_CFLAGS
 fi

@@ -1,16 +1,21 @@
 AC_PREREQ(2.59)
 dnl Use a short version and package name here, or "make dist" will fail
-dnl packaging [...]/libgphoto2_port/gphoto2-port-portability-os2.h
+dnl packaging [...]/libgphoto2_port/gphoto2-port-portability.h
 dnl because tar only handles 99 chars per file path. Oh, and GNU tar 1.13
 dnl even used to fail silently before automake got the filename-length-max=99
 dnl parameter.
+dnl
 dnl If we want to use a package name like "gphoto-suite-2.2.4", then we have to
 dnl remove libgphoto2_port from libgphoto2 and give it its own subdirectory:
-dnl   src/libgphoto2_port/libgphoto2_port/gphoto2-port-portability-os2.h
+dnl   src/libgphoto2_port/libgphoto2_port/gphoto2-port-portability.h
 dnl   src/libgphoto2/libgphoto2/...
 dnl   src/libgphoto2/camlibs/...
 dnl   src/gphoto2/...
 dnl That would change the standard module people check out to "gphoto-suite".
+dnl
+dnl "/src/libgphoto2/libgphoto2_port/libgphoto2_port/gphoto2/gphoto2-port-portability.h"
+dnl is 82 characters, which leaves 17 characters for the distdir name. 
+dnl "gphoto-suite-2.3.0" whould be 18 characters - one too many: 82+18=100 > 99 :-(
 AC_INIT([gphoto suite],[2.2.1.4.t],[gphoto-devel@lists.sourceforge.net],[gp-s])
 AC_CONFIG_SRCDIR([README.gphoto-suite])
 AC_CONFIG_HEADERS([config.h])

@@ -5,6 +5,8 @@ EXTRA_DIST = autogen.sh COPYING.LIB README.gphoto-suite
 
 ACLOCAL_AMFLAGS = -I m4m
 
+include $(top_srcdir)/tools/Makefile-files
+
 #######################################################################
 # Help for the maintainer
 #

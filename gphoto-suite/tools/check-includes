@@ -1,0 +1,10 @@
+#!/bin/sh
+
+dir="${1-.}"
+
+find "$dir" \
+	-type f \
+	-not -name '*~' \
+	-not -name '*.orig' \
+	-not -name '*.svn-base' \
+	-exec grep -H '^#include ["<]gphoto2[^/].*[">]' {} \;

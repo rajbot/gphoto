@@ -70,9 +70,9 @@ Then run (for an in-tree build)
 
 with your favourite configure parameters. Or, for an out-of-tree build:
 
-    mkdir ../libexif-testsuite-build
-    cd ../libexif-testsuite-build
-    ../libexif-testsuite/configure
+    mkdir ../gphoto-suite-build
+    cd ../gphoto-suite-build
+    ../gphoto-suite/configure
 
 with your favourite configure parameters.
 

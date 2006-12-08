@@ -9,6 +9,7 @@ gphoto-suite makes compiling and installing from scratch easier for
   - people without much compilation experience
   - people who use cross compilation environments
   - people who run test builds and runtime tests
+  - people who build integrated binary packages of libgphoto2 and gphoto2
 
 
 Legal stuff:
@@ -34,6 +35,24 @@ Getting gphoto-suite from source tarball:
 
 If you got gphoto-suite from a tarball, the source subdirectories
 should already be there.
+
+
+Make sure required (or optional) dependencies are installed:
+------------------------------------------------------------
+
+Highest importance:
+    pkgconfig
+    libusb-dev libexif-dev libjpeg-dev
+    libpopt-dev libltdl-dev
+
+Recommended:
+    libreadline-dev
+
+Less important:
+    doxygen
+
+Optional:
+    libaa-dev
 
 
 Initialize the buildsystem:
@@ -72,9 +91,26 @@ with your favourite configure parameters. Or, for an out-of-tree build:
 
     mkdir ../gphoto-suite-build
     cd ../gphoto-suite-build
-    ../gphoto-suite/configure
+    ../gphoto-suite/configure ...
 
 with your favourite configure parameters.
+
+If need be, you can even build the included subprojects by themselves:
+
+    mkdir ../libgphoto2-build
+    cd ../libgphoto2-build
+    ../gphoto-suite/src/libgphoto2/configure ...
+
+
+Compilation:
+------------
+
+Use the standard commands:
+
+    make
+    make install
+
+The latter may be given a DESTDIR= parameter or run as root.
 
 
 Cross-compilation:

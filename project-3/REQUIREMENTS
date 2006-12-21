@@ -58,6 +58,8 @@ for the device database to contain all information regarding device
 capabilities and settings specific to certain driver-device
 combinations.
 
+Over time, there have been multiple ideas: [1] [2] [3]
+
 
 R4. Memory Management semantics
 -------------------------------
@@ -238,6 +240,11 @@ References
 
 Mailing list postings, articles, etc. addressing problems with the
 libgphoto2 API/ABI or proposing features for a rewritten API.
+
+[1] http://article.gmane.org/gmane.comp.multimedia.gphoto.devel/2262
+[2] http://marc.theaimsgroup.com/?l=gphoto-devel&r=1&b=200303&w=2
+       (look for mails with subject "Camera Support Information")
+[3] https://sourceforge.net/mailarchive/message.php?msg_id=36866239 
 
 (TBD)
 

@@ -60,6 +60,23 @@ combinations.
 
 Over time, there have been multiple ideas: [1] [2] [3]
 
+Possible solutions: HAL (XML based), other XML-based, gphoto
+proprietary format, ...
+
+Issues: Resources for parser and database (RAM, storage, CPU cycles).
+        hal + dbus + expat + gphoto will become a little much for an
+        OpenWRT box.
+
+Idea: Store everything in HAL, create lightweight format for
+lightweight parser for low-memory systems, and on desktops directly
+use HAL. Cf. libipoddevice (can only be given device by HAL and then
+operates on it). banshee stores audio player formats in HAL. Other
+people store lists of exploding batteries or known-broken
+laptops/drivers in HAL to warn users... so our data should be storable
+as well. We could put the device selection someplace around
+libgphoto_highlevel in R9a, and create a heavy HAL+DBUS+everything
+version for desktops and a light version for light systems.
+
 
 R4. Memory Management semantics
 -------------------------------

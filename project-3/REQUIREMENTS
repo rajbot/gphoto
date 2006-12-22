@@ -261,6 +261,17 @@ and header use like
 Use corresponding mechanisms for other languages.
 
 
+R11. Parallel build system
+--------------------------
+
+Parallel builds (make -jn) would be nice in the age of more-than-one
+core CPUs.
+
+For automake, this requires a single top-level Makefile.am and then
+include foo/bar/Makefile-files for every directory. And properly
+defined dependencies, of course.
+
+
 
 ========================================================================
 References

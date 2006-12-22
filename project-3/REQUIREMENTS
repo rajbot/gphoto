@@ -14,14 +14,23 @@ deficiencies of the existing codebase noted in the last few years.
 
 This document just lists unordered requirements. It does not make any
 decision or give any preferences on which requirements can be
-reasonably addressed and which will need to be dropped.
-
-Maybe "wishlist" would have been a better title :-)
+reasonably addressed and which will need to be dropped. "Wishlist" may
+have been a better title. :-)
 
 The "Rn" numbers of the requirements are intended to be unique and
 permanent. If it is necessary to remove a requirement from this list,
 mark it with "(deleted)" like "R4. (deleted) All use must be reported
 to the authorities". Add new requirements using unused numbers.
+
+
+Consider this file a Wiki
+-------------------------
+
+Anybody with SVN write access is codially invited to add their own
+ideas to this list.
+
+If we get a wiki some time soon, we can still migrate this document to
+the wiki, but we need a place to note ideas *now*.
 
 
 

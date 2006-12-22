@@ -58,6 +58,8 @@ breakage.
 
 Consequently, bindings building on the ABI also cannot break.
 
+Cf. [4]
+
 
 R3. Device database
 -------------------
@@ -245,6 +247,8 @@ versioning (highly system specific, no system generic tool support).
 
 Use corresponding mechanisms for other languages.
 
+Cf. [4], [5].
+
 
 R10. C API versioning
 ---------------------
@@ -260,6 +264,8 @@ and header use like
 
 Use corresponding mechanisms for other languages.
 
+Cf. [4].
+
 
 R11. Parallel build system
 --------------------------
@@ -272,6 +278,19 @@ include foo/bar/Makefile-files for every directory. And properly
 defined dependencies, of course.
 
 
+R12. Network addresses
+----------------------
+
+If some piece of code works with network sockets via IP, it must
+support both IPv4 and IPv6.
+
+
+R13. Code quality
+-----------------
+
+Check these papers: [6], [7], [8], [9], [10], [11].
+
+
 
 ========================================================================
 References
@@ -281,11 +300,29 @@ Mailing list postings, articles, etc. addressing problems with the
 libgphoto2 API/ABI or proposing features for a rewritten API.
 
 [1] http://article.gmane.org/gmane.comp.multimedia.gphoto.devel/2262
+    Hubert Figuière - RFC: extending camera support for OEM vendors?
 [2] http://marc.theaimsgroup.com/?l=gphoto-devel&r=1&b=200303&w=2
        (look for mails with subject "Camera Support Information")
+    Misc. Authors - Camera Support Information
 [3] https://sourceforge.net/mailarchive/message.php?msg_id=36866239 
-
-(TBD)
+    Hans Ulrich Niedermann - RFC: extending camera support for OEM vendors?
+[4] http://plan99.net/~mike/writing-shared-libraries.html
+    Mike Hearn -  Writing shared libraries
+[5] http://people.redhat.com/drepper/symbol-versioning
+    Ulrich Drepper - ELF Symbol Versioning
+[6] http://people.redhat.com/drepper/
+    Ulrich Drepper - (many relevant papers)
+[7] https://ols2006.108.redhat.com/reprints/jones-reprint.pdf
+    David Jones - Why Userspace Sucks
+[8] 
+    Ulrich Drepper - Defensive Programming for Red Hat Enterprise Linux
+    (and What To Do If Something Goes Wrong)
+[9] 
+    Ulrich Drepper - How To Write Shared Libraries
+[10]
+     Ulrich Drepper - Good Practices in Library Design, Implementation, and Maintenance
+[11]
+     Dave Jones - Why Userspace Sucks, Or 101 Really Dumb Things Your App Shouldn't Do
 
 
 

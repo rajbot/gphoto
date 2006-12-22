@@ -16,6 +16,8 @@ This document just lists unordered requirements. It does not make any
 decision or give any preferences on which requirements can be
 reasonably addressed and which will need to be dropped.
 
+Maybe "wishlist" would have been a better title :-)
+
 The "Rn" numbers of the requirements are intended to be unique and
 permanent. If it is necessary to remove a requirement from this list,
 mark it with "(deleted)" like "R4. (deleted) All use must be reported

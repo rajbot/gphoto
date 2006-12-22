@@ -288,7 +288,7 @@ support both IPv4 and IPv6.
 R13. Code quality
 -----------------
 
-Check these papers: [6], [7], [8], [9], [10], [11].
+Check these papers: [6], [7], [8], [9], [10]
 
 
 
@@ -313,16 +313,14 @@ libgphoto2 API/ABI or proposing features for a rewritten API.
 [6] http://people.redhat.com/drepper/
     Ulrich Drepper - (many relevant papers)
 [7] https://ols2006.108.redhat.com/reprints/jones-reprint.pdf
-    David Jones - Why Userspace Sucks
-[8] 
+    David Jones - Why Userspace Sucks, Or 101 Really Dumb Things Your App Shouldn't Do
+[8] http://people.redhat.com/drepper/defprogramming.pdf
     Ulrich Drepper - Defensive Programming for Red Hat Enterprise Linux
     (and What To Do If Something Goes Wrong)
-[9] 
+[9] http://people.redhat.com/drepper/dsohowto.pdf
     Ulrich Drepper - How To Write Shared Libraries
-[10]
+[10] http://people.redhat.com/drepper/goodpractice.pdf
      Ulrich Drepper - Good Practices in Library Design, Implementation, and Maintenance
-[11]
-     Dave Jones - Why Userspace Sucks, Or 101 Really Dumb Things Your App Shouldn't Do
 
 
 

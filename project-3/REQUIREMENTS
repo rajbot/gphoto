@@ -245,6 +245,15 @@ R9. C ABI versioning
 Make proper use of library versioning (soname) and possibly symbol
 versioning (highly system specific, no system generic tool support).
 
+A real issue here is cross platform compatibility and the (perceived
+or real) lack of tools to solve those cross platform problems. It
+looks like GNU (Linux, Hurd) supports symbol versioning including
+incompatible changes, Solaris supports symbol versioning without
+incompatible changes, some BSDs have taken to support versioned
+symbols as well, and other systems rely on a changed
+SONAME. Supporting all these systems with a single codebase is not
+going to be trivial.
+
 Use corresponding mechanisms for other languages.
 
 Cf. [4], [5].
@@ -289,6 +298,38 @@ R13. Code quality
 -----------------
 
 Check these papers: [6], [7], [8], [9], [10]
+
+
+R14. Supported platforms
+----------------------
+
+Define a list of explicitly supported platforms:
+
+  * operating system
+  * compiler
+  * C runtime
+  * build tools
+  * other things
+
+including the respective versions.
+
+New releases will at least have to be test built for these supported
+systems.
+
+There may be another set of platforms which is supported on an
+if-someone-sends-a-patch basis, and a set of platforms we are by
+design incompatible with.
+
+
+R15. API Documentation
+----------------------
+
+Every API function and data type must be documented. There must be API
+docs must be generated from some source, probably via doxygen or a
+similar tool. API docs will be published with each release.
+
+The documentation of a function or data type must contain the version
+it was added in.
 
 
 

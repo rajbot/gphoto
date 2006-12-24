@@ -332,6 +332,35 @@ The documentation of a function or data type must contain the version
 it was added in.
 
 
+R16. Transition strategy
+------------------------
+
+The way for libgphoto2 users to adapt to the revised API must be
+well-considered and documented well.
+
+
+R17. Code rewrite plan
+----------------------
+
+All rewriting of our code must be actually feasible within the
+constraints we face, the most confining constraint probably being
+manpower.
+
+It should be possible to actually use the code for tests from quite
+early in the process - otherwise no one will use it, and it will
+possibly die before it has a chance to catch on.
+
+
+R18. Ask our users for input
+----------------------------
+
+For this purpose, users are:
+
+  * authors of software using libgphoto2
+  * packages shipping gphoto2 in distributions
+  * end users
+
+
 
 ========================================================================
 References

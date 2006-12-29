@@ -118,7 +118,7 @@ The code must compile without warnings with the strictest compiler
 settings possible. E.g. for gcc, it should be something like
 
    CFLAGS="-Wall -Wextra -Werror --std=c99 -pedantic"
-   CXXFLAGS="-Wall -Wextra -Werror --std=c++98 -pedantic"
+   CXXFLAGS="-Wall -Wextra -Weffc++ -Werror --std=c++98 -pedantic"
 
 
 R7. Library architecture
@@ -360,6 +360,40 @@ For this purpose, users are:
   * packages shipping gphoto2 in distributions
   * end users
 
+
+R19. Driver/device capabilities, testcase driver
+------------------------------------------------
+
+All drivers have different capabilites as their devices also have
+different capabilities. Therefore both these capabilities must be 
+exposed to the application, and applications must be able to handle
+widely different sets of capabilities.
+
+It may be useful to write a testcase driver for testing applications.
+That testcase driver would simulate a device, or multiple devices
+supporting subsets of its total capabilities.
+
+
+R20. Storage API
+----------------
+
+In many respects, camera protocols are just file storage over
+RS232 or USB. That part of the API must cover
+
+  - directory/folder handling
+  - reading/writing files
+  - handling metainformation, e.g.
+     - audio track author, performer, song name, etc.
+     - associated thumbnail image, audio annotation, ...
+  - pure file level access
+  - filesystem properties, such as total FS size, used, and free
+
+
+R21. Remote control and capturing API
+-------------------------------------
+
+TBD: Camera remote control, capturing images, tethered shooting,
+     audio player control, other device control, ...
 
 
 ========================================================================

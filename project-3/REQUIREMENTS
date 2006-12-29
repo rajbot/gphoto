@@ -380,13 +380,13 @@ R20. Storage API
 In many respects, camera protocols are just file storage over
 RS232 or USB. That part of the API must cover
 
-  - directory/folder handling
-  - reading/writing files
-  - handling metainformation, e.g.
+  * directory/folder handling
+  * reading/writing files
+  * handling metainformation, e.g.
      - audio track author, performer, song name, etc.
      - associated thumbnail image, audio annotation, ...
-  - pure file level access
-  - filesystem properties, such as total FS size, used, and free
+  * pure file level access
+  * filesystem properties, such as total FS size, used, and free
 
 
 R21. Remote control and capturing API
@@ -394,6 +394,16 @@ R21. Remote control and capturing API
 
 TBD: Camera remote control, capturing images, tethered shooting,
      audio player control, other device control, ...
+
+
+R22. Device settings
+--------------------
+
+Some kind of device settings are available on more than one kind of
+device. These deserve more than driver specific support. Examples:
+
+  * name of device owner
+  * device date/time (including timezone nightmare)
 
 
 ========================================================================

@@ -20,10 +20,10 @@ dnl
 dnl However, "/src/libgphoto2/libgphoto2_port/gphoto2/gphoto2-port-portability.h"
 dnl is 66 characters, which leaves 33 characters for the distdir name. 
 dnl "gphoto-suite-2.3.0" whould be 18 characters - bingo!
-AC_INIT([gphoto suite],[2.3.1.0.t],[gphoto-devel@lists.sourceforge.net],[gphoto-suite])
+AC_INIT([gphoto suite],[2.3.1.1.t],[gphoto-devel@lists.sourceforge.net],[gphoto-suite])
 AC_CONFIG_SRCDIR([README.gphoto-suite])
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_AUX_DIR([.])
+AC_CONFIG_AUX_DIR([auto-aux])
 AM_INIT_AUTOMAKE([-Wall -Werror gnu 1.9 dist-bzip2 check-news filename-length-max=99])
 
 

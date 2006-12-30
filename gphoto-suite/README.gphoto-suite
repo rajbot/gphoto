@@ -64,7 +64,7 @@ added new SVN directories to src/.
 If you have only added the contents of a source tarball to src/, then
 you do *not* need it.
 
-    ./autogen.sh
+    autoreconf --install --symlink [ --verbose ]
 
 
 Configure the build system:

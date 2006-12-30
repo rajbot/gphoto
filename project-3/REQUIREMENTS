@@ -404,6 +404,7 @@ device. These deserve more than driver specific support. Examples:
 
   * name of device owner
   * device date/time (including timezone nightmare)
+  * battery level
 
 
 ========================================================================

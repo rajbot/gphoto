@@ -1,0 +1,3 @@
+obsolete/
+  This directory contains all packages which are obsolete. If you want
+  to revive some package, feel free to move it someplace else in SVN.

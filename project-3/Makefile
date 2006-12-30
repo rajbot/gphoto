@@ -11,4 +11,7 @@ clean:
 PAPER = A4
 
 REQUIREMENTS.ps: REQUIREMENTS
-	iconv -f utf-8 -t iso-8859-1 "$<" | a2ps -M"$(PAPER)" -o"$@" -t"$<" --stdin="gphoto project3/REQUIREMENTS" -
+	iconv -f utf-8 -t iso-8859-1 "$<" \
+		| a2ps -M"$(PAPER)" -o"$@" -t"$<" \
+			--stdin="gphoto project-3/REQUIREMENTS" \
+			-

@@ -77,9 +77,9 @@ fi
 
 if test -d "${srcdir}/src/libgphoto2"; then
    AC_CONFIG_SUBDIRS([src/libgphoto2])
-   AC_SUBST([LIBGPHOTO2_CFLAGS],["-I${gp_top_srcdir}/src/libgphoto2 -I${gp_top_builddir}/src/libgphoto2 -I${gp_top_srcdir}/src/libgphoto2/libgphoto2_port -I${gp_top_builddir}/src/libgphoto2/libgphoto2_port"])
-   AC_SUBST([LIBGPHOTO2_LIBS],["${gp_top_builddir}/src/libgphoto2/libgphoto2/libgphoto2.la ${gp_top_builddir}/src/libgphoto2/libgphoto2_port/libgphoto2_port/libgphoto2_port.la"])
-   export LIBGPHOTO2_LIBS LIBGPHOTO2_CFLAGS
+   # let pkg-config find *-uninstalled.pc
+   PKG_CONFIG_PATH="${gp_top_builddir}/src/libgphoto2:${gp_top_builddir}/src/libgphoto2/libgphoto2_port${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
+   export PKG_CONFIG_PATH
 fi
 
 if test -d "${srcdir}/src/gphoto2"; then

@@ -19,27 +19,81 @@ gphoto-suite includes multiple packages which are mostly licensed under
 GPL or LGPL. See the respective packages for details.
 
 
+Quick Start:
+------------
+
+Depending on your desired directory layout, choose one of the
+following Quick Start n of 3 sections.
+
+
+Quick Start 1 of 3:
+-------------------
+
+Directory layout:
+ 
+  someplace
+  +- gphoto-suite   source code
+     +- _b          built files (object files and stuff)
+     +- _i          properly installed files (binaries, libs, docs)
+
+    svn co https://svn.sourceforge.net/svnroot/gphoto/trunk/gphoto-suite gphoto-suite
+    cd gphoto-suite
+    autoreconf -vis
+    mkdir _b
+    cd _b
+    ../configure --prefix=$PWD/../_i
+    make all
+    make install
+    ../_i/bin/gphoto2 --list-cameras
+
+
+Quick Start 2 of 3:
+-------------------
+
+Directory layout:
+ 
+  someplace
+  +- gphoto-suite          source code
+  +- gphoto-suite-build    built files (object files and stuff)
+  +- gphoto-suite-install  properly installed files (binaries, libs, docs)
+
+    svn co https://svn.sourceforge.net/svnroot/gphoto/trunk/gphoto-suite gphoto-suite
+    mkdir gphoto-suite-build
+    autoreconf -vis gphoto-suite
+    cd gphoto-suite-build
+    ../gphoto-suite/configure --prefix=$PWD/../gphoto-suite-install
+    make all
+    make install
+    ../gphoto-suite-install/bin/gphoto2 --list-cameras
+
+
+Quick Start 3 of 3:
+-------------------
+
+Directory layout:
+ 
+  someplace
+  +- gphoto-suite   source code and built files (object files and stuff)
+     +- _i          properly installed files (binaries, libs, docs)
+
+    svn co https://svn.sourceforge.net/svnroot/gphoto/trunk/gphoto-suite gphoto-suite
+    cd gphoto-suite
+    autoreconf -vis
+    ./configure --prefix=$PWD/_i
+    make all
+    make install
+    ./_i/bin/gphoto2 --list-cameras
+
+
 Getting gphoto-suite from SVN:
 ------------------------------
 
 Get gphoto-suite via SVN and change into its directory:
 
     svn co https://svn.sourceforge.net/svnroot/gphoto/trunk/gphoto-suite gphoto-suite
-    cd gphoto-suite
 
 This downloads the programs from the gphoto project SVN.
 
-
-Quick Start:
-------------
-
-    mkdir gphoto-suite-build
-    mkdir gphoto-suite-install
-    autoreconf -vis gphoto-suite
-    cd gphoto-suite-build
-    ../gphoto-suite/configure --prefix=$PWD/../gphoto-suite-install
-    make all
-    make install
 
 
 Getting gphoto-suite from source tarball:

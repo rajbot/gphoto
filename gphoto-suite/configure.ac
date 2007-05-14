@@ -67,18 +67,16 @@ AC_SUBST([AM_LDFLAGS])
 # Configure subdirs.
    
 dnl Absolute directories work with multiple levels of
-dnl AC_CONFIG_SUBDIRS recursion, relative do not.
+dnl AC_CONFIG_SUBDIRS recursion, relative directories do not.
 gp_top_builddir="$(pwd)"
 gp_top_srcdir="$(cd "${srcdir}" && pwd)"
 
 if test -d "$srcdir/src/gphoto2-manual"; then
    AC_CONFIG_SUBDIRS([src/gphoto2-manual])
-   GP_AUTOGEN_SUBDIR([src/gphoto2-manual])
 fi
 
 if test -d "${srcdir}/src/libgphoto2"; then
    AC_CONFIG_SUBDIRS([src/libgphoto2])
-   GP_AUTOGEN_SUBDIR([src/libgphoto2])
    AC_SUBST([LIBGPHOTO2_CFLAGS],["-I${gp_top_srcdir}/src/libgphoto2 -I${gp_top_builddir}/src/libgphoto2 -I${gp_top_srcdir}/src/libgphoto2/libgphoto2_port -I${gp_top_builddir}/src/libgphoto2/libgphoto2_port"])
    AC_SUBST([LIBGPHOTO2_LIBS],["${gp_top_builddir}/src/libgphoto2/libgphoto2/libgphoto2.la ${gp_top_builddir}/src/libgphoto2/libgphoto2_port/libgphoto2_port/libgphoto2_port.la"])
    export LIBGPHOTO2_LIBS LIBGPHOTO2_CFLAGS
@@ -86,22 +84,18 @@ fi
 
 if test -d "${srcdir}/src/gphoto2"; then
    AC_CONFIG_SUBDIRS([src/gphoto2])
-   GP_AUTOGEN_SUBDIR([src/gphoto2])
 fi
 
 if test -d "${srcdir}/src/gphotofs"; then
    AC_CONFIG_SUBDIRS([src/gphotofs])
-   GP_AUTOGEN_SUBDIR([src/gphotofs])
 fi
 
 if test -d "${srcdir}/src/libgphoto2-sharp"; then
    AC_CONFIG_SUBDIRS([src/libgphoto2-sharp])
-   GP_AUTOGEN_SUBDIR([src/libgphoto2-sharp])
 fi
 
 if test -d "${srcdir}/src/libgphoto2-python"; then
    AC_CONFIG_SUBDIRS([src/libgphoto2-python])
-   GP_AUTOGEN_SUBDIR([src/libgphoto2-python])
 fi
 
 

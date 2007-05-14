@@ -29,12 +29,15 @@ following Quick Start n of 3 sections.
 Quick Start 1 of 3:
 -------------------
 
-Directory layout (ideal for testing):
+Directory layout (ideal for development and testing):
  
   someplace
   +- gphoto-suite   source code
      +- _b          built files (object files and stuff)
      +- _i          properly installed files (binaries, libs, docs)
+
+Of course, you can replace the relative _i directory with an absolute
+directory like $HOME/usr or /usr/local.
 
     svn co https://svn.sourceforge.net/svnroot/gphoto/trunk/gphoto-suite gphoto-suite
     cd gphoto-suite
@@ -50,7 +53,7 @@ Directory layout (ideal for testing):
 Quick Start 2 of 3:
 -------------------
 
-Directory layout (ideal for testing):
+Directory layout (ideal for development and testing):
  
   someplace
   +- gphoto-suite          source code
@@ -70,7 +73,7 @@ Directory layout (ideal for testing):
 Quick Start 3 of 3:
 -------------------
 
-Directory layout:
+Directory layout (ideal for one-off installation):
  
   someplace
   +- gphoto-suite   source code and built files (object files and stuff)

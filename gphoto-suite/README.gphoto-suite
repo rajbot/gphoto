@@ -29,7 +29,7 @@ following Quick Start n of 3 sections.
 Quick Start 1 of 3:
 -------------------
 
-Directory layout:
+Directory layout (ideal for testing):
  
   someplace
   +- gphoto-suite   source code
@@ -50,7 +50,7 @@ Directory layout:
 Quick Start 2 of 3:
 -------------------
 
-Directory layout:
+Directory layout (ideal for testing):
  
   someplace
   +- gphoto-suite          source code
@@ -74,15 +74,17 @@ Directory layout:
  
   someplace
   +- gphoto-suite   source code and built files (object files and stuff)
-     +- _i          properly installed files (binaries, libs, docs)
+  /my/usr           properly installed files (binaries, libs, docs)
+
+Common values for /my/usr would be $HOME/usr/gphoto, $HOME/usr or /usr/local.
 
     svn co https://svn.sourceforge.net/svnroot/gphoto/trunk/gphoto-suite gphoto-suite
     cd gphoto-suite
     autoreconf -vis
-    ./configure --prefix=$PWD/_i
+    ./configure --prefix=/my/usr
     make all
     make install
-    ./_i/bin/gphoto2 --list-cameras
+    /my/usr/bin/gphoto2 --list-cameras
 
 
 Getting gphoto-suite from SVN:

@@ -30,6 +30,18 @@ Get gphoto-suite via SVN and change into its directory:
 This downloads the programs from the gphoto project SVN.
 
 
+Quick Start:
+------------
+
+    mkdir gphoto-suite-build
+    mkdir gphoto-suite-install
+    autoreconf -vis gphoto-suite
+    cd gphoto-suite-build
+    ../gphoto-suite/configure --prefix=$PWD/../gphoto-suite-install
+    make all
+    make install
+
+
 Getting gphoto-suite from source tarball:
 -----------------------------------------
 

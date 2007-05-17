@@ -75,6 +75,28 @@ if test -d "$srcdir/src/gphoto2-manual"; then
    AC_CONFIG_SUBDIRS([src/gphoto2-manual])
 fi
 
+if test -d "${srcdir}/src/libexif"; then
+   AC_CONFIG_SUBDIRS([src/libexif])
+   # let pkg-config find *-uninstalled.pc
+   PKG_CONFIG_PATH="${gp_top_builddir}/src/libexif${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
+   export PKG_CONFIG_PATH
+fi
+
+if test -d "${srcdir}/src/exif"; then
+   AC_CONFIG_SUBDIRS([src/exif])
+fi
+
+if test -d "${srcdir}/src/libexif-gtk"; then
+   AC_CONFIG_SUBDIRS([src/libexif-gtk])
+   # let pkg-config find *-uninstalled.pc
+   PKG_CONFIG_PATH="${gp_top_builddir}/src/libexif-gtk${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
+   export PKG_CONFIG_PATH
+fi
+
+if test -d "${srcdir}/src/gexif"; then
+   AC_CONFIG_SUBDIRS([src/gexif])
+fi
+
 if test -d "${srcdir}/src/libgphoto2"; then
    AC_CONFIG_SUBDIRS([src/libgphoto2])
    # let pkg-config find *-uninstalled.pc
@@ -96,6 +118,10 @@ fi
 
 if test -d "${srcdir}/src/libgphoto2-python"; then
    AC_CONFIG_SUBDIRS([src/libgphoto2-python])
+fi
+
+if test -d "${srcdir}/src/gtkam"; then
+   AC_CONFIG_SUBDIRS([src/gtkam])
 fi
 
 

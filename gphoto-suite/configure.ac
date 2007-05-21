@@ -73,6 +73,9 @@ gp_top_srcdir="$(cd "${srcdir}" && pwd)"
 
 if test -d "$srcdir/src/gphoto2-manual"; then
    AC_CONFIG_SUBDIRS([src/gphoto2-manual])
+   # let pkg-config find *-uninstalled.pc
+   PKG_CONFIG_PATH="${gp_top_builddir}/src/gphoto2-manual${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
+   export PKG_CONFIG_PATH
 fi
 
 if test -d "${srcdir}/src/libexif"; then

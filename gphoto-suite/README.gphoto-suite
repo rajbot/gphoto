@@ -29,7 +29,7 @@ following Quick Start n of 3 sections.
 Quick Start 1 of 3:
 -------------------
 
-Directory layout (ideal for development and testing):
+Directory layout (works for development and testing):
  
   someplace
   +- gphoto-suite   source code
@@ -38,6 +38,8 @@ Directory layout (ideal for development and testing):
 
 Of course, you can replace the relative _i directory with an absolute
 directory like $HOME/usr or /usr/local.
+
+Disadvantage: A simple "grep -r" will grep both source and binaries.
 
     svn co https://svn.sourceforge.net/svnroot/gphoto/trunk/gphoto-suite gphoto-suite
     cd gphoto-suite
@@ -60,6 +62,8 @@ Directory layout (ideal for development and testing):
   +- gphoto-suite-build    built files (object files and stuff)
   +- gphoto-suite-install  properly installed files (binaries, libs, docs)
 
+Advantage: A simple "grep -r" can grep just the source (without the binaries).
+
     svn co https://svn.sourceforge.net/svnroot/gphoto/trunk/gphoto-suite gphoto-suite
     mkdir gphoto-suite-build
     autoreconf -vis gphoto-suite
@@ -80,6 +84,8 @@ Directory layout (ideal for one-off installation):
   /my/usr           properly installed files (binaries, libs, docs)
 
 Common values for /my/usr would be $HOME/usr/gphoto, $HOME/usr or /usr/local.
+
+Advantage: Simple instructions.
 
     svn co https://svn.sourceforge.net/svnroot/gphoto/trunk/gphoto-suite gphoto-suite
     cd gphoto-suite

@@ -22,8 +22,8 @@ GPL or LGPL. See the respective packages for details.
 Quick Start:
 ------------
 
-First, look into gphoto-suite/src/ and make sure that only the software you
-want built is there - nothing more, nothing less.
+First, look into gphoto-suite/src/ and make sure that only the software
+packages you want built are there - none more, none less.
 
 Then, depending on your desired directory layout, choose one of the
 following Quick Start n of 3 sections.

@@ -8,6 +8,11 @@ AC_CONFIG_SRCDIR([checkout-config.sh])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([gnu 1.8 dist-bzip2])
 
+AC_MSG_ERROR([
+gphoto-suite-all is OUT OF ORDER.
+Use gphoto-suite instead.
+])
+
 GP_CHECK_SHELL_ENVIRONMENT
 GP_CONFIG_MSG([Build])
 GP_CONFIG_MSG([Source code location],[${srcdir}])

@@ -4,6 +4,11 @@
 # For more detailed info, run "autogen.sh --help" or scroll down to the
 # print_help() function.
 
+cat<<EOF
+gphoto-suite-all is OUT OF ORDER.
+Use gphoto-suite instead.
+EOF
+exit 13
 
 if test "$(pwd)" != "`pwd`"
 then

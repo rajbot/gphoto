@@ -1,0 +1,56 @@
+This file describes the contents of the gphoto project's SVN repository trunk:
+
+    https://gphoto.svn.sourceforge.net/svnroot/gphoto/trunk/
+
+To check out the "MOD/" module, run something like
+
+    $ svn checkout https://gphoto.svn.sourceforge.net/svnroot/gphoto/trunk/MOD
+
+
+Released modules:
+
+  gphoto-suite/
+    Umbrella package which includes libgphoto2, gphoto2, and others.
+
+  gphoto2/
+    command line frontend to libgphoto2
+
+  libgphoto2/
+    access library to digital cameras (includes libgphoto2_port)
+
+  gtkam/
+    simple GTK+ frontend to libgphoto2
+
+  gphotofs/
+    FUSE based filesystem to access cameras
+
+  gphoto2-manual/
+    gphoto2 manual
+
+
+Modules approaching release:
+
+  bindings/libgphoto2-python
+    Python bindings for libgphoto2
+
+  bindings/libgphoto2-sharp
+    C# bindings for libgphoto2
+
+
+Modules for internal use:
+
+  project-3/
+    Thoughts for a complete overhaul of libgphotoX.
+
+  website/
+    The gphoto.org website
+
+  m4/
+    The m4 macros used with aclocal for building the source trees.
+
+  playground/
+    Things we are or have been playing with.
+
+
+
+Everything else should be considered possibly unsupported and broken.

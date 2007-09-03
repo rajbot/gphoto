@@ -414,10 +414,16 @@ C#/mono has issues with "int" types in C definitions, as the size of an
 "int" or "long" may differ between 32bit and 64bit libraries.
 
 Writing bindings in a way it adapts to either a 32bit or a 64bit library
-at compile-time is non-trivial. OTOH, using a single ABI on both 32bit
-and 64bit systems may cause issues on the C side.
+at compile-time is non-trivial according to Alan.
 
-For details on the C# side, ask Alan McGovern.
+OTOH, using a single ABI on both 32bit and 64bit systems may cause issues
+on the C side.
+
+So one could say that C# should solve its own problems like this:
+  * dlls that import native libs -> biarch compatible directory
+  * dlls that do not use native libs -> global assembly cahce
+
+People involved here: Alan McGovern, Marcus Meissner, H. U. Niedermann
 
 
 ========================================================================

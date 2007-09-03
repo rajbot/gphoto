@@ -407,6 +407,19 @@ device. These deserve more than driver specific support. Examples:
   * battery level
 
 
+R23. int/long sizes in the ABI and bindings
+-------------------------------------------
+
+C#/mono has issues with "int" types in C definitions, as the size of an
+"int" or "long" may differ between 32bit and 64bit libraries.
+
+Writing bindings in a way it adapts to either a 32bit or a 64bit library
+at compile-time is non-trivial. OTOH, using a single ABI on both 32bit
+and 64bit systems may cause issues on the C side.
+
+For details on the C# side, ask Alan McGovern.
+
+
 ========================================================================
 References
 ==========

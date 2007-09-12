@@ -20,7 +20,7 @@ dnl
 dnl However, "/src/libgphoto2/libgphoto2_port/gphoto2/gphoto2-port-portability.h"
 dnl is 66 characters, which leaves 33 characters for the distdir name. 
 dnl "gphoto-suite-2.3.0" whould be 18 characters - bingo!
-AC_INIT([gphoto suite],[2.3.1.3.t],[gphoto-devel@lists.sourceforge.net],[gphoto-suite])
+AC_INIT([gphoto suite],[2.4.0.3],[gphoto-devel@lists.sourceforge.net],[gphoto-suite])
 AC_CONFIG_SRCDIR([README.gphoto-suite])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([auto-aux])
@@ -68,14 +68,14 @@ AC_SUBST([AM_LDFLAGS])
    
 dnl Absolute directories work with multiple levels of
 dnl AC_CONFIG_SUBDIRS recursion, relative directories do not.
-gp_top_builddir="$(pwd)"
-gp_top_srcdir="$(cd "${srcdir}" && pwd)"
+gp_top_builddir="$(pwd)/"
+gp_top_srcdir="$(cd "${srcdir}" && pwd)/"
 
 GP_SUBPACKAGE([gphoto2_manual])
 if "$enable_subpackage_gphoto2_manual" && test -d "${srcdir}/src/gphoto2-manual"; then
    AC_CONFIG_SUBDIRS([src/gphoto2-manual])
    # let pkg-config find *-uninstalled.pc
-   PKG_CONFIG_PATH="${gp_top_builddir}/src/gphoto2-manual${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
+   PKG_CONFIG_PATH="${gp_top_builddir}src/gphoto2-manual${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
    export PKG_CONFIG_PATH
 fi
 
@@ -83,7 +83,7 @@ GP_SUBPACKAGE([libexif])
 if "$enable_subpackage_libexif" && test -d "${srcdir}/src/libexif"; then
    AC_CONFIG_SUBDIRS([src/libexif])
    # let pkg-config find *-uninstalled.pc
-   PKG_CONFIG_PATH="${gp_top_builddir}/src/libexif${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
+   PKG_CONFIG_PATH="${gp_top_builddir}src/libexif${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
    export PKG_CONFIG_PATH
 fi
 
@@ -96,7 +96,7 @@ GP_SUBPACKAGE([libexif_gtk])
 if "$enable_subpackage_libexif_gtk" && test -d "${srcdir}/src/libexif-gtk"; then
    AC_CONFIG_SUBDIRS([src/libexif-gtk])
    # let pkg-config find *-uninstalled.pc
-   PKG_CONFIG_PATH="${gp_top_builddir}/src/libexif-gtk${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
+   PKG_CONFIG_PATH="${gp_top_builddir}src/libexif-gtk${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
    export PKG_CONFIG_PATH
 fi
 
@@ -109,7 +109,8 @@ GP_SUBPACKAGE([libgphoto2])
 if "$enable_subpackage_libgphoto2" && test -d "${srcdir}/src/libgphoto2"; then
    AC_CONFIG_SUBDIRS([src/libgphoto2])
    # let pkg-config find *-uninstalled.pc
-   PKG_CONFIG_PATH="${gp_top_builddir}/src/libgphoto2:${gp_top_builddir}/src/libgphoto2/libgphoto2_port${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
+   PKG_CONFIG_PATH="${gp_top_builddir}src/libgphoto2:${gp_top_builddir}src/libgphoto2/libgphoto2_port${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
+   # PKG_CONFIG_PATH="src/libgphoto2:src/libgphoto2/libgphoto2_port${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
    export PKG_CONFIG_PATH
 fi
 
@@ -149,3 +150,4 @@ AC_CONFIG_FILES([
 AC_OUTPUT
 
 GP_CONFIG_OUTPUT
+

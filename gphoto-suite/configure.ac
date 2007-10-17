@@ -20,7 +20,7 @@ dnl
 dnl However, "/src/libgphoto2/libgphoto2_port/gphoto2/gphoto2-port-portability.h"
 dnl is 66 characters, which leaves 33 characters for the distdir name. 
 dnl "gphoto-suite-2.3.0" whould be 18 characters - bingo!
-AC_INIT([gphoto suite],[2.4.0.3],[gphoto-devel@lists.sourceforge.net],[gphoto-suite])
+AC_INIT([gphoto suite],[2.4.0.4],[gphoto-devel@lists.sourceforge.net],[gphoto-suite])
 AC_CONFIG_SRCDIR([README.gphoto-suite])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([auto-aux])
@@ -109,8 +109,10 @@ GP_SUBPACKAGE([libgphoto2])
 if "$enable_subpackage_libgphoto2" && test -d "${srcdir}/src/libgphoto2"; then
    AC_CONFIG_SUBDIRS([src/libgphoto2])
    # let pkg-config find *-uninstalled.pc
-   PKG_CONFIG_PATH="${gp_top_builddir}src/libgphoto2:${gp_top_builddir}src/libgphoto2/libgphoto2_port${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
-   # PKG_CONFIG_PATH="src/libgphoto2:src/libgphoto2/libgphoto2_port${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
+   PKG_CONFIG_PATH="${gp_top_builddir}src/libgphoto2/libgphoto2_port${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
+   PKG_CONFIG_PATH="${gp_top_builddir}src/libgphoto2${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
+   # PKG_CONFIG_PATH="src/libgphoto2/libgphoto2_port${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
+   # PKG_CONFIG_PATH="src/libgphoto2${PKG_CONFIG_PATH+:}${PKG_CONFIG_PATH}"
    export PKG_CONFIG_PATH
 fi
 

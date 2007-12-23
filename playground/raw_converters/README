@@ -1,0 +1,31 @@
+I have created this directory, intending to put into it some tools for 
+experimenting with conversion of raw camera output. The purpose of these 
+tools is to make it easy to experiment, with code which the user can 
+change without great effort and without lengthy installation procedures 
+in order to try to get better results output from a camera. 
+
+Tools which make it easy to re-do the same task repeatedly, under 
+controlled circumstances, with small changes from one iteration to another, 
+are essential for doing such things as figuring out a decompression 
+algorithm or, otherwise, just for improving the quality of image output 
+from a given camera or camera library. By construction, tools which perform
+a speedy conversion from raw to finished format can do the same task over 
+and over again on the same raw file, with small changes in the program 
+between one test and the next. 
+
+The first subdirectory of this directory is for the JL2005A cameras. These
+cameras do not use image compression. However, there does seem to be a need 
+and, one hopes a possibility to improve the output quality. Thus, I am posting 
+this code in order to make it possible for others to share in testing this 
+particular camera, should anyone like to do so. 
+
+I have created similar test environments for other cameras in the past; I 
+think that the time which I spent in doing so was well spent and has led to 
+great improvements in several existing camera drivers. I may in the future 
+put some of those tools in this directory, too. If anyone else working in the 
+gphoto project has done similar work for some other cameras, I would hope to 
+see that work publicized here, too. 
+
+
+Theodore Kilgore
+12/22/2007

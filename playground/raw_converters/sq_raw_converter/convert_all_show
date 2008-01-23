@@ -1,0 +1,17 @@
+i=1
+
+
+while [ "$i" -le 100 ]
+do
+    echo $i
+ls raw*$i.raw > /dev/null
+if [ $? -ne 0 ]
+then
+exit 1
+else 
+#test $? -eq 0
+#decomp raw_pict00$i.raw
+show_sq_raw raw*$i.raw
+    i=`expr "$i" + 1`
+fi
+done

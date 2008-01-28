@@ -163,9 +163,11 @@ int main(int argc, char *argv[])
 	gp_bayer_decode(buf2, WIDTH, HEIGHT, ptr, THIS_CAM_TILE);
 	free(buf2);
 	sq_postprocess (WIDTH, HEIGHT, ptr);
-	if (info-> lighting < 0x40)
+	if (info-> lighting < 0x40) {
+	fprintf(stderr, 
+		"Low light condition. Using default gamma. No white balance.\n");
 		gp_gamma_correct_single(gtable,ptr,WIDTH*HEIGHT);
-	else 
+	} else 
 		white_balance (ptr, WIDTH*HEIGHT, 1.1);
 
 	if ( (fp_dest = fopen(dest, "wb") ) == NULL )

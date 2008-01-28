@@ -1,0 +1,9 @@
+2008-01-27   Theodore Kilgore <kilgota@auburn.edu>
+	* sq_process.c: Changed the postprocess function to a brightness 
+	enhancer for dark photos; if the photo contains a datum of 0xff for
+	any color then postprocessing kicks out immediately. 
+	Fixed a small oops in computing new_gamma.
+	* main.c: More debugging statements.
+
+2008-01-22   Theodore Kilgore <kilgota@auburn.edu>
+	* *.[c,h]: First check-in.

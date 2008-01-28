@@ -347,6 +347,12 @@ int sq_postprocess(int width, int height, unsigned char* rgb)
 	min = MIN( MIN( red_min, green_min ), blue_min);
 	amplify = 255.0/(max-min);
 
+	printf("min=%f max=%f amplify=%f\n",min,max,amplify);
+	if (max == 255)
+		printf("max is already max'ed at 255. Exiting from normalize()\n");
+		return 0;
+
+
 	for( y=0; y<height; y++){
 		for( x=0; x<width; x++ ){
 			RED(rgb,x,y,width)= MIN(amplify*(double)(RED(rgb,x,y,width)-min),255);
@@ -420,7 +426,7 @@ white_balance (unsigned char *data, unsigned int size, float saturation)
 	saturation=saturation*new_gamma*new_gamma;
 	printf("saturation = %1.2f\n", saturation);
 	gamma = new_gamma;
-	if (new_gamma < 1.0) gamma = 0.90;
+	if (new_gamma < .70) gamma = 0.70;
 	if (new_gamma > 1.2) gamma = 1.2;
 	printf("Gamma correction = %1.2f\n", gamma);
 	gp_gamma_fill_table(gtable, gamma);

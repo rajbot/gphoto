@@ -1,0 +1,101 @@
+/* README
+ *
+ * Copyright (C) 2008 Theodore Kilgore <kilgota@auburn.edu>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+The program show_sonix_raw will convert a raw file from any one of the known 
+cameras supported in libgphoto2/camlibs/sonix into a viewable PPM file. The 
+file will be saved, and the image contained in the file will be displayed in 
+an X window. To close the program, close the window. The output file will be
+saved. The name of the output file will look like sonix***ppm. An image file 
+created by libgphoto2/camlibs/sonix will have a similar name, but with a "." 
+before the ppm. The reason why the filenames put out from this program are 
+slightly different is that the output of this program and of the sonix camera 
+library will be close together if in the same directory, whereas at the same 
+time there will be no name conflicts. As one of the purposes of the 
+show_sonix_raw program is to try to improve the image processing for the Sonix
+cameras, this feature will therefore allow easy comparison of the image 
+resulting from two different processing routines. 
+
+The program is written to accept raw files which were the output of 
+gphoto2 --get-all-raw-data 
+or 
+gphoto2 --get-raw-data (number or range of numbers, or file name(s)). The  
+raw files will have names which look like raw_sonix***.raw in which *** is the 
+number of the photo. A sample script file should also be present here, which 
+will successively run the program through all of the raw files in a directory, 
+provided that the numbering of those raw files is consecutive and starts with 
+001. Just put the script and the show_sonix_raw executable in the same 
+directory with the raw files and run the script. The first image will be 
+displayed and will remain displayed until you close the window in which it sits.
+At that point, the second image will be displayed, and so on until you have 
+opened all of the photos.  
+
+There are several Sonix SN9C2028 cameras, and they have different features:
+
+First, there is an option about the camera's resolution. For, embedded in 
+each raw file is the information about whether the image is low or high 
+resolution, relative to what the camera will do. But unfortunately the 
+information about what is the camera's highest resolution is not present. Thus,
+for cameras which have a maximum resolution setting of 352*288, and a lower 
+resolution setting of 176*144, please use the
+command 
+
+show_sonix_raw -qvga (name of raw file)
+
+and if the camera has its highest resolution setting as 640*280, then do not 
+use this option. The max resolution of the camera will then be presumed to be 
+a default setting of 640*480, and information embedded in the image will then 
+determine whether that particular image is 640*480 or 320*240. 
+
+As far as I know right now, the cameras which will do 352*288 resolution will 
+not need any other options but this one, so that no other options may be used
+if the -qvga option is used. If this causes any problems or is inconsistent 
+with your camera, please let me know. 
+
+Second, the 640*480 cameras are divided into two classes, those which have a
+header of length 8 bytes in the raw files, and those which do not. A camera 
+which has such headers in the raw files will need the option 
+
+show_sonix_raw -useoffset (name of raw file).
+
+It is easy to tell if the camera needs this or not. Just try 
+
+show_sonix_raw (name of raw file)
+
+and if the output comes out looking very strange, then try the option. 
+
+Third, the 640*480 cameras which require the option -useoffset are divided in
+turn into two sets. If by trying the -useoffset option you got a recognizable 
+image, but the image is upside down and color-shifted, then please try 
+
+show_sonix_raw -useoffset -invert (name of raw file)
+
+and, one hopes, you will get good results. 
+
+Please do note that each option is listed above. For example, there is no 
+option built in to do both -qvga and -invert, or -invert without -useoffset 
+given first, or any other combination which is not listed explicitly above. 
+
+
+If you encounter any SN9C2028 camera which seems to require other processing 
+options which are not incorporated here, or if there are any other problems 
+remaining with the raw conversion program which prevent it from doing its job, 
+then please let me know. 
+
+Theodore Kilgore (February 12, 2007).

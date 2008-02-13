@@ -1,0 +1,19 @@
+
+i=1
+
+while [ "$i" -le 100 ]
+do
+    echo $i
+    ls raw*$i.raw > /dev/null
+    if [ $? -ne 0 ]
+    then
+	exit 1
+    else 
+	# choose one of the following lines, as appropriate
+#	show_sonix_raw raw*$i.raw
+#	show_sonix_raw -qvga raw*$i.raw
+	show_sonix_raw -useoffset raw*$i.raw
+#	show_sonix_raw -useoffset -invert raw*$i.raw
+	i=`expr "$i" + 1`
+    fi
+done

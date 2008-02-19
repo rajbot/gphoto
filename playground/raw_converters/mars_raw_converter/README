@@ -1,0 +1,102 @@
+/* README.show_mr_raw
+ *
+ * Part of a processor program for raw data from Mars MR97310 cameras.
+ * 
+ * Copyright (C) 2008 Theodore Kilgore <kilgota@auburn.edu>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+The program show_mr_raw will convert a raw file from most of the known 
+cameras supported in libgphoto2/camlibs/mars into a viewable PPM file. The 
+file will be saved, and the image contained in the file will be displayed in 
+an X window. To close the program, close the window. The output file will be
+saved. The name of the output file will look like mrpic***ppm. An image file 
+created by libgphoto2/camlibs/mars will have a similar name, but with a "." 
+before the ppm. The reason why the filenames put out from this program are 
+slightly different is that the output of this program and of the mars camera 
+library will be close together if in the same directory, whereas at the same 
+time there will be no name conflicts. As one of the purposes of the 
+show_mr_raw program is to try to improve the image processing for the Mars
+cameras, this feature will therefore allow easy comparison of the image 
+resulting from two different processing routines. 
+
+The program should automatically detect and handle compressed files, and also 
+should automatically detect the output dimensions. The user is warned, however,
+that raw files created with a version of camlibs/mars/library,c prior to 
+September 23, 2006 do _not_ contain the needed information about the output 
+dimensions of the finished photo. The default dimensions of the output file 
+are considered here as 176*144, which will give rather bad results unless that 
+really is the appropriate resolution setting. If you have such old raw files 
+from a Mars camera lying around and really want to get photos from them, then 
+it is of course possible to add the needed information. Please see the 
+sourcecode or the file README.mars in libgphoto2/camlibs/mars to see how I 
+added this information to the raw files. 
+
+The program is written to accept raw files which were the output of 
+gphoto2 --get-all-raw-data 
+or 
+gphoto2 --get-raw-data (number or range of numbers, or file name(s)). The  
+raw files will have names which look like raw_mrpic***.raw in which *** is the 
+number of the photo. A sample script file should also be present here, which 
+will successively run the program through all of the raw files in a directory, 
+provided that the numbering of those raw files is consecutive and starts with 
+001. Just put the script and the show_mr_raw executable in the same 
+directory with the raw files and run the script. The first image will be 
+displayed and will remain displayed until you close the window in which it sits.
+At that point, the second image will be displayed, and so on until you have 
+opened all of the photos.  
+
+There are many MR97310 cameras. Some of them use a compression algorithm for 
+all photos; some of them run only in uncompressed mode, and some of them offer
+the user a choice of compressed mode or uncomrpressed mode. Unfortunately, 
+too, it is known that there exist two compression algorithms which are used 
+in Mars cameras. The decompression of photos taken with one of these algorithms 
+is supported, but the other decompression algorithm, alas, is different. If 
+your camera is running that "bad" compression algorithm, then I am sorry that
+I cannot help you at this time. Rather, perhaps I am lucky enough that you will 
+be able to help _me_. For a discussion of the known cameras, whether they use 
+a compression algorithm or not, and if so, which one, please consult 
+libgphoto2/camlibs/mars/README.mars. 
+
+As stated, there are many MR97310 cameras. Another consequence of this is that 
+there is a bewildering variety of sensors used behind the lens. As a reault, 
+it is very difficult to write an image postprocessing routine which works 
+equally well for all of these cameras. The worst problem is that what appears 
+to work very well for some subset of the cameras seems to work atrociously for 
+some other subset. The main problem lies in the different color sensitivities 
+of the various sensors. The most common problem is that the finished photo 
+often looks too green or too blue with some of the cameras. Some of what is 
+done here helps a bit with this problem, but the problem still exists. 
+Moreover, the USB routines of the Mars cameras have nothing in them which will 
+distinguish one camera from a too-large set of other cameras. Unlike what 
+happens with some other cameras, there is no such thing as a firmware version 
+or other ID string at all. In other words, there is no way that a raw file 
+could automatically be marked as coming from a certain camera. 
+
+
+If you encounter any MR97310 camera which seems to require other processing 
+options which are not incorporated here and which are not already listed and 
+described in README.mars, or if there are any other problems 
+remaining with the raw conversion program which prevent it from doing its job, 
+then please let me know. 
+
+The standard warranty disclaimer applies to this program. I do hope that you 
+find the program useful and enjoyable. If you are a developer working on 
+support for these or similar digital cameras, I hope that you will find it 
+helpful in your work. 
+
+Theodore Kilgore (February 18, 2007).

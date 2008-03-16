@@ -91,6 +91,7 @@ int main(int argc, char *argv[])
 	if ((strcmp(argv[current], "-qvga") == 0) && (current+1 < argc)) 
 	{ 
 		qvga = 1;
+		offset_correct=8;
 		current += 1;
 		if (argc != 3) {
 			printf("Syntax: show_sonix_raw -qvga sourcefile\n");
@@ -106,15 +107,6 @@ int main(int argc, char *argv[])
 		printf("Syntax: show_sonix_raw -useoffset -invert sourcefile\n");
 		return 0;
 	}
-/*
-	if ( !(argc > 3) && (strcmp(argv[current+1], "-invert") == 0) )
-	{
-		printf("Syntax: show_sonix_raw sourcefile, or \n");
-		printf("Syntax: show_sonix_raw -useoffset sourcefile, or \n");
-		printf("Syntax: show_sonix_raw -useoffset -invert sourcefile\n");
-		return 0;
-	}
-*/
 
 		printf("argc=%i\n", argc);
 
@@ -132,10 +124,6 @@ int main(int argc, char *argv[])
 			return 0;
 		}
 	}
-
-
-
-
 
 	if ( !(argc > 3) && (strcmp(argv[current], "-invert") == 0) )
 	{
@@ -236,7 +224,7 @@ int main(int argc, char *argv[])
 		free (buf2);
 		return -1;
 	}
-	if(offset_correct) {
+	if((offset_correct)&&!(qvga)) {
 		info->reverse = 1;
 		info->bayer = BAYER_TILE_BGGR;
 	}
@@ -245,6 +233,7 @@ int main(int argc, char *argv[])
 	 } else {
 		memcpy(buf2, bufp, WIDTH*HEIGHT);
 	}
+	free(buf);
 	if (invert)
 		reverse_bytes(buf2, WIDTH*HEIGHT);
 	ppm = malloc (WIDTH * HEIGHT * 3 + 256); /* Data + header */
@@ -264,6 +253,7 @@ int main(int argc, char *argv[])
         ptr = ppm + strlen ((char *)ppm);
         size = strlen ((char *)ppm) + (WIDTH * HEIGHT * 3);
 	gp_bayer_decode(buf2, WIDTH, HEIGHT, ptr, info->bayer);
+	free(buf2);
         white_balance(ptr, WIDTH * HEIGHT, 1.2);
 
 	if ( (fp_dest = fopen(dest, "wb") ) == NULL )
@@ -296,8 +286,7 @@ int main(int argc, char *argv[])
 	gtk_widget_show (image);
         gtk_widget_show (window);
         gtk_main ();
-
-
-
+	free(info);
+	free(dest);
 	return 0;
 }

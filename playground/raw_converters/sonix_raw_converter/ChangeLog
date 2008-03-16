@@ -1,3 +1,6 @@
-2008-2-13  Theodore Kilgore <kilgota@auburn.edu>                               
-                                                                                
+2008-3-15  Theodore Kilgore <kilgota@auburn.edu>
+        * byr2ppm.[c,h]: replaced. New files contain new interpolation method.
+        * show_sonix_raw.c: qvga cameras use offset. 
+
+2008-2-13  Theodore Kilgore <kilgota@auburn.edu>
         * *.[c,h]: First check-in.

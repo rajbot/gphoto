@@ -1,3 +1,5 @@
-2008-02-18  Theodore Kilgore <kilgota@auburn.edu>                               
-                                                                                
+2008-03-15  Theodore Kilgore <kilgota@auburn.edu>
+        * byr2ppm.[c,h]: replaced. New files contain new interpolation method.
+
+2008-02-18  Theodore Kilgore <kilgota@auburn.edu>
         * *.[c,h]: First check-in.

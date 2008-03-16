@@ -1,13 +1,20 @@
-/** byr2ppm.c (equivalent to libgphoto2/libgphoto2/bayer.c)
- * Bayer array conversion routines.
+/** byr2ppm.c (equivalent to libgphoto2/libgphoto2/bayer.c and gamma.c)
+ * Contains Bayer array conversion routines and the gamma-setting functions
+ * of 
  * 
- * Copyright 2001 Lutz Mller <lutz@users.sf.net>
- * Copyright 2007 Theodore Kilgore <kilgota@auburn.edu>
+ * Copyright March 12, 2008 Theodore Kilgore <kilgota@auburn.edu>
  *
- * 
- * gp_bayer_accrue() from Theodore Kilgore <kilgota@auburn.edu>
- * contains suggestions by B. R. Harris (e-mail address disappeared) and
- * Werner Eugster <eugster@giub.unibe.ch>
+ * gp_bayer_interpolate() from Eero Salminen <esalmine@gmail.com>
+ * and Theodore Kilgore. The work of Eero Salminen is for partial completion 
+ * of a Diploma in Information and Computer Science, 
+ * Helsinki University of Technology, Finland.
+ *
+ * The algorithm is based upon the paper
+ *
+ * Adaptive Homogeneity-Directed Democsaicing Algoritm, 
+ * Keigo Hirakawa and Thomas W. Parks, presented 
+ * in the IEEE Transactions on Image Processing, 
+ * vol. 14, no. 3, March 2005. 
  *
  * License
  * This library is free software; you can redistribute it and/or
@@ -34,43 +41,45 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
-/* The tiles will be used in the Bayer interpolation routine. */
 #include "bayer.h"
 #include "gamma.h"
 
-static int tile_colors[8][4] = {
-	{0, 1, 1, 2},
-	{1, 0, 2, 1},
-	{2, 1, 1, 0},
-	{1, 2, 0, 1},
-	{0, 1, 1, 2},
-	{1, 0, 2, 1},
-	{2, 1, 1, 0},
-	{1, 2, 0, 1}};
 
+
+#define ABS(x) ((x < 0) ? (-x) : (x))
+#define MAX(x,y) ((x < y) ? (y) : (x))
+#define MIN(x,y) ((x > y) ? (y) : (x))
+#define CLAMP(x) MAX(MIN(x,0xff),0)
 #define RED 0
 #define GREEN 1
 #define BLUE 2
 
-
-/* Bayer interpolation routine. Credit to libgphoto2/bayer.c, by Lutz M\"uller.
-*/
-
-int
-gp_bayer_accrue (unsigned char *image, int w, int h, int x0, int y0,
-		int x1, int y1, int x2, int y2, int x3, int y3, int colour) ;
+static int tile_colors[8][4] = {
+	{RED, GREEN, GREEN, BLUE}, /* The four standard tilings */
+	{GREEN, RED, BLUE, GREEN},
+	{BLUE, GREEN, GREEN, RED},
+	{GREEN, BLUE, RED, GREEN},
+	{RED, GREEN, GREEN, BLUE}, /* The four interlaced tilings */
+	{GREEN, RED, BLUE, GREEN},
+	{BLUE, GREEN, GREEN, RED},
+	{GREEN, BLUE, RED, GREEN}
+	};
 
 int
 gp_bayer_expand (unsigned char *input, int w, int h, unsigned char *output,
 		 BayerTile tile)
 {
+	/* We begin with w*h raw (uncompressed) input data of size w*h.
+	 * This function spreads out the data to prepare for Bayer
+	 * interpolation. Missing data gets 0 as a placeholder.
+	 */
 	int x, y, i;
-	int colour, bayer;
+	int color, bayer;
 	unsigned char *ptr = input;
 
 	switch (tile) {
-
 		case BAYER_TILE_RGGB:
 		case BAYER_TILE_GRBG:
 		case BAYER_TILE_BGGR:
@@ -79,17 +88,16 @@ gp_bayer_expand (unsigned char *input, int w, int h, unsigned char *output,
 				for (x = 0; x < w; ++x, ++ptr) {
 					bayer = (x&1?0:1) + (y&1?0:2);
 
-					colour = tile_colors[tile][bayer];
+					color = tile_colors[tile][bayer];
 
 					i = (y * w + x) * 3;
 
 					output[i+RED]    = 0;
 					output[i+GREEN]  = 0;
 					output[i+BLUE]   = 0;
-					output[i+colour] = *ptr;
+					output[i+color] = *ptr;
 				}
 			break;
-
 		case BAYER_TILE_RGGB_INTERLACED:
 		case BAYER_TILE_GRBG_INTERLACED:
 		case BAYER_TILE_BGGR_INTERLACED:
@@ -97,15 +105,12 @@ gp_bayer_expand (unsigned char *input, int w, int h, unsigned char *output,
 			for (y = 0; y < h; ++y, ptr+=w)
 				for (x = 0; x < w; ++x) {
 					bayer = (x&1?0:1) + (y&1?0:2);
-
-					colour = tile_colors[tile][bayer];
-
+					color = tile_colors[tile][bayer];
 					i = (y * w + x) * 3;
-
 					output[i+RED]    = 0;
 					output[i+GREEN]  = 0;
 					output[i+BLUE]   = 0;
-					output[i+colour] = (x&1)? ptr[x>>1]:ptr[(w>>1)+(x>>1)];
+					output[i+color] = (x&1)? ptr[x>>1]:ptr[(w>>1)+(x>>1)];
 				}
 			break;
 	}
@@ -115,194 +120,502 @@ gp_bayer_expand (unsigned char *input, int w, int h, unsigned char *output,
 
 #define AD(x, y, w) ((y)*(w)*3+3*(x))
 
-int
-gp_bayer_interpolate (unsigned char *image, int w, int h, BayerTile tile)
-{
-	int x, y, bayer;
-	int p0, p1, p2, p3;
-	int value, div ;
+/* This function computes distance^2 between two sets of pixel data */
+int dRGB(int i1, int i2, unsigned char *RGB) {
+	int dR,dG,dB;
+	dR=RGB[i1+RED]-RGB[i2+RED];
+	dG=RGB[i1+GREEN]-RGB[i2+GREEN];
+	dB=RGB[i1+BLUE]-RGB[i2+BLUE];
+	return dR*dR+dG*dG+dB*dB;
+}
 
+/* Here, we reconstruct the reds and/or greens on the center row of a small, 
+ * three-row window.  */
+int do_rb_ctr_row(unsigned char *image_h, unsigned char *image_v, int w, 
+					int h, int y, int *pos_code) 
+{
+	int x, bayer;
+	int value,value2,div,color;
+	/*
+	 * pos_code[0] = red. green lrtb, blue diagonals 
+	 * pos_code[1] = green. red lr, blue tb 
+	 * pos_code[2] = green. blue lr, red tb 
+	 * pos_code[3] = blue. green lrtb, red diagonals 
+	 *
+	 * The Red channel reconstruction is R=G+L(Rs-Gs), in which
+	 *	G = interpolated & known Green
+	 *	Rs = known Red
+	 *	Gs = values of G at the positions of Rs
+	 *	L()= should be a 2D lowpass filter, now we'll check 
+	 *	them from a 3x3 square
+	 *	L-functions' convolution matrix is 
+	 *	[1/4 1/2 1/4;1/2 1 1/2; 1/4 1/2 1/4]
+	 * 
+	 * The Blue channel reconstruction uses exactly the same methods.
+	 */
+	for (x = 0; x < w; x++) 
+	{
+		bayer = (x&1?0:1) + (y&1?0:2);
+		for (color=0; color < 3; color+=2) {
+			if ((color==RED && bayer == pos_code[3]) 
+					|| (color==BLUE 
+						    && bayer == pos_code[0])) {
+				value=value2=div=0;
+				if (x > 0 && y > 0) {
+					value += image_h[AD(x-1,0,w)+color]
+						-image_h[AD(x-1,0,w)+GREEN];
+					value2+= image_v[AD(x-1,0,w)+color]
+						-image_v[AD(x-1,0,w)+GREEN];
+					div++;
+				}
+				if (x > 0 && y < h-1) {
+					value += image_h[AD(x-1,2,w)+color]
+						-image_h[AD(x-1,2,w)+GREEN];
+					value2+= image_v[AD(x-1,2,w)+color]
+						-image_v[AD(x-1,2,w)+GREEN];
+					div++;
+				}
+				if (x < w-1 && y > 0) {
+					value += image_h[AD(x+1,0,w)+color]
+						-image_h[AD(x+1,0,w)+GREEN];
+					value2+= image_v[AD(x+1,0,w)+color]
+						-image_v[AD(x+1,0,w)+GREEN];
+					div++;
+				}
+				if (x < w-1 && y < h-1) {
+					value += image_h[AD(x+1,2,w)+color]
+					        -image_h[AD(x+1,2,w)+GREEN];
+					value2+= image_v[AD(x+1,2,w)+color]
+						-image_v[AD(x+1,2,w)+GREEN];
+								div++;
+				}
+				image_h[AD(x,1,w)+color]=
+						CLAMP(
+						image_h[AD(x,1,w)+GREEN]
+						+value/div);
+				image_v[AD(x,1,w)+color]=
+						CLAMP(image_v[AD(x,1,w)+GREEN]
+						+value2/div);
+			} else if ((color==RED && bayer == pos_code[2]) 
+					|| (color==BLUE 
+						    && bayer == pos_code[1])) {
+				value=value2=div=0;
+				if (y > 0) {
+					value += image_h[AD(x,0,w)+color]
+						-image_h[AD(x,0,w)+GREEN];
+					value2+= image_v[AD(x,0,w)+color]
+						-image_v[AD(x,0,w)+GREEN];
+						div++;
+				}
+				if (y < h-1) {
+					value += image_h[AD(x,2,w)+color]
+						-image_h[AD(x,2,w)+GREEN];
+					value2+= image_v[AD(x,2,w)+color]
+						-image_v[AD(x,2,w)+GREEN];
+					div++;
+				}
+				image_h[AD(x,1,w)+color]=
+						CLAMP(
+						image_h[AD(x,1,w)+GREEN]
+						+value/div);
+				image_v[AD(x,1,w)+color]=
+						CLAMP(
+						image_v[AD(x,1,w)+GREEN]
+						+value2/div);
+			} else if ((color==RED && bayer == pos_code[1]) 
+					|| (color==BLUE 
+						    && bayer == pos_code[2])) {
+					value=value2=div=0;
+				if (x > 0) {
+					value += image_h[AD(x-1,1,w)+color]
+						-image_h[AD(x-1,1,w)+GREEN];
+					value2+= image_v[AD(x-1,1,w)+color]
+						-image_v[AD(x-1,1,w)+GREEN];
+					div++;
+				}
+				if (x < w-1) {
+					value += image_h[AD(x+1,1,w)+color]
+						-image_h[AD(x+1,1,w)+GREEN];
+					value2+= image_v[AD(x+1,1,w)+color]
+						-image_v[AD(x+1,1,w)+GREEN];
+					div++;
+				}
+				image_h[AD(x,1,w)+color]=
+						CLAMP(
+						image_h[AD(x,1,w)+GREEN]
+						+value/div);
+				image_v[AD(x,1,w)+color]=
+						CLAMP(
+						image_v[AD(x,1,w)+GREEN]
+						+value2/div);
+			}
+		}
+	}
+return 0;
+}
+
+	/* Here, we do the missing green data on a single row. Nominally, the 
+	 * row is the center row of a three row window, as is the case with the 
+	 * reconstruction of RB data. However, in the case of reconstructing G
+	 * data we can find all the information that is needed in the original 
+	 * image. Thus, this function uses data from the original image and 
+	 * writes to the rows in the respective windows. 
+	 */
+
+int do_green_ctr_row(unsigned char *image, unsigned char *image_h, 
+			    unsigned char *image_v, int w, int h, int y, 
+			    int *pos_code) 
+{
+	int x, bayer,color;
+	int value,div;
+	/*
+	 * The horizontal green estimation on a red-green row is 
+	 * G(x) = (2*R(x)+2*G(x+1)+2*G(x-1)-R(x-2)-R(x+2))/4
+	 * The estimation on a green-blue row works in the same
+	 * way.
+	 */
+	for (x = 0; x < w; x++) {
+		bayer = (x&1?0:1) + (y&1?0:2);
+		/* pos_code[0] = red. green lrtb, blue diagonals */
+		/* pos_code[3] = blue. green lrtb, red diagonals */
+		if ( bayer == pos_code[0] || bayer == pos_code[3]) {
+			div=value=0;
+			if (bayer==pos_code[0])
+				color = RED;
+			else
+				color = BLUE;
+			value += 2*image[AD(x,y,w)+color];
+			div+=2;
+			if (x < (w-1)) {
+				value += 2*image[AD(x+1,y,w)+GREEN];
+				div+=2;	
+			}
+			if (x < (w-2)) {
+				value -= image[AD(x+2,y,w)+color];
+					div--;
+			}
+			if (x > 0) {
+				value += 2*image[AD(x-1,y,w)+GREEN];
+				div+=2;
+			}
+			if (x > 1) {
+				value -= image[AD(x-2,y,w)+color];
+				div--;
+			}
+			image_h[AD(x,1,w)+GREEN] = CLAMP(value / div);
+			/* The method for vertical estimation is just like 
+			 * what is done for horizontal estimation, with only  
+			 * the obvious difference that it is done vertically. 
+			 */
+			div=value=0;
+			value += 2*image[AD(x,y,w)+color];
+			div+=2;
+			if (y < (h-1)) {
+				value += 2*image[AD(x,y+1,w)+GREEN];
+				div+=2;	
+			}
+			if (y < (h-2)) {
+				value -= image[AD(x,y+2,w)+color];
+				div--;
+			}
+			if (y > 0) {
+				value += 2*image[AD(x,y-1,w)+GREEN];
+				div+=2;
+			}
+			if (y > 1) {
+				value -= image[AD(x,y-2,w)+color];
+				div--;
+			}
+			image_v[AD(x,1,w)+GREEN] = CLAMP(value / div);
+			
+		}
+	}
+	return 0;
+}
+
+int get_diffs_row2(unsigned char * hom_buffer_h, unsigned char *hom_buffer_v, 
+			unsigned char * buffer_h, unsigned char *buffer_v, 
+				int w) 
+{
+	int i,j;
+	int RGBeps;
+	unsigned char Usize_h, Usize_v;
+
+	for (j = 1; j < w-1; j++) {
+		i=3*j+9*w;
+		Usize_h=0;
+		Usize_v=0;
+		/* 
+		 * Adaptive parametrization. The idea here is that, if there
+		 * are small changes near the pixel under consideration, then 
+		 * the choice algorithm is more restricted. 
+		 */
+		RGBeps=MIN(
+			MAX(dRGB(i,i-3,buffer_h),dRGB(i,i+3,buffer_h)),
+			MAX(dRGB(i,i-3*w,buffer_v),dRGB(i,i+3*w,buffer_v))
+			);
+		/*
+		 * Homogeneity mapping. Within the indicated bounds, we 
+		 * assign a higher number if there is less change. The indices
+		 * thus computed will be used in the choice algorithm to choose 
+		 * the direction of least change. 
+		 */
+
+		if (dRGB(i,i-3,buffer_h) <= RGBeps)
+			Usize_h++;
+		if (dRGB(i,i-3,buffer_v) <= RGBeps)
+			Usize_v++;
+		if (dRGB(i,i+3,buffer_h) <= RGBeps)
+			Usize_h++;
+		if (dRGB(i,i+3,buffer_v) <= RGBeps)
+			Usize_v++;
+		if (dRGB(i,i-3*w,buffer_h)<= RGBeps)
+			Usize_h++;
+		if (dRGB(i,i-3*w,buffer_v) <= RGBeps)
+			Usize_v++;
+		if (dRGB(i,i+3*w,buffer_h) <= RGBeps)
+			Usize_h++;
+		if (dRGB(i,i+3*w,buffer_v) <= RGBeps)
+			Usize_v++;
+		hom_buffer_h[j+2*w]=Usize_h;
+		hom_buffer_v[j+2*w]=Usize_v;
+	}
+	return 0;
+}
+
+/* In outline, the interpolation algorithm used here does the 
+ * following:
+ *
+ * The image itself is the input and the output of gp_bayer_interpolate(). 
+ * In principle, the first thing which is done is to split off from the 
+ * image two copies. In one of these, interpolation can be done in the 
+ * vertical direction only, and in the other copy only in the 
+ * horizontal direction. "Cross-color" data is used throughout, on the 
+ * principle that it can be used as a measure for brightness even if it is 
+ * derived from the "wrong" color. Finally, at each pixel there is a choice 
+ * criterion to decide whether to use the result of the vertical 
+ * interpolation, the horizontal interpolation, or an average of the two. 
+ *
+ * In addition to the above, the implementation here also optimizes both 
+ * memory use and speed by using two sliding windows, one for the vertical 
+ * interpolation and the other for the horizontal interpolation instead of 
+ * using two copies of the entire input image. The choice algorithm is 
+ * implemented within these windows, too. Then the windows are moved, and 
+ * the process repeats. 
+ */
+
+int gp_bayer_interpolate (unsigned char *image, int w, int h, BayerTile tile) 
+{
+	int i, j, k, x, y;
+	int p[4];
+	int color;
+	unsigned char *window_h, *window_v, *cur_window_h, *cur_window_v;
+	unsigned char *homo_h, *homo_v;
+	unsigned char *homo_ch, *homo_cv;
+
+	clock_t time_start=clock();
+	fprintf(stderr, "Starting bayer AHD-interpolation\n");
+	window_h = calloc (w * 18, 1);
+	if (!window_h) {
+		free (window_h);
+		fprintf(stderr, "Out of memory\n");
+		return -1;
+	}
+	window_v = calloc(w * 18, 1);
+	if (!window_v) {
+		free (window_v);
+		fprintf(stderr, "Out of memory\n");
+		return -1;
+	}
+	homo_h = calloc(w*3, 1);
+	if (!homo_h) {
+		free (homo_h);
+		fprintf(stderr, "Out of memory\n");
+		return -1;
+	}
+	homo_v = calloc(w*3, 1);
+	if (!homo_v) {
+		free (homo_v);
+		fprintf(stderr, "Out of memory\n");
+		return -1;
+	}
+	homo_ch = calloc (w, 1);
+	if (!homo_ch) {
+		free (homo_ch);
+		fprintf(stderr, "Out of memory\n");
+		return -1;
+	}
+	homo_cv = calloc (w, 1);
+	if (!homo_cv) {
+		free (homo_ch);
+		fprintf(stderr, "Out of memory\n");
+		return -1;
+	}
 	switch (tile) {
 	default:
 	case BAYER_TILE_RGGB:
 	case BAYER_TILE_RGGB_INTERLACED:
-		p0 = 0; p1 = 1; p2 = 2; p3 = 3;
+		p[0] = 0; p[1] = 1; p[2] = 2; p[3] = 3;
 		break;
 	case BAYER_TILE_GRBG:
 	case BAYER_TILE_GRBG_INTERLACED:
-		p0 = 1; p1 = 0; p2 = 3; p3 = 2;
+		p[0] = 1; p[1] = 0; p[2] = 3; p[3] = 2;
 		break;
 	case BAYER_TILE_BGGR:
 	case BAYER_TILE_BGGR_INTERLACED:
-		p0 = 3; p1 = 2; p2 = 1; p3 = 0;
+		p[0] = 3; p[1] = 2; p[2] = 1; p[3] = 0;
 		break;
 	case BAYER_TILE_GBRG:
 	case BAYER_TILE_GBRG_INTERLACED:
-		p0 = 2; p1 = 3; p2 = 0; p3 = 1;
+		p[0] = 2; p[1] = 3; p[2] = 0; p[3] = 1;
 		break;
 	}
 
-	for (y = 0; y < h; y++)
-		for (x = 0; x < w; x++) {
-			bayer = (x&1?0:1) + (y&1?0:2);
-
-			if ( bayer == p0 ) {
-
-				/* red. green lrtb, blue diagonals */
-				image[AD(x,y,w)+GREEN] =
-					gp_bayer_accrue(image, w, h, x-1, y, x+1, y, x, y-1, x, y+1, GREEN) ;
-
-				image[AD(x,y,w)+BLUE] =
-					gp_bayer_accrue(image, w, h, x+1, y+1, x-1, y-1, x-1, y+1, x+1, y-1, BLUE) ;
-
-			} else if (bayer == p1) {
-
-				/* green. red lr, blue tb */
-				div = value = 0;
-				if (x < (w - 1)) {
-					value += image[AD(x+1,y,w)+RED];
-					div++;
+	/* 
+	 * Once the algorithm is initialized and running, one cycle of the 
+	 * algorithm can be described thus:
+	 * 
+	 * Step 1
+	 * Write from row y+3 of the image to row 5 in window_v and in 
+	 * window_h. 
+	 *
+	 * Step 2
+	 * Interpolate missing green data on row 5 in each window. Data from
+	 * the image only is needed for this, not data from the windows. 
+	 *
+	 * Step 3
+	 * Now interpolate the missing red or blue data on row 4 in both 
+	 * windows. We need to do this inside the windows; what is required 
+	 * is the real or interpolated green data from rows 3 and 5, and the 
+	 * real data on rows 3 and 5 about the color being interpolated on 
+	 * row 4, so all of this information is available in the two windows. 
+	 * Note that for this operation we are interpolating the center row 
+	 * of cur_window_v and cur_window_h. 
+	 * 
+	 * Step 4
+	 * Now we have five completed rows in each window, 0 through 4 (rows
+	 * 0 - 3 having been done in previous cycles). Completed rows 0 - 4 
+	 * are what is required in order to run the choice algorithm at 
+	 * each pixel location across row 2, to decide whether to choose the 
+	 * data for that pixel from window_v or from window_h. We run the 
+	 * choice algorithm, sending the data from row 2 over to row y of the 
+	 * image, pixel by pixel. 
+	 *
+	 * Step 5
+	 * Move the windows down (or the data in them up) by one row.
+	 * Increment y, the row counter for the image. Go to Step 1.
+	 * 
+	 * Initialization of the algorithm clearly requires some special 
+	 * steps, which are described below, as they occur. 
+	 */
+	cur_window_h = window_h+9*w; 
+	cur_window_v = window_v+9*w; 
+	/*
+	 * Getting started. Copy row 0 from image to line 4 of windows
+	 * and row 1 from image to line 5 of windows. 
+	 */
+	memcpy (window_h+12*w, image, 6*w);
+	memcpy (window_v+12*w, image, 6*w);
+	/*
+	 * this does the green interpolation in row 4 of the windows, the 
+	 * "center" row of cur_window, from image row 0.
+	 */
+	do_green_ctr_row(image, cur_window_h, cur_window_v, w, h, 0, p);
+	/* this does the green interpolation in row 5 of the windows */
+	do_green_ctr_row(image, cur_window_h+3*w, cur_window_v+3*w, w, h, 1, p);
+	/*
+	 * we are now ready to do the rb interpolation on row 4 of the 
+	 * windows, which relates to row 0 of the image. 
+	 */ 
+	do_rb_ctr_row(cur_window_h, cur_window_v, w, h, 0, p);
+	/*
+	 * now we have row 0 of the image completed in row 4 of the windows
+	 * and row 5 has had only the green interpolation. 
+	 */
+	memmove(window_h, window_h+3*w,15*w);
+	memmove(window_v, window_v+3*w,15*w);
+	memcpy (window_h+15*w, image+6*w, 3*w);
+	memcpy (window_v+15*w, image+6*w, 3*w);
+	/*
+	 * now we have shifted backwards and we have row 0 of the image in 
+	 * row 3 of the windows. Row 4 of the window contains row 1 of image
+	 * and needs the rb interpolation. We have copied row 2 of the image 
+	 * into row 5 of the windows and need to do green interpolation. 
+	 */
+	do_green_ctr_row(image, cur_window_h+3*w, cur_window_v+3*w, w, h, 2, p);
+	do_rb_ctr_row(cur_window_h, cur_window_v, w, h, 1, p);
+	memmove (window_h, window_h+3*w, 15*w);
+	memmove(window_v, window_v+3*w,15*w); 
+	/*
+	 * We have shifted one more time. Row 2 of the two windows is 
+	 * the original row 0 of the image, now fully interpolated. Rows 3 
+	 * and 4 of the windows contain the original rows 1 and 2 of the 
+	 * image, also fully interpolated. They will be used while applying 
+	 * the choice algorithm on row 2, in order to write it back to row
+	 * 0 of the image. The algorithm is now fully initialized. We enter 
+	 * the loop which will complete it for the whole image.
+	 */
+	 
+	for (y = 0; y < h; y++) {
+		if(y<h-3) {
+			memcpy (window_v+15*w,image+3*y*w+9*w, 3*w);
+			memcpy (window_h+15*w,image+3*y*w+9*w, 3*w);
+		} else {
+			memset(window_v+15*w, 0, 3*w);
+			memset(window_h+15*w, 0, 3*w);
+		}
+		if (y<h-3) 
+			do_green_ctr_row(image, cur_window_h+3*w, 
+					cur_window_v+3*w, w, h, y+3, p);
+		if (y<h-2) 
+			do_rb_ctr_row(cur_window_h, cur_window_v, w, h, y+2, p);
+		/* The next function writes row 2 of diffs, which is the set 
+		 * of diffs for row y+1 of the image, which is row 3 of our 
+		 * windows. When starting with row 0 of the image, this is all
+		 * we need. As we continue, the results of this calculation 
+		 * will also be rotated; in general we need the diffs for rows
+		 * y-1, y, and y+1 in order to carry out the choice algorithm
+		 * for writing row y.
+		 */
+		get_diffs_row2(homo_h, homo_v, window_h, window_v, w);
+		memset(homo_ch, 0, w);
+		memset(homo_cv, 0, w);
+		/* We apply the choice algorithm. */
+		for (x=0; x < w; x++) {
+			for (i=-1; i < 2;i++) {
+				for (k=0; k < 3;k++) {
+					j=i+x+w*k; 
+					homo_ch[x]+=homo_h[j];
+					homo_cv[x]+=homo_v[j];
 				}
-				if (x) {
-					value += image[AD(x-1,y,w)+RED];
-					div++;
-				}
-				image[AD(x,y,w)+RED] = value / div;
-
-				div = value = 0;
-				if (y < (h - 1)) {
-					value += image[AD(x,y+1,w)+BLUE];
-					div++;
-				}
-				if (y) {
-					value += image[AD(x,y-1,w)+BLUE];
-					div++;
-				}
-				image[AD(x,y,w)+BLUE] = value / div;
-
-			} else if ( bayer == p2 ) {
-
-				/* green. blue lr, red tb */
-				div = value = 0;
-
-				if (x < (w - 1)) {
-					value += image[AD(x+1,y,w)+BLUE];
-					div++;
-				}
-				if (x) {
-					value += image[AD(x-1,y,w)+BLUE];
-					div++;
-				}
-				image[AD(x,y,w)+BLUE] = value / div;
-
-				div = value = 0;
-				if (y < (h - 1)) {
-					value += image[AD(x,y+1,w)+RED];
-					div++;
-				}
-				if (y) {
-					value += image[AD(x,y-1,w)+RED];
-					div++;
-				}
-				image[AD(x,y,w)+RED] = value / div;
-
-			} else {
-
-				/* blue. green lrtb, red diagonals */
-				image[AD(x,y,w)+GREEN] =
-					gp_bayer_accrue (image, w, h, x-1, y, x+1, y, x, y-1, x, y+1, GREEN) ;
-
-				image[AD(x,y,w)+RED] =
-					gp_bayer_accrue (image, w, h, x+1, y+1, x-1, y-1, x-1, y+1, x+1, y-1, RED) ;
+			}
+			for (color=0; color < 3; color++) {
+				if (homo_ch[x] > homo_cv[x])
+					image[3*y*w+3*x+color]
+					= window_h[3*x+6*w+color];
+				else if (homo_ch[x] < homo_cv[x])
+					image[3*y*w+3*x+color]
+					= window_v[3*x+6*w+color];
+				else
+					image[3*y*w+3*x+color]
+					= (window_v[3*x+6*w+color]+
+						window_h[3*x+6*w+color])/2;
 			}
 		}
-
+		memmove(window_v, window_v+3*w, 15*w);
+		memmove(window_h, window_h+3*w, 15*w);
+		memmove (homo_h,homo_h+w,2*w);
+		memmove (homo_v,homo_v+w,2*w);
+	}
+	clock_t time_end=clock();
+	fprintf(stderr,"Total time of AHD :\t%i ms\n",(int)(time_end-time_start)/1000);
+	free(window_v);
+	free(window_h);
+	free(homo_h);
+	free(homo_v);
+	free(homo_ch);
+	free(homo_cv);
 	return 0;
-}
-
-/* Accrue four surrounding values.  If three values are one side of the average value,
-	the fourth value is ignored. This will sharpen up boundaries. B.R.Harris 13Nov03*/
-int
-gp_bayer_accrue (unsigned char *image, int w, int h, int x0, int y0,
-		int x1, int y1, int x2, int y2, int x3, int y3, int colour)
-{	int x [4] ;
-	int y [4] ;
-	int value [4] ;
-	int above [4] ;
-	int counter	; // counter
-	int total_value	; // total value
-	int average ;
-	int i ;
-	x[0] = x0 ; x[1] = x1 ; x[2] = x2 ; x[3] = x3 ;
-	y[0] = y0 ; y[1] = y1 ; y[2] = y2 ; y[3] = y3 ;
-
-	// special treatment for green
-	counter = total_value = 0 ;
-	if(colour == GREEN)
-	{
-	  	// we need to make sure that horizontal or vertical lines become horizontal
-	  	// and vertical lines even in this interpolation procedure
-	  	// therefore, we determine whether we might have such a line structure
-	  	for (i = 0 ; i < 4 ; i++)
-	  	{	if ((x[i] >= 0) && (x[i] < w) && (y[i] >= 0) && (y[i] < h))
-			{
-				value [i] = image[AD(x[i],y[i],w) + colour] ;
-				counter++;
-			}
-			else
-			{
-				value [i] = -1 ;
-			}
-	  	}
-		if(counter == 4)
-		{
-			// we must assume that x0,y0 and x1,y1 are on the horizontal axis and
-			// x2,y2 and x3,y3 are on the vertical axis
-			int hdiff ;
-			int vdiff ;
-			hdiff = value [1] - value [0] ;
-			hdiff *= hdiff ;	// make value positive by squaring it
-			vdiff = value [3] - value [2] ;
-			vdiff *= vdiff ;	// make value positive by squaring it
-			if(hdiff > 2*vdiff)
-			{
-				// we might have a vertical structure here
-				return (value [3] + value [2])/2 ;
-			}
-			if(vdiff > 2*hdiff)
-			{
-				// we might have a horizontal structure here
-				return (value [1] + value [0])/2 ;
-			}
-			// else we proceed as with blue and red
-		}
-		// if we do not have four points then we proceed as we do for blue and red
-	}
-
-	// for blue and red as it was before
-	counter = total_value = 0 ;
-	for (i = 0 ; i < 4 ; i++)
-	{	if ((x[i] >= 0) && (x[i] < w) && (y[i] >= 0) && (y[i] < h))
-		{	value [i] = image[AD(x[i],y[i],w) + colour] ;
-			total_value += value [i] ;
-			counter++ ;
-		}
-	}
-	average = total_value / counter ;
-	if (counter < 4) return average ;  // Less than four surrounding - just take average
-	counter = 0 ;
-	for (i = 0 ; i < 4 ; i++)
-	{	above[i] = value[i] > average ;
-		if (above[i]) counter++ ;
-	}
-	// Note: counter == 0 indicates all values the same
-	if ((counter == 2) || (counter == 0)) return average ;
-	total_value = 0 ;
-	for (i = 0 ; i < 4 ; i++)
-	{	if ((counter == 3) == above[i])
-		{	total_value += value[i] ; }
-	}
-	return total_value / 3 ;
 }
 
 
@@ -312,11 +625,12 @@ gp_bayer_decode (unsigned char *input, int w, int h, unsigned char *output,
 {
 	gp_bayer_expand (input, w, h, output, tile);
 	gp_bayer_interpolate (output, w, h, tile);
+
 	return 0;
 }
 
 
-/* Gamma correction routine. Credit to libgphoto2/bayer.c, by Lutz M\"uller.
+/* Gamma correction routine. Credit to libgphoto2/gamma.c, by Lutz M\"uller.
 */
 
 

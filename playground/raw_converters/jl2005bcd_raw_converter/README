@@ -1,0 +1,70 @@
+/* README
+ *
+ * Copyright (C) 2010 Theodore Kilgore <kilgota@auburn.edu>
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+
+What is here?
+
+This directory contains the source for a program for converting a raw file
+from a JL2005B or JL2005C or JL2005D camera. If the camera provides thumbnails,
+those are part of the raw file. If present, the thumnail will be detected and
+will also be processed, saved as a separate file.
+
+The program resulting from compilation will be called jl2005bcd_decompress.
+To compile it, just do "make". To use it, either put it in some appropriate
+place in your executable path, or into a directory which contains some raw
+files from one of the supported cameras. Those raw files can be obtained by
+running gphoto2 --get-all-raw-data. The syntax for using this executable is 
+simply
+
+jl2005bcd_decompress (name of raw file)
+
+For example, if the raw file is named raw_jl_005.raw then you do 
+
+jl2005bcd_decompress raw_jl_005.raw
+
+The output file will be in the PPM format, which is an uncompressed bitmap
+format. Its name will be derived from the name of the input file. Continuing
+our example, it will be called jl_2005r.ppm, where the "r" in the name will
+indicate that it was derived from a raw file using this program. If a
+thumbnail is also present as part of the raw file, then the thumbnail will
+also be saved as a file called jl2005r-thumb.ppm. If there is no thumbnail,
+then no such file will be created. The presence or absence of a thumbnail
+is dependent on the camera which produced the raw file. It seems that the
+cameras which have a viewing screen on the rear will produce thumbnails, and
+those which have no viewing screen will not.
+
+
+PURPOSE
+
+The first purpose for this program is experimentation with the processing of
+raw data for the cameras for which it was designed. At the same time, it
+clearly could also be used by anyone who has one of these cameras or raw
+files from one of them and would prefer to  keep the data in the form of raw
+camera output, on the grounds that it is smaller than a finished PPM image.
+
+
+INSTALLATION
+
+Just do "make" as stated above, and copy the executable to the place where you
+want to copy it.
+
+
+Theodore Kilgore
+04/10/2007

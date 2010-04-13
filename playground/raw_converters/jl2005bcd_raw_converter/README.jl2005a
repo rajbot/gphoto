@@ -1,0 +1,112 @@
+/* README
+ *
+ * Copyright (C) 2010 Theodore Kilgore <kilgota@auburn.edu>
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+
+What is here? 
+
+This directory contains the source for a program for converting a raw file
+from a JL2005B or JL2005C or JL2005D camera and displaying same. If the
+camera provides thumbnails, those are part of the raw file. The thumnail
+is also processed, as a separate file.
+
+The program is called jl2005bcd_decompress.
+
+To compile it, just do "make". To use it, put the executable 
+in some appropriate place in your executable path, or into a directory which 
+contains some raw files from one of the supported cameras. Those raw files
+can be obtained by running gphoto2 --get-all-raw-data. The syntax for using 
+this executable is simply 
+
+show_jl2005a_raw (name of raw file). 
+
+For example, if the raw file is named raw_jl_005.raw then you do 
+
+show_jl2005a_raw raw_jl_005.raw
+
+This command must be run while you are running X, because what the program 
+will do is to produce a finished output file in PPM format and immediately
+thereafter will display the output file in an xterm window which is created 
+for the occasion. After inspecting the photo at leisure, the user may then 
+close that popup xterm with a mouse click. When the xterm is thus closed, 
+the output file will be automatically saved to disk. Continuing with our 
+example, the name of the output file produced will be jl_005bcdr.ppm, and the
+thumbnail will be jl2005bcdrt.ppm.
+
+A standard frontend for libgphoto2 would produce directly from the camera a 
+file called jl_005.ppm 
+
+from the same input data. Thus, name collision with direct output from gphoto2 
+is avoided, and the two output files can peacefully coexist side by side.
+
+A script file is also included, which will run the converter program on a 
+directory full of raw files. These files must be consecutively numbered and 
+the list must begin with raw_jl_01.raw.
+
+
+PURPOSE
+
+The first purpose for this program is experimentation with the processing of 
+raw data for the particular camera for which it was designed. At the same time,
+it clearly could also be used by anyone who has one of these cameras or raw 
+files from one of them and would prefer to  keep the data in the form of raw
+camera output, on the grounds that it is smaller than a finished PPM image. 
+
+Although no fetish has been made of modularity and portability to other cameras,
+the program has also been designed in somewhat modular form, thus:
+
+1. The particulars of image processing for the particular model of camera 
+have been put in jl2005a_process.c This file can be replaced by a similar 
+file relating to some other camera, as the places where it ties into main.c 
+are fairly clear and obvious. 
+
+2. The particulars of Bayer interpolation have been put in byr2ppm.c (based 
+upon libgphoto2/libgphoto2.bayer.c, of course). 
+This file is camera-independent and does not need to be touched 
+unless one is motivated to tweak the Bayer interpolation algorithm itself. 
+However, isolation from the main libgphoto2 tree makes it much easier to 
+experiment with the Bayer interpolation algorithm, too. 
+
+
+3. The main part of the image processing, which calls upon functions in the 
+other files, is in main.c.
+
+4. Also in main.c is the GUI component of the program, which creates a display
+window, fills it with the photo data, displays it, and interacts with normal 
+X functionality so that the window can be closed in orderly fashion. This 
+portion of main.c depends only upon the GTK library for its functions. 
+
+Thus very little of what is in the files other than the 
+(name of camera)_process.c needs to be changed to create a similar program to 
+handle the raw output files from some other camera. In fact, I have done 
+exactly this on several occasions, for several of the cameras which I have 
+worked on. 
+
+INSTALLATION
+
+Just do "make" as stated above, and copy the executable to the place where you
+want to copy it. 
+
+DEPENDENCIES
+
+GTK, preferably version 2.x.
+
+
+Theodore Kilgore
+12/22/2007

@@ -59,6 +59,38 @@ capture. <code>-F 0</code> will capture images ad-infinitum.
 </p><p>
 This can be used with either <code>--capture-image</code> which would leave all images on the card, or <code>--capture-image-and-download</code> which captures and downloads the images immediately.
 </p>
+<h2>Movie Capture</h2>
+<p>
+Capturing movies with sound is currently possible with:
+<ul>
+<li>Newer Nikon DSLRs: <code>gphoto2 --set-config movie=1 --wait-event=10s --set-config movie=0 --wait-event-and-download=2s</code>. Replace 10s by the number of seconds you want to have your movie long. This started being supported around 2012, around the D7000 release.
+<li>Newer Canon EOS DSLRs (around 7D and later) : Switch the camera to movie record mode on the camera. Then run <code>gphoto2 --set-config movierecord=4 --wait-event=10s --set-config movierecord=0 --wait-event-and-download=2s</code>
+<li>Older cameras with preview capture ability: <code>gphoto2 --capture-movie=10s</code> . This will capture 10 seconds of preview frames and concatenate them in a MotionJPEG style stream.
+</ul>
+</p>
+<h2>Bulb Capture</h2>
+<p>
+Bulb capture is a bit difficult in a command-response style setting. Various cameras handle it differently.
+<ul>
+<li>Nikon DSLR: We do not know how to do Bulb capture yet.</li>
+<li>Older Canon EOS DSLR:
+<p>
+<code>gphoto2 --set-config shutterspeed=bulb</code><br/>
+<code>gphoto2 --set-config bulb=1 --wait-event=30s --set-config bulb=0 --wait-event-and-download=2s</code>
+</p>
+</li>
+<li>Newer Canon EOS DSLR:
+<p>
+<code>gphoto2 --set-config shutterspeed=bulb</code><br/>
+<code>gphoto2 --set-config eosremoterelease=Immediate --wait-event=30s --set-config eosremoterelease=Off --wait-event-and-download=2s</code>
+</p><p>
+The <code>eosremoterelease</code> refers to the direct shutter button manipulation, so it can be used for different scenarios
+outside of immediate shutter releases.
+</p>
+</li>
+</ul>
+
+</p>
 <h2>List of cameras</h2>
 <hr />
 <table border="1">

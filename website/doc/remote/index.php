@@ -59,6 +59,7 @@ capture. <code>-F 0</code> will capture images ad-infinitum.
 </p><p>
 This can be used with either <code>--capture-image</code> which would leave all images on the card, or <code>--capture-image-and-download</code> which captures and downloads the images immediately.
 </p>
+
 <h2>Movie Capture</h2>
 <p>
 Capturing movies with sound is currently possible with:
@@ -68,6 +69,7 @@ Capturing movies with sound is currently possible with:
 <li>Older cameras with preview capture ability: <code>gphoto2 --capture-movie=10s</code> . This will capture 10 seconds of preview frames and concatenate them in a MotionJPEG style stream.
 </ul>
 </p>
+
 <h2>Bulb Capture</h2>
 <p>
 Bulb capture is a bit difficult in a command-response style setting. Various cameras handle it differently.
@@ -89,7 +91,19 @@ outside of immediate shutter releases.
 </p>
 </li>
 </ul>
+</p>
 
+<h2>Manual Focus</h2>
+<p>
+<ul>
+<li>Nikon DSLR: Manual focusing only works in the "liveview" aka "preview" mode (with mirror up). In "non preview" mode the focus motor is only controllable by the autofocus engine. 
+<code>--set-config manualfocusdrive=<b>step size</b> </code> Here a value between <code>-32768</code> and <code>32767</code> can be specified that is probably the direction and pulse length to the focus ring motor. Setting this value causes a relative movement, fixed positions cannot be driven to. To achieve the wanted focus, multiple calls might need to be done.
+</li>
+<li>Canon EOS DSLR: Manual focus driving only works on the "liveview" aka "preview" mode (with mirror up). In "non preview" mode the focus motor is only controllable by the autofocus
+engine.
+<code>--set-config manualfocusdrive=<b>Mode</b></code> where mode is "Near 1" "Near 2" "Near 3" "Far 1" "Far 2" "Far 3". These are 3 different relative stepsizes for both focusing directions. To achieve focusing, multiple calls might need to be done.
+</li>
+</ul>
 </p>
 <h2>List of cameras</h2>
 <hr />

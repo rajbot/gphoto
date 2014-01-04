@@ -97,7 +97,9 @@ outside of immediate shutter releases.
 <p>
 <ul>
 <li>Nikon DSLR: Manual focusing only works in the "liveview" aka "preview" mode (with mirror up). In "non preview" mode the focus motor is only controllable by the autofocus engine. 
-<code>--set-config manualfocusdrive=<b>step size</b> </code> Here a value between <code>-32768</code> and <code>32767</code> can be specified that is probably the direction and pulse length to the focus ring motor. Setting this value causes a relative movement, fixed positions cannot be driven to. To achieve the wanted focus, multiple calls might need to be done.
+<code>--set-config manualfocusdrive=<b>step size</b> </code><br/>Here a value between <code>-32768</code> and <code>32767</code> can be specified that is the direction and pulse length to the focus ring motor.<br/>Setting this value causes a relative movement, fixed positions cannot be driven to. To achieve the wanted focus, multiple calls might need to be done.
+<br/>
+An error will be reported if the end of the focus range is reached.
 </li>
 <li>Canon EOS DSLR: Manual focus driving only works on the "liveview" aka "preview" mode (with mirror up). In "non preview" mode the focus motor is only controllable by the autofocus
 engine.

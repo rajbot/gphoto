@@ -10,6 +10,91 @@
 	<td class="text">
 <!-- news headlines -->
 <hr />
+<h2>libgphoto2 and gphoto2 2.5.3 release</h2>
+
+<h3>packaging</h3>
+<ul>
+<li>"print-camera-list hwdb" output mode added for udev versions &gt;= 201.<br>
+  Put this to /usr/lib/udev/hwdb/20-gphoto.hwdb (your udev hwdb directory might be different)
+</li>
+<li>"print-camera-list html" output mode added for http://gphoto.org/proj/libgphoto2/support.php</li>
+</ul>
+
+<h3>all</h3>
+Lots of Coverity fixes merged
+
+<h3>ptp2</h3>
+<ul>
+<li>Nikon: added a new PTP capture opcode function, allows capture to card during liveview
+<li>Nikon: rewrote some of the wait logic in the capture routines
+<li>Nikon: enable --trigger-capture support
+<li>Nikon: hook up some more configuration variables (funcbutton, previewbutton, menusandplayback, changeafarea)
+<li>canon: hook up configuration variables (colortemperature)
+<li>ptpip: several contributed bugfixes, and event handling
+<li>panasonic: allow deleting files by setting MTP Responder code.
+<li>New ids:<ul>
+  <li>Kodak Z8612 IS
+  <li>Sony DSC-S780, SLT-A57, SLT-A58, SLT-A99v, DSC-RX100M2, Alpha A3000, NEX 6
+  <li>Nikon Coolpix S3200, DSLR D3200, J3, V2, S02, 2200v1.1, S4300, S2700, L27, S02, V2, J3
+  <li>Panasonic TZ-8
+  <li>Olympus E-M5
+  <li>Canon Rebel G15, EOS 70D, A1000IS, SX150IS, A810
+  <li>Canon Rebel T3, EOS 1Dx, EOS 70D
+  <li>Fuji FinePix SL1000, S2980
+<li>merged ids from libmtp
+<li>lots of bugfixes
+</ul>
+
+<h3>canon</h3>
+<ul>
+<li>label PowerShot S110 from 2001 differently than the 2012 PowerShot S110.
+<li>fixed "new / downloaded" logic
+<li>disable unconditional "clear halt" calls as they confuse newer controllers
+</ul>
+
+<h3>ax203</h3>
+<ul>
+<li>support Nantronics N25S80 chipset
+</ul>
+
+<h3>directory</h3>
+<ul>
+<li>support NRW files
+</ul>
+
+<h3>sierra</h3>
+<ul>
+<li>capture fixed for Olympus C-3030
+</ul>
+
+<h3>pentax</h3>
+<ul>
+<li>Various fixes from Jiri Pinka
+</ul>
+
+<h3>jd11</h3>
+<ul>
+<li>enhanced de-bayering a bit
+</ul>
+
+<h3>translations</h3>
+<ul>
+<li>new czech translation by Pavel Borecki.
+<li>updated czech, danish, dutch, polish, russian, seribian, ukrainian,
+  french, vietnamese, taiwanese
+</ul>
+
+<h3>libgphoto2</h3>
+<ul>
+<li>use generic macros to check for libGD and libxml2 to allow better handling.
+</ul>
+
+<h3>libgphoto2_port/disk</h3>
+<ul>
+<li>check the right fstab field for ignoring filesystems (avoids autofs scans)
+</ul>
+
+<hr />
 
 <h2>libgphoto2 2.5.2 release</h2>
 

@@ -41,6 +41,7 @@ Lots of Coverity fixes merged
   <li>Canon Rebel G15, EOS 70D, A1000IS, SX150IS, A810
   <li>Canon Rebel T3, EOS 1Dx, EOS 70D
   <li>Fuji FinePix SL1000, S2980
+</ul>
 <li>merged ids from libmtp
 <li>lots of bugfixes
 </ul>

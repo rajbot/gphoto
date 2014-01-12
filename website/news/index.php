@@ -10,7 +10,7 @@
 	<td class="text">
 <!-- news headlines -->
 <hr />
-<h2>libgphoto2 and gphoto2 2.5.3 release</h2>
+<h2>libgphoto2 2.5.3.1 and gphoto2 2.5.3 release</h2>
 
 <h3>packaging</h3>
 <ul>

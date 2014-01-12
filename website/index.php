@@ -17,7 +17,7 @@
 
 
     	<p>
-	<b>libgphoto2 and gphoto2 2.5.3</b> have been
+	<b>libgphoto2 2.5.3.1 and gphoto2 2.5.3</b> have been
 	released. Read <a href="/news/"><b>what's new</b></a>.
 	Download it <a href="/download/"><b>now</b></a>.
     	</p>

@@ -3346,6 +3346,7 @@ or
 	<arg>--reset-interval</arg>
 	<sbr/>
 	<arg choice="opt">--capture-image</arg>
+	<arg choice="opt">--trigger-capture</arg>
 	<arg choice="opt">--capture-movie</arg>
 	<arg choice="opt">--capture-sound</arg>
 	<sbr/>
@@ -3577,8 +3578,8 @@ or
 		%a, %A, %b, %B, %d, %H, %k, %I, %l, %j, %m, %M, %S,
 		%y, %%, (see date(1)) and, 
 		in addition, %n for the number, %C for the filename
-		suffix, %f for the filename without suffix, %: for the
-		complete filename in lowercase.
+		suffix, %f for the filename without suffix, %F for the foldername,
+                %: for the complete filename in lowercase.
 	      </para>
 	      <para>
 	        Note that %: is still in alpha stage, and the actual
@@ -3759,6 +3760,12 @@ or
 	</varlistentry>
 
 	<varlistentry>
+	  <term><option>--skip-existing</option></term>
+	  <listitem>
+	    <para>Skip files if they exist already on the local directory.</para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
 	  <term><option>--new</option></term>
 	  <listitem>
 	    <para>Only get not already downloaded files. This option depends on camera support of flagging already downloaded images and is not available for all drivers.</para>
@@ -3837,6 +3844,13 @@ or
 	  <term><option>--capture-image</option></term>
 	  <listitem>
 	    <para>Capture an image and keep it on the camera.</para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><option>--trigger-capture</option></term>
+	  <listitem>
+	    <para>Trigger the capture an image and return. If you want to get the image downloaded, see --wait-event-and-download</para>
 	  </listitem>
 	</varlistentry>
 

@@ -871,6 +871,14 @@ here</a></td>
 </tr>
 
 <tr>
+	<td>Nikon CoolPix AW100</td>
+	<td>Yes</td>
+	<td>Unknown</td>
+	<td>16</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
 	<td>Nikon CoolPix P1</td>
 	<td>Yes</td>
 	<td>Some</td>

@@ -10,6 +10,63 @@
 	<td class="text">
 <!-- news headlines -->
 <hr />
+<h2>libgphoto2 2.5.4 and gphoto2 2.5.4 release</h2>
+
+<h3>ptp2</h3>
+<ul>
+<li>Sony SLT DSLR support: SDRAM capture, Tethering, Triggering movie capture, property reading
+<li>Nikon DSLR: bulb mode implemented in newer DSLRs (D600/D7100/D5200 and later)
+<li>Nikon capture adjustments (always set controlmode before capture).
+<li>Nikon capture in "live view mode" no longer does autofocus, use "autofocusdrive".
+<li>Nikon "applicationmode" setting added.
+<li>Nikon Coolpix capture failure on empty cards fixed.
+<li>Some Canon EOS 5D Mark III config adjustments/additions.
+<li>Canon EOS: enable trigger capture 
+<li>Olympus E-series capture: some improvements.
+<li>ptp2: implemented device property description caching
+<li>New IDs:
+<ul>
+<li>Sony DSC-W510, SLT-A58 (control)
+<li>Nikon P80 v1.1
+<li>Canon A3500IS, A1400, SX170IS, SX510HS, A2200
+<li>Fuji FinePix S4850, JX370, S4850
+<li>Apple iPhone 5
+</ul>
+</ul>
+
+<h3>ax203</h3>
+<ul>
+<li>support for picture frame with id 1.
+</ul>
+
+<h3>sierra</h3>
+<ul>
+<li>Reimplemented a libusb based mass storage tunneling driver to support non-Linux systems (e.g. Mac OS X).
+</ul>
+
+<h3>libusb1</h3>
+<ul>
+<li>fixed timeout detection for USB interrupts
+</ul>
+
+<h3>all</h3>
+<ul>
+<li>Lots of small fixes to build with mingw32.
+</ul>
+
+<h3>Translations updates</h3>
+<ul><li>Danish, Spanish, French, Dutch, Polish, Russian, Serbian, Ukrainian,
+  Vietnamese
+</ul>
+
+<h3>gphoto2</h3>
+<ul>
+<li>--skip-existing option that skips if a local file would already exist
+<li>%F for foldername inclusion added to format strings for --filename
+<li>add the commandline arguments to the debug log
+</ul>
+
+<hr />
 <h2>libgphoto2 2.5.3.1 and gphoto2 2.5.3 release</h2>
 
 <h3>packaging</h3>

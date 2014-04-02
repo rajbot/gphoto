@@ -1,0 +1,25 @@
+var structCameraAbilities =
+[
+    [ "device_type", "structCameraAbilities.html#aac03205ae0594aa3f4c9950cc07d4d2a", null ],
+    [ "file_operations", "structCameraAbilities.html#af914e0f9fbdce526f5c8dd647d25345c", null ],
+    [ "folder_operations", "structCameraAbilities.html#aa69d4c1cd5c1b78412ecdf64f1ee12b9", null ],
+    [ "id", "structCameraAbilities.html#ab848badc7ca4167ceac12163efd6e312", null ],
+    [ "library", "structCameraAbilities.html#a2563f727188e388a0d1b56ee602b4bc8", null ],
+    [ "model", "structCameraAbilities.html#a444494b9920cba8fa1d1bb7ed0b06261", null ],
+    [ "operations", "structCameraAbilities.html#ae138b41e1bfec18f9f9b80e46b625ea2", null ],
+    [ "port", "structCameraAbilities.html#a4451195881be4aa7e56933dc354e0430", null ],
+    [ "reserved2", "structCameraAbilities.html#aebc9344eb8776f612ae545959c247611", null ],
+    [ "reserved3", "structCameraAbilities.html#ac4def437fda197bdae93dc8adebc7c9a", null ],
+    [ "reserved4", "structCameraAbilities.html#a92aea1659935e3026244c9bfa52b47e3", null ],
+    [ "reserved5", "structCameraAbilities.html#a1b53da8592bdeaacf418b66dde09afc8", null ],
+    [ "reserved6", "structCameraAbilities.html#a6efea4276c434c519b6b2e7bbe4199a5", null ],
+    [ "reserved7", "structCameraAbilities.html#a151938cff5c0e513f1f29d1af5b85d8e", null ],
+    [ "reserved8", "structCameraAbilities.html#a499af16abc8a7b8ab1498b86589566f7", null ],
+    [ "speed", "structCameraAbilities.html#a6ce8f70b23920da2ec6fd5575147dde9", null ],
+    [ "status", "structCameraAbilities.html#a85f035d23af22a22dcbcb6179461a9b2", null ],
+    [ "usb_class", "structCameraAbilities.html#a462953e49f54fe313439a7aafe163428", null ],
+    [ "usb_product", "structCameraAbilities.html#ad567d6fc8fe165ff168a7873b4ff06cf", null ],
+    [ "usb_protocol", "structCameraAbilities.html#a4a8bb77e122df4c2d1dd0b3a4e06aaab", null ],
+    [ "usb_subclass", "structCameraAbilities.html#ae332f74bb4f6b3f8b88db3f625bcc0d8", null ],
+    [ "usb_vendor", "structCameraAbilities.html#a3ebec7be1e6528e451e5fcdb989e5124", null ]
+];

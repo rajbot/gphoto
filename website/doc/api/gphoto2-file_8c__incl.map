@@ -1,6 +1,7 @@
-base referer
-rect $gphoto2-file_8h.html 260,57 415,84
-rect $gphoto2-port-log_8h.html 247,513 428,540
-rect $gphoto2-port-portability_8h.html 227,159 448,185
-rect $gphoto2-result_8h.html 252,564 423,591
-rect $gphoto2-port-result_8h.html 497,564 695,591
+<map id="libgphoto2/gphoto2&#45;file.c" name="libgphoto2/gphoto2&#45;file.c">
+<area shape="rect" id="node5" href="$gphoto2-file_8h.html" title="Abstracted gphoto2 file operations. " alt="" coords="97,104,247,131"/>
+<area shape="rect" id="node25" href="$gphoto2-port-log_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;log.h" alt="" coords="909,97,1053,138"/>
+<area shape="rect" id="node29" href="$gphoto2-port-portability_8h_source.html" title="gphoto2/gphoto2&#45;port\l&#45;portability.h" alt="" coords="1077,97,1221,138"/>
+<area shape="rect" id="node31" href="$gphoto2-result_8h.html" title="gphoto2/gphoto2&#45;result.h" alt="" coords="1245,104,1409,131"/>
+<area shape="rect" id="node33" href="$gphoto2-port-result_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;result.h" alt="" coords="1256,187,1400,229"/>
+</map>

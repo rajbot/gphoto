@@ -1,4 +1,5 @@
-base referer
-rect $gphoto2-filesys_8c.html 236,7 423,33
-rect $gphoto2-setting_8c.html 235,57 424,84
-rect $gphoto2_8h.html 263,108 396,135
+<map id="gphoto2/gphoto2&#45;setting.h" name="gphoto2/gphoto2&#45;setting.h">
+<area shape="rect" id="node3" href="$gphoto2-filesys_8c.html" title="libgphoto2/gphoto2\l&#45;filesys.c" alt="" coords="5,81,135,122"/>
+<area shape="rect" id="node5" href="$gphoto2-setting_8c.html" title="libgphoto2/gphoto2\l&#45;setting.c" alt="" coords="160,81,289,122"/>
+<area shape="rect" id="node7" href="$gphoto2_8h.html" title="Convenience header for gphoto2. " alt="" coords="314,88,443,115"/>
+</map>

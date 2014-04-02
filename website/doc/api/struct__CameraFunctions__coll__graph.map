@@ -1,0 +1,22 @@
+<map id="_CameraFunctions" name="_CameraFunctions">
+<area shape="rect" id="node2" href="$struct__Camera.html" title="_Camera" alt="" coords="1484,209,1559,236"/>
+<area shape="rect" id="node22" href="$struct__CameraPrivateCore.html" title="_CameraPrivateCore" alt="" coords="1739,235,1883,261"/>
+<area shape="rect" id="node4" href="$struct__GPPort.html" title="The GPhoto port structure. " alt="" coords="1204,185,1276,212"/>
+<area shape="rect" id="node6" href="$struct__GPPortPrivateCore.html" title="Internal private libgphoto2_port data. This structure contains private data. " alt="" coords="849,123,991,149"/>
+<area shape="rect" id="node8" href="$struct__GPPortOperations.html" title="The port operations. " alt="" coords="530,72,665,99"/>
+<area shape="rect" id="node10" href="$struct__GPPortInfo.html" title="_GPPortInfo" alt="" coords="550,123,645,149"/>
+<area shape="rect" id="node12" href="$union__GPPortSettings.html" title="Union of port settings. " alt="" coords="860,224,980,251"/>
+<area shape="rect" id="node14" href="$struct__GPPortSettingsSerial.html" title="Port settings for serial ports. " alt="" coords="521,173,674,200"/>
+<area shape="rect" id="node16" href="$struct__GPPortSettingsUSB.html" title="Port settings for USB ports. " alt="" coords="523,224,671,251"/>
+<area shape="rect" id="node18" href="$struct__GPPortSettingsUsbDiskDirect.html" title="Port settings for USB mass storage direct IO ports. " alt="" coords="494,275,701,301"/>
+<area shape="rect" id="node20" href="$struct__GPPortSettingsUsbScsi.html" title="Port settings for USB Mass Storage raw SCSI ports. " alt="" coords="512,325,683,352"/>
+<area shape="rect" id="node24" href="$structCameraAbilities.html" title="Describes the properties of a specific camera. " alt="" coords="1464,280,1579,307"/>
+<area shape="rect" id="node27" href="$struct__CameraFilesystem.html" title="The internal camera filesystem structure. " alt="" coords="1171,421,1309,448"/>
+<area shape="rect" id="node29" href="$struct__CameraFilesystemFile.html" title="_CameraFilesystemFile" alt="" coords="517,468,677,495"/>
+<area shape="rect" id="node42" href="$struct__CameraFilesystemFolder.html" title="_CameraFilesystemFolder" alt="" coords="833,512,1007,539"/>
+<area shape="rect" id="node31" href="$struct__CameraFileInfo.html" title="File information structure. " alt="" coords="270,408,389,435"/>
+<area shape="rect" id="node33" href="$struct__CameraFileInfoAudio.html" title="File information of an audio file. " alt="" coords="13,357,163,384"/>
+<area shape="rect" id="node35" href="$struct__CameraFileInfoPreview.html" title="File information of a preview file. " alt="" coords="5,408,171,435"/>
+<area shape="rect" id="node37" href="$struct__CameraFileInfoFile.html" title="File information of a regular file. " alt="" coords="19,459,157,485"/>
+<area shape="rect" id="node40" href="$structCameraFile.html" title="File structure. " alt="" coords="285,527,374,553"/>
+</map>

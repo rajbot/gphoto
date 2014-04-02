@@ -1,2 +1,4 @@
-base referer
-rect $bayer_8c.html 188,7 319,33
+<map id="libgphoto2/bayer.h" name="libgphoto2/bayer.h">
+<area shape="rect" id="node3" href="$ahd__bayer_8c.html" title="Adaptive Homogeneity&#45;Directed Bayer array conversion routine. " alt="" coords="5,80,160,107"/>
+<area shape="rect" id="node5" href="$bayer_8c.html" title="Bayer array conversion routines. " alt="" coords="185,80,313,107"/>
+</map>

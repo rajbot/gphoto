@@ -1,3 +1,4 @@
-base referer
-rect $gphoto2-context_8h.html 251,58 432,84
-rect $gphoto2-port-log_8h.html 251,210 432,236
+<map id="libgphoto2/gphoto2&#45;context.c" name="libgphoto2/gphoto2&#45;context.c">
+<area shape="rect" id="node5" href="$gphoto2-context_8h.html" title="Context callback operation functions. " alt="" coords="97,104,273,131"/>
+<area shape="rect" id="node15" href="$gphoto2-port-log_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;log.h" alt="" coords="561,97,705,138"/>
+</map>

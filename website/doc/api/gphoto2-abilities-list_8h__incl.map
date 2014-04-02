@@ -1,7 +1,8 @@
-base referer
-rect $gphoto2-context_8h.html 273,7 455,33
-rect $gphoto2-list_8h.html 287,57 441,84
-rect $gphoto2-port-info-list_8h.html 260,159 468,185
-rect $gphoto2-port-log_8h.html 273,108 455,135
-rect $gphoto2-port_8h.html 517,159 677,185
-rect $gphoto2-port-portability_8h.html 728,159 949,185
+<map id="gphoto2/gphoto2&#45;abilities&#45;list.h" name="gphoto2/gphoto2&#45;abilities&#45;list.h">
+<area shape="rect" id="node3" href="$gphoto2-context_8h.html" title="Context callback operation functions. " alt="" coords="5,104,181,131"/>
+<area shape="rect" id="node7" href="$gphoto2-list_8h.html" title="gphoto2/gphoto2&#45;list.h" alt="" coords="206,104,356,131"/>
+<area shape="rect" id="node9" href="$gphoto2-port-info-list_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;info&#45;list.h" alt="" coords="549,97,693,138"/>
+<area shape="rect" id="node16" href="$gphoto2-port-log_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;log.h" alt="" coords="381,97,525,138"/>
+<area shape="rect" id="node11" href="$gphoto2-port_8h.html" title="gphoto2/gphoto2&#45;port.h" alt="" coords="544,187,697,213"/>
+<area shape="rect" id="node14" href="$gphoto2-port-portability_8h_source.html" title="gphoto2/gphoto2&#45;port\l&#45;portability.h" alt="" coords="549,262,693,303"/>
+</map>

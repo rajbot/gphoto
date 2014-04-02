@@ -1,4 +1,5 @@
-base referer
-rect $bayer_8h.html 237,57 304,84
-rect $gphoto2-result_8h.html 185,108 356,135
-rect $gphoto2-port-result_8h.html 404,108 601,135
+<map id="libgphoto2/bayer.c" name="libgphoto2/bayer.c">
+<area shape="rect" id="node5" href="$bayer_8h.html" title="bayer.h" alt="" coords="97,80,161,107"/>
+<area shape="rect" id="node7" href="$gphoto2-result_8h.html" title="gphoto2/gphoto2&#45;result.h" alt="" coords="185,80,349,107"/>
+<area shape="rect" id="node9" href="$gphoto2-port-result_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;result.h" alt="" coords="196,155,340,197"/>
+</map>

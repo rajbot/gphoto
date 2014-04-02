@@ -1,4 +1,15 @@
-base referer
-rect $gphoto2-list_8c.html 228,7 396,33
-rect $gphoto2-abilities-list_8h.html 211,57 413,84
-rect $gphoto2-filesys_8h.html 225,108 399,135
+<map id="gphoto2/gphoto2&#45;list.h" name="gphoto2/gphoto2&#45;list.h">
+<area shape="rect" id="node3" href="$gphoto2-list_8c.html" title="libgphoto2/gphoto2\l&#45;list.c" alt="" coords="271,81,400,122"/>
+<area shape="rect" id="node5" href="$gphoto2-abilities-list_8h.html" title="List of supported camera models including their abilities. " alt="" coords="426,81,592,122"/>
+<area shape="rect" id="node29" href="$gphoto2-filesys_8h.html" title="Filesystem related operations and declarations. " alt="" coords="617,88,788,115"/>
+<area shape="rect" id="node7" href="$gphoto2-abilities-list_8c.html" title="List of supported camera models including their abilities. " alt="" coords="5,337,135,378"/>
+<area shape="rect" id="node9" href="$gphoto2-camera_8h.html" title="Implement Camera object representing a camera attached to the system. " alt="" coords="580,179,756,205"/>
+<area shape="rect" id="node13" href="$gphoto2-library_8h.html" title="Camery driver header. " alt="" coords="425,261,593,288"/>
+<area shape="rect" id="node11" href="$gphoto2-camera_8c.html" title="libgphoto2/gphoto2\l&#45;camera.c" alt="" coords="677,337,807,378"/>
+<area shape="rect" id="node23" href="$gphoto2-widget_8h.html" title="gphoto2/gphoto2&#45;widget.h" alt="" coords="705,261,876,288"/>
+<area shape="rect" id="node17" href="$gphoto2-library_8c.html" title="libgphoto2/gphoto2\l&#45;library.c" alt="" coords="371,337,500,378"/>
+<area shape="rect" id="node19" href="$gphoto2_8h.html" title="Convenience header for gphoto2. " alt="" coords="525,344,653,371"/>
+<area shape="rect" id="node21" href="$template_8c.html" title="Documented source code template for a camera driver (camlib). " alt="" coords="160,344,347,371"/>
+<area shape="rect" id="node25" href="$gphoto2-widget_8c.html" title="libgphoto2/gphoto2\l&#45;widget.c" alt="" coords="832,337,961,378"/>
+<area shape="rect" id="node31" href="$gphoto2-filesys_8c.html" title="libgphoto2/gphoto2\l&#45;filesys.c" alt="" coords="780,171,909,213"/>
+</map>

@@ -1,0 +1,26 @@
+var template_8c =
+[
+    [ "_", "template_8c.html#a32a3cf3d9dd914f5aeeca5423c157934", null ],
+    [ "N_", "template_8c.html#a75278405e7f034d2b1af80bfd94675fe", null ],
+    [ "camera_abilities", "template_8c.html#a14e65a4ed26c2c6e19c54fce9325d1a4", null ],
+    [ "camera_about", "template_8c.html#addfb85248f27b40480209cc9de04c6a0", null ],
+    [ "camera_capture", "template_8c.html#a1ce76118f10ea387007d1f3d841521ad", null ],
+    [ "camera_capture_preview", "template_8c.html#a60705b0c4e51ef116aeb4a36307ab2ba", null ],
+    [ "camera_config_get", "template_8c.html#a4bd2a0de808513f069648bb78c06b700", null ],
+    [ "camera_config_set", "template_8c.html#a54957aeb3e72b9acf33fc41924e5763d", null ],
+    [ "camera_exit", "template_8c.html#aab9c38421fc9b44444b9586c3e117d91", null ],
+    [ "camera_id", "template_8c.html#a6b9e41589d48154298976ee65aa9f9d6", null ],
+    [ "camera_init", "template_8c.html#af8be80f9a636a9dff8c497cf3cfe0871", null ],
+    [ "camera_manual", "template_8c.html#aa2bedbf50a33963dbe0938bc83d542d1", null ],
+    [ "camera_summary", "template_8c.html#a142f88d75496e8af70d2503ce2b532fa", null ],
+    [ "delete_all_func", "template_8c.html#ab19683ddf354e8f4d401d79489cdab00", null ],
+    [ "delete_file_func", "template_8c.html#ad6759410a0799b25df88f4297d15441f", null ],
+    [ "file_list_func", "template_8c.html#abc05a8ae36f010d3b6d1f774a397d9b5", null ],
+    [ "folder_list_func", "template_8c.html#a0a19203e52602e3662abde3b7c3c1eda", null ],
+    [ "get_file_func", "template_8c.html#abaedcea6348683a300838b493f4254a9", null ],
+    [ "get_info_func", "template_8c.html#a6fb50401c2b5419a38d7cdec8468b6ee", null ],
+    [ "put_file_func", "template_8c.html#a8f4cb0c9cb393986b466b60edc3bcd98", null ],
+    [ "set_info_func", "template_8c.html#ac5604f4c487f848626ed2ac56a7c9339", null ],
+    [ "storage_info_func", "template_8c.html#a53529c0b157ddbb75951745fe31e38fb", null ],
+    [ "fsfuncs", "template_8c.html#a9127c82b044f56fac4cbceb92b9e0217", null ]
+];

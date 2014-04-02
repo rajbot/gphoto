@@ -1,9 +1,10 @@
-base referer
-rect $gphoto2-filesys_8h.html 247,57 420,84
-rect $gphoto2-result_8h.html 248,311 419,337
-rect $gphoto2-port-log_8h.html 479,361 660,388
-rect $gphoto2-setting_8h.html 246,412 422,439
-rect $gphoto2-context_8h.html 479,159 660,185
-rect $gphoto2-list_8h.html 492,7 647,33
-rect $gphoto2-file_8h.html 492,57 647,84
-rect $gphoto2-port-result_8h.html 471,311 668,337
+<map id="libgphoto2/gphoto2&#45;filesys.c" name="libgphoto2/gphoto2&#45;filesys.c">
+<area shape="rect" id="node5" href="$gphoto2-filesys_8h.html" title="Filesystem related operations and declarations. " alt="" coords="190,96,360,123"/>
+<area shape="rect" id="node29" href="$gphoto2-result_8h.html" title="gphoto2/gphoto2&#45;result.h" alt="" coords="792,96,956,123"/>
+<area shape="rect" id="node33" href="$gphoto2-port-log_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;log.h" alt="" coords="634,171,778,213"/>
+<area shape="rect" id="node36" href="$gphoto2-setting_8h.html" title="gphoto2/gphoto2&#45;setting.h" alt="" coords="982,96,1154,123"/>
+<area shape="rect" id="node11" href="$gphoto2-context_8h.html" title="Context callback operation functions. " alt="" coords="430,179,606,205"/>
+<area shape="rect" id="node15" href="$gphoto2-list_8h.html" title="gphoto2/gphoto2&#45;list.h" alt="" coords="26,179,176,205"/>
+<area shape="rect" id="node17" href="$gphoto2-file_8h.html" title="Abstracted gphoto2 file operations. " alt="" coords="201,179,351,205"/>
+<area shape="rect" id="node31" href="$gphoto2-port-result_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;result.h" alt="" coords="803,171,947,213"/>
+</map>

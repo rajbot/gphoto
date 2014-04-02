@@ -1,5 +1,10 @@
-base referer
-rect $union__GPPortSettings.html 201,97 324,124
-rect $struct__GPPortSettingsSerial.html 7,7 164,33
-rect $struct__GPPortSettingsDisk.html 188,7 337,33
-rect $struct__GPPortSettingsUSB.html 361,7 511,33
+<map id="_GPPort" name="_GPPort">
+<area shape="rect" id="node2" href="$struct__GPPortPrivateCore.html" title="Internal private libgphoto2_port data. This structure contains private data. " alt="" coords="344,56,485,83"/>
+<area shape="rect" id="node4" href="$struct__GPPortOperations.html" title="The port operations. " alt="" coords="42,5,177,32"/>
+<area shape="rect" id="node6" href="$struct__GPPortInfo.html" title="_GPPortInfo" alt="" coords="62,56,157,83"/>
+<area shape="rect" id="node8" href="$union__GPPortSettings.html" title="Union of port settings. " alt="" coords="355,157,475,184"/>
+<area shape="rect" id="node10" href="$struct__GPPortSettingsSerial.html" title="Port settings for serial ports. " alt="" coords="33,107,186,133"/>
+<area shape="rect" id="node12" href="$struct__GPPortSettingsUSB.html" title="Port settings for USB ports. " alt="" coords="35,157,183,184"/>
+<area shape="rect" id="node14" href="$struct__GPPortSettingsUsbDiskDirect.html" title="Port settings for USB mass storage direct IO ports. " alt="" coords="6,208,213,235"/>
+<area shape="rect" id="node16" href="$struct__GPPortSettingsUsbScsi.html" title="Port settings for USB Mass Storage raw SCSI ports. " alt="" coords="24,259,195,285"/>
+</map>

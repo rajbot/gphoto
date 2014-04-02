@@ -1,0 +1,26 @@
+var gphoto2_port_result_8h =
+[
+    [ "GP_ERROR", "gphoto2-port-result_8h.html#ae235fa7ee045ef1d14f76c7e3c13fb69", null ],
+    [ "GP_ERROR_BAD_PARAMETERS", "gphoto2-port-result_8h.html#ad59062d61d227d96e614fda1e9171bb8", null ],
+    [ "GP_ERROR_FIXED_LIMIT_EXCEEDED", "gphoto2-port-result_8h.html#a2c013d68afcf5fa7e7452f757d463cf8", null ],
+    [ "GP_ERROR_HAL", "gphoto2-port-result_8h.html#a571981fd142a047c1c259edeb287bd6a", null ],
+    [ "GP_ERROR_IO", "gphoto2-port-result_8h.html#a503f642aca99f5001d85af2c1c3805ae", null ],
+    [ "GP_ERROR_IO_INIT", "gphoto2-port-result_8h.html#ac28fe84223a56601b56a4953a8673e6c", null ],
+    [ "GP_ERROR_IO_LOCK", "gphoto2-port-result_8h.html#a67e09cf03a3ecbf9f8b52c93285cafaa", null ],
+    [ "GP_ERROR_IO_READ", "gphoto2-port-result_8h.html#a4d0d4c4c5c4b402da6159beb9831e0ce", null ],
+    [ "GP_ERROR_IO_SERIAL_SPEED", "gphoto2-port-result_8h.html#a9af64fa5b5b5ff253cb1a8a39b130241", null ],
+    [ "GP_ERROR_IO_SUPPORTED_SERIAL", "gphoto2-port-result_8h.html#a91262711afe809d3eb12e370e8d79c09", null ],
+    [ "GP_ERROR_IO_SUPPORTED_USB", "gphoto2-port-result_8h.html#a7f606bc9a9ee8706ae77e2cc1c9bac19", null ],
+    [ "GP_ERROR_IO_UPDATE", "gphoto2-port-result_8h.html#a6a1a6e9b5c66257e1531eb20163ac675", null ],
+    [ "GP_ERROR_IO_USB_CLAIM", "gphoto2-port-result_8h.html#a1176f08c37f885d07b7682c0e53e8f42", null ],
+    [ "GP_ERROR_IO_USB_CLEAR_HALT", "gphoto2-port-result_8h.html#ad620272923e042e85713b755783f7c07", null ],
+    [ "GP_ERROR_IO_USB_FIND", "gphoto2-port-result_8h.html#afd4a48ebc75390ed40bdf4b5cc30b258", null ],
+    [ "GP_ERROR_IO_WRITE", "gphoto2-port-result_8h.html#abd63939fa5eac99160d09a664d3f84aa", null ],
+    [ "GP_ERROR_LIBRARY", "gphoto2-port-result_8h.html#adbafb7248a8e2dd2b86118f227a73124", null ],
+    [ "GP_ERROR_NO_MEMORY", "gphoto2-port-result_8h.html#a3d7d0cbb390f931e72a3b67c999a9183", null ],
+    [ "GP_ERROR_NOT_SUPPORTED", "gphoto2-port-result_8h.html#aab604085d1124f2a688ac5a91423e9a8", null ],
+    [ "GP_ERROR_TIMEOUT", "gphoto2-port-result_8h.html#a92629507f0c8525ad8c042a733afd205", null ],
+    [ "GP_ERROR_UNKNOWN_PORT", "gphoto2-port-result_8h.html#af56f93684bc8145a14a17d68ea20d589", null ],
+    [ "GP_OK", "gphoto2-port-result_8h.html#a560d29bd042a83bdd6a87a5f3ffbcff4", null ],
+    [ "gp_port_result_as_string", "gphoto2-port-result_8h.html#a42cb93c9a0e2ada0716ab6e89884f450", null ]
+];

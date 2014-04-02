@@ -1,4 +1,16 @@
-base referer
-rect $gphoto2-library_8h.html 242,57 415,84
-rect $gphoto2-abilities-list_8h.html 696,57 899,84
-rect $gphoto2-camera_8h.html 464,83 646,109
+<map id="libgphoto2/gphoto2&#45;library.c" name="libgphoto2/gphoto2&#45;library.c">
+<area shape="rect" id="node5" href="$gphoto2-library_8h.html" title="Camery driver header. " alt="" coords="319,96,487,123"/>
+<area shape="rect" id="node7" href="$gphoto2-abilities-list_8h.html" title="List of supported camera models including their abilities. " alt="" coords="205,246,371,287"/>
+<area shape="rect" id="node25" href="$gphoto2-camera_8h.html" title="Implement Camera object representing a camera attached to the system. " alt="" coords="394,171,570,197"/>
+<area shape="rect" id="node9" href="$gphoto2-context_8h.html" title="Context callback operation functions. " alt="" coords="360,344,536,371"/>
+<area shape="rect" id="node13" href="$gphoto2-list_8h.html" title="gphoto2/gphoto2&#45;list.h" alt="" coords="561,344,711,371"/>
+<area shape="rect" id="node15" href="$gphoto2-port-info-list_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;info&#45;list.h" alt="" coords="24,337,168,378"/>
+<area shape="rect" id="node22" href="$gphoto2-port-log_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;log.h" alt="" coords="192,337,336,378"/>
+<area shape="rect" id="node17" href="$gphoto2-port_8h.html" title="gphoto2/gphoto2&#45;port.h" alt="" coords="19,427,172,453"/>
+<area shape="rect" id="node20" href="$gphoto2-port-portability_8h_source.html" title="gphoto2/gphoto2&#45;port\l&#45;portability.h" alt="" coords="24,502,168,543"/>
+<area shape="rect" id="node29" href="$gphoto2-widget_8h.html" title="gphoto2/gphoto2&#45;widget.h" alt="" coords="396,253,567,280"/>
+<area shape="rect" id="node33" href="$gphoto2-filesys_8h.html" title="Filesystem related operations and declarations. " alt="" coords="639,253,810,280"/>
+<area shape="rect" id="node45" href="$gphoto2-result_8h.html" title="gphoto2/gphoto2&#45;result.h" alt="" coords="954,253,1118,280"/>
+<area shape="rect" id="node41" href="$gphoto2-file_8h.html" title="Abstracted gphoto2 file operations. " alt="" coords="788,344,938,371"/>
+<area shape="rect" id="node47" href="$gphoto2-port-result_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;result.h" alt="" coords="1014,337,1158,378"/>
+</map>

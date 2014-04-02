@@ -1,5 +1,9 @@
-base referer
-rect $gphoto2-port-info-list_8h.html 655,209 863,236
-rect $gphoto2-port-result_8h.html 407,311 604,337
-rect $gphoto2-port-library_8h.html 405,361 605,388
-rect $gphoto2-port-log_8h.html 415,412 596,439
+<map id="libgphoto2_port/libgphoto2_port/gphoto2&#45;port&#45;info&#45;list.c" name="libgphoto2_port/libgphoto2_port/gphoto2&#45;port&#45;info&#45;list.c">
+<area shape="rect" id="node5" href="$gphoto2-port-info-list_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;info&#45;list.h" alt="" coords="545,187,689,229"/>
+<area shape="rect" id="node20" href="$gphoto2-port-result_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;result.h" alt="" coords="487,97,631,138"/>
+<area shape="rect" id="node22" href="$gphoto2-port-library_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;library.h" alt="" coords="655,97,799,138"/>
+<area shape="rect" id="node26" href="$gphoto2-port-log_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;log.h" alt="" coords="823,97,967,138"/>
+<area shape="rect" id="node30" href="$gphoto2-port-info_8h.html" title="gphoto2&#45;port&#45;info.h" alt="" coords="991,104,1120,131"/>
+<area shape="rect" id="node7" href="$gphoto2-port_8h.html" title="gphoto2/gphoto2&#45;port.h" alt="" coords="540,277,693,304"/>
+<area shape="rect" id="node10" href="$gphoto2-port-portability_8h_source.html" title="gphoto2/gphoto2&#45;port\l&#45;portability.h" alt="" coords="545,353,689,394"/>
+</map>

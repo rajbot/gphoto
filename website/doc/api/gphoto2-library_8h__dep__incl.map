@@ -1,6 +1,7 @@
-base referer
-rect $gphoto2-abilities-list_8c.html 229,7 445,34
-rect $gphoto2-camera_8c.html 240,58 435,84
-rect $gphoto2-library_8c.html 244,108 431,135
-rect $gphoto2_8h.html 271,159 404,186
-rect $template_8c.html 243,210 432,236
+<map id="gphoto2/gphoto2&#45;library.h" name="gphoto2/gphoto2&#45;library.h">
+<area shape="rect" id="node3" href="$gphoto2-abilities-list_8c.html" title="List of supported camera models including their abilities. " alt="" coords="5,81,135,122"/>
+<area shape="rect" id="node5" href="$gphoto2-camera_8c.html" title="libgphoto2/gphoto2\l&#45;camera.c" alt="" coords="160,81,289,122"/>
+<area shape="rect" id="node7" href="$gphoto2-library_8c.html" title="libgphoto2/gphoto2\l&#45;library.c" alt="" coords="315,81,444,122"/>
+<area shape="rect" id="node9" href="$gphoto2_8h.html" title="Convenience header for gphoto2. " alt="" coords="469,88,597,115"/>
+<area shape="rect" id="node11" href="$template_8c.html" title="Documented source code template for a camera driver (camlib). " alt="" coords="623,88,809,115"/>
+</map>

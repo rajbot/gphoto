@@ -1,17 +1,19 @@
-base referer
-rect $bayer_8c.html 256,7 387,34
-rect $gamma_8c.html 250,58 394,84
-rect $gphoto2-abilities-list_8c.html 691,108 907,135
-rect $gphoto2-camera_8c.html 702,159 896,186
-rect $gphoto2-file_8c.html 238,463 406,490
-rect $gphoto2-filesys_8c.html 228,514 415,540
-rect $gphoto2-list_8c.html 238,564 406,591
-rect $gphoto2-result_8c.html 230,615 414,642
-rect $gphoto2-setting_8c.html 227,666 416,692
-rect $gphoto2-widget_8c.html 704,387 894,414
-rect $gphoto2-camera_8h.html 231,362 412,388
-rect $template_8c.html 704,311 894,338
-rect $gphoto2-library_8h.html 467,260 640,287
-rect $gphoto2-widget_8h.html 466,362 642,388
-rect $gphoto2-library_8c.html 706,260 892,287
-rect $gphoto2_8h.html 732,210 866,236
+<map id="gphoto2/gphoto2&#45;result.h" name="gphoto2/gphoto2&#45;result.h">
+<area shape="rect" id="node3" href="$ahd__bayer_8c.html" title="Adaptive Homogeneity&#45;Directed Bayer array conversion routine. " alt="" coords="5,88,160,115"/>
+<area shape="rect" id="node5" href="$bayer_8c.html" title="Bayer array conversion routines. " alt="" coords="185,88,313,115"/>
+<area shape="rect" id="node7" href="$gamma_8c.html" title="libgphoto2/gamma.c" alt="" coords="337,88,476,115"/>
+<area shape="rect" id="node9" href="$gphoto2-abilities-list_8c.html" title="List of supported camera models including their abilities. " alt="" coords="211,246,340,287"/>
+<area shape="rect" id="node11" href="$gphoto2-camera_8c.html" title="libgphoto2/gphoto2\l&#45;camera.c" alt="" coords="883,246,1012,287"/>
+<area shape="rect" id="node13" href="$gphoto2-file_8c.html" title="libgphoto2/gphoto2\l&#45;file.c" alt="" coords="1095,81,1224,122"/>
+<area shape="rect" id="node15" href="$gphoto2-filesys_8c.html" title="libgphoto2/gphoto2\l&#45;filesys.c" alt="" coords="1249,81,1379,122"/>
+<area shape="rect" id="node17" href="$gphoto2-list_8c.html" title="libgphoto2/gphoto2\l&#45;list.c" alt="" coords="1404,81,1533,122"/>
+<area shape="rect" id="node19" href="$gphoto2-result_8c.html" title="libgphoto2/gphoto2\l&#45;result.c" alt="" coords="1559,81,1688,122"/>
+<area shape="rect" id="node21" href="$gphoto2-setting_8c.html" title="libgphoto2/gphoto2\l&#45;setting.c" alt="" coords="1713,81,1843,122"/>
+<area shape="rect" id="node23" href="$gphoto2-widget_8c.html" title="libgphoto2/gphoto2\l&#45;widget.c" alt="" coords="1037,246,1167,287"/>
+<area shape="rect" id="node25" href="$gphoto2-camera_8h.html" title="Implement Camera object representing a camera attached to the system. " alt="" coords="844,88,1020,115"/>
+<area shape="rect" id="node36" href="$template_8c.html" title="Documented source code template for a camera driver (camlib). " alt="" coords="365,253,552,280"/>
+<area shape="rect" id="node28" href="$gphoto2-library_8h.html" title="Camery driver header. " alt="" coords="601,171,769,197"/>
+<area shape="rect" id="node38" href="$gphoto2-widget_8h.html" title="gphoto2/gphoto2&#45;widget.h" alt="" coords="895,171,1065,197"/>
+<area shape="rect" id="node32" href="$gphoto2-library_8c.html" title="libgphoto2/gphoto2\l&#45;library.c" alt="" coords="576,246,705,287"/>
+<area shape="rect" id="node34" href="$gphoto2_8h.html" title="Convenience header for gphoto2. " alt="" coords="730,253,859,280"/>
+</map>

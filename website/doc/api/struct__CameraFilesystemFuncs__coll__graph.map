@@ -1,0 +1,10 @@
+<map id="_CameraFilesystemFuncs" name="_CameraFilesystemFuncs">
+<area shape="rect" id="node2" href="$struct__CameraFilesystem.html" title="The internal camera filesystem structure. " alt="" coords="319,525,457,552"/>
+<area shape="rect" id="node4" href="$struct__CameraFilesystemFile.html" title="_CameraFilesystemFile" alt="" coords="279,267,437,293"/>
+<area shape="rect" id="node17" href="$struct__CameraFilesystemFolder.html" title="_CameraFilesystemFolder" alt="" coords="410,367,584,393"/>
+<area shape="rect" id="node6" href="$struct__CameraFileInfo.html" title="File information structure. " alt="" coords="203,96,321,123"/>
+<area shape="rect" id="node8" href="$struct__CameraFileInfoAudio.html" title="File information of an audio file. " alt="" coords="5,5,155,32"/>
+<area shape="rect" id="node10" href="$struct__CameraFileInfoPreview.html" title="File information of a preview file. " alt="" coords="180,5,344,32"/>
+<area shape="rect" id="node12" href="$struct__CameraFileInfoFile.html" title="File information of a regular file. " alt="" coords="369,5,508,32"/>
+<area shape="rect" id="node15" href="$structCameraFile.html" title="File structure. " alt="" coords="346,96,435,123"/>
+</map>

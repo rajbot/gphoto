@@ -1,4 +1,5 @@
-base referer
-rect $gphoto2-context_8h.html 231,7 412,33
-rect $gphoto2-list_8h.html 244,108 399,135
-rect $gphoto2-file_8h.html 244,159 399,185
+<map id="gphoto2/gphoto2&#45;filesys.h" name="gphoto2/gphoto2&#45;filesys.h">
+<area shape="rect" id="node7" href="$gphoto2-context_8h.html" title="Context callback operation functions. " alt="" coords="461,80,637,107"/>
+<area shape="rect" id="node11" href="$gphoto2-list_8h.html" title="gphoto2/gphoto2&#45;list.h" alt="" coords="286,80,436,107"/>
+<area shape="rect" id="node13" href="$gphoto2-file_8h.html" title="Abstracted gphoto2 file operations. " alt="" coords="59,80,209,107"/>
+</map>

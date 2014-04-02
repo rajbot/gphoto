@@ -1,3 +1,4 @@
-base referer
-rect $gphoto2-result_8h.html 239,57 409,84
-rect $gphoto2-port-result_8h.html 457,57 655,84
+<map id="libgphoto2/gphoto2&#45;result.c" name="libgphoto2/gphoto2&#45;result.c">
+<area shape="rect" id="node5" href="$gphoto2-result_8h.html" title="gphoto2/gphoto2&#45;result.h" alt="" coords="96,96,260,123"/>
+<area shape="rect" id="node7" href="$gphoto2-port-result_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;result.h" alt="" coords="107,171,251,213"/>
+</map>

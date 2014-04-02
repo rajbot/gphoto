@@ -1,3 +1,4 @@
-base referer
-rect $gphoto2-version_8h.html 249,108 431,135
-rect $gphoto2-port-version_8h.html 480,108 688,135
+<map id="libgphoto2/gphoto2&#45;version.c" name="libgphoto2/gphoto2&#45;version.c">
+<area shape="rect" id="node7" href="$gphoto2-version_8h.html" title="gphoto2/gphoto2&#45;version.h" alt="" coords="186,96,360,123"/>
+<area shape="rect" id="node9" href="$gphoto2-port-version_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;version.h" alt="" coords="201,171,345,213"/>
+</map>

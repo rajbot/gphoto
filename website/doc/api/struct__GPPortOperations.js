@@ -1,0 +1,27 @@
+var struct__GPPortOperations =
+[
+    [ "check_int", "struct__GPPortOperations.html#a88272ade481b95ccfaa70f448b260969", null ],
+    [ "clear_halt", "struct__GPPortOperations.html#a2cfbbd43232484a42a4dd1fb080d053b", null ],
+    [ "close", "struct__GPPortOperations.html#a59d8d5449abe72118f852c69eb1b1a49", null ],
+    [ "exit", "struct__GPPortOperations.html#ad4b8e668a700dc2a3afa1dc1ceb634df", null ],
+    [ "find_device", "struct__GPPortOperations.html#a61a3d4c659f1622094b9808bf8d641ed", null ],
+    [ "find_device_by_class", "struct__GPPortOperations.html#aa17650b71b8c338fe50adfa7dc987e15", null ],
+    [ "flush", "struct__GPPortOperations.html#a77ff264c1332319f06c5bfca933f2d7b", null ],
+    [ "get_pin", "struct__GPPortOperations.html#a33051766a2499f496e86a976c6d9b21c", null ],
+    [ "init", "struct__GPPortOperations.html#a3a1525b263246c182118bb97bc26d2d2", null ],
+    [ "msg_class_read", "struct__GPPortOperations.html#aa433083fdb5d7a38c8fa752841816a4d", null ],
+    [ "msg_class_write", "struct__GPPortOperations.html#a9c84543d6e5e69fab728f93c5fc5969b", null ],
+    [ "msg_interface_read", "struct__GPPortOperations.html#ad7769b95b33db4b8f71d4d462002f277", null ],
+    [ "msg_interface_write", "struct__GPPortOperations.html#ac960344afb5f60700a1cf4462d5fa29b", null ],
+    [ "msg_read", "struct__GPPortOperations.html#a8c09ac20352599af1f4895f5f8def257", null ],
+    [ "msg_write", "struct__GPPortOperations.html#aab57d791713078b337dd2e0bf0e19d21", null ],
+    [ "open", "struct__GPPortOperations.html#a333adda6d19ab438bcb7acc1cd8c0834", null ],
+    [ "read", "struct__GPPortOperations.html#ad323394086f5aaf82a54cb32f5102da8", null ],
+    [ "reset", "struct__GPPortOperations.html#ad6e1e871be54bf4ad355dfbca99ef4ff", null ],
+    [ "seek", "struct__GPPortOperations.html#a6b321c5da351dbe910eceed7be85a355", null ],
+    [ "send_break", "struct__GPPortOperations.html#a80acfcf8db96c04303cabf3ff6f86703", null ],
+    [ "send_scsi_cmd", "struct__GPPortOperations.html#ac9abb4771ff54ba094ade7d55ab67706", null ],
+    [ "set_pin", "struct__GPPortOperations.html#a92ca8aab66fd6a1a3eb1a8a3777d5568", null ],
+    [ "update", "struct__GPPortOperations.html#ab82067768f8f5f113d13cad18d6f3e64", null ],
+    [ "write", "struct__GPPortOperations.html#a5cdd7d2af27f04c5c8c68d2bd216f8d1", null ]
+];

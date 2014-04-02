@@ -1,8 +1,16 @@
-base referer
-rect $gphoto2-file_8c.html 216,7 384,34
-rect $jpeg_8h.html 239,58 361,84
-rect $jpeg_8c.html 469,83 592,110
-rect $gphoto2-filesys_8h.html 213,159 387,186
-rect $gphoto2_8h.html 233,210 367,236
-rect $gphoto2-filesys_8c.html 437,134 624,160
-rect $gphoto2-camera_8h.html 440,184 621,211
+<map id="gphoto2/gphoto2&#45;file.h" name="gphoto2/gphoto2&#45;file.h">
+<area shape="rect" id="node3" href="$gphoto2-file_8c.html" title="libgphoto2/gphoto2\l&#45;file.c" alt="" coords="5,81,135,122"/>
+<area shape="rect" id="node5" href="$jpeg_8h.html" title="libgphoto2/jpeg.h" alt="" coords="211,88,331,115"/>
+<area shape="rect" id="node7" href="$jpeg_8c.html" title="libgphoto2/jpeg.c" alt="" coords="113,179,233,205"/>
+<area shape="rect" id="node10" href="$gphoto2-filesys_8h.html" title="Filesystem related operations and declarations. " alt="" coords="355,88,525,115"/>
+<area shape="rect" id="node25" href="$gphoto2_8h.html" title="Convenience header for gphoto2. " alt="" coords="987,344,1116,371"/>
+<area shape="rect" id="node12" href="$gphoto2-filesys_8c.html" title="libgphoto2/gphoto2\l&#45;filesys.c" alt="" coords="257,171,387,213"/>
+<area shape="rect" id="node14" href="$gphoto2-camera_8h.html" title="Implement Camera object representing a camera attached to the system. " alt="" coords="412,179,588,205"/>
+<area shape="rect" id="node16" href="$gphoto2-camera_8c.html" title="libgphoto2/gphoto2\l&#45;camera.c" alt="" coords="313,337,443,378"/>
+<area shape="rect" id="node18" href="$gphoto2-library_8h.html" title="Camery driver header. " alt="" coords="568,261,736,288"/>
+<area shape="rect" id="node29" href="$gphoto2-widget_8h.html" title="gphoto2/gphoto2&#45;widget.h" alt="" coords="292,261,463,288"/>
+<area shape="rect" id="node20" href="$gphoto2-abilities-list_8c.html" title="List of supported camera models including their abilities. " alt="" coords="679,337,808,378"/>
+<area shape="rect" id="node23" href="$gphoto2-library_8c.html" title="libgphoto2/gphoto2\l&#45;library.c" alt="" coords="833,337,963,378"/>
+<area shape="rect" id="node27" href="$template_8c.html" title="Documented source code template for a camera driver (camlib). " alt="" coords="468,344,655,371"/>
+<area shape="rect" id="node31" href="$gphoto2-widget_8c.html" title="libgphoto2/gphoto2\l&#45;widget.c" alt="" coords="159,337,288,378"/>
+</map>

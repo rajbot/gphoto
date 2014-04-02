@@ -1,3 +1,4 @@
-base referer
-rect $jpeg_8h.html 186,57 244,84
-rect $gphoto2-file_8h.html 299,83 454,109
+<map id="libgphoto2/jpeg.c" name="libgphoto2/jpeg.c">
+<area shape="rect" id="node5" href="$jpeg_8h.html" title="jpeg.h" alt="" coords="97,80,153,107"/>
+<area shape="rect" id="node7" href="$gphoto2-file_8h.html" title="Abstracted gphoto2 file operations. " alt="" coords="83,155,233,181"/>
+</map>

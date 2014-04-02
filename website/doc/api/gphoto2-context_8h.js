@@ -1,0 +1,37 @@
+var gphoto2_context_8h =
+[
+    [ "GPContext", "gphoto2-context_8h.html#a3ecfdf82f972b15f8d4feb26a9d25b92", null ],
+    [ "GPContextCancelFunc", "gphoto2-context_8h.html#a7d488d8887c5531bb8b148781fc188d8", null ],
+    [ "GPContextErrorFunc", "gphoto2-context_8h.html#a15a47156fb1ef25a826e95328544a047", null ],
+    [ "GPContextFeedback", "gphoto2-context_8h.html#a1eea319168183e636b1daa1f47d50ba3", null ],
+    [ "GPContextIdleFunc", "gphoto2-context_8h.html#a2d6b39a6d8ccf3da058d1d875af6440a", null ],
+    [ "GPContextMessageFunc", "gphoto2-context_8h.html#ac716f657b88b39a207178e234b93117f", null ],
+    [ "GPContextProgressStartFunc", "gphoto2-context_8h.html#a520dd45e31eb002a6312ae28bc7a4f7d", null ],
+    [ "GPContextProgressStopFunc", "gphoto2-context_8h.html#a76821cdb7ffeba8e3fedcdae7a716dfa", null ],
+    [ "GPContextProgressUpdateFunc", "gphoto2-context_8h.html#aad85848ba66bd6a67d57de7596a71d2f", null ],
+    [ "GPContextQuestionFunc", "gphoto2-context_8h.html#a0092eea99e74e42deac22f43269e2be7", null ],
+    [ "GPContextStatusFunc", "gphoto2-context_8h.html#a7a62ec68615189eef4e8489f3ee70b3e", null ],
+    [ "_GPContextFeedback", "gphoto2-context_8h.html#ae3ccc9d5a652ca165b4a0d22cf6e493f", [
+      [ "GP_CONTEXT_FEEDBACK_OK", "gphoto2-context_8h.html#ae3ccc9d5a652ca165b4a0d22cf6e493fadde53439fb2bad49c0922a5719394963", null ],
+      [ "GP_CONTEXT_FEEDBACK_CANCEL", "gphoto2-context_8h.html#ae3ccc9d5a652ca165b4a0d22cf6e493fafadd72ed8d05a4692bac36e6f6170a59", null ]
+    ] ],
+    [ "gp_context_cancel", "gphoto2-context_8h.html#a1decda483ec848e9cfd0ce68fb35ba82", null ],
+    [ "gp_context_error", "gphoto2-context_8h.html#aec0c2be0a43adeec13fd6c6aed5d3bf0", null ],
+    [ "gp_context_idle", "gphoto2-context_8h.html#afefd086439808e0ea31fe982cf2bf742", null ],
+    [ "gp_context_message", "gphoto2-context_8h.html#aaf988fc2b9e09b4054ac5988b683ed52", null ],
+    [ "gp_context_new", "gphoto2-context_8h.html#a0fd357aa949525dd1a3a2bdb404366cf", null ],
+    [ "gp_context_progress_start", "gphoto2-context_8h.html#a6d241a0d2941e08a4d918cd923b7d9f3", null ],
+    [ "gp_context_progress_stop", "gphoto2-context_8h.html#aed9bdc97988854ae81a7cc57e94a064e", null ],
+    [ "gp_context_progress_update", "gphoto2-context_8h.html#a47bb3df49a3b08e69600fe8e67d4dfbf", null ],
+    [ "gp_context_question", "gphoto2-context_8h.html#a118cc634d4288bc3722391691bf89f0c", null ],
+    [ "gp_context_ref", "gphoto2-context_8h.html#a941ca9159c54542bbdb3fc6f165f2851", null ],
+    [ "gp_context_set_cancel_func", "gphoto2-context_8h.html#a51bc910dfc03c967e3c6ba03b43fbfb3", null ],
+    [ "gp_context_set_error_func", "gphoto2-context_8h.html#a925d07de0bb8cfc37acc5891b11bc1a5", null ],
+    [ "gp_context_set_idle_func", "gphoto2-context_8h.html#a986c79c9bd39aef8b7f4b5129738ac20", null ],
+    [ "gp_context_set_message_func", "gphoto2-context_8h.html#a6a87ac8f4beeff86f0d247623b39a5fe", null ],
+    [ "gp_context_set_progress_funcs", "gphoto2-context_8h.html#a8ee292247dd4512ec0f71b62bd24fcd1", null ],
+    [ "gp_context_set_question_func", "gphoto2-context_8h.html#a2af604b145886e65cfb39b6eca75fe7e", null ],
+    [ "gp_context_set_status_func", "gphoto2-context_8h.html#ab8786f91f991473182ef47d8abf2fd1d", null ],
+    [ "gp_context_status", "gphoto2-context_8h.html#ac30a859efe417aa671cfa32275940d87", null ],
+    [ "gp_context_unref", "gphoto2-context_8h.html#ac015a1ed8c349b1bda9b0f652904d0ac", null ]
+];

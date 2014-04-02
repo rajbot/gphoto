@@ -1,4 +1,6 @@
-base referer
-rect $struct__GPPortSettingsSerial.html 7,7 164,34
-rect $struct__GPPortSettingsDisk.html 188,7 337,34
-rect $struct__GPPortSettingsUSB.html 361,7 511,34
+<map id="_GPPortSettings" name="_GPPortSettings">
+<area shape="rect" id="node2" href="$struct__GPPortSettingsSerial.html" title="Port settings for serial ports. " alt="" coords="33,5,186,32"/>
+<area shape="rect" id="node4" href="$struct__GPPortSettingsUSB.html" title="Port settings for USB ports. " alt="" coords="35,56,183,83"/>
+<area shape="rect" id="node6" href="$struct__GPPortSettingsUsbDiskDirect.html" title="Port settings for USB mass storage direct IO ports. " alt="" coords="6,107,213,133"/>
+<area shape="rect" id="node8" href="$struct__GPPortSettingsUsbScsi.html" title="Port settings for USB Mass Storage raw SCSI ports. " alt="" coords="24,157,195,184"/>
+</map>

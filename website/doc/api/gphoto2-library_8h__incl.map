@@ -1,3 +1,15 @@
-base referer
-rect $gphoto2-abilities-list_8h.html 461,32 664,59
-rect $gphoto2-camera_8h.html 229,58 411,84
+<map id="gphoto2/gphoto2&#45;library.h" name="gphoto2/gphoto2&#45;library.h">
+<area shape="rect" id="node3" href="$gphoto2-abilities-list_8h.html" title="List of supported camera models including their abilities. " alt="" coords="205,155,371,197"/>
+<area shape="rect" id="node21" href="$gphoto2-camera_8h.html" title="Implement Camera object representing a camera attached to the system. " alt="" coords="394,80,570,107"/>
+<area shape="rect" id="node5" href="$gphoto2-context_8h.html" title="Context callback operation functions. " alt="" coords="360,253,536,280"/>
+<area shape="rect" id="node9" href="$gphoto2-list_8h.html" title="gphoto2/gphoto2&#45;list.h" alt="" coords="561,253,711,280"/>
+<area shape="rect" id="node11" href="$gphoto2-port-info-list_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;info&#45;list.h" alt="" coords="24,246,168,287"/>
+<area shape="rect" id="node18" href="$gphoto2-port-log_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;log.h" alt="" coords="192,246,336,287"/>
+<area shape="rect" id="node13" href="$gphoto2-port_8h.html" title="gphoto2/gphoto2&#45;port.h" alt="" coords="19,336,172,363"/>
+<area shape="rect" id="node16" href="$gphoto2-port-portability_8h_source.html" title="gphoto2/gphoto2&#45;port\l&#45;portability.h" alt="" coords="24,411,168,453"/>
+<area shape="rect" id="node25" href="$gphoto2-widget_8h.html" title="gphoto2/gphoto2&#45;widget.h" alt="" coords="396,163,567,189"/>
+<area shape="rect" id="node29" href="$gphoto2-filesys_8h.html" title="Filesystem related operations and declarations. " alt="" coords="639,163,810,189"/>
+<area shape="rect" id="node41" href="$gphoto2-result_8h.html" title="gphoto2/gphoto2&#45;result.h" alt="" coords="954,163,1118,189"/>
+<area shape="rect" id="node37" href="$gphoto2-file_8h.html" title="Abstracted gphoto2 file operations. " alt="" coords="788,253,938,280"/>
+<area shape="rect" id="node43" href="$gphoto2-port-result_8h.html" title="gphoto2/gphoto2&#45;port\l&#45;result.h" alt="" coords="1014,246,1158,287"/>
+</map>

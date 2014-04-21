@@ -135,6 +135,27 @@ engine.
 </tr>
 
 <tr>
+	<td>Canon Digital IXUS 30</td>
+	<td>Yes</td>
+	<td>All,Viewfinder</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+<tr>
+	<td>Canon Digital IXUS 300</td>
+	<td>Yes</td>
+	<td>All,Viewfinder</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+<tr>
+	<td>Canon Digital IXUS 330</td>
+	<td>Yes</td>
+	<td>All,Viewfinder</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+<tr>
 	<td>Canon Digital IXUS 400</td>
 	<td>Yes</td>
 	<td>All,Viewfinder</td>
@@ -159,11 +180,43 @@ engine.
 </tr>
 
 <tr>
+	<td>Canon Digital IXUS 500</td>
+	<td>Yes</td>
+	<td>All,Viewfinder</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
+	<td>Canon EOS 1D Mark III</td>
+	<td>Yes</td>
+	<td>All</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
+	<td>Canon EOS 1D Mark IV</td>
+	<td>Yes</td>
+	<td>All, LiveView</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
+	<td>Canon EOS 1D X</td>
+	<td>Yes</td>
+	<td>All, LiveView</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
 	<td>Canon EOS 1000D / Rebel XS / Kiss F</td>
 	<td>Yes</td>
 	<td>Image Format, ISO, WhiteBalance, Whitebalance Adjust, DriveMode, Picture Style, Bulb Mode, BracketMode, Aperture, ShutterSpeed, Autofocus (in LiveView mode), Manual Focus (in LiveView mode), Viewfinder</td>
 	<td>10</td>
-	<td>Use libgphoto2 2.4.9<br>
+	<td>Use libgphoto2 2.4.9 or newer<br>
 	Use the Modewheel on the Camera to get to different
 	settings.<br>
 	Shutterspeed and Aperture not available in Auto or P
@@ -180,7 +233,7 @@ engine.
 	<td>Yes</td>
 	<td>Image Format, ISO, WhiteBalance, Whitebalance Adjust, DriveMode, Picture Style, Bulb Mode, BracketMode, Aperture, ShutterSpeed, Autofocus (in LiveView mode), Manual Focus (in LiveView mode), Viewfinder</td>
 	<td>10</td>
-	<td>Use libgphoto2 2.4.14<br>
+	<td>Use libgphoto2 2.4.14 or newer<br>
 	Use the Modewheel on the Camera to get to different settings.<br>
 	Shutterspeed and Aperture not available in Auto or P
 	setting, only in the more manual ones.<br>
@@ -205,7 +258,7 @@ gphoto2 --wait-event=2s --set-config eosremoterelease=Immediate --wait-event=5s 
 	<td>Yes</td>
 	<td>limited level of configurability (see EOS 1000D), Viewfinder</td>
 	<td>10.1</td>
-	<td>use libgphoto2 2.4.9</td>
+	<td>use libgphoto2 2.4.9 or newer</td>
 </tr>
 
 <tr>
@@ -293,7 +346,7 @@ gphoto2 --wait-event=2s --set-config eosremoterelease=Immediate --wait-event=5s 
 	<td>Yes</td>
 	<td>see other EOS like 1000D, Viewfinder</td>
 	<td>10.1</td>
-	<td>use libgphoto2 2.4.9</td>
+	<td>use libgphoto2 2.4.9 or newer</td>
 </tr>
 
 <tr>
@@ -301,7 +354,7 @@ gphoto2 --wait-event=2s --set-config eosremoterelease=Immediate --wait-event=5s 
 	<td>Yes</td>
 	<td>see other EOS like 1000D, Viewfinder</td>
 	<td>22</td>
-	<td>use libgphoto2 2.4.14 or later</td>
+	<td>use libgphoto2 2.4.14 or newer</td>
 </tr>
 
 <tr>
@@ -309,7 +362,7 @@ gphoto2 --wait-event=2s --set-config eosremoterelease=Immediate --wait-event=5s 
 	<td>Yes</td>
 	<td>see other EOS like 1000D, Viewfinder</td>
 	<td>20</td>
-	<td>use libgphoto2 2.4.14 or later</td>
+	<td>use libgphoto2 2.4.14 or newer</td>
 </tr>
 
 <tr>
@@ -318,6 +371,14 @@ gphoto2 --wait-event=2s --set-config eosremoterelease=Immediate --wait-event=5s 
 	<td>ImageFormat, ISO, WhiteBalance, WhiteBalanceAdjust, DriveMode, PictureStyle, Aperture, Shutterspeed, MeteringMode, BracketMode, AutoExposure Bracketing, Viewfinder</td>
 	<td>18</td>
 	<td>Use libgphoto2 2.4.9. For Bulb capture turn rotary dial to 'B'.</td>
+</tr>
+
+<tr>
+	<td>Canon EOS 70D</td>
+	<td>Yes</td>
+	<td>ImageFormat, ISO, WhiteBalance, WhiteBalanceAdjust, DriveMode, PictureStyle, Aperture, Shutterspeed, MeteringMode, BracketMode, AutoExposure Bracketing, Viewfinder</td>
+	<td>?</td>
+	<td>&nbsp;</td>
 </tr>
 
 
@@ -879,6 +940,54 @@ here</a></td>
 </tr>
 
 <tr>
+	<td>Nikon CoolPix L12</td>
+	<td>Yes</td>
+	<td>Unknown</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
+	<td>Nikon CoolPix L16</td>
+	<td>Yes</td>
+	<td>Unknown</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
+	<td>Nikon CoolPix L19</td>
+	<td>Yes</td>
+	<td>Unknown</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
+	<td>Nikon CoolPix L110</td>
+	<td>Yes</td>
+	<td>Unknown</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
+	<td>Nikon CoolPix L120</td>
+	<td>Yes</td>
+	<td>Unknown</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
+	<td>Nikon CoolPix L820</td>
+	<td>Yes</td>
+	<td>Unknown</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
 	<td>Nikon CoolPix P1</td>
 	<td>Yes</td>
 	<td>Some</td>
@@ -900,6 +1009,22 @@ here</a></td>
 	<td>Some</td>
 	<td>8</td>
 	<td>Only over USB, not over PTP/IP.</td>
+</tr>
+
+<tr>
+	<td>Nikon CoolPix P50</td>
+	<td>Yes</td>
+	<td>None</td>
+	<td>?</td>
+	<td>not configurable, just trigger capture</td>
+</tr>
+
+<tr>
+	<td>Nikon CoolPix P60</td>
+	<td>Yes</td>
+	<td>None</td>
+	<td>?</td>
+	<td>not configurable, just trigger capture</td>
 </tr>
 
 <tr>
@@ -934,6 +1059,30 @@ here</a></td>
 	<td>Only image quality/size, flash, focusmode configurable</td>
 </tr>
 
+
+<tr>
+	<td>Nikon D2x</td>
+	<td>Yes</td>
+	<td>All</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
+	<td>Nikon D3</td>
+	<td>Yes</td>
+	<td>All</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
+	<td>Nikon D3s</td>
+	<td>Yes</td>
+	<td>All</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
 
 <tr>
 	<td>Nikon D4</td>
@@ -1024,10 +1173,26 @@ here</a></td>
 </tr>
 
 <tr>
+	<td>Nikon D300s</td>
+	<td>Yes</td>
+	<td>All</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
 	<td>Nikon D3000</td>
 	<td>Yes</td>
 	<td>Basic set of abilities (no SDRAM, no Viewfinder, just the basic capture settings)</td>
 	<td>10</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
+	<td>Nikon D3100</td>
+	<td>Yes</td>
+	<td>Basic set of abilities (no SDRAM, no Viewfinder, just the basic capture settings)</td>
+	<td>?</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -1048,6 +1213,14 @@ here</a></td>
 </tr>
 
 <tr>
+	<td>Nikon D5200</td>
+	<td>Yes</td>
+	<td>All, Viewfinder</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
 	<td>Nikon D600</td>
 	<td>Yes</td>
 	<td>All, Viewfinder</td>
@@ -1060,6 +1233,22 @@ here</a></td>
 	<td>Yes</td>
 	<td>All, Viewfinder</td>
 	<td>12</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
+	<td>Nikon D7000</td>
+	<td>Yes</td>
+	<td>All, Viewfinder</td>
+	<td>?</td>
+	<td>&nbsp;</td>
+</tr>
+
+<tr>
+	<td>Nikon D7100</td>
+	<td>Yes</td>
+	<td>All, Viewfinder</td>
+	<td>?</td>
 	<td>&nbsp;</td>
 </tr>
 

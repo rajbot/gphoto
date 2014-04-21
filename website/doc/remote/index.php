@@ -138,21 +138,21 @@ engine.
 	<td>Canon Digital IXUS 30</td>
 	<td>Yes</td>
 	<td>All,Viewfinder</td>
-	<td>?</td>
+	<td>3.2</td>
 	<td>&nbsp;</td>
 </tr>
 <tr>
 	<td>Canon Digital IXUS 300</td>
 	<td>Yes</td>
 	<td>All,Viewfinder</td>
-	<td>?</td>
+	<td>2.1</td>
 	<td>&nbsp;</td>
 </tr>
 <tr>
 	<td>Canon Digital IXUS 330</td>
 	<td>Yes</td>
 	<td>All,Viewfinder</td>
-	<td>?</td>
+	<td>2</td>
 	<td>&nbsp;</td>
 </tr>
 <tr>
@@ -183,7 +183,7 @@ engine.
 	<td>Canon Digital IXUS 500</td>
 	<td>Yes</td>
 	<td>All,Viewfinder</td>
-	<td>?</td>
+	<td>5</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -191,7 +191,7 @@ engine.
 	<td>Canon EOS 1D Mark III</td>
 	<td>Yes</td>
 	<td>All</td>
-	<td>?</td>
+	<td>10.1</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -199,7 +199,7 @@ engine.
 	<td>Canon EOS 1D Mark IV</td>
 	<td>Yes</td>
 	<td>All, LiveView</td>
-	<td>?</td>
+	<td>16.1</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -207,7 +207,7 @@ engine.
 	<td>Canon EOS 1D X</td>
 	<td>Yes</td>
 	<td>All, LiveView</td>
-	<td>?</td>
+	<td>18.1</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -377,7 +377,7 @@ gphoto2 --wait-event=2s --set-config eosremoterelease=Immediate --wait-event=5s 
 	<td>Canon EOS 70D</td>
 	<td>Yes</td>
 	<td>ImageFormat, ISO, WhiteBalance, WhiteBalanceAdjust, DriveMode, PictureStyle, Aperture, Shutterspeed, MeteringMode, BracketMode, AutoExposure Bracketing, Viewfinder</td>
-	<td>?</td>
+	<td>20.2</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -487,7 +487,7 @@ AFDistance</td>
 	<td>Canon PowerShot A620</td>
 	<td>Yes</td>
 	<td>Unknown, Viewfinder</td>
-	<td>?</td>
+	<td>7.1</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -775,7 +775,7 @@ AFDistance</td>
 	<td>Canon PowerShot S400</td>
 	<td>Yes</td>
 	<td>All, Viewfinder</td>
-	<td>?</td>
+	<td>4</td>
 	<td>from capture.sf.net notes</td>
 </tr>
 
@@ -783,7 +783,7 @@ AFDistance</td>
 	<td>Canon PowerShot S410</td>
 	<td>Yes</td>
 	<td>All, Viewfinder</td>
-	<td>?</td>
+	<td>4</td>
 	<td>from capture.sf.net notes</td>
 </tr>
 
@@ -791,7 +791,7 @@ AFDistance</td>
 	<td>Canon PowerShot S500</td>
 	<td>Yes</td>
 	<td>All, Viewfinder</td>
-	<td>?</td>
+	<td>5</td>
 	<td>from capture.sf.net notes</td>
 </tr>
 
@@ -863,7 +863,7 @@ AFDistance</td>
 	<td>Nikon CoolPix 880</td>
 	<td>Yes</td>
 	<td>All</td>
-	<td>?</td>
+	<td>3</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -943,7 +943,7 @@ here</a></td>
 	<td>Nikon CoolPix L12</td>
 	<td>Yes</td>
 	<td>Unknown</td>
-	<td>?</td>
+	<td>7</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -951,7 +951,7 @@ here</a></td>
 	<td>Nikon CoolPix L16</td>
 	<td>Yes</td>
 	<td>Unknown</td>
-	<td>?</td>
+	<td>7</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -959,7 +959,7 @@ here</a></td>
 	<td>Nikon CoolPix L19</td>
 	<td>Yes</td>
 	<td>Unknown</td>
-	<td>?</td>
+	<td>8</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -967,7 +967,7 @@ here</a></td>
 	<td>Nikon CoolPix L110</td>
 	<td>Yes</td>
 	<td>Unknown</td>
-	<td>?</td>
+	<td>12</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -975,7 +975,7 @@ here</a></td>
 	<td>Nikon CoolPix L120</td>
 	<td>Yes</td>
 	<td>Unknown</td>
-	<td>?</td>
+	<td>14</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -983,7 +983,7 @@ here</a></td>
 	<td>Nikon CoolPix L820</td>
 	<td>Yes</td>
 	<td>Unknown</td>
-	<td>?</td>
+	<td>16</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -1015,7 +1015,7 @@ here</a></td>
 	<td>Nikon CoolPix P50</td>
 	<td>Yes</td>
 	<td>None</td>
-	<td>?</td>
+	<td>8</td>
 	<td>not configurable, just trigger capture</td>
 </tr>
 
@@ -1023,7 +1023,7 @@ here</a></td>
 	<td>Nikon CoolPix P60</td>
 	<td>Yes</td>
 	<td>None</td>
-	<td>?</td>
+	<td>8</td>
 	<td>not configurable, just trigger capture</td>
 </tr>
 
@@ -1064,7 +1064,7 @@ here</a></td>
 	<td>Nikon D2x</td>
 	<td>Yes</td>
 	<td>All</td>
-	<td>?</td>
+	<td>12.5</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -1072,7 +1072,7 @@ here</a></td>
 	<td>Nikon D3</td>
 	<td>Yes</td>
 	<td>All</td>
-	<td>?</td>
+	<td>12.1</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -1080,7 +1080,7 @@ here</a></td>
 	<td>Nikon D3s</td>
 	<td>Yes</td>
 	<td>All</td>
-	<td>?</td>
+	<td>12.1</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -1176,7 +1176,7 @@ here</a></td>
 	<td>Nikon D300s</td>
 	<td>Yes</td>
 	<td>All</td>
-	<td>?</td>
+	<td>12</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -1192,7 +1192,7 @@ here</a></td>
 	<td>Nikon D3100</td>
 	<td>Yes</td>
 	<td>Basic set of abilities (no SDRAM, no Viewfinder, just the basic capture settings)</td>
-	<td>?</td>
+	<td>14.2</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -1216,7 +1216,7 @@ here</a></td>
 	<td>Nikon D5200</td>
 	<td>Yes</td>
 	<td>All, Viewfinder</td>
-	<td>?</td>
+	<td>24.2</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -1248,7 +1248,7 @@ here</a></td>
 	<td>Nikon D7100</td>
 	<td>Yes</td>
 	<td>All, Viewfinder</td>
-	<td>?</td>
+	<td>24.1</td>
 	<td>&nbsp;</td>
 </tr>
 
@@ -1306,6 +1306,14 @@ here</a></td>
 	<td>All</td>
 	<td>4</td>
 	<td>&nbsp;</td>
+</tr>
+
+<tr>
+	<td>Sony SLT-A58</td>
+	<td>Yes</td>
+	<td>Some</td>
+	<td>20</td>
+	<td>use libgphoto2 2.5.4 or newer</td>
 </tr>
 
 <tr>

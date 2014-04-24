@@ -2586,6 +2586,20 @@ camera_nikon_capture (Camera *camera, CameraCaptureType type, CameraFilePath *pa
 		ptp_free_devicepropdesc (&propdesc);
 	}
 
+	/* Nikon V* and J* require sending PTP_OC_NIKON_StartLiveView before
+	 * sending PTP_OC_NIKON_InitiateCaptureRecInMedia */
+	if (	(params->deviceinfo.VendorExtensionID == PTP_VENDOR_NIKON) &&
+		(params->deviceinfo.Model && (
+			strstr(params->deviceinfo.Model,"J") ||
+			strstr(params->deviceinfo.Model,"V")
+		))
+	) {
+		ret = ptp_nikon_start_liveview(params);
+		if (ret != PTP_RC_OK) {
+			gp_log (GP_LOG_ERROR,"nikon_capture", "could not start liveview: %x", ret);
+		}
+	}
+
 	/* if in liveview mode, we have to run non-af capture */
 	params->inliveview = 0;
 	if (ptp_property_issupported (params, PTP_DPC_NIKON_LiveViewStatus)) {
@@ -3308,16 +3322,6 @@ camera_capture (Camera *camera, CameraCaptureType type, CameraFilePath *path,
 	SET_CONTEXT_P(params, context);
 	camera->pl->checkevents = TRUE;
 
-	/* Nikon V* and J* advertise the new Nikon stuff, but only do the generic
-	 * PTP capture. FIXME: could use flags. */
-	if (	(params->deviceinfo.VendorExtensionID == PTP_VENDOR_NIKON) &&
-		(params->deviceinfo.Model && (
-			strstr(params->deviceinfo.Model,"J") ||
-			strstr(params->deviceinfo.Model,"V")
-		))
-	)
-		goto standard_capture;
-
 	/* 3rd gen style nikon capture, can do both sdram and card */
 	if (	(params->deviceinfo.VendorExtensionID == PTP_VENDOR_NIKON) &&
 		 ptp_operation_issupported(params, PTP_OC_NIKON_InitiateCaptureRecInMedia)
@@ -3367,7 +3371,6 @@ camera_capture (Camera *camera, CameraCaptureType type, CameraFilePath *path,
 		return camera_sony_capture (camera, type, path, context);
 	}
 
-standard_capture:
 	if (!ptp_operation_issupported(params,PTP_OC_InitiateCapture)) {
 		gp_context_error(context,
                	_("Sorry, your camera does not support generic capture"));
